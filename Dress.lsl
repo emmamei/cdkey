@@ -1,9 +1,23 @@
-//Oct. 1. Adds everything in ~normalself folder, if oldoutfit began with a +. adds channel dialog or id to screen listen
-//Nov. 17, moves listen to cd2667 so it gets turned off
-//Nov. 25, puts in dress menu
-//Aug 1, redoes closing
+// Dress.lsl
+//
+// vim: et sw=4
+//
+// DATE: 26 February 2013
+//
+// HISTORY:
+//   Oct. 1   Adds everything in ~normalself folder, if oldoutfit begins with a +.
+//            Adds channel dialog or id to screen listen
+//   Nov. 17  moves listen to cd2667 so it gets turned off
+//   Nov. 25  puts in dress menu
+//   Aug 1    redoes closing
 
+//========================================
+// VARIABLES
+//========================================
 string bigsubfolder = "Dressup"; //name of subfolder in RLV to always use if available. But also checks for outfits.
+
+// FIXME: This should be in a notecard so it can be changed without mangling the scripts.
+string outfits_url = "http://communitydolls.com/outfits.htm";
 
 integer candresstemp;
 integer candresstimeout;
@@ -18,351 +32,617 @@ string newoutfitname;
 integer channel_dialog;
 integer cd2667;
 
+// These are the paths of the outfits relative to #RLV
 string newoutfit;
 string oldoutfit;
-string oldoutfitname;
+string xfolder;
 
-string clothingprefix;
-string bigprefix;
+string oldoutfitname;
+list outfitsList;
+string msgx; // could be "msg" but that is used elsewhere?
+
+string clothingFolder; // This contains clothing to be worn
+string outfitsFolder;  // This contains folders of clothing to be worn
 
 integer listen_id_2667;
 integer listen_id_outfitrequest;
 integer listen_id_2555;
 integer listen_id_2668;
 integer listen_id_2669;
-integer listen_id_9001;
-integer listen_id_9002;
-integer listen_id_9003;
-integer listen_id_9005;
-integer listen_id_9007;
-integer listen_id_9011;
-integer listen_id_9012;
-integer listen_id_9013;
-integer listen_id_9014;
+
+integer outfitPage;
 
 string oldattachmentpoints;
+string oldclothespoints;
 integer newoutfitwordend;
+integer outfitPageSize = 9;
+
+//========================================
+// FUNCTIONS
+//========================================
+
+list outfitsPage(list outfitList) {
+    integer newOutfitCount = llGetListLength(outfitList);
+
+    // GLOBAL: outfitPage
+
+    // compute start index
+    integer currentIndex = outfitPage * outfitPageSize;
+
+    // If reaching beyond the end...
+    if (currentIndex > newOutfitCount) {
+        // Wrap to start...
+        //outfitPage = 0;
+        //currentIndex = 0;
+
+        // Halt at end
+        outfitPage--;
+        currentIndex = outfitPage * outfitPageSize;
+    }
+    // If reaching beyond the beginning...
+    else if (currentIndex < 0) {
+        // Wrap to end
+        //currentIndex = newOutfitCount % outfitPageSize;
+        //outfitPage = currentIndex % outfitPageSize;
+
+        // Halt at start
+        outfitPage = 0;
+        currentIndex = 0;
+    }
+
+    integer endIndex = currentIndex + outfitPageSize - 1;
+    if (endIndex > newOutfitCount) {
+        endIndex = newOutfitCount;
+    }
+
+    // Use sort function to reverse order: this makes the sort
+    // read top to bottom in dialog
+    return (llListSort(llList2List(outfitsList, currentIndex, endIndex),3,FALSE));
+    //return (llList2List(outfitsList, currentIndex, endIndex));
+}
+
+integer isClothingItem (string folder) {
+    string prefix = llGetSubString(folder,0,0);
+
+    // Folders that start with "~" are hidden and
+    // those that start with "*" are actually outfit folders
+    return (prefix == "~" || prefix == "*");
+}
+
+integer isGroupItem (string f) {
+    string prefix = llGetSubString(f,0,0);
+
+    return (prefix == "#");
+}
+
+integer isHiddenItem (string f) {
+    string prefix = llGetSubString(f,0,0);
+
+    // Items that start with "~" are hidden
+    return (prefix == "~");
+}
+
+integer isTransformingItem (string f) {
+    string prefix = llGetSubString(f,0,0);
+
+    // Items that start with "*" are Transforming folders
+    return (prefix == "*");
+}
+
+integer isPlusItem (string f) {
+    string prefix = llGetSubString(f,0,0);
+
+    // Items that start with "+" are self-contained outfits;
+    // make no assumptions when restoring to "normal" outfit
+    return (prefix == "+");
+}
+
+removeListeners () {
+    llListenRemove(listen_id_2555);
+    llListenRemove(listen_id_outfitrequest3);
+    llListenRemove(listen_id_outfitrequest);
+    llListenRemove(listen_id_2668);
+    llListenRemove(listen_id_2669);
+//    llListenRemove(listen_id_9001);
+//    llListenRemove(listen_id_9002);
+//    llListenRemove(listen_id_9003);
+//    llListenRemove(listen_id_9005);
+//    llListenRemove(listen_id_9007);
+//    llListenRemove(listen_id_9011);
+//    llListenRemove(listen_id_9012);
+//    llListenRemove(listen_id_9013);
+//    llListenRemove(listen_id_9014);
+}
+
+addListeners (string dollID) {
+    listen_id_2555           = llListen(2555, "", dollID, "");
+    listen_id_outfitrequest3 = llListen(2665, "", dollID, "");
+    listen_id_outfitrequest  = llListen(2666, "", dollID, "");
+    listen_id_2668           = llListen(2668, "", dollID, "");
+    listen_id_2669           = llListen(2669, "", dollID, "");
+
+//    listen_id_9001           = llListen(9001, "", dollID, "");
+//    listen_id_9002           = llListen(9002, "", dollID, "");
+//    listen_id_9003           = llListen(9003, "", dollID, "");
+//    listen_id_9005           = llListen(9005, "", dollID, "");
+//    listen_id_9007           = llListen(9007, "", dollID, "");
+//    listen_id_9011           = llListen(9011, "", dollID, "");
+//    listen_id_9012           = llListen(9012, "", dollID, "");
+//    listen_id_9013           = llListen(9013, "", dollID, "");
+//    listen_id_9014           = llListen(9014, "", dollID, "");
+}
+
+listInventoryOn (string channel) {
+    candresstimeout = 8;
+
+    llSay(DEBUG_CHANNEL,">> clothingFolder = " + (string)clothingFolder);
+    llSay(DEBUG_CHANNEL,">> outfitsFolder = " + (string)outfitsFolder);
+                
+    if (clothingFolder == "") {
+        llOwnerSay("@getinv=" + channel);
+    }
+    else {
+        llSay(DEBUG_CHANNEL,"cmd = getinv:" + clothingFolder + "=" + channel);
+        llOwnerSay("@getinv:" + clothingFolder + "=" + channel);
+    }
+}
 
 setup ()  {
-    dollID =   llGetOwner();
+    dollID = llGetOwner();
     candresstemp = TRUE;
     llOwnerSay("@getinv=2555");
 
 //from dollkey36
 
-    integer ncd = ( -1 * (integer)("0x"+llGetSubString((string)llGetKey(),-5,-1)) ) -1;
+    integer ncd = ( -1 * (integer)("0x" + llGetSubString((string)llGetKey(),-5,-1) ) ) - 1;
+
     if (channel_dialog != ncd) {
-           llListenRemove(listen_id_2667); 
+        llListenRemove(listen_id_2667);
         channel_dialog = ncd;
         cd2667 = channel_dialog - 2667;
         llListenRemove(listen_id_2667);
         listen_id_2667 = llListen( cd2667, "", "", "");
-
     }
+
     if (dollID != setupID) {
-        llListenRemove(listen_id_2555);
-        llListenRemove(listen_id_outfitrequest3);
-        llListenRemove(listen_id_outfitrequest);
-        llListenRemove(listen_id_2668); 
-        llListenRemove(listen_id_2669); 
-        llListenRemove(listen_id_9001); 
-        llListenRemove(listen_id_9002);
-        llListenRemove(listen_id_9003); 
-        llListenRemove(listen_id_9005); 
-        llListenRemove(listen_id_9007); 
-        llListenRemove(listen_id_9011);
-        llListenRemove(listen_id_9012);
-        llListenRemove(listen_id_9013); 
-        llListenRemove(listen_id_9014);
-         llSleep(2.0);
-        listen_id_2555 = llListen(2555, "", dollID, "");
-        listen_id_outfitrequest3 = llListen(2665, "", dollID, "");
-        listen_id_outfitrequest = llListen(2666, "", dollID, "");
-        listen_id_2668 = llListen(2668, "", dollID, "");
-        listen_id_2669 = llListen(2669, "", dollID, "");
-        listen_id_9001 = llListen(9001, "", dollID, "");
-        listen_id_9002 = llListen(9002, "", dollID, "");
-        listen_id_9003 = llListen(9003, "", dollID, "");
-        listen_id_9005 = llListen(9005, "", dollID, "");
-        listen_id_9007 = llListen(9007, "", dollID, "");
-        listen_id_9011 = llListen(9011, "", dollID, "");
-        listen_id_9012 = llListen(9012, "", dollID, "");
-        listen_id_9013 = llListen(9013, "", dollID, "");
-        listen_id_9014 = llListen(9014, "", dollID, "");
+        removeListeners();
+        llSleep(2.0);
+        addListeners(dollID);
+
         setupID = dollID;
     }
 }
 
+//========================================
+// STATES
+//========================================
 default {
+
+    //----------------------------------------
+    // STATE_ENTRY
+    //----------------------------------------
     state_entry() {
+        clothingFolder = "";
         channel_dialog = 0;
+
         setup();
+
         llSetTimerEvent(10.0);  //clock is accessed every ten seconds;
-        clothingprefix = "";
     }
 
-        on_rez(integer iParam) {
+    //----------------------------------------
+    // ON_REZ
+    //----------------------------------------
+    on_rez(integer iParam) {
         setup();
-     }
+    }
 
-    timer() {   //called everytimeinterval 
+    //----------------------------------------
+    // TIMER
+    //----------------------------------------
+    timer() {   //called everytimeinterval
         if (candresstimeout-- == 0) {
             candresstemp = TRUE;
         }
     }
 
-     link_message(integer source, integer num, string choice, key id) {
-// need to disallow dressing while dressing is happening
-        if (num == 1)  { 
+    //----------------------------------------
+    // LINK_MESSAGE
+    //----------------------------------------
+    link_message(integer source, integer num, string choice, key id) {
+
+        // need to disallow dressing while dressing is happening
+
+        // Choice #1: Dress Dolly
+        if (num == 1)  {
             if (candresstemp == FALSE) {
-                llSay(0, "She cannot be dressed right now; she is already dressing");
+                llRegionSayTo(dresserID, PUBLIC_CHANNEL, "Dolly cannot be dressed right now; she is already dressing");
             }
+            // If this code is linked with an argument of "start", then
+            // act normally
             else if (choice == "start") {
                 dresserID = id;
-
-                candresstimeout = 8;
-                if (clothingprefix == "") {
-                    llOwnerSay("@getinv=2666");
-                }
-                else {
-                    llOwnerSay("@getinv:" + clothingprefix + "=2666");
-                }
+                listInventoryOn("2666");
             }
+            // If this code is linked with an argument of "random", then
+            // choose random outfit and be done
+            //
+            // This is used on style change
             else if (choice == "random") {
                 //candresstemp = FALSE;
-                candresstimeout = 8;
-                if (clothingprefix == "") {
-                    llOwnerSay("@getinv=2665");
-                }
-                else {
-                    llOwnerSay("@getinv:" + clothingprefix + "=2665");
-                }
+                listInventoryOn("2665");
             }
         }
-        if (num == 2)  {  //probably should have been in transformer
-            string oldclothingprefix = clothingprefix;
-            if (bigprefix) {
-                clothingprefix = bigprefix + "/" +  choice;
+        // Choice #2: ...
+        else if (num == 2)  {  //probably should have been in transformer
+
+            string oldclothingprefix = clothingFolder;
+
+            if (outfitsFolder) {
+                clothingFolder = outfitsFolder + "/" +  choice;
             }
             else {
-                clothingprefix = choice;
+                clothingFolder = choice;
             }
-            if (clothingprefix != oldclothingprefix) {
-                llOwnerSay("@detach:" + oldclothingprefix + "/~AO=force");
-                llOwnerSay("@attach:" + clothingprefix + "/~AO=force");
-                if (oldclothingprefix != "") {
-                    //remove tatoo");
-                    llOwnerSay("@remoutfit:" + clothingprefix + "/tatoo=force");
-                    llOwnerSay("@attach:~normalself=force");
-                    llSleep(4.0);
-                }
 
-                llOwnerSay("@attach:" + clothingprefix + "/~normalself=force");
+            if (clothingFolder != oldclothingprefix) {
+
+                xfolder = "~normalself";
+                //llOwnerSay("@attach:" + clothingFolder + "/~normalself=force");
+                llOwnerSay("@attach:~normalself=force");
+                llOwnerSay("@getinvworn:~normalself=2668");
+
+                // FIXME: Make sure...
+                //llSleep(2.0);
+                //llOwnerSay("@attach:~normalself=force");
             }
-            
-
-            //puts on ~normalself
         }
+    }
 
-     }
 // First, all clothes are taken off except for skull and anything that might be revealing.
+//
 // Then the new outfit is put on. It uses replace, so it should take off any old clothes.
-// Then there is an 8 second wait and then the new outfit is put on again! In case something was locked. This I think explains the double put-on.
-// Then the places are checked where there could be old clothes still on. If anything is there, according to whatever is returned, the id is checked and it is taken off if they are old.
+//
+// Then there is an 8 second wait and then the new outfit is put on again! In case something
+// was locked. This I think explains the double put-on.
+//
+// Then the places are checked where there could be old clothes still on. If anything is there,
+// according to whatever is returned, the id is checked and it is taken off if they are old.
+//
 // This last step takes off all the clothes that weren't replaced.
 
-//There is one place where the old outfit is removed.
+// There is one place where the old outfit is removed.
 
+    //----------------------------------------
+    // LISTEN
+    //----------------------------------------
     listen(integer channel, string name, key id, string choice) {
+
+        // channels:
+        //
+        // 2555: list of inventory
+        // 2665: random outfit
+        // 2666:
+        // 2667:
+        // 2668:
+        // 2669:
+        // 9000+
+
+        //----------------------------------------
+        // Channel: 2555
+        //
+        // Look for a usable outfits directory, or use the root: looks for
+        // "Outfits" or "outfits" - results are saved for use later to get
+        // at appropriate outfits in folders
+        //
         if (channel == 2555) { // looks for one folder at start
-            string oldbigprefix = bigprefix;
-            list Outfits = llParseString2List(choice, [","], []); //what are brackets at end? 
-            integer n;
+            list Outfits = llParseString2List(choice, [","], []); //what are brackets at end?
             integer iStop = llGetListLength(Outfits);
+            string oldbigprefix = outfitsFolder;
+            integer n;
             string itemname;
-            bigprefix = "";
+
+            outfitsFolder = "";
+
+            // Looks for a folder that may contain outfits - folders such
+            // as Dressup/, or outfits/, or Outfits/ ...
             for (n = 0; n < iStop; n++) {
-                        itemname = llList2String(Outfits, n);
+                itemname = llList2String(Outfits, n);
+
+                // If there are more than one of these folders in #RLV,
+                // then the last one read will be used...
                 if (itemname == bigsubfolder) {
-                    bigprefix = bigsubfolder;
+                    outfitsFolder = bigsubfolder;
                 }
                 else if (itemname == "outfits") {
-                    bigprefix = "outfits";
+                    outfitsFolder = "outfits";
                 }
                 else if (itemname == "Outfits") {
-                    bigprefix = "Outfits";
+                    outfitsFolder = "Outfits";
                 }
             }
-            if (bigprefix != oldbigprefix) {  //outfits-don't-match-type bug only occurs when big prefix is changed
-                clothingprefix = bigprefix;
+
+            // if prefix changes, change clothingFolder to match
+            if (outfitsFolder != oldbigprefix) {  //outfits-don't-match-type bug only occurs when big prefix is changed
+                clothingFolder = outfitsFolder;
             }
+
+            llSay(DEBUG_CHANNEL,">oldbigprefix = " + oldbigprefix);
+            llSay(DEBUG_CHANNEL,">outfitsFolder = " + outfitsFolder);
+            llSay(DEBUG_CHANNEL,">clothingFolder = " + clothingFolder);
         }
-        if (channel == 2665) { // gets random outfit
-            list Outfits = llParseString2List(choice, [","], []); //what are brackets at end? 
-            list newoutfits = [];
-            integer n;
+
+        //----------------------------------------
+        // Channel: 2665
+        //
+        // Switched doll types: grab a new (appropriate) outfit at random and change to it
+        //
+        else if (channel == 2665) { // list of inventory items from the current prefix
+            list Outfits = llParseString2List(choice, [","], []); //what are brackets at end?
             integer iStop = llGetListLength(Outfits);
-            if (iStop == 0) {   //folder is empty, switching to regular folder
-                llOwnerSay("There are no outfits in your " + clothingprefix + " folder.");
-                if (bigprefix) {
-                    clothingprefix = bigprefix + "/";
+
+            integer n;
+
+            // May never occur: other directories, hidden directories and files,
+            // and hidden UNIX files all take up space here.
+
+            if (iStop == 0) {   // folder is bereft of files, switching to regular folder
+
+                // No files found; leave the prefix alone and don't change
+                llOwnerSay("There are no outfits in your " + clothingFolder + " folder.");
+
+                // Didnt find any outfits in the standard folder, try the
+                // "extended" folder containing (we hope) outfits....
+
+                if (outfitsFolder) {
+                    clothingFolder = outfitsFolder + "/";
+                    llOwnerSay("Trying the " + clothingFolder + " folder.");
+                    listInventoryOn("2665"); // recursion
                 }
-                else {
-                    clothingprefix = "";
-                }
+                //else {
+                //    clothingFolder = "";
+                //    llOwnerSay("Trying the main #RLV folder.");
+                //}
             }
             else {
+                // Outfits (theoretically) found: change to one
+
                 string itemname;
                 string prefix;
                 integer total = 0;
+
                 for (n = 0; n < iStop; n++) {
-                            itemname = llList2String(Outfits, n);
+                    itemname = llList2String(Outfits, n);
                     prefix = llGetSubString(itemname,0,0);
-                    if (prefix != "~" && prefix != "*") {
+
+                    llSay(DEBUG_CHANNEL,">itemname = " + itemname);
+                    llSay(DEBUG_CHANNEL,">prefix = " + prefix);
+
+                    // skip hidden files/directories and skip
+                    // Doll Type (Transformation) folders...
+                    //
+                    // Note this skips *Regular too
+
+                    if (!isHiddenItem(itemname) && !isTransformingItem(itemname) && !isGroupItem(itemname)) {
                         total += 1;
-                        newoutfits += itemname;
+                        outfitsList += itemname;
                     }
                 }
+
+                // Pick outfit at random
                 integer i = (integer) llFrand(total);
-                string nextoutfit  = llList2String(newoutfits, i);
-                llDialog(dollID, "You are being dressed in this",[nextoutfit], cd2667);
+                string nextoutfitname = llList2String(outfitsList, i);
+                llSay(DEBUG_CHANNEL,">nextoutfitname = " + nextoutfitname);
+
+                // the dialog not only OKs things - but fires off the dressing process
+                //llDialog(dollID, "You are being dressed in this outfit.",[nextoutfit], cd2667);
+                llSay(cd2667, nextoutfitname);
+                llOwnerSay("You are being dressed in this outfit: " + nextoutfitname);
             }
         }
 
-        if (channel == 2666) {
-            list Outfits = llParseString2List(choice, [","], []); //what are brackets at end? 
-            list newoutfits = [];
+        //----------------------------------------
+        // Channel: 2666
+        //
+        // Choosing a new outfit normally and manually: create a paged dialog with an
+        // alphabetical list of available outfits, and let the user choose one
+        //
+        else if (channel == 2666) {
+            list Outfits = llParseString2List(choice, [","], []); //what are brackets at end?
             integer n;
             integer iStop = llGetListLength(Outfits);
             string itemname;
+            string prefix;
+
+            // Collect names of possible new outfits, removing folders (items)
+            // longer than 23 characters, those that start with "~" (hidden) or
+            // with "*" (outfit folder). Also do not count current outfit name
+
+            outfitsList = [];
             for (n = 0; n < iStop; n++) {
-                        itemname = llList2String(Outfits, n);
-                if (llStringLength(itemname) < 24  && llGetSubString(itemname,0,0) != "~"  && llGetSubString(itemname,0,0) != "*"&& itemname != oldoutfitname) {
-                    newoutfits += itemname;
+                itemname = llList2String(Outfits, n);
+
+                if (llStringLength(itemname) < 24 &&
+                    !isHiddenItem(itemname) &&
+                    !isGroupItem(itemname) &&
+                    !isTransformingItem(itemname) &&
+                    itemname != oldoutfitname) {
+
+                    outfitsList += itemname;
                 }
             }
-//picks out
-            list newoutfits2 = [];
+
+            // Sort: slow bubble sort
+            outfitsList = llListSort(outfitsList,1,TRUE);
+
+            // Now create appropriate menu page from full outfits list
             integer total = 0;
-            for (n = 0; n < 12; n++) {
-                integer t = llGetListLength(newoutfits);
-                if (t > 0) {
-                    integer i = (integer) llFrand(t);
-                    itemname  = llList2String(newoutfits, i);
-                    newoutfits = llDeleteSubList(newoutfits, i, i);
-                    newoutfits2 += itemname;
-                }
+            outfitPage = 0;
+            integer newOutfitCount = llGetListLength(outfitsList);
+
+            list newoutfits2 = outfitsPage(outfitsList);
+            if (newOutfitCount > 12) {
+                newoutfits2 = ["Prev", "Next", "Page " + (string)(outfitPage+1)] + outfitsPage(outfitsList);
             }
-            string msgg = "You may choose any outfit.";
+
+            msgx = "You may choose any outfit.";
+
             if (dresserID == dollID) {
-                msgg =     "See http://communitydolls.com/outfits.htm for information on outfits.";
+                msgx = "See " + outfits_url + " for more information on outfits.";
             }
-            llDialog(dresserID, msgg,newoutfits2, cd2667);
 
+            // Provide a dialog to user to choose new outfit
+            llDialog(dresserID, msgx, newoutfits2, cd2667);
         }
 
-        else if (channel == cd2667  && choice != "OK") {  //the random outfit from 2665 didn't work with the above
-            candresstemp = FALSE;
-            newoutfitname = choice;
-            if (clothingprefix == "") {
-                newoutfit = choice;
-            }
-            else {
-                newoutfit = clothingprefix + "/" + choice;
-            }
-            newoutfitwordend = llStringLength(newoutfit)  - 1;
-            llOwnerSay("@detach:left shoulder=force,detach:right shoulder=force,detach:left hand=force,detach:right hand=force,detach:left foot=force,detach:r upper leg=force,detach:l upper leg=force,detach:spine=force");
-            llOwnerSay("@detach:right foot=force,detach:mouth=force,detach:chin=force,detach:left ear=force,detach:right ear=force,detach:left eyeball=force,detach:right eyeball=force,detach:nose=force,detach:r upper arm=force,detach:r forearm=force,detach:l upper arm=force,detach:l forearm=force,detach:r lower leg=force,detach:l lower leg=force,detach:left pec=force,detach:right pec=force");
-            llOwnerSay("@remoutfit:gloves=force,remoutfit:shoes=force,remoutfit:socks=force,remoutfit:underpants=force,remoutfit:undershirt=force");
-            //why have the following? i guess so hair replaces skull
-            if (llGetSubString(newoutfitname,0,0) == "+") {
-                llOwnerSay("@detach:skull=force");
-                //detach hair too
-            }
-            llOwnerSay("@getattach=2668");
-            if (llGetSubString(oldoutfitname,0,0) == "+" && llGetSubString(newoutfitname,0,0) != "+") {  // only works well assuming in regular
-                llOwnerSay("@attach:~normalself=force");
-            }
+        //----------------------------------------
+        // Channel: 2667
+        //
+        // Handle a newly chosen outfit: outfit path relative to clothingFolder is the choice.
+        // The original random code could also return a "OK" as choice, and this was filtered for.
+        //
+        else if (channel == cd2667) {
+            if (choice == "OK") {
+                ; // No outfits: only OK is available
+            } else if (choice == "Next") {
+                outfitPage++;
+                llDialog(dresserID, msgx, ["Prev", "Next", "Page " + (string)(outfitPage+1)] + outfitsPage(outfitsList), cd2667);
+            } else if (choice == "Prev") {
+                outfitPage--;
+                llDialog(dresserID, msgx, ["Prev", "Next", "Page " + (string)(outfitPage+1)] + outfitsPage(outfitsList), cd2667);
+            } else if (choice == "Page " + (string)(outfitPage+1)) {
+                ; // Do nothing
+            } else {
+                candresstemp = FALSE;
+                newoutfitname = choice;
 
-        }
-        else if (channel == 2668) {
-            //llOwnerSay("@attachall:" + newoutfit + "=force");
-            llOwnerSay("@attachalloverorreplace:" + newoutfit + "=force");
- 
-            oldattachmentpoints = choice;
-                    llSleep(8.0);
-            llOwnerSay("@attachallover:" + newoutfit + "=force"); // puts on things that wouldn't go on over locked items explains second put-on
-            if (oldoutfit) {
-                if (oldoutfit != newoutfit) {
-                    llOwnerSay("@detach:" + oldoutfit + "=force");
+                if (clothingFolder == "") {
+                    newoutfit = choice;
                 }
-            }
-            oldoutfit = newoutfit;
-            oldoutfitname = newoutfitname;
-            candresstimeout = 2;
-            llOwnerSay("@getoutfit=2669");
-        }
-        else if (channel == 2669) {
-            string oldclothespoints = choice;
-            if (llGetSubString(oldclothespoints, 1, 1) == "1") {
-                llOwnerSay("@getpath:jacket=9011");
-            }
-            if (llGetSubString(oldclothespoints, 2, 2) == "1") {
-                llOwnerSay("@getpath:pants=9012");
-            }
-            if (llGetSubString(oldclothespoints, 3, 3) == "1") {
-                llOwnerSay("@getpath:shirt=9013");
-            }
-            if (llGetSubString(oldclothespoints, 5, 5) == "1") {
-                llOwnerSay("@getpath:skirt=9014");
-            }
-            if (llGetSubString(oldattachmentpoints, 1, 1) == "1") {
-                llOwnerSay("@getpath:chest=9001");
-            }
+                else {
+                    newoutfit = clothingFolder + "/" + choice;
+                }
 
-            if (llGetSubString(oldattachmentpoints, 10, 10) == "1") {
-                llOwnerSay("@getpath:pelvis=9002");
-            }
-            if (llGetSubString(oldattachmentpoints, 22, 22) == "1") {
-                llOwnerSay("@getpath:right hip=9003");
-            }
-            if (llGetSubString(oldattachmentpoints, 25, 25) == "1") {
-                llOwnerSay("@getpath:left hip=9005");
-            }
-            if (llGetSubString(oldattachmentpoints, 28, 28) == "1") {
-                llOwnerSay("@getpath:stomach=9007");
-            }
-        }
-        else if ((channel > 9000) && (llStringLength(choice) > 1) && (newoutfit != llGetSubString(choice, 0, newoutfitwordend))) {
-            if (channel == 9001) {
-                llOwnerSay("@detach:chest=force");
-            }
-            else if (channel == 9002) {
-                llOwnerSay("@detach:pelvis=force");
-            }
-            else if (channel == 9003) {
-                llOwnerSay("@detach:right hip=force");
-            }
-            else if (channel == 9005) {
-                llOwnerSay("@detach:left hip=force");
-            }
-            else if (channel == 9007) {
-                llOwnerSay("@detach:stomach=force");
-            }
-            else if (channel == 9011) {
-                llOwnerSay("@remoutfit:jacket=force");
-            }
-            else if (channel == 9012) {
-                llOwnerSay("@remoutfit:pants=force");
-            }
-            else if (channel == 9013) {
-                llOwnerSay("@remoutfit:shirt=force");
-            }
-            else if (channel == 9014) {
-                llOwnerSay("@remoutfit:skirt=force");
+                newoutfitwordend = llStringLength(newoutfit)  - 1;
+                llSay(DEBUG_CHANNEL,">>>newoutfit = " + newoutfit);
+
+                //llOwnerSay("newoutfit is: " + newoutfit);
+                //llOwnerSay("newoutfitname is: " + newoutfitname);
+                //llOwnerSay("choice is: " + choice);
+                //llOwnerSay("clothingFolder is: " + clothingFolder);
+
+                // Four steps to dressing avi:
+                //
+                // 1) Replace every item that can be replaced (using the
+                //    command @attachalloverorreplace)
+                // 2) Add every item that didnt get put on the first time
+                //    (using the @attachallover command)
+                // 3) Remove the remaining portions of the old outfit
+                // 4) Add items that are required for all outfits
+                //    (using the @attach command)
+
+                llOwnerSay("New outfit chosen: " + newoutfit);
+
+                // Original outfit was a complete avi reset....
+                // Restore our usual look from the ~normalself
+                // folder...
+
+                if ( isPlusItem(oldoutfitname) &&
+                    !isPlusItem(newoutfitname)) {  // only works well assuming in regular
+
+                    llOwnerSay("@attach:~normalself=force");
+                    llSleep(4.0);
+
+                    // FIXME: Make sure
+                    //llOwnerSay("@attach:~normalself=force");
+                    //llSleep(4.0);
+                }
+
+                // First, replace current outfit with new (or replace)
+                llOwnerSay("@attach:" + newoutfit + "=force");
+                llSleep(4.0);
+
+                // FIXME: Try to make sure
+                //llOwnerSay("@attach:" + newoutfit + "=force");
+                //llSleep(4.0);
+
+                // Add items that cant replace what is already there
+                llOwnerSay("@attachallover:" + newoutfit + "=force");
+                llSleep(4.0);
+
+                // FIXME: Make sure
+                //llOwnerSay("@attachallover:" + newoutfit + "=force");
+                //llSleep(4.0);
+
+                // Remove rest of old outfit
+                if (oldoutfit) {
+                    if (oldoutfit != newoutfit) {
+                        llOwnerSay("@detachall:" + oldoutfit + "=force");
+                        llSleep(4.0);
+
+                        // FIXME: Make sure
+                        //llOwnerSay("@detachall:" + oldoutfit + "=force");
+                        //llSleep(4.0);
+                    }
+                }
+
+                if (!isPlusItem(newoutfit)) {
+                    // Attach items that should be present when we are nude...
+                    // This could include things like (actual) tattoos, piercings,
+                    // enhanced feet or lipstick or mascara, rings, etc.
+                    //
+                    // This is necessary because many items may be considered part
+                    // of the "nude" outfit, but will still be removed during an
+                    // automated removal process.  There is nothing to determine
+                    // which are desired and which are not.
+                    //
+                    // Perhaps these things should be individually locked.
+                    //
+                    // This could also be expanded to create a Nude dress selection -
+                    // such as for use when going to nude beaches and such.
+                    llOwnerSay("@attach:~nude=force");
+                    llSleep(4.0);
+
+                    // FIXME: Make sure
+                    //llOwnerSay("@attach:~nude=force");
+                    //llSleep(4.0);
+                }
+
+                oldoutfit = newoutfit;
+                oldoutfitname = newoutfitname;
+                candresstimeout = 2;
+
+                llOwnerSay("Change to new outfit " + newoutfitname + " complete.");
             }
         }
 
+        //----------------------------------------
+        // Channel: 2668
+        //
+        // Check to see if all items are fully worn; if not, try again
+        //
+        else if (channel == cd2668) {
+            llSay(DEBUG_CHANNEL,">> @getinvworn:" + xfolder);
+            if ((llGetSubString(choice,2,2)) != "3") {
+                llSleep(4.0);
+                llOwnerSay("@attach:" + xfolder + "=force");
+                llOwnerSay("@getinvworn:" + xfolder + "=2668");
+            }
+        }
+
+        //----------------------------------------
+        // Channel: 2669
+        //
+        // Check to see if all items are fully removed; if not, try again
+        //
+        else if (channel == cd2669) {
+            llSay(DEBUG_CHANNEL,">> @getinvworn:" + xfolder);
+            if ((llGetSubString(choice,2,2)) != "1") {
+                llSleep(4.0);
+                llOwnerSay("@detach:" + xfolder + "=force");
+                llOwnerSay("@getinvworn:" + xfolder + "=2669");
+            }
+        }
     }
 }
 
