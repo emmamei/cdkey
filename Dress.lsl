@@ -31,6 +31,8 @@ string newoutfitname;
 
 integer channel_dialog;
 integer cd2667;
+integer cd2668;
+integer cd2669;
 
 // These are the paths of the outfits relative to #RLV
 string newoutfit;
@@ -44,9 +46,9 @@ string msgx; // could be "msg" but that is used elsewhere?
 string clothingFolder; // This contains clothing to be worn
 string outfitsFolder;  // This contains folders of clothing to be worn
 
-integer listen_id_2667;
 integer listen_id_outfitrequest;
 integer listen_id_2555;
+integer listen_id_2667;
 integer listen_id_2668;
 integer listen_id_2669;
 
@@ -119,7 +121,7 @@ integer isHiddenItem (string f) {
     string prefix = llGetSubString(f,0,0);
 
     // Items that start with "~" are hidden
-    return (prefix == "~");
+    return (prefix == "~" || prefix == ">");
 }
 
 integer isTransformingItem (string f) {
@@ -342,6 +344,7 @@ default {
             integer n;
             string itemname;
 
+            llSay(DEBUG_CHANNEL,">on channle 2555");
             outfitsFolder = "";
 
             // Looks for a folder that may contain outfits - folders such
@@ -411,6 +414,8 @@ default {
                 string prefix;
                 integer total = 0;
 
+                outfitsList = [];
+
                 for (n = 0; n < iStop; n++) {
                     itemname = llList2String(Outfits, n);
                     prefix = llGetSubString(itemname,0,0);
@@ -435,8 +440,8 @@ default {
                 llSay(DEBUG_CHANNEL,">nextoutfitname = " + nextoutfitname);
 
                 // the dialog not only OKs things - but fires off the dressing process
-                //llDialog(dollID, "You are being dressed in this outfit.",[nextoutfit], cd2667);
-                llSay(cd2667, nextoutfitname);
+                llDialog(dollID, "You are being dressed in this outfit.",[nextoutfit], cd2667);
+                //llSay(cd2667, nextoutfitname);
                 llOwnerSay("You are being dressed in this outfit: " + nextoutfitname);
             }
         }
@@ -502,6 +507,7 @@ default {
         // The original random code could also return a "OK" as choice, and this was filtered for.
         //
         else if (channel == cd2667) {
+            llSay(DEBUG_CHANNEL,">>> channel 2667: " + choice);
             if (choice == "OK") {
                 ; // No outfits: only OK is available
             } else if (choice == "Next") {
