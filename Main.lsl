@@ -873,18 +873,13 @@ restoreFromCollapse() {
     // Remove this eventually
     llRequestPermissions(dollID, PERMISSION_TAKE_CONTROLS|PERMISSION_TRIGGER_ANIMATION);
 
-    // Lock controls
-    llTakeControls( CONTROL_FWD        |
-                    CONTROL_BACK       |
-                    CONTROL_LEFT       |
-                    CONTROL_RIGHT      |
-                    CONTROL_ROT_LEFT   |
-                    CONTROL_ROT_RIGHT  |
-                    CONTROL_UP         |
-                    CONTROL_DOWN       |
-                    CONTROL_LBUTTON    |
-                    CONTROL_ML_LBUTTON |
-                    0, TRUE, FALSE);
+    // Unlock controls
+    //llReleaseControls( );
+    llTakeControls( CONTROL_FWD   |
+                    CONTROL_BACK  |
+                    CONTROL_LEFT  |
+                    CONTROL_RIGHT |
+                    0, TRUE, TRUE);
 
     aoChange("on");
 }
