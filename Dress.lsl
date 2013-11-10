@@ -28,11 +28,13 @@ key setupID;
 
 integer listen_id_outfitrequest3;
 string newoutfitname;
+string oldoutfitpath;
 
 integer channel_dialog;
 integer cd2667;
 integer cd2668;
 integer cd2669;
+integer cd2670;
 
 // These are the paths of the outfits relative to #RLV
 string newoutfit;
@@ -51,6 +53,7 @@ integer listen_id_2555;
 integer listen_id_2667;
 integer listen_id_2668;
 integer listen_id_2669;
+integer listen_id_2670;
 
 integer outfitPage;
 
@@ -145,6 +148,7 @@ removeListeners () {
     llListenRemove(listen_id_outfitrequest);
     llListenRemove(listen_id_2668);
     llListenRemove(listen_id_2669);
+    llListenRemove(listen_id_2670);
 //    llListenRemove(listen_id_9001);
 //    llListenRemove(listen_id_9002);
 //    llListenRemove(listen_id_9003);
@@ -162,6 +166,7 @@ addListeners (string dollID) {
     listen_id_outfitrequest  = llListen(2666, "", dollID, "");
     listen_id_2668           = llListen(2668, "", dollID, "");
     listen_id_2669           = llListen(2669, "", dollID, "");
+    listen_id_2670           = llListen(2670, "", dollID, "");
 
 //    listen_id_9001           = llListen(9001, "", dollID, "");
 //    listen_id_9002           = llListen(9002, "", dollID, "");
@@ -279,13 +284,20 @@ default {
         else if (num == 2)  {  //probably should have been in transformer
 
             string oldclothingprefix = clothingFolder;
+            llSay(DEBUG_CHANNEL,">on link #2");
+            llSay(DEBUG_CHANNEL,">>oldclothingprefix = " + oldclothingprefix);
+            llSay(DEBUG_CHANNEL,">>outfitsFolder = " + outfitsFolder);
+            llSay(DEBUG_CHANNEL,">>clothingFolder = " + clothingFolder);
+            llSay(DEBUG_CHANNEL,">>choice = " + choice);
 
-            if (outfitsFolder) {
+            if (outfitsFolder != "") {
                 clothingFolder = outfitsFolder + "/" +  choice;
             }
             else {
                 clothingFolder = choice;
             }
+
+            llSay(DEBUG_CHANNEL,">>clothingFolder = " + clothingFolder);
 
             if (clothingFolder != oldclothingprefix) {
 
@@ -328,6 +340,7 @@ default {
         // 2667:
         // 2668:
         // 2669:
+        // 2670:
         // 9000+
 
         //----------------------------------------
@@ -393,6 +406,7 @@ default {
 
                 // No files found; leave the prefix alone and don't change
                 llOwnerSay("There are no outfits in your " + clothingFolder + " folder.");
+                llSay(DEBUG_CHANNEL,"There are no outfits in your " + clothingFolder + " folder.");
 
                 // Didnt find any outfits in the standard folder, try the
                 // "extended" folder containing (we hope) outfits....
@@ -440,7 +454,7 @@ default {
                 llSay(DEBUG_CHANNEL,">nextoutfitname = " + nextoutfitname);
 
                 // the dialog not only OKs things - but fires off the dressing process
-                llDialog(dollID, "You are being dressed in this outfit.",[nextoutfit], cd2667);
+                llDialog(dollID, "You are being dressed in this outfit.",[nextoutfitname], cd2667);
                 //llSay(cd2667, nextoutfitname);
                 llOwnerSay("You are being dressed in this outfit: " + nextoutfitname);
             }
@@ -549,6 +563,28 @@ default {
 
                 llOwnerSay("New outfit chosen: " + newoutfit);
 
+                // Get the path of whatever outfit is being worn, and save
+                // it for later to be able to remove an outfit - not just
+                // one we know about
+                //
+                // Go through a litany of clothing, in order to find the path
+                // to the clothing worn. If there is no clothing on these points
+                // for this outift, then this does not work.
+                //
+                // This also assumes that a complete outfit is being used,
+                // and that all parts are contained in a single folder.
+                // This also assumes that the new outfit does not also
+                // exist in this folder - such as one outfit using certain
+                // items and another outfit using other items - such as
+                // one outfit using a miniskirt and one a long dress.
+                //
+                llOwnerSay("@getpathnew:pants=2670");
+                llOwnerSay("@getpathnew:shirt=2670");
+                llOwnerSay("@getpathnew:jacket=2670");
+                llOwnerSay("@getpathnew:skirt=2670");
+                llOwnerSay("@getpathnew:underpants=2670");
+                llOwnerSay("@getpathnew:undershirt=2670");
+
                 // Original outfit was a complete avi reset....
                 // Restore our usual look from the ~normalself
                 // folder...
@@ -580,8 +616,8 @@ default {
                 //llOwnerSay("@attachallover:" + newoutfit + "=force");
                 //llSleep(4.0);
 
-                // Remove rest of old outfit
-                if (oldoutfit) {
+                // Remove rest of old outfit (using memorized former outfit)
+                if (oldoutfit != "") {
                     if (oldoutfit != newoutfit) {
                         llOwnerSay("@detachall:" + oldoutfit + "=force");
                         llSleep(4.0);
@@ -590,6 +626,13 @@ default {
                         //llOwnerSay("@detachall:" + oldoutfit + "=force");
                         //llSleep(4.0);
                     }
+                }
+
+                // Remove rest of old outfit (using path from attachments)
+                if (oldoutfitpath != "") {
+                    llOwnerSay("@detachall:" + oldoutfitpath + "=force");
+                    llSleep(4.0);
+                    oldoutfitpath = "";
                 }
 
                 if (!isPlusItem(newoutfit)) {
@@ -647,6 +690,21 @@ default {
                 llSleep(4.0);
                 llOwnerSay("@detach:" + xfolder + "=force");
                 llOwnerSay("@getinvworn:" + xfolder + "=2669");
+            }
+        }
+
+        //----------------------------------------
+        // Channel: 2670
+        //
+        // Grab a path for an outfit, and save it for later
+        //
+        else if (channel == cd2670) {
+            llSay(DEBUG_CHANNEL,"<< choice = " + choice);
+
+            // When do we override the old outfit path - and with what?
+            if (oldoutfitpath == "") {
+                oldoutfitpath = choice;
+                llSay(DEBUG_CHANNEL,"<< oldoutfitpath = " + oldoutfitpath);
             }
         }
     }
