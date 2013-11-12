@@ -1010,13 +1010,18 @@ default {
 
             // Key being attached to Spine?
             if (attachPoint == ATTACH_BACK) { //the proper location for the key
+
                 // if Doll is one of the developers... dont lock:
-                // prevents inadvertent lock-in
+                // prevents inadvertent lock-in during development
+
                 if (dollID != DevOne) {
                     if (RLVok) {
-                        if (!detachable) {
-                            llOwnerSay("@detach=n");  //locks key
-                        }
+
+                        // We lock the key on here - but in the menu system, it appears
+                        // unlocked and detachable: this is because it can be detached 
+                        // via the menu. To make the key truly "undetachable", we get
+                        // rid of the menu item to unlock it
+                        llOwnerSay("@detach=n");  //locks key
                     }
                 } else {
                     llSay(PUBLIC_CHANNEL, "Developer Key not locked.");
