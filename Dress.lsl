@@ -594,37 +594,21 @@ default {
 
                     llOwnerSay("@attach:~normalself=force");
                     llSleep(4.0);
-
-                    // FIXME: Make sure
-                    //llOwnerSay("@attach:~normalself=force");
-                    //llSleep(4.0);
                 }
 
                 // First, replace current outfit with new (or replace)
                 llOwnerSay("@attach:" + newoutfit + "=force");
                 llSleep(4.0);
 
-                // FIXME: Try to make sure
-                //llOwnerSay("@attach:" + newoutfit + "=force");
-                //llSleep(4.0);
-
                 // Add items that cant replace what is already there
                 llOwnerSay("@attachallover:" + newoutfit + "=force");
                 llSleep(4.0);
-
-                // FIXME: Make sure
-                //llOwnerSay("@attachallover:" + newoutfit + "=force");
-                //llSleep(4.0);
 
                 // Remove rest of old outfit (using memorized former outfit)
                 if (oldoutfit != "") {
                     if (oldoutfit != newoutfit) {
                         llOwnerSay("@detachall:" + oldoutfit + "=force");
                         llSleep(4.0);
-
-                        // FIXME: Make sure
-                        //llOwnerSay("@detachall:" + oldoutfit + "=force");
-                        //llSleep(4.0);
                     }
                 }
 
@@ -651,10 +635,6 @@ default {
                     // such as for use when going to nude beaches and such.
                     llOwnerSay("@attach:~nude=force");
                     llSleep(4.0);
-
-                    // FIXME: Make sure
-                    //llOwnerSay("@attach:~nude=force");
-                    //llSleep(4.0);
                 }
 
                 oldoutfit = newoutfit;
