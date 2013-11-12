@@ -1013,7 +1013,11 @@ default {
                 // if Doll is one of the developers... dont lock:
                 // prevents inadvertent lock-in
                 if (dollID != DevOne) {
-                    if (RLVok) llOwnerSay("@detach=n");  //locks key
+                    if (RLVok) {
+                        if (!detachable) {
+                            llOwnerSay("@detach=n");  //locks key
+                        }
+                    }
                 } else {
                     llSay(PUBLIC_CHANNEL, "Developer Key not locked.");
                 }
@@ -1689,7 +1693,7 @@ default {
                        restoreFromCollapse();
 
                        llOwnerSay("Emergency self-winder has been triggered by Doll.");
-                       llOwnerSay("Emergency function requires recharging and will be available again in " + (string)emergencyLimitHours + " hours.");
+                       llOwnerSay("Emergency circuitry requires recharging and will be available again in " + (string)emergencyLimitHours + " hours.");
                    } else {
                        llOwnerSay("No emergency exists - emergency self-winder deactivated.");
                    }
