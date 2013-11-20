@@ -100,11 +100,16 @@ sendStateName() {
     
 
 reloadTypeNames() {
-    types = [];
+    string typeName;
+
     integer n = llGetInventoryNumber(INVENTORY_NOTECARD);
+    types = [];
 
     while(n) {
-        types += llGetInventoryName(INVENTORY_NOTECARD, --n);
+        typeName = llGetInventoryName(INVENTORY_NOTECARD, --n);
+        if (typeName != "Preferences") {
+            types += typeName;
+        }
     }
 }
 
