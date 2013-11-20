@@ -342,7 +342,7 @@ becomeController(key ToucherID) {
 
 // doOptionsMenu() for all of the options related to the Key
 //
-//    * can dress
+//    * can outfit
 //    * can carry
 //    * detachable
 //    * warnings
@@ -361,10 +361,10 @@ doOptionsMenu(key ToucherID) {
     toucherID = ToucherID;
 
     if (!canDress) {
-        pluslist += "can dress";
+        pluslist += "can outfit";
     }
     else {
-        pluslist += "no dressing";
+        pluslist += "no outfitting";
     }
 
     if (!canCarry) {
@@ -1484,12 +1484,12 @@ default {
                     canCarry = FALSE;
                 }
 
-                else if (choice == "can dress") {
-                    llOwnerSay("Other people can now dress you.");
+                else if (choice == "can outfit") {
+                    llOwnerSay("Other people can now outfit you.");
                     canDress = TRUE;
                 }
-                else if (choice == "no dressing") {
-                    llOwnerSay("Other people can no longer dress you.");
+                else if (choice == "no outfitting") {
+                    llOwnerSay("Other people can no longer outfit you.");
                     canDress = FALSE;
                 }
 
