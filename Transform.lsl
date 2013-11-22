@@ -218,7 +218,7 @@ default {
             // Doll must remain in a type for a period of time
             if (minMinutes > 0) {
                 // Since the output goes to the listener "handle" of 9999, it is discarded silently
-                llDialog(id,"The Doll " + dollname + " cannot be transformed right now. The Doll was recently transformed. Dolly can be transformed in " + minMinutes + " minutes.",["OK"], 9999);
+                llDialog(id,"The Doll " + dollname + " cannot be transformed right now. The Doll was recently transformed. Dolly can be transformed in " + (string)minMinutes + " minutes.",["OK"], 9999);
             }
             else {
                 string msg = "These change the personality of " + dollname + " This Doll is currently a " + stateName + " Doll. What type of doll do you want the Doll to be?";
