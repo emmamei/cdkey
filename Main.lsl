@@ -201,6 +201,13 @@ processConfiguration(string data) {
                 if (name == "doll type") {
                     dollType = (string) value;
                 }
+                else if (name == "wind time") {
+                    windamount = (integer) value * ticks;
+                }
+                else if (name == "max time") {
+                    deflimit = (integer) value * ticks;
+                    keylimit = deflimit;
+                }
                 else if (name == "helpless dolly") {
                     helpless = (integer) value;
                     if (RLVok) {
@@ -1692,6 +1699,10 @@ default {
                     (llGetTime() - lastEmergencyTime > emergencyLimitTime)) {
 
                    if (collapsed) {
+                       if (hasController) {
+                           llInstantMessage(MistressID, dollName + " has activated the emergency winder.");
+                       }
+
                        windKey();
                        lastEmergencyTime = llGetTime();
 
