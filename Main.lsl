@@ -4,11 +4,8 @@
 //
 // DATE: 22 March 2013
 
-string optiondate = "14 October 2013";
+string optiondate = "26 November 2013";
 
-// TODO: Fix "anyone can auto-TP" - limit users to controller, controlled, and "Saviors"... or to selected users
-// TODO: Make '*Regular' part of normal operations
-//
 // Note that some doll types are special....
 //    - regular: used for standard Dolls, including non-transformable
 //    - slut: can be stripped (like Pleasure Dolls)
@@ -318,14 +315,6 @@ setDefaults () {
     //restoreFromCollapse();
     aoChange("on");
 
-    if (RLVok) {
-        llOwnerSay("@unsit=y");                 // Allow stand
-        llOwnerSay("@sit=y");                   // Allow sit
-        llOwnerSay("@fly=y");                   // Allow fly
-        llOwnerSay("@tplure=y,tplm=y,tploc=y"); // Allow TP
-        llOwnerSay("@accepttp=rem");            // Disallow auto TP
-    }
-
     //llRequestPermissions(dollID, PERMISSION_TRIGGER_ANIMATION);
     llSetLinkAlpha(LINK_SET, 1, ALL_SIDES);
 }
@@ -552,9 +541,6 @@ doWind(string name) {
     llRegionSayTo(toucherID, PUBLIC_CHANNEL, "Doll is now at " + (string) (llRound(timeLeftOnKey * 1000.0 / keylimit)/10.0) + "% of capacity.");
 
     if (timeLeftOnKey == keylimit) {
-        // Note this might not be mathematically accurate - but
-        // based on minutes and English grammar, it is correct...
-        // The wind may have been less than a minute...
         llSay(PUBLIC_CHANNEL, dollName + " has been fully wound by " + name + ".");
     }
     // Is this too spammy?
@@ -609,9 +595,13 @@ handlemenuchoices(string choice, string name, key ToucherID) {
     }
     else if (choice == "Wind") {
         if (collapsed) {  //uncollapsing
+            llSay(DEBUG_CHANNEL, "+> Restore from collapse");
             restoreFromCollapse();
+            llSay(DEBUG_CHANNEL, "+> Done restore from collapse");
         }
+        llSay(DEBUG_CHANNEL, "+> Wind");
         doWind(name);
+        llSay(DEBUG_CHANNEL, "+> Done Wind");
         // FIXME: mainMessage is wrong at this point...
         llDialog(mainToucherID, mainMessage, mainMenu, channel_dialog);
     }
@@ -682,7 +672,7 @@ handlemenuchoices(string choice, string name, key ToucherID) {
             }
 
             llOwnerSay("You are now no longer away from keyboard (AFK). Movements are unrestricted and winding down proceeds at normal rate.");
-            llOwnerSay("You have " + (string) ((integer) ((timeLeftOnKey + 5) / ticks)) + " minutes of life remaning.");
+            llOwnerSay("You have " + (string)(timeLeftOnKey / ticks) + " minutes of life remaning.");
         }
         else {
             // set sign to "afk"
@@ -697,7 +687,7 @@ handlemenuchoices(string choice, string name, key ToucherID) {
             afk = TRUE;
             tok = tokFactor;
             llOwnerSay("You are now away from keyboard (AFK). Wind down time has slowed by a factor of " + (string)(tokFactor) + " and movements are restricted.");
-            llOwnerSay("You have " + (string) ((integer) ((timeLeftOnKey + 5) / ticks)) + " minutes of life remaning.");
+            llOwnerSay("You have " + (string)(timeLeftOnKey / ticks) + " minutes of life remaning.");
         }
     }
 }
@@ -765,16 +755,6 @@ initializeStart ()  {
     dollName = llGetDisplayName(dollID);
     llSay(PUBLIC_CHANNEL, dollName + " is now a dolly - anyone may play with their Key.");
 
-    //{
-    //string o = llKey2Name(owner);
-    //integer x = llSubStringIndex(o," ") + 1;
-
-    //cmdPrefix = llToLower(llGetSubString(o,0,0)) +
-    //            llToLower(llGetSubString(o,x,x));
-
-    //llOwnerSay("Prefix: " + cmdPrefix);
-    //}
-
     // This hack makes Key work on no-script land
     llTakeControls( CONTROL_FWD   |
                     CONTROL_BACK  |
@@ -837,12 +817,19 @@ configureStart () {
         if (!canFly) {
             llOwnerSay("@fly=n");
         }
+
+        if (!canStand) {
+            llOwnerSay("@stand=n");
+        }
+
+        if (!canSit) {
+            llOwnerSay("@sit=n");
+        }
     }
 
     {
         integer freemem = llGetFreeMemory();
         llOwnerSay(((string)(freemem/1024.0)) + " kbytes of free memory available for allocation.");
-        //llOwnerSay((string)((llGetUsedMemory())/1024.0) + " kbytes of memory currently used.");
     }
 
     // Intro hypno text - long
@@ -880,8 +867,7 @@ restoreFromCollapse() {
     // Remove this eventually
     llRequestPermissions(dollID, PERMISSION_TAKE_CONTROLS|PERMISSION_TRIGGER_ANIMATION);
 
-    // Unlock controls
-    //llReleaseControls( );
+    // This hack makes Key work on no-script land
     llTakeControls( CONTROL_FWD   |
                     CONTROL_BACK  |
                     CONTROL_LEFT  |
@@ -895,7 +881,7 @@ collapse(string s) {
     visible = TRUE;
 
     if (hasController) {
-        llInstantMessage(MistressID, dollName + " has collapsed at this location: " + wwGetSLUrl());
+        llMessageLinked(LINK_THIS, 11, (dollName + " has collapsed at this location: " + wwGetSLUrl()), MistressID);
     }
 
     // Set this so an "animated" but disabled dolly can be identified
@@ -945,6 +931,7 @@ collapse(string s) {
                     CONTROL_ML_LBUTTON |
                     0, TRUE, FALSE);
 
+    // No emotes for dolly
     if (RLVok) llOwnerSay("@rediremote:999=add");
 
     // Rotation: all stop
@@ -990,7 +977,6 @@ default {
 
         initConfiguration();
         listenerStart();
-        configureStart();
 
     }
 
@@ -1003,9 +989,13 @@ default {
         // Test to see if RLV is active
         llOwnerSay("@versionnew=" + (string)channel_chat);
         llSetTimerEvent(30);  // Access timer in 30s...
+        llSleep(35);
 
-        //llRequestPermissions(llGetOwner(), PERMISSION_TRIGGER_ANIMATION);
-        //llResetScript();
+        do
+            llSleep(5);
+        while (RLVck);
+
+        configureStart();
     }
 
     //----------------------------------------
@@ -1048,7 +1038,7 @@ default {
                 windDown = FALSE;
             }
 
-            llOwnerSay("You have " + (string) ((integer) (timeLeftOnKey + 5) / ticks) + " minutes of life remaning.");
+            llOwnerSay("You have " + (string)(timeLeftOnKey / ticks) + " minutes of life remaning.");
 
             // When rezzed.... if currently being carried, drop..
             if (carried) {
@@ -1119,7 +1109,7 @@ default {
         string timeleft;
 
         {
-            integer minsleft = (timeLeftOnKey + 5) / ticks;
+            integer minsleft = timeLeftOnKey / ticks;
 
             if (minsleft > 0) {
                 timeleft = "Dolly has " + (string)minsleft + " minutes remaining. ";
@@ -1163,8 +1153,7 @@ default {
                 msg = "You are being carried by " + carriername + ".";
                 menu = ["OK"];
 
-                // Allows user to permit current carrier to take over
-                // and become Mistress
+                // Allows user to permit current carrier to take over and become Mistress
                 if (!hasController) {
                     if (!takeoverAllowed) {
                         menu += "Allow Takeover";
@@ -1282,7 +1271,6 @@ default {
         mainMessage = timeleft + " " + msg;
         mainMenu = menu;
 
-        //llDialog(ToucherID, timeleft + " " + msg,  menu, channel_dialog);
         llDialog(mainToucherID, mainMessage, mainMenu, channel_dialog);
     }
 
@@ -1300,7 +1288,7 @@ default {
         // Checking for RLV?
         if (RLVck) {
            if (hasController && !RLVok) {
-              llInstantMessage(MistressID, dollName + " has logged in without RLV!");
+              llMessageLinked(LINK_THIS, 11, (dollName + " has logged in without RLV!"), MistressID);
            }
 
            RLVck = FALSE;
@@ -1333,7 +1321,7 @@ default {
                 afk = TRUE;
                 tok = tokFactor;
                 //llOwnerSay("Automatically entering AFK mode. Wind down time has slowed by a factor of " + (string)(tokFactor) + " and movements are restricted.");
-                //llOwnerSay("You have " + (string) ((integer) (timeLeftOnKey + 5) / ticks) + " minutes of life remaning.");
+                //llOwnerSay("You have " + (string)(timeLeftOnKey / ticks) + " minutes of life remaning.");
             }
 
             // wind down only if not collapsed
@@ -1344,9 +1332,6 @@ default {
                 //timex = llGetAndResetTime();
                 // AFK: Away From Keyboard
                 if (afk) {
-                    // timeLeftOnKey = timex / tokFactor;
-                    // Count down using tok (set using tokFactor)
-                    // When countdown is done, time ticks by
                     tok -= 1;
                     if (tok < 1) {
                         timeLeftOnKey -= 1;
@@ -1358,17 +1343,16 @@ default {
                     timeLeftOnKey -= 1;
                 }
 
-                integer minsLeft = (timeLeftOnKey + 5) / ticks;
-                // minsLeft = timeLeftOnKey;
+                integer minLeftOnKey = timeLeftOnKey / ticks;
 
                 if (doWarnings) {
-                    if ((minsLeft == 30  ||
-                         minsLeft == 15  ||
-                         minsLeft == 10  ||
-                         minsLeft ==  5  ||
-                         minsLeft ==  2) && !warned) {
+                    if ((minLeftOnKey == 30  ||
+                         minLeftOnKey == 15  ||
+                         minLeftOnKey == 10  ||
+                         minLeftOnKey ==  5  ||
+                         minLeftOnKey ==  2) && !warned) {
                         // FIXME: This can be seen as a spammy message - especially if there are too many warnings
-                        llSay(PUBLIC_CHANNEL, dollName + " has " + (string) minsLeft + " minutes left before they run down!");
+                        llSay(PUBLIC_CHANNEL, dollName + " has " + (string) minLeftOnKey + " minutes left before they run down!");
                         warned = TRUE; // have warned now: dont repeat same warning
                     }
                     else {
@@ -1700,7 +1684,7 @@ default {
 
                    if (collapsed) {
                        if (hasController) {
-                           llInstantMessage(MistressID, dollName + " has activated the emergency winder.");
+                           llMessageLinked(LINK_THIS, 11, (dollName + " has activated the emergency winder."), MistressID);
                        }
 
                        windKey();
@@ -1720,7 +1704,6 @@ default {
             else if (choice == "xstats") {
                 llOwnerSay("AFK time factor: " + (string)(tokFactor) + "x");
                 llOwnerSay("Wind amount: " + (string)(windamount / ticks) + " minutes.");
-                //llOwnerSay("Command Prefix: " + cmdPrefix);
 
                 {
                     string s;
@@ -1756,6 +1739,14 @@ default {
                     else {
                         llOwnerSay(s + "not fly.");
                     }
+
+                    s = "RLV is ";
+                    if (RLVok) {
+                        llOwnerSay(s + "active.");
+                    }
+                    else {
+                        llOwnerSay(s + "not active.");
+                    }
                 }
 
                 if (!windDown) {
@@ -1764,7 +1755,7 @@ default {
 
             }
             else if (choice == "stat") {
-                integer t1 = (integer) ((timeLeftOnKey + 5) / ticks);
+                integer t1 = timeLeftOnKey / ticks;
                 integer t2 = keylimit / ticks;
                 integer p = t1 * 100 / t2;
 
@@ -1776,7 +1767,7 @@ default {
                 llOwnerSay(s);
             }
             else if (choice == "stats") {
-                llOwnerSay("Time remaining: " + (string)((integer) ((timeLeftOnKey + 5) / ticks)) + " minutes of " +
+                llOwnerSay("Time remaining: " + (string)(timeLeftOnKey / ticks) + " minutes of " +
                             (string)(keylimit / ticks) + " minutes.");
                 if (afk) {
                     llOwnerSay("Key is unwinding at a slowed rate of " + (string)tokFactor + "x.");
@@ -1797,12 +1788,6 @@ default {
                 }
 
                 {
-                    //vector dollposition = llList2Vector(llGetObjectDetails(dollID, [OBJECT_POS]), 0);
-                    //llOwnerSay("Current position: (" +
-                    //           (string)(llRound(dollposition.x)) + ", " +
-                    //           (string)(llRound(dollposition.y)) + ", " +
-                    //           (string)(llRound(dollposition.z)) + ")");
-
                     integer free_memory = llGetFreeMemory();
                     llOwnerSay((string)(free_memory/1024.0) + " kbytes of free memory available for allocation.");
                     integer used_memory = llGetUsedMemory();
