@@ -4,11 +4,7 @@
 //
 // DATE: 22 March 2013
 
-<<<<<<< HEAD
 string optiondate = "6 December 2013";
-=======
-string optiondate = "26 November 2013";
->>>>>>> 4239e337257fac7c6fcf5dc283729bfa51ebdf8a
 
 // Note that some doll types are special....
 //    - regular: used for standard Dolls, including non-transformable
@@ -270,57 +266,6 @@ autoTPAllowed(key userID) {
     }
 }
 
-<<<<<<< HEAD
-=======
-// Note these settings are only set in this program...
-// RLV settings are not set here - but are assumed to be
-// as expected. If they are not...
-setDefaults () {
-                 pose = FALSE; // Not currently in a Doll pose
-            collapsed = FALSE; // Not currently collapsed in heap on floor
-         pleasureDoll = FALSE; // Not a pleasure doll
-           detachable = TRUE;  // Key can be removed
-               autoTP = FALSE; // No (normal) person can automatically transport us
-             helpless = FALSE; // Problem with being stuck on private land -- no way to get off.
-             canDress = TRUE;  // Can be dressed by others
-               canFly = TRUE;  // Dolly can fly
-             canCarry = TRUE;  // Dolly can be carried
-           doWarnings = FALSE; // Warnings: optional
-             windDown = TRUE;  // Key is active: winding down
-                  afk = FALSE; // User is not away from keyboard
-              visible = TRUE;  // Key is visible
-        timeLeftOnKey = windamount; // Time remaining on key
-    lastEmergencyTime = 0;     // Last emergency occured when?
-
-    //isTransformingKey = FALSE;     // This is not a transforming key
-             dollType = "regular"; // Doll is "regular" type
-
-      takeoverAllowed = FALSE; // No one can become controller
-              carried = FALSE; // No one carrying us
-
-// Reset controller
-
-        hasController = FALSE;         // No controller
-           MistressID = MasterBuilder; // Mistress is MasterBuilder
-
-// New options
-
-               canAFK = TRUE;
-               canSit = TRUE;
-             canStand = TRUE;
-
-// Set up RLV and other environments to match
-
-    // Stop all current animations: that means if you
-    // attach the key when dancing - dancing will stop
-    //restoreFromCollapse();
-    aoChange("on");
-
-    //llRequestPermissions(dollID, PERMISSION_TRIGGER_ANIMATION);
-    llSetLinkAlpha(LINK_SET, 1, ALL_SIDES);
-}
-
->>>>>>> 4239e337257fac7c6fcf5dc283729bfa51ebdf8a
 becomeController(key ToucherID) {
     takeoverAllowed = FALSE;
     hasController = TRUE;
@@ -751,14 +696,6 @@ initializeStart ()  {
     // attach the key when dancing - dancing will stop
     //restoreFromCollapse();
     aoChange("on");
-
-    if (RLVok) {
-	llOwnerSay("@unsit=y");                 // Allow stand
-	llOwnerSay("@sit=y");                   // Allow sit
-	llOwnerSay("@fly=y");                   // Allow fly
-	llOwnerSay("@tplure=y,tplm=y,tploc=y"); // Allow TP
-	llOwnerSay("@accepttp=rem");            // Disallow auto TP
-    }
 
     //llRequestPermissions(dollID, PERMISSION_TRIGGER_ANIMATION);
     llSetLinkAlpha(LINK_SET, 1, ALL_SIDES);
