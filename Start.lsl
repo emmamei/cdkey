@@ -20,7 +20,7 @@ default {
     link_message(integer source, integer num, string choice, key id) {
         if (num == 200) { // Triggered from Main.lsl
 
-            llOwnerSay("---- Community Doll Key loaded: Version: 25 March 2013");
+            llOwnerSay("---- Community Doll Key loaded: Version: 26 November 2013");
             llOwnerSay("---- Key: " + llKey2Name(id));
 
             // First minute....
@@ -37,6 +37,8 @@ default {
 
             // Third minute...
             msg("You realize now that other dolls are your sisters - and understand you like no one else.");
+        } else if (num == 11) {
+            llInstantMessage(id, choice);
         }
     }
 }
