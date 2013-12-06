@@ -4,7 +4,7 @@
 //
 // DATE: 22 March 2013
 
-string optiondate = "14 October 2013";
+string optiondate = "6 December 2013";
 
 // TODO: Fix "anyone can auto-TP" - limit users to controller, controlled, and "Saviors"... or to selected users
 // TODO: Make '*Regular' part of normal operations
@@ -37,31 +37,31 @@ integer isTransformingKey = FALSE;
 // including the SetDefaults and the NCPrefs.
 
 integer channel_chat = 75;
-integer visible;
+integer visible = 1;
 string dollName;
-integer permissionsGranted = FALSE;
+integer permissionsGranted;
 integer signOn;
-integer detachable;
+integer detachable = 1;
 integer autoTP;
 integer pleasureDoll;
 integer helpless;
-integer canFly;
+integer canFly = 1;
 integer hasController;
-integer windDown;
+integer windDown = 1;
 integer afk;
 integer warned;
-integer doWarnings = FALSE;
-integer canSit;
-integer canAFK;
-integer canStand;
-integer canCarry = TRUE;
+integer doWarnings;
+integer canSit = 1;
+integer canAFK = 1;
+integer canStand = 1;
+integer canCarry = 1;
 //integer canPose;
 integer ticks = 2;   // ticks per minute
 float lastEmergencyTime;
 integer emergencyLimitHours = 12;
 integer emergencyLimitTime = 43200; // (60 * 60 * emergencyLimitHours) // measured in seconds
-integer RLVok = FALSE;
-integer RLVck = TRUE;
+integer RLVok;
+integer RLVck = 1;
 
 key ncPrefsKey;
 string ncName = "Preferences";
@@ -75,12 +75,13 @@ string collapseAnim = "collapse";
 key MasterBuilder = "42c7aaec-38bc-4b0c-94dd-ae562eb67e6d";   // Christina Halpin
 key  MasterWinder = "64d26535-f390-4dc4-a371-a712b946daf8";   // GreigHighland
 key        DevOne = "c5e11d0a-694f-46cc-864b-e42340890934";   // MayStone
+key        DevTwo = "2fff40f0-ea4a-4b52-abb8-d4bf6b1c98c9";   // Silky Mesmeriser
 
 // Current Controller - or Mistress
-key MistressID;
+key MistressID = MasterBuilder;
 list rescuerList = [ MasterBuilder, MasterWinder ];
 
-integer canDress;
+integer canDress = 1;
 integer takeoverAllowed;
 
 key dollID;
@@ -102,7 +103,7 @@ integer cd5666;
 
 // If the key is a Transforming Key - one that can transform from one
 // type of Doll to another - this tracks the current type of doll.
-string dollType;
+string dollType = "regular";
 
 // these are measured in timer tics - not minutes or seconds
 // assuming a clock interval of 10 seconds -
@@ -115,7 +116,7 @@ integer hackLimit    = 720; // 6 * 60 * ticks;   // 6 hours
 
 integer tok; // time factor
 integer tokFactor = 2; // time factor: for slowdowns: measures ticks
-integer timeLeftOnKey = 60;
+integer timeLeftOnKey = windamount;
 //integer posetime;
 integer pose;
 integer carried;
@@ -186,14 +187,9 @@ processConfiguration(string data) {
                 string name = llGetSubString(data, 0, i - 1);
                 string value = llGetSubString(data, i + 1, -1);
 
-                // Strip whitespace and lowercase
-                list temp = llParseString2List(name, [" "], []);
-                name = llDumpList2String(temp, " ");
-                name = llToLower(name);
-
-                // Strip whitespace from value
-                temp = llParseString2List(value, [" "], []);
-                value = llDumpList2String(temp, " ");
+                // Trim input and lowercase name
+                name = llStringTrim(llToLower(name), STRING_TRIM);
+                value = llStringTrim(value, STRING_TRIM);
 
                 //----------------------------------------
                 // Assign values to program variables
@@ -252,11 +248,10 @@ processConfiguration(string data) {
 
 stopAnimations() {
     list anims = llGetAnimationList(dollID);
-    integer len = llGetListLength(anims);
     integer n;
     string anim;
 
-    for ( n = 0; n < len; n++ ) {
+    for ( n = 0; n < llGetListLength(anims); n++ ) {
         anim = llList2String(anims, n);
 
         llStopAnimation(anim);
@@ -272,62 +267,6 @@ autoTPAllowed(key userID) {
         llOwnerSay("@tplure:"   + (string) userID + "=add");
         llOwnerSay("@accepttp:" + (string) userID + "=add");
     }
-}
-
-// Note these settings are only set in this program...
-// RLV settings are not set here - but are assumed to be
-// as expected. If they are not...
-setDefaults () {
-                 pose = FALSE; // Not currently in a Doll pose
-            collapsed = FALSE; // Not currently collapsed in heap on floor
-         pleasureDoll = FALSE; // Not a pleasure doll
-           detachable = TRUE;  // Key can be removed
-               autoTP = FALSE; // No (normal) person can automatically transport us
-             helpless = FALSE; // Problem with being stuck on private land -- no way to get off.
-             canDress = TRUE;  // Can be dressed by others
-               canFly = TRUE;  // Dolly can fly
-             canCarry = TRUE;  // Dolly can be carried
-           doWarnings = FALSE; // Warnings: optional
-             windDown = TRUE;  // Key is active: winding down
-                  afk = FALSE; // User is not away from keyboard
-              visible = TRUE;  // Key is visible
-        timeLeftOnKey = windamount; // Time remaining on key
-    lastEmergencyTime = 0;     // Last emergency occured when?
-
-    //isTransformingKey = FALSE;     // This is not a transforming key
-             dollType = "regular"; // Doll is "regular" type
-
-      takeoverAllowed = FALSE; // No one can become controller
-              carried = FALSE; // No one carrying us
-
-// Reset controller
-
-        hasController = FALSE;         // No controller
-           MistressID = MasterBuilder; // Mistress is MasterBuilder
-
-// New options
-
-               canAFK = TRUE;
-               canSit = TRUE;
-             canStand = TRUE;
-
-// Set up RLV and other environments to match
-
-    // Stop all current animations: that means if you
-    // attach the key when dancing - dancing will stop
-    //restoreFromCollapse();
-    aoChange("on");
-
-    if (RLVok) {
-        llOwnerSay("@unsit=y");                 // Allow stand
-        llOwnerSay("@sit=y");                   // Allow sit
-        llOwnerSay("@fly=y");                   // Allow fly
-        llOwnerSay("@tplure=y,tplm=y,tploc=y"); // Allow TP
-        llOwnerSay("@accepttp=rem");            // Disallow auto TP
-    }
-
-    //llRequestPermissions(dollID, PERMISSION_TRIGGER_ANIMATION);
-    llSetLinkAlpha(LINK_SET, 1, ALL_SIDES);
 }
 
 becomeController(key ToucherID) {
@@ -752,15 +691,24 @@ uncarry() {
 }
 
 initializeStart ()  {
-    key owner = llGetOwner();
-    llSetText("", <1,1,1>, 2);
+    dollID = llGetOwner();
+    llSetText("", <1,1,1>, 1);
+    
+    // Stop all current animations: that means if you
+    // attach the key when dancing - dancing will stop
+    //restoreFromCollapse();
+    aoChange("on");
 
-    // If "dollID" is not same as owner... then we are starting from
-    // scratch and need to set it - and a few other things
-    if (dollID != owner) {
-        dollID = owner;
-        setDefaults();
+    if (RLVok) {
+	llOwnerSay("@unsit=y");                 // Allow stand
+	llOwnerSay("@sit=y");                   // Allow sit
+	llOwnerSay("@fly=y");                   // Allow fly
+	llOwnerSay("@tplure=y,tplm=y,tploc=y"); // Allow TP
+	llOwnerSay("@accepttp=rem");            // Disallow auto TP
     }
+
+    //llRequestPermissions(dollID, PERMISSION_TRIGGER_ANIMATION);
+    llSetLinkAlpha(LINK_SET, 1, ALL_SIDES);
 
     dollName = llGetDisplayName(dollID);
     llSay(PUBLIC_CHANNEL, dollName + " is now a dolly - anyone may play with their Key.");
@@ -1021,7 +969,7 @@ default {
                 // if Doll is one of the developers... dont lock:
                 // prevents inadvertent lock-in during development
 
-                if (dollID != DevOne) {
+                if (dollID != DevOne && dollID != DevTwo) {
                     if (RLVok) {
 
                         // We lock the key on here - but in the menu system, it appears
