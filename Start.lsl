@@ -11,16 +11,37 @@
 
 float delayTime = 15.0; // in seconds
 
+key ncPrefsKey;
+key ncPrefsLoadedUUID = NULL_KEY;
+string ncName = "Preferences";
+integer ncLine;
+integer replyHandle;
+
 msg (string s) {
     llOwnerSay(s);
     llSleep(delayTime);
+}
+
+initConfiguration() {
+    // Check to see if the file exists and is a notecard
+    if (llGetInventoryType(ncName) == INVENTORY_NOTECARD) {
+
+        // Start reading from first line (which is 0)
+        ncLine = 0;
+        ncPrefsKey = llGetNotecardLine(ncName, ncLine);
+
+    } else {
+
+        // File missing - report for debugging only
+        llOwnerSay("No configuration found (" + ncName + ")");
+    }
 }
 
 default {
     link_message(integer source, integer num, string choice, key id) {
         if (num == 200) { // Triggered from Main.lsl
 
-            llOwnerSay("---- Community Doll Key loaded: Version: 26 November 2013");
+            llOwnerSay("---- Community Doll Key loaded: Version: 6 December 2013");
             llOwnerSay("---- Key: " + llKey2Name(id));
 
             // First minute....
@@ -40,5 +61,44 @@ default {
         } else if (num == 11) {
             llInstantMessage(id, choice);
         }
+    }
+    
+    state_entry() {
+        initConfiguration();
+    }
+    
+    dataserver(key query_id, string data) {
+        if (query_id == ncPrefsKey) {
+            if (data == EOF) ncPrefsLoadedUUID = llGetInventoryKey(ncName);
+            if (data != "" && llGetSubString(data, 0, 0) != "#") llMessageLinked(LINK_SET, 101, data, NULL_KEY);
+            ncPrefsKey = llGetNotecardLine(ncName, ++ncLine);
+        }
+    }
+    
+    changed(integer change)
+    {
+        if (change & CHANGED_INVENTORY) {
+            if (llGetInventoryKey(ncName) != ncPrefsLoadedUUID) {
+                // Get a unique number
+                integer ncd = -1 * (integer)("0x" + llGetSubString((string)llGetKey(),-7,-1));
+                integer channel = ncd - 5467;
+                replyHandle = llListen(channel, "", "", "");
+                
+                llSetTimerEvent(60);
+                llDialog(llGetOwner(), "Detected a change in your Preferences notecard, would you like to load the new settings?\n\n" +
+                  "WARNING: All current data will be lost!", [ "Reload Config", "Keep Settings" ], channel);
+            }
+        }
+    }
+    
+    listen(integer channel, string name, key id, string message)
+    {
+        if (message == "Reload Config") {
+            llResetOtherScript("Main");
+        }
+    }
+    
+    timer() {
+        llListenRemove(replyHandle);
     }
 }

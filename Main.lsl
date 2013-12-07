@@ -4,7 +4,10 @@
 //
 // DATE: 22 March 2013
 
-string optiondate = "6 December 2013";
+string optiondate = "7 December 2013";
+
+string ZWSP = "​"; // This is not an empty string it's a Zero Width Space Character
+                  // used for a safe parameter seperator in messages.
 
 // Note that some doll types are special....
 //    - regular: used for standard Dolls, including non-transformable
@@ -28,10 +31,12 @@ string optiondate = "6 December 2013";
 // and triggers a setting of the following variable,
 // making this a transforming key:
 //
-integer isTransformingKey = FALSE;
+integer isTransformingKey = 0;
 //
 // All other settings of this variable have been removed,
 // including the SetDefaults and the NCPrefs.
+
+integer configured;
 
 integer channel_chat = 75;
 integer visible = 1;
@@ -58,12 +63,22 @@ float lastEmergencyTime;
 integer emergencyLimitHours = 12;
 integer emergencyLimitTime = 43200; // (60 * 60 * emergencyLimitHours) // measured in seconds
 integer RLVok;
-integer RLVck = 1;
+integer RLVck;
 
 key ncPrefsKey;
 string ncName = "Preferences";
 integer ncLine;
 //string cmdPrefix;
+
+key lmHomeDataRequest;
+key lmHomeLoadedUUID = NULL_KEY;
+string lmHomeName = "Home";
+vector lmHomeGlobal;
+
+key msgTarget;
+key stringRequest;
+
+string rlvAPIversion;
 
 // This variable is used to set the collapse animation - and documentation
 string collapseAnim = "collapse";
@@ -77,6 +92,7 @@ key        DevTwo = "2fff40f0-ea4a-4b52-abb8-d4bf6b1c98c9";   // Silky Mesmerise
 // Current Controller - or Mistress
 key MistressID = MasterBuilder;
 list rescuerList = [ MasterBuilder, MasterWinder ];
+list developerList = [ DevOne, DevTwo ];
 
 integer canDress = 1;
 integer takeoverAllowed;
@@ -94,13 +110,13 @@ string mainMessage;
 string httpstart = "http://communitydolls.com/";
 integer channel_dialog;
 //integer cd3666;
-integer cd6012;
+//integer cd6012;
 integer cd4667;
 integer cd5666;
 
 // If the key is a Transforming Key - one that can transform from one
 // type of Doll to another - this tracks the current type of doll.
-string dollType = "regular";
+string dollType = "Regular";
 
 // these are measured in timer tics - not minutes or seconds
 // assuming a clock interval of 10 seconds -
@@ -136,7 +152,9 @@ integer controlLock;
 // FUNCTIONS
 //========================================
 
-
+//----------------------------------------
+// Utility Functions
+//----------------------------------------
 string wwGetSLUrl() {
     string globe = "http://maps.secondlife.com/secondlife";
     string region = llGetRegionName();
@@ -148,99 +166,102 @@ string wwGetSLUrl() {
     return (globe + "/" + llEscapeURL(region) +"/" + posx + "/" + posy + "/" + posz);
 }
 
-initConfiguration() {
-    // Check to see if the file exists and is a notecard
-    if (llGetInventoryType(ncName) == INVENTORY_NOTECARD) {
-
-        // Start reading from first line (which is 0)
-        ncLine = 0;
-        ncPrefsKey = llGetNotecardLine(ncName, ncLine);
-
-    } else {
-
-        // File missing - report for debugging only
-        llOwnerSay("No configuration found (" + ncName + ")");
+string FormatFloat(float val, integer dp)
+{
+    string out = "ERROR";
+    if (dp == 0) {
+        out = (string)llRound(val);
+    } else if (dp > 0 && dp <= 6) {
+        val = llRound(val * llPow(10.0, dp)) / llPow(10.0, dp);
+        out = llGetSubString((string)val, 0, -7 + dp);
     }
+    return out;
 }
 
+memReport() {
+    integer free_memory = llGetFreeMemory();
+    integer used_memory = llGetUsedMemory();
+    
+    llOwnerSay("Main: Using " + FormatFloat(used_memory/1024.0, 2) + " of " + FormatFloat((used_memory + free_memory)/1024.0, 2) + " kB script memory, " + 
+               FormatFloat(free_memory/1024.0, 2) + " kBytes free");
+}
+
+//---------------------------------------
+// Configuration Functions
+//---------------------------------------
 // This code assumes a human-generated config file
 processConfiguration(string data) {
 
-    // Return if done
+    // Notecard done
     if (data == EOF) {
-        llOwnerSay("Key configuration completed.");
+        configured = 1;
+        listenerStart();
+        llSetTimerEvent(60 / ticks);
         return;
     }
+    integer i = llSubStringIndex(data, "=");
 
-    if(data != "") {
-        // Ignore comments
-        if(llSubStringIndex(data, "#") != 0) {
-            integer i = llSubStringIndex(data, "=");
+    // Configuration lines contain equals sign
+    if (i != -1) {
 
-            // Configuration lines contain equals sign
-            if (i != -1) {
+        // Get parts of configuration: name and value
+        string name = llGetSubString(data, 0, i - 1);
+        string value = llGetSubString(data, i + 1, -1);
 
-                // Get parts of configuration: name and value
-                string name = llGetSubString(data, 0, i - 1);
-                string value = llGetSubString(data, i + 1, -1);
+        // Trim input and lowercase name
+        name = llStringTrim(llToLower(name), STRING_TRIM);
+        value = llStringTrim(value, STRING_TRIM);
 
-                // Trim input and lowercase name
-                name = llStringTrim(llToLower(name), STRING_TRIM);
-                value = llStringTrim(value, STRING_TRIM);
+        //----------------------------------------
+        // Assign values to program variables
 
-                //----------------------------------------
-                // Assign values to program variables
-
-                if (name == "doll type") {
-                    dollType = (string) value;
-                }
-                else if (name == "wind time") {
-                    windamount = (integer) value * ticks;
-                }
-                else if (name == "max time") {
-                    deflimit = (integer) value * ticks;
-                    keylimit = deflimit;
-                }
-                else if (name == "helpless dolly") {
-                    helpless = (integer) value;
-                    if (RLVok) {
-                        if (helpless) {
-                            llOwnerSay("@tplm=n,tploc=n");
-                        } else {
-                            llOwnerSay("@tplm=y,tploc=y");
-                        }
-                    }
-                }
-                else if (name == "controller") {
-                    MistressID = (key) value;
-                    hasController = TRUE;
-                    takeoverAllowed = FALSE; // there is a Mistress; takeover is irrelevant
-                    mistressQuery = llRequestAgentData(MistressID, DATA_NAME);
-                }
-                else if (name == "auto tp") {
-                    autoTP = (integer) value;
-                    if (autoTP) {
-                        llOwnerSay("@accepttp=add");            // Allow auto TP
-                    } else {
-                        llOwnerSay("@accepttp=rem");            // Disallow auto TP
-                    }
-                }
-                else if (name == "pleasure doll") {
-                    pleasureDoll = (integer) value;
-                }
-                else if (name == "detachable") {
-                    detachable = (integer) value;
-                }
-                else {
-                    // Unknown configuration
-                    llSay(DEBUG_CHANNEL,"Unknown configuration value: " + name + " on line " + (string)ncLine);
+        if (name == "doll type") {
+            // Ensure proper capitalization for matching or display
+            dollType = llGetSubString(llToUpper(value), 0, 0) + llGetSubString(llToLower(value), 1, -1);
+        }
+        else if (name == "wind time") {
+            windamount = (integer)value * ticks;
+        }
+        else if (name == "max time") {
+            deflimit = (integer)value * ticks;
+            keylimit = deflimit;
+        }
+        else if (name == "helpless dolly") {
+            helpless = (integer)value;
+            if (RLVok) {
+                if (helpless) {
+                    llOwnerSay("@tplm=n,tploc=n");
+                } else {
+                    llOwnerSay("@tplm=y,tploc=y");
                 }
             }
         }
+        else if (name == "controller") {
+            MistressID = (key)value;
+            hasController = 1;
+            llMessageLinked(LINK_SET, 100, "MistressID", MistressID);
+            takeoverAllowed = 0; // there is a Mistress; takeover is irrelevant
+            mistressQuery = llRequestAgentData(MistressID, DATA_NAME);
+        }
+        else if (name == "auto tp") {
+            autoTP = (integer)value;
+            if (autoTP) {
+                llOwnerSay("@accepttp=add");            // Allow auto TP
+            } else {
+                llOwnerSay("@accepttp=rem");            // Disallow auto TP
+            }
+        }
+        else if (name == "pleasure doll") {
+            pleasureDoll = (integer)value;
+        }
+        else if (name == "detachable") {
+            detachable = (integer)value;
+        }
+        else {
+            // Unknown configuration
+            llSay(DEBUG_CHANNEL,"Unknown configuration value: " + name + " on line " + (string)ncLine);
+        }
     }
-
-    // Read the next configuration line
-    ncPrefsKey = llGetNotecardLine(ncName, ++ncLine);
 }
 
 stopAnimations() {
@@ -258,17 +279,9 @@ stopAnimations() {
     llSetColor( <0,1,0>, ALL_SIDES );
 }
 
-// Only useful if @tplure and @accepttp are off and denied by default...
-autoTPAllowed(key userID) {
-    if (RLVok) {
-        llOwnerSay("@tplure:"   + (string) userID + "=add");
-        llOwnerSay("@accepttp:" + (string) userID + "=add");
-    }
-}
-
 becomeController(key ToucherID) {
-    takeoverAllowed = FALSE;
-    hasController = TRUE;
+    takeoverAllowed = 0;
+    hasController = 1;
 
     MistressID = ToucherID;
 
@@ -276,7 +289,7 @@ becomeController(key ToucherID) {
     mistressname = llKey2Name(ToucherID);
 
     llOwnerSay("Your carrier, " + mistressname + ", has become your controller.");
-    //llSay(PUBLIC_CHANNEL, mistressname + " has become controller of the doll " + dollName + ".");
+    //llSay(0, mistressname + " has become controller of the doll " + dollName + ".");
 
     // Note that the response goes to 9999 - a nonsense channel
     string msg = "You are now controller of " + dollName + ". See " + httpstart + "controller.htm for more information.";
@@ -298,162 +311,59 @@ becomeController(key ToucherID) {
 //    * remove sign
 
 doOptionsMenu(key ToucherID) {
+    integer controller;
+    if (isMistress(ToucherID)) controller = 1;
+    
     string msg = "See " + httpstart + "keychoices.htm for explanation. (" + optiondate + " version)";
     list pluslist;
+    
+    if (controller) {
+        msg = "See " + httpstart + "controller.htm. Choose what you want to happen. (" + optiondate + " version)";
+        pluslist += "drop control";
+    }
+    
+    if (!canDress) pluslist += "can outfit";
+    else pluslist += "no outfitting";
 
-    toucherID = ToucherID;
-
-    if (!canDress) {
-        pluslist += "can outfit";
-    }
-    else {
-        pluslist += "no outfitting";
-    }
-
-    if (!canCarry) {
-        pluslist += "can carry";
-    }
-    else {
-        pluslist += "no carry";
-    }
+    if (!canCarry) pluslist += "can carry";
+    else pluslist += "no carry";
 
     // One-way option
-    if (detachable) {
-        pluslist += "no detaching";
-    }
+    if (detachable) pluslist += "no detaching";
+    else if (controller) pluslist += "detachable";
 
-    if (doWarnings) {
-        pluslist += "no warnings";
-    }
-    else {
-        pluslist += "warnings";
-    }
+    if (doWarnings) pluslist += "no warnings";
+    else pluslist += "warnings";
 
-    if (canSit) {
-        pluslist += "no sitting";
-    }
-    else {
-        pluslist += "can sit";
-    }
+    if (canSit) pluslist += "no sitting";
+    else pluslist += "can sit";
 
     // One-way option
-    if (!autoTP) {
-        pluslist += "auto tp";
-    }
+    if (!autoTP) pluslist += "auto tp";
+    else if (controller) pluslist += "no auto tp";
 
     // One-way option
-    if (!helpless) {
-        pluslist += "no self tp";
-    }
+    if (!helpless) pluslist += "no self tp";
+    else if (controller) pluslist += "self tp";
 
     // One-way option
-    if (canFly) {
-        pluslist += "no flying";
-    }
+    if (canFly) pluslist += "no flying";
+    else if (controller) pluslist += "can fly";
 
-    if (pleasureDoll) {
-        pluslist += "no pleasure";
-    }
-    else {
-        pluslist += "pleasure doll";
-    }
+    if (pleasureDoll) pluslist += "no pleasure";
+    else pluslist += "pleasure doll";
 
     if (!hasController) {
-        if (takeoverAllowed) {
-            pluslist += "no takeover";
-        }
-        else {
-            pluslist += "allow takeover";
-        }
+        if (takeoverAllowed) pluslist += "no takeover";
+        else pluslist += "allow takeover";
     }
 
     if (isTransformingKey) {
-        if (signOn) {
-            pluslist += "turn off sign";
-        }
-        else {
-            pluslist += "turn on sign";
-        }
+        if (signOn) pluslist += "turn off sign";
+        else pluslist += "turn on sign";
     }
 
     llDialog(toucherID, msg, pluslist, cd5666);
-}
-
-// This is the Menu that the Controller sess
-doControlMenu(key ToucherID) {
-    list privatemenu = ["drop control"];
-
-    if (detachable) {
-        privatemenu += "undetachable";
-    }
-    else {
-        privatemenu += "detachable";
-    }
-
-    if (autoTP) {
-        privatemenu += "no auto tp";
-    }
-    else {
-        privatemenu += "auto tp";
-    }
-
-    if (helpless) {
-        privatemenu += "can travel";
-    }
-    else {
-        privatemenu += "no self trav";
-    }
-
-    if (pleasureDoll) {
-        privatemenu += "no plsr doll";
-    }
-    else {
-        privatemenu += "make plsrdll";
-    }
-
-    if (canFly) {
-        privatemenu += "no flying";
-    }
-    else {
-        privatemenu += "can fly";
-    }
-
-    if (canStand) {
-        privatemenu += "no standing";
-    }
-    else {
-        privatemenu += "can stand";
-    }
-
-    if (canSit) {
-        privatemenu += "no sitting";
-    }
-    else {
-        privatemenu += "can sit";
-    }
-
-    if (canCarry) {
-        privatemenu += "no carry";
-    }
-    else {
-        privatemenu += "can carry";
-    }
-
-    if (canAFK) {
-        privatemenu += "no AFK";
-    }
-    else {
-        privatemenu += "can AFK";
-    }
-
-    if (doWarnings) {
-        privatemenu += "no warnings";
-    }
-    else {
-        privatemenu += "warnings";
-    }
-
-    llDialog(ToucherID, "See " + httpstart + "controller.htm. Choose what you want to happen.",  privatemenu, cd6012);
 }
 
 integer windKey() {
@@ -483,12 +393,12 @@ doWind(string name) {
     integer winding = windKey() / ticks;
 
     if (winding > 0) {
-        llRegionSayTo(toucherID, PUBLIC_CHANNEL, "You have given " + dollName + " " + (string) (winding) + " more minutes of life.");
+        llRegionSayTo(toucherID, 0, "You have given " + dollName + " " + (string)winding + " more minutes of life.");
     }
-    llRegionSayTo(toucherID, PUBLIC_CHANNEL, "Doll is now at " + (string) (llRound(timeLeftOnKey * 1000.0 / keylimit)/10.0) + "% of capacity.");
+    llRegionSayTo(toucherID, 0, "Doll is now at " + FormatFloat(((float)timeLeftOnKey / (float)keylimit) / 100.0, 2) + "% of capacity.");
 
     if (timeLeftOnKey == keylimit) {
-        llSay(PUBLIC_CHANNEL, dollName + " has been fully wound by " + name + ".");
+        llSay(0, dollName + " has been fully wound by " + name + ".");
     }
     // Is this too spammy?
     llOwnerSay("Have you remembered to thank " + name + " for winding you?");
@@ -496,7 +406,6 @@ doWind(string name) {
 
 integer isMistress(key id) {
     list mastersList = [ MistressID, MasterBuilder, MasterWinder ];
-
     return (llListFindList(mastersList, [ id ]) != -1);
 }
 
@@ -505,23 +414,13 @@ handlemenuchoices(string choice, string name, key ToucherID) {
 
     if (choice == "Carry") {
         // Doll has been picked up...
-        carried = TRUE;
+        carried = 1;
         carriername = name;
         carrierID = ToucherID;
 
-        if (RLVok) {
-            // No TP allowed for Doll
-            llOwnerSay("@tplm=n,tploc=n,accepttp=rem,tplure=n");
+        llMessageLinked(LINK_SET, 305, "carried", carrierID);
 
-            // Allow carrier to TP: but Doll can deny
-            llOwnerSay("@tplure:" + (string) carrierID  + "=add");
-
-            // Allow rescuers to AutoTP
-            autoTPAllowed(MistressID);
-            autoTPAllowed(DevOne);
-        }
-
-        llSay(PUBLIC_CHANNEL, dollName + " has been picked up by " + carriername);
+        llSay(0, dollName + " has been picked up by " + carriername);
     }
     else if (choice == "Place Down") {
         uncarry();
@@ -534,11 +433,11 @@ handlemenuchoices(string choice, string name, key ToucherID) {
     }
     else if (choice == "Unpose") {
         //doUnpose(ToucherID);
-        pose = FALSE;
+        pose = 0;
         aoChange("on");
     }
     else if (choice == "Allow Takeover") {
-        takeoverAllowed = TRUE;
+        takeoverAllowed = 1;
     }
     else if (choice == "Wind") {
         if (collapsed) {  //uncollapsing
@@ -566,10 +465,7 @@ handlemenuchoices(string choice, string name, key ToucherID) {
     else if (choice == "Be Controller") {
         becomeController(ToucherID);
     }
-    else if (choice == "Use Control") {
-        doControlMenu(ToucherID);
-    }
-    else if (choice == "Options") {
+    else if (choice == "Use Control" || choice == "Options") {
         doOptionsMenu(ToucherID);
     }
     else if (choice == "Detach") {
@@ -577,81 +473,69 @@ handlemenuchoices(string choice, string name, key ToucherID) {
         if (RLVok) llOwnerSay("@clear,detachme=force");
     }
     else if (choice == "Invisible") {
-        visible = FALSE;
+        visible = 0;
         llSetLinkAlpha(LINK_SET, 0, ALL_SIDES);
         llOwnerSay("Your key fades from view...");
         //doFade(LINK_SET, 1.0, 0.0, ALL_SIDES, 0.1);
     }
     else if (choice == "Visible") {
-        visible = TRUE;
+        visible = 1;
         llSetLinkAlpha(LINK_SET, 1, ALL_SIDES);
         llOwnerSay("Your key appears magically.");
         //doFade(LINK_SET, 0.0, 1.0, ALL_SIDES, 0.1);
     }
+    else if (choice == "Reload Config") {
+        llResetScript();
+    }
+    else if (choice == "TP Home") {
+        if (ToucherID != dollID) llRegionSayTo(ToucherID, 0, "Teleporting dolly " + dollName + " to their home landmark.");
+        rlvTeleportDoll(lmHomeGlobal);
+    }
     else if (choice == "Toggle AFK") {
         if (afk) {
-            if (dollType == "regular") {
-                llSetText("", <1,1,1>, 2);
-            }
-            else {
-                // Change sign to represent Doll Type
-                llSetText(dollType, <1,1,1>, 2);
-            }
+            if (dollType == "Regular" || !signOn) llSetText("", <1,1,1>, 1);
+            else llSetText(dollType, <1,1,1>, 1);
 
-            afk = FALSE;
-
-            if (RLVok) {
-                if (canFly) {
-                    llOwnerSay("@fly=y"); // restore flying capability
-                }
-
-                if (! helpless) {
-                    llOwnerSay("@tplm=y,tploc=y"); // restore travel capabilities
-                }
-
-                if (autoTP) {
-                    llOwnerSay("@accepttp=add"); // restore autoTP
-                } else {
-                    llOwnerSay("@accepttp=rem"); // remove autoTP
-                }
-
-                llOwnerSay("@temprun=y,alwaysrun=y,sendchat=y,tplure=y,sittp=y,standtp=y,unsit=y,sit=y");
-            }
-
-            llOwnerSay("You are now no longer away from keyboard (AFK). Movements are unrestricted and winding down proceeds at normal rate.");
-            llOwnerSay("You have " + (string)(timeLeftOnKey / ticks) + " minutes of life remaning.");
+            afk = 0;
+            llMessageLinked(LINK_SET, 305, "unsetAFK" + ZWSP + (string)(timeLeftOnKey / ticks), NULL_KEY);
         }
         else {
-            // set sign to "afk"
-            llSetText("AFK", <1,1,1>, 2);
-
-            // AFK turns everything off
-            if (RLVok) {
-                llOwnerSay("@temprun=n,alwaysrun=n,sendchat=n,tplure=n,sittp=n,standtp=n,unsit=n,sit=n");
-                llOwnerSay("@fly=n,tplm=n,tploc=n,accepttp=rem");
-            }
-
-            afk = TRUE;
+            afk = 1;
             tok = tokFactor;
-            llOwnerSay("You are now away from keyboard (AFK). Wind down time has slowed by a factor of " + (string)(tokFactor) + " and movements are restricted.");
-            llOwnerSay("You have " + (string)(timeLeftOnKey / ticks) + " minutes of life remaning.");
+            
+            llMessageLinked(LINK_SET, 305, "setAFK" + ZWSP + (string)(tokFactor) + ZWSP + (string)(timeLeftOnKey / ticks), NULL_KEY);
         }
+    }
+}
+
+rlvTeleportDoll(vector global) {
+    string locx = (string)llFloor(global.x);
+    string locy = (string)llFloor(global.y);
+    string locz = (string)llFloor(global.z);
+    
+    llOwnerSay("Dolly will now teleport home.");
+    
+    if (RLVok) {
+        llOwnerSay("@tpto:" + locx + "/" + locy + "/" + locz + "=force");
     }
 }
 
 aoChange(string choice) {
     integer g_iAOChannel = -782690;
     integer g_iInterfaceChannel = -12587429;
+    integer LockMeisterChannel = -8888;
 
     if (choice == "off" || choice == "stop") {
         string AO_OFF = "ZHAO_STANDOFF";
         llWhisper(g_iInterfaceChannel, "CollarComand|499|" + AO_OFF);
+        llWhisper(LockMeisterChannel, (string)dollID + "bootoff");
         llWhisper(g_iAOChannel, AO_OFF);
         llMessageLinked(LINK_SET, 0, "ZHAO_AOON", NULL_KEY);
     }
     else {
         string AO_ON = "ZHAO_STANDON";
         llWhisper(g_iInterfaceChannel, "CollarComand|499|" + AO_ON);
+        llWhisper(LockMeisterChannel, (string)dollID + "booton");
         llWhisper(g_iAOChannel, AO_ON);
         llMessageLinked(LINK_SET, 0, "ZHAO_AOON", NULL_KEY);
     }
@@ -662,7 +546,7 @@ uncarry() {
     if (!carried)
         return;
 
-    carried = FALSE;
+    carried = 0;
 
     if (RLVok) {
         llOwnerSay("@accepttp:" + (string) carrierID + "=rem");
@@ -684,14 +568,11 @@ uncarry() {
         }
     }
 
-    llSay(PUBLIC_CHANNEL, dollName + " was being carried by " + carriername + " and has been set down.");
+    llSay(0, dollName + " was being carried by " + carriername + " and has been set down.");
     carrierID = NULL_KEY;
 }
 
 initializeStart ()  {
-    dollID = llGetOwner();
-    llSetText("", <1,1,1>, 1);
-    
     // Stop all current animations: that means if you
     // attach the key when dancing - dancing will stop
     //restoreFromCollapse();
@@ -701,14 +582,19 @@ initializeStart ()  {
     llSetLinkAlpha(LINK_SET, 1, ALL_SIDES);
 
     dollName = llGetDisplayName(dollID);
-    llSay(PUBLIC_CHANNEL, dollName + " is now a dolly - anyone may play with their Key.");
+    llSay(0, dollName + " is now a dolly - anyone may play with their Key.");
 
     // This hack makes Key work on no-script land
     llTakeControls( CONTROL_FWD   |
                     CONTROL_BACK  |
                     CONTROL_LEFT  |
                     CONTROL_RIGHT |
-                    0, TRUE, TRUE);
+                    0, 1, 1);
+                    
+    // Check for home landmark
+    if (llGetInventoryType(lmHomeName) == INVENTORY_LANDMARK) {
+        lmHomeDataRequest = llRequestInventoryData(lmHomeName);
+    }
 }
 
 listenerStart () {
@@ -719,7 +605,6 @@ listenerStart () {
         llListenRemove(listen_id_mainmenu);
         llListenRemove(listen_id_stripmenu);
         llListenRemove(listen_id_optionmenu);
-        llListenRemove(listen_id_controllermenu);
         llListenRemove(listen_id_commands);
 
         // channel_dialog = Main key menu
@@ -729,59 +614,35 @@ listenerStart () {
         //   channel_chat = Chat commands
 
         channel_dialog = ncd;
-        cd6012 = channel_dialog - 6012;
         cd4667 = channel_dialog - 4667;
         cd5666 = channel_dialog - 5666;
 
         // Create Listeners
         listen_id_mainmenu       = llListen(channel_dialog, "", "", "");
-        listen_id_controllermenu = llListen(cd6012,         "", "", "");
         listen_id_stripmenu      = llListen(cd4667,         "", "", "");
         listen_id_optionmenu     = llListen(cd5666,         "", "", "");
         listen_id_commands       = llListen(channel_chat,   "", llGetOwner(), "");
-
     }
 }
 
-configureStart () {
-    //if (RLVok) llOwnerSay("@acceptpermission=add,accepttp=rem");
-    if (RLVok) llOwnerSay("@accepttp=rem");
+initFinal() {
+    llOwnerSay("You have " + (string)(timeLeftOnKey / ticks) + " minutes of life remaning.");
 
-    aoChange("on");
-
-    if (!canDress) {
-        llOwnerSay("Other people cannot dress you.");
+    // When rezzed.... if currently being carried, drop..
+    if (carried) {
+        uncarry();
     }
 
-    if (RLVok) {
-        if (autoTP) {
-            llOwnerSay("@accepttp=add");
-        }
-
-        if (helpless) {
-            llOwnerSay("@tplm=n,tploc=n");
-        }
-
-        if (!canFly) {
-            llOwnerSay("@fly=n");
-        }
-
-        if (!canStand) {
-            llOwnerSay("@stand=n");
-        }
-
-        if (!canSit) {
-            llOwnerSay("@sit=n");
-        }
+    // When rezzed.... if collapsed... no escape!
+    if (collapsed) {
+        collapse("start");
     }
 
-    {
-        integer freemem = llGetFreeMemory();
-        llOwnerSay(((string)(freemem/1024.0)) + " kbytes of free memory available for allocation.");
-    }
-
-    // Intro hypno text - long
-    //llMessageLinked(LINK_THIS, 200, "start", dollID);
+    // Start clock ticks
+    llSetTimerEvent(60 / ticks);
+    
+    // This is our finial init step report memory
+    memReport();
 }
 
 //----------------------------------------
@@ -792,25 +653,14 @@ configureStart () {
 restoreFromCollapse() {
     // Rotate key: around Z access at rate .3 and gain 1
     llTargetOmega(<0,0,1>, .3, 1);
-    llSetText("", <1,1,1>, 2);
+    llSetText("", <1,1,1>, 1);
 
-    if (RLVok) {
-        // Clear restrictions
-        if (canFly) {
-            llOwnerSay("@fly=y");
-        }
-
-        if (! helpless) {
-            llOwnerSay("@tplm=y,tploc=y");
-        }
-
-        llOwnerSay("@accepttp=rem,temprun=y,alwaysrun=y,sendchat=y,tplure=y,sittp=y,standtp=y,unsit=y,sit=y,shownames=y,showhovertextall=y,rediremote:999=rem");
-    }
+    llMessageLinked(LINK_SET, 305, "restore", NULL_KEY);
 
     // Clear animation
     newState = "nothing";
-    collapsed = FALSE;
-    controlLock = FALSE;
+    collapsed = 0;
+    controlLock = 0;
 
     // Remove this eventually
     llRequestPermissions(dollID, PERMISSION_TAKE_CONTROLS|PERMISSION_TRIGGER_ANIMATION);
@@ -820,48 +670,30 @@ restoreFromCollapse() {
                     CONTROL_BACK  |
                     CONTROL_LEFT  |
                     CONTROL_RIGHT |
-                    0, TRUE, TRUE);
+                    0, 1, 1);
 
     aoChange("on");
 }
 
 collapse(string s) {
-    visible = TRUE;
+    visible = 1;
+    
+    aoChange("off");
 
     if (hasController) {
         llMessageLinked(LINK_THIS, 11, (dollName + " has collapsed at this location: " + wwGetSLUrl()), MistressID);
     }
 
     // Set this so an "animated" but disabled dolly can be identified
-    llSetText("Dolly needs winding up!", <1,1,1>, 2);
+    llSetText("Disabled Dolly!", <1,1,1>, 1);
 
-    // Turn everything off: Dolly is down
-    if (RLVok) {
-        llOwnerSay("@fly=n,temprun=n,alwaysrun=n,sendchat=n,tplm=n,tploc=n,sittp=n,standtp=n,accepttp=rem," +
-            "unsit=n,sit=n,shownames=n,showhovertextall=n");
-
-        // Only the carrier and the General Dolly Rescuers can
-        // AutoTP someone who is collapsed...
-        //
-        llOwnerSay("@accepttp=rem,tplure=n");
-
-        autoTPAllowed(MistressID);
-        autoTPAllowed(MasterBuilder);
-        autoTPAllowed(MasterWinder);
-        autoTPAllowed(DevOne);
-
-        if (carried) {
-            autoTPAllowed(carrierID);
-        }
-
-        llOwnerSay("@unsit=force");
-    }
+    llMessageLinked(LINK_SET, 305, "collapse", NULL_KEY);
 
     newAnimation = collapseAnim;
     newState = "collapsed";
-    pose = FALSE;
-    collapsed = TRUE;
-    controlLock = TRUE;
+    pose = 0;
+    collapsed = 1;
+    controlLock = 1;
 
     // Remove this eventually
     llRequestPermissions(dollID, PERMISSION_TAKE_CONTROLS|PERMISSION_TRIGGER_ANIMATION);
@@ -877,7 +709,7 @@ collapse(string s) {
                     CONTROL_DOWN       |
                     CONTROL_LBUTTON    |
                     CONTROL_ML_LBUTTON |
-                    0, TRUE, FALSE);
+                    0, 1, 0);
 
     // No emotes for dolly
     if (RLVok) llOwnerSay("@rediremote:999=add");
@@ -903,29 +735,28 @@ default {
     // This should set up generic defaults
     // not specific to owner
     state_entry() {
+        dollID = llGetOwner();
+        
+        llSetText("", <1,1,1>, 1);
 
-        //----------------------------------------
-        // FIXME: Much of the following is included in initializeStart
-        key owner = llGetOwner();
-
-        dollID = owner;
-        //setDefaults();
-
+        // If Transform script present reset to ensure registration
+        if (llGetInventoryType("Transform") == INVENTORY_SCRIPT) llResetOtherScript("Transform");
+    
         // Rotate self: around Z access at rate .3 and gain 1
         llTargetOmega(<0,0,1>, .3, 1);
 
         // set controls so we work in no-script land
         // FIXME: this could be a "set and forget" permission request for the entire script
-        controlLock = FALSE;
-        llRequestPermissions(dollID, PERMISSION_TAKE_CONTROLS);
+        controlLock = 0;
+        llRequestPermissions(dollID, PERMISSION_TAKE_CONTROLS|PERMISSION_TRIGGER_ANIMATION);
 
         //----------------------------------------
         initializeStart();
         //----------------------------------------
 
-        initConfiguration();
-        listenerStart();
-
+        llResetOtherScript("RLV");
+        llSleep(0.5);
+        llResetOtherScript("Start");
     }
 
     //----------------------------------------
@@ -934,74 +765,15 @@ default {
     // This takes place when a user logs back in....
 
     on_rez(integer iParam) {  //when key is put on, or when logging back on
-        // Test to see if RLV is active
-        llOwnerSay("@versionnew=" + (string)channel_chat);
-        llSetTimerEvent(30);  // Access timer in 30s...
-        llSleep(35);
-
-        do
-            llSleep(5);
-        while (RLVck);
-
-        configureStart();
+        // Reset RLV script
+        llResetOtherScript("RLV");
     }
 
     //----------------------------------------
     // ATTACH
     //----------------------------------------
     attach(key id) {
-        if (id) { // valid key
-            integer attachPoint = llGetAttached();
-
-            // Key being attached to Spine?
-            if (attachPoint == ATTACH_BACK) { //the proper location for the key
-
-                // if Doll is one of the developers... dont lock:
-                // prevents inadvertent lock-in during development
-
-                if (dollID != DevOne && dollID != DevTwo) {
-                    if (RLVok) {
-
-                        // We lock the key on here - but in the menu system, it appears
-                        // unlocked and detachable: this is because it can be detached 
-                        // via the menu. To make the key truly "undetachable", we get
-                        // rid of the menu item to unlock it
-                        llOwnerSay("@detach=n");  //locks key
-                    }
-                } else {
-                    llSay(PUBLIC_CHANNEL, "Developer Key not locked.");
-                }
-                windDown = TRUE;
-            }
-
-            // Key attached elsewhere...
-            else {
-                // Key can be removed...
-                if (RLVok) llOwnerSay("@detach=y");
-
-                // Words are erroneous: attaches anyway
-                llOwnerSay("Your key stubbornly refuses to attach itself, and you " +
-                           "belatedly realize that it must be attached to your spine.");
-                //llOwnerSay("Attach Point: " + (string) llGetAttached());
-                windDown = FALSE;
-            }
-
-            llOwnerSay("You have " + (string)(timeLeftOnKey / ticks) + " minutes of life remaning.");
-
-            // When rezzed.... if currently being carried, drop..
-            if (carried) {
-                uncarry();
-            }
-
-            // When rezzed.... if collapsed... no escape!
-            if (collapsed) {
-                collapse("start");
-            }
-
-            // Start clock ticks
-            llSetTimerEvent(60 / ticks);
-
-        } else { // NULL_KEY = detach
+        if (id == NULL_KEY) { // NULL_KEY = detach
             llOwnerSay("The key is wrenched from your back, and you double over at the " +
                        "unexpected pain as the tendrils are ripped out. You feel an emptiness, " +
                        "as if some beautiful presence has been removed.");
@@ -1012,12 +784,14 @@ default {
     // DATASERVER
     //----------------------------------------
     dataserver(key query_id, string data) {
-
-        if (query_id == ncPrefsKey) {
-            processConfiguration(data);
-        } else if (query_id == mistressQuery) {
+        if (query_id == mistressQuery) {
             mistressname = data;
             llOwnerSay("Your mistress is " + mistressname);
+        } else if (query_id == lmHomeDataRequest) {
+            if ((vector)data != ZERO_VECTOR) {
+                lmHomeGlobal = llGetRegionCorner() + (vector)data;
+                lmHomeLoadedUUID = llGetInventoryKey(lmHomeName);
+            }
         }
     }
 
@@ -1025,10 +799,15 @@ default {
     // CHANGED
     //----------------------------------------
     changed(integer change) {
-
         if (change & CHANGED_INVENTORY)  {
             // Update Dress script if inventory changes
-            llResetOtherScript("Dress");
+            // Why? This is the keys inventory not the avatars
+            //llResetOtherScript("Dress");
+            
+            if (llGetInventoryKey(lmHomeName) != lmHomeLoadedUUID) {
+                lmHomeDataRequest = llRequestInventoryData(lmHomeName);
+                lmHomeLoadedUUID = llGetInventoryKey(lmHomeName);
+            }
 
             // Reset configuration if inventory changes... but...
             // Do we want to allow updating info -- on the fly -- through
@@ -1124,7 +903,7 @@ default {
                 }
 
                 // Is doll strippable?
-                if ((pleasureDoll > 0 || dollType == "slut") && RLVok) {
+                if ((pleasureDoll || dollType == "Slut") && RLVok) {
                     menu += "Strip";
                 }
             }
@@ -1170,6 +949,10 @@ default {
                 }
                 else {
                     menu += "Visible";
+                }
+                
+                if (lmHomeLoadedUUID != NULL_KEY) {
+                   menu += "TP Home";
                 }
 
                 if (isTransformingKey) {
@@ -1233,15 +1016,6 @@ default {
         //    4. Wind down
         //    5. How far away is carrier? ("follow")
 
-        // Checking for RLV?
-        if (RLVck) {
-           if (hasController && !RLVok) {
-              llMessageLinked(LINK_THIS, 11, (dollName + " has logged in without RLV!"), MistressID);
-           }
-
-           RLVck = FALSE;
-        }
-
         if (collapsed) {
             // nothing
         } else {
@@ -1257,19 +1031,9 @@ default {
 
             // When Dolly is "away" - enter AFK
             if (llGetAgentInfo(dollID) & AGENT_AWAY) {
-                // set sign to "afk"
-                llSetText("Away", <1,1,1>, 2);
-
-                // AFK turns everything off
-                if (RLVok) {
-                    llOwnerSay("@temprun=n,alwaysrun=n,sendchat=n,tplure=n,sittp=n,standtp=n,unsit=n,sit=n");
-                    llOwnerSay("@fly=n,tplm=n,tploc=n,accepttp=rem");
-                }
-
-                afk = TRUE;
+                afk = 1;
                 tok = tokFactor;
-                //llOwnerSay("Automatically entering AFK mode. Wind down time has slowed by a factor of " + (string)(tokFactor) + " and movements are restricted.");
-                //llOwnerSay("You have " + (string)(timeLeftOnKey / ticks) + " minutes of life remaning.");
+                llMessageLinked(LINK_SET, 305, "autoSetAFK" + ZWSP + (string)(tokFactor) + ZWSP + (string)(timeLeftOnKey / ticks), NULL_KEY);
             }
 
             // wind down only if not collapsed
@@ -1300,19 +1064,19 @@ default {
                          minLeftOnKey ==  5  ||
                          minLeftOnKey ==  2) && !warned) {
                         // FIXME: This can be seen as a spammy message - especially if there are too many warnings
-                        llSay(PUBLIC_CHANNEL, dollName + " has " + (string) minLeftOnKey + " minutes left before they run down!");
-                        warned = TRUE; // have warned now: dont repeat same warning
+                        llSay(0, dollName + " has " + (string) minLeftOnKey + " minutes left before they run down!");
+                        warned = 1; // have warned now: dont repeat same warning
                     }
                     else {
-                        warned = FALSE;
+                        warned = 0;
                     }
                 }
 
                 // Dolly is DONE! Go down... and yell for help.
                 if (timeLeftOnKey < 0) {
                     collapse("out");
-                    //llSay(PUBLIC_CHANNEL, dollName + " has run out of life. Dolly will have to be wound. (Click on the key.)");
-                    llSay(PUBLIC_CHANNEL, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on their key.)");
+                    //llSay(0, dollName + " has run out of life. Dolly will have to be wound. (Click on the key.)");
+                    llSay(0, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on their key.)");
                 }
             }
 
@@ -1350,14 +1114,18 @@ default {
         if (num == 16) {
             // Pre-conversion... restore settings as needed
 
-            // reset key to start winding down
-            //windDown = (dollType == "Key"|| dollType == "Builder");
-
             // change to new Doll Type
             dollType = choice;
+            
+            // Update sign if turned on
+            if (dollType == "Regular" || !signOn) {
+               llSetText("", <1,1,1>, 1);
+            } else {
+               llSetText(dollType, <1,1,1>, 1);
+            }
 
             // new type is slut Doll
-            if (dollType == "slut") {
+            if (dollType == "Slut") {
                 llOwnerSay("As a slut Doll, you can be stripped.");
             }
 
@@ -1367,8 +1135,28 @@ default {
 
         // 18: Convert to Transforming Key
         else if (num == 18) {
-            isTransformingKey = TRUE;
+            isTransformingKey = 1;
         }
+        
+        else if (num == 101) {
+            if (!configured) processConfiguration(choice);
+        }
+        
+        else if (num == 310) {
+            RLVck = 0;
+            RLVok = 1;
+            rlvAPIversion = choice;
+            initFinal();
+        }
+        
+        else if (num == 311) {
+            RLVck = 0;
+            RLVok = 0;
+            initFinal();
+        }
+        
+        else if (num == 312) windDown = 1;
+        else if (num == 313) windDown = 0;
     }
 
     //----------------------------------------
@@ -1385,168 +1173,101 @@ default {
             handlemenuchoices(choice, name, id);
         }
 
-        // Dolly options menu (self)
+        // Options menu
         else if (channel == cd5666) {
-            if (id == dollID) {
+            integer controller = isMistress(id);
+            if (controller && (id == dollID)) {
                 if (choice == "no detaching") {
-                    detachable = FALSE;
+                    detachable = 0;
                     llOwnerSay( "Your key is now a permanent part of you.");
                 }
                 else if (choice == "auto tp") {
-                    llOwnerSay("You will now be automatically teleported.");
-                    autoTP = TRUE;
-                    if (RLVok) llOwnerSay("@accepttp=add");
+                    autoTP = 1;
+                    llMessageLinked(LINK_SET, 300, "autoTP" + ZWSP + (string)autoTP, NULL_KEY);
                 }
                 else if (choice == "pleasure doll") {
                     llOwnerSay("You are now a pleasure doll.");
-                    pleasureDoll = TRUE;
+                    pleasureDoll = 1;
                 }
                 else if (choice == "not pleasure") {
                     llOwnerSay("You are no longer a pleasure doll.");
-                    pleasureDoll = FALSE;
+                    pleasureDoll = 0;
 
-                    if (dollType == "slut") {
+                    if (dollType == "Slut") {
                         llOwnerSay("As a Slut Dolly, you can still be stripped.");
                     }
                 }
                 else if (choice == "no self tp") {
-                    llOwnerSay("You can no longer teleport yourself. You are a Helpless Dolly.");
-                    helpless = TRUE;
-                    if (RLVok) llOwnerSay("@tplm=n,tploc=n");
+                    helpless = 1;
+                    llMessageLinked(LINK_SET, 300, "helpless" + ZWSP + (string)helpless, NULL_KEY);
                 }
                 else if (choice == "can carry") {
                     llOwnerSay("Other people can now carry you.");
-                    canCarry = TRUE;
+                    canCarry = 1;
                 }
                 else if (choice == "no carry") {
                     llOwnerSay("Other people can no longer carry you.");
-                    canCarry = FALSE;
+                    canCarry = 0;
                 }
-
                 else if (choice == "can outfit") {
                     llOwnerSay("Other people can now outfit you.");
-                    canDress = TRUE;
+                    canDress = 1;
                 }
                 else if (choice == "no outfitting") {
                     llOwnerSay("Other people can no longer outfit you.");
-                    canDress = FALSE;
+                    canDress = 0;
                 }
-
                 else if (choice == "no takeover") {
                     llOwnerSay("There is now no way for someone to become your controller.");
-                    takeoverAllowed = FALSE;
+                    takeoverAllowed = 0;
                 }
                 else if (choice == "allow takeover") {
                     llOwnerSay( "Anyone carrying you may now choose to be your controller.");
-                    takeoverAllowed = TRUE;
-                }
-                else if (choice == "take off now") {
-                    aoChange("on");
-                    if (RLVok) llOwnerSay("@clear,detachme=force");
+                    takeoverAllowed = 1;
                 }
                 else if (choice == "no warnings") {
                     llOwnerSay( "No warnings will be given when time remaining is low.");
-                    doWarnings = FALSE;
+                    doWarnings = 0;
                 }
                 else if (choice == "warnings") {
                     llOwnerSay( "Warnings will now be given when time remaining is low.");
-                    doWarnings = TRUE;
+                    doWarnings = 1;
                 }
                 else if (choice == "no flying") {
-                    canFly = FALSE;
-                    if (RLVok) llOwnerSay("@fly=n");
-                    llOwnerSay("You can no longer fly. Helpless Dolly!");
+                    canFly = 0;
+                    llMessageLinked(LINK_SET, 300, "canFly" + ZWSP + (string)canFly, NULL_KEY);
                 }
                 else if (choice == "turn off sign") {
                     // erase sign
-                    llSetText("", <1,1,1>, 2);
-                    signOn = FALSE;
+                    llSetText("", <1,1,1>, 1);
+                    signOn = 0;
                 }
                 else if (choice == "turn on sign") {
                     // erase sign
-                    llSetText(dollType, <1,1,1>, 2);
-                    signOn = TRUE;
+                    llSetText(dollType, <1,1,1>, 1);
+                    signOn = 1;
                 }
             }
-        }
-
-        // Controller menu....
-        else if (channel == cd6012) {
-            if (isMistress(id) && !(id == dollID)) {
-
+            if (controller && !(id == dollID))
+            {
                 if (choice == "detachable") {
-                    detachable = TRUE;
-                }
-                else if (choice == "undetachable") {
-                    detachable = FALSE;
-                }
-                else if (choice == "no auto tp") {
-                    autoTP = FALSE;
-                    if (RLVok) llOwnerSay("@accepttp=rem");
-                }
-                else if (choice == "auto tp") {
-                    autoTP = TRUE;
-                    if (RLVok) llOwnerSay("@accepttp=add");
-                }
-                else if (choice == "no standing") {
-                    canStand = FALSE;
-                    if (RLVok) llOwnerSay("@unsit=n");
-                }
-                else if (choice == "can stand") {
-                    canStand = TRUE;
-                    if (RLVok) llOwnerSay("@unsit=y");
-                }
-                else if (choice == "no sitting") {
-                    canSit = FALSE;
-                    if (RLVok) llOwnerSay("@sit=n");
-                }
-                else if (choice == "can sit") {
-                    canSit = TRUE;
-                    if (RLVok) llOwnerSay("@sit=y");
-                }
-                else if (choice == "no AFK") {
-                    canAFK = FALSE;
-                }
-                else if (choice == "can AFK") {
-                    canAFK = TRUE;
-                }
-                else if (choice == "can travel") {
-                    helpless = FALSE;
-                    if (RLVok) llOwnerSay("@tplm=y,tploc=y");
-                    //llRegionSayTo(id, PUBLIC_CHANNEL, dollName + " may travel on their own.");
-                }
-                else if (choice == "no self trav") {
-                    //llRegionSayTo(id, PUBLIC_CHANNEL, dollName + " is now a Helpless Dolly and cannot travel on their own.");
-                    if (RLVok) llOwnerSay("@tplm=n,tploc=n");
-                    helpless = TRUE;
-                }
-                else if (choice == "drop control") {
-                    //llRegionSayTo(id, PUBLIC_CHANNEL, dollName + " now has no controller.");
+                    detachable = 1;
+                } else if (choice == "no auto tp") {
+                    autoTP = 0;
+                    llMessageLinked(LINK_SET, 300, "autoTP" + ZWSP + (string)autoTP, NULL_KEY);
+                } else if (choice == "no AFK") {
+                    canAFK = 0;
+                } else if (choice == "can AFK") {
+                    canAFK = 1;
+                } else if (choice == "can travel") {
+                    helpless = 0;
+                    llMessageLinked(LINK_SET, 300, "helpless" + ZWSP + (string)helpless, NULL_KEY);
+                } else if (choice == "drop control") {
                     MistressID = MasterBuilder;
-                    hasController = FALSE;
-                }
-                else if (choice == "no plsr doll") {
-                    pleasureDoll = FALSE;
-                    if (dollType == "slut") {
-                        llOwnerSay("As a Slut Dolly, you can still be stripped.");
-                    }
-                }
-                else if (choice == "make plsrdll") {
-                    pleasureDoll = 2;
-                }
-                else if (choice == "can fly") {
-                    canFly = TRUE;
-                    if (RLVok) llOwnerSay("@fly=y");
-                }
-                else if (choice == "no warnings") {
-                    doWarnings = FALSE;
-                }
-                else if (choice == "warnings") {
-                    doWarnings = TRUE;
-                }
-                else if (choice == "no flying") {
-                    canFly = FALSE;
-                    if (RLVok) llOwnerSay("@fly=n");
+                    hasController = 0;
+                } else if (choice == "can fly") {
+                    canFly = 1;
+                    llMessageLinked(LINK_SET, 300, "canFly" + ZWSP + (string)canFly, NULL_KEY);
                 }
             }
         }
@@ -1558,7 +1279,7 @@ default {
             if (choice == "detach") {
                 if (detachable) {
                     aoChange("on");
-                    if (RLVok) llOwnerSay("@clear,detachme=force");
+                    llMessageLinked(LINK_SET, 305, "detach", NULL_KEY);
                 }
                 else {
                     llOwnerSay("Key can't be detached...");
@@ -1580,7 +1301,7 @@ default {
                 string c = llStringTrim(llGetSubString(choice,9,llStringLength(choice) - 1),STRING_TRIM);
                 if ((string) ((integer) c) == c) {
                     integer ch = (integer) c;
-                    if (ch != PUBLIC_CHANNEL && ch != DEBUG_CHANNEL) {
+                    if (ch != 0 && ch != DEBUG_CHANNEL) {
                         channel_chat = ch;
                         llListenRemove(listen_id_commands);
                         listen_id_commands = llListen(ch, "", llGetOwner(), "");
@@ -1705,10 +1426,10 @@ default {
             else if (choice == "stat") {
                 integer t1 = timeLeftOnKey / ticks;
                 integer t2 = keylimit / ticks;
-                integer p = t1 * 100 / t2;
+                float p = (float)t1 * 100.0 / (float)t2;
 
                 string s = "Time: " + (string)t1 + "/" +
-                            (string)t2 + " min (" + (string)p + "% capacity)";
+                            (string)t2 + " min (" + FormatFloat(p, 2) + "% capacity)";
                 if (afk) {
                     s += " (rate slowed by " + (string)tokFactor + "x)";
                 }
@@ -1735,17 +1456,7 @@ default {
                     llOwnerSay("Doll is posed.");
                 }
 
-                {
-                    integer free_memory = llGetFreeMemory();
-                    llOwnerSay((string)(free_memory/1024.0) + " kbytes of free memory available for allocation.");
-                    integer used_memory = llGetUsedMemory();
-                    llOwnerSay((string)(used_memory/1024.0) + " kbytes of memory currently used.");
-                }
-            }
-            else if (llGetSubString(choice,0,13) == "RestrainedLove") {
-                // RLV has been verified and is available to us
-                RLVok = TRUE;
-                llOwnerSay("Logged with Community Doll Key and RLV active...");
+                memReport();
             }
         }
 
@@ -1753,22 +1464,19 @@ default {
         else if (channel == cd4667) {
             if (id == carrierID) {
                 if (choice == "Top") {
-                    llOwnerSay("@detach:stomach=force,detach:left shoulder=force,detach:right shoulder=force,detach:left hand=force,detach:right hand=force,detach:r upper arm=force,detach:r forearm=force,detach:l upper arm=force,detach:l forearm=force,detach:chest=force,detach:left pec=force,detach:right pec=force");
-                    llOwnerSay("@remoutfit:gloves=force,remoutfit:jacket=force,remoutfit:shirt=force");
+                    llMessageLinked(LINK_SET, 305, "stripTop", NULL_KEY);
                 }
                 else if (choice == "Bra") {
-                    llOwnerSay("@remoutfit:undershirt=force");
+                    llMessageLinked(LINK_SET, 305, "stripBra", NULL_KEY);
                 }
                 else if (choice == "Bottom") {
-                    llOwnerSay("@detach:chin=force,detach:r upper leg=force,detach:r lower leg=force,detach:l upper loge=force,detach:l lower leg=force,detach:pelvis=force,detach:right hip=force,detach:left hip=force,detach");
-                    llOwnerSay("@remoutfit:pants=force,remoutfit:skirt=force");
+                    llMessageLinked(LINK_SET, 305, "stripBottom", NULL_KEY);
                 }
                 else if (choice == "Panties") {
-                    llOwnerSay("@remoutfit:underpants=force");
+                    llMessageLinked(LINK_SET, 305, "stripPanties", NULL_KEY);
                 }
                 else if (choice == "Shoes") {
-                    llOwnerSay("@detach:right foot=force,detach:left foot=force");
-                    llOwnerSay("@remoutfit:shoes=force,remoutfit:socks=force");
+                    llMessageLinked(LINK_SET, 305, "stripShoes", NULL_KEY);
                 }
 
                 // Do strip menu
@@ -1810,7 +1518,7 @@ default {
                 // Next animation: collapse
                 newAnimation = collapseAnim;
 
-                llSay(PUBLIC_CHANNEL, "Dolly " + dollName + " has now collapsed.");
+                llSay(0, "Dolly " + dollName + " has now collapsed.");
             } else if (newState == "nothing") {
                 // If either collapsed or posed: stop all
                 stopAnimations();
@@ -1845,7 +1553,7 @@ default {
         // This only happens the first time; the rest of the time, the actions
         // happen directly in the code.
         //
-        if (permissionsGranted == FALSE) {
+        if (permissionsGranted == 0) {
             // Permission granted: TAKE_CONTROLS
             if (perm & PERMISSION_TAKE_CONTROLS) {
                 if (controlLock) {
@@ -1859,20 +1567,19 @@ default {
                                     CONTROL_DOWN       |
                                     CONTROL_LBUTTON    |
                                     CONTROL_ML_LBUTTON |
-                                    0, TRUE, FALSE);
+                                    0, 1, 0);
                 } else {
                     //llReleaseControls( );
                     llTakeControls( CONTROL_FWD   |
                                     CONTROL_BACK  |
                                     CONTROL_LEFT  |
                                     CONTROL_RIGHT |
-                                    0, TRUE, TRUE);
+                                    0, 1, 1);
                 }
             }
 
             // This is only reasonable first time this runs...
-            permissionsGranted = TRUE;
+            permissionsGranted = 1;
         }
     }
 }
-

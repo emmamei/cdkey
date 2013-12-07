@@ -309,12 +309,6 @@ default {
 
             llSay(0, dollname + " has become a " + stateName + " Doll.");
 
-            if (currentState == "Regular") {
-               llSetText("", <1,1,1>, 2);
-            } else {
-               llSetText(stateName + " Doll", <1,1,1>, 2);
-            }
-
         // Set options - "Options"
         } else if (channel == cd8667) {
             if (choice == "verify") {
