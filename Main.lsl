@@ -4,7 +4,7 @@
 //
 // DATE: 22 March 2013
 
-string optiondate = "7 December 2013";
+string optiondate = "6 December 2013";
 
 string ZWSP = "​"; // This is not an empty string it's a Zero Width Space Character
                   // used for a safe parameter seperator in messages.
@@ -228,13 +228,6 @@ processConfiguration(string data) {
         }
         else if (name == "helpless dolly") {
             helpless = (integer)value;
-            if (RLVok) {
-                if (helpless) {
-                    llOwnerSay("@tplm=n,tploc=n");
-                } else {
-                    llOwnerSay("@tplm=y,tploc=y");
-                }
-            }
         }
         else if (name == "controller") {
             MistressID = (key)value;
@@ -245,11 +238,6 @@ processConfiguration(string data) {
         }
         else if (name == "auto tp") {
             autoTP = (integer)value;
-            if (autoTP) {
-                llOwnerSay("@accepttp=add");            // Allow auto TP
-            } else {
-                llOwnerSay("@accepttp=rem");            // Disallow auto TP
-            }
         }
         else if (name == "pleasure doll") {
             pleasureDoll = (integer)value;
