@@ -17,6 +17,8 @@ string ncName = "Preferences";
 integer ncLine;
 integer replyHandle;
 
+string optiondate = "12 December 2013";
+
 msg (string s) {
     llOwnerSay(s);
     llSleep(delayTime);
@@ -41,7 +43,7 @@ default {
     link_message(integer source, integer num, string choice, key id) {
         if (num == 200) { // Triggered from Main.lsl
 
-            llOwnerSay("---- Community Doll Key loaded: Version: 6 December 2013");
+            llOwnerSay("---- Community Doll Key loaded: Version: " + optiondate);
             llOwnerSay("---- Key: " + llKey2Name(id));
 
             // First minute....
@@ -70,13 +72,13 @@ default {
     dataserver(key query_id, string data) {
         if (query_id == ncPrefsKey) {
             if (data == EOF) ncPrefsLoadedUUID = llGetInventoryKey(ncName);
-            if (data != "" && llGetSubString(data, 0, 0) != "#") llMessageLinked(LINK_SET, 101, data, NULL_KEY);
+            if (data != "" && llGetSubString(data, 0, 0) != "#") // ignore comments and blank lines
+                llMessageLinked(LINK_SET, 101, data, NULL_KEY);
             ncPrefsKey = llGetNotecardLine(ncName, ++ncLine);
         }
     }
     
-    changed(integer change)
-    {
+    changed(integer change) {
         if (change & CHANGED_INVENTORY) {
             if (llGetInventoryKey(ncName) != ncPrefsLoadedUUID) {
                 // Get a unique number
