@@ -466,13 +466,15 @@ default {
             }
         }
 
-        if (num == 100 && data == "MistressID") {
-            MistressID = id;
-            if (MistressID != MasterBuilder) hasController = 1;
-            else hasController = 0;
+        else if (num == 100) {
+            if (data == "MistressID") {
+                MistressID = id;
+                if (MistressID != MasterBuilder) hasController = 1;
+                else hasController = 0;
+            }
         }
 
-        if (num == 101) {
+        else if (num == 101) {
             if (!configured) processConfiguration(data);
         }
     }
