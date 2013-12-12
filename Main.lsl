@@ -256,13 +256,13 @@ stopAnimations() {
     list anims = llGetAnimationList(dollID);
     integer n;
     string anim;
+    integer animCount = llGetListLength(anims);
 
-    for ( n = 0; n < llGetListLength(anims); n++ ) {
+    for ( n = 0; n < animCount; n++ ) {
         anim = llList2String(anims, n);
 
         llStopAnimation(anim);
-        //llSleep(0.2);
-        llSleep(5);
+        llSleep(0.5);
     }
     llSetColor( <0,1,0>, ALL_SIDES );
 }
