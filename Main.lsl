@@ -573,7 +573,7 @@ initializeStart ()  {
     llSay(0, dollName + " is now a dolly - anyone may play with their Key.");
 
     // This hack makes Key work on no-script land
-    llTakeControls(CONTROL_FWD, 0, 1, 1);   
+    llTakeControls(CONTROL_FWD, 1, 1);   
                     
     // Check for home landmark
     if (llGetInventoryType(lmHomeName) == INVENTORY_LANDMARK) {
@@ -650,7 +650,7 @@ restoreFromCollapse() {
     llRequestPermissions(dollID, PERMISSION_TAKE_CONTROLS|PERMISSION_TRIGGER_ANIMATION);
 
     // This hack makes Key work on no-script land
-    llTakeControls(CONTROL_FWD, 0, 1, 1);   
+    llTakeControls(CONTROL_FWD, 1, 1);   
 
     aoChange("on");
 }
@@ -1156,7 +1156,8 @@ default {
         // Options menu
         else if (channel == cd5666) {
             integer controller = isMistress(id);
-            if (controller && (id == dollID)) {
+
+            if (id == dollID) {
                 if (choice == "no detaching") {
                     detachable = 0;
                     llOwnerSay( "Your key is now a permanent part of you.");
@@ -1227,9 +1228,7 @@ default {
                     llSetText(dollType, <1,1,1>, 1);
                     signOn = 1;
                 }
-            }
-            if (controller && !(id == dollID))
-            {
+            } else if (controller && !(id == dollID)) {
                 if (choice == "detachable") {
                     detachable = 1;
                 } else if (choice == "no auto tp") {
@@ -1552,7 +1551,7 @@ default {
                     //llReleaseControls( );
 
                     // This is a hack to allow working in no-script areas
-                    llTakeControls(CONTROL_FWD, 0, 1, 1);   
+                    llTakeControls(CONTROL_FWD, 1, 1);   
                 }
             }
 
