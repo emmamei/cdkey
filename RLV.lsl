@@ -1,3 +1,7 @@
+//========================================
+// RLV.lsl
+//========================================
+
 string ZWSP = "​"; // This is not an empty string it's a Zero Width Space Character
                   // used for a safe parameter seperator in messages.
                   
@@ -38,6 +42,10 @@ integer channel;
 integer replyHandle;
 
 string rlvAPIversion;
+
+//========================================
+// FUNCTIONS
+//========================================
 
 // This code assumes a human-generated config file
 processConfiguration(string data) {
@@ -199,7 +207,16 @@ autoTPAllowed(key userID) {
     }
 }
 
+//========================================
+// STATES
+//========================================
+
 default {
+
+    //----------------------------------------
+    // STATE ENTRY
+    //----------------------------------------
+
     state_entry() {
         dollID = llGetOwner();
         
@@ -207,6 +224,10 @@ default {
         checkRLV();
     }
     
+    //----------------------------------------
+    // TIMER
+    //----------------------------------------
+
     timer() {
         if (!RLVok && RLVck < 5) {
             llSetTimerEvent(15);
@@ -219,6 +240,10 @@ default {
         }
     }
     
+    //----------------------------------------
+    // LISTEN
+    //----------------------------------------
+
     listen(integer chan, string name, key id, string msg) {
         llOwnerSay(msg);
         if (chan == channel) {
@@ -230,8 +255,39 @@ default {
         }
     }
     
+    //----------------------------------------
+    // LINK_MESSAGE
+    //----------------------------------------
+
     link_message(integer sender, integer num, string data, key id) {
-        integer index; string parameter; list parameterList;
+        integer index;
+        string parameter;
+        list parameterList;
+
+        // valid numbers:
+        //    300: RLV Configuration
+        //    305: RLV Commands
+        //    100: Process Mistress ID
+        //    101: Process configuration
+        //
+        // 300 cmds:
+        //    * autoTP
+        //    * helpless
+        //    * canFly
+        //
+        // 305 cmds:
+        //    * autoSetAFK
+        //    * setAFK
+        //    * unsetAFK
+        //    * collapse
+        //    * restore
+        //    * stripTop
+        //    * stripBra
+        //    * stripBottom
+        //    * stripPanties
+        //    * stripShoes
+        //    * carried
+
         if (num >= 300 && num < 400) {
             while (index != -1) {
                 index = llSubStringIndex(data, ZWSP);
@@ -242,7 +298,9 @@ default {
         }
         
         if (num == 300) { // RLV Config
-            if (llList2String(parameterList, 0) == "autoTP") {
+            string cmd = llList2String(parameterList, 0);
+
+            if (cmd == "autoTP") {
                 autoTP = llList2Integer(parameterList, 1);
                 if (autoTP) {
                     llOwnerSay("You will now be automatically teleported.");
@@ -250,7 +308,7 @@ default {
                 } else {
                     if (RLVok) llOwnerSay("@accepttp=rem");
                 }
-            } else if (llList2String(parameterList, 0) == "helpless") {
+            } else if (cmd == "helpless") {
                 helpless = llList2Integer(parameterList, 1);
                 if (helpless) {
                     llOwnerSay("You can no longer teleport yourself. You are a Helpless Dolly.");
@@ -258,7 +316,7 @@ default {
                 } else {
                     if (RLVok) llOwnerSay("@tplm=y,tploc=y");
                 }
-            } else if (llList2String(parameterList, 0) == "canFly") {
+            } else if (cmd == "canFly") {
                 canFly = llList2Integer(parameterList, 1);
                 if (!canFly) {
                     llOwnerSay("You can no longer fly. Helpless Dolly!");
@@ -268,8 +326,11 @@ default {
                 }
             }
         }
+
         else if (num == 305) { // RLV Commands
-            if (llList2String(parameterList, 0) == "autoSetAFK") {
+            string cmd = llList2String(parameterList, 0);
+
+            if (cmd == "autoSetAFK") {
                 afk = 1;
                 
                 // set sign to "afk"
@@ -284,7 +345,8 @@ default {
                 llOwnerSay("Automatically entering AFK mode. Wind down time has slowed by a factor of " + llList2String(parameterList, 1) + " and movements are restricted.");
                 llOwnerSay("You have " + llList2String(parameterList, 2) + " minutes of life remaning.");
             }
-            else if (llList2String(parameterList, 0) == "setAFK") {
+
+            else if (cmd == "setAFK") {
                 afk = 1;
                 
                 // set sign to "afk"
@@ -299,7 +361,8 @@ default {
                 llOwnerSay("You are now away from keyboard (AFK). Wind down time has slowed by a factor of " + llList2String(parameterList, 1) + " and movements are restricted.");
                 llOwnerSay("You have " + llList2String(parameterList, 2) + " minutes of life remaning.");
             }
-            if (llList2String(parameterList, 0) == "unsetAFK") {
+
+            else if (cmd == "unsetAFK") {
                 afk = 0;
                 
                 if (RLVok) {
@@ -323,7 +386,8 @@ default {
                 llOwnerSay("You are now no longer away from keyboard (AFK). Movements are unrestricted and winding down proceeds at normal rate.");
                 llOwnerSay("You have " + llList2String(parameterList, 1) + " minutes of life remaning.");
             }
-            if (llList2String(parameterList, 0) == "collapse") {
+
+            else if (cmd == "collapse") {
                 // Turn everything off: Dolly is down
                 if (RLVok) {
                     llOwnerSay("@fly=n,temprun=n,alwaysrun=n,sendchat=n,tplm=n,tploc=n,sittp=n,standtp=n,accepttp=rem," +
@@ -347,7 +411,8 @@ default {
                     llOwnerSay("@unsit=force");
                 }
             }
-            if (llList2String(parameterList, 0) == "restore") {
+
+            else if (cmd == "restore") {
                 if (RLVok) {
                     // Clear restrictions
                     if (canFly) {
@@ -361,44 +426,52 @@ default {
                     llOwnerSay("@accepttp=rem,temprun=y,alwaysrun=y,sendchat=y,tplure=y,sittp=y,standtp=y,unsit=y,sit=y,shownames=y,showhovertextall=y,rediremote:999=rem");
                 }
             }
-            if (llList2String(parameterList, 0) == "stripTop") {
+
+            else if (cmd == "stripTop") {
                 llOwnerSay("@detach:stomach=force,detach:left shoulder=force,detach:right shoulder=force,detach:left hand=force,detach:right hand=force,detach:r upper arm=force,detach:r forearm=force,detach:l upper arm=force,detach:l forearm=force,detach:chest=force,detach:left pec=force,detach:right pec=force");
                 llOwnerSay("@remoutfit:gloves=force,remoutfit:jacket=force,remoutfit:shirt=force");
             }
-            if (llList2String(parameterList, 0) == "stripBra") {
+
+            else if (cmd == "stripBra") {
                 llOwnerSay("@remoutfit:undershirt=force");
             }
-            if (llList2String(parameterList, 0) == "stripBottom") {
+
+            else if (cmd == "stripBottom") {
                 llOwnerSay("@detach:chin=force,detach:r upper leg=force,detach:r lower leg=force,detach:l upper loge=force,detach:l lower leg=force,detach:pelvis=force,detach:right hip=force,detach:left hip=force,detach");
                 llOwnerSay("@remoutfit:pants=force,remoutfit:skirt=force");
             }
-            if (llList2String(parameterList, 0) == "stripPanties") {
+
+            else if (cmd == "stripPanties") {
                 llOwnerSay("@remoutfit:underpants=force");
             }
-            if (llList2String(parameterList, 0) == "stripShoes") {
+
+            else if (cmd == "stripShoes") {
                 llOwnerSay("@detach:right foot=force,detach:left foot=force");
                 llOwnerSay("@remoutfit:shoes=force,remoutfit:socks=force");
             }
-        }
-        if (llList2String(parameterList, 0) == "carried") {
-            if (RLVok) {
-                // No TP allowed for Doll
-                llOwnerSay("@tplm=n,tploc=n,accepttp=rem,tplure=n");
-    
-                // Allow carrier to TP: but Doll can deny
-                llOwnerSay("@tplure:" + (string)carrierID  + "=add");
-    
-                // Allow rescuers to AutoTP
-                autoTPAllowed(MistressID);
-                autoTPAllowed(DevOne);
-                autoTPAllowed(DevTwo);
+
+            else if (cmd == "carried") {
+                if (RLVok) {
+                    // No TP allowed for Doll
+                    llOwnerSay("@tplm=n,tploc=n,accepttp=rem,tplure=n");
+        
+                    // Allow carrier to TP: but Doll can deny
+                    llOwnerSay("@tplure:" + (string)carrierID  + "=add");
+        
+                    // Allow rescuers to AutoTP
+                    autoTPAllowed(MistressID);
+                    autoTPAllowed(DevOne);
+                    autoTPAllowed(DevTwo);
+                }
             }
         }
+
         if (num == 100 && data == "MistressID") {
             MistressID = id;
             if (MistressID != MasterBuilder) hasController = 1;
             else hasController = 0;
         }
+
         if (num == 101) {
             if (!configured) processConfiguration(data);
         }
