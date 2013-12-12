@@ -160,11 +160,13 @@ initializeRLV() {
     
         if (!canDress) llOwnerSay("Other people cannot dress you.");
         
-        if (autoTP) llOwnerSay("@accepttp=add");
-        if (helpless) llOwnerSay("@tplm=n,tploc=n");
-        if (!canFly) llOwnerSay("@fly=n");
-        if (!canStand) llOwnerSay("@stand=n");
-        if (!canSit) llOwnerSay("@sit=n");
+        if (RLVok) {
+            if ( autoTP)     llOwnerSay("@accepttp=add");
+            if ( helpless)   llOwnerSay("@tplm=n,tploc=n");
+            if (!canFly)     llOwnerSay("@fly=n");
+            if (!canStand)   llOwnerSay("@stand=n");
+            if (!canSit)     llOwnerSay("@sit=n");
+        }
 
         // if Doll is one of the developers... dont lock:
         // prevents inadvertent lock-in during development
