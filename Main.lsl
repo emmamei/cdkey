@@ -427,6 +427,9 @@ handlemenuchoices(string choice, string name, key ToucherID) {
     else if (choice == "Allow Takeover") {
         takeoverAllowed = 1;
     }
+    else if (choice == "Help") {
+        llGiveInventory(ToucherID,"Community Dolls Key Help and Manual")
+    }
     else if (choice == "Wind") {
         if (collapsed) {  //uncollapsing
             llSay(DEBUG_CHANNEL, "+> Restore from collapse");
@@ -808,7 +811,7 @@ default {
         key ToucherID = llDetectedKey(0);  //detects user UUID
         string ToucherName = llDetectedName(0);  //detects user UUID
         string msg;
-        list menu =  ["Wind"];
+        list menu =  ["Wind", "Help"];
 
         toucherID = ToucherID;
 
