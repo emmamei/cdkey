@@ -4,7 +4,7 @@
 //
 // DATE: 22 March 2013
 
-string optiondate = "6 December 2013";
+string optiondate = "12 December 2013";
 
 string ZWSP = "​"; // This is not an empty string it's a Zero Width Space Character
                   // used for a safe parameter seperator in messages.
@@ -573,11 +573,7 @@ initializeStart ()  {
     llSay(0, dollName + " is now a dolly - anyone may play with their Key.");
 
     // This hack makes Key work on no-script land
-    llTakeControls( CONTROL_FWD   |
-                    CONTROL_BACK  |
-                    CONTROL_LEFT  |
-                    CONTROL_RIGHT |
-                    0, 1, 1);
+    llTakeControls(CONTROL_FWD, 0, 1, 1);   
                     
     // Check for home landmark
     if (llGetInventoryType(lmHomeName) == INVENTORY_LANDMARK) {
@@ -654,11 +650,7 @@ restoreFromCollapse() {
     llRequestPermissions(dollID, PERMISSION_TAKE_CONTROLS|PERMISSION_TRIGGER_ANIMATION);
 
     // This hack makes Key work on no-script land
-    llTakeControls( CONTROL_FWD   |
-                    CONTROL_BACK  |
-                    CONTROL_LEFT  |
-                    CONTROL_RIGHT |
-                    0, 1, 1);
+    llTakeControls(CONTROL_FWD, 0, 1, 1);   
 
     aoChange("on");
 }
@@ -1558,11 +1550,9 @@ default {
                                     0, 1, 0);
                 } else {
                     //llReleaseControls( );
-                    llTakeControls( CONTROL_FWD   |
-                                    CONTROL_BACK  |
-                                    CONTROL_LEFT  |
-                                    CONTROL_RIGHT |
-                                    0, 1, 1);
+
+                    // This is a hack to allow working in no-script areas
+                    llTakeControls(CONTROL_FWD, 0, 1, 1);   
                 }
             }
 
