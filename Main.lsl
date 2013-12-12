@@ -1164,7 +1164,7 @@ default {
                 }
                 else if (choice == "auto tp") {
                     autoTP = 1;
-                    llMessageLinked(LINK_SET, 300, "autoTP" + ZWSP + (string)autoTP, NULL_KEY);
+                    llMessageLinked(LINK_SET, 300, "autoTP" + ZWSP + "1", NULL_KEY);
                 }
                 else if (choice == "pleasure doll") {
                     llOwnerSay("You are now a pleasure doll.");
@@ -1180,7 +1180,7 @@ default {
                 }
                 else if (choice == "no self tp") {
                     helpless = 1;
-                    llMessageLinked(LINK_SET, 300, "helpless" + ZWSP + (string)helpless, NULL_KEY);
+                    llMessageLinked(LINK_SET, 300, "helpless" + ZWSP + "1", NULL_KEY);
                 }
                 else if (choice == "can carry") {
                     llOwnerSay("Other people can now carry you.");
@@ -1216,7 +1216,7 @@ default {
                 }
                 else if (choice == "no flying") {
                     canFly = 0;
-                    llMessageLinked(LINK_SET, 300, "canFly" + ZWSP + (string)canFly, NULL_KEY);
+                    llMessageLinked(LINK_SET, 300, "canFly" + ZWSP + "0", NULL_KEY);
                 }
                 else if (choice == "turn off sign") {
                     // erase sign
@@ -1233,20 +1233,20 @@ default {
                     detachable = 1;
                 } else if (choice == "no auto tp") {
                     autoTP = 0;
-                    llMessageLinked(LINK_SET, 300, "autoTP" + ZWSP + (string)autoTP, NULL_KEY);
+                    llMessageLinked(LINK_SET, 300, "autoTP" + ZWSP + "0", NULL_KEY);
                 } else if (choice == "no AFK") {
                     canAFK = 0;
                 } else if (choice == "can AFK") {
                     canAFK = 1;
                 } else if (choice == "can travel") {
                     helpless = 0;
-                    llMessageLinked(LINK_SET, 300, "helpless" + ZWSP + (string)helpless, NULL_KEY);
+                    llMessageLinked(LINK_SET, 300, "helpless" + ZWSP + "0", NULL_KEY);
                 } else if (choice == "drop control") {
                     MistressID = MasterBuilder;
                     hasController = 0;
                 } else if (choice == "can fly") {
                     canFly = 1;
-                    llMessageLinked(LINK_SET, 300, "canFly" + ZWSP + (string)canFly, NULL_KEY);
+                    llMessageLinked(LINK_SET, 300, "canFly" + ZWSP + "1", NULL_KEY);
                 }
             }
         }
