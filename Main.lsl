@@ -527,17 +527,21 @@ default {
             ifPermissions();
         }
 
+        integer agentInfo = llGetAgentInfo(dollID);
+        integer newAFK;
         // When Dolly is "away" - enter AFK
-        if (llGetAgentInfo(dollID)) {
-            if (AGENT_AWAY) {
-                afk = 1;
-                autoAFK = 1;
-            } else if (afk && autoAFK) {
-                afk = 0;
-                autoAFK = 0;
-            }
+        if (agentInfo & AGENT_AWAY) {
+            newAFK = 1;
+            autoAFK = 1;
+        } else if (afk && autoAFK) {
+            newAFK = 0;
+            autoAFK = 0;
+        }
+        if (newAFK != afk) {
             setWindRate();
-            llMessageLinked(LINK_SET, 305, llGetScriptName() + "|setAFK|" + (string)afk + "|" + (string)autoAFK + "|" + formatFloat(windRate, 1) + "|" + (string)llRound(timeLeftOnKey / (60.0 * windRate)), NULL_KEY);
+            integer minsLeft;
+            if (windRate > 0.0) minsLeft = llRound(timeLeftOnKey / (60.0 * windRate));
+            llMessageLinked(LINK_SET, 305, llGetScriptName() + "|setAFK|" + (string)(afk = newAFK) + "|" + (string)autoAFK + "|" + formatFloat(windRate, 1) + "|" + (string)minsLeft, NULL_KEY);
         }
 
         // A specific test for collapsed status is no longer required here
@@ -693,10 +697,10 @@ default {
             }
             else if (name == "hasController") hasController = (integer)value;
             else if (name == "afk") {
-		afk = (integer)value;
-		setWindRate();
-	    }
-	    else if (name == "autoAFK") autoAFK = (integer)value;
+        afk = (integer)value;
+        setWindRate();
+        }
+        else if (name == "autoAFK") autoAFK = (integer)value;
         }
         
         else if (num == 305) {
@@ -706,9 +710,9 @@ default {
             split = llList2List(split, 2, -1);
             
             if (cmd == "setAFK") {
-		afk = llList2Integer(split, 0);
-		setWindRate();
-	    }
+        afk = llList2Integer(split, 0);
+        setWindRate();
+        }
             else if (cmd == "carry") {
                 string name = llList2String(split, 1);
                 carry(name, id);

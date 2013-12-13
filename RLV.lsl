@@ -201,6 +201,8 @@ postCheckRLV()
     // Mark RLV check completed
     RLVck = 0;
     
+    if (configured) initializeRLV();
+    
     llMessageLinked(LINK_SET, 103, scriptName, NULL_KEY);
 }
 
@@ -379,9 +381,9 @@ afkOrCollapse(string type, integer set) {
 
 default {
     state_entry() {
-	dollID = llGetOwner();
-	scriptName = llGetScriptName();
-	llMessageLinked(LINK_SET, 999, llGetScriptName(), NULL_KEY);
+    dollID = llGetOwner();
+    scriptName = llGetScriptName();
+    llMessageLinked(LINK_SET, 999, llGetScriptName(), NULL_KEY);
     }
     
     //----------------------------------------
@@ -395,7 +397,6 @@ default {
         } else if (!RLVok && RLVck == 5) {
             postCheckRLV();
         } else {
-            if (!RLVstarted && configured) initializeRLV();
             if (wearLockExpire > 0.0) {
                 wearLockExpire -= llGetAndResetTime();
                 if (wearLockExpire <= 0.0) {
@@ -474,7 +475,10 @@ default {
         else if (num == 101) {
             if (!configured) processConfiguration(llList2String(parameterList, 0), llList2List(parameterList, 1, -1));
         }
-        else if (num == 102) configured = 1;
+        else if (num == 102) {
+            configured = 1;
+            if (!RLVstarted) initializeRLV();
+        }
         else if (num == 104) {
             dollID = llGetOwner();
             dollName = llGetDisplayName(dollID);
@@ -513,7 +517,7 @@ default {
             else if (name == "hasController") {
                 hasController = llList2Integer(parameterList, 1);
             }
-            else if (cmd == "autoTP") {
+            else if (name == "autoTP") {
                 autoTP = llList2Integer(parameterList, 1);
                 if (autoTP) {
                     llOwnerSay("You will now be automatically teleported.");

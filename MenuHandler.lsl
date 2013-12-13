@@ -286,11 +286,13 @@ doMainMenu(key id) {
                 menu += "Type of Doll";
             }
         }
-        else manpage = "communitydoll.htm";
+        else {
+            manpage = "communitydoll.htm";
         
-        // Toucher is not Doll.... could be anyone
-        msg =  dollName + " is a doll and likes to be treated like " +
-               "a doll. So feel free to use these options.\n";
+            // Toucher is not Doll.... could be anyone
+            msg =  dollName + " is a doll and likes to be treated like " +
+                   "a doll. So feel free to use these options.\n";
+        }
                
         if (llGetInventoryType(NOTECARD_HELP) == INVENTORY_NOTECARD) menu += "Help";
 
