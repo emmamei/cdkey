@@ -51,6 +51,7 @@ integer canFly = 1;
 integer hasController;
 integer windDown = 1;
 integer afk;
+integer autoAFK;
 integer warned;
 integer doWarnings;
 integer canSit = 1;
@@ -428,7 +429,7 @@ handlemenuchoices(string choice, string name, key ToucherID) {
         takeoverAllowed = 1;
     }
     else if (choice == "Help") {
-        llGiveInventory(ToucherID,"Community Dolls Key Help and Manual")
+        llGiveInventory(ToucherID,"Community Dolls Key Help and Manual");
     }
     else if (choice == "Wind") {
         if (collapsed) {  //uncollapsing
@@ -488,10 +489,12 @@ handlemenuchoices(string choice, string name, key ToucherID) {
             else llSetText(dollType, <1,1,1>, 1);
 
             afk = 0;
+            autoAFK = 0;
             llMessageLinked(LINK_SET, 305, "unsetAFK" + ZWSP + (string)(timeLeftOnKey / ticks), NULL_KEY);
         }
         else {
             afk = 1;
+            autoAFK = 0;
             tok = tokFactor;
             
             llMessageLinked(LINK_SET, 305, "setAFK" + ZWSP + (string)(tokFactor) + ZWSP + (string)(timeLeftOnKey / ticks), NULL_KEY);
@@ -1013,10 +1016,20 @@ default {
             }
 
             // When Dolly is "away" - enter AFK
-            if (llGetAgentInfo(dollID) & AGENT_AWAY) {
-                afk = 1;
-                tok = tokFactor;
-                llMessageLinked(LINK_SET, 305, "autoSetAFK" + ZWSP + (string)(tokFactor) + ZWSP + (string)(timeLeftOnKey / ticks), NULL_KEY);
+            if (llGetAgentInfo(dollID)) {
+                if (AGENT_AWAY) {
+                    afk = 1;
+                    autoAFK = 1;
+                    tok = tokFactor;
+                    llMessageLinked(LINK_SET, 305, "autoSetAFK" + ZWSP + (string)(tokFactor) + ZWSP + (string)(timeLeftOnKey / ticks), NULL_KEY);
+                } else if (afk && autoAFK) {
+                    if (dollType == "Regular" || !signOn) llSetText("", <1,1,1>, 1);
+                    else llSetText(dollType, <1,1,1>, 1);
+
+                    afk = 0;
+                    autoAFK = 0;
+                    llMessageLinked(LINK_SET, 305, "unsetAFK" + ZWSP + (string)(timeLeftOnKey / ticks), NULL_KEY);
+                }
             }
 
             // wind down only if not collapsed
