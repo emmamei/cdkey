@@ -14,6 +14,29 @@ all of the features of both.
 Main Menu
 ---------
 
+On the initial menu seen after a Key is touched are the following buttons:
+
+    Wind: Wind up the dolly a certain amount, typically 30 minutes.
+
+    Doll Type: Convert the dolly to a particular Type of Doll. This will
+    provide the Doll with a select choice of outfits (if set up) for that
+    Type, and will also send text affirmations and suggestions to the Doll
+    pertaining to the Doll Type selected.
+
+    Dress: This will dress the Doll in a chosen outfit. If the Doll is a
+    specific Doll Type, and outfits are set up properly, then this list
+    of outfits will be specific to the Type of Doll chosen.
+
+    Options: these are Options that affect how the Doll operates and what
+    restrictions they operate under. When Carried or when having a Controller,
+    these options may change or be eliminated from the Wearer's consideration.
+
+    Visible (or Invisible): This makes the Key vanish. The Key remains
+    completely operational, and touchable - but it is Invisible. This can be
+    useful for RP and for situations where the Key appears in the "wrong"
+    place - such as poking through a chair or another person. The Key can
+    also be made Visible again.
+
 Options Menu
 ------------
 
