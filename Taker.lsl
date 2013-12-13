@@ -23,17 +23,12 @@ setup() {
         listen_cd6011 = llListen(cd6011, "", "", "");
         cd6200 = cd6011 - 122;
     }
+    
+    llMessageLinked(LINK_SET, 103, llGetScriptName(), NULL_KEY);
 }
 
 default {
-    state_entry() {
-        cd6011 = 0;
-        setup();
-    }
-
-    on_rez(integer iParam) {  //when key is put on, or when logging back on
-        setup();
-    }
+    state_entry() { llMessageLinked(LINK_SET, 999, llGetScriptName(), NULL_KEY); }
 
     timer() {
         // countdown...
@@ -42,6 +37,10 @@ default {
             llSetTimerEvent(0.0);
             llAllowInventoryDrop(FALSE);
         }
+    }
+    
+    link_message(integer sender, integer num, string data, key id) {
+        if (num == 104 || num == 105) setup();
     }
 
     listen(integer channel, string name, key id, string choice) {
@@ -75,4 +74,3 @@ default {
         }
     }
 }
-

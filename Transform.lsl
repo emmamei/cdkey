@@ -26,6 +26,7 @@ integer minMinutes = 0;
 integer channel_dialog;
 integer channelHUD;
 integer channelAsk;
+integer configured;
 
 //integer menulimit = 9;     // 1.5 minute
 
@@ -40,16 +41,66 @@ key kQuery;
 
 list currentphrases;
 
+integer quiet;
+
+// Keys of important people in life of the Key:
+key MasterBuilder = "42c7aaec-38bc-4b0c-94dd-ae562eb67e6d";   // Christina Halpin
+key  MasterWinder = "64d26535-f390-4dc4-a371-a712b946daf8";   // GreigHighland
+key        DevOne = "c5e11d0a-694f-46cc-864b-e42340890934";   // MayStone
+key        DevTwo = "2fff40f0-ea4a-4b52-abb8-d4bf6b1c98c9";   // Silky Mesmeriser
+
+list rescuerList = [ MasterBuilder, MasterWinder ];
+list developerList = [ DevOne, DevTwo ];
+
 //========================================
 // FUNCTIONS
 //========================================
+
+integer devKey() {
+    if (dollID != llGetOwner()) dollID = llGetOwner();
+    return llListFindList(developerList, [ dollID ]) != -1;
+}
+
+string FormatFloat(float val, integer dp)
+{
+    string out = "ERROR";
+    if (dp == 0) {
+        out = (string)llRound(val);
+    } else if (dp > 0 && dp <= 6) {
+        val = llRound(val * llPow(10.0, dp)) / llPow(10.0, dp);
+        out = llGetSubString((string)val, 0, -7 + dp);
+    }
+    return out;
+}
+
+memReport() {
+    float free_memory = (float)llGetFreeMemory();
+    float used_memory = (float)llGetUsedMemory();
+    
+    if (devKey()) llOwnerSay(llGetScriptName() + ": Memory " + FormatFloat(used_memory/1024.0, 2) + "/" + (string)llRound((used_memory + free_memory)/1024.0) + "kB, " + FormatFloat(free_memory/1024.0, 2) + " kB free");
+}
+
+//---------------------------------------
+// Configuration Functions
+//---------------------------------------
+// This code assumes a human-generated config file
+processConfiguration(string name, list values) {
+    //----------------------------------------
+    // Assign values to program variables
+
+    if (name == "doll type") {
+        // Ensure proper capitalization for matching or display
+        setDollType(llList2String(values, 0), 1);
+    }
+    else if (name == "quiet key") {
+        quiet = llList2Integer(values, 0);
+    }
+}
+
 setup ()  {
     dollID =   llGetOwner();
     dollname = llGetDisplayName(dollID);
     stateName = "Regular";
-
-    // Trigger Transforming Key setting
-    llMessageLinked(LINK_THIS, 18, "here", dollID );
 
     integer ncd = ( -1 * (integer)("0x"+llGetSubString((string)llGetKey(),-5,-1)) ) -1;
     if (channel_dialog != ncd) {
@@ -76,6 +127,37 @@ setup ()  {
     sendStateName();
 }
 
+setDollType(string choice, integer force) {
+    if (force) {
+        transform = llGetSubString(llToUpper(choice), 0, 0) + llGetSubString(llToLower(choice), 1, -1);
+        choice = "Yes";
+        minMinutes = 0;
+    } else {
+        minMinutes = 5;
+    }
+    
+    if (choice == "Yes") stateName = transform;
+    else stateName = choice;
+
+    sendStateName();
+
+    currentState = stateName;
+    clothingprefix = "*" + stateName;
+    currentphrases = [];
+    lineno = 0;
+    
+    if (llGetInventoryType(stateName) == INVENTORY_NOTECARD) kQuery = llGetNotecardLine(stateName,0);
+
+    llMessageLinked(LINK_THIS, 2, clothingprefix, dollID);
+    llSleep(1.0);
+
+    llMessageLinked(LINK_THIS, 1, "random", dollID);
+    llMessageLinked(LINK_THIS, 16, currentState, dollID);
+
+    if (!quiet) llSay(0, dollname + " has become a " + stateName + " Doll.");
+    else llOwnerSay("You have become a " + stateName + " Doll.");
+}
+
 sendStateName() {
     string stateToSend = stateName;
 
@@ -98,7 +180,6 @@ sendStateName() {
     llSay(channelHUD,stateToSend);
 }
     
-
 reloadTypeNames() {
     string typeName;
 
@@ -107,7 +188,7 @@ reloadTypeNames() {
 
     while(n) {
         typeName = llGetInventoryName(INVENTORY_NOTECARD, --n);
-        if (typeName != "Preferences") {
+        if (llGetSubString(typeName, 0, 10) != "Preferences") {
             types += typeName;
         }
     }
@@ -121,26 +202,14 @@ default {
     //----------------------------------------
     // STATE ENTRY
     //----------------------------------------
-    state_entry() {
-        setup();
-        reloadTypeNames();
-
-        llSetTimerEvent(60.0);   // every minute
-
-        cd8666 = ( -1 * (integer)("0x"+llGetSubString((string)llGetKey(),-5,-1)) ) - 8666;
-
-        //maxMinutes = -1;
-        mustAgreeToType = FALSE;
-        showPhrases = TRUE;
-        //avoid = FALSE;
-    }
+    state_entry() { llMessageLinked(LINK_SET, 999, llGetScriptName(), NULL_KEY); }
 
     //----------------------------------------
     // ON REZ
     //----------------------------------------
-    on_rez(integer iParam) {
-        setup();
-    }
+    //on_rez(integer iParam) {
+        
+    //}
 
     //----------------------------------------
     // CHANGED
@@ -211,8 +280,10 @@ default {
     //----------------------------------------
     // LINK MESSAGE
     //----------------------------------------
-    link_message(integer source, integer num, string choice, key id) {
-
+    link_message(integer source, integer num, string data, key id) {
+        list parameterList = llParseString2List(data, [ "|" ], []);
+        string choice = llList2String(parameterList, 0);
+        
         if (num == 17) {
 
             // Doll must remain in a type for a period of time
@@ -241,6 +312,40 @@ default {
                 llDialog(id, msg, choices, channel);
             }
         }
+        
+        else if (num == 101) {
+            if (!configured) processConfiguration(llList2String(parameterList, 0), llList2List(parameterList, 1, -1));
+        }
+        
+        else if (num == 102) {
+            configured = 1;
+        }
+        
+        else if (num == 103 && choice == "Main") {
+            // Trigger Transforming Key setting
+            llMessageLinked(LINK_THIS, 18, "here", dollID );
+            llMessageLinked(LINK_SET, 103, llGetScriptName(), NULL_KEY);
+        }
+        
+        else if (num == 104) {
+            setup();
+            reloadTypeNames();
+    
+            llSetTimerEvent(60.0);   // every minute
+    
+            cd8666 = ( -1 * (integer)("0x"+llGetSubString((string)llGetKey(),-5,-1)) ) - 8666;
+    
+            //maxMinutes = -1;
+            mustAgreeToType = FALSE;
+            showPhrases = TRUE;
+            //avoid = FALSE;
+        }
+        
+        else if (num == 105) {
+            setup();
+        }
+        
+        else if (num == 135) memReport();
     }
 
     //----------------------------------------
@@ -286,29 +391,7 @@ default {
             llSay(DEBUG_CHANNEL,"choice = " + (string)choice);
             llSay(DEBUG_CHANNEL,"stateName = " + (string)stateName);
 
-            if (choice == "Yes") {
-                stateName = transform;
-            } else {
-                stateName = choice;
-            }
-
-            sendStateName();
-
-            minMinutes = 5;
-            currentState = stateName;
-            clothingprefix = "*" + stateName;
-            currentphrases = [];
-            lineno = 0;
-            kQuery = llGetNotecardLine(stateName,0);
-
-            llMessageLinked(LINK_THIS, 2, clothingprefix, dollID);
-            llSleep(1.0);
-
-            llMessageLinked(LINK_THIS, 1, "random", dollID);
-            llMessageLinked(LINK_THIS, 16, currentState, dollID);
-
-            llSay(0, dollname + " has become a " + stateName + " Doll.");
-
+            setDollType(choice, 0);
         // Set options - "Options"
         } else if (channel == cd8667) {
             if (choice == "verify") {
@@ -353,5 +436,3 @@ default {
         }
     }
 }
-
-

@@ -14,6 +14,7 @@
 //========================================
 // VARIABLES
 //========================================
+                  
 string bigsubfolder = "Dressup"; //name of subfolder in RLV to always use if available. But also checks for outfits.
 
 // FIXME: This should be in a notecard so it can be changed without mangling the scripts.
@@ -26,6 +27,7 @@ key dollID;
 key dresserID;
 key setupID;
 
+integer lockTime = 300;
 integer listen_id_outfitrequest3;
 string newoutfitname;
 string oldoutfitpath;
@@ -62,9 +64,44 @@ string oldclothespoints;
 integer newoutfitwordend;
 integer outfitPageSize = 9;
 
+// Keys of important people in life of the Key:
+key MasterBuilder = "42c7aaec-38bc-4b0c-94dd-ae562eb67e6d";   // Christina Halpin
+key  MasterWinder = "64d26535-f390-4dc4-a371-a712b946daf8";   // GreigHighland
+key        DevOne = "c5e11d0a-694f-46cc-864b-e42340890934";   // MayStone
+key        DevTwo = "2fff40f0-ea4a-4b52-abb8-d4bf6b1c98c9";   // Silky Mesmeriser
+
+list rescuerList = [ MasterBuilder, MasterWinder ];
+list developerList = [ DevOne, DevTwo ];
+
+string scriptName;
+
 //========================================
 // FUNCTIONS
 //========================================
+
+integer devKey() {
+    if (dollID != llGetOwner()) dollID = llGetOwner();
+    return llListFindList(developerList, [ dollID ]) != -1;
+}
+
+string FormatFloat(float val, integer dp)
+{
+    string out = "ERROR";
+    if (dp == 0) {
+        out = (string)llRound(val);
+    } else if (dp > 0 && dp <= 6) {
+        val = llRound(val * llPow(10.0, dp)) / llPow(10.0, dp);
+        out = llGetSubString((string)val, 0, -7 + dp);
+    }
+    return out;
+}
+
+memReport() {
+    float free_memory = (float)llGetFreeMemory();
+    float used_memory = (float)llGetUsedMemory();
+    
+    if (devKey()) llOwnerSay(scriptName + ": Memory " + FormatFloat(used_memory/1024.0, 2) + "/" + (string)llRound((used_memory + free_memory)/1024.0) + "kB, " + FormatFloat(free_memory/1024.0, 2) + " kB free");
+}
 
 list outfitsPage(list outfitList) {
     integer newOutfitCount = llGetListLength(outfitList);
@@ -186,18 +223,17 @@ listInventoryOn (string channel) {
     llSay(DEBUG_CHANNEL,">> outfitsFolder = " + (string)outfitsFolder);
                 
     if (clothingFolder == "") {
-        llOwnerSay("@getinv=" + channel);
+        llMessageLinked(LINK_SET, 315, scriptName + "|getinv=" + channel, NULL_KEY);
     }
     else {
         llSay(DEBUG_CHANNEL,"cmd = getinv:" + clothingFolder + "=" + channel);
-        llOwnerSay("@getinv:" + clothingFolder + "=" + channel);
+        llMessageLinked(LINK_SET, 315, scriptName + "|getinv:" + clothingFolder + "=" + channel, NULL_KEY);
     }
 }
 
 setup ()  {
     dollID = llGetOwner();
     candresstemp = TRUE;
-    llOwnerSay("@getinv=2555");
 
 //from dollkey36
 
@@ -218,32 +254,20 @@ setup ()  {
 
         setupID = dollID;
     }
+    
+    listInventoryOn("2555");
+    
+    llSetTimerEvent(10.0);  //clock is accessed every ten seconds;
+    
+    llMessageLinked(LINK_SET, 103, scriptName, NULL_KEY);
 }
 
 //========================================
 // STATES
 //========================================
 default {
-
-    //----------------------------------------
-    // STATE_ENTRY
-    //----------------------------------------
-    state_entry() {
-        clothingFolder = "";
-        channel_dialog = 0;
-
-        setup();
-
-        llSetTimerEvent(10.0);  //clock is accessed every ten seconds;
-    }
-
-    //----------------------------------------
-    // ON_REZ
-    //----------------------------------------
-    on_rez(integer iParam) {
-        setup();
-    }
-
+    state_entry() { scriptName = llGetScriptName(); llMessageLinked(LINK_SET, 999, scriptName, NULL_KEY); }
+    
     //----------------------------------------
     // TIMER
     //----------------------------------------
@@ -261,13 +285,13 @@ default {
         // need to disallow dressing while dressing is happening
 
         // Choice #1: Dress Dolly
-        if (num == 1)  {
+        if (num == 500)  {
             if (candresstemp == FALSE) {
                 llRegionSayTo(dresserID, PUBLIC_CHANNEL, "Dolly cannot be dressed right now; she is already dressing");
             }
             // If this code is linked with an argument of "start", then
             // act normally
-            else if (choice == "start") {
+            else if (choice == "Dress") {
                 dresserID = id;
                 listInventoryOn("2666");
             }
@@ -302,14 +326,24 @@ default {
             if (clothingFolder != oldclothingprefix) {
 
                 xfolder = "~normalself";
-                //llOwnerSay("@attach:" + clothingFolder + "/~normalself=force");
-                llOwnerSay("@attach:~normalself=force");
-                llOwnerSay("@getinvworn:~normalself=2668");
+                //llMessageLinked(LINK_SET, 315, scriptName + "|attach:" + clothingFolder + "/~normalself=force", NULL_KEY);
+                llMessageLinked(LINK_SET, 315, scriptName + "|attach:~normalself=force", NULL_KEY);
+                llMessageLinked(LINK_SET, 315, scriptName + "|getinvworn:~normalself=2668", NULL_KEY);
 
                 // FIXME: Make sure...
                 //llSleep(2.0);
-                //llOwnerSay("@attach:~normalself=force");
+                //llMessageLinked(LINK_SET, 315, scriptName + "|attach:~normalself=force", NULL_KEY);
             }
+        }
+        else if (num == 104) {
+            llSleep(1);
+            
+            clothingFolder = "";
+            channel_dialog = 0;
+        }
+        else if (num == 135) memReport();
+        else if (num == 350) {
+            setup();
         }
     }
 
@@ -357,7 +391,7 @@ default {
             integer n;
             string itemname;
 
-            llSay(DEBUG_CHANNEL,">on channle 2555");
+            llSay(DEBUG_CHANNEL,">on channel 2555");
             outfitsFolder = "";
 
             // Looks for a folder that may contain outfits - folders such
@@ -521,6 +555,8 @@ default {
         // The original random code could also return a "OK" as choice, and this was filtered for.
         //
         else if (channel == cd2667) {
+            llMessageLinked(LINK_SET, 305, scriptName + "|wearClear", NULL_KEY);
+                                    
             llSay(DEBUG_CHANNEL,">>> channel 2667: " + choice);
             if (choice == "OK") {
                 ; // No outfits: only OK is available
@@ -578,12 +614,12 @@ default {
                 // items and another outfit using other items - such as
                 // one outfit using a miniskirt and one a long dress.
                 //
-                llOwnerSay("@getpathnew:pants=2670");
-                llOwnerSay("@getpathnew:shirt=2670");
-                llOwnerSay("@getpathnew:jacket=2670");
-                llOwnerSay("@getpathnew:skirt=2670");
-                llOwnerSay("@getpathnew:underpants=2670");
-                llOwnerSay("@getpathnew:undershirt=2670");
+                llMessageLinked(LINK_SET, 315, scriptName + "|getpathnew:pants=2670", NULL_KEY);
+                llMessageLinked(LINK_SET, 315, scriptName + "|getpathnew:shirt=2670", NULL_KEY);
+                llMessageLinked(LINK_SET, 315, scriptName + "|getpathnew:jacket=2670", NULL_KEY);
+                llMessageLinked(LINK_SET, 315, scriptName + "|getpathnew:skirt=2670", NULL_KEY);
+                llMessageLinked(LINK_SET, 315, scriptName + "|getpathnew:underpants=2670", NULL_KEY);
+                llMessageLinked(LINK_SET, 315, scriptName + "|getpathnew:undershirt=2670", NULL_KEY);
 
                 // Original outfit was a complete avi reset....
                 // Restore our usual look from the ~normalself
@@ -592,29 +628,29 @@ default {
                 if ( isPlusItem(oldoutfitname) &&
                     !isPlusItem(newoutfitname)) {  // only works well assuming in regular
 
-                    llOwnerSay("@attach:~normalself=force");
+                    llMessageLinked(LINK_SET, 315, scriptName + "|attach:~normalself=force", NULL_KEY);
                     llSleep(4.0);
                 }
 
                 // First, replace current outfit with new (or replace)
-                llOwnerSay("@attach:" + newoutfit + "=force");
+                llMessageLinked(LINK_SET, 315, scriptName + "|attach:" + newoutfit + "=force", NULL_KEY);
                 llSleep(4.0);
 
                 // Add items that cant replace what is already there
-                llOwnerSay("@attachallover:" + newoutfit + "=force");
+                llMessageLinked(LINK_SET, 315, scriptName + "|attachallover:" + newoutfit + "=force", NULL_KEY);
                 llSleep(4.0);
 
                 // Remove rest of old outfit (using memorized former outfit)
                 if (oldoutfit != "") {
                     if (oldoutfit != newoutfit) {
-                        llOwnerSay("@detachall:" + oldoutfit + "=force");
+                        llMessageLinked(LINK_SET, 315, scriptName + "|detachall:" + oldoutfit + "=force", NULL_KEY);
                         llSleep(4.0);
                     }
                 }
 
                 // Remove rest of old outfit (using path from attachments)
                 if (oldoutfitpath != "") {
-                    llOwnerSay("@detachall:" + oldoutfitpath + "=force");
+                    llMessageLinked(LINK_SET, 315, scriptName + "|detachall:" + oldoutfitpath + "=force", NULL_KEY);
                     llSleep(4.0);
                     oldoutfitpath = "";
                 }
@@ -633,7 +669,7 @@ default {
                     //
                     // This could also be expanded to create a Nude dress selection -
                     // such as for use when going to nude beaches and such.
-                    llOwnerSay("@attach:~nude=force");
+                    llMessageLinked(LINK_SET, 315, scriptName + "|attach:~nude=force", NULL_KEY);
                     llSleep(4.0);
                 }
 
@@ -642,6 +678,8 @@ default {
                 candresstimeout = 2;
 
                 llOwnerSay("Change to new outfit " + newoutfitname + " complete.");
+                
+                if (id != dollID) llMessageLinked(LINK_SET, 305, scriptName + "|wearLock", NULL_KEY);
             }
         }
 
@@ -654,8 +692,8 @@ default {
             llSay(DEBUG_CHANNEL,">> @getinvworn:" + xfolder);
             if ((llGetSubString(choice,2,2)) != "3") {
                 llSleep(4.0);
-                llOwnerSay("@attach:" + xfolder + "=force");
-                llOwnerSay("@getinvworn:" + xfolder + "=2668");
+                llMessageLinked(LINK_SET, 315, scriptName + "|attach:" + xfolder + "=force", NULL_KEY);
+                llMessageLinked(LINK_SET, 315, scriptName + "|getinvworn:" + xfolder + "=2668", NULL_KEY);
             }
         }
 
@@ -668,8 +706,8 @@ default {
             llSay(DEBUG_CHANNEL,">> @getinvworn:" + xfolder);
             if ((llGetSubString(choice,2,2)) != "1") {
                 llSleep(4.0);
-                llOwnerSay("@detach:" + xfolder + "=force");
-                llOwnerSay("@getinvworn:" + xfolder + "=2669");
+                llMessageLinked(LINK_SET, 315, scriptName + "|detach:" + xfolder + "=force", NULL_KEY);
+                llMessageLinked(LINK_SET, 315, scriptName + "|getinvworn:" + xfolder + "=2669", NULL_KEY);
             }
         }
 
@@ -689,5 +727,3 @@ default {
         }
     }
 }
-
-
