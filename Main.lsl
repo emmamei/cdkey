@@ -550,12 +550,12 @@ default {
         if (windRate > 0.0) {
             timeLeftOnKey -= (llGetAndResetTime() * windRate);
 
-            minsLeft = llRound(timeLeftOnKey / 60.0);
+            minsLeft = llRound(timeLeftOnKey / (60.0 * windRate));
 
             if (doWarnings && (minsLeft == 30 || minsLeft == 15 || minsLeft == 10 || minsLeft ==  5 || minsLeft ==  2) && !warned) {
                 // FIXME: This can be seen as a spammy message - especially if there are too many warnings
                 if (!quiet) llSay(0, dollName + " has " + (string)minsLeft + " minutes left before they run down!");
-                else llOwnerSay("You have " + (string)minsleft + " minutes left before winding down!");
+                else llOwnerSay("You have " + (string)minsLeft + " minutes left before winding down!");
                 warned = 1; // have warned now: dont repeat same warning
             }
             else warned = 0;
@@ -692,6 +692,11 @@ default {
                 mistressQuery = llRequestAgentData(MistressID, DATA_NAME);
             }
             else if (name == "hasController") hasController = (integer)value;
+            else if (name == "afk") {
+		afk = (integer)value;
+		setWindRate();
+	    }
+	    else if (name == "autoAFK") autoAFK = (integer)value;
         }
         
         else if (num == 305) {
@@ -701,9 +706,9 @@ default {
             split = llList2List(split, 2, -1);
             
             if (cmd == "setAFK") {
-                afk = llList2Integer(split, 0);
-                setWindRate();
-            }
+		afk = llList2Integer(split, 0);
+		setWindRate();
+	    }
             else if (cmd == "carry") {
                 string name = llList2String(split, 1);
                 carry(name, id);
@@ -738,112 +743,6 @@ default {
         //     key = filter by avatar key
         //  choice = filter by specific message
 
-<<<<<<< HEAD
-=======
-        // Main Menu
-        if (channel == channel_dialog) {
-            handlemenuchoices(choice, name, id);
-        }
-
-        // Options menu
-        else if (channel == cd5666) {
-            integer controller = isMistress(id);
-
-            if (id == dollID) {
-                if (choice == "no detaching") {
-                    detachable = 0;
-                    llOwnerSay( "Your key is now a permanent part of you.");
-                }
-                else if (choice == "auto tp") {
-                    autoTP = 1;
-                    llMessageLinked(LINK_SET, 300, "autoTP" + ZWSP + "1", NULL_KEY);
-                }
-                else if (choice == "pleasure doll") {
-                    llOwnerSay("You are now a pleasure doll.");
-                    pleasureDoll = 1;
-                }
-                else if (choice == "not pleasure") {
-                    llOwnerSay("You are no longer a pleasure doll.");
-                    pleasureDoll = 0;
-
-                    if (dollType == "Slut") {
-                        llOwnerSay("As a Slut Dolly, you can still be stripped.");
-                    }
-                }
-                else if (choice == "no self tp") {
-                    helpless = 1;
-                    llMessageLinked(LINK_SET, 300, "helpless" + ZWSP + "1", NULL_KEY);
-                }
-                else if (choice == "can carry") {
-                    llOwnerSay("Other people can now carry you.");
-                    canCarry = 1;
-                }
-                else if (choice == "no carry") {
-                    llOwnerSay("Other people can no longer carry you.");
-                    canCarry = 0;
-                }
-                else if (choice == "can outfit") {
-                    llOwnerSay("Other people can now outfit you.");
-                    canDress = 1;
-                }
-                else if (choice == "no outfitting") {
-                    llOwnerSay("Other people can no longer outfit you.");
-                    canDress = 0;
-                }
-                else if (choice == "no takeover") {
-                    llOwnerSay("There is now no way for someone to become your controller.");
-                    takeoverAllowed = 0;
-                }
-                else if (choice == "allow takeover") {
-                    llOwnerSay( "Anyone carrying you may now choose to be your controller.");
-                    takeoverAllowed = 1;
-                }
-                else if (choice == "no warnings") {
-                    llOwnerSay( "No warnings will be given when time remaining is low.");
-                    doWarnings = 0;
-                }
-                else if (choice == "warnings") {
-                    llOwnerSay( "Warnings will now be given when time remaining is low.");
-                    doWarnings = 1;
-                }
-                else if (choice == "no flying") {
-                    canFly = 0;
-                    llMessageLinked(LINK_SET, 300, "canFly" + ZWSP + "0", NULL_KEY);
-                }
-                else if (choice == "turn off sign") {
-                    // erase sign
-                    llSetText("", <1,1,1>, 1);
-                    signOn = 0;
-                }
-                else if (choice == "turn on sign") {
-                    // erase sign
-                    llSetText(dollType, <1,1,1>, 1);
-                    signOn = 1;
-                }
-            } else if (controller && !(id == dollID)) {
-                if (choice == "detachable") {
-                    detachable = 1;
-                } else if (choice == "no auto tp") {
-                    autoTP = 0;
-                    llMessageLinked(LINK_SET, 300, "autoTP" + ZWSP + "0", NULL_KEY);
-                } else if (choice == "no AFK") {
-                    canAFK = 0;
-                } else if (choice == "can AFK") {
-                    canAFK = 1;
-                } else if (choice == "can travel") {
-                    helpless = 0;
-                    llMessageLinked(LINK_SET, 300, "helpless" + ZWSP + "0", NULL_KEY);
-                } else if (choice == "drop control") {
-                    MistressID = MasterBuilder;
-                    hasController = 0;
-                } else if (choice == "can fly") {
-                    canFly = 1;
-                    llMessageLinked(LINK_SET, 300, "canFly" + ZWSP + "1", NULL_KEY);
-                }
-            }
-        }
-
->>>>>>> cfc773018669816656cba94949b3f91caf212c33
         // Text commands
         if (channel == chatChannel) {
 

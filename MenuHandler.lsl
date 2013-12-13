@@ -23,11 +23,12 @@ list developerList = [ DevOne, DevTwo ];
 list testerList = [ DevTwo ];
 
 float timeLeftOnKey;
-float windRate = 0.0;
+float windRate = 1.0;
 
 string httpstart = "http://communitydolls.com/";
 
 string ANIMATION_COLLAPSED = "collapse";
+string NOTECARD_HELP = "Community Dolls Key Help and Manual";
 string LANDMARK_HOME = "Home";
 float RATE_STANDARD = 1.0;
 float RATE_AFK = 0.5;
@@ -164,7 +165,6 @@ doMainMenu(key id) {
 
     // Compute "time remaining" message
     string timeleft;
-    
     // Manual page
     string manpage;
 
@@ -263,12 +263,6 @@ doMainMenu(key id) {
             menu = ["Dress","Options"];
             if (testerKey()) menu += ["Strip","Wind"];
 
-            if (pose) {
-                menu += "Unpose";
-            }
-
-            menu += "Pose";
-
             if (canAFK) {
                 menu += "Toggle AFK";
             }
@@ -292,35 +286,35 @@ doMainMenu(key id) {
                 menu += "Type of Doll";
             }
         }
+        else manpage = "communitydoll.htm";
+        
         // Toucher is not Doll.... could be anyone
-        else {
-            msg =  dollName + " is a doll and likes to be treated like " +
-                   "a doll. So feel free to use these options.\n";
+        msg =  dollName + " is a doll and likes to be treated like " +
+               "a doll. So feel free to use these options.\n";
+               
+        if (llGetInventoryType(NOTECARD_HELP) == INVENTORY_NOTECARD) menu += "Help";
 
-            // Hide the general "Carry" option for all but Mistress when one exists
-            if ((id == MistressID) || !hasController) {
-                if (canCarry) {
-                    msg =  msg +
-                           "Carry option picks up " + dollName + " and temporarily" +
-                           " makes the Dolly exclusively yours.\n";
+        // Hide the general "Carry" option for all but Mistress when one exists
+        if (((id == MistressID) || !hasController) && id != dollID) {
+            if (canCarry) {
+                msg =  msg +
+                       "Carry option picks up " + dollName + " and temporarily" +
+                       " makes the Dolly exclusively yours.\n";
 
-                    menu += "Carry";
-                }
+                menu += "Carry";
             }
-
-            if (pose) {
-                //msg += "Doll is currently in the " + currentAnimation + " pose. ";
-                msg += "Doll is currently posed.\n";
-            }
-
-            manpage = "communitydoll.htm";
-
-            if (pose) {
-                menu += "Unpose";
-            }
-
-            menu += "Pose";
         }
+
+        if (pose) {
+            //msg += "Doll is currently in the " + currentAnimation + " pose. ";
+            msg += "Doll is currently posed.\n";
+        }
+
+        if (pose) {
+            menu += "Unpose";
+        }
+
+        menu += "Pose";
     }
 
     // If toucher is Mistress and NOT self...
@@ -408,6 +402,9 @@ handlemenuchoices(string choice, string name, key id) {
         carrierName = name;
         llMessageLinked(LINK_SET, 305, llGetScriptName() + "|carry|" + carrierName, carrierID);
     }
+    else if (choice == "Help") {
+        llGiveInventory(id,NOTECARD_HELP);
+    }
     else if (carried && carrier && choice == "Place Down") {
         // Doll has been placed down...
         llMessageLinked(LINK_SET, 305, llGetScriptName() + "|uncarry|" + carrierName, carrierID);
@@ -494,12 +491,16 @@ handlemenuchoices(string choice, string name, key id) {
 
             integer minsleft = llRound(timeLeftOnKey / 60.0);
             llMessageLinked(LINK_SET, 305, llGetScriptName() + "|setAFK|" + (string)afk + "|0|" + formatFloat(getWindRate(), 1) + "|" + (string)llRound((float)minsleft / getWindRate()), id);
+            llMessageLinked(LINK_SET, 300, "afk|1", id);
+            llMessageLinked(LINK_SET, 300, "autoAFK|0", id);
         }
         else {
             llSetText(dollType + " Doll (AFK)", <1,1,0>, 1);
             
             integer minsleft = llRound(timeLeftOnKey / 60.0);
             llMessageLinked(LINK_SET, 305, llGetScriptName() + "|setAFK|" + (string)afk + "|0|" + formatFloat(getWindRate(), 1) + "|" + (string)llRound((float)minsleft / getWindRate()), id);
+            llMessageLinked(LINK_SET, 300, "afk|0", id);
+            llMessageLinked(LINK_SET, 300, "autoAFK|0", id);
         }
     }
     else if (choice == "no detaching")
