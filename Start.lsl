@@ -41,20 +41,6 @@ list readyScripts;
 integer startup = 1;
 integer reset;
 
-integer DEBUG = 1;
-integer INFO = 2;
-integer NOTICE = 3;
-integer WARN = 4;
-integer ERROR = 5;
-
-ownerMsg (integer level, string msg) {
-    if (devKey() && level == DEBUG) llOwnerSay("DEBUG: " + msg);
-    else if (devKey() && level == INFO) llOwnerSay("INFO: " + msg);
-    else if (level == NOTICE) llOwnerSay(msg);
-    else if (level == WARN) llOwnerSay("WARNING: " + msg);
-    else llRegionSayTo(dollID, DEBUG_CHANNEL, msg);
-}
-
 msg (string s) {
     sendMsg(dollID, s);
     llSleep(delayTime);
@@ -165,8 +151,8 @@ default {
     link_message(integer source, integer num, string choice, key id) {
         if (num == 200) { // Triggered from Main.lsl
 
-            sendMsg(dollID, "---- Community Doll Key loaded: Version: 6 December 2013");
-            sendMsg(dollID, "---- Key: " + llKey2Name(id));
+            llOwnerSay("---- Community Doll Key loaded: Version: " + optiondate);
+            llOwnerSay("---- Key: " + llKey2Name(id));
 
             // First minute....
             msg("You feel a key being put on your back, the weight settling in. Imagine that as vividly as you can.");
@@ -299,15 +285,14 @@ default {
                     //else if (llGetSubString(name, 0, 2) == "ext")
                     //    llMessageLinked(LINK_SET, 201, name + param, NULL_KEY);
                     else
-                        ownerMsg(WARN, "Unknown configuration value: " + name + " on line " + (string)(ncLine + 1));
+                        llOwnerSay("Unknown configuration value: " + name + " on line " + (string)(ncLine + 1));
                 }
                 ncPrefsKey = llGetNotecardLine(ncName, ++ncLine);
             }
         }
     }
     
-    changed(integer change)
-    {
+    changed(integer change) {
         if (change & CHANGED_INVENTORY) {
             if (ncPrefsLoadedUUID != NULL_KEY && llGetInventoryKey(ncName) != ncPrefsLoadedUUID) {
                 // Get a unique number

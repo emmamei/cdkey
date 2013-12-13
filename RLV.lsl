@@ -1,4 +1,6 @@
+//========================================
 // RLV.lsl
+//========================================
 //
 // vim:sw=4 et nowrap:
 //
@@ -75,6 +77,10 @@ integer devKey() {
     if (dollID != llGetOwner()) dollID = llGetOwner();
     return llListFindList(developerList, [ dollID ]) != -1;
 }
+
+//========================================
+// FUNCTIONS
+//========================================
 
 // This code assumes a human-generated config file
 processConfiguration(string name, list values) {
@@ -367,14 +373,20 @@ afkOrCollapse(string type, integer set) {
     }
 }
 
+//========================================
+// STATES
+//========================================
+
 default {
-    state_entry() { scriptName = llGetScriptName(); llMessageLinked(LINK_SET, 999, llGetScriptName(), NULL_KEY); }
-    
-    on_rez(integer start) {
-        llResetTime();
-        RLVstarted = 0;
+    state_entry() {
+	dollID = llGetOwner();
+	scriptName = llGetScriptName();
+	llMessageLinked(LINK_SET, 999, llGetScriptName(), NULL_KEY);
     }
     
+    //----------------------------------------
+    // TIMER
+    //----------------------------------------
     timer() {
         if (!RLVok && RLVck > 0 && RLVck < 5) {
             llSetTimerEvent(15);
@@ -401,6 +413,10 @@ default {
         }
     }
     
+    //----------------------------------------
+    // LISTEN
+    //----------------------------------------
+
     listen(integer chan, string name, key id, string msg) {
         if (chan == channel) {
             RLVok = 1;
@@ -409,10 +425,56 @@ default {
         }
     }
     
+    //----------------------------------------
+    // LINK_MESSAGE
+    //----------------------------------------
+
     link_message(integer sender, integer num, string data, key id) {
+        integer index;
+        string parameter;
         list parameterList = llParseString2List(data, [ "|" ], []);
+
+        // valid numbers:
+        //    101: Initial configuration from Preferences
+        //    102: End of Preferences notification message
+        //    104: Global startup trigger from start.lsl
+        //    105: Global on_rez trigger
+        //    300: Configuration messages from other scripts
+        //    305: Internal RLV Commands
+        //    315: Raw RLV Commands
+        //
+        // 300 cmds:
+        //    * MistressID
+        //    * hasController
+        //    * autoTP
+        //    * helpless
+        //    * canFly
+        //    * canStand
+        //    * canSit
+        //    * canWear
+        //    * canUnwear
+        //    * detachable
+        //    * visible
+        //    * signOn
+        //
+        // 305 cmds:
+        //    * autoSetAFK
+        //    * setAFK
+        //    * unsetAFK
+        //    * collapse
+        //    * restore
+        //    * stripTop
+        //    * stripBra
+        //    * stripBottom
+        //    * stripPanties
+        //    * stripShoes
+        //    * carried
         
         if (num == 16) dollType = llList2String(parameterList, 0);
+        else if (num == 101) {
+            if (!configured) processConfiguration(llList2String(parameterList, 0), llList2List(parameterList, 1, -1));
+        }
+        else if (num == 102) configured = 1;
         else if (num == 104) {
             dollID = llGetOwner();
             dollName = llGetDisplayName(dollID);
@@ -420,7 +482,15 @@ default {
             listenerStart();
             checkRLV();
         }
-        else if (num == 105) checkRLV();
+        else if (num == 105) {
+            locked = 0;
+            RLVok = 0;
+            ATHok = llGetAttached() == ATTACH_BACK;
+            RLVstarted = 0;
+            llResetTime();
+            
+            checkRLV();
+        }
         else if (num == 106) {
             if (id == NULL_KEY && hasController && !detachable && !locked) {
                 // Undetachable key with controller is detached while RLV lock
@@ -443,7 +513,7 @@ default {
             else if (name == "hasController") {
                 hasController = llList2Integer(parameterList, 1);
             }
-            else if (name == "autoTP") {
+            else if (cmd == "autoTP") {
                 autoTP = llList2Integer(parameterList, 1);
                 if (autoTP) {
                     llOwnerSay("You will now be automatically teleported.");
@@ -498,6 +568,7 @@ default {
                 signOn = llList2Integer(parameterList, 1);
             }
         }
+
         else if (num == 305) { // RLV Commands
             string script = llList2String(parameterList, 0);
             string cmd = llList2String(parameterList, 1);
@@ -642,15 +713,5 @@ default {
                 doRLV(script, "remoutfit=y,remattach=y,addoutfit=y,addattach=y," + cmd + ",remoutfit=n,remattach=n,addoutfit=n,addattach=n");
             }
         }
-        
-        else if (num == 100 && data == "MistressID") {
-            MistressID = id;
-            if (MistressID != MasterBuilder) hasController = 1;
-            else hasController = 0;
-        }
-        else if (num == 101) {
-            if (!configured) processConfiguration(llList2String(parameterList, 0), llList2List(parameterList, 1, -1));
-        }
-        else if (num == 102) configured = 1;
     }
 }
