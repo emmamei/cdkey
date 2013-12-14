@@ -410,12 +410,12 @@ ifPermissions() {
 
 float setWindRate() {
     float newWindRate = RATE_STANDARD;
-    integer attached = llGetAttached() && ATTACH_BACK;
+    integer attached = llGetAttached() == ATTACH_BACK;
     if (afk) newWindRate *= RATE_AFK;
-    if (!attached || collapsed || !(dollType == "Builder" || dollType == "Key")) newWindRate *= 0.0;
+    if (!attached || collapsed || (dollType == "Builder" || dollType == "Key")) newWindRate *= 0.0;
     
-    if (newWindRate != windRate) {
-        if (windRate = 0.0) llResetTime();
+    if (windRate != newWindRate) {
+        if (windRate == 0.0) llResetTime();
         windRate = newWindRate;
         llTargetOmega(<0,0,1>, windRate * 0.5, 1);
         llMessageLinked(LINK_SET, 300, "windRate|" + (string)windRate, NULL_KEY);
@@ -537,8 +537,10 @@ default {
             newAFK = 0;
             autoAFK = 0;
         }
+        
+        setWindRate();
+        
         if (newAFK != afk) {
-            setWindRate();
             integer minsLeft;
             if (windRate > 0.0) minsLeft = llRound(timeLeftOnKey / (60.0 * windRate));
             llMessageLinked(LINK_SET, 305, llGetScriptName() + "|setAFK|" + (string)(afk = newAFK) + "|" + (string)autoAFK + "|" + formatFloat(windRate, 1) + "|" + (string)minsLeft, NULL_KEY);
