@@ -6,7 +6,7 @@
 // Note that some doll types are special....
 //    - regular: used for standard Dolls, including non-transformable
 //    - slut: can be stripped (like Pleasure Dolls)
-//    - Display: poseds dont time out
+//    - Display: poses dont time out
 //    - Key: doesnt wind down - Doll can be worn by other Dolly as Key
 //    - Builder: doesnt wind down
 
@@ -144,8 +144,7 @@ string wwGetSLUrl() {
     return ("secondlife://" + llEscapeURL(region) +"/" + posx + "/" + posy + "/" + posz);
 }
 
-string formatFloat(float val, integer dp)
-{
+string formatFloat(float val, integer dp) {
     string out = "ERROR";
     if (dp == 0) {
         out = (string)llRound(val);
@@ -376,17 +375,25 @@ ifPermissions() {
             if (keyAnimation != "") {
                 aoControl(0);
                 
-                list animList; integer i; integer animCount;
+                list animList;
+                integer i;
+                integer animCount;
+
                 while ((animCount = llGetListLength(animList = llGetAnimationList(dollID))) > 1) {
-                    for (i = 0; i < animCount; i++) llStopAnimation(llList2Key(animList, i));
+                    for (i = 0; i < animCount; i++)
+                        llStopAnimation(llList2Key(animList, i));
                     llStartAnimation(keyAnimation);
                 }
             } else {
                 aoControl(1);
                 
-                list animList; integer i; integer animCount;
+                list animList;
+                integer i;
+                integer animCount;
+
                 while (animCount = llGetListLength(animList = llGetAnimationList(dollID)))
-                    for (i = 0; i < animCount; i++) llStopAnimation(llList2Key(animList, i));
+                    for (i = 0; i < animCount; i++)
+                        llStopAnimation(llList2Key(animList, i));
             }
         }
         
@@ -394,28 +401,38 @@ ifPermissions() {
             if (keyAnimation != "") {
                 llSetAnimationOverride("Standing", keyAnimation);
                 llSetAnimationOverride("Sitting", keyAnimation);
-            } else llResetAnimationOverride("ALL");
+            } else {
+                llResetAnimationOverride("ALL");
+            }
         }
         
         if (perm & PERMISSION_TAKE_CONTROLS) {
-            if (collapsed || posed || afk) llTakeControls(CONTROL_ALL, 1, 0);
-            else llTakeControls(CONTROL_FWD, 1, 1);
+            if (collapsed || posed || afk)
+                llTakeControls(CONTROL_ALL, 1, 0);
+            else
+                llTakeControls(CONTROL_FWD, 1, 1);
         }
         
         if (perm & PERMISSION_ATTACH) {
-            if (!devKey() && !llGetAttached()) llAttachToAvatar(ATTACH_BACK);
+            if (!devKey() && !llGetAttached())
+                llAttachToAvatar(ATTACH_BACK);
         }
     }
 }
 
 float setWindRate() {
     float newWindRate = RATE_STANDARD;
-    integer attached = llGetAttached() == ATTACH_BACK;
-    if (afk) newWindRate *= RATE_AFK;
-    if (!attached || collapsed || (dollType == "Builder" || dollType == "Key")) newWindRate *= 0.0;
+    integer attached = (llGetAttached() == ATTACH_BACK);
+
+    if (afk)
+        newWindRate *= RATE_AFK;
+
+    if (!attached || collapsed || (dollType == "Builder" || dollType == "Key"))
+        newWindRate *= 0.0;
     
     if (windRate != newWindRate) {
-        if (windRate == 0.0) llResetTime();
+        if (windRate == 0.0)
+            llResetTime();
         windRate = newWindRate;
         llTargetOmega(<0,0,1>, windRate * 0.5, 1);
         llMessageLinked(LINK_SET, 300, "windRate|" + (string)windRate, NULL_KEY);
@@ -445,7 +462,8 @@ carry(string name, key id) {
         
     if (carrierPos != ZERO_VECTOR && !posed) llMoveToTarget(carrierPos, 0.7);
     
-    if (!quiet) llSay(0, "The doll " + dollName + " has been picked up by " + carrierName);
+    if (!quiet)
+        llSay(0, "The doll " + dollName + " has been picked up by " + carrierName);
     else {
         llOwnerSay("You have been picked up by " + carrierName);
         llRegionSayTo(carrierID, 0, "You have picked up the doll " + dollName);
@@ -475,9 +493,17 @@ default {
     //----------------------------------------
     // This should set up generic defaults
     // not specific to owner
-    state_entry() { llMessageLinked(LINK_SET, 999, llGetScriptName(), NULL_KEY); llSetTimerEvent(1); }
+    state_entry() {
+        llMessageLinked(LINK_SET, 999, llGetScriptName(), NULL_KEY);
+        llSetTimerEvent(1);
+    }
     
-    on_rez(integer start) { llResetTime(); }
+    //----------------------------------------
+    // ON_REZ
+    //----------------------------------------
+    on_rez(integer start) {
+        llResetTime();
+    }
 
     //----------------------------------------
     // DATASERVER
@@ -529,6 +555,7 @@ default {
 
         integer agentInfo = llGetAgentInfo(dollID);
         integer newAFK;
+
         // When Dolly is "away" - enter AFK
         if (agentInfo & AGENT_AWAY) {
             newAFK = 1;
@@ -644,10 +671,12 @@ default {
         }
         
         else if (num == 101) {
-            if (!configured) processConfiguration(llList2String(parameterList, 0), llList2List(parameterList, 1, -1));
+            if (!configured)
+                processConfiguration(llList2String(parameterList, 0), llList2List(parameterList, 1, -1));
         }
         
-        else if (num == 102) configured = 1;
+        else if (num == 102)
+            configured = 1;
         
         else if (num == 104) {
             dollID = llGetOwner();
@@ -665,7 +694,8 @@ default {
         }
         
         else if (num == 105) {
-            if (hasController) llOwnerSay("Your Mistress is " + MistressName);
+            if (hasController)
+                llOwnerSay("Your Mistress is " + MistressName);
             
             dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -9, -1));
             simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
@@ -680,29 +710,30 @@ default {
             string name = llList2String(parameterList, 0);
             string value = llList2String(parameterList, 1);
             
-            if (name == "detachable") detachable = (integer)value;
-            else if (name == "autoTP") autoTP = (integer)value;
-            else if (name == "pleasureDoll") pleasureDoll = (integer)value;
-            else if (name == "helpless") helpless = (integer)value;
-            else if (name == "canCarry") canCarry = (integer)value;
-            else if (name == "canDress") canDress = (integer)value;
-            else if (name == "canStand") canStand = (integer)value;
-            else if (name == "canSit") canSit = (integer)value;
-            else if (name == "canFly") canFly = (integer)value;
-            else if (name == "takeoverAllowed") takeoverAllowed = (integer)value;
-            else if (name == "doWarnings") doWarnings = (integer)value;
-            else if (name == "signOn") signOn = (integer)value;
-            else if (name == "canAFK") canAFK = (integer)value;
+                 if (name == "detachable")            detachable = (integer)value;
+            else if (name == "autoTP")                    autoTP = (integer)value;
+            else if (name == "pleasureDoll")        pleasureDoll = (integer)value;
+            else if (name == "helpless")                helpless = (integer)value;
+            else if (name == "canCarry")                canCarry = (integer)value;
+            else if (name == "canDress")                canDress = (integer)value;
+            else if (name == "canStand")                canStand = (integer)value;
+            else if (name == "canSit")                    canSit = (integer)value;
+            else if (name == "canFly")                    canFly = (integer)value;
+            else if (name == "takeoverAllowed")  takeoverAllowed = (integer)value;
+            else if (name == "doWarnings")            doWarnings = (integer)value;
+            else if (name == "signOn")                    signOn = (integer)value;
+            else if (name == "canAFK")                    canAFK = (integer)value;
+            else if (name == "hasController")      hasController = (integer)value;
+            else if (name == "autoAFK")                  autoAFK = (integer)value;
+
             else if (name == "MistressID") {
                 MistressID = (key)value;
                 mistressQuery = llRequestAgentData(MistressID, DATA_NAME);
             }
-            else if (name == "hasController") hasController = (integer)value;
             else if (name == "afk") {
-        afk = (integer)value;
-        setWindRate();
-        }
-        else if (name == "autoAFK") autoAFK = (integer)value;
+                afk = (integer)value;
+                setWindRate();
+            }
         }
         
         else if (num == 305) {
@@ -712,9 +743,9 @@ default {
             split = llList2List(split, 2, -1);
             
             if (cmd == "setAFK") {
-        afk = llList2Integer(split, 0);
-        setWindRate();
-        }
+                afk = llList2Integer(split, 0);
+                setWindRate();
+            }
             else if (cmd == "carry") {
                 string name = llList2String(split, 1);
                 carry(name, id);
@@ -792,7 +823,7 @@ default {
 
                 // Menu max limit of 11... report error
                 if (n > 11) {
-                    llOwnerSay("Too many poseds! Found " + (string)n + " poseds (max is 11)");
+                    llOwnerSay("Too many poses! Found " + (string)n + " poses (max is 11)");
                 }
 
                 while(n) {
@@ -930,6 +961,9 @@ default {
         }
     }
     
+    //----------------------------------------
+    // RUN_TIME_PERMISSIONS
+    //----------------------------------------
     run_time_permissions(integer perm) {
         ifPermissions();
     }

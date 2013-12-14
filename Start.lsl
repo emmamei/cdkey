@@ -9,6 +9,9 @@
 //
 // As of 30 October 2013, this script is unused.
 
+//========================================
+// VARIABLES
+//========================================
 string optiondate = "13/Dec/13";
 string keyName = "Community Doll Key";
 
@@ -41,6 +44,9 @@ list readyScripts;
 integer startup = 1;
 integer reset;
 
+//========================================
+// FUNCTIONS
+//========================================
 msg (string s) {
     sendMsg(dollID, s);
     llSleep(delayTime);
@@ -147,7 +153,13 @@ list notReady() {
     return waiting;
 }
 
+//========================================
+// STATES
+//========================================
 default {
+    //----------------------------------------
+    // LINK_MESSAGE
+    //----------------------------------------
     link_message(integer source, integer num, string choice, key id) {
         if (num == 200) { // Triggered from Main.lsl
 
@@ -187,6 +199,9 @@ default {
         }
     }
     
+    //----------------------------------------
+    // STATE_ENTRY
+    //----------------------------------------
     state_entry() {
         dollID = llGetOwner();
         
@@ -210,6 +225,9 @@ default {
         llSetTimerEvent(2);
     }
     
+    //----------------------------------------
+    // ON_REZ
+    //----------------------------------------
     on_rez(integer start) {
         if (startup) llResetScript();
         
@@ -231,6 +249,9 @@ default {
         llMessageLinked(LINK_SET, 105, llGetScriptName(), NULL_KEY);
     }
     
+    //----------------------------------------
+    // ATTACH
+    //----------------------------------------
     attach(key id) {
         if (id == NULL_KEY) {
             llMessageLinked(LINK_SET, 106, "detached|" + (string)lastAttachPoint, lastAttachAvatar);
@@ -258,6 +279,9 @@ default {
         }
     }
     
+    //----------------------------------------
+    // DATASERVER
+    //----------------------------------------
     dataserver(key query_id, string data) {
         list validConfig = [ "initial time", "wind time", "max time", "doll type", "helpless dolly", "controller",
                              "auto tp", "can fly", "outfitable", "pleasure doll", "detachable", "barefeet path", 
@@ -292,6 +316,9 @@ default {
         }
     }
     
+    //----------------------------------------
+    // CHANGED
+    //----------------------------------------
     changed(integer change) {
         if (change & CHANGED_INVENTORY) {
             if (ncPrefsLoadedUUID != NULL_KEY && llGetInventoryKey(ncName) != ncPrefsLoadedUUID) {
@@ -314,13 +341,18 @@ default {
         }
     }
     
-    listen(integer channel, string name, key id, string message)
-    {
+    //----------------------------------------
+    // LISTEN
+    //----------------------------------------
+    listen(integer channel, string name, key id, string message) {
         if (message == "Reload Config") {
             llResetScript();
         }
     }
     
+    //----------------------------------------
+    // TIMER
+    //----------------------------------------
     timer() {
         llListenRemove(replyHandle);
         llSetTimerEvent(0);
