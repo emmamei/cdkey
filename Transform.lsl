@@ -321,7 +321,7 @@ default {
             configured = 1;
         }
         
-        else if (num == 103 && choice == "Main") {
+        else if (num == 103 && (choice == "Main" || choice == "MenuHandler")) {
             // Trigger Transforming Key setting
             llMessageLinked(LINK_THIS, 18, "here", dollID );
             llMessageLinked(LINK_SET, 103, llGetScriptName(), NULL_KEY);

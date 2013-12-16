@@ -9,8 +9,7 @@
 //
 // As of 30 October 2013, this script is unused.
 
-string optiondate = "13/Dec/13";
-string keyName = "Community Doll Key";
+string optiondate = "15/Dec/13";
 
 float delayTime = 15.0; // in seconds
 
@@ -54,9 +53,6 @@ memReport() {
 }
 
 sendMsg(key target, string msg) {
-    string prefix = "Doll Key: ";
-    //llSetObjectName("");
-    
     if (llGetSubString(msg, 0, 0) == "%" && llGetSubString(msg, -1, -1) == "%") {
         msg = findString(msg);
     }
@@ -64,8 +60,6 @@ sendMsg(key target, string msg) {
     if (target == dollID) llOwnerSay(msg);
     else if (llGetAgentSize(target)) llRegionSayTo(target, 0, msg);
     else llInstantMessage(target, msg);
-    
-    llSetObjectName(keyName + " " + optiondate);
 }
 
 string findString(string msg) {
@@ -190,7 +184,9 @@ default {
     state_entry() {
         dollID = llGetOwner();
         
-        llSetObjectName(keyName + " " + optiondate);
+        llTargetOmega(<0,0,0>,0,0);
+        
+        llSetObjectName(llList2String(llGetLinkPrimitiveParams(24, [ PRIM_DESC ]), 0) + " " + optiondate);
         
         string me = llGetScriptName();
         integer loop; string script;
@@ -212,6 +208,8 @@ default {
     
     on_rez(integer start) {
         if (startup) llResetScript();
+        
+        llTargetOmega(<0,0,0>,0,0);
         
         llResetTime();
         string me = llGetScriptName();
@@ -328,7 +326,7 @@ default {
         if (!reset) {
             llOwnerSay("Starting initialization");
             reset = 1;
-            llSetTimerEvent(20);
+            llSetTimerEvent(120);
             llMessageLinked(LINK_SET, 104, llGetScriptName(), NULL_KEY);
         }
         else if (startup) {

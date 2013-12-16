@@ -15,6 +15,8 @@ key MistressID = MasterBuilder;
 key carrierID;
 key dollID;
 
+key mistressQuery;
+
 list developerList = [ DevOne, DevTwo ];
 
 // Add keys here to enable tester facilities
@@ -30,6 +32,7 @@ string httpstart = "http://communitydolls.com/";
 string ANIMATION_COLLAPSED = "collapse";
 string NOTECARD_HELP = "Community Dolls Key Help and Manual";
 string LANDMARK_HOME = "Home";
+string LANDMARK_CDROOM = "Community Dolls Room";
 float RATE_STANDARD = 1.0;
 float RATE_AFK = 0.5;
 
@@ -52,6 +55,7 @@ integer hasController;
 integer windDown = 1;
 integer isTransformingKey;
 integer afk;
+integer autoAFK;
 integer warned;
 integer doWarnings;
 integer canSit = 1;
@@ -168,19 +172,20 @@ doMainMenu(key id) {
     // Manual page
     string manpage;
 
-    integer minsleft = llRound(timeLeftOnKey / 60.0);
+    float displayWindRate = setWindRate();
+    integer minsLeft = llRound(timeLeftOnKey / (60.0 * displayWindRate));
     
-    if (minsleft > 0) {
-        timeleft = "Dolly has " + (string)minsleft + " minutes remaining.\n";
+    if (minsLeft > 0) {
+        timeleft = "Dolly has " + (string)minsLeft + " minutes remaining.\n";
 
         timeleft += "Key is ";
-        if (!windDown) {
+        if (windRate == 0.0) {
             timeleft += "not ";
         }
         timeleft += "winding down";
         
         if (windRate == 1.0) timeleft += ".";
-        else timeleft += " at " + formatFloat(windRate, 1) + "x rate.";
+        else timeleft += " at " + formatFloat(displayWindRate, 1) + "x rate.";
 
         timeleft += ". ";
     }
@@ -294,7 +299,7 @@ doMainMenu(key id) {
                    "a doll. So feel free to use these options.\n";
         }
                
-        if (llGetInventoryType(NOTECARD_HELP) == INVENTORY_NOTECARD) menu += "Help";
+        menu += "Help/Support";
 
         // Hide the general "Carry" option for all but Mistress when one exists
         if (((id == MistressID) || !hasController) && id != dollID) {
@@ -332,6 +337,18 @@ doMainMenu(key id) {
     
     msg += "See " + httpstart + manpage + " for more information." ;
     llDialog(id, timeleft + msg, menu, dialogChannel);
+}
+
+doHelpMenu(key id) {
+    string msg = "Here you can find various options to get help with your " +
+                "key and to connect with the community.";
+    list menu;
+    
+    menu += [ "Report Bug", "Ask Question", "Suggestions" ];
+    if (llGetInventoryType(NOTECARD_HELP) == INVENTORY_NOTECARD) menu += "Help Notecard";
+    menu += [ "Join Group", "Visit CD Room" ];
+    
+    llDialog(id, msg, menu, dialogChannel);
 }
 
 doOptionsMenu(key id) {
@@ -404,8 +421,22 @@ handlemenuchoices(string choice, string name, key id) {
         carrierName = name;
         llMessageLinked(LINK_SET, 305, llGetScriptName() + "|carry|" + carrierName, carrierID);
     }
-    else if (choice == "Help") {
+    else if (choice == "Help/Support") {
+        doHelpMenu(id);
+    }
+    else if (choice == "Help Notecard") {
         llGiveInventory(id,NOTECARD_HELP);
+    }
+    else if (choice == "Join Group") {
+        llOwnerSay("Here is your link to the community dolls group profile secondlife:///app/group/0f0c0dd5-a611-2529-d5c7-1284fb719003/about");
+        llDialog(id, "To join the community dolls group open your chat history (CTRL+H) and click the group link there.  Just click the Join Group button when the group profile opens.", [ "OK" ], 9999);
+    }
+    else if (choice == "Visit CD Room") {
+        if (id == dollID) llMessageLinked(LINK_SET, 305, llGetScriptName() + "|TP|" + LANDMARK_CDROOM, id);
+        else llGiveInventory(id, LANDMARK_CDROOM);
+    }
+    else if (choice == "Report Bug" || choice == "Ask Question" || choice == "Suggestions") {
+        llLoadURL(id, "Visit our issues page to report bugs, ask questions or post any suggestions you may have.", "https://github.com/emmamei/cdkey/issues");
     }
     else if (carried && carrier && choice == "Place Down") {
         // Doll has been placed down...
@@ -486,24 +517,14 @@ handlemenuchoices(string choice, string name, key id) {
         llMessageLinked(LINK_SET, 305, llGetScriptName() + "|TP|" + LANDMARK_HOME, id);
     }
     else if (choice == "Toggle AFK") {
-        afk = !afk;
-        if (afk) {
-            if (signOn) llSetText(dollType + " Doll", <1,1,1>, 1);
-            else llSetText("", <1,1,1>, 1);
-
-            integer minsleft = llRound(timeLeftOnKey / 60.0);
-            llMessageLinked(LINK_SET, 305, llGetScriptName() + "|setAFK|" + (string)afk + "|0|" + formatFloat(getWindRate(), 1) + "|" + (string)llRound((float)minsleft / getWindRate()), id);
-            llMessageLinked(LINK_SET, 300, "afk|1", id);
-            llMessageLinked(LINK_SET, 300, "autoAFK|0", id);
-        }
-        else {
-            llSetText(dollType + " Doll (AFK)", <1,1,0>, 1);
-            
-            integer minsleft = llRound(timeLeftOnKey / 60.0);
-            llMessageLinked(LINK_SET, 305, llGetScriptName() + "|setAFK|" + (string)afk + "|0|" + formatFloat(getWindRate(), 1) + "|" + (string)llRound((float)minsleft / getWindRate()), id);
-            llMessageLinked(LINK_SET, 300, "afk|0", id);
-            llMessageLinked(LINK_SET, 300, "autoAFK|0", id);
-        }
+        afk = (!afk);
+        if (afk) llSetText(dollType + " Doll (AFK)", <1,1,0>, 1);
+        else if (signOn) llSetText(dollType + " Doll", <1,1,1>, 1);
+        else llSetText("", <1,1,1>, 1);
+        
+        float displayWindRate = setWindRate();
+        integer minsLeft = llRound(timeLeftOnKey / (60.0 * displayWindRate));
+        llMessageLinked(LINK_SET, 305, llGetScriptName() + "|setAFK|" + (string)afk + "|0|" + formatFloat(displayWindRate, 1) + "|" + (string)minsLeft, id);
     }
     else if (choice == "no detaching")
         llMessageLinked(LINK_SET, 300, "detachable|" + (string)(detachable = 0), id);
@@ -606,9 +627,16 @@ handlemenuchoices(string choice, string name, key id) {
     }
 }
 
-float getWindRate() {
+float setWindRate() {
     float newWindRate = RATE_STANDARD;
+    integer attached = llGetAttached() == ATTACH_BACK;
+    integer windDown = !(!attached || collapsed || (dollType == "Builder" || dollType == "Key"));
     if (afk) newWindRate *= RATE_AFK;
+    
+    if (windRate != (newWindRate * (float)windDown)) {
+        if (windRate == 0.0) llResetTime();
+        windRate = newWindRate * (float)windDown;
+    }
     
     return newWindRate;
 }
@@ -654,13 +682,28 @@ default
         else if (num == 300) {
             list split = llParseString2List(data, [ "|" ], []);
             string name = llList2String(split, 0);
-            if (name == "MistressID") {
-                MistressID = llList2Key(split, 1);
+            string value = llList2String(split, 1);
+            
+            if (name == "detachable") detachable = (integer)value;
+            else if (name == "autoTP") autoTP = (integer)value;
+            else if (name == "pleasureDoll") pleasureDoll = (integer)value;
+            else if (name == "helpless") helpless = (integer)value;
+            else if (name == "canCarry") canCarry = (integer)value;
+            else if (name == "canDress") canDress = (integer)value;
+            else if (name == "canStand") canStand = (integer)value;
+            else if (name == "canSit") canSit = (integer)value;
+            else if (name == "canFly") canFly = (integer)value;
+            else if (name == "takeoverAllowed") takeoverAllowed = (integer)value;
+            else if (name == "doWarnings") doWarnings = (integer)value;
+            else if (name == "signOn") signOn = (integer)value;
+            else if (name == "canAFK") canAFK = (integer)value;
+            else if (name == "mistressName") mistressName = value;
+            else if (name == "timeLeftOnKey") timeLeftOnKey = (float)value;
+            else if (name == "MistressID") {
+                MistressID = (key)value;
                 hasController = !(MistressID == MasterBuilder);
+                mistressQuery = llRequestDisplayName(MistressID);
             }
-            else if (name == "timeLeftOnKey") timeLeftOnKey = llList2Float(split, 1);
-            else if (name == "windRate") windRate = llList2Float(split, 1);
-            else if (name == "optiondate") optiondate = llList2String(split, 1);
         }        
         else if (num == 305) {
             list split = llParseString2List(data, [ "|" ], []);
@@ -682,7 +725,14 @@ default
             }
             else if (cmd == "setAFK") {
                 afk = llList2Integer(split, 0);
-                windRate = llList2Float(split, 2);
+                integer autoSet = llList2Integer(split, 1);
+                
+                if (!autoSet) {
+                    integer agentInfo = llGetAgentInfo(dollID);
+                    if ((agentInfo & AGENT_AWAY) && afk) autoAFK = 1;
+                    else if (!(agentInfo & AGENT_AWAY) && !afk) autoAFK = 1;
+                    else autoAFK = 0;
+                }
             }
             else if (cmd == "collapse") {
                 collapsed = 1;
@@ -712,5 +762,12 @@ default
         if (displayName != "") name = displayName;
 
         handlemenuchoices(choice, name, id);
+    }
+    
+    dataserver(key query_id, string data) {
+        if (query_id == mistressQuery) {
+            mistressName = data;
+            llMessageLinked(LINK_SET, 300, "mistressName|" + mistressName, NULL_KEY);
+        }
     }
 }

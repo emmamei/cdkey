@@ -50,7 +50,7 @@ integer detachable = 1;
 integer helpless;
 integer locked;
 
-integer visible;
+integer visible = 1;
 
 integer carried;
 integer collapsed;
@@ -61,6 +61,7 @@ integer RLVok;
 integer ATHok;
 
 integer channel;
+integer listenHandle;
 integer RLVstarted;
 
 string carrierName;
@@ -72,6 +73,7 @@ string scriptName;
 string dollType;
 string barefeet;
 string wearLockRLV;
+string myPath;
 
 integer devKey() {
     if (dollID != llGetOwner()) dollID = llGetOwner();
@@ -172,7 +174,7 @@ memReport() {
 listenerStart() {
     // Get a unique number
     channel = (integer)("0x" + llGetSubString((string)llGenerateKey(),-7,-1)) + 3467;
-    llListen(channel, "", "", "");
+    listenHandle = llListen(channel, "", "", "");
 }
 
 //----------------------------------------
@@ -184,7 +186,7 @@ checkRLV()
     ATHok = llGetAttached() == ATTACH_BACK;
     if (ATHok) {
         if (RLVck == 0) {
-            llSetTimerEvent(60);
+            llSetTimerEvent(5);
             rlvAPIversion = "";
             RLVck = 1;
         }
@@ -202,47 +204,50 @@ postCheckRLV()
     RLVck = 0;
     
     if (configured) initializeRLV();
-    
     llMessageLinked(LINK_SET, 103, scriptName, NULL_KEY);
 }
 
 initializeRLV() {
-    if (RLVok && ATHok) llOwnerSay("Enabling RLV mode");
+    if (RLVok && ATHok) {
+        llOwnerSay("Enabling RLV mode");
+        
+        rlvSources = [];
+        rlvStatus = [];
+        
+        doRLV("UserBase", addBaseRLVcmd);
+        
+        afkOrCollapse("Collapsed", collapsed);
+        afkOrCollapse("AFK", afk);
+        if (collapsed) doRLV("UserCollapsed", addCollapseRLVcmd);
+        else doRLV("UserCollapsed", addRestoreRLVcmd);
+        
+        if (autoTP) doRLV("Base", "accepttp=add");
+        if (helpless) doRLV("Base", "tplm=n,tploc=n");
+        if (!canFly) doRLV("Base", "fly=n");
+        if (!canStand) doRLV("Base", "unsit=n");
+        if (!canSit) doRLV("Base", "sit=n");
+        if (!canWear || wearLockExpire > 0) doRLV("Base", "addoutfit=n,addattach=n");
+        if (!canUnwear || wearLockExpire > 0) doRLV("Base", "remoutfit=n,remattach=n");
     
-    rlvSources = [];
-    rlvStatus = [];
+        // if Doll is one of the developers... dont lock:
+        // prevents inadvertent lock-in during development
     
-    doRLV("UserBase", addBaseRLVcmd);
-    
-    afkOrCollapse("Collapsed", collapsed);
-    afkOrCollapse("AFK", afk);
-    if (collapsed) doRLV("UserCollapsed", addCollapseRLVcmd);
-    else doRLV("UserCollapsed", addRestoreRLVcmd);
-    
-    if (autoTP) doRLV("Base", "accepttp=add");
-    if (helpless) doRLV("Base", "tplm=n,tploc=n");
-    if (!canFly) doRLV("Base", "fly=n");
-    if (!canStand) doRLV("Base", "unsit=n");
-    if (!canSit) doRLV("Base", "sit=n");
-    if (!canWear || wearLockExpire > 0) doRLV("Base", "addoutfit=n,addattach=n");
-    if (!canUnwear || wearLockExpire > 0) doRLV("Base", "remoutfit=n,remattach=n");
-
-    // if Doll is one of the developers... dont lock:
-    // prevents inadvertent lock-in during development
-
-    if (!devKey()) {
-        // We lock the key on here - but in the menu system, it appears
-        // unlocked and detachable: this is because it can be detached 
-        // via the menu. To make the key truly "undetachable", we get
-        // rid of the menu item to unlock it
-        doRLV("Base", "detach=n,editobj:" + (string)llGetKey() + "=add");  //locks key
-        locked = 1;
-    } else {
-        if (!quiet) llSay(0, "Developer Key not locked.");
-        else llOwnerSay("Developer key not locked.");
+        if (!devKey()) {
+            // We lock the key on here - but in the menu system, it appears
+            // unlocked and detachable: this is because it can be detached 
+            // via the menu. To make the key truly "undetachable", we get
+            // rid of the menu item to unlock it
+            doRLV("Base", "detach=n,editobj:" + (string)llGetKey() + "=add");  //locks key
+            locked = 1;
+        } else {
+            if (!quiet) llSay(0, "Developer Key not locked.");
+            else llOwnerSay("Developer key not locked.");
+            doRLV("Base", "getpathnew:spine=" + (string)channel);
+        }
     }
     
     RLVstarted = 1;
+    llSetTimerEvent(1);
     llMessageLinked(LINK_SET, 350, (string)RLVok + "|" + rlvAPIversion, NULL_KEY);
 }
 
@@ -259,7 +264,7 @@ autoTPAllowed(string script, key userID) {
 
 doRLV(string script, string commandString) {
     if (RLVok) {
-        integer commandLoop; string sendRLV;
+        integer commandLoop; list sendCommands;
         integer scriptIndex = llListFindList(rlvSources, [ script ]);
         list commandList = llParseString2List(commandString, [ "," ], []);
         
@@ -271,7 +276,7 @@ doRLV(string script, string commandString) {
         for (commandLoop = 0; commandLoop < llGetListLength(commandList); commandLoop++) {
             string fullCmd; list parts; string param; string cmd;
             
-            fullCmd = llList2String(commandList, commandLoop);
+            fullCmd = llStringTrim(llList2String(commandList, commandLoop), STRING_TRIM);
             parts = llParseString2List(fullCmd, [ "=" ], []);
             param = llList2String(parts, 1);
             cmd = llList2String(parts, 0);
@@ -281,7 +286,7 @@ doRLV(string script, string commandString) {
                     integer cmdIndex = llListFindList(rlvStatus, [ cmd ]);
                     if (cmdIndex == -1) { // New restriction add to list and send to viewer
                         rlvStatus += [ cmd, script ];
-                        sendRLV += fullCmd + ",";
+                        sendCommands += fullCmd;
                         llMessageLinked(LINK_SET, 320, script + "|" + fullCmd, NULL_KEY);
                     }
                     else { // Duplicate restriction, note but do not send again
@@ -305,7 +310,7 @@ doRLV(string script, string commandString) {
                             scriptList = llDeleteSubList(scriptList, myIndex, myIndex);
                             if (scriptList == []) { // All released delete old record and send to viewer
                                 rlvStatus = llDeleteSubList(rlvStatus, cmdIndex, cmdIndex + 1);
-                                sendRLV += fullCmd + ",";
+                                sendCommands += fullCmd;
                                 llMessageLinked(LINK_SET, 320, script + "|" + fullCmd, NULL_KEY);
                             } else { // Restriction still holds due to other scripts but release for this one
                                 rlvStatus = llListReplaceList(rlvStatus, [ cmd, llDumpList2String(scriptList, "|") ],
@@ -313,6 +318,11 @@ doRLV(string script, string commandString) {
                             }
                         }
                     }
+                }
+                else {
+                    // Oneshot command
+                    sendCommands += fullCmd;
+                    llMessageLinked(LINK_SET, 320, script + "|" + fullCmd, NULL_KEY);
                 }
             }
             else if (cmd == "clear") {
@@ -328,7 +338,11 @@ doRLV(string script, string commandString) {
                             if (scriptList == []) { // All released delete old record and send to viewer
                                 rlvStatus = llDeleteSubList(rlvStatus, i, i + 1);
                                 i = i - 2;
-                                sendRLV += thisCmd + "=rem,";
+                                sendCommands += [ thisCmd + "=rem" ];
+                                if (llGetListLength(sendCommands) >= 10) {
+                                    llOwnerSay("@" + llDumpList2String(sendCommands, ","));
+                                    sendCommands = [];
+                                }
                                 llMessageLinked(LINK_SET, 320, script + "|" + thisCmd + "=rem|" + fullCmd, NULL_KEY);
                             } else { // Restriction still holds due to other scripts but release for this one
                                 rlvStatus = llListReplaceList(rlvStatus, [ thisCmd, llDumpList2String(scriptList, "|") ],
@@ -338,17 +352,17 @@ doRLV(string script, string commandString) {
                     }
                 }
             }
-            else {
-                // Oneshot command
-                sendRLV += fullCmd + ",";
-                llMessageLinked(LINK_SET, 320, script + "|" + fullCmd, NULL_KEY);
+            if (llGetListLength(sendCommands) >= 10) {
+                llOwnerSay("@" + llDumpList2String(sendCommands, ","));
+                sendCommands = [];
             }
         }
         
-        if (sendRLV != "") llOwnerSay("@" + llGetSubString(sendRLV, 0, -2));
+        if (llGetListLength(sendCommands) > 0)
+            llOwnerSay("@" + llDumpList2String(sendCommands, ","));
         
-        llOwnerSay("RLV Sources " + llList2CSV(rlvSources));
-        llOwnerSay("RLV Status " + llDumpList2String(llList2ListStrided(rlvStatus, 0, -1, 2), "/"));
+        //llOwnerSay("RLV Sources " + llList2CSV(rlvSources));
+        //llOwnerSay("RLV Status " + llDumpList2String(llList2ListStrided(rlvStatus, 0, -1, 2), "/"));
     }
 }
 
@@ -361,17 +375,29 @@ rlvTeleportToVector(vector global) {
     string locy = (string)llFloor(global.y);
     string locz = (string)llFloor(global.z);
     
-    llOwnerSay("Dolly will now teleport home.");
+    llOwnerSay("Dolly is now teleporting.");
     
-    doRLV("Core", "tpto:" + locx + "/" + locy + "/" + locz + "=force");
+    llOwnerSay("@tpto:" + locx + "/" + locy + "/" + locz + "=force");
 }
 
 afkOrCollapse(string type, integer set) {
     if (set) {
-        doRLV(type, "fly=n,sit=n,unsit=n,tplm=n,tploc=n,addoutfit=n,addattach=n,remoutfit=n,remattach=n,temprun=n,alwaysrun=n,sendchat=n,tplure=n,sittp=n,standtp=n,shownames=n,showhovertextall=n,redirchat:999=add,rediremote:999=add");
-                    
+        doRLV(type, "addoutfit=n,remoutfit=n,fly=n,sit=n,unsit=n,tplm=n,tploc=n,temprun=n,alwaysrun=n,sendchat=n,tplure=n,sittp=n,standtp=n,shownames=n,showhovertextall=n,redirchat:999=add,rediremote:999=add");
+
+        lockAttachments(type, set);
+        
+        if (devKey() && myPath != "") doRLV(type, "detachthis_except:" + myPath + "=add");
         allowRescue(type);
         if (carried) autoTPAllowed(type, carrierID);
+    }
+}
+
+lockAttachments(string type, integer set) {
+    list points = [ "chest", "skull", "left shoulder", "right shoulder", "left hand", "right hand", "left foot", "right foot", "pelvis", "mouth", "chin", "left ear", "right ear", "left eyeball", "right eyeball", "nose", "r upper arm", "r forearm", "l upper arm", "l forearm", "right hip", "r upper leg", "r lower leg", "left hip", "l upper leg", "l lower leg", "stomach", "left pec", "right pec", "center 2", "top right", "top", "top left", "center", "bottom left", "bottom", "bottom right", "neck" ];
+    if (set) {
+        integer i;
+        for (i = 0; i < llGetListLength(points); i++)
+            doRLV(type, "detach:" + llList2String(points, i) + "=n");
     }
 }
 
@@ -390,11 +416,11 @@ default {
     // TIMER
     //----------------------------------------
     timer() {
-        if (!RLVok && RLVck > 0 && RLVck < 5) {
-            llSetTimerEvent(15);
+        if (RLVck != 0 && RLVck <= 6) {
+            if (RLVck == 1) llMessageLinked(LINK_SET, 103, llGetScriptName(), NULL_KEY);
             RLVck++;
-            RLVck;
-        } else if (!RLVok && RLVck == 5) {
+            if (ATHok && RLVck != 6) llOwnerSay("@clear,versionnew=" + (string)channel);
+        } else if (RLVck != 0) {
             postCheckRLV();
         } else {
             if (wearLockExpire > 0.0) {
@@ -420,9 +446,21 @@ default {
 
     listen(integer chan, string name, key id, string msg) {
         if (chan == channel) {
-            RLVok = 1;
-            rlvAPIversion = llStringTrim(msg, STRING_TRIM);
-            postCheckRLV();
+            if (RLVck != 0) {
+                RLVok = 1;
+                rlvAPIversion = llStringTrim(msg, STRING_TRIM);
+                postCheckRLV();
+            } else {
+                list split = llParseString2List(msg, [ "|" ], []);
+                integer i;
+                
+                for (i = 0; i < llGetListLength(split); i++) {
+                    string path = llStringTrim(llToLower(llList2String(split, 0)), STRING_TRIM);
+                    if (llSubStringIndex(path, "key") != -1) myPath = llList2String(split, 0);
+                }
+            }
+            
+            llListenControl(listenHandle, 0);
         }
     }
     
@@ -477,7 +515,7 @@ default {
         }
         else if (num == 102) {
             configured = 1;
-            if (!RLVstarted) initializeRLV();
+            if (!RLVck && !RLVstarted) initializeRLV();
         }
         else if (num == 104) {
             dollID = llGetOwner();
@@ -507,7 +545,6 @@ default {
         }
         else if (num == 135) {
             memReport();
-            llSetTimerEvent(1);
         }
         else if (num == 300) { // RLV Config
             string name = llList2String(parameterList, 0);
@@ -585,11 +622,9 @@ default {
                 string mins = llList2String(parameterList, 3);
                 
                 if (afk) {
+                    
                     // set sign to "afk"
                     llSetText(dollType + " Doll (AFK)", <1,1,0>, 1);
-                    
-                    // Rotate key: around Z access at rate .2 and gain 1
-                    llTargetOmega(<0,0,1>, .2, 1);
     
                     // AFK turns everything off
                     afkOrCollapse("AFK", 1);
@@ -602,9 +637,6 @@ default {
                     // set sign back to normal
                     if (signOn) llSetText(dollType + " Doll", <1,1,1>, 1);
                     else llSetText("", <1,1,1>, 1);
-                    
-                    // Rotate key: around Z access at rate .5 and gain 1
-                    llTargetOmega(<0,0,1>, .5, 1);
                     
                     doRLV("AFK", "clear");
         
@@ -696,7 +728,7 @@ default {
             }
             else if (cmd == "TP") {
                 string lm = llList2String(parameterList, 0);
-                llRegionSayTo(id, 0, "Teleporting dolly " + dollName + " to  landmark" + lm + ".");
+                llRegionSayTo(id, 0, "Teleporting dolly " + dollName + " to  landmark " + lm + ".");
                 rlvTeleportToLandmark(lm);
             }
             else if (cmd == "detach") {

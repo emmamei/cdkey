@@ -42,7 +42,7 @@ integer canFly = 1;
 integer hasController;
 integer windDown = 1;
 integer afk;
-integer autoAFK;
+integer autoAFK = 1;
 integer warned;
 integer doWarnings;
 integer canSit = 1;
@@ -53,6 +53,7 @@ integer canDress = 1;
 integer takeoverAllowed;
 integer quiet;
 integer minsLeft;
+integer clearAnims;
 //integer canPose;
 float lastEmergencyTime;
 integer emergencyLimitHours = 12;
@@ -68,6 +69,8 @@ string ANIMATION_COLLAPSED = "collapse";
 integer PERMISSION_MASK = 0x8034;
 // This mask will capture all of the dolls controls
 integer CONTROL_ALL = 0x5000033f;
+// This mask just grabs the basic movement keys
+integer CONTROL_MOVE = 0x15;
 // This is the distance away the doll will be carried
 float CARRY_RANGE = 1.5;
 
@@ -105,8 +108,6 @@ float keyLimit     = defLimit;
 //integer posedlimit    = 30;     // 5 minutes
 float hackLimit    = 720.0; // 6 * 60 * ticks;   // 6 hours
 
-float RATE_STANDARD = 1.0; // Standard rate multiplication factor
-float RATE_AFK = 0.5; // Rate multiplication factor for AFK mode
 float windRate;
 float timeLeftOnKey = windamount;
 integer ticks;
@@ -121,7 +122,7 @@ string currentAnimation;
 string newAnimation;
 string dollName;
 string carrierName;
-string MistressName;
+string mistressName;
 key mistressQuery;
 string simRating;
 key simRatingQuery;
@@ -291,25 +292,28 @@ float windKey() {
         timeLeftOnKey = keyLimit;
         llOwnerSay("You have been fully wound - " + (string)llRound(keyLimit / 60.0) + " minutes remaining.");
     }
+    
     return (winding);
 }
 
 doWind(string name, key id) {
-    integer winding = llRound(windKey() / 60.0);
+    integer winding = llFloor(windKey() / 60.0);
 
     if (winding > 0) {
         llMessageLinked(LINK_SET, 11, "You have given " + dollName + " " + (string)winding + " more minutes of life.", id);
     }
-    llMessageLinked(LINK_SET, 11, "Doll is now at " + formatFloat((float)timeLeftOnKey * 100.0 / (float)keyLimit, 2) + "% of capacity.", id);
 
     if (timeLeftOnKey == keyLimit) {
         if (!quiet) llSay(0, dollName + " has been fully wound by " + name + ".");
         else llMessageLinked(LINK_SET, 11, dollName + " is now fully wound.", id);
+    } else {
+        llMessageLinked(LINK_SET, 11, "Doll is now at " + formatFloat((float)timeLeftOnKey * 100.0 / (float)keyLimit, 2) + "% of capacity.", id);
     }
     // Is this too spammy?
     llOwnerSay("Have you remembered to thank " + name + " for winding you?");
     
-    llMessageLinked(LINK_SET, 300, "timeLeftOnKey|" + (string)timeLeftOnKey, NULL_KEY);
+    if (collapsed) uncollapse();
+    else llMessageLinked(LINK_SET, 300, "timeLeftOnKey|" + (string)timeLeftOnKey, NULL_KEY);
 }
 
 integer isMistress(key id) {
@@ -322,11 +326,14 @@ initializeStart ()  {
 
     dollName = llGetDisplayName(dollID);
     
-    llMessageLinked(LINK_SET, 300, "timeLeftOnKey|" + (string)timeLeftOnKey, NULL_KEY);
+    setWindRate();
+    
+    if (configured) initFinal();
 }
 
-initFinal() {       
+initFinal() {
     llOwnerSay("You have " + (string)llRound(timeLeftOnKey / 60.0) + " minutes of life remaning.");
+    llMessageLinked(LINK_SET, 300, "timeLeftOnKey|" + (string)timeLeftOnKey, NULL_KEY);
 
     // When rezzed.... if currently being carried, drop..
     if (carried) uncarry();
@@ -336,8 +343,13 @@ initFinal() {
         llMessageLinked(LINK_SET, 305, llGetScriptName() + "|collapse|" + wwGetSLUrl(), NULL_KEY);
     }
     
-    if (RLVok && !canDress) llOwnerSay("Other people cannot outfit you.");
-    if (MistressName) llOwnerSay("Your Mistress is " + MistressName);
+    if (collapsed) llSetText("Disabled Dolly!", <1,0,0>, 1);
+    else if (afk) llSetText(dollType + " Doll (AFK)", <1,1,0>, 1);
+    else if (signOn) llSetText(dollType + " Doll", <1,1,1>, 1);
+    else llSetText("", <1,1,1>, 1);
+    
+    if (!canDress) llOwnerSay("Other people cannot outfit you.");
+    if (mistressName) llOwnerSay("Your Mistress is " + mistressName);
     
     if (RLVok && hasController)
         llMessageLinked(LINK_SET, 11, dollName + " has logged in with RLV at " + wwGetSLUrl(), MistressID);
@@ -348,6 +360,9 @@ initFinal() {
     llSetTimerEvent(1.0);
     
     setWindRate();
+    
+    clearAnims = 1;
+    ifPermissions();
     
     llMessageLinked(LINK_SET, 103, llGetScriptName(), NULL_KEY);
 }
@@ -381,25 +396,27 @@ ifPermissions() {
                     for (i = 0; i < animCount; i++) llStopAnimation(llList2Key(animList, i));
                     llStartAnimation(keyAnimation);
                 }
-            } else {
+            } else if (clearAnims) {
                 aoControl(1);
                 
                 list animList; integer i; integer animCount;
                 while (animCount = llGetListLength(animList = llGetAnimationList(dollID)))
                     for (i = 0; i < animCount; i++) llStopAnimation(llList2Key(animList, i));
+                    
+                clearAnims = 0;
             }
         }
         
         if (perm & PERMISSION_OVERRIDE_ANIMATIONS && llGetAttached() == ATTACH_BACK) {
             if (keyAnimation != "") {
                 llSetAnimationOverride("Standing", keyAnimation);
-                llSetAnimationOverride("Sitting", keyAnimation);
-            } else llResetAnimationOverride("ALL");
+            }
+            else llResetAnimationOverride("ALL");
         }
         
-        if (perm & PERMISSION_TAKE_CONTROLS) {
+        if (perm & PERMISSION_TAKE_CONTROLS && llGetAttached() == ATTACH_BACK) {
             if (collapsed || posed || afk) llTakeControls(CONTROL_ALL, 1, 0);
-            else llTakeControls(CONTROL_FWD, 1, 1);
+            else llTakeControls(CONTROL_MOVE, 1, 1);
         }
         
         if (perm & PERMISSION_ATTACH) {
@@ -409,19 +426,28 @@ ifPermissions() {
 }
 
 float setWindRate() {
-    float newWindRate = RATE_STANDARD;
+    float newWindRate;
+    vector agentPos = llList2Vector(llGetObjectDetails(dollID, [ OBJECT_POS ]), 0);
+    integer agentInfo = llGetAgentInfo(dollID);
     integer attached = llGetAttached() == ATTACH_BACK;
-    if (afk) newWindRate *= RATE_AFK;
-    if (!attached || collapsed || (dollType == "Builder" || dollType == "Key")) newWindRate *= 0.0;
+    integer windDown = attached && !collapsed && dollType != "Builder" && dollType != "Key";
     
-    if (windRate != newWindRate) {
-        if (windRate == 0.0) llResetTime();
-        windRate = newWindRate;
-        llTargetOmega(<0,0,1>, windRate * 0.5, 1);
+    newWindRate = 1.0;
+    if (afk) newWindRate *= 0.5;
+    
+    if (windRate != newWindRate * windDown) {
+        windRate = newWindRate * windDown;
+        
         llMessageLinked(LINK_SET, 300, "windRate|" + (string)windRate, NULL_KEY);
     }
     
-    return windRate;
+    // llTargetOmega: With normalized vector spinrate is equal to radians per second
+    // 2𝜋 radians per rotation.  This sets a normal rotation rate of 4 rpm about the
+    // Z axis multiplied by the wind rate this way the key will visually run faster as
+    // the dolly begins using their time faster.
+    llTargetOmega(llVecNorm(<0.0, 0.0, 1.0>), windRate * (TWO_PI / 15.0), 1);
+    
+    return newWindRate;
 }
 
 turnToTarget(vector target) {
@@ -452,6 +478,15 @@ carry(string name, key id) {
     }
 }
 
+collapse() {
+    collapsed = 1;
+    keyAnimation = ANIMATION_COLLAPSED;
+    setWindRate();
+    llMessageLinked(LINK_SET, 305, llGetScriptName() + "|collapse|" + wwGetSLUrl(), NULL_KEY);
+    ifPermissions();
+    llMessageLinked(LINK_SET, 300, "timeLeftOnKey|" + (string)timeLeftOnKey, NULL_KEY);
+}
+
 uncarry() {
     carried = 0;
     carrierID = NULL_KEY;
@@ -460,6 +495,16 @@ uncarry() {
     // Clear old targets to ensure there is only one
     llTargetRemove(targetHandle);
     llStopMoveToTarget();
+}
+
+uncollapse() {
+    collapsed = 0;
+    keyAnimation = "";
+    clearAnims = 1;
+    setWindRate();
+    llMessageLinked(LINK_SET, 305, llGetScriptName() + "|restore", NULL_KEY);
+    llMessageLinked(LINK_SET, 300, "timeLeftOnKey|" + (string)timeLeftOnKey, NULL_KEY);
+    ifPermissions();
 }
 
 //========================================
@@ -475,7 +520,7 @@ default {
     //----------------------------------------
     // This should set up generic defaults
     // not specific to owner
-    state_entry() { llMessageLinked(LINK_SET, 999, llGetScriptName(), NULL_KEY); llSetTimerEvent(1); }
+    state_entry() { dollID = llGetOwner(); llMessageLinked(LINK_SET, 999, llGetScriptName(), NULL_KEY); }
     
     on_rez(integer start) { llResetTime(); }
 
@@ -484,8 +529,8 @@ default {
     //----------------------------------------
     dataserver(key query_id, string data) {
         if (query_id == mistressQuery) {
-            MistressName = data;
-            llOwnerSay("Your Mistress is " + MistressName);
+            mistressName = data;
+            llOwnerSay("Your Mistress is " + mistressName);
         }
         if (query_id == simRatingQuery) {
             simRating = data;
@@ -520,31 +565,18 @@ default {
         // Increment a counter
         ticks++;
         
-        setWindRate();
+        if (ticks % 60 == 0)  llMessageLinked(LINK_SET, 300, "timeLeftOnKey|" + (string)timeLeftOnKey, NULL_KEY);
         
-        if (ticks % 15 == 0) {
-            llMessageLinked(LINK_SET, 300, "timeLeftOnKey|" + (string)timeLeftOnKey, NULL_KEY);
-            ifPermissions();
-        }
+        ifPermissions();
 
-        integer agentInfo = llGetAgentInfo(dollID);
-        integer newAFK;
         // When Dolly is "away" - enter AFK
-        if (agentInfo & AGENT_AWAY) {
-            newAFK = 1;
-            autoAFK = 1;
-        } else if (afk && autoAFK) {
-            newAFK = 0;
-            autoAFK = 0;
-        }
-        
-        setWindRate();
-        
-        if (newAFK != afk) {
-            integer minsLeft;
-            if (windRate > 0.0) minsLeft = llRound(timeLeftOnKey / (60.0 * windRate));
-            llMessageLinked(LINK_SET, 305, llGetScriptName() + "|setAFK|" + (string)(afk = newAFK) + "|" + (string)autoAFK + "|" + formatFloat(windRate, 1) + "|" + (string)minsLeft, NULL_KEY);
-        }
+        integer dollAway = ((llGetAgentInfo(dollID) & AGENT_AWAY) != 0);
+        if (autoAFK && afk != dollAway) {
+            minsLeft = llRound(timeLeftOnKey / (60.0 * setWindRate()));
+            llMessageLinked(LINK_SET, 305, llGetScriptName() + "|setAFK|" + (string)(afk = dollAway) + "|1|" + formatFloat(windRate, 1) + "|" + (string)minsLeft, NULL_KEY);
+        } else {
+	    minsLeft = llRound(timeLeftOnKey / (60.0 * setWindRate()));
+	}
 
         // A specific test for collapsed status is no longer required here
         // as being collapsed is one of several conditions which forces the
@@ -553,13 +585,13 @@ default {
         // and 
         //--------------------------------
         // WINDING DOWN.....
-        if (windRate > 0.0) {
+        if (windRate != 0.0) {
             timeLeftOnKey -= (llGetAndResetTime() * windRate);
-
-            minsLeft = llRound(timeLeftOnKey / (60.0 * windRate));
 
             if (doWarnings && (minsLeft == 30 || minsLeft == 15 || minsLeft == 10 || minsLeft ==  5 || minsLeft ==  2) && !warned) {
                 // FIXME: This can be seen as a spammy message - especially if there are too many warnings
+                // FIXME: What do we think about this being gated by the quiet key option?  Should we just leave it without as
+                // it has it's own option, though quiet version still warns the doll so perhaps still of use to some?
                 if (!quiet) llSay(0, dollName + " has " + (string)minsLeft + " minutes left before they run down!");
                 else llOwnerSay("You have " + (string)minsLeft + " minutes left before winding down!");
                 warned = 1; // have warned now: dont repeat same warning
@@ -567,13 +599,8 @@ default {
             else warned = 0;
 
             // Dolly is DONE! Go down... and yell for help.
-            if (timeLeftOnKey <= 0) {
-                collapsed = 1;
-                keyAnimation = ANIMATION_COLLAPSED;
-                setWindRate();
-                timeLeftOnKey = 0.0;
-                llMessageLinked(LINK_SET, 300, "timeLeftOnKey|" + (string)timeLeftOnKey, NULL_KEY);
-                llMessageLinked(LINK_SET, 305, llGetScriptName() + "|collapse| " + wwGetSLUrl(), NULL_KEY);
+            if (!collapsed && timeLeftOnKey <= 0) {
+                collapse();
                 
                 // This message is intentionally excluded from the quiet key setting as it is not good for
                 // dolls to simply go down silently.
@@ -647,7 +674,10 @@ default {
             if (!configured) processConfiguration(llList2String(parameterList, 0), llList2List(parameterList, 1, -1));
         }
         
-        else if (num == 102) configured = 1;
+        else if (num == 102) {
+            configured = 1;
+            initFinal();
+        }
         
         else if (num == 104) {
             dollID = llGetOwner();
@@ -657,21 +687,20 @@ default {
             simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
             
             llSetText("", <1,1,1>, 1);
-        
-            // Rotate self: around Z access at rate .3 and gain 1
-            llTargetOmega(<0,0,1>, .3, 1);
 
             initializeStart();
         }
         
         else if (num == 105) {
-            if (hasController) llOwnerSay("Your Mistress is " + MistressName);
+            if (hasController) llOwnerSay("Your Mistress is " + mistressName);
             
             dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -9, -1));
             simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
             
             simRating = "";
             simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
+            
+            initFinal();
         }
         
         else if (num == 135) memReport();
@@ -693,16 +722,13 @@ default {
             else if (name == "doWarnings") doWarnings = (integer)value;
             else if (name == "signOn") signOn = (integer)value;
             else if (name == "canAFK") canAFK = (integer)value;
+            else if (name == "mistressName") mistressName = value;
+            else if (name == "timeLeftOnKey") timeLeftOnKey = (float)value;
             else if (name == "MistressID") {
                 MistressID = (key)value;
-                mistressQuery = llRequestAgentData(MistressID, DATA_NAME);
+                hasController = !(MistressID == MasterBuilder);
+                mistressQuery = llRequestDisplayName(MistressID);
             }
-            else if (name == "hasController") hasController = (integer)value;
-            else if (name == "afk") {
-        afk = (integer)value;
-        setWindRate();
-        }
-        else if (name == "autoAFK") autoAFK = (integer)value;
         }
         
         else if (num == 305) {
@@ -712,9 +738,18 @@ default {
             split = llList2List(split, 2, -1);
             
             if (cmd == "setAFK") {
-        afk = llList2Integer(split, 0);
-        setWindRate();
-        }
+                afk = llList2Integer(split, 0);
+                integer autoSet = llList2Integer(split, 1);
+                
+                if (!autoSet) {
+                    integer agentInfo = llGetAgentInfo(dollID);
+                    if ((agentInfo & AGENT_AWAY) && afk) autoAFK = 1;
+                    else if (!(agentInfo & AGENT_AWAY) && !afk) autoAFK = 1;
+                    else autoAFK = 0;
+                }
+                
+                ifPermissions();
+            }
             else if (cmd == "carry") {
                 string name = llList2String(split, 1);
                 carry(name, id);
@@ -729,8 +764,6 @@ default {
             rlvAPIversion = llList2String(parameterList, 1);
             
             dollID == llGetOwner();
-            
-            initFinal();
         }
         else if (num == 500) {
             string choice = llList2String(parameterList, 0);
@@ -825,10 +858,7 @@ default {
                         windKey();
                         lastEmergencyTime = llGetTime();
 
-                        collapsed = 0;
-                        keyAnimation = "";
-                        setWindRate();
-                        llMessageLinked(LINK_SET, 305, llGetScriptName() + "|restore", NULL_KEY);
+                        uncollapse();
 
                         llOwnerSay("Emergency self-winder has been triggered by Doll.");
                         llOwnerSay("Emergency circuitry requires recharging and will be available again in " + (string)emergencyLimitHours + " hours.");
@@ -840,7 +870,7 @@ default {
                 }
             }
             else if (choice == "xstats") {
-                llOwnerSay("AFK time factor: " + formatFloat(RATE_AFK, 1) + "x");
+                llOwnerSay("AFK time factor: " + formatFloat(0.5, 1) + "x");
                 llOwnerSay("Wind amount: " + (string)llRound(windamount / 60.0) + " minutes.");
 
                 {
@@ -900,20 +930,22 @@ default {
                 string s = "Time: " + (string)llRound(t1) + "/" +
                             (string)llRound(t2) + " min (" + formatFloat(p, 2) + "% capacity)";
                 if (afk) {
-                    s += " (rate slowed by " + formatFloat(RATE_AFK, 1) + "x)";
+                    s += " (current wind rate " + formatFloat(setWindRate(), 1) + "x)";
                 }
                 llOwnerSay(s);
             }
             else if (choice == "stats") {
+                setWindRate();
                 llOwnerSay("Time remaining: " + (string)llRound(timeLeftOnKey / 60.0) + " minutes of " +
                             (string)llRound(keyLimit / 60.0) + " minutes.");
-                if (afk) {
-                    llOwnerSay("Key is unwinding at a slowed rate of " + formatFloat(RATE_AFK, 1) + "x.");
-                    llOwnerSay("Doll is AFK.");
+                if (windRate < 1.0) {
+                    llOwnerSay("Key is unwinding at a slowed rate of " + formatFloat(windRate, 1) + "x.");
+                } else if (windRate > 1.0) {
+                    llOwnerSay("Key is unwinding at an accelerated rate of " + formatFloat(windRate, 1) + "x.");
                 }
 
                 if (hasController) {
-                    llOwnerSay("Controller: " + MistressName);
+                    llOwnerSay("Controller: " + mistressName);
                 }
                 else {
                     llOwnerSay("Controller: none");
