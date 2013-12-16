@@ -1,11 +1,12 @@
-//========================================
 // RLV.lsl
-//========================================
 //
 // vim:sw=4 et nowrap:
 //
 // DATE: 8 December 2013
                   
+//========================================
+// VARIABLES
+//========================================
 // Keys of important people in life of the Key:
 key MasterBuilder = "42c7aaec-38bc-4b0c-94dd-ae562eb67e6d";   // Christina Halpin
 key  MasterWinder = "64d26535-f390-4dc4-a371-a712b946daf8";   // GreigHighland
@@ -180,8 +181,7 @@ listenerStart() {
 //----------------------------------------
 // RLV Initialization Functions
 //----------------------------------------
-checkRLV()
-{ // Run RLV viewer check
+checkRLV() { // Run RLV viewer check
     locked = 0;
     ATHok = llGetAttached() == ATTACH_BACK;
     if (ATHok) {
@@ -195,8 +195,7 @@ checkRLV()
     } else postCheckRLV();
 }
 
-postCheckRLV()
-{ // Handle RLV check result
+postCheckRLV() { // Handle RLV check result
     if (RLVok) llOwnerSay("Logged with Community Doll Key and " + rlvAPIversion + " active...");
     else if (ATHok && !RLVok) llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
     
@@ -218,31 +217,30 @@ initializeRLV() {
         
         afkOrCollapse("Collapsed", collapsed);
         afkOrCollapse("AFK", afk);
-        if (collapsed) doRLV("UserCollapsed", addCollapseRLVcmd);
-        else doRLV("UserCollapsed", addRestoreRLVcmd);
-        
-        if (autoTP) doRLV("Base", "accepttp=add");
-        if (helpless) doRLV("Base", "tplm=n,tploc=n");
-        if (!canFly) doRLV("Base", "fly=n");
-        if (!canStand) doRLV("Base", "unsit=n");
-        if (!canSit) doRLV("Base", "sit=n");
-        if (!canWear || wearLockExpire > 0) doRLV("Base", "addoutfit=n,addattach=n");
-        if (!canUnwear || wearLockExpire > 0) doRLV("Base", "remoutfit=n,remattach=n");
+
+        if (collapsed)  doRLV("UserCollapsed", addCollapseRLVcmd);
+        else            doRLV("UserCollapsed", addRestoreRLVcmd);
     
+        if ( autoTP)                           doRLV("Base", "accepttp=add");
+        if ( helpless)                         doRLV("Base", "tplm=n,tploc=n");
+        if (!canFly)                           doRLV("Base", "fly=n");
+        if (!canStand)                         doRLV("Base", "unsit=n");
+        if (!canSit)                           doRLV("Base", "sit=n");
+        if (!canWear   || wearLockExpire > 0)  doRLV("Base", "addoutfit=n,addattach=n");
+        if (!canUnwear || wearLockExpire > 0)  doRLV("Base", "remoutfit=n,remattach=n");
+
         // if Doll is one of the developers... dont lock:
         // prevents inadvertent lock-in during development
-    
+
         if (!devKey()) {
             // We lock the key on here - but in the menu system, it appears
-            // unlocked and detachable: this is because it can be detached 
+            // unlocked and detachable: this is because it can be detached
             // via the menu. To make the key truly "undetachable", we get
             // rid of the menu item to unlock it
             doRLV("Base", "detach=n,editobj:" + (string)llGetKey() + "=add");  //locks key
-            locked = 1;
         } else {
             if (!quiet) llSay(0, "Developer Key not locked.");
             else llOwnerSay("Developer key not locked.");
-            doRLV("Base", "getpathnew:spine=" + (string)channel);
         }
     }
     
@@ -293,6 +291,7 @@ doRLV(string script, string commandString) {
                         string scripts = llList2String(rlvStatus, cmdIndex + 1);
                         list scriptList = llParseString2List(scripts, [ "|" ], []);
                         integer myIndex = llListFindList(scriptList, [ script ]);
+
                         if (myIndex == -1) {
                             scriptList = llListSort(scriptList + [ script ], 1, 1);
                             rlvStatus = llListReplaceList(rlvStatus, [ cmd, llDumpList2String(scriptList, "|") ],
@@ -302,12 +301,15 @@ doRLV(string script, string commandString) {
                 }
                 else if (param == "y" || param == "rem") {
                     integer cmdIndex = llListFindList(rlvStatus, [ cmd ]);
+
                     if (cmdIndex != -1) { // Restriction does exist from one or more scripts
                         string scripts = llList2String(rlvStatus, cmdIndex + 1);
                         list scriptList = llParseString2List(scripts, [ "|" ], []);
                         integer myIndex = llListFindList(scriptList, [ script ]);
+
                         if (myIndex != -1) { // This script is one of the restriction issuers clear it
                             scriptList = llDeleteSubList(scriptList, myIndex, myIndex);
+
                             if (scriptList == []) { // All released delete old record and send to viewer
                                 rlvStatus = llDeleteSubList(rlvStatus, cmdIndex, cmdIndex + 1);
                                 sendCommands += fullCmd;
@@ -327,12 +329,15 @@ doRLV(string script, string commandString) {
             }
             else if (cmd == "clear") {
                 integer i;
+
                 for (i = 0; i < llGetListLength(rlvStatus); i = i + 2) {
                     string thisCmd = llList2String(rlvStatus, i);
+
                     if (llSubStringIndex(thisCmd, param) != -1) { // Restriction matches clear param
                         string scripts = llList2String(rlvStatus, i + 1);
                         list scriptList = llParseString2List(scripts, [ "|" ], []);
                         integer myIndex = llListFindList(scriptList, [ script ]);
+
                         if (myIndex != -1) { // This script is one of the restriction issuers clear it
                             scriptList = llDeleteSubList(scriptList, myIndex, myIndex);
                             if (scriptList == []) { // All released delete old record and send to viewer
@@ -382,22 +387,33 @@ rlvTeleportToVector(vector global) {
 
 afkOrCollapse(string type, integer set) {
     if (set) {
-        doRLV(type, "addoutfit=n,remoutfit=n,fly=n,sit=n,unsit=n,tplm=n,tploc=n,temprun=n,alwaysrun=n,sendchat=n,tplure=n,sittp=n,standtp=n,shownames=n,showhovertextall=n,redirchat:999=add,rediremote:999=add");
 
         lockAttachments(type, set);
         
-        if (devKey() && myPath != "") doRLV(type, "detachthis_except:" + myPath + "=add");
+        doRLV(type, "fly=n,sit=n,unsit=n,tplm=n,tploc=n,tplure=n,standtp=n,sittp=n," +
+                    "addoutfit=n,addattach=n,remoutfit=n,remattach=n," +
+                    "temprun=n,alwaysrun=n,sendchat=n,shownames=n,showhovertextall=n," +
+                    "redirchat:999=add,rediremote:999=add");
+                    
         allowRescue(type);
         if (carried) autoTPAllowed(type, carrierID);
     }
 }
 
 lockAttachments(string type, integer set) {
-    list points = [ "chest", "skull", "left shoulder", "right shoulder", "left hand", "right hand", "left foot", "right foot", "pelvis", "mouth", "chin", "left ear", "right ear", "left eyeball", "right eyeball", "nose", "r upper arm", "r forearm", "l upper arm", "l forearm", "right hip", "r upper leg", "r lower leg", "left hip", "l upper leg", "l lower leg", "stomach", "left pec", "right pec", "center 2", "top right", "top", "top left", "center", "bottom left", "bottom", "bottom right", "neck" ];
+    list points = [ "spine", "chest", "skull", "left shoulder", "right shoulder", "left hand",
+                    "right hand", "left foot", "right foot", "pelvis", "mouth", "chin", 
+                    "left ear", "right ear", "left eyeball", "right eyeball", "nose",
+                    "r upper arm", "r forearm", "l upper arm", "l forearm", "right hip",
+                    "r upper leg", "r lower leg", "left hip", "l upper leg", "l lower leg",
+                    "stomach", "left pec", "right pec", "center 2", "top right", "top",
+                    "top left", "center", "bottom left", "bottom", "bottom right", "neck", "root" ];
+
     if (set) {
-        integer i;
-        for (i = 0; i < llGetListLength(points); i++)
-            doRLV(type, "detach:" + llList2String(points, i) + "=n");
+        // Skip locking spine on dev keys, this is for the same reason as we skip the @detach=n and
+        // @editobj restrictions.
+        if (!devKey()) doRLV(type, "detach:" + llDumpList2String(points, "=n,detach:") + "=n");
+        else doRLV(type, "detach:" + llDumpList2String(llList2List(points, 1, -1), "=n,detach:") + "=n");
     }
 }
 
@@ -433,6 +449,9 @@ default {
         }
     }
     
+    //----------------------------------------
+    // DATASERVER
+    //----------------------------------------
     dataserver(key query_id, string data) {
         if (query_id == rlvTPrequest) {
             vector loc = llGetRegionCorner() + (vector)data;
@@ -443,7 +462,6 @@ default {
     //----------------------------------------
     // LISTEN
     //----------------------------------------
-
     listen(integer chan, string name, key id, string msg) {
         if (chan == channel) {
             if (RLVck != 0) {
@@ -467,7 +485,6 @@ default {
     //----------------------------------------
     // LINK_MESSAGE
     //----------------------------------------
-
     link_message(integer sender, integer num, string data, key id) {
         integer index;
         string parameter;
@@ -509,9 +526,11 @@ default {
         //    * stripShoes
         //    * carried
         
-        if (num == 16) dollType = llList2String(parameterList, 0);
+        if (num == 16)
+            dollType = llList2String(parameterList, 0);
         else if (num == 101) {
-            if (!configured) processConfiguration(llList2String(parameterList, 0), llList2List(parameterList, 1, -1));
+            if (!configured)
+                processConfiguration(llList2String(parameterList, 0), llList2List(parameterList, 1, -1));
         }
         else if (num == 102) {
             configured = 1;
