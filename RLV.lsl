@@ -251,8 +251,10 @@ initializeRLV() {
 
 allowRescue(string script) {
     list allow = [ MistressID, MasterBuilder, MasterWinder, DevOne, DevTwo ];
-    integer loop;
-    for (loop = 0; loop < llGetListLength(allow); loop++) autoTPAllowed(script, llList2Key(allow, loop));
+    integer index;
+    integer allowLen = llGetListLength(allow);
+
+    for (index = 0; index < allowLen; index++) autoTPAllowed(script, llList2Key(allow, index));
 }
 
 // Only useful if @tplure and @accepttp are off and denied by default...
@@ -265,13 +267,14 @@ doRLV(string script, string commandString) {
         integer commandLoop; list sendCommands;
         integer scriptIndex = llListFindList(rlvSources, [ script ]);
         list commandList = llParseString2List(commandString, [ "," ], []);
+        integer commandListLen = llGetListLength(commandList);
         
         if (scriptIndex == -1) {
             scriptIndex = llGetListLength(rlvSources);
             rlvSources += script;
         }
         
-        for (commandLoop = 0; commandLoop < llGetListLength(commandList); commandLoop++) {
+        for (commandLoop = 0; commandLoop < commandListLen; commandLoop++) {
             string fullCmd; list parts; string param; string cmd;
             
             fullCmd = llStringTrim(llList2String(commandList, commandLoop), STRING_TRIM);
