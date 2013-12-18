@@ -108,6 +108,8 @@ float keyLimit     = defLimit;
 //integer posedlimit    = 30;     // 5 minutes
 float hackLimit    = 720.0; // 6 * 60 * ticks;   // 6 hours
 
+float RATE_STANDARD = 1.0;
+float RATE_AFK = 0.5;
 float windRate;
 float timeLeftOnKey = windamount;
 integer ticks;
