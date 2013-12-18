@@ -372,7 +372,7 @@ aoControl(integer on) {
     integer LockMeisterChannel = -8888;
     
     if (on) llWhisper(LockMeisterChannel, (string)dollID + "booton");
-    else llWhisper(LockMeisterChannel, (string)dollID + "bootoff");
+    else    llWhisper(LockMeisterChannel, (string)dollID + "bootoff");
 }
 
 ifPermissions() {
@@ -388,41 +388,43 @@ ifPermissions() {
         llRequestPermissions(dollID, PERMISSION_MASK);
     
     if (grantor == dollID) {
-        if (perm & PERMISSION_TRIGGER_ANIMATION && llGetAttached() == ATTACH_BACK) {
-            if (keyAnimation != "") {
-                aoControl(0);
-                
-                list animList;
-                integer i;
-                integer animCount;
+        if (llGetAttached() == ATTACH_BACK) {
+            if (perm & PERMISSION_TRIGGER_ANIMATION) {
+                if (keyAnimation != "") {
+                    aoControl(0);
+                    
+                    list animList;
+                    integer i;
+                    integer animCount;
 
-                while ((animCount = llGetListLength(animList = llGetAnimationList(dollID))) > 1) {
-                    for (i = 0; i < animCount; i++)
-                        llStopAnimation(llList2Key(animList, i));
+                    while ((animCount = llGetListLength(animList = llGetAnimationList(dollID))) > 0) {
+                        for (i = 0; i < animCount; i++)
+                            llStopAnimation(llList2Key(animList, i));
+                    }
                     llStartAnimation(keyAnimation);
-                }
-            } else if (clearAnims) {
-                aoControl(1);
-                
-                list animList;
-                integer i;
-                integer animCount;
+                } else if (clearAnims) {
+                    aoControl(1);
+                    
+                    list animList;
+                    integer i;
+                    integer animCount;
 
-                while (animCount = llGetListLength(animList = llGetAnimationList(dollID)))
-                    for (i = 0; i < animCount; i++) llStopAnimation(llList2Key(animList, i));
+                    while (animCount = llGetListLength(animList = llGetAnimationList(dollID)))
+                        for (i = 0; i < animCount; i++) llStopAnimation(llList2Key(animList, i));
+                }
             }
-        }
-        
-        if (perm & PERMISSION_OVERRIDE_ANIMATIONS && llGetAttached() == ATTACH_BACK) {
-            if (keyAnimation != "") {
-                llSetAnimationOverride("Standing", keyAnimation);
+            
+            if (perm & PERMISSION_OVERRIDE_ANIMATIONS) {
+                if (keyAnimation != "") {
+                    llSetAnimationOverride("Standing", keyAnimation);
+                }
+                else llResetAnimationOverride("ALL");
             }
-            else llResetAnimationOverride("ALL");
-        }
-        
-        if (perm & PERMISSION_TAKE_CONTROLS && llGetAttached() == ATTACH_BACK) {
-            if (collapsed || posed || afk) llTakeControls(CONTROL_ALL, 1, 0);
-            else llTakeControls(CONTROL_MOVE, 1, 1);
+            
+            if (perm & PERMISSION_TAKE_CONTROLS) {
+                if (collapsed || posed || afk) llTakeControls(CONTROL_ALL,  1, 0);
+                else                           llTakeControls(CONTROL_MOVE, 1, 1);
+            }
         }
         
         if (perm & PERMISSION_ATTACH) {
