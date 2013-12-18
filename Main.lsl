@@ -392,25 +392,36 @@ ifPermissions() {
             if (perm & PERMISSION_TRIGGER_ANIMATION) {
                 if (keyAnimation != "") {
                     aoControl(0);
-                    
+
                     list animList;
                     integer i;
                     integer animCount;
+                    key animKey = llGetInventoryKey(keyAnimation);
 
-                    while ((animCount = llGetListLength(animList = llGetAnimationList(dollID))) > 0) {
-                        for (i = 0; i < animCount; i++)
-                            llStopAnimation(llList2Key(animList, i));
+                    // stops all animations until only keyAnimation is running
+                    while ((animList = llGetAnimationList(dollID)) != [ animKey ]) {
+                        animCount = llGetListLength(animList);
+
+                        // Stops all animations except the requested keyAnimation
+                        for (i = 0; i < animCount; i++) {
+                            if (llList2Key(animList, i) != animKey) llStopAnimation(llList2Key(animList, i));
+                        }
+                        llStartAnimation(keyAnimation);
                     }
-                    llStartAnimation(keyAnimation);
                 } else if (clearAnims) {
-                    aoControl(1);
-                    
-                    list animList;
+                    list animList = llGetAnimationList(dollID); 
                     integer i;
-                    integer animCount;
+                    integer animCount = llGetInventoryNumber(20);
 
-                    while (animCount = llGetListLength(animList = llGetAnimationList(dollID)))
-                        for (i = 0; i < animCount; i++) llStopAnimation(llList2Key(animList, i));
+                    // This stops all poses, and a collapsed animation, too
+                    for (i = 0; i < animCount; i++) {
+                        key animKey = llGetInventoryKey(llGetInventoryName(20, i));
+
+                        if (~llListFindList(animList, (list) animKey))
+                            llStopAnimation(animKey);
+                    }
+                    clearAnim = 0;
+                    aoControl(1);
                 }
             }
             
