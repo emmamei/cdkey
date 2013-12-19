@@ -651,6 +651,10 @@ default {
                 // If not a display doll set an expire time
                 if (dollType != "Display") poseExpire = llGetTime() + POSE_LIMIT;
                 
+                // Force unsit and block sitting before posing
+                lmRunRLV("unsit=force");
+                llSleep(0.2);   // delay to let the command execute
+                
                 // Run ifPermissions to pose the doll
                 // This will also prevent movement while posed
                 ifPermissions();
