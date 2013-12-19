@@ -3,6 +3,7 @@
 // DATE: 18 December 2012
 //
 // 8/19 sits in key, helps change key.  Taker 4 doesn't have allowing inventory drop for getpin
+#include "include/GlobalDefines.lsl"
 
 integer cd6011;
 integer cd6200;
@@ -28,7 +29,7 @@ setup() {
 }
 
 default {
-    state_entry() { llMessageLinked(LINK_SET, 999, llGetScriptName(), NULL_KEY); }
+    state_entry() { lmScriptReset(); }
 
     timer() {
         // countdown...
@@ -39,8 +40,8 @@ default {
         }
     }
     
-    link_message(integer sender, integer num, string data, key id) {
-        if (num == 104 || num == 105) setup();
+    link_message(integer sender, integer code, string data, key id) {
+        if (code == 104 || code == 105) setup();
     }
 
     listen(integer channel, string name, key id, string choice) {
@@ -74,4 +75,5 @@ default {
         }
     }
 }
+
 

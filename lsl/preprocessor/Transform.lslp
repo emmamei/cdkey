@@ -2,6 +2,7 @@
 
 //Aug 14, totally changing
 //Nov. 12, adding compatibility with hypnosisHUD
+#include "include/GlobalDefines.lsl"
 
 //========================================
 // VARIABLES
@@ -33,7 +34,7 @@ integer configured;
 string currentState;
 integer winddown;
 integer mustAgreeToType;
-integer showPhrases;
+integer showPhrases = TRUE;
 key dollID;
 string clothingprefix;
 
@@ -43,43 +44,9 @@ list currentphrases;
 
 integer quiet;
 
-// Keys of important people in life of the Key:
-key MasterBuilder = "42c7aaec-38bc-4b0c-94dd-ae562eb67e6d";   // Christina Halpin
-key  MasterWinder = "64d26535-f390-4dc4-a371-a712b946daf8";   // GreigHighland
-key        DevOne = "c5e11d0a-694f-46cc-864b-e42340890934";   // MayStone
-key        DevTwo = "2fff40f0-ea4a-4b52-abb8-d4bf6b1c98c9";   // Silky Mesmeriser
-
-list rescuerList = [ MasterBuilder, MasterWinder ];
-list developerList = [ DevOne, DevTwo ];
-
 //========================================
 // FUNCTIONS
 //========================================
-
-integer devKey() {
-    if (dollID != llGetOwner()) dollID = llGetOwner();
-    return llListFindList(developerList, [ dollID ]) != -1;
-}
-
-string FormatFloat(float val, integer dp)
-{
-    string out = "ERROR";
-    if (dp == 0) {
-        out = (string)llRound(val);
-    } else if (dp > 0 && dp <= 6) {
-        val = llRound(val * llPow(10.0, dp)) / llPow(10.0, dp);
-        out = llGetSubString((string)val, 0, -7 + dp);
-    }
-    return out;
-}
-
-memReport() {
-    float free_memory = (float)llGetFreeMemory();
-    float used_memory = (float)llGetUsedMemory();
-    
-    if (devKey()) llOwnerSay(llGetScriptName() + ": Memory " + FormatFloat(used_memory/1024.0, 2) + "/" + (string)llRound((used_memory + free_memory)/1024.0) + "kB, " + FormatFloat(free_memory/1024.0, 2) + " kB free");
-}
-
 //---------------------------------------
 // Configuration Functions
 //---------------------------------------
@@ -97,7 +64,7 @@ processConfiguration(string name, list values) {
     }
 }
 
-setup ()  {
+setup()  {
     dollID =   llGetOwner();
     dollname = llGetDisplayName(dollID);
     stateName = "Regular";
@@ -152,7 +119,7 @@ setDollType(string choice, integer force) {
     llSleep(1.0);
 
     llMessageLinked(LINK_THIS, 1, "random", dollID);
-    llMessageLinked(LINK_THIS, 16, currentState, dollID);
+    lmSendConfig("dollType", currentState, dollID);
 
     if (!quiet) llSay(0, dollname + " has become a " + stateName + " Doll.");
     else llOwnerSay("You have become a " + stateName + " Doll.");
@@ -202,7 +169,7 @@ default {
     //----------------------------------------
     // STATE ENTRY
     //----------------------------------------
-    state_entry() { llMessageLinked(LINK_SET, 999, llGetScriptName(), NULL_KEY); }
+    state_entry() { lmScriptReset(); }
 
     //----------------------------------------
     // ON REZ
@@ -318,13 +285,9 @@ default {
         }
         
         else if (num == 102) {
-            configured = 1;
-        }
-        
-        else if (num == 103 && (choice == "Main" || choice == "MenuHandler")) {
             // Trigger Transforming Key setting
-            llMessageLinked(LINK_THIS, 18, "here", dollID );
-            llMessageLinked(LINK_SET, 103, llGetScriptName(), NULL_KEY);
+            lmSendConfig("isTransformingKey", (string)1, NULL_KEY);
+            configured = 1;
         }
         
         else if (num == 104) {
@@ -335,14 +298,12 @@ default {
     
             cd8666 = ( -1 * (integer)("0x"+llGetSubString((string)llGetKey(),-5,-1)) ) - 8666;
     
-            //maxMinutes = -1;
-            mustAgreeToType = FALSE;
-            showPhrases = TRUE;
-            //avoid = FALSE;
+            llMessageLinked(LINK_SET, 103, llGetScriptName(), NULL_KEY);
         }
         
         else if (num == 105) {
             setup();
+            llMessageLinked(LINK_SET, 103, llGetScriptName(), NULL_KEY);
         }
         
         else if (num == 135) memReport();
@@ -386,10 +347,11 @@ default {
             choice != "OK" && choice != "No") {
 
             //avoid = FALSE;
-
+#ifdef DEVELOPER_MODE
             llSay(DEBUG_CHANNEL,"transform = " + (string)transform);
             llSay(DEBUG_CHANNEL,"choice = " + (string)choice);
             llSay(DEBUG_CHANNEL,"stateName = " + (string)stateName);
+#endif
 
             setDollType(choice, 0);
         // Set options - "Options"
@@ -436,3 +398,6 @@ default {
         }
     }
 }
+
+
+
