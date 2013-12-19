@@ -277,7 +277,7 @@ doWind(string name, key id) {
     else llMessageLinked(LINK_SET, 300, "timeLeftOnKey" + "|" + (string)timeLeftOnKey,NULL_KEY);
 
     llSleep(0.1);
-    llMessageLinked(LINK_SET, 305, llGetScriptName() + "|" + "windMenu" + "|" +name, id);
+    llMessageLinked(LINK_SET, 305, llGetScriptName() + "|" + "mainMenu" + "|" +name, id);
 }
 
 integer isMistress(key id) {

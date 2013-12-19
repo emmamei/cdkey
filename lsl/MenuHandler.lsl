@@ -780,7 +780,7 @@ default
                 carrierID = NULL_KEY;
                 carrierName = "";
             }
-            else if (cmd == "windMenu") doMainMenu(id);
+            else if (cmd == "mainMenu") doMainMenu(id);
             else if (cmd == "collapse") collapsed = 1;
             else if (cmd == "restore") collapsed = 0;
         }
