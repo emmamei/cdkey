@@ -64,10 +64,10 @@ processConfiguration(string name, list values) {
             lmSendConfig("timeLeftOnKey", (string)((float)value * SEC_TO_MIN), NULL_KEY);
         }
         else if (name == "wind time") {
-            lmSendConfig("wind time", (string)((float)value * SEC_TO_MIN), NULL_KEY);
+            lmSendConfig("windamount", (string)((float)value * SEC_TO_MIN), NULL_KEY);
         }
         else if (name == "max time") {
-            lmSendConfig("max time", (string)((float)value * SEC_TO_MIN), NULL_KEY);
+            lmSendConfig("keyLimit", (string)((float)value * SEC_TO_MIN), NULL_KEY);
         }
         else if (name == "barefeet path") {
             lmSendConfig("barefeet", value, NULL_KEY);
