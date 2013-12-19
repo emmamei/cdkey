@@ -12,9 +12,9 @@
 //
 // Global preprocessor and variable definitions for the key
 //
-// 32 "include/GlobalDefines.lsl"
+// 35 "include/GlobalDefines.lsl"
 // Link messages
-// 41 "include/GlobalDefines.lsl"
+// 44 "include/GlobalDefines.lsl"
 // Keys of important people in life of the Key:
 
 
@@ -64,7 +64,7 @@ memReport() {
 
     llOwnerSay(llGetScriptName() + ": Memory " + formatFloat(used_memory/1024.0, 2) + "/" + (string)llRound((used_memory + free_memory)/1024.0) + "kB, " + formatFloat(free_memory/1024.0, 2) + " kB free");
 }
-// 48 "include/GlobalDefines.lsl" 2
+// 51 "include/GlobalDefines.lsl" 2
 // 1 "include/KeySharedFuncs.lsl" 1
 //-----------------------------------
 // Internal Shared Functions
@@ -84,7 +84,7 @@ float setWindRate() {
     if (windRate != newWindRate * windDown) {
         windRate = newWindRate * windDown;
 
-        llMessageLinked(LINK_SET, 300, "windRate" + "|" + (string)windRate,NULL_KEY);
+        llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "windRate" + "|" + (string)windRate,NULL_KEY);
     }
 
     // llTargetOmega: With normalized vector spinrate is equal to radians per second
@@ -100,12 +100,12 @@ integer setFlags(integer clear, integer set) {
     integer oldFlags = globalFlags;
     globalFlags = (globalFlags & ~clear) | set;
     if (globalFlags != oldFlags) {
-        llMessageLinked(LINK_SET, 300, "globalFlags" + "|" + "0x" + bits2nybbles(globalFlags),NULL_KEY);
+        llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "globalFlags" + "|" + "0x" + bits2nybbles(globalFlags),NULL_KEY);
         return 1;
     }
     else return 0;
 }
-// 49 "include/GlobalDefines.lsl" 2
+// 52 "include/GlobalDefines.lsl" 2
 // 7 "Taker.lslp" 2
 
 integer cd6011;
@@ -127,12 +127,10 @@ setup() {
         listen_cd6011 = llListen(cd6011, "", "", "");
         cd6200 = cd6011 - 122;
     }
-
-    llMessageLinked(LINK_SET, 103, llGetScriptName(), NULL_KEY);
 }
 
 default {
-    state_entry() { llMessageLinked(LINK_SET, 999, llGetScriptName(), NULL_KEY); }
+    state_entry() { llMessageLinked(LINK_THIS, 999, llGetScriptName(), NULL_KEY); }
 
     timer() {
         // countdown...
@@ -144,7 +142,13 @@ default {
     }
 
     link_message(integer sender, integer code, string data, key id) {
-        if (code == 104 || code == 105) setup();
+        list split = llParseString2List(data, [ "|" ], []);
+
+        if (code == 104 || code == 105) {
+            if (llList2String(split, 0) != "Start") return;
+            setup();
+            llMessageLinked(LINK_THIS, code, llGetScriptName(), NULL_KEY);
+        }
     }
 
     listen(integer channel, string name, key id, string choice) {

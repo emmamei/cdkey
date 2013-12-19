@@ -3,10 +3,11 @@
 // Global preprocessor and variable definitions for the key
 //
 
-#define OPTION_DATE "18/Dec/13"   // The date of this code in this key, we should really look into a proper version numbering system sometime
+#define OPTION_DATE "19/Dec/13"   // The date of this code in this key, we should really look into a proper version numbering system sometime
 
+#define LOW_SCRIPT_MODE           // Enables the low script mode code
 #define DEVELOPER_MODE            // Enables various developer specific features of the key
-#define TESTER_MODE
+#define TESTER_MODE               // Enables tester mode allowing access to some features the doll would not normally have for testing
 #define ADULT_MODE                // Enables code related to adult features this way we can disable this to remove all such code entirely
 #define LINK_DEBUG                // Enables link message debugging code now in Main.lsl - Note this is kinda spammy only if needed
 
@@ -24,19 +25,21 @@
 #define PERMISSION_MASK 0x8034                                  // Permissions scripts should request
 #define RATE_AFK 0.5                                            // Wind down rate factor in AFK mode
 #define RATE_STANDARD 1.0                                       // Wind down rate factor in standard mode
+#define LAG_HIGH_THRESHOLD 0.92					// If region time dilation is worse than this go to sim friendly mode
+#define LAG_LOW_THRESHOLD 0.97					// If region time dilation is better than this we will return to normal
 #define SEC_TO_MIN 60.0                                         // Seconds per minute
 #define WEB_DOMAIN "http://communitydolls.com/"			// Community dolls website
 
 #define SCRIPT_NAME llGetScriptName()
 
 // Link messages
-#define lmMemReport() llMessageLinked(LINK_SET, 135, SCRIPT_NAME, NULL_KEY)
-#define lmInternalCommand(command, parameter, id) llMessageLinked(LINK_SET, 305, SCRIPT_NAME + "|" + command + "|" +parameter, id)
-#define lmRunRLV(command) llMessageLinked(LINK_SET, 315, SCRIPT_NAME + "|" + command, NULL_KEY)
-#define lmSendConfig(name, value, id) llMessageLinked(LINK_SET, 300, name + "|" + value,id)
-#define lmSendToAgent(msg, id) llMessageLinked(LINK_SET, 11,msg,id)
-#define lmScriptReset() llMessageLinked(LINK_SET, 999, SCRIPT_NAME, NULL_KEY)
-#define lmInitializationCompleted() llMessageLinked(LINK_SET, 103, SCRIPT_NAME, NULL_KEY)
+#define lmMemReport() llMessageLinked(LINK_THIS, 135, SCRIPT_NAME, NULL_KEY)
+#define lmInternalCommand(command, parameter, id) llMessageLinked(LINK_THIS, 305, SCRIPT_NAME + "|" + command + "|" +parameter, id)
+#define lmRunRLV(command) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|" + command, NULL_KEY)
+#define lmSendConfig(name, value, id) llMessageLinked(LINK_THIS, 300, SCRIPT_NAME + "|" + name + "|" + value,id)
+#define lmSendToAgent(msg, id) llMessageLinked(LINK_THIS, 11,msg,id)
+#define lmScriptReset() llMessageLinked(LINK_THIS, 999, SCRIPT_NAME, NULL_KEY)
+#define lmInitializationCompleted(code) llMessageLinked(LINK_THIS, code, SCRIPT_NAME, NULL_KEY)
 
 // Keys of important people in life of the Key:
 #define AGENT_CHRISTINA_HALPIN "42c7aaec-38bc-4b0c-94dd-ae562eb67e6d"

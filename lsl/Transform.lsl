@@ -11,9 +11,9 @@
 //
 // Global preprocessor and variable definitions for the key
 //
-// 32 "include/GlobalDefines.lsl"
+// 35 "include/GlobalDefines.lsl"
 // Link messages
-// 41 "include/GlobalDefines.lsl"
+// 44 "include/GlobalDefines.lsl"
 // Keys of important people in life of the Key:
 
 
@@ -63,7 +63,7 @@ memReport() {
 
     llOwnerSay(llGetScriptName() + ": Memory " + formatFloat(used_memory/1024.0, 2) + "/" + (string)llRound((used_memory + free_memory)/1024.0) + "kB, " + formatFloat(free_memory/1024.0, 2) + " kB free");
 }
-// 48 "include/GlobalDefines.lsl" 2
+// 51 "include/GlobalDefines.lsl" 2
 // 1 "include/KeySharedFuncs.lsl" 1
 //-----------------------------------
 // Internal Shared Functions
@@ -83,7 +83,7 @@ float setWindRate() {
     if (windRate != newWindRate * windDown) {
         windRate = newWindRate * windDown;
 
-        llMessageLinked(LINK_SET, 300, "windRate" + "|" + (string)windRate,NULL_KEY);
+        llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "windRate" + "|" + (string)windRate,NULL_KEY);
     }
 
     // llTargetOmega: With normalized vector spinrate is equal to radians per second
@@ -99,12 +99,12 @@ integer setFlags(integer clear, integer set) {
     integer oldFlags = globalFlags;
     globalFlags = (globalFlags & ~clear) | set;
     if (globalFlags != oldFlags) {
-        llMessageLinked(LINK_SET, 300, "globalFlags" + "|" + "0x" + bits2nybbles(globalFlags),NULL_KEY);
+        llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "globalFlags" + "|" + "0x" + bits2nybbles(globalFlags),NULL_KEY);
         return 1;
     }
     else return 0;
 }
-// 49 "include/GlobalDefines.lsl" 2
+// 52 "include/GlobalDefines.lsl" 2
 // 6 "Transform.lslp" 2
 
 //========================================
@@ -131,6 +131,9 @@ integer channel_dialog;
 integer channelHUD;
 integer channelAsk;
 integer configured;
+integer RLVok;
+
+integer startup = 1;
 
 //integer menulimit = 9;     // 1.5 minute
 
@@ -150,22 +153,6 @@ integer quiet;
 //========================================
 // FUNCTIONS
 //========================================
-//---------------------------------------
-// Configuration Functions
-//---------------------------------------
-// This code assumes a human-generated config file
-processConfiguration(string name, list values) {
-    //----------------------------------------
-    // Assign values to program variables
-
-    if (name == "doll type") {
-        // Ensure proper capitalization for matching or display
-        setDollType(llList2String(values, 0), 1);
-    }
-    else if (name == "quiet key") {
-        quiet = llList2Integer(values, 0);
-    }
-}
 
 setup() {
     dollID = llGetOwner();
@@ -218,14 +205,18 @@ setDollType(string choice, integer force) {
 
     if (llGetInventoryType(stateName) == INVENTORY_NOTECARD) kQuery = llGetNotecardLine(stateName,0);
 
-    llMessageLinked(LINK_THIS, 2, clothingprefix, dollID);
+    llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "clothingFolder" + "|" + clothingprefix,NULL_KEY);
     llSleep(1.0);
 
-    llMessageLinked(LINK_THIS, 1, "random", dollID);
-    llMessageLinked(LINK_SET, 300, "dollType" + "|" + currentState,dollID);
+    llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|" + "randomDress" + "|" +"", NULL_KEY);
 
     if (!quiet) llSay(0, dollname + " has become a " + stateName + " Doll.");
     else llOwnerSay("You have become a " + stateName + " Doll.");
+
+    if (startup == 2) {
+        llMessageLinked(LINK_THIS, 105, llGetScriptName(), NULL_KEY);
+        startup = 0;
+    }
 }
 
 sendStateName() {
@@ -272,14 +263,14 @@ default {
     //----------------------------------------
     // STATE ENTRY
     //----------------------------------------
-    state_entry() { llMessageLinked(LINK_SET, 999, llGetScriptName(), NULL_KEY); }
+    state_entry() { llMessageLinked(LINK_THIS, 999, llGetScriptName(), NULL_KEY); }
 
     //----------------------------------------
     // ON REZ
     //----------------------------------------
-    //on_rez(integer iParam) {
-
-    //}
+    on_rez(integer iParam) {
+        startup = 2;
+    }
 
     //----------------------------------------
     // CHANGED
@@ -350,11 +341,11 @@ default {
     //----------------------------------------
     // LINK MESSAGE
     //----------------------------------------
-    link_message(integer source, integer num, string data, key id) {
-        list parameterList = llParseString2List(data, [ "|" ], []);
-        string choice = llList2String(parameterList, 0);
+    link_message(integer source, integer code, string data, key id) {
+        list split = llParseString2List(data, [ "|" ], []);
+        string choice = llList2String(split, 0);
 
-        if (num == 17) {
+        if (code == 17) {
 
             // Doll must remain in a type for a period of time
             if (minMinutes > 0) {
@@ -383,33 +374,52 @@ default {
             }
         }
 
-        else if (num == 101) {
-            if (!configured) processConfiguration(llList2String(parameterList, 0), llList2List(parameterList, 1, -1));
-        }
-
-        else if (num == 102) {
+        else if (code == 102) {
             // Trigger Transforming Key setting
-            llMessageLinked(LINK_SET, 300, "isTransformingKey" + "|" + (string)1,NULL_KEY);
+            llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "isTransformingKey" + "|" + "1",NULL_KEY);
             configured = 1;
+            setDollType(stateName, 1);
         }
 
-        else if (num == 104) {
+        else if (code == 104) {
+            if (llList2String(split, 0) != "Start") return;
             setup();
             reloadTypeNames();
+            startup = 1;
 
             llSetTimerEvent(60.0); // every minute
 
             cd8666 = ( -1 * (integer)("0x"+llGetSubString((string)llGetKey(),-5,-1)) ) - 8666;
 
-            llMessageLinked(LINK_SET, 103, llGetScriptName(), NULL_KEY);
+            llMessageLinked(LINK_THIS, 104, llGetScriptName(), NULL_KEY);
         }
 
-        else if (num == 105) {
-            setup();
-            llMessageLinked(LINK_SET, 103, llGetScriptName(), NULL_KEY);
+        else if (code == 105) {
+            if (llList2String(split, 0) != "Dress") return;
+            startup = 2;
+            RLVok = 0;
+            setDollType(stateName, 1);
         }
 
-        else if (num == 135) memReport();
+        else if (code == 135) memReport();
+
+        else if (code == 300) {
+            string script = llList2String(split, 0);
+            string name = llList2String(split, 1);
+            string value = llList2String(split, 2);
+
+            if (script != llGetScriptName()) {
+                if (name == "dollType") {
+                    stateName = value;
+                    if (!startup) setDollType(stateName, 0);
+                }
+                if (name == "quiet") quiet = (integer)value;
+            }
+        }
+
+        else if (code == 350) {
+            RLVok = llList2Integer(split, 0);
+        }
     }
 
     //----------------------------------------
@@ -456,7 +466,8 @@ default {
             llSay(DEBUG_CHANNEL,"stateName = " + (string)stateName);
 
 
-            setDollType(choice, 0);
+            if (!startup) setDollType(choice, 0);
+            llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "dollType" + "|" + stateName,NULL_KEY);
         // Set options - "Options"
         } else if (channel == cd8667) {
             if (choice == "verify") {

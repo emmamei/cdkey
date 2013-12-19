@@ -28,6 +28,9 @@ integer channel_dialog;
 integer channelHUD;
 integer channelAsk;
 integer configured;
+integer RLVok;
+
+integer startup = 1;
 
 //integer menulimit = 9;     // 1.5 minute
 
@@ -47,22 +50,6 @@ integer quiet;
 //========================================
 // FUNCTIONS
 //========================================
-//---------------------------------------
-// Configuration Functions
-//---------------------------------------
-// This code assumes a human-generated config file
-processConfiguration(string name, list values) {
-    //----------------------------------------
-    // Assign values to program variables
-
-    if (name == "doll type") {
-        // Ensure proper capitalization for matching or display
-        setDollType(llList2String(values, 0), 1);
-    }
-    else if (name == "quiet key") {
-        quiet = llList2Integer(values, 0);
-    }
-}
 
 setup()  {
     dollID =   llGetOwner();
@@ -115,14 +102,18 @@ setDollType(string choice, integer force) {
     
     if (llGetInventoryType(stateName) == INVENTORY_NOTECARD) kQuery = llGetNotecardLine(stateName,0);
 
-    llMessageLinked(LINK_THIS, 2, clothingprefix, dollID);
+    lmSendConfig("clothingFolder", clothingprefix, NULL_KEY);
     llSleep(1.0);
 
-    llMessageLinked(LINK_THIS, 1, "random", dollID);
-    lmSendConfig("dollType", currentState, dollID);
+    lmInternalCommand("randomDress", "", NULL_KEY);
 
     if (!quiet) llSay(0, dollname + " has become a " + stateName + " Doll.");
     else llOwnerSay("You have become a " + stateName + " Doll.");
+    
+    if (startup == 2) {
+        lmInitializationCompleted(105);
+        startup = 0;
+    }
 }
 
 sendStateName() {
@@ -174,9 +165,9 @@ default {
     //----------------------------------------
     // ON REZ
     //----------------------------------------
-    //on_rez(integer iParam) {
-        
-    //}
+    on_rez(integer iParam) {
+        startup = 2;
+    }
 
     //----------------------------------------
     // CHANGED
@@ -247,11 +238,11 @@ default {
     //----------------------------------------
     // LINK MESSAGE
     //----------------------------------------
-    link_message(integer source, integer num, string data, key id) {
-        list parameterList = llParseString2List(data, [ "|" ], []);
-        string choice = llList2String(parameterList, 0);
+    link_message(integer source, integer code, string data, key id) {
+        list split = llParseString2List(data, [ "|" ], []);
+        string choice = llList2String(split, 0);
         
-        if (num == 17) {
+        if (code == 17) {
 
             // Doll must remain in a type for a period of time
             if (minMinutes > 0) {
@@ -280,33 +271,52 @@ default {
             }
         }
         
-        else if (num == 101) {
-            if (!configured) processConfiguration(llList2String(parameterList, 0), llList2List(parameterList, 1, -1));
-        }
-        
-        else if (num == 102) {
+        else if (code == 102) {
             // Trigger Transforming Key setting
-            lmSendConfig("isTransformingKey", (string)1, NULL_KEY);
+            lmSendConfig("isTransformingKey", "1", NULL_KEY);
             configured = 1;
+            setDollType(stateName, 1);
         }
         
-        else if (num == 104) {
+        else if (code == 104) {
+            if (llList2String(split, 0) != "Start") return;
             setup();
             reloadTypeNames();
+            startup = 1;
     
             llSetTimerEvent(60.0);   // every minute
     
             cd8666 = ( -1 * (integer)("0x"+llGetSubString((string)llGetKey(),-5,-1)) ) - 8666;
     
-            llMessageLinked(LINK_SET, 103, llGetScriptName(), NULL_KEY);
+            lmInitializationCompleted(104);
         }
         
-        else if (num == 105) {
-            setup();
-            llMessageLinked(LINK_SET, 103, llGetScriptName(), NULL_KEY);
+        else if (code == 105) {
+            if (llList2String(split, 0) != "Dress") return;
+            startup = 2;
+            RLVok = 0;
+            setDollType(stateName, 1);
         }
         
-        else if (num == 135) memReport();
+        else if (code == 135) memReport();
+        
+        else if (code == 300) {
+            string script = llList2String(split, 0);
+            string name = llList2String(split, 1);
+            string value = llList2String(split, 2);
+            
+            if (script != SCRIPT_NAME) {
+                if (name == "dollType") {
+                    stateName = value;
+                    if (!startup) setDollType(stateName, 0);
+                }
+                if (name == "quiet") quiet = (integer)value;
+            }
+        }
+        
+        else if (code == 350) {
+            RLVok = llList2Integer(split, 0);
+        }
     }
 
     //----------------------------------------
@@ -353,7 +363,8 @@ default {
             llSay(DEBUG_CHANNEL,"stateName = " + (string)stateName);
 #endif
 
-            setDollType(choice, 0);
+            if (!startup) setDollType(choice, 0);
+            lmSendConfig("dollType", stateName, NULL_KEY);
         // Set options - "Options"
         } else if (channel == cd8667) {
             if (choice == "verify") {
@@ -398,6 +409,5 @@ default {
         }
     }
 }
-
 
 

@@ -520,6 +520,7 @@ handlemenuchoices(string choice, string name, key id) {
         lmSendConfig("MistressID", (string)NULL_KEY, id);
         lmSendConfig("mistressName", "", id);
     }
+    else if (doll && choice == "Reload Config") llResetOtherScript("Start");
     
     if ((keyAnimation == "" || (!doll || poserID == dollID)) && llGetInventoryType(choice) == 20) {
         keyAnimation = choice;
@@ -621,45 +622,50 @@ default
             }
         }
         else if (code == 104 || code == 105) {
+            if (llList2String(split, 0) != "Start") return;
+            
             dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -9, -1));
             llListenRemove(dialogHandle);
             dialogHandle = llListen(dialogChannel, "", "", "");
             
-            llMessageLinked(LINK_SET, 103, llGetScriptName(), NULL_KEY);
+            lmInitializationCompleted(code);
         }
         else if (code == 106) {
             
         }
         else if (code == 135) memReport();
         else if (code == 300) {
-            string name = llList2String(split, 0);
-            string value = llList2String(split, 1);
+            string script = llList2String(split, 0);
+            string name = llList2String(split, 1);
+            string value = llList2String(split, 2);
             
-                 if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
-            else if (name == "keyAnimation")             keyAnimation = value;
-            else if (name == "afk")                               afk = (integer)value;
-            else if (name == "autoTP")                         autoTP = (integer)value;
-            else if (name == "canAFK")                         canAFK = (integer)value;
-            else if (name == "canCarry")                     canCarry = (integer)value;
-            else if (name == "canDress")                     canDress = (integer)value;
-            else if (name == "canFly")                         canFly = (integer)value;
-            else if (name == "canSit")                         canSit = (integer)value;
-            else if (name == "canStand")                     canStand = (integer)value;
-            else if (name == "configured")                 configured = (integer)value;
-            else if (name == "detachable")                 detachable = (integer)value;
-            else if (name == "helpless")                     helpless = (integer)value;
-            else if (name == "pleasureDoll")             pleasureDoll = (integer)value;
-            else if (name == "isTransformingKey")   isTransformingKey = (integer)value;
-            else if (name == "isVisible")                     visible = (integer)value;
-            else if (name == "quiet")                           quiet = (integer)value;
-            else if (name == "RLVok")                           RLVok = (integer)value;
-            else if (name == "signOn")                         signOn = (integer)value;
-            else if (name == "takeoverAllowed")       takeoverAllowed = (integer)value;
-            else if (name == "dollType")
-                dollType = llGetSubString(llToUpper(value), 0, 0) + llGetSubString(llToLower(value), 1, -1);
-            else if (name == "MistressID") {
-                MistressID = (key)value;
-                mistressQuery = llRequestDisplayName(MistressID);
+            if (script != SCRIPT_NAME) {
+                     if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
+                else if (name == "keyAnimation")             keyAnimation = value;
+                else if (name == "afk")                               afk = (integer)value;
+                else if (name == "autoTP")                         autoTP = (integer)value;
+                else if (name == "canAFK")                         canAFK = (integer)value;
+                else if (name == "canCarry")                     canCarry = (integer)value;
+                else if (name == "canDress")                     canDress = (integer)value;
+                else if (name == "canFly")                         canFly = (integer)value;
+                else if (name == "canSit")                         canSit = (integer)value;
+                else if (name == "canStand")                     canStand = (integer)value;
+                else if (name == "configured")                 configured = (integer)value;
+                else if (name == "detachable")                 detachable = (integer)value;
+                else if (name == "helpless")                     helpless = (integer)value;
+                else if (name == "pleasureDoll")             pleasureDoll = (integer)value;
+                else if (name == "isTransformingKey")   isTransformingKey = (integer)value;
+                else if (name == "isVisible")                     visible = (integer)value;
+                else if (name == "quiet")                           quiet = (integer)value;
+                else if (name == "RLVok")                           RLVok = (integer)value;
+                else if (name == "signOn")                         signOn = (integer)value;
+                else if (name == "takeoverAllowed")       takeoverAllowed = (integer)value;
+                else if (name == "dollType")
+                    dollType = llGetSubString(llToUpper(value), 0, 0) + llGetSubString(llToLower(value), 1, -1);
+                else if (name == "MistressID") {
+                    MistressID = (key)value;
+                    mistressQuery = llRequestDisplayName(MistressID);
+                }
             }
         }        
         else if (code == 305) {
@@ -681,10 +687,6 @@ default
             else if (cmd == "collapse") collapsed = 1;
             else if (cmd == "restore") collapsed = 0;
         }
-    }
-    
-    touch_start(integer num) {
-        doMainMenu(llDetectedKey(0));
     }
     
     //----------------------------------------

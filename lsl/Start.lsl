@@ -11,9 +11,9 @@
 //
 // Global preprocessor and variable definitions for the key
 //
-// 32 "include/GlobalDefines.lsl"
+// 35 "include/GlobalDefines.lsl"
 // Link messages
-// 41 "include/GlobalDefines.lsl"
+// 44 "include/GlobalDefines.lsl"
 // Keys of important people in life of the Key:
 
 
@@ -63,7 +63,7 @@ memReport() {
 
     llOwnerSay(llGetScriptName() + ": Memory " + formatFloat(used_memory/1024.0, 2) + "/" + (string)llRound((used_memory + free_memory)/1024.0) + "kB, " + formatFloat(free_memory/1024.0, 2) + " kB free");
 }
-// 48 "include/GlobalDefines.lsl" 2
+// 51 "include/GlobalDefines.lsl" 2
 // 1 "include/KeySharedFuncs.lsl" 1
 //-----------------------------------
 // Internal Shared Functions
@@ -83,7 +83,7 @@ float setWindRate() {
     if (windRate != newWindRate * windDown) {
         windRate = newWindRate * windDown;
 
-        llMessageLinked(LINK_SET, 300, "windRate" + "|" + (string)windRate,NULL_KEY);
+        llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "windRate" + "|" + (string)windRate,NULL_KEY);
     }
 
     // llTargetOmega: With normalized vector spinrate is equal to radians per second
@@ -99,12 +99,12 @@ integer setFlags(integer clear, integer set) {
     integer oldFlags = globalFlags;
     globalFlags = (globalFlags & ~clear) | set;
     if (globalFlags != oldFlags) {
-        llMessageLinked(LINK_SET, 300, "globalFlags" + "|" + "0x" + bits2nybbles(globalFlags),NULL_KEY);
+        llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "globalFlags" + "|" + "0x" + bits2nybbles(globalFlags),NULL_KEY);
         return 1;
     }
     else return 0;
 }
-// 49 "include/GlobalDefines.lsl" 2
+// 52 "include/GlobalDefines.lsl" 2
 // 6 "Start.lslp" 2
 
 //#define HYPNO_START   // Enable hypno messages on startup
@@ -140,7 +140,11 @@ integer startup = 1;
 integer reset;
 integer rlvWait;
 integer RLVok;
-// 48 "Start.lslp"
+
+
+integer afk;
+integer lowScriptMode;
+// 53 "Start.lslp"
 //---------------------------------------
 // Configuration Functions
 //---------------------------------------
@@ -151,57 +155,60 @@ processConfiguration(string name, list values) {
 
     string value = llList2String(values,0);
 
-    list validConfig = [ "initial time", "wind time", "max time", "doll type", "helpless dolly", "controller",
-                         "auto tp", "can fly", "outfitable", "pleasure doll", "detachable", "barefeet path",
-                         "user startup rlv", "user collapse rlv", "quiet key" ];
+    if (value == "yes" || value == "on") value = "1";
+    else if (value == "no" || value == "off") value = "0";
 
-    if (llListFindList(validConfig, [ name ]) != -1) {
-        if (name == "initial time") {
-            llMessageLinked(LINK_SET, 300, "timeLeftOnKey" + "|" + (string)((float)value * 60.0),NULL_KEY);
-        }
-        else if (name == "wind time") {
-            llMessageLinked(LINK_SET, 300, "windamount" + "|" + (string)((float)value * 60.0),NULL_KEY);
-        }
-        else if (name == "max time") {
-            llMessageLinked(LINK_SET, 300, "keyLimit" + "|" + (string)((float)value * 60.0),NULL_KEY);
-        }
-        else if (name == "barefeet path") {
-            llMessageLinked(LINK_SET, 300, "barefeet" + "|" + value,NULL_KEY);
-        }
-        else if (name == "user startup rlv") {
-            llMessageLinked(LINK_SET, 300, "userBaseRLVcmd" + "|" + value,NULL_KEY);
-        }
-        else if (name == "user collapse rlv") {
-            llMessageLinked(LINK_SET, 300, "userCollapseRLVcmd" + "|" + value,NULL_KEY);
-        }
-        else if (name == "helpless dolly") {
-            llMessageLinked(LINK_SET, 300, "helpless" + "|" + value,NULL_KEY);
-        }
-        else if (name == "auto tp") {
-            llMessageLinked(LINK_SET, 300, "autoTP" + "|" + value,NULL_KEY);
-        }
-        else if (name == "pleasure doll") {
-            llMessageLinked(LINK_SET, 300, "pleasureDoll" + "|" + value,NULL_KEY);
-        }
-        else if (name == "detachable") {
-            llMessageLinked(LINK_SET, 300, "detachable" + "|" + value,NULL_KEY);
-        }
-        else if (name == "outfitable") {
-            llMessageLinked(LINK_SET, 300, "canDress" + "|" + value,NULL_KEY);
-        }
-        else if (name == "can fly") {
-            llMessageLinked(LINK_SET, 300, "canFly" + "|" + value,NULL_KEY);
-        }
-        else if (name == "can sit") {
-            llMessageLinked(LINK_SET, 300, "canSit" + "|" + value,NULL_KEY);
-        }
-        else if (name == "can stand") {
-            llMessageLinked(LINK_SET, 300, "canStand" + "|" + value,NULL_KEY);
-        }
-        else if (name == "quiet key") {
-            quiet = (integer)value;
-            llMessageLinked(LINK_SET, 300, "quiet" + "|" + value,NULL_KEY);
-        }
+    if (name == "initial time") {
+        llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "timeLeftOnKey" + "|" + (string)((float)value * 60.0),NULL_KEY);
+    }
+    else if (name == "wind time") {
+        llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "windamount" + "|" + (string)((float)value * 60.0),NULL_KEY);
+    }
+    else if (name == "max time") {
+        llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "keyLimit" + "|" + (string)((float)value * 60.0),NULL_KEY);
+    }
+    else if (name == "barefeet path") {
+        llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "barefeet" + "|" + value,NULL_KEY);
+    }
+    else if (name == "doll type") {
+        llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "dollType" + "|" + value,NULL_KEY);
+    }
+    else if (name == "user startup rlv") {
+        llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "userBaseRLVcmd" + "|" + value,NULL_KEY);
+    }
+    else if (name == "user collapse rlv") {
+        llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "userCollapseRLVcmd" + "|" + value,NULL_KEY);
+    }
+    else if (name == "helpless dolly") {
+        llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "helpless" + "|" + value,NULL_KEY);
+    }
+    else if (name == "auto tp") {
+        llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "autoTP" + "|" + value,NULL_KEY);
+    }
+    else if (name == "pleasure doll") {
+        llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "pleasureDoll" + "|" + value,NULL_KEY);
+    }
+    else if (name == "detachable") {
+        llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "detachable" + "|" + value,NULL_KEY);
+    }
+    else if (name == "outfitable") {
+        llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "canDress" + "|" + value,NULL_KEY);
+    }
+    else if (name == "can fly") {
+        llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "canFly" + "|" + value,NULL_KEY);
+    }
+    else if (name == "can sit") {
+        llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "canSit" + "|" + value,NULL_KEY);
+    }
+    else if (name == "can stand") {
+        llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "canStand" + "|" + value,NULL_KEY);
+    }
+    else if (name == "busy is away") {
+        llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "busyIsAway" + "|" + value,NULL_KEY);
+    }
+    else if (name == "quiet key") {
+        quiet = (integer)value;
+        llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "quiet" + "|" + value,NULL_KEY);
     }
     //--------------------------------------------------------------------------
     // Disabled for future use, allows for extention scripts to add support for
@@ -260,30 +267,36 @@ initConfiguration() {
 }
 
 doneConfiguration() {
-    if (startup) {
+    if (startup == 1) {
         ncPrefsLoadedUUID = llGetInventoryKey(ncName);
         //sendMsg(dollID, (string)ncPrefsLoadedUUID);
         llMessageLinked(LINK_SET, 102, "", NULL_KEY);
-        startup = 0;
+        startup = 2;
+        readyScripts = [];
+        llMessageLinked(LINK_THIS, 105, llGetScriptName(), NULL_KEY);
 
         sendMsg(dollID, "Preferences read in " + formatFloat(llGetTime() - ncStart, 2) + "s");
 
     }
+}
 
-    llSleep(1);
+initializationCompleted() {
+    if (!quiet && llGetAttached() == ATTACH_BACK)
+        llSay(0, llGetDisplayName(llGetOwner()) + " is now a dolly - anyone may play with their Key.");
 
+
+    llMessageLinked(LINK_SET, 135, llGetScriptName(), NULL_KEY);
+    memReport();
+
+    llSleep(1.0);
     string msg = "Initialization completed";
 
     msg += " in " + formatFloat(llGetTime(), 2) + "s";
 
     msg += " key ready";
     sendMsg(dollID, msg);
-    if (!quiet && llGetAttached() == ATTACH_BACK)
-        llSay(0, llGetDisplayName(llGetOwner()) + " is now a dolly - anyone may play with their Key.");
 
-
-    llMessageLinked(LINK_SET, 135, llGetScriptName(), NULL_KEY);
-
+    startup = 0;
 }
 
 list notReady() {
@@ -295,26 +308,55 @@ list notReady() {
     return waiting;
 }
 
+
+wakeMenu() {
+
+    llOwnerSay("Waking menu scripts");
+
+    llSetScriptState("MenuHandler", 1);
+    llSetScriptState("Transform", 1);
+    llSetScriptState("Dress", 1);
+    llSetScriptState("Taker", 1);
+}
+
+sleepMenu() {
+
+    llOwnerSay("Sleeping menu scripts");
+
+    llSetScriptState("MenuHandler", 0);
+    llSetScriptState("Transform", 0);
+    llSetScriptState("Dress", 0);
+    llSetScriptState("Taker", 0);
+}
+
+
 default {
     link_message(integer source, integer code, string data, key id) {
         list split = llParseString2List(data, [ "|" ], []);
-// 228 "Start.lslp"
+// 264 "Start.lslp"
         if (code == 11) {
 
 
             sendMsg(id, llList2String(split,0));
         }
-        else if (code == 103) {
+        else if (startup == 1 && code == 104) {
+            if (llList2String(split, 0) == "Start") return;
             if (llListFindList(readyScripts, [ llList2String(split,0) ]) == -1) {
                 readyScripts += llList2String(split,0);
             }
-            if (llList2String(split,0) == "RLV") {
-                if (startup) initConfiguration();
-                else doneConfiguration();
+            if (notReady() == []) initConfiguration();
+        }
+        else if (startup == 2 && code == 105) {
+            if (llList2String(split, 0) == "Start") return;
+            if (llListFindList(readyScripts, [ llList2String(split,0) ]) == -1) {
+                readyScripts += llList2String(split,0);
             }
+            if (notReady() == []) initializationCompleted();
         }
 
-        else if (code == 135) memReport();
+        else if (code == 135 && llList2String(split, 0) != llGetScriptName()) {
+            memReport();
+        }
 
         else if (code == 300) {
             string name = llList2String(split, 0);
@@ -340,9 +382,28 @@ default {
             else if (name == "signOn")              signOn = (integer)value;
             else if (name == "takeoverAllowed")     takeoverAllowed = (integer)value;*/
         }
+
+        else if (code == 305) {
+            string cmd = llList2String(split, 1);
+
+            if (cmd == "setAFK") afk = llList2Integer(split, 2);
+
+            if (!lowScriptMode && afk) {
+                lowScriptMode = 1;
+                llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "lowScriptMode" + "|" + "1",NULL_KEY);
+                sleepMenu();
+            }
+            else if (lowScriptMode && !afk && llGetRegionTimeDilation() > 0.97) {
+                lowScriptMode = 0;
+                llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "lowScriptMode" + "|" + "0",NULL_KEY);
+                wakeMenu();
+            }
+        }
+
         else if (code == 350) {
             RLVok = llList2Integer(split, 0);
             rlvWait = 0;
+            llSetTimerEvent(5.0);
         }
         else if (code == 500) {
             string selection = llList2String(split, 0);
@@ -361,6 +422,9 @@ default {
                     llResetScript();
                 }
             }
+
+            llSetTimerEvent(60.0);
+
         }
         else if (code == 999) {
             if (reset) llResetScript();
@@ -372,9 +436,11 @@ default {
         dollID = llGetOwner();
         dollName = llGetDisplayName(dollID);
 
+        wakeMenu();
+
         llTargetOmega(<0,0,0>,0,0);
 
-        llSetObjectName(llList2String(llGetLinkPrimitiveParams(24, [ PRIM_DESC ]), 0) + " " + "18/Dec/13");
+        llSetObjectName(llList2String(llGetLinkPrimitiveParams(24, [ PRIM_DESC ]), 0) + " " + "19/Dec/13");
 
         string me = llGetScriptName();
         integer loop; string script;
@@ -389,12 +455,32 @@ default {
             }
         }
 
-        llSetTimerEvent(2);
+        llSetTimerEvent(2.0);
+    }
+
+    //----------------------------------------
+    // TOUCHED
+    //----------------------------------------
+    touch_start(integer num) {
+        integer i;
+
+        if (!llGetScriptState("MenuHandler")) wakeMenu();
+        llSetTimerEvent(60.0);
+
+        for (i = 0; i < num; i++) {
+            key id = llDetectedKey(i);
+            string name = llGetDisplayName(id);
+            llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|" + "mainMenu" + "|" +name, id);
+        }
     }
 
     on_rez(integer start) {
         rlvWait = 1;
         if (startup) llResetScript();
+        else startup = 2;
+
+        wakeMenu();
+
 
         llTargetOmega(<0,0,0>,0,0);
 
@@ -410,8 +496,6 @@ default {
             script = llGetInventoryName(INVENTORY_SCRIPT, loop);
             if (script != me) knownScripts += script;
         }
-
-        llSetTimerEvent(120);
 
         llMessageLinked(LINK_SET, 105, llGetScriptName(), NULL_KEY);
     }
@@ -434,7 +518,7 @@ default {
                            "belatedly realize that it must be attached to your spine.");
                 llOwnerSay("@clear,detachme=force");
 
-                llSleep(3);
+                llSleep(3.0);
                 llDetachFromAvatar();
             }
 
@@ -447,7 +531,8 @@ default {
         if (query_id == ncPrefsKey) {
             if (data == EOF) {
                 doneConfiguration();
-            } else {
+            }
+            else {
                 if (data != "" && llGetSubString(data, 0, 0) != "#") {
                     integer index = llSubStringIndex(data, "=");
                     string name = llGetSubString(data, 0, index - 1);
@@ -465,12 +550,11 @@ default {
     changed(integer change) {
         if (change & CHANGED_INVENTORY) {
             if (ncPrefsLoadedUUID != NULL_KEY && llGetInventoryKey(ncName) != ncPrefsLoadedUUID) {
-                // Get a unique number
-                integer ncd = -1 * (integer)("0x" + llGetSubString((string)llGetKey(),-7,-1));
-                integer channel = ncd - 5467;
+                wakeMenu();
+                integer channel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -9, -1));
                 replyHandle = llListen(channel, "", "", "");
 
-                llSetTimerEvent(60);
+                llSetTimerEvent(60.0);
                 llDialog(llGetOwner(), "Detected a change in your Preferences notecard, would you like to load the new settings?\n\n" +
                   "WARNING: All current data will be lost!", [ "Reload Config", "Keep Settings" ], channel);
             }
@@ -493,24 +577,45 @@ default {
 
     timer() {
         llListenRemove(replyHandle);
-        llSetTimerEvent(0);
+        llSetTimerEvent(0.0);
 
         if (!reset) {
             llOwnerSay("Starting initialization");
+            lowScriptMode = 0;
             reset = 1;
-            llSetTimerEvent(120);
 
             llMessageLinked(LINK_SET, 104, llGetScriptName() + "|1", NULL_KEY);
 
 
 
         }
-        else if (startup) {
+        else if (startup && llGetTime() > 90.0) {
+            lowScriptMode = 0;
             sendMsg(dollID, "Startup failure detected one or more scripts may have crashed, resetting");
 
 
             sendMsg(dollID, "The following scripts did not report: " + llList2CSV(notReady()));
 
         }
+
+        else if (!startup) {
+            float timeDilation = llGetRegionTimeDilation();
+            if (!lowScriptMode && !afk && timeDilation < 0.92) {
+                llOwnerSay("Sim lag detected going into low activity mode");
+
+                llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "lowScriptMode" + "|" + "1",NULL_KEY);
+                lowScriptMode = 1;
+                sleepMenu();
+            }
+            else if (lowScriptMode && !afk && timeDilation > 0.97) {
+                llOwnerSay("Sim lag has improved scripts returning to normal mode");
+
+                llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|" + "lowScriptMode" + "|" + "0",NULL_KEY);
+                lowScriptMode = 0;
+                wakeMenu();
+            }
+            llSetTimerEvent(60.0);
+        }
+
     }
 }

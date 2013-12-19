@@ -24,8 +24,6 @@ setup() {
         listen_cd6011 = llListen(cd6011, "", "", "");
         cd6200 = cd6011 - 122;
     }
-    
-    llMessageLinked(LINK_SET, 103, llGetScriptName(), NULL_KEY);
 }
 
 default {
@@ -41,7 +39,13 @@ default {
     }
     
     link_message(integer sender, integer code, string data, key id) {
-        if (code == 104 || code == 105) setup();
+        list split = llParseString2List(data, [ "|" ], []);
+        
+        if (code == 104 || code == 105) {
+            if (llList2String(split, 0) != "Start") return;
+            setup();
+            lmInitializationCompleted(code);
+        }
     }
 
     listen(integer channel, string name, key id, string choice) {
@@ -75,5 +79,4 @@ default {
         }
     }
 }
-
 

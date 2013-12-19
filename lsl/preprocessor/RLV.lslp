@@ -42,10 +42,14 @@ integer quiet;
 integer RLVck;
 integer RLVok;
 integer locked;
+integer startup = 1;
 
 integer channel;
 integer listenHandle;
 integer RLVstarted;
+#ifdef LOW_SCRIPT_MODE
+integer lowScriptMode;
+#endif
 
 string rlvAPIversion;
 string userBaseRLVcmd;
@@ -70,10 +74,9 @@ listenerStart() {
 checkRLV()
 { // Run RLV viewer check
     locked = 0;
-    if (isAttached) {
+    if (!RLVok && isAttached) {
         llListenControl(listenHandle, 1);
-        llSetTimerEvent(5);
-        rlvAPIversion = "";
+        llSetTimerEvent(5.0);
         RLVck = 1;
         
         llOwnerSay("@clear,versionnew=" + (string)channel);
@@ -86,11 +89,18 @@ postCheckRLV()
     if (RLVok) llOwnerSay("Logged with Community Doll Key and " + rlvAPIversion + " active...");
     else if (isAttached && !RLVok) llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
     
+    llMessageLinked(LINK_SET, 350, (string)RLVok + "|" + rlvAPIversion, NULL_KEY);
+    
     // Mark RLV check completed
     RLVck = 0;
     
-    if (configured) initializeRLV(0);
-    lmInitializationCompleted();
+    if (startup == 1) {
+        lmInitializationCompleted(104);
+        startup = 2;
+    }
+    else {
+        initializeRLV(0);
+    }
 }
 
 initializeRLV(integer refresh) {
@@ -146,38 +156,33 @@ initializeRLV(integer refresh) {
     
     if (!refresh) {
         RLVstarted = 1;
-        llSetTimerEvent(1);
-        llMessageLinked(LINK_SET, 350, (string)RLVok + "|" + rlvAPIversion, NULL_KEY);
+        llSetTimerEvent(1.0);
+#ifdef LOW_SCRIPT_MODE
+        if (lowScriptMode) llSetTimerEvent(30.0);
+#endif
+        lmInitializationCompleted(105);
+        startup = 0;
     }
 }
 
-allowRescue(string script) {
-    list allow = [ AGENT_CHRISTINA_HALPIN, AGENT_GREIGHIGHLAND_RESIDENT, AGENT_MAYSTONE_RESIDENT, AGENT_SILKY_MESMERISER ];
-    if (MistressID != NULL_KEY) allow += MistressID;
-    integer loop;
-    for (loop = 0; loop < llGetListLength(allow); loop++) autoTPAllowed(script, llList2Key(allow, loop));
-}
-
-// Only useful if @tplure and @accepttp are off and denied by default...
-autoTPAllowed(string script, key userID) {
-    doRLV(script, "tplure:"   + (string) userID + "=add,accepttp:" + (string) userID + "=add");
+string autoTPAllowed(string script, key userID) {
+    return "tplure:"   + (string)userID + "=add,accepttp:" + (string)userID + "=add";
 }
 
 doRLV(string script, string commandString) {
     if (RLVok) {
         integer commandLoop; string sendCommands = "";
-        integer charLimit = 756;    // Secondlife supports chat messages up to 1024 chars
-                                    // here we avoid sending over 756 at a time for safety
+        integer charLimit = 1000;   // Secondlife supports chat messages up to 1024 chars
+                                    // here we avoid sending over 1000 at a time for safety
         integer scriptIndex = llListFindList(rlvSources, [ script ]);
         list commandList = llParseString2List(commandString, [ "," ], []);
-        integer commandListLen = llGetListLength(commandList);
         
         if (scriptIndex == -1) {
             scriptIndex = llGetListLength(rlvSources);
             rlvSources += script;
         }
         
-        for (commandLoop = 0; commandLoop < commandListLen; commandLoop++) {
+        for (commandLoop = 0; commandLoop < llGetListLength(commandList); commandLoop++) {
             string fullCmd; list parts; string param; string cmd;
             
             fullCmd = llStringTrim(llList2String(commandList, commandLoop), STRING_TRIM);
@@ -286,29 +291,38 @@ rlvTeleportToVector(vector global) {
 }
 
 afkOrCollapse(string type, integer set) {
+    string RLV;
+    
     if (set) {
-        doRLV(type, 
-"addoutfit=n,remoutfit=n,addattach=n,remattach=n,fly=n,sit=n,unsit=n,tplm=n,tploc=n,temprun=n,alwaysrun=n,sendchat=n,tplure=n,sittp=n,standtp=n,shownames=n,showhovertextall=n,redirchat:999=add,rediremote:999=add");
-
-        lockAttachments(type, set);
-        
-        allowRescue(type);
-        if (carrierID != NULL_KEY) autoTPAllowed(type, carrierID);
+        RLV = "addoutfit=n,remoutfit=n,addattach=n,remattach=n,fly=n,sit=n,unsit=n,tplm=n,tploc=n,temprun=n,";
+        RLV += "alwaysrun=n,sendchat=n,tplure=n,sittp=n,standtp=n,shownames=n,showhovertextall=n,";
+        RLV += "redirchat:999=add,rediremote:999=add,";
+        RLV += getAttachLockRLV() + ",";
+        RLV += getAutoTPList();
     }
-    else doRLV(type, "clear");
+    else RLV = "clear";
+    
+    doRLV(type, RLV);
 }
 
-lockAttachments(string type, integer set) {
-    list points = [ "spine", "chest", "skull", "left shoulder", "right shoulder", "left hand", "right hand", "left foot", "right foot", "pelvis", "mouth", "chin", "left ear", "right ear", "left eyeball", "right 
-eyeball", "nose", "r upper arm", "r forearm", "l upper arm", "l forearm", "right hip", "r upper leg", "r lower leg", "left hip", "l upper leg", "l lower leg", "stomach", "left pec", "right pec", "center 2", "top 
-right", "top", "top left", "center", "bottom left", "bottom", "bottom right", "neck" ];
-    if (set) {
+string getAttachLockRLV() {
+    list points = [ "spine", "chest", "skull", "left shoulder", "right shoulder", "left hand", "right hand", "left foot", "right foot", "pelvis", "mouth", "chin", "left ear", "right ear", "left eyeball", "right eyeball", "nose", "r upper arm", "r forearm", "l upper arm", "l forearm", "right hip", "r upper leg", "r lower leg", "left hip", "l upper leg", "l lower leg", "stomach", "left pec", "right pec", "center 2", "top right", "top", "top left", "center", "bottom left", "bottom", "bottom right", "neck" ];
 #ifdef DEVELOPER_MODE   // Skip locking spine in developer mode
-        doRLV(type, "detach:" + llDumpList2String(llList2List(points, 1, -1), "=n,detach:") + "=n");
+    return "detach:" + llDumpList2String(llList2List(points, 1, -1), "=n,detach:") + "=n";
 #else
-        doRLV(type, "detach:" + llDumpList2String(points, "=n,detach:") + "=n");
+    return "detach:" + llDumpList2String(points, "=n,detach:") + "=n";
 #endif
-    }
+}
+
+// Only useful if @tplure and @accepttp are off and denied by default...
+string getAutoTPList() {
+    list allow = [ AGENT_CHRISTINA_HALPIN, AGENT_GREIGHIGHLAND_RESIDENT, AGENT_MAYSTONE_RESIDENT, AGENT_SILKY_MESMERISER ];
+    if (MistressID != NULL_KEY) allow += MistressID;
+    if (carrierID != NULL_KEY) allow += carrierID;
+    integer loop; key userID;
+    string RLV = "tplure:" + llDumpList2String(allow, "=add,tplure:") + "=add,";
+    RLV += "accepttp:" + llDumpList2String(allow, "=add,accepttp:") + "=add";
+    return RLV;
 }
 
 //========================================
@@ -320,6 +334,12 @@ default {
         dollID = llGetOwner();
         scriptName = llGetScriptName();
         lmScriptReset();
+    }
+    
+    on_rez(integer start) {
+        RLVstarted = 0;
+        RLVok = 0;
+        locked = 0;
     }
     
     //----------------------------------------
@@ -412,19 +432,16 @@ default {
         
         if (code == 102) {
             configured = 1;
-            if (!RLVck && !RLVstarted) initializeRLV(0);
         }
         else if (code == 104) {
+            if (llList2String(split, 0) != "Start") return;
             dollID = llGetOwner();
             dollName = llGetDisplayName(dollID);
             listenerStart();
             checkRLV();
         }
         else if (code == 105) {
-            locked = 0;
-            RLVok = 0;
-            RLVstarted = 0;
-            
+            if (llList2String(split, 0) != "Start") return;
             checkRLV();
         }
         else if (code == 106) {
@@ -434,39 +451,51 @@ default {
                 // We send no message if the key is RLV locked as RLV will reattach
                 // automatically this prevents neusance messages when defaultwear is
                 // permitted.
-                llMessageLinked(LINK_SET, 11, dollName + " has detached their key while undetachable.", MistressID);
+                lmSendToAgent(dollName + " has detached their key while undetachable.", MistressID);
             }
         }
         else if (code == 135) {
             memReport();
         }
         else if (code == 300) { // RLV Config
-            string name = llList2String(split, 0);
-            string value = llList2String(split, 1);
+            string script = llList2String(split, 0);
+            string name = llList2String(split, 1);
+            string value = llList2String(split, 2);
             
-            if (llListFindList([ "autoTP", "canFly", "canSit", "canStand", "canWear", "canUnwear", "helpless" ], [ name ]) != -1) {
-                     if (name == "autoTP")                       autoTP = (integer)value;
-                else if (name == "canFly")                       canFly = (integer)value;
-                else if (name == "canSit")                       canSit = (integer)value;
-                else if (name == "canStand")                   canStand = (integer)value;
-                else if (name == "canWear")                     canWear = (integer)value;
-                else if (name == "canUnwear")                 canUnwear = (integer)value;
-                else if (name == "helpless")                   helpless = (integer)value;
-                
-                if (RLVstarted) initializeRLV(1);
-            } else {            
-                     if (name == "detachable")               detachable = (integer)value;
-                else if (name == "dollType")                   dollType = value;
-                else if (name == "MistressID")               MistressID = (key)value;
-                else if (name == "mistressName")           mistressName = value;
-                else if (name == "quiet")                         quiet = (integer)value;
-                else if (name == "userBaseRLVcmd") {
-                    if (userBaseRLVcmd == "") userBaseRLVcmd = value;
-                    else userBaseRLVcmd += "," +value;
-                }
-                else if (name == "userCollapseRLVcmd") {
-                    if (userCollapseRLVcmd == "") userCollapseRLVcmd = value;
-                    else userCollapseRLVcmd += "," +value;
+            if (script != SCRIPT_NAME) {
+                if (llListFindList([ "autoTP", "canFly", "canSit", "canStand", "canWear", "canUnwear", "helpless" ], [ name ]) != -1) {
+                         if (name == "autoTP")                       autoTP = (integer)value;
+                    else if (name == "canFly")                       canFly = (integer)value;
+                    else if (name == "canSit")                       canSit = (integer)value;
+                    else if (name == "canStand")                   canStand = (integer)value;
+                    else if (name == "canWear")                     canWear = (integer)value;
+                    else if (name == "canUnwear")                 canUnwear = (integer)value;
+                    else if (name == "helpless")                   helpless = (integer)value;
+                    
+                    if (RLVstarted) initializeRLV(1);
+                } else {            
+                         if (name == "detachable")               detachable = (integer)value;
+                    else if (name == "dollType")                   dollType = value;
+                    else if (name == "MistressID")               MistressID = (key)value;
+                    else if (name == "mistressName")           mistressName = value;
+                    else if (name == "quiet")                         quiet = (integer)value;
+                    else if (name == "userBaseRLVcmd") {
+                        if (userBaseRLVcmd == "") userBaseRLVcmd = value;
+                        else userBaseRLVcmd += "," +value;
+                    }
+                    else if (name == "userCollapseRLVcmd") {
+                        if (userCollapseRLVcmd == "") userCollapseRLVcmd = value;
+                        else userCollapseRLVcmd += "," +value;
+                    }
+#ifdef LOW_SCRIPT_MODE
+                    else if (name == "lowScriptMode") {
+                        lowScriptMode = (integer)value;
+                        if (RLVstarted) {
+                            if (lowScriptMode) llSetTimerEvent(30.0);
+                            else llSetTimerEvent(1.0);
+                        }
+                    }
+#endif
                 }
             }
         }
@@ -504,7 +533,8 @@ default {
                 // Turn everything off: Dolly is down
                 afkOrCollapse("Collapse", 1);
                 // Add user defined restrictions
-                doRLV("UserCollapse", userCollapseRLVcmd);
+                if (userCollapseRLVcmd != "")
+                    doRLV("UserCollapse", userCollapseRLVcmd);
             }
             else if (cmd == "restore") {
                 // Clear collapse restrictions
@@ -555,11 +585,8 @@ stripped again)");
                 carrierID = id;
                 carrierName = llList2String(split, 0);
                 
-                // No TP allowed for Doll
-                doRLV("Carry", "tplm=n,tploc=n,accepttp=rem,tplure=n,accepttp:" + (string)carrierID + "=add,tplure:" + (string)carrierID  + "=add,showinv=n");
-    
-                // Allow rescuers to AutoTP
-                allowRescue("Carry");
+                // No TP allowed for Doll except rescuers
+                doRLV("Carry", "tplm=n,tploc=n,accepttp=rem,tplure=n,showinv=n," + getAutoTPList());
             }
             else if (cmd == "uncarry") {
                 // Clear carry restrictions
