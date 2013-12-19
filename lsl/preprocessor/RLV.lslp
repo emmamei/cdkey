@@ -71,6 +71,7 @@ checkRLV()
 { // Run RLV viewer check
     locked = 0;
     if (isAttached) {
+        llListenControl(listenHandle, 1);
         llSetTimerEvent(5);
         rlvAPIversion = "";
         RLVck = 1;

@@ -174,6 +174,7 @@ checkRLV()
 { // Run RLV viewer check
     locked = 0;
     if ((llGetAttached() == ATTACH_BACK)) {
+        llListenControl(listenHandle, 1);
         llSetTimerEvent(5);
         rlvAPIversion = "";
         RLVck = 1;
@@ -231,7 +232,7 @@ initializeRLV(integer refresh) {
 
         // if Doll is one of the developers... dont lock:
         // prevents inadvertent lock-in during development
-// 139 "RLV.lslp"
+// 140 "RLV.lslp"
         if (!refresh) {
             if (!quiet) llSay(0, "Developer Key not locked.");
             else llOwnerSay("Developer key not locked.");
@@ -265,13 +266,14 @@ doRLV(string script, string commandString) {
                                     // here we avoid sending over 756 at a time for safety
         integer scriptIndex = llListFindList(rlvSources, [ script ]);
         list commandList = llParseString2List(commandString, [ "," ], []);
+        integer commandListLen = llGetListLength(commandList);
 
         if (scriptIndex == -1) {
             scriptIndex = llGetListLength(rlvSources);
             rlvSources += script;
         }
 
-        for (commandLoop = 0; commandLoop < llGetListLength(commandList); commandLoop++) {
+        for (commandLoop = 0; commandLoop < commandListLen; commandLoop++) {
             string fullCmd; list parts; string param; string cmd;
 
             fullCmd = llStringTrim(llList2String(commandList, commandLoop), STRING_TRIM);
