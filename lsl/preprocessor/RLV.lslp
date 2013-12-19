@@ -169,13 +169,14 @@ doRLV(string script, string commandString) {
                                     // here we avoid sending over 756 at a time for safety
         integer scriptIndex = llListFindList(rlvSources, [ script ]);
         list commandList = llParseString2List(commandString, [ "," ], []);
+        integer commandListLen = llGetListLength(commandList);
         
         if (scriptIndex == -1) {
             scriptIndex = llGetListLength(rlvSources);
             rlvSources += script;
         }
         
-        for (commandLoop = 0; commandLoop < llGetListLength(commandList); commandLoop++) {
+        for (commandLoop = 0; commandLoop < commandListLen; commandLoop++) {
             string fullCmd; list parts; string param; string cmd;
             
             fullCmd = llStringTrim(llList2String(commandList, commandLoop), STRING_TRIM);

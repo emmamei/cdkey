@@ -116,6 +116,16 @@ integer setFlags(integer clear, integer set) {
 //    - Builder: doesnt wind down
 
 //========================================
+// DEFINES
+//========================================
+
+#define toMinutes(a) (string)llRound((a)/60)
+#define getSimRating llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING)
+#define toSeconds(a) ((a)*60)
+#define noTimeLeftOnKey (timeLeftOnKey<=0)
+#define markTimeLeft llMessageLinked(LINK_SET, 300, "timeLeftOnKey|" + (string)timeLeftOnKey, NULL_KEY)
+
+//========================================
 // VARIABLES
 //========================================
 
@@ -190,8 +200,6 @@ integer timeReporting = 1;
 string dollType = "Regular";
 
 
-
-
 float poseExpire;
 float carryExpire;
 float windamount = 1800.0; // 30 * SEC_TO_MIN;    // 30 minutes
@@ -225,10 +233,8 @@ setDollType(string choice) {
     // change to new Doll Type
     dollType = llGetSubString(llToUpper(choice), 0, 0) + llGetSubString(llToLower(choice), 1, -1);
 
-
     // new type is slut Doll
     if (dollType == "Slut") llOwnerSay("As a slut Doll, you can be stripped.");
-
 
     // new type is builder or key doll
     if (dollType == "Builder" || dollType == "Key")
@@ -328,7 +334,7 @@ aoControl(integer on) {
     integer LockMeisterChannel = -8888;
 
     if (on) llWhisper(LockMeisterChannel, (string)dollID + "booton");
-    else llWhisper(LockMeisterChannel, (string)dollID + "bootoff");
+    else    llWhisper(LockMeisterChannel, (string)dollID + "bootoff");
 }
 
 ifPermissions() {
@@ -389,10 +395,6 @@ ifPermissions() {
                 llTakeControls(0x15, 1, 1);
             }
         }
-
-
-
-
     }
 }
 
@@ -476,6 +478,9 @@ default {
         llMessageLinked(LINK_SET, 999, llGetScriptName(), NULL_KEY);
     }
 
+    //----------------------------------------
+    // ON_REZ
+    //----------------------------------------
     on_rez(integer start) {
         if (lockPos != ZERO_VECTOR) {
             llStopMoveToTarget();
@@ -511,7 +516,7 @@ default {
 
     changed(integer change) {
         if (change & CHANGED_REGION) {
-            simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
+            simRatingQuery = getSimRating;
         }
         if (change & CHANGED_TELEPORT) {
             if (lockPos != ZERO_VECTOR) {
@@ -603,7 +608,7 @@ default {
             else warned = 0;
 
             // Dolly is DONE! Go down... and yell for help.
-            if (!collapsed && timeLeftOnKey <= 0) {
+            if (!collapsed && noTimeLeftOnKey) {
                 collapse();
 
                 // This message is intentionally excluded from the quiet key setting as it is not good for
@@ -681,7 +686,6 @@ default {
 
             simRating = "";
             simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
-
 
             initFinal();
             llMessageLinked(LINK_SET, 103, llGetScriptName(), NULL_KEY);
@@ -883,7 +887,7 @@ default {
             }
             else if (choice == "xstats") {
                 llOwnerSay("AFK time factor: " + formatFloat(0.5, 1) + "x");
-                llOwnerSay("Wind amount: " + (string)llRound(windamount / 60.0) + " minutes.");
+                llOwnerSay("Wind amount: " + toMinutes(windamount) + " minutes.");
 
                 {
                     string s;
@@ -935,12 +939,10 @@ default {
 
             }
             else if (choice == "stat") {
-                float t1 = timeLeftOnKey / 60.0;
-                float t2 = keyLimit / 60.0;
-                float p = t1 * 100.0 / t2;
+                float p = timeLeftOnKey * 100.0 / keyLimit;
 
-                string s = "Time: " + (string)llRound(t1) + "/" +
-                            (string)llRound(t2) + " min (" + formatFloat(p, 2) + "% capacity)";
+                string s = "Time: " + toMinutes(timeLeftOnKey) + "/" +
+                            toMinutes(keyLimit) + " min (" + formatFloat(p, 2) + "% capacity)";
                 if (afk) {
                     s += " (current wind rate " + formatFloat(setWindRate(), 1) + "x)";
                 }
@@ -948,8 +950,8 @@ default {
             }
             else if (choice == "stats") {
                 setWindRate();
-                llOwnerSay("Time remaining: " + (string)llRound(timeLeftOnKey / 60.0) + " minutes of " +
-                            (string)llRound(keyLimit / 60.0) + " minutes.");
+                llOwnerSay("Time remaining: " + toMinutes(timeLeftOnKey) + " minutes of " +
+                            toMinutes(keyLimit) + " minutes.");
                 if (windRate < 1.0) {
                     llOwnerSay("Key is unwinding at a slowed rate of " + formatFloat(windRate, 1) + "x.");
                 } else if (windRate > 1.0) {
@@ -979,6 +981,9 @@ default {
         }
     }
 
+    //----------------------------------------
+    // RUN_TIME_PERMISSIONS
+    //----------------------------------------
     run_time_permissions(integer perm) {
         ifPermissions();
     }
