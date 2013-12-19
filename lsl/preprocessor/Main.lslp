@@ -45,7 +45,7 @@ key dresserID = NULL_KEY;
 key dollID = NULL_KEY;
 
 integer dialogChannel;
-integer chatChannel;
+integer chatChannel = 75;
 integer chatHandle;
 integer targetHandle;
 #ifdef LOW_SCRIPT_MODE
@@ -191,7 +191,6 @@ initializeStart() {
     dollName = llGetDisplayName(dollID);
             
     chatHandle = llListen(chatChannel, "", dollID, "");
-    dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -9, -1));
 #ifdef ADULT_MODE
     simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
 #endif
