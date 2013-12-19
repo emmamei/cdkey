@@ -236,20 +236,24 @@ setDollType(string choice) {
 }
 
 float windKey() {
-    float winding = windamount;
-    float windLimit = (float)(keyLimit * !demoMode) + (float)(300.0 * demoMode);
+    float windLimit = keyLimit - timeLeftOnKey;
+    if (demoMode) windLimit = 300.0 - timeLeftOnKey;
 
     // Return if winding is irrelevant
-    if (timeLeftOnKey > windLimit) return 0;
+    if (windLimit <= 0) return 0;
 
     // Return windamount if less than remaining capacity
-    else if ((windLimit - timeLeftOnKey) < windamount) return windamount;
+    else if (windLimit >= windamount) {
+        timeLeftOnKey += windamount;
+        return windamount;
+    }
 
     // Eles return limit - timeleft
     else {
         // Inform doll of full wind
         llOwnerSay("You have been fully wound - " + (string)llRound(keyLimit / 60.0) + " minutes remaining.");
-        return windLimit - timeLeftOnKey;
+        timeLeftOnKey += windLimit;
+        return windLimit;
     }
 }
 
@@ -271,6 +275,9 @@ doWind(string name, key id) {
 
     if (collapsed) uncollapse();
     else llMessageLinked(LINK_SET, 300, "timeLeftOnKey" + "|" + (string)timeLeftOnKey,NULL_KEY);
+
+    llSleep(0.1);
+    llMessageLinked(LINK_SET, 305, llGetScriptName() + "|" + "windMenu" + "|" +name, id);
 }
 
 integer isMistress(key id) {
@@ -712,6 +719,8 @@ default {
             else if (name == "signOn") signOn = (integer)value;
             else if (name == "takeoverAllowed") takeoverAllowed = (integer)value;
             else if (name == "timeLeftOnKey") timeLeftOnKey = (float)value;
+            else if (name == "windamount") windamount = (float)value;
+            else if (name == "keyLimit") keyLimit = (float)value;
             else if (name == "MistressID") MistressID = (key)value;
             else if (name == "mistressName") mistressName = value;
         }

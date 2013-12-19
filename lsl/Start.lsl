@@ -160,10 +160,10 @@ processConfiguration(string name, list values) {
             llMessageLinked(LINK_SET, 300, "timeLeftOnKey" + "|" + (string)((float)value * 60.0),NULL_KEY);
         }
         else if (name == "wind time") {
-            llMessageLinked(LINK_SET, 300, "wind time" + "|" + (string)((float)value * 60.0),NULL_KEY);
+            llMessageLinked(LINK_SET, 300, "windamount" + "|" + (string)((float)value * 60.0),NULL_KEY);
         }
         else if (name == "max time") {
-            llMessageLinked(LINK_SET, 300, "max time" + "|" + (string)((float)value * 60.0),NULL_KEY);
+            llMessageLinked(LINK_SET, 300, "keyLimit" + "|" + (string)((float)value * 60.0),NULL_KEY);
         }
         else if (name == "barefeet path") {
             llMessageLinked(LINK_SET, 300, "barefeet" + "|" + value,NULL_KEY);

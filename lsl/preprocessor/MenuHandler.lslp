@@ -386,13 +386,6 @@ handlemenuchoices(string choice, string name, key id) {
         }
         lmSendConfig("takeoverAllowed", (string)1, id);
     }
-#ifdef TESTER_MODE
-    else if (choice == "Wind") {
-#else
-    else if (!doll && choice == "Wind") {
-#endif
-        doMainMenu(id);
-    }
     else if (choice == "Dress") {
         if (!doll) llOwnerSay(name + " is looking at your dress menu");
     }
@@ -652,7 +645,6 @@ default
             else if (name == "canFly")                         canFly = (integer)value;
             else if (name == "canSit")                         canSit = (integer)value;
             else if (name == "canStand")                     canStand = (integer)value;
-            else if (name == "collapsed")                   collapsed = (integer)value;
             else if (name == "configured")                 configured = (integer)value;
             else if (name == "detachable")                 detachable = (integer)value;
             else if (name == "helpless")                     helpless = (integer)value;
@@ -685,6 +677,9 @@ default
                 carrierID = NULL_KEY;
                 carrierName = "";
             }
+            else if (cmd == "menuMenu") doMainMenu(id);
+            else if (cmd == "collapse") collapsed = 1;
+            else if (cmd == "restore") collapsed = 0;
         }
     }
     

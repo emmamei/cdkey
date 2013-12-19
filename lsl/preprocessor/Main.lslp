@@ -172,6 +172,9 @@ doWind(string name, key id) {
     
     if (collapsed) uncollapse();
     else lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey, NULL_KEY);
+
+    llSleep(0.1);
+    lmInternalCommand("mainMenu", name, id);
 }
 
 integer isMistress(key id) {
