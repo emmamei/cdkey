@@ -11,16 +11,6 @@
 //    - Builder: doesnt wind down
 
 //========================================
-// DEFINES
-//========================================
-
-#define toMinutes(a) (string)llRound((a)/60)
-#define getSimRating llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING)
-#define toSeconds(a) ((a)*60)
-#define noTimeLeftOnKey (timeLeftOnKey<=0)
-#define markTimeLeft llMessageLinked(LINK_SET, 300, "timeLeftOnKey|" + (string)timeLeftOnKey, NULL_KEY)
-
-//========================================
 // VARIABLES
 //========================================
 
@@ -195,19 +185,19 @@ processConfiguration(string name, list values) {
         //setDollType(llList2String(values, 0));
     //}
     if (name == "initial time") {
-        timeLeftOnKey = toSeconds(llList2Float(values, 0));
-        if (noTimeLeftOnKey) {
+        timeLeftOnKey = ((llList2Float(values, 0))*60);
+        if ((timeLeftOnKey<=0)) {
             collapsed = 1;
             keyAnimation = ANIMATION_COLLAPSED;
             llMessageLinked(LINK_SET, 305, llGetScriptName() + "|collapse|" + wwGetSLUrl(), NULL_KEY);
         }
-        markTimeLeft;
+        llMessageLinked(LINK_SET, 300, "timeLeftOnKey|" + (string)timeLeftOnKey, NULL_KEY);
     }
     else if (name == "wind time") {
-        windamount = toSeconds(llList2Float(values, 0));
+        windamount = ((llList2Float(values, 0))*60);
     }
     else if (name == "max time") {
-        defLimit = toSeconds(llList2Float(values, 0));
+        defLimit = ((llList2Float(values, 0))*60);
         keyLimit = defLimit;
     }
     else if (name == "helpless dolly") {
@@ -302,7 +292,7 @@ float windKey() {
 
         // Clip time left on key
         timeLeftOnKey = keyLimit;
-        llOwnerSay("You have been fully wound - " + toMinutes(keyLimit) + " minutes remaining.");
+        llOwnerSay("You have been fully wound - " + (string)llRound((keyLimit)/60) + " minutes remaining.");
     }
 
     return (winding);
@@ -325,7 +315,7 @@ doWind(string name, key id) {
     llOwnerSay("Have you remembered to thank " + name + " for winding you?");
 
     if (collapsed) uncollapse();
-    else markTimeLeft;
+    else llMessageLinked(LINK_SET, 300, "timeLeftOnKey|" + (string)timeLeftOnKey, NULL_KEY);
 }
 
 integer isMistress(key id) {
@@ -344,8 +334,8 @@ initializeStart ()  {
 }
 
 initFinal() {
-    llOwnerSay("You have " + toMinutes(timeLeftOnKey) + " minutes of life remaning.");
-    markTimeLeft;
+    llOwnerSay("You have " + (string)llRound((timeLeftOnKey)/60) + " minutes of life remaning.");
+    llMessageLinked(LINK_SET, 300, "timeLeftOnKey|" + (string)timeLeftOnKey, NULL_KEY);
 
     // When rezzed.... if currently being carried, drop..
     if (carried) uncarry();
@@ -514,7 +504,7 @@ collapse() {
     setWindRate();
     llMessageLinked(LINK_SET, 305, llGetScriptName() + "|collapse|" + wwGetSLUrl(), NULL_KEY);
     ifPermissions();
-    markTimeLeft;
+    llMessageLinked(LINK_SET, 300, "timeLeftOnKey|" + (string)timeLeftOnKey, NULL_KEY);
 }
 
 uncarry() {
@@ -533,7 +523,7 @@ uncollapse() {
     clearAnims = 1;
     setWindRate();
     llMessageLinked(LINK_SET, 305, llGetScriptName() + "|restore", NULL_KEY);
-    markTimeLeft;
+    llMessageLinked(LINK_SET, 300, "timeLeftOnKey|" + (string)timeLeftOnKey, NULL_KEY);
     ifPermissions();
 }
 
@@ -585,7 +575,7 @@ default {
     //----------------------------------------
     changed(integer change) {
         if (change & CHANGED_REGION) {
-            simRatingQuery = getSimRating;
+            simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
         }
     }
 
@@ -603,17 +593,17 @@ default {
         // Increment a counter
         ticks++;
 
-        if (ticks % 60 == 0)  markTimeLeft;
+        if (ticks % 60 == 0)  llMessageLinked(LINK_SET, 300, "timeLeftOnKey|" + (string)timeLeftOnKey, NULL_KEY);
 
         ifPermissions();
 
         // When Dolly is "away" - enter AFK
         integer dollAway = ((llGetAgentInfo(dollID) & AGENT_AWAY) != 0);
         if (autoAFK && afk != dollAway) {
-            minsLeft = llRound(timeLeftOnKey / (toSeconds(setWindRate())));
+            minsLeft = llRound(timeLeftOnKey / (((setWindRate())*60)));
             llMessageLinked(LINK_SET, 305, llGetScriptName() + "|setAFK|" + (string)(afk = dollAway) + "|1|" + formatFloat(windRate, 1) + "|" + (string)minsLeft, NULL_KEY);
         }
-        else minsLeft = llRound(timeLeftOnKey / (toSeconds(setWindRate())));
+        else minsLeft = llRound(timeLeftOnKey / (((setWindRate())*60)));
 
         // A specific test for collapsed status is no longer required here
         // as being collapsed is one of several conditions which forces the
@@ -636,7 +626,7 @@ default {
             else warned = 0;
 
             // Dolly is DONE! Go down... and yell for help.
-            if (!collapsed && noTimeLeftOnKey) {
+            if (!collapsed && (timeLeftOnKey<=0)) {
                 collapse();
 
                 // This message is intentionally excluded from the quiet key setting as it is not good for
@@ -675,13 +665,6 @@ default {
         if ((carrierPos != ZERO_VECTOR) && !posed)
         {
             //only at target
-           /* if (!(llGetAgentInfo(g_kWearer) & AGENT_SITTING))
-            {
-                if ((g_iUnixTime + 2) >= llGetUnixTime())
-                {
-                    turnToTarget(g_vPos);
-                }
-            }*/
             llMoveToTarget(carrierPos, 0.7);
         }
         else
@@ -722,7 +705,7 @@ default {
 
             chatHandle = llListen(chatChannel, "", dollID, "");
             dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -9, -1));
-            simRatingQuery = getSimRating;
+            simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
 
             llSetText("", <1,1,1>, 1);
 
@@ -734,10 +717,10 @@ default {
             else mistressQuery = llRequestDisplayName(MistressID);
 
             dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -9, -1));
-            simRatingQuery = getSimRating;
+            simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
 
             simRating = "";
-            simRatingQuery = getSimRating;
+            simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
 
             initFinal();
         }
@@ -911,7 +894,7 @@ default {
             }
             else if (choice == "xstats") {
                 llOwnerSay("AFK time factor: " + formatFloat(0.5, 1) + "x");
-                llOwnerSay("Wind amount: " + toMinutes(windamount) + " minutes.");
+                llOwnerSay("Wind amount: " + (string)llRound((windamount)/60) + " minutes.");
 
                 {
                     string s;
@@ -965,8 +948,8 @@ default {
             else if (choice == "stat") {
                 float p = timeLeftOnKey * 100.0 / keyLimit;
 
-                string s = "Time: " + toMinutes(timeLeftOnKey) + "/" +
-                            toMinutes(keyLimit) + " min (" + formatFloat(p, 2) + "% capacity)";
+                string s = "Time: " + (string)llRound((timeLeftOnKey)/60) + "/" +
+                            (string)llRound((keyLimit)/60) + " min (" + formatFloat(p, 2) + "% capacity)";
                 if (afk) {
                     s += " (current wind rate " + formatFloat(setWindRate(), 1) + "x)";
                 }
@@ -974,8 +957,8 @@ default {
             }
             else if (choice == "stats") {
                 setWindRate();
-                llOwnerSay("Time remaining: " + toMinutes(timeLeftOnKey) + " minutes of " +
-                            toMinutes(keyLimit) + " minutes.");
+                llOwnerSay("Time remaining: " + (string)llRound((timeLeftOnKey)/60) + " minutes of " +
+                            (string)llRound((keyLimit)/60) + " minutes.");
                 if (windRate < 1.0) {
                     llOwnerSay("Key is unwinding at a slowed rate of " + formatFloat(windRate, 1) + "x.");
                 } else if (windRate > 1.0) {
