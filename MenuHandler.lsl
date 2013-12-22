@@ -1,12 +1,8 @@
 // MenuHandler.lsl
-//
-// vim:sw=4 et nowrap:
-//
 // DATE: 10 December 2013
 
 // Keys of important people in life of the Key:
 key MasterBuilder = "42c7aaec-38bc-4b0c-94dd-ae562eb67e6d";   // Christina Halpin
-key  MasterWinder = "64d26535-f390-4dc4-a371-a712b946daf8";   // GreigHighland
 key        DevOne = "c5e11d0a-694f-46cc-864b-e42340890934";   // MayStone
 key        DevTwo = "2fff40f0-ea4a-4b52-abb8-d4bf6b1c98c9";   // Silky Mesmeriser
 
@@ -19,10 +15,8 @@ key mistressQuery;
 
 list developerList = [ DevOne, DevTwo ];
 
-// Add keys here to enable tester facilities
-// lets the doll access normally inaccesible
-// features like Wind and Strip for testing
-list testerList = [ DevTwo ];
+// Add keys here to enable Tester facilities
+list testerList = [ DevOne, DevTwo ];
 
 float timeLeftOnKey;
 float windRate = 1.0;
@@ -101,7 +95,7 @@ string formatFloat(float val, integer dp)
 memReport() {
     float free_memory = (float)llGetFreeMemory();
     float used_memory = (float)llGetUsedMemory();
-    
+
     if (devKey()) llOwnerSay(llGetScriptName() + ": Memory " + formatFloat(used_memory/1024.0, 2) + "/" + (string)llRound((used_memory + free_memory)/1024.0) + "kB, " + formatFloat(free_memory/1024.0, 2) + " kB free");
 }
 
@@ -113,13 +107,6 @@ setDollType(string choice) {
 }
 
 processConfiguration(string name, list values) {
-    //----------------------------------------
-    // Assign values to program variables
-
-    //if (name == "doll type") {
-        // Ensure proper capitalization for matching or display
-        //setDollType(llList2String(values, 0));
-    //}
     if (name == "helpless dolly") {
         helpless = llList2Integer(values, 0);
     }
@@ -158,14 +145,14 @@ processConfiguration(string name, list values) {
 
 aoControl(integer on) {
     integer LockMeisterChannel = -8888;
-    
+
     if (on) llWhisper(LockMeisterChannel, (string)dollID + "booton");
-    else llWhisper(LockMeisterChannel, (string)dollID + "bootoff");
+    else    llWhisper(LockMeisterChannel, (string)dollID + "bootoff");
 }
 
 doMainMenu(key id) {
     string msg;
-    list menu =  ["Wind"];
+    list menu = ["Wind"];
 
     // Compute "time remaining" message
     string timeleft;
@@ -174,7 +161,7 @@ doMainMenu(key id) {
 
     float displayWindRate = setWindRate();
     integer minsLeft = llRound(timeLeftOnKey / (60.0 * displayWindRate));
-    
+
     if (minsLeft > 0) {
         timeleft = "Dolly has " + (string)minsLeft + " minutes remaining.\n";
 
@@ -183,7 +170,7 @@ doMainMenu(key id) {
             timeleft += "not ";
         }
         timeleft += "winding down";
-        
+
         if (windRate == 1.0) timeleft += ".";
         else timeleft += " at " + formatFloat(displayWindRate, 1) + "x rate.";
 
@@ -195,14 +182,10 @@ doMainMenu(key id) {
     timeleft += "\n";
 
     // Can the doll be dressed? Add menu button
-    if (canDress) {
-        menu += "Dress";
-    }
+    if (canDress) menu += "Dress";
 
     // Can the doll be transformed? Add menu button
-    if (isTransformingKey) {
-        menu += "Type of Doll";
-    }
+    if (isTransformingKey) menu += "Type of Doll";
 
     // Is the doll being carried? ...and who clicked?
     if (carried) {
@@ -228,20 +211,14 @@ doMainMenu(key id) {
         else if (id == carrierID) {
             msg = "Place Down frees " + dollName + " when you are done with her";
             menu += ["Place Down","Pose"];
-            if (pose) {
-                menu += "Unpose";
-            }
+            if (pose) menu += "Unpose";
 
             if (!hasController) {
-                if (takeoverAllowed) {
-                    menu += "Be Controller";
-                }
+                if (takeoverAllowed) menu += "Be Controller";
             }
 
             // Is doll strippable?
-            if ((pleasureDoll || dollType == "Slut") && RLVok && (simRating == "MATURE" || simRating == "ADULT")) {
-                menu += "Strip";
-            }
+            if ((pleasureDoll || dollType == "Slut") && RLVok && (simRating == "MATURE" || simRating == "ADULT")) menu += "Strip";
         }
 
         // Someone else clicked on key
@@ -264,41 +241,31 @@ doMainMenu(key id) {
         // Is toucher the Doll?
         if (id == dollID) {
             manpage = "dollkeyselfinfo.htm";
-            
+
             menu = ["Dress","Options"];
             if (testerKey()) menu += ["Strip","Wind"];
 
-            if (canAFK) {
-                menu += "Toggle AFK";
-            }
+            if (canAFK) menu += "Toggle AFK";
 
-            if (detachable) {
-                menu += "Detach";
-            }
+            if (detachable) menu += "Detach";
 
-            if (visible) {
-                menu += "Invisible";
-            }
-            else {
-                menu += "Visible";
-            }
-            
+            if (visible) menu += "Invisible";
+            else         menu += "Visible";
+
             if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK) {
                menu += "TP Home";
             }
 
-            if (isTransformingKey) {
-                menu += "Type of Doll";
-            }
+            if (isTransformingKey) menu += "Type of Doll";
         }
         else {
             manpage = "communitydoll.htm";
-        
+
             // Toucher is not Doll.... could be anyone
             msg =  dollName + " is a doll and likes to be treated like " +
                    "a doll. So feel free to use these options.\n";
         }
-               
+
         menu += "Help/Support";
 
         // Hide the general "Carry" option for all but Mistress when one exists
@@ -317,9 +284,7 @@ doMainMenu(key id) {
             msg += "Doll is currently posed.\n";
         }
 
-        if (pose) {
-            menu += "Unpose";
-        }
+        if (pose) menu += "Unpose";
 
         menu += "Pose";
     }
@@ -329,12 +294,10 @@ doMainMenu(key id) {
     // That is, you can't be your OWN Mistress...
     if ((id == MistressID) && (id != dollID)) {
         menu += "Use Control";
-        
-        if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK) {
-            menu += "TP Home";
-        }
+
+        if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK) menu += "TP Home";
     }
-    
+
     msg += "See " + httpstart + manpage + " for more information." ;
     llDialog(id, timeleft + msg, menu, dialogChannel);
 }
@@ -343,26 +306,26 @@ doHelpMenu(key id) {
     string msg = "Here you can find various options to get help with your " +
                 "key and to connect with the community.";
     list menu;
-    
+
     menu += [ "Report Bug", "Ask Question", "Suggestions" ];
     if (llGetInventoryType(NOTECARD_HELP) == INVENTORY_NOTECARD) menu += "Help Notecard";
     menu += [ "Join Group", "Visit CD Room" ];
-    
+
     llDialog(id, msg, menu, dialogChannel);
 }
 
 doOptionsMenu(key id) {
     integer controller;
     if ((id == MistressID) && (id != dollID)) controller = 1;
-    
+
     string msg = "See " + httpstart + "keychoices.htm for explanation. (" + optiondate + " version)";
     list pluslist;
-    
+
     if (controller) {
         msg = "See " + httpstart + "controller.htm. Choose what you want to happen. (" + optiondate + " version)";
         pluslist += "drop control";
     }
-    
+
     if (!canDress) pluslist += "can outfit";
     else pluslist += "no outfitting";
 
@@ -411,9 +374,9 @@ handlemenuchoices(string choice, string name, key id) {
     integer doll = (id == dollID);
     integer carrier = (id == carrierID && !doll);
     integer controller = (id == MistressID && !doll);
-    
+
     llMessageLinked(LINK_SET, 500, choice + "|" + name, id);
-    
+
     if (!carried && !doll && choice == "Carry") {
         // Doll has been picked up...
         carried = 1;
@@ -421,12 +384,8 @@ handlemenuchoices(string choice, string name, key id) {
         carrierName = name;
         llMessageLinked(LINK_SET, 305, llGetScriptName() + "|carry|" + carrierName, carrierID);
     }
-    else if (choice == "Help/Support") {
-        doHelpMenu(id);
-    }
-    else if (choice == "Help Notecard") {
-        llGiveInventory(id,NOTECARD_HELP);
-    }
+    else if (choice == "Help/Support") { doHelpMenu(id); }
+    else if (choice == "Help Notecard") { llGiveInventory(id,NOTECARD_HELP); }
     else if (choice == "Join Group") {
         llOwnerSay("Here is your link to the community dolls group profile secondlife:///app/group/0f0c0dd5-a611-2529-d5c7-1284fb719003/about");
         llDialog(id, "To join the community dolls group open your chat history (CTRL+H) and click the group link there.  Just click the Join Group button when the group profile opens.", [ "OK" ], 9999);
@@ -445,12 +404,8 @@ handlemenuchoices(string choice, string name, key id) {
         carrierID = NULL_KEY;
         carrierName = "";
     }
-    else if (choice == "Type of Doll") {
-        llMessageLinked(LINK_SET, 17, name, id);
-    }
-    else if ((!pose || !doll) && choice == "Pose") {
-        llMessageLinked(LINK_SET, 22, "menu", id);
-    }
+    else if (choice == "Type of Doll") { llMessageLinked(LINK_SET, 17, name, id); }
+    else if ((!pose || !doll) && choice == "Pose") { llMessageLinked(LINK_SET, 22, "menu", id); }
     else if ((pose && !doll) && choice == "Unpose") {
         //doUnpose(ToucherID);
         pose = 0;
@@ -477,15 +432,15 @@ handlemenuchoices(string choice, string name, key id) {
     else if (choice == "Be Controller") {
         llMessageLinked(LINK_SET, 300, "takeoverAllowed|" + (string)(takeoverAllowed = 0), id);
         llMessageLinked(LINK_SET, 300, "hasController|" + (string)(hasController = 1), id);
-        
+
         llMessageLinked(LINK_SET, 300, "MistressID|" + (string)(MistressID = id), id);
-    
+
         // Mistress is present: use llKey2Name()
         llMessageLinked(LINK_SET, 300, "mistressName|" + (string)(mistressName = name), id);
-    
+
         llOwnerSay("Your carrier, " + mistressName + ", has become your controller.");
         if (!quiet) llSay(0, mistressName + " has become controller of the doll " + dollName + ".");
-    
+
         // Note that the response goes to 9999 - a nonsense channel
         string msg = "You are now controller of " + dollName + ". See " + httpstart + "controller.htm for more information.";
         llDialog(id, msg, ["OK"], 9999);
@@ -510,9 +465,7 @@ handlemenuchoices(string choice, string name, key id) {
         llOwnerSay("Your key appears magically.");
         //doFade(LINK_SET, 0.0, 1.0, ALL_SIDES, 0.1);
     }
-    else if (choice == "Reload Config") {
-        llResetScript();
-    }
+    else if (choice == "Reload Config") { llResetScript(); }
     else if (choice == "TP Home") {
         llMessageLinked(LINK_SET, 305, llGetScriptName() + "|TP|" + LANDMARK_HOME, id);
     }
@@ -521,19 +474,17 @@ handlemenuchoices(string choice, string name, key id) {
         if (afk) llSetText(dollType + " Doll (AFK)", <1,1,0>, 1);
         else if (signOn) llSetText(dollType + " Doll", <1,1,1>, 1);
         else llSetText("", <1,1,1>, 1);
-        
+
         float displayWindRate = setWindRate();
         integer minsLeft = llRound(timeLeftOnKey / (60.0 * displayWindRate));
         llMessageLinked(LINK_SET, 305, llGetScriptName() + "|setAFK|" + (string)afk + "|0|" + formatFloat(displayWindRate, 1) + "|" + (string)minsLeft, id);
     }
-    else if (choice == "no detaching")
-        llMessageLinked(LINK_SET, 300, "detachable|" + (string)(detachable = 0), id);
-    else if (controller && choice == "detachable") 
-        llMessageLinked(LINK_SET, 300, "detachable|" + (string)(detachable = 1), id);
-    else if (choice == "auto tp")
-        llMessageLinked(LINK_SET, 300, "autoTP|" + (string)(autoTP = 1), id);
-    else if (controller && choice == "no auto tp")
-        llMessageLinked(LINK_SET, 300, "autoTP|" + (string)(autoTP = 0), id);
+    else if (choice == "no detaching") llMessageLinked(LINK_SET, 300, "detachable|" + (string)(detachable = 0), id);
+    else if (controller && choice == "detachable") llMessageLinked(LINK_SET, 300, "detachable|" + (string)(detachable = 1), id);
+
+    else if (choice == "auto tp") llMessageLinked(LINK_SET, 300, "autoTP|" + (string)(autoTP = 1), id);
+    else if (controller && choice == "no auto tp") llMessageLinked(LINK_SET, 300, "autoTP|" + (string)(autoTP = 0), id);
+
     else if (choice == "pleasure doll") {
         llOwnerSay("You are now a pleasure doll.");
         llMessageLinked(LINK_SET, 300, "pleasureDoll|" + (string)(pleasureDoll = 1), id);
@@ -542,10 +493,9 @@ handlemenuchoices(string choice, string name, key id) {
         llOwnerSay("You are no longer a pleasure doll.");
         llMessageLinked(LINK_SET, 300, "pleasureDoll|" + (string)(pleasureDoll = 0), id);
     }
-    else if (choice == "no self tp")
-        llMessageLinked(LINK_SET, 300, "helpless|" + (string)(helpless = 1), id);
-    else if (controller && choice == "can travel")
-        llMessageLinked(LINK_SET, 300, "helpless|" + (string)(helpless = 0), id);
+    else if (choice == "no self tp") llMessageLinked(LINK_SET, 300, "helpless|" + (string)(helpless = 1), id);
+    else if (controller && choice == "can travel") llMessageLinked(LINK_SET, 300, "helpless|" + (string)(helpless = 0), id);
+
     else if (choice == "can carry") {
         llOwnerSay("Other people can now carry you.");
         llMessageLinked(LINK_SET, 300, "canCarry|" + (string)(canCarry = 1), id);
@@ -578,10 +528,9 @@ handlemenuchoices(string choice, string name, key id) {
         llOwnerSay("Warnings will now be given when time remaining is low.");
         llMessageLinked(LINK_SET, 300, "doWarnings|" + (string)(doWarnings = 1), id);
     }
-    else if (choice == "no flying")
-        llMessageLinked(LINK_SET, 300, "canFly|" + (string)(canFly = 0), id);
-    else if (controller && choice == "can fly")
-        llMessageLinked(LINK_SET, 300, "canFly|" + (string)(canFly = 1), id);
+    else if (choice == "no flying") llMessageLinked(LINK_SET, 300, "canFly|" + (string)(canFly = 0), id);
+    else if (controller && choice == "can fly") llMessageLinked(LINK_SET, 300, "canFly|" + (string)(canFly = 1), id);
+
     else if (choice == "turn off sign") {
         // erase sign
         llSetText("", <1,1,1>, 1);
@@ -600,24 +549,14 @@ handlemenuchoices(string choice, string name, key id) {
         llMessageLinked(LINK_SET, 300, "MistressID|" + (string)(MistressID = MasterBuilder), id);
         llMessageLinked(LINK_SET, 300, "hasController|" + (string)(hasController = 0), id);
     }
-    
+
     // Strip items... only for Pleasure Doll and Slut Doll Types...
     if (id == carrierID || id == dollID || (hasController && id == MistressID)) {
-        if (choice == "Top") {
-            llMessageLinked(LINK_SET, 305, llGetScriptName() + "|stripTop", id);
-        }
-        else if (choice == "Bra") {
-            llMessageLinked(LINK_SET, 305, llGetScriptName() + "|stripBra", id);
-        }
-        else if (choice == "Bottom") {
-            llMessageLinked(LINK_SET, 305, llGetScriptName() + "|stripBottom", id);
-        }
-        else if (choice == "Panties") {
-            llMessageLinked(LINK_SET, 305, llGetScriptName() + "|stripPanties", id);
-        }
-        else if (choice == "Shoes") {
-            llMessageLinked(LINK_SET, 305, llGetScriptName() + "|stripShoes", id);
-        }
+        if (choice == "Top") { llMessageLinked(LINK_SET, 305, llGetScriptName() + "|stripTop", id); }
+        else if (choice == "Bra") { llMessageLinked(LINK_SET, 305, llGetScriptName() + "|stripBra", id); }
+        else if (choice == "Bottom") { llMessageLinked(LINK_SET, 305, llGetScriptName() + "|stripBottom", id); }
+        else if (choice == "Panties") { llMessageLinked(LINK_SET, 305, llGetScriptName() + "|stripPanties", id); }
+        else if (choice == "Shoes") { llMessageLinked(LINK_SET, 305, llGetScriptName() + "|stripShoes", id); }
 
         if (llListFindList(["Top", "Bra", "Bottom", "Panties", "Shoes", "Strip"], [ choice ]) != -1)
             // Do strip menu
@@ -632,12 +571,12 @@ float setWindRate() {
     integer attached = llGetAttached() == ATTACH_BACK;
     integer windDown = !(!attached || collapsed || (dollType == "Builder" || dollType == "Key"));
     if (afk) newWindRate *= RATE_AFK;
-    
+
     if (windRate != (newWindRate * (float)windDown)) {
         if (windRate == 0.0) llResetTime();
         windRate = newWindRate * (float)windDown;
     }
-    
+
     return newWindRate;
 }
 
@@ -648,42 +587,40 @@ default
         dollName = llGetDisplayName(dollID);
         llMessageLinked(LINK_SET, 999, llGetScriptName(), NULL_KEY);
     }
-    
+
     link_message(integer sender, integer num, string data, key id) {
         list parameterList = llParseString2List(data, [ "|" ], []);
-        
+
         // 16: Change Key Type: transforming: choice = Doll Type
         if (num == 16) {
             setDollType(llList2String(parameterList, 0));
         }
 
         // 18: Convert to Transforming Key
-        else if (num == 18) {
-            isTransformingKey = 1;
-        }
-        
+        else if (num == 18) { isTransformingKey = 1; }
+
         else if (num == 101) {
             string name = llList2String(parameterList, 0);
             list params = llList2List(parameterList, 1, -1);
-            
+
             if (!configured) processConfiguration(name, params);
         }
         else if (num == 104 || num == 105) {
             dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -9, -1));
             llListenRemove(dialogHandle);
             dialogHandle = llListen(dialogChannel, "", "", "");
-            
+
             llMessageLinked(LINK_SET, 103, llGetScriptName(), NULL_KEY);
         }
         else if (num == 106) {
-            
+
         }
         else if (num == 135) memReport();
         else if (num == 300) {
             list split = llParseString2List(data, [ "|" ], []);
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
-            
+
             if (name == "detachable") detachable = (integer)value;
             else if (name == "autoTP") autoTP = (integer)value;
             else if (name == "pleasureDoll") pleasureDoll = (integer)value;
@@ -704,13 +641,13 @@ default
                 hasController = !(MistressID == MasterBuilder);
                 mistressQuery = llRequestDisplayName(MistressID);
             }
-        }        
+        }
         else if (num == 305) {
             list split = llParseString2List(data, [ "|" ], []);
             string script = llList2String(split, 0);
             string cmd = llList2String(split, 1);
             split = llList2List(split, 2, -1);
-            
+
             if (cmd == "carry") {
                 // Doll has been picked up...
                 carried = 1;
@@ -726,7 +663,7 @@ default
             else if (cmd == "setAFK") {
                 afk = llList2Integer(split, 0);
                 integer autoSet = llList2Integer(split, 1);
-                
+
                 if (!autoSet) {
                     integer agentInfo = llGetAgentInfo(dollID);
                     if ((agentInfo & AGENT_AWAY) && afk) autoAFK = 1;
@@ -734,22 +671,16 @@ default
                     else autoAFK = 0;
                 }
             }
-            else if (cmd == "collapse") {
-                collapsed = 1;
-            }
-            else if (cmd == "restore") {
-                collapsed = 0;
-            }
+            else if (cmd == "collapse") { collapsed = 1; }
+            else if (cmd == "restore") { collapsed = 0; }
         }
-        else if (num == 350) {
-            RLVok = llList2Integer(parameterList, 0);
-        }
+        else if (num == 350) { RLVok = llList2Integer(parameterList, 0); }
     }
-    
+
     touch_start(integer num) {
         doMainMenu(llDetectedKey(0));
     }
-    
+
     //----------------------------------------
     // LISTEN
     //----------------------------------------
@@ -763,7 +694,7 @@ default
 
         handlemenuchoices(choice, name, id);
     }
-    
+
     dataserver(key query_id, string data) {
         if (query_id == mistressQuery) {
             mistressName = data;
