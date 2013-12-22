@@ -186,6 +186,7 @@ checkRLV() { // Run RLV viewer check
     ATHok = llGetAttached() == ATTACH_BACK;
     if (ATHok) {
         if (RLVck == 0) {
+            llListenControl(listenHandle, 1);
             llSetTimerEvent(5);
             rlvAPIversion = "";
             RLVck = 1;
