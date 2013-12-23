@@ -1,3 +1,5 @@
+#ifndef UTILITY_LSL
+#define UTILITY_LSL
 //----------------------------------------
 // Utility Functions
 //----------------------------------------
@@ -34,10 +36,20 @@ string formatFloat(float val, integer dp)
     return out;
 }
 
+#ifdef DEVELOPER_MODE
 memReport() {
+    float memory_limit = (float)llGetMemoryLimit();
     float free_memory = (float)llGetFreeMemory();
     float used_memory = (float)llGetUsedMemory();
+    if (used_memory == memory_limit && free_memory > 0 && memory_limit == 16384) { // LSL2 compiled script
+       used_memory = memory_limit - free_memory;
+    }
     
-    llOwnerSay(SCRIPT_NAME + ": Memory " + formatFloat(used_memory/1024.0, 2) + "/" + (string)llRound((used_memory + free_memory)/1024.0) + "kB, " + formatFloat(free_memory/1024.0, 2) + " kB free");
+    llSleep(1.0);
+    llOwnerSay(SCRIPT_NAME + ": Memory " + formatFloat(used_memory/1024.0, 2) + "/" + (string)llRound((memory_limit)/1024.0) + "kB, " + formatFloat(free_memory/1024.0, 2) + " kB free");
 }
+#else
+#define memReport(dummy)
+#endif // DEVELOPER_MODE
 
+#endif // UTILITY_LSL

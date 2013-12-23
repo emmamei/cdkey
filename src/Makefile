@@ -26,6 +26,7 @@ INCLUDES=include/GlobalDefines.lsl \
 	cpp -C $< | sed 's/^#.*$$//' | cat -s > $@
 
 all: $(OUT)
+	test -d ../key || mkdir ../key
 	cp $^ ../key
 
 clean:

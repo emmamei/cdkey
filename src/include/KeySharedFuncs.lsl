@@ -1,3 +1,6 @@
+#ifndef KEY_SHARED_FUNC_LSL
+#define KEY_SHARED_FUNC_LSL
+
 //-----------------------------------
 // Internal Shared Functions
 //-----------------------------------
@@ -16,7 +19,7 @@ float setWindRate() {
     if (windRate != newWindRate * windDown) {
         windRate = newWindRate * windDown;
         
-        lmSendConfig("windRate", (string)windRate, NULL_KEY);
+        lmSendConfig("windRate", (string)windRate);
     }
     
     // llTargetOmega: With normalized vector spinrate is equal to radians per second
@@ -32,10 +35,10 @@ integer setFlags(integer clear, integer set) {
     integer oldFlags = globalFlags;
     globalFlags = (globalFlags & ~clear) | set;
     if (globalFlags != oldFlags) {
-        lmSendConfig("globalFlags", "0x" + bits2nybbles(globalFlags), NULL_KEY);
+        lmSendConfig("globalFlags", "0x" + bits2nybbles(globalFlags));
         return 1;
     }
     else return 0;
 }
 
-
+#endif // KEY_SHARED_FUNC_LSL
