@@ -776,7 +776,7 @@ default {
                 ifPermissions();
             }
             else if (cmd == "carry") {
-                string name = llList2String(split, 1);
+                string name = llList2String(split, 0);
                 carry(name, id);
             }
             else if (cmd == "uncarry") {
