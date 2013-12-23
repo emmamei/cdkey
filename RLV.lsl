@@ -768,9 +768,10 @@ default {
             string cmd = llList2String(parameterList, 1);
             parameterList = llList2List(parameterList, 2, -1);
             
-            if ((wearLockExpire > 0.0 || !canWear || !canUnwear) && script == "Dress" && id != dollID) {
-                doRLV(script, "remoutfit=y,remattach=y,addoutfit=y,addattach=y," + cmd + ",remoutfit=n,remattach=n,addoutfit=n,addattach=n");
-            }
+            //if ((wearLockExpire > 0.0 || !canWear || !canUnwear) && script == "Dress" && id != dollID) {
+            //    doRLV(script, "remoutfit=y,remattach=y,addoutfit=y,addattach=y," + cmd + ",remoutfit=n,remattach=n,addoutfit=n,addattach=n");
+            //}
+            doRLV(script, cmd);
         }
     }
 }

@@ -375,7 +375,10 @@ handlemenuchoices(string choice, string name, key id) {
     integer carrier = (id == carrierID && !doll);
     integer controller = (id == MistressID && !doll);
 
-    llMessageLinked(LINK_SET, 500, choice + "|" + name, id);
+    if (choice == "Dress")
+        llMessageLinked(LINK_SET, 500, "Dress", id);
+    else
+        llMessageLinked(LINK_SET, 500, choice + "|" + name, id);
 
     if (!carried && !doll && choice == "Carry") {
         // Doll has been picked up...
