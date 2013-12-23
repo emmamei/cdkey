@@ -597,13 +597,22 @@ default {
 
         ifPermissions();
 
+        integer agentInfo = llGetAgentInfo(dollID);
+        integer newAFK;
         // When Dolly is "away" - enter AFK
-        integer dollAway = ((llGetAgentInfo(dollID) & AGENT_AWAY) != 0);
-        if (autoAFK && afk != dollAway) {
-            minsLeft = llRound(timeLeftOnKey / (((setWindRate())*60)));
-            llMessageLinked(LINK_SET, 305, llGetScriptName() + "|setAFK|" + (string)(afk = dollAway) + "|1|" + formatFloat(windRate, 1) + "|" + (string)minsLeft, NULL_KEY);
+        if (agentInfo & AGENT_AWAY) {
+            newAFK = 1;
+            autoAFK = 1;
+        } else if (afk && autoAFK) {
+            newAFK = 0;
+            autoAFK = 0;
         }
-        else minsLeft = llRound(timeLeftOnKey / (((setWindRate())*60)));
+        if (newAFK != afk) {
+            setWindRate();
+            integer minsLeft;
+            if (windRate > 0.0) minsLeft = llRound(timeLeftOnKey / (60.0 * windRate));
+            llMessageLinked(LINK_SET, 305, llGetScriptName() + "|setAFK|" + (string)(afk = newAFK) + "|" + (string)autoAFK + "|" + formatFloat(windRate, 1) + "|" + (string)minsLeft, NULL_KEY);
+        }
 
         // A specific test for collapsed status is no longer required here
         // as being collapsed is one of several conditions which forces the
@@ -754,6 +763,10 @@ default {
                 hasController = !(MistressID == MasterBuilder);
                 mistressQuery = llRequestDisplayName(MistressID);
             }
+            else if (name == "afk") {
+                afk = (integer)value;
+                setWindRate();
+            }
         }
 
         else if (num == 305) {
@@ -765,6 +778,7 @@ default {
             if (cmd == "setAFK") {
                 afk = llList2Integer(split, 0);
                 integer autoSet = llList2Integer(split, 1);
+                setWindRate();
 
                 if (!autoSet) {
                     integer agentInfo = llGetAgentInfo(dollID);
