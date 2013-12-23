@@ -60,7 +60,7 @@ integer emergencyLimitHours = 12;
 integer emergencyLimitTime = 43200; // (60 * 60 * emergencyLimitHours) // measured in seconds
 integer RLVok;
 integer RLVck;
-integer demomode;
+integer demoMode;
 
 // This variable is used to set the home landmark
 string LANDMARK_HOME = "Home";
