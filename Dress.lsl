@@ -266,7 +266,10 @@ setup ()  {
 // STATES
 //========================================
 default {
-    state_entry() { scriptName = llGetScriptName(); llMessageLinked(LINK_SET, 999, scriptName, NULL_KEY); }
+    state_entry() {
+        scriptName = llGetScriptName();
+        llMessageLinked(LINK_SET, 999, scriptName, NULL_KEY);
+    }
     
     //----------------------------------------
     // TIMER
