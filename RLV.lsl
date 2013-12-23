@@ -427,9 +427,9 @@ lockAttachments(string type, integer set) {
 
 default {
     state_entry() {
-    dollID = llGetOwner();
-    scriptName = llGetScriptName();
-    llMessageLinked(LINK_SET, 999, llGetScriptName(), NULL_KEY);
+        dollID = llGetOwner();
+        scriptName = llGetScriptName();
+        llMessageLinked(LINK_SET, 999, llGetScriptName(), NULL_KEY);
     }
     
     //----------------------------------------
