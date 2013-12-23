@@ -151,7 +151,7 @@ setDollType(string choice, integer force) {
     llMessageLinked(LINK_THIS, 2, clothingprefix, dollID);
     llSleep(1.0);
 
-    llMessageLinked(LINK_THIS, 1, "random", dollID);
+    llMessageLinked(LINK_THIS, 500, "random", dollID);
     llMessageLinked(LINK_THIS, 16, currentState, dollID);
 
     if (!quiet) llSay(0, dollname + " has become a " + stateName + " Doll.");
@@ -189,7 +189,12 @@ reloadTypeNames() {
     while(n) {
         typeName = llGetInventoryName(INVENTORY_NOTECARD, --n);
         if (llGetSubString(typeName, 0, 10) != "Preferences") {
-            types += typeName;
+            if (llStringLength(typeName) < 18) {
+                types += typeName;
+            }
+//          else {
+//              llSay(DEBUG_CHANNEL,"Bad Notecard/Type = " + (string)typeName);
+//          }
         }
     }
 }
