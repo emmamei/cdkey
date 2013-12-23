@@ -129,6 +129,7 @@ setup ()  {
 
 setDollType(string choice, integer force) {
     if (force) {
+        // Force to Title Case
         transform = llGetSubString(llToUpper(choice), 0, 0) + llGetSubString(llToLower(choice), 1, -1);
         choice = "Yes";
         minMinutes = 0;
@@ -151,7 +152,10 @@ setDollType(string choice, integer force) {
     llMessageLinked(LINK_THIS, 2, clothingprefix, dollID);
     llSleep(1.0);
 
+    // Select random outfit
     llMessageLinked(LINK_THIS, 500, "random", dollID);
+
+    // Notify all of new Doll Type
     llMessageLinked(LINK_THIS, 16, currentState, dollID);
 
     if (!quiet) llSay(0, dollname + " has become a " + stateName + " Doll.");
