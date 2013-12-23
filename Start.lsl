@@ -12,7 +12,7 @@
 //========================================
 // VARIABLES
 //========================================
-string optiondate = "15/Dec/13";
+string optiondate = "22 Dec 2013";
 
 float delayTime = 15.0; // in seconds
 
@@ -201,7 +201,8 @@ default {
         
         llTargetOmega(<0,0,0>,0,0);
         
-        llSetObjectName(llList2String(llGetLinkPrimitiveParams(24, [ PRIM_DESC ]), 0) + " " + optiondate);
+        //llSetObjectName(llList2String(llGetLinkPrimitiveParams(24, [ PRIM_DESC ]), 0) + " " + optiondate);
+        llSetObjectName("Community Doll Key - " + optiondate);
         
         string me = llGetScriptName();
         integer loop; string script;
@@ -283,7 +284,7 @@ default {
     dataserver(key query_id, string data) {
         list validConfig = [ "initial time", "wind time", "max time", "doll type", "helpless dolly", "controller",
                              "auto tp", "can fly", "outfitable", "pleasure doll", "detachable", "barefeet path", 
-                             "user startup rlv", "user collapse rlv", "quiet key" ];
+                             "user startup rlv", "user collapse rlv", "quiet key", "keyLimit", "windamount" ];
                              
         if (query_id == ncPrefsKey) {
             if (data == EOF) {

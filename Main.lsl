@@ -60,6 +60,7 @@ integer emergencyLimitHours = 12;
 integer emergencyLimitTime = 43200; // (60 * 60 * emergencyLimitHours) // measured in seconds
 integer RLVok;
 integer RLVck;
+integer demomode;
 
 // This variable is used to set the home landmark
 string LANDMARK_HOME = "Home";
@@ -107,6 +108,7 @@ float defLimit     = 7200.0; // 180 * ticks;   // 180 minutes - worksafe (3h)
 float keyLimit     = defLimit;
 //integer posedlimit    = 30;     // 5 minutes
 float hackLimit    = 720.0; // 6 * 60 * ticks;   // 6 hours
+float demoLimit    = 30.0; // 5 minutes
 
 float RATE_STANDARD = 1.0;
 float RATE_AFK = 0.5;
@@ -275,27 +277,25 @@ stopAnimations() {
 }
 
 float windKey() {
-    float winding = windamount;
-
+    float windLimit = keyLimit - timeLeftOnKey;
+    if (demoMode) windLimit = demoLimit - timeLeftOnKey;
+    
     // Return if winding is irrelevant
-    if (timeLeftOnKey >= keyLimit)
-        return 0;
+    if (windLimit <= 0) return 0;
 
-    // Winding...
-    timeLeftOnKey += windamount;
-
-    // Is key overwound?
-    if (timeLeftOnKey > keyLimit) {
-
-        // Compute actual amount of time wound
-        winding = windamount - (timeLeftOnKey - keyLimit);
-
-        // Clip time left on key
-        timeLeftOnKey = keyLimit;
-        llOwnerSay("You have been fully wound - " + (string)llRound((keyLimit)/60) + " minutes remaining.");
+    // Return windamount if less than remaining capacity
+    else if (windLimit >= windamount) {
+        timeLeftOnKey += windamount;
+        return windamount;
     }
-
-    return (winding);
+        
+    // Eles return limit - timeleft
+    else {
+        // Inform doll of full wind
+        llOwnerSay("You have been fully wound - " + (string)llRound(keyLimit / 60.0) + " minutes remaining.");
+        timeLeftOnKey += windLimit;
+        return windLimit;
+    }
 }
 
 doWind(string name, key id) {
@@ -421,7 +421,7 @@ ifPermissions() {
                         if (~llListFindList(animList, (list) animKey))
                             llStopAnimation(animKey);
                     }
-                    clearAnim = 0;
+                    clearAnims = 0;
                     aoControl(1); // AO on
                 }
             }
@@ -746,6 +746,8 @@ default {
             else if (name == "canAFK")                    canAFK = (integer)value;
             else if (name == "hasController")      hasController = (integer)value;
             else if (name == "autoAFK")                  autoAFK = (integer)value;
+            else if (name == "windamount")            windamount = (float)value;
+            else if (name == "keyLimit")                keyLimit = (float)value;
 
             else if (name == "MistressID") {
                 MistressID = (key)value;
