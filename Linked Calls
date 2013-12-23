@@ -1,0 +1,92 @@
+Linked Messages Sent and Received
+---------------------------------
+
+  1: -- unused --
+  2: set clothing prefix (unused)
+ 11: Used to send an IM, usually to Mistress
+ 17: Set Type of Doll
+ 18: Generated to activate a Transforming Key
+ 22: Activate a Pose Menu
+135: Generate a Memory Report
+101: Initial configuration from Preferences
+102: End of Preferences notification message
+103: -- part of Startup
+104: Global startup trigger from start.lsl
+105: Global on_rez trigger
+106: Key Attach/Detach activity
+150: Sim Rating
+201: -- unused --
+300: Configuration messages from other scripts
+305: Internal RLV Commands
+315: Raw RLV Commands
+320: RLV Commands & State Trackers
+500: Dressing?
+999: State Entry (init)
+
+Responded to By:
+----------------
+ 11: Start.lsl
+ 17: Transform.lsl
+ 18: Main.lsl, MenuHandler.lsl
+103: Start.lsl, Transform.lsl
+135: Dress.lsl, Main.lsl, MenuHandler.lsl, RLV.lsl, Start.lsl, Transform.lsl
+150:
+305: Main.lsl, MenuHandler.lsl, RLV.lsl
+315: RLV.lsl
+320:
+500: Main.lsl
+
+Triggered By:
+-------------
+Dress.lsl: 103    // ScriptName
+Dress.lsl: 305
+Dress.lsl: 315
+Dress.lsl: 999
+
+LinkListen.lsl: 103    // ScriptName
+
+Main.lsl: 103    // ScriptName
+Main.lsl: 11
+Main.lsl: 135
+Main.lsl: 150
+Main.lsl: 18       // "here" -- transforming key
+Main.lsl: 300
+Main.lsl: 305
+Main.lsl: 315
+Main.lsl: 999
+
+MenuHandler.lsl: 1
+MenuHandler.lsl: 103    // ScriptName
+MenuHandler.lsl: 17
+MenuHandler.lsl: 22
+MenuHandler.lsl: 300
+MenuHandler.lsl: 305
+MenuHandler.lsl: 500
+MenuHandler.lsl: 999
+
+RLV.lsl: 103    // ScriptName
+RLV.lsl: 11
+RLV.lsl: 320
+RLV.lsl: 350
+RLV.lsl: 999
+
+Start.lsl: 101
+Start.lsl: 102
+Start.lsl: 104
+Start.lsl: 105
+Start.lsl: 106
+Start.lsl: 135
+Start.lsl: 201
+Start.lsl: 300
+Start.lsl: 311
+
+Taker.lsl: 103    // ScriptName
+Taker.lsl: 999
+
+Transform.lsl: 103    // ScriptName
+Transform.lsl: 16
+Transform.lsl: 18     // "here" -- transforming key
+Transform.lsl: 2
+Transform.lsl: 500
+Transform.lsl: 999
+
