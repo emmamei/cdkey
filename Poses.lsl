@@ -37,7 +37,7 @@ setControlLock(integer lock) {
     llRequestPermissions(dollID, PERMISSION_TAKE_CONTROLS|PERMISSION_TRIGGER_ANIMATION);
 }
 
-stopAnimation(anim) {
+stopAnimation(string anim) {
 
     stopAnim = anim;
     llRequestPermissions(dollID, PERMISSION_TRIGGER_ANIMATION);
