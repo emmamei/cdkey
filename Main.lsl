@@ -92,7 +92,7 @@ key dresserID;
 
 string httpstart = "http://communitydolls.com/";
 integer dialogChannel;
-integer chatChannel;
+integer chatChannel = 75;
 integer chatHandle;
 integer targetHandle;
 
@@ -713,7 +713,7 @@ default {
             dollID = llGetOwner();
 
             chatHandle = llListen(chatChannel, "", dollID, "");
-            dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -9, -1));
+            //dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -9, -1));
             simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
 
             llSetText("", <1,1,1>, 1);
