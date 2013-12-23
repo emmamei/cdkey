@@ -396,7 +396,7 @@ afkOrCollapse(string type, integer set) {
         
         doRLV(type, "fly=n,sit=n,unsit=n,tplm=n,tploc=n,tplure=n,standtp=n,sittp=n," +
                     "addoutfit=n,addattach=n,remoutfit=n,remattach=n," +
-                    "temprun=n,alwaysrun=n,sendchat=n,shownames=n,showhovertextall=n," +
+                    "temprun=n,alwaysrun=n,sendchat=n,showhovertextall=n," +
                     "redirchat:999=add,rediremote:999=add");
                     
         allowRescue(type);
