@@ -198,7 +198,7 @@ doMainMenu(key id) {
         menu += "Help/Support";
 
         // Hide the general "Carry" option for all but Mistress when one exists
-        if (((id == MistressID) || !hasController) && id != dollID) {
+        if (isMistress(id) || !hasController) && id != dollID) {
             if (canCarry) {
                 msg =  msg +
                        "Carry option picks up " + dollName + " and temporarily" +
@@ -221,7 +221,7 @@ doMainMenu(key id) {
     // If toucher is Mistress and NOT self...
     //
     // That is, you can't be your OWN Mistress...
-    if ((id == MistressID) && (id != dollID)) {
+    if (isMistress(id) && (id != dollID)) {
         menu += "Use Control";
         
         if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK) {
@@ -244,7 +244,7 @@ doHelpMenu(key id) {
 
 doOptionsMenu(key id) {
     integer isController;
-    if ((id == MistressID) && (id != dollID)) isController = 1;
+    if (isMistress(id) && (id != dollID)) isController = 1;
     
     string msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
     list pluslist;

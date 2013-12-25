@@ -26,13 +26,20 @@
 
 #define hasCarrier (carrierID != NULL_KEY)    
 #define hasController (MistressID != NULL_KEY)
+#ifndef DEVELOPER_MODE
 #define isAttached (llGetAttached() == ATTACH_BACK)
+#define isAllowedRLV (llGetAttached() == ATTACH_BACK)
+#else
+#define isAttached ((llGetAttached() == ATTACH_BACK) || (llGetAttached() == ATTACH_HUD_CENTER_1) || (llGetAttached() == ATTACH_HUD_CENTER_2))
+#define isAllowedRLV ((llGetAttached() == ATTACH_BACK) || (llGetAttached() == ATTACH_HUD_CENTER_2))
+#endif
 #define isCarrier ((id == carrierID) && !isDoll)
 #define isDoll (id == dollID)
 #define isDollAway ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0)
 #define isController (isMistress(id) && !isDoll)
 #define isWindingDown (!collapsed && isAttached && dollType != "Builder" && dollType != "Key")
 #define mainTimerEnable (configured && isAttached && RLVchecked)
+#define
 
 // Collapse animation - and documentation
 #define ANIMATION_COLLAPSED "collapse"
@@ -68,6 +75,11 @@
 #define SEC_TO_MIN 60.0
 // Community dolls website
 #define WEB_DOMAIN "http://communitydolls.com/"
+// Timeouts
+#define WEAR_LOCK_TIME 600.0
+#define DEMO_LIMIT 300.0
+#define POSE_LIMIT 300.0
+#define CARRY_TIMEOUT 60.0
 
 #define SCRIPT_NAME llGetScriptName()
 

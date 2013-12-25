@@ -65,7 +65,6 @@ integer canSit = 1;
 integer canStand = 1;
 //integer canWear;
 //integer canUnwear;
-integer carryMoved;
 integer clearAnim;
 integer collapsed;
 integer configured;
@@ -90,9 +89,6 @@ integer timeReporting = 1;
 // type of Doll to another - this tracks the current type of doll.
 string dollType = "Regular";
 
-#define DEMO_LIMIT 300.0
-#define POSE_LIMIT 300.0
-#define CARRY_TIMEOUT 60.0
 float poseExpire;
 float menuSleep;
 float carryExpire;
@@ -182,10 +178,6 @@ doWind(string name, key id) {
     lmInternalCommand("mainMenu", name, id);
 }
 
-integer isMistress(key id) {
-    return (llListFindList([ MistressID, AGENT_CHRISTINA_HALPIN, AGENT_GREIGHIGHLAND_RESIDENT ], [ id ]) != -1);
-}
-
 initializeStart() {
     dollID = llGetOwner();
     dollName = llGetDisplayName(dollID);
@@ -235,13 +227,6 @@ initFinal() {
 #endif
 }
 
-aoControl(integer on) {
-    integer LockMeisterChannel = -8888;
-    
-    if (on) llWhisper(LockMeisterChannel, (string)dollID + "booton");
-    else llWhisper(LockMeisterChannel, (string)dollID + "bootoff");
-}
-
 ifPermissions() {
     key grantor = llGetPermissionsKey();
     integer perm = llGetPermissions();
@@ -264,7 +249,7 @@ ifPermissions() {
         
         if (perm & PERMISSION_TRIGGER_ANIMATION && isAttached) {
             if (keyAnimation != "") {
-                aoControl(0);
+                llWhisper(LockMeisterChannel, (string)dollID + "bootoff");
                 
                 list animList; integer i; integer animCount; key animKey = llGetInventoryKey(keyAnimation);
                 while ((animList = llGetAnimationList(dollID)) != [ animKey ]) {
@@ -283,7 +268,7 @@ ifPermissions() {
                         llStopAnimation(animKey);
                 }
                 clearAnim = 0;
-                aoControl(1);
+                llWhisper(LockMeisterChannel, (string)dollID + "booton");
             }
         }
         
@@ -334,17 +319,6 @@ carry(string name, key id) {
         llOwnerSay("You have been picked up by " + carrierName);
         llRegionSayTo(carrierID, 0, "You have picked up the doll " + dollName);
     }
-}
-
-collapse() {
-    collapsed = 1;
-    keyAnimation = ANIMATION_COLLAPSED;
-    lockPos = llGetPos();
-    lmSendConfig("keyAnimation", keyAnimation, NULL_KEY);
-    setWindRate();
-    lmInternalCommand("collapse", wwGetSLUrl(), NULL_KEY);
-    ifPermissions();
-    lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey, NULL_KEY);
 }
 
 uncarry() {
@@ -485,10 +459,10 @@ default {
         
         // Update sign if appropriate
         string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
-        if (collapsed && primText != "Disabled Dolly!") llSetText("Disabled Dolly!", <1.0, 0.0 ,0.0>, 1.0);
-        else if (afk && primText != dollType + " Doll (AFK)") llSetText(dollType + " Doll (AFK)", <1.0, 1.0 ,0.0>, 1.0);
-        else if (signOn && primText != dollType + " Doll") llSetText(dollType + " Doll", <1.0, 1.0 ,1.0>, 1.0);
-        else if (!signOn && !afk && !collapsed && primText != "") llSetText("", <1,1,1>, 1);
+        if (collapsed && primText != "Disabled Dolly!") llSetText("Disabled Dolly!", <1.0, 0.0, 0.0>, 1.0);
+        else if (afk && primText != dollType + " Doll (AFK)") llSetText(dollType + " Doll (AFK)", <1.0, 1.0, 0.0>, 1.0);
+        else if (signOn && primText != dollType + " Doll") llSetText(dollType + " Doll", <1.0, 1.0, 1.0>, 1.0);
+        else if (!signOn && !afk && !collapsed && primText != "") llSetText("", <1.0, 1.0, 1.0>, 1.0);
 
       /*--------------------------------
         WINDING DOWN.....
@@ -518,11 +492,22 @@ default {
 
             // Dolly is DONE! Go down... and yell for help.
             if (!collapsed && timeLeftOnKey <= 0) {
-                collapse();
-                
                 // This message is intentionally excluded from the quiet key setting as it is not good for
                 // dolls to simply go down silently.
                 llSay(0, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on their key.)");
+		
+		// We only collapse when we run out of time on the key so inline the collapse functionality
+		collapsed = 1;
+		keyAnimation = ANIMATION_COLLAPSED;
+		lmInternalCommand("collapse", (string)timeLeftOnKey, NULL_KEY);
+		
+		// Skip redundant link messages.
+		// lmSendConfig("keyAnimation", keyAnimation);			// Inferred and ANIMATION_COLLAPSED is gloabally defined
+		// lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);	// Again collapsed = no time inferrable
+		
+		// Skip call to setWindRate() this function is heavily overused we only make practical use of the
+		// value once per tick.  Updating more frequently is at best a waste at worst it's even a bug.
+		// setWindRate();
             }
         }
     }

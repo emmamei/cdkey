@@ -347,9 +347,8 @@ default {
     //----------------------------------------
     timer() {
         if (RLVck != 0 && RLVck <= 6) {
-            if (RLVck == 1) llMessageLinked(LINK_SET, 103, llGetScriptName(), NULL_KEY);
-            RLVck++;
             if (isAttached && RLVck != 6) llOwnerSay("@clear,versionnew=" + (string)channel);
+            llSetTimerEvent(5.0 * RLVck++);
         } else if (RLVck != 0) {
             postCheckRLV();
         } else {
