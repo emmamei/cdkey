@@ -271,7 +271,7 @@ default {
         else if (code == 105) {
             if (llList2String(split, 0) != "Start") return;
             if (startup == 2) {
-                lmInitializationCompleted(105);
+                lmInitState(105);
                 startup = 0;
             }
         }
@@ -429,7 +429,7 @@ default {
 #endif
             if (startup == 1) {
                 startup = 2;
-                lmInitializationCompleted(104);
+                lmInitState(104);
             }
         }
 
