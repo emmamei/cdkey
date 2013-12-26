@@ -130,7 +130,7 @@
 // Defines for various virtual functions to save typing and memory by inlining
 #define isInteger(input) ((string)((integer)input) == input)
 #define isMistress(id) (llListFindList(ALL_CONTROLLERS, [ id ]) != -1)
-#define getLinkDesc(linknum) (string)llGetLinkPrimitiveParams(linknum, [ PRIM_DESC ])
+#define getLinkDesc(linknum) llList2String(llGetLinkPrimitiveParams(linknum, [ PRIM_DESC ]), 0)
 #define getObjectScriptTime(id) (1000.0 * llList2Float(llGetObjectDetails(id, [ OBJECT_SCRIPT_TIME ]), 0))
 #define getScriptTime() formatFloat(getObjectScriptTime(llGetKey()), 3) + "ms"
 #define getWindRate() llList2Float(llGetPrimitiveParams([ PRIM_OMEGA ]), 1) / (TWO_PI / 15.0)
