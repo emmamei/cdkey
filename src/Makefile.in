@@ -1,0 +1,41 @@
+# makefile
+
+SHELL=/bin/sh
+OUTPATH=../key
+
+.SUFFIXES: .lsl
+
+SRC=Dress.cpp \
+	Main.cpp \
+	MenuHandler.cpp \
+	RLV.cpp \
+	Start.cpp \
+	Taker.cpp \
+	Transform.cpp
+
+OUT=$(OUTPATH)/Dress.lsl \
+	$(OUTPATH)/Main.lsl \
+	$(OUTPATH)/MenuHandler.lsl \
+	$(OUTPATH)/RLV.lsl \
+	$(OUTPATH)/Start.lsl \
+	$(OUTPATH)/Taker.lsl \
+	$(OUTPATH)/Transform.lsl
+
+INCLUDES=include/config.h \
+	include/CommonGlobals.lsl \
+	include/GlobalDefines.lsl \
+	include/KeySharedFuncs.lsl \
+	include/RestrainedLoveAPI.lsl \
+	include/Utility.lsl
+
+all: $(OUT)
+	@SED@ -i -e 's/^#.*$$//' $^
+
+%.lsl: %.cpp $(INCLUDES)
+	@CPP@ -C -nostdinc -o $@ $<
+
+$(OUTPATH)/%.lsl: %.lsl
+	@MKDIR_P@ $(OUTPATH); cp $< $@
+
+clean:
+	rm -f *.lsl
