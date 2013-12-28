@@ -30,6 +30,17 @@ memReport() {
 #else
 #define memReport(dummy)
 #endif // DEVELOPER_MODE
+#ifdef DEBUG_LEVEL
+debugSay(integer level, string msg) {
+    if (DEBUG_LEVEL >= level) {
+        msg = "DEBUG(" + (string)level + "): " + llGetScriptName() + ": " + msg;
+        if ("DEBUG_TARGET" == "OWNER") llOwnerSay(msg);
+        else llSay(DEBUG_CHANNEL, msg);
+    }
+}
+#else
+#define debugSay(dummy)
+#endif
 /*
  * ----------------------------------------
  * NUMERIC FUNCTIONS

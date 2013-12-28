@@ -187,18 +187,14 @@ addListeners(string dollID) {
 listInventoryOn(string channel) {
     candresstimeout = 8;
 
-#ifdef DEVELOPER_MODE
-    llSay(DEBUG_CHANNEL,">> clothingFolder = " + (string)clothingFolder);
-    llSay(DEBUG_CHANNEL,">> outfitsFolder = " + (string)outfitsFolder);
-#endif
+    debugSay(5, ">> clothingFolder = " + (string)clothingFolder);
+    debugSay(5, ">> outfitsFolder = " + (string)outfitsFolder);
                 
     if (clothingFolder == "") {
         llMessageLinked(LINK_SET, 315, SCRIPT_NAME + "|getinv=" + channel, NULL_KEY);
     }
     else {
-#ifdef DEVELOPER_MODE
-        llSay(DEBUG_CHANNEL,"cmd = getinv:" + clothingFolder + "=" + channel);
-#endif
+        debugSay(5, "cmd = getinv:" + clothingFolder + "=" + channel);
         llMessageLinked(LINK_SET, 315, SCRIPT_NAME + "|getinv:" + clothingFolder + "=" + channel, NULL_KEY);
     }
 }
@@ -286,13 +282,11 @@ default {
             if (script != SCRIPT_NAME) {
                 if (name == "clothingFolder") {
                     string oldclothingprefix = clothingFolder;
-#ifdef DEVELOPER_MODE
-                    llSay(DEBUG_CHANNEL,">on link #2");
-                    llSay(DEBUG_CHANNEL,">>oldclothingprefix = " + oldclothingprefix);
-                    llSay(DEBUG_CHANNEL,">>outfitsFolder = " + outfitsFolder);
-                    llSay(DEBUG_CHANNEL,">>clothingFolder = " + clothingFolder);
-                    llSay(DEBUG_CHANNEL,">>choice = " + value);
-#endif
+                    debugSay(5, ">on link #2");
+                    debugSay(5, ">>oldclothingprefix = " + oldclothingprefix);
+                    debugSay(5, ">>outfitsFolder = " + outfitsFolder);
+                    debugSay(5, ">>clothingFolder = " + clothingFolder);
+                    debugSay(5, ">>choice = " + value);
                     if (outfitsFolder != "") {
                         clothingFolder = outfitsFolder + "/" +  value;
                     }
@@ -300,9 +294,7 @@ default {
                         clothingFolder = value;
                     }
         
-#ifdef DEVELOPER_MODE
-                    llSay(DEBUG_CHANNEL,">>clothingFolder = " + clothingFolder);
-#endif
+                    debugSay(5, ">>clothingFolder = " + clothingFolder);
                     if (clothingFolder != oldclothingprefix) {
         
                         xfolder = "~normalself";
@@ -393,9 +385,7 @@ default {
             integer n;
             string itemname;
 
-#ifdef DEVELOPER_MODE
-            llSay(DEBUG_CHANNEL,">on channel 2555");
-#endif
+            debugSay(5, ">on channel 2555");
             // Looks for a folder that may contain outfits - folders such
             // as Dressup/, or outfits/, or Outfits/ ...
             for (n = 0; n < iStop; n++) {
@@ -422,11 +412,9 @@ default {
                 clothingFolder = outfitsFolder;
             }
 
-#ifdef DEVELOPER_MODE
-            llSay(DEBUG_CHANNEL,">oldbigprefix = " + oldbigprefix);
-            llSay(DEBUG_CHANNEL,">outfitsFolder = " + outfitsFolder);
-            llSay(DEBUG_CHANNEL,">clothingFolder = " + clothingFolder);
-#endif
+            debugSay(5, ">oldbigprefix = " + oldbigprefix);
+            debugSay(5, ">outfitsFolder = " + outfitsFolder);
+            debugSay(5, ">clothingFolder = " + clothingFolder);
             if (startup == 1) {
                 startup = 2;
                 lmInitState(104);
@@ -451,9 +439,7 @@ default {
 
                 // No files found; leave the prefix alone and don't change
                 llOwnerSay("There are no outfits in your " + clothingFolder + " folder.");
-#ifdef DEVELOPER_MODE
-                llSay(DEBUG_CHANNEL,"There are no outfits in your " + clothingFolder + " folder.");
-#endif
+                debugSay(5, "There are no outfits in your " + clothingFolder + " folder.");
                 // Didnt find any outfits in the standard folder, try the
                 // "extended" folder containing (we hope) outfits....
 
@@ -480,10 +466,8 @@ default {
                     itemname = llList2String(Outfits, n);
                     prefix = llGetSubString(itemname,0,0);
 
-#ifdef DEVELOPER_MODE
-                    llSay(DEBUG_CHANNEL,">itemname = " + itemname);
-                    llSay(DEBUG_CHANNEL,">prefix = " + prefix);
-#endif
+                    debugSay(5, ">itemname = " + itemname);
+                    debugSay(5, ">prefix = " + prefix);
                     // skip hidden files/directories and skip
                     // Doll Type (Transformation) folders...
                     //
@@ -498,9 +482,7 @@ default {
                 // Pick outfit at random
                 integer i = (integer) llFrand(total);
                 string nextoutfitname = llList2String(outfitsList, i);
-#ifdef DEVELOPER_MODE
-                llSay(DEBUG_CHANNEL,">nextoutfitname = " + nextoutfitname);
-#endif
+                debugSay(5, ">nextoutfitname = " + nextoutfitname);
                 // the dialog not only OKs things - but fires off the dressing process
                 llDialog(dollID, "You are being dressed in this outfit.",[nextoutfitname], cd2667);
                 //llSay(cd2667, nextoutfitname);
@@ -570,9 +552,7 @@ default {
         //
         else if (channel == cd2667) {
             llMessageLinked(LINK_SET, 305, SCRIPT_NAME + "|wearClear", NULL_KEY);
-#ifdef DEVELOPER_MODE
-            llSay(DEBUG_CHANNEL,">>> channel 2667: " + choice);
-#endif
+            debugSay(5, ">>> channel 2667: " + choice);
             if (choice == "OK") {
                 ; // No outfits: only OK is available
             } else if (choice == "Next") {
@@ -595,9 +575,7 @@ default {
                 }
 
                 newoutfitwordend = llStringLength(newoutfit)  - 1;
-#ifdef DEVELOPER_MODE
-                llSay(DEBUG_CHANNEL,">>>newoutfit = " + newoutfit);
-#endif
+                debugSay(5, ">>>newoutfit = " + newoutfit);
 
                 //llOwnerSay("newoutfit is: " + newoutfit);
                 //llOwnerSay("newoutfitname is: " + newoutfitname);
@@ -706,9 +684,7 @@ default {
         // Check to see if all items are fully worn; if not, try again
         //
         else if (channel == cd2668) {
-#ifdef DEVELOPER_MODE
-            llSay(DEBUG_CHANNEL,">> @getinvworn:" + xfolder);
-#endif
+            debugSay(5, ">> @getinvworn:" + xfolder);
             if ((llGetSubString(choice,2,2)) != "3") {
                 llSleep(4.0);
                 llMessageLinked(LINK_SET, 315, SCRIPT_NAME + "|attach:" + xfolder + "=force", NULL_KEY);
@@ -722,9 +698,7 @@ default {
         // Check to see if all items are fully removed; if not, try again
         //
         else if (channel == cd2669) {
-#ifdef DEVELOPER_MODE
-            llSay(DEBUG_CHANNEL,">> @getinvworn:" + xfolder);
-#endif
+            debugSay(5, ">> @getinvworn:" + xfolder);
             if ((llGetSubString(choice,2,2)) != "1") {
                 llSleep(4.0);
                 llMessageLinked(LINK_SET, 315, SCRIPT_NAME + "|detach:" + xfolder + "=force", NULL_KEY);
@@ -738,15 +712,11 @@ default {
         // Grab a path for an outfit, and save it for later
         //
         else if (channel == cd2670) {
-#ifdef DEVELOPER_MODE
-            llSay(DEBUG_CHANNEL,"<< choice = " + choice);
-#endif
+            debugSay(5, "<< choice = " + choice);
             // When do we override the old outfit path - and with what?
             if (oldoutfitpath == "") {
                 oldoutfitpath = choice;
-#ifdef DEVELOPER_MODE
-                llSay(DEBUG_CHANNEL,"<< oldoutfitpath = " + oldoutfitpath);
-#endif
+                debugSay(5, "<< oldoutfitpath = " + oldoutfitpath);
             }
         }
     }

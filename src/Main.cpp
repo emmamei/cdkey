@@ -48,7 +48,7 @@ integer dialogChannel;
 integer chatChannel = 75;
 integer chatHandle;
 integer targetHandle;
-#ifdef LOW_SCRIPT_MODE
+#ifdef SIM_FRIENDLY
 integer lowScriptMode;
 #endif
 integer busyIsAway;
@@ -172,7 +172,7 @@ doWind(string name, key id) {
     llOwnerSay("Have you remembered to thank " + name + " for winding you?");
     
     if (collapsed) uncollapse();
-    else lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey, NULL_KEY);
+    else lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
 
     llSleep(0.1);
     lmInternalCommand("mainMenu", name, id);
@@ -194,7 +194,7 @@ initializeStart() {
 
 initFinal() {
     llOwnerSay("You have " + (string)llRound(timeLeftOnKey / 60.0) + " minutes of life remaning.");
-    lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey, NULL_KEY);
+    lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
 
     // 
     // When rezzed.... if currently being carried, drop..
@@ -222,7 +222,7 @@ initFinal() {
     lmInitializationCompleted(105);
     llSleep(0.5);
     llSetTimerEvent(1.0);
-#ifdef LOW_SCRIPT_MODE
+#ifdef SIM_FRIENDLY
     if (lowScriptMode) llSetTimerEvent(10.0);
 #endif
 }
@@ -337,10 +337,10 @@ uncollapse() {
     collapsed = 0;
     keyAnimation = "";
     lockPos = ZERO_VECTOR;
-    lmSendConfig("keyAnimation", keyAnimation, NULL_KEY);
+    lmSendConfig("keyAnimation", keyAnimation);
     setWindRate();
     lmInternalCommand("restore", "", NULL_KEY);
-    lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey, NULL_KEY);
+    lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
     ifPermissions();
 }
 
@@ -428,7 +428,7 @@ default {
         
         ifPermissions();
         if (ticks % 30 == 0) {
-            lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey, NULL_KEY);
+            lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
 #ifdef DEVELOPER_MODE
             if (timeReporting) llOwnerSay("Script Time: " + formatFloat(llList2Float(llGetObjectDetails(llGetKey(), [ OBJECT_SCRIPT_TIME ]), 0) * 1000000, 2) + "µs");
 #endif
@@ -439,7 +439,7 @@ default {
             if (poseExpire > 0.0 && poseExpire < llGetTime()) { // Pose expire is set and has passed
                 keyAnimation = "";
                 lockPos = ZERO_VECTOR;
-                lmSendConfig("keyAnimation", keyAnimation, NULL_KEY);
+                lmSendConfig("keyAnimation", keyAnimation);
                 poseExpire = 0.0;
                 clearAnim = 1;
             }
@@ -568,11 +568,9 @@ default {
     //----------------------------------------
     // For Transforming Key operations
     link_message(integer source, integer code, string data, key id) {
-#ifdef LINK_DEBUG
         string msg = "Link code: " + (string)code + " Data: " + data;
         if (id) msg += " Key: " + (string)id;
-        llOwnerSay(msg);
-#endif
+        debugSay(9, msg);
         list split = llParseString2List(data, [ "|" ], []);
         
         if (code == 102) {
@@ -631,7 +629,7 @@ default {
                 else if (name == "keyLimit")                     keyLimit = (float)value;
                 else if (name == "MistressID")                 MistressID = (key)value;
                 else if (name == "mistressName")             mistressName = value;
-    #ifdef LOW_SCRIPT_MODE
+    #ifdef SIM_FRIENDLY
                 else if (name == "lowScriptMode") {
                     lowScriptMode = (integer)value;
                     if (lowScriptMode) llSetTimerEvent(10.0);
@@ -681,7 +679,7 @@ default {
             else if (cmd == "doUnpose") {
                 keyAnimation = "";
                 lockPos = ZERO_VECTOR;
-                lmSendConfig("keyAnimation", keyAnimation, NULL_KEY);
+                lmSendConfig("keyAnimation", keyAnimation);
                 poseExpire = 0.0; // Clear timers
                 clearAnim = 1; // Set signal for animation clear
                 
@@ -746,7 +744,7 @@ default {
             }
             // Demo: short time span
             else if (choice == "demo") {
-                lmSendConfig("autoAFK", (string)(!demoMode), NULL_KEY);
+                lmSendConfig("autoAFK", (string)(!demoMode));
                 if (demoMode) {
                     timeLeftOnKey = DEMO_LIMIT;
                     llOwnerSay("Key set to run in demo mode: time limit set to " + (string)llRound((timeLeftOnKey = DEMO_LIMIT) / SEC_TO_MIN) + " minutes.");

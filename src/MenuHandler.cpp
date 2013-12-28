@@ -384,7 +384,7 @@ handlemenuchoices(string choice, string name, key id) {
             lmSendToAgent(dollName + " seems willing to let you take permanant control of her key now. " +
                             "Maybe you could claim " + dollName + " as your own? (Be Controller from the menu).", carrierID);
         }
-        lmSendConfig("takeoverAllowed", (string)1, id);
+        lmSendConfig("takeoverAllowed", (string)1);
     }
     else if (choice == "Dress") {
         if (!doll) llOwnerSay(name + " is looking at your dress menu");
@@ -423,13 +423,13 @@ handlemenuchoices(string choice, string name, key id) {
     else if (choice == "Detach")
         lmInternalCommand("detach", "", id);
     else if (choice == "Invisible") {
-        lmSendConfig("visible", (string)0, id);
+        lmSendConfig("visible", (string)0);
         llSetLinkAlpha(LINK_SET, 0, ALL_SIDES);
         llOwnerSay("Your key fades from view...");
         //doFade(LINK_SET, 1.0, 0.0, ALL_SIDES, 0.1);
     }
     else if (choice == "Visible") {
-        lmSendConfig("visible", (string)1, id);
+        lmSendConfig("visible", (string)1);
         llSetLinkAlpha(LINK_SET, 1, ALL_SIDES);
         llOwnerSay("Your key appears magically.");
         //doFade(LINK_SET, 0.0, 1.0, ALL_SIDES, 0.1);
@@ -447,42 +447,42 @@ handlemenuchoices(string choice, string name, key id) {
         lmInternalCommand("setAFK", (string)afk + "|0|" + formatFloat(windRate, 1) + "|" + (string)minsLeft, id);
     }
     else if (choice == "No Detaching")
-        lmSendConfig("detachable", (string)0, id);
+        lmSendConfig("detachable", (string)0);
     else if (controller && choice == "Detachable") 
-        lmSendConfig("detachable", (string)1, id);
+        lmSendConfig("detachable", (string)1);
     else if (choice == "Auto TP")
-        lmSendConfig("autoTP", (string)0, id);
+        lmSendConfig("autoTP", (string)0);
     else if (controller && choice == "No Auto TP")
-        lmSendConfig("autoTP", (string)1, id);
+        lmSendConfig("autoTP", (string)1);
 #ifdef ADULT_MODE
     else if (choice == "Pleasure Poll") {
         llOwnerSay("You are now a pleasure doll.");
-        lmSendConfig("pleasureDoll", (string)0, id);
+        lmSendConfig("pleasureDoll", (string)0);
     }
     else if (choice == "No Pleasure") {
         llOwnerSay("You are no longer a pleasure doll.");
-        lmSendConfig("pleasureDoll", (string)1, id);
+        lmSendConfig("pleasureDoll", (string)1);
     }
 #endif
     else if (choice == "No Self TP")
-        lmSendConfig("helpless", (string)1, id);
+        lmSendConfig("helpless", (string)1);
     else if (controller && choice == "Self TP")
-        lmSendConfig("helpless", (string)0, id);
+        lmSendConfig("helpless", (string)0);
     else if (choice == "Can Carry") {
         llOwnerSay("Other people can now carry you.");
-        lmSendConfig("canCarry", (string)1, id);
+        lmSendConfig("canCarry", (string)1);
     }
     else if (choice == "No Carry") {
         llOwnerSay("Other people can no longer carry you.");
-        lmSendConfig("canCarry", (string)0, id);
+        lmSendConfig("canCarry", (string)0);
     }
     else if (choice == "Can Outfit") {
         llOwnerSay("Other people can now outfit you.");
-        lmSendConfig("canDress", (string)1, id);
+        lmSendConfig("canDress", (string)1);
     }
     else if (choice == "No Outfitting") {
         llOwnerSay("Other people can no longer outfit you.");
-        lmSendConfig("canDress", (string)0, id);
+        lmSendConfig("canDress", (string)0);
     }
     else if (choice == "Allow Takeover") {
         llOwnerSay("Anyone carrying you may now choose to be your controller.");
@@ -490,35 +490,35 @@ handlemenuchoices(string choice, string name, key id) {
             lmSendToAgent(dollName + " seems willing to let you take permanant control of her key now. " +
                             "Maybe you could claim " + dollName + " as your own? (Be Controller from the menu).", carrierID);
         }
-        lmSendConfig("takeoverAllowed", (string)1, id);
+        lmSendConfig("takeoverAllowed", (string)1);
     }
     else if (choice == "No Takeover") {
         llOwnerSay("There is now no way for someone to become your controller.");
-        lmSendConfig("takeoverAllowed", (string)0, id);
+        lmSendConfig("takeoverAllowed", (string)0);
     }
     else if (choice == "No Warnings") {
         llOwnerSay("No warnings will be given when time remaining is low.");
-        lmSendConfig("doWarnings", (string)0, id);
+        lmSendConfig("doWarnings", (string)0);
     }
     else if (choice == "Warnings") {
         llOwnerSay("Warnings will now be given when time remaining is low.");
-        lmSendConfig("doWarnings", (string)1, id);
+        lmSendConfig("doWarnings", (string)1);
     }
     else if (choice == "No Flying")
-        lmSendConfig("canFly", (string)0, id);
+        lmSendConfig("canFly", (string)0);
     else if (controller && choice == "Can Fly")
-        lmSendConfig("canFly", (string)1, id);
+        lmSendConfig("canFly", (string)1);
     else if (choice == "Turn Off Sign")
-        lmSendConfig("signOn", (string)0, id);
+        lmSendConfig("signOn", (string)0);
     else if (choice == "Turn On Sign")
-        lmSendConfig("signOn", (string)1, id);
+        lmSendConfig("signOn", (string)1);
     else if (choice == "No AFK")
-        lmSendConfig("canAFK", (string)0, id);
+        lmSendConfig("canAFK", (string)0);
     else if (controller && choice == "Can AFK")
-        lmSendConfig("canAFK", (string)1, id);
+        lmSendConfig("canAFK", (string)1);
     else if (controller && choice == "Drop Control") {
-        lmSendConfig("MistressID", (string)NULL_KEY, id);
-        lmSendConfig("mistressName", "", id);
+        lmSendConfig("MistressID", (string)NULL_KEY);
+        lmSendConfig("mistressName", "");
     }
     else if (doll && choice == "Reload Config") llResetOtherScript("Start");
     
@@ -706,7 +706,7 @@ default
     dataserver(key query_id, string data) {
         if (query_id == mistressQuery) {
             mistressName = data;
-            lmSendConfig("mistressName", mistressName, NULL_KEY);
+            lmSendConfig("mistressName", mistressName);
         }
     }
 }

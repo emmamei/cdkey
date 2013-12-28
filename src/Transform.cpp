@@ -102,7 +102,7 @@ setDollType(string choice, integer force) {
     
     if (llGetInventoryType(stateName) == INVENTORY_NOTECARD) kQuery = llGetNotecardLine(stateName,0);
 
-    lmSendConfig("clothingFolder", clothingprefix, NULL_KEY);
+    lmSendConfig("clothingFolder", clothingprefix);
     llSleep(1.0);
 
     lmInternalCommand("randomDress", "", NULL_KEY);
@@ -273,7 +273,7 @@ default {
         
         else if (code == 102) {
             // Trigger Transforming Key setting
-            lmSendConfig("isTransformingKey", "1", NULL_KEY);
+            lmSendConfig("isTransformingKey", "1");
             configured = 1;
             setDollType(stateName, 1);
         }
@@ -358,13 +358,13 @@ default {
 
             //avoid = FALSE;
 #ifdef DEVELOPER_MODE
-            llSay(DEBUG_CHANNEL,"transform = " + (string)transform);
-            llSay(DEBUG_CHANNEL,"choice = " + (string)choice);
-            llSay(DEBUG_CHANNEL,"stateName = " + (string)stateName);
+            debugSay(5, "transform = " + (string)transform);
+            debugSay(5, "choice = " + (string)choice);
+            debugSay(5, "stateName = " + (string)stateName);
 #endif
 
             if (!startup) setDollType(choice, 0);
-            lmSendConfig("dollType", stateName, NULL_KEY);
+            lmSendConfig("dollType", stateName);
         // Set options - "Options"
         } else if (channel == cd8667) {
             if (choice == "verify") {

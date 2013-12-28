@@ -47,7 +47,7 @@ integer startup = 1;
 integer channel;
 integer listenHandle;
 integer RLVstarted;
-#ifdef LOW_SCRIPT_MODE
+#ifdef SIM_FRIENDLY
 integer lowScriptMode;
 #endif
 
@@ -157,7 +157,7 @@ initializeRLV(integer refresh) {
     if (!refresh) {
         RLVstarted = 1;
         llSetTimerEvent(1.0);
-#ifdef LOW_SCRIPT_MODE
+#ifdef SIM_FRIENDLY
         if (lowScriptMode) llSetTimerEvent(30.0);
 #endif
         lmInitializationCompleted(105);
@@ -486,7 +486,7 @@ default {
                         if (userCollapseRLVcmd == "") userCollapseRLVcmd = value;
                         else userCollapseRLVcmd += "," +value;
                     }
-#ifdef LOW_SCRIPT_MODE
+#ifdef SIM_FRIENDLY
                     else if (name == "lowScriptMode") {
                         lowScriptMode = (integer)value;
                         if (RLVstarted) {
@@ -546,9 +546,7 @@ default {
                 string stripped;
                 if (cmd == "stripTop") {
                     stripped = "top";
-                    doRLV("Dress", "remoutfit=y,remattach=y,detach:stomach=force,detach:left shoulder=force,detach:right shoulder=force,detach:left hand=force,detach:right hand=force,detach:r upper arm=force,detach:r 
-forearm=force,detach:l upper arm=force,detach:l forearm=force,detach:chest=force,detach:left pec=force,detach:right 
-pec=force,remoutfit:gloves=force,remoutfit:jacket=force,remoutfit:shirt=force,addoutfit=n,addattach=n,remoutfit=n,remattach=n");
+                    doRLV("Dress", "remoutfit=y,remattach=y,detach:stomach=force,detach:left shoulder=force,detach:right shoulder=force,detach:left hand=force,detach:right hand=force,detach:r upper arm=force,detach:r forearm=force,detach:l upper arm=force,detach:l forearm=force,detach:chest=force,detach:left pec=force,detach:right pec=force,remoutfit:gloves=force,remoutfit:jacket=force,remoutfit:shirt=force,addoutfit=n,addattach=n,remoutfit=n,remattach=n");
                     wearLockExpire = (float)wearLockTime;
                 }
                 else if (cmd == "stripBra") {
@@ -558,8 +556,7 @@ pec=force,remoutfit:gloves=force,remoutfit:jacket=force,remoutfit:shirt=force,ad
                 }
                 else if (cmd == "stripBottom") {
                     stripped = "bottoms";
-                    doRLV("Dress", "remoutfit=y,remattach=y,,detach:chin=force,detach:r upper leg=force,detach:r lower leg=force,detach:l upper leg=force,detach:l lower leg=force,detach:pelvis=force,detach:right 
-hip=force,detach:left hip=force,remoutfit:pants=force,remoutfit:skirt=force,addoutfit=n,addattach=n,remoutfit=n,remattach=n");
+                    doRLV("Dress", "remoutfit=y,remattach=y,,detach:chin=force,detach:r upper leg=force,detach:r lower leg=force,detach:l upper leg=force,detach:l lower leg=force,detach:pelvis=force,detach:right hip=force,detach:left hip=force,remoutfit:pants=force,remoutfit:skirt=force,addoutfit=n,addattach=n,remoutfit=n,remattach=n");
                     wearLockExpire = (float)wearLockTime;
                 }
                 else if (cmd == "stripPanties") {
@@ -571,12 +568,10 @@ hip=force,detach:left hip=force,remoutfit:pants=force,remoutfit:skirt=force,addo
                     stripped = "shoes";
                     string attachFeet;
                     if (barefeet != "") attachFeet = "attachallover:" + barefeet + "=force,";
-                    doRLV("Dress", "remoutfit=y,remattach=y,addoutfit=y,addattach=y,detach:l lower leg=force,detach:r lower leg=force,detach:right foot=force,detach:left 
-foot=force,remoutfit:shoes=force,remoutfit:socks=force," + attachFeet + "addoutfit=n,addattach=n,remoutfit=n,remattach=n");
+                    doRLV("Dress", "remoutfit=y,remattach=y,addoutfit=y,addattach=y,detach:l lower leg=force,detach:r lower leg=force,detach:right foot=force,detach:left foot=force,remoutfit:shoes=force,remoutfit:socks=force," + attachFeet + "addoutfit=n,addattach=n,remoutfit=n,remattach=n");
                     wearLockExpire = (float)wearLockTime;
                 }
-                if (!quiet) llSay(0, "The dolly " + dollName + " has her " + stripped + " stripped off her and may not redress for " + (string)llRound(wearLockExpire / 60.0) + " minutes.  (Timer resets if dolly is 
-stripped again)");
+                if (!quiet) llSay(0, "The dolly " + dollName + " has her " + stripped + " stripped off her and may not redress for " + (string)llRound(wearLockExpire / 60.0) + " minutes.  (Timer resets if dolly is stripped again)");
                 else llOwnerSay("You have had your " + stripped + " stripped off you and may not redress for " + (string)llRound(wearLockExpire / 60.0) + " minutes.");
             }
 #endif

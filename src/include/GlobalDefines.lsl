@@ -8,21 +8,7 @@
 // The date of this code in this key, we should really look into a proper version numbering system sometime
 #define OPTION_DATE "23/Dec/13"
 
-// Enables optional sim friendly mode support
-#define LOW_SCRIPT_MODE
-// Enables various developer specific features of the key
-#define DEVELOPER_MODE	// cpp 4.2.4 testing
-#define TESTER_MODE	// And this is a test cpp 4.2.3
-// Selects between llSay on DEBUG_CHANNEL and OwnerSay for delivering debugSay messages these options
-// are mutually exclusive define either or none to disable but not both.
-#define DEBUG_TO_OWNER
-//#define DEBUG_TO_DEBUG
-// Enables code related to adult features this way we can disable this to remove all such code entirely
-#define ADULT_MODE
-// Enables link message debugging code now in Main.lsl - Note this is kinda spammy only if needed
-//#define LINK_DEBUG
-// Enables intro messages during initial startup
-#define INTRO_ENABLED
+#include "config.h"
 
 #define hasCarrier (carrierID != NULL_KEY)    
 #define hasController (MistressID != NULL_KEY)
@@ -81,23 +67,6 @@
 #define CARRY_TIMEOUT 60.0
 
 #define SCRIPT_NAME llGetScriptName()
-
-// debugSay
-#ifdef DEBUG_TO_OWNER
-#define debugSay(msg) llOwnerSay(msg)
-#else
-#ifdef DEBUG_TO_DEBUG
-#define debugSay(msg) llSay(DEBUG_CHANNEL, msg)
-#else
-#define debugSay(dummy)
-#endif // DEBUG_TO_DEBUG
-#endif // DEBUG_TO_OWNER
-
-// Define some functions like debugSay() etc as dummy when not
-// in developer mode
-#ifndef DEVELOPER_MODE
-#define debugSay(dummy)
-#endif
 
 #define ATTACH_BACK 9
 #define ATTACH_HUD_CENTER_1 35

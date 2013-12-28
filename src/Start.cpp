@@ -38,7 +38,7 @@ integer reset;
 integer rlvWait;
 integer RLVok;
 
-#ifdef LOW_SCRIPT_MODE
+#ifdef SIM_FRIENDLY
 integer afk;
 integer lowScriptMode;
 #endif
@@ -64,56 +64,56 @@ processConfiguration(string name, list values) {
     else if (value == "no" || value == "off") value = "0";
     
     if (name == "initial time") {
-        lmSendConfig("timeLeftOnKey", (string)((float)value * SEC_TO_MIN), NULL_KEY);
+        lmSendConfig("timeLeftOnKey", (string)((float)value * SEC_TO_MIN));
     }
     else if (name == "wind time") {
-        lmSendConfig("windamount", (string)((float)value * SEC_TO_MIN), NULL_KEY);
+        lmSendConfig("windamount", (string)((float)value * SEC_TO_MIN));
     }
     else if (name == "max time") {
-        lmSendConfig("keyLimit", (string)((float)value * SEC_TO_MIN), NULL_KEY);
+        lmSendConfig("keyLimit", (string)((float)value * SEC_TO_MIN));
     }
     else if (name == "barefeet path") {
-        lmSendConfig("barefeet", value, NULL_KEY);
+        lmSendConfig("barefeet", value);
     }
     else if (name == "doll type") {
-        lmSendConfig("dollType", value, NULL_KEY);
+        lmSendConfig("dollType", value);
     }
     else if (name == "user startup rlv") {
-        lmSendConfig("userBaseRLVcmd", value, NULL_KEY);
+        lmSendConfig("userBaseRLVcmd", value);
     }
     else if (name == "user collapse rlv") {
-        lmSendConfig("userCollapseRLVcmd", value, NULL_KEY);
+        lmSendConfig("userCollapseRLVcmd", value);
     }
     else if (name == "helpless dolly") {
-        lmSendConfig("helpless", value, NULL_KEY);
+        lmSendConfig("helpless", value);
     }
     else if (name == "auto tp") {
-        lmSendConfig("autoTP", value, NULL_KEY);
+        lmSendConfig("autoTP", value);
     }
     else if (name == "pleasure doll") {
-        lmSendConfig("pleasureDoll", value, NULL_KEY);
+        lmSendConfig("pleasureDoll", value);
     }
     else if (name == "detachable") {
-        lmSendConfig("detachable", value, NULL_KEY);
+        lmSendConfig("detachable", value);
     }
     else if (name == "outfitable") {
-        lmSendConfig("canDress", value, NULL_KEY);
+        lmSendConfig("canDress", value);
     }
     else if (name == "can fly") {
-        lmSendConfig("canFly", value, NULL_KEY);
+        lmSendConfig("canFly", value);
     }
     else if (name == "can sit") {
-        lmSendConfig("canSit", value, NULL_KEY);
+        lmSendConfig("canSit", value);
     }
     else if (name == "can stand") {
-        lmSendConfig("canStand", value, NULL_KEY);
+        lmSendConfig("canStand", value);
     }
     else if (name == "busy is away") {
-        lmSendConfig("busyIsAway", value, NULL_KEY);
+        lmSendConfig("busyIsAway", value);
     }
     else if (name == "quiet key") {
         quiet = (integer)value;
-        lmSendConfig("quiet", value, NULL_KEY);
+        lmSendConfig("quiet", value);
     }
     //--------------------------------------------------------------------------
     // Disabled for future use, allows for extention scripts to add support for
@@ -213,7 +213,7 @@ list notReady() {
     return waiting;
 }
 
-#ifdef LOW_SCRIPT_MODE
+#ifdef SIM_FRIENDLY
 wakeMenu() {
 #ifdef DEVELOPER_MODE
     llOwnerSay("Waking menu scripts");
@@ -309,7 +309,7 @@ default {
             else if (name == "signOn")              signOn = (integer)value;
             else if (name == "takeoverAllowed")     takeoverAllowed = (integer)value;*/
         }
-#ifdef LOW_SCRIPT_MODE
+#ifdef SIM_FRIENDLY
         else if (code == 305) {
             string cmd = llList2String(split, 1);
             
@@ -317,12 +317,12 @@ default {
             
             if (!lowScriptMode && afk) {
                 lowScriptMode = 1;
-                lmSendConfig("lowScriptMode", "1", NULL_KEY);
+                lmSendConfig("lowScriptMode", "1");
                 sleepMenu();
             }
             else if (lowScriptMode && !afk && llGetRegionTimeDilation() > LAG_LOW_THRESHOLD) {
                 lowScriptMode = 0;
-                lmSendConfig("lowScriptMode", "0", NULL_KEY);
+                lmSendConfig("lowScriptMode", "0");
                 wakeMenu();
             }
         }
@@ -349,7 +349,7 @@ default {
                     llResetScript();
                 }
             }
-#ifdef LOW_SCRIPT_MODE
+#ifdef SIM_FRIENDLY
             llSetTimerEvent(60.0);
 #endif
         }
@@ -362,7 +362,7 @@ default {
         rlvWait = 1;
         dollID = llGetOwner();
         dollName = llGetDisplayName(dollID);
-#ifdef LOW_SCRIPT_MODE
+#ifdef SIM_FRIENDLY
         wakeMenu();
 #endif
         llTargetOmega(<0,0,0>,0,0);
@@ -390,7 +390,7 @@ default {
     //----------------------------------------
     touch_start(integer num) {
         integer i;
-#ifdef LOW_SCRIPT_MODE
+#ifdef SIM_FRIENDLY
         if (!llGetScriptState("MenuHandler")) wakeMenu();
         llSetTimerEvent(60.0);
 #endif
@@ -405,7 +405,7 @@ default {
         rlvWait = 1;
         if (startup) llResetScript();
         else startup = 2;
-#ifdef LOW_SCRIPT_MODE
+#ifdef SIM_FRIENDLY
         wakeMenu();
 #endif
         
@@ -524,20 +524,20 @@ default {
             sendMsg(dollID, "The following scripts did not report: " + llList2CSV(notReady()));
 #endif
         }
-#ifdef LOW_SCRIPT_MODE
+#ifdef SIM_FRIENDLY
         else if (!startup) {
             float timeDilation = llGetRegionTimeDilation();
             if (!lowScriptMode && !afk && timeDilation < LAG_HIGH_THRESHOLD) {
                 llOwnerSay("Sim lag detected going into low activity mode");
                 
-                lmSendConfig("lowScriptMode", "1", NULL_KEY);
+                lmSendConfig("lowScriptMode", "1");
                 lowScriptMode = 1;
                 sleepMenu();
             }
             else if (lowScriptMode && !afk && timeDilation > LAG_LOW_THRESHOLD) {
                 llOwnerSay("Sim lag has improved scripts returning to normal mode");
                 
-                lmSendConfig("lowScriptMode", "0", NULL_KEY);
+                lmSendConfig("lowScriptMode", "0");
                 lowScriptMode = 0;
                 wakeMenu();
             }
