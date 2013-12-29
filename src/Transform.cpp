@@ -100,7 +100,7 @@ setDollType(string choice, integer force) {
     currentphrases = [];
     lineno = 0;
     
-    if (llGetInventoryType(stateName) == INVENTORY_NOTECARD) kQuery = llGetNotecardLine(stateName,0);
+    if (llGetInventoryType("*" + stateName) == INVENTORY_NOTECARD) kQuery = llGetNotecardLine("*" + stateName,0);
 
     lmSendConfig("clothingFolder", clothingprefix);
     llSleep(1.0);
@@ -111,7 +111,7 @@ setDollType(string choice, integer force) {
     else llOwnerSay("You have become a " + stateName + " Doll.");
     
     if (startup == 2) {
-        lmInitializationCompleted(105);
+        lmInitState(105);
         startup = 0;
     }
 }
@@ -146,8 +146,8 @@ reloadTypeNames() {
 
     while(n) {
         typeName = llGetInventoryName(INVENTORY_NOTECARD, --n);
-        if (llGetSubString(typeName, 0, 10) != "Preferences") {
-            types += typeName;
+        if (llGetSubString(typeName, 0, 0) == "*") {
+            types += llGetSubString(typeName, 1, -1);
         }
     }
 }
@@ -242,7 +242,7 @@ default {
         list split = llParseString2List(data, [ "|" ], []);
         string choice = llList2String(split, 0);
         
-        if (code == 17) {
+        if (code == 500 && choice == "Type of Doll") {
 
             // Doll must remain in a type for a period of time
             if (minMinutes > 0) {
@@ -288,7 +288,7 @@ default {
     
             cd8666 = ( -1 * (integer)("0x"+llGetSubString((string)llGetKey(),-5,-1)) ) - 8666;
     
-            lmInitializationCompleted(104);
+            lmInitState(104);
         }
         
         else if (code == 105) {
@@ -403,7 +403,7 @@ default {
                 }
 
                 lineno++;
-                kQuery = llGetNotecardLine(currentState,lineno);
+                kQuery = llGetNotecardLine("*" + currentState,lineno);
 
             }
         }

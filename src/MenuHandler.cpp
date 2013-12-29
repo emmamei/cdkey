@@ -6,7 +6,7 @@
 #include "include/GlobalDefines.lsl"
 
 // Current Controller - or Mistress
-key MistressID = NULL_KEY;
+//key MistressID = NULL_KEY;
 key carrierID = NULL_KEY;
 key poserID = NULL_KEY;
 key dollID = NULL_KEY;
@@ -98,7 +98,7 @@ doMainMenu(key id) {
     }
 
     // Is the doll being carried? ...and who clicked?
-    if (isCarried) {
+    if (hasCarrier) {
         // Three possibles:
         //   1. Doll
         //   2. Carrier
@@ -110,7 +110,7 @@ doMainMenu(key id) {
             menu = ["OK"];
 
             // Allows user to permit current carrier to take over and become Mistress
-            if (!hasController && !takeoverAllowed) {
+            if ((numControllers < MAX_USER_CONTROLLERS) && !takeoverAllowed) {
                 menu += "Allow Takeover";
             }
         }
@@ -123,7 +123,7 @@ doMainMenu(key id) {
                 menu += "Unpose";
             }
 
-            if (!hasController && takeoverAllowed) {
+            if ((numControllers < MAX_USER_CONTROLLERS) && takeoverAllowed) {
                 menu += "Be Controller";
             }
 
@@ -198,7 +198,7 @@ doMainMenu(key id) {
         menu += "Help/Support";
 
         // Hide the general "Carry" option for all but Mistress when one exists
-        if (isMistress(id) || !hasController) && id != dollID) {
+        if (isMistress(id) || (numControllers == 0)) {
             if (canCarry) {
                 msg =  msg +
                        "Carry option picks up " + dollName + " and temporarily" +
@@ -242,10 +242,7 @@ doHelpMenu(key id) {
     llDialog(id, msg, menu, dialogChannel);
 }
 
-doOptionsMenu(key id) {
-    integer isController;
-    if (isMistress(id) && (id != dollID)) isController = 1;
-    
+doOptionsMenu(key id) {    
     string msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
     list pluslist;
     
@@ -292,7 +289,7 @@ doOptionsMenu(key id) {
     else pluslist += "Pleasure Doll";
 #endif
 
-    if (!hasController) {
+    if (numControllers < MAX_USER_CONTROLLERS) {
         if (takeoverAllowed) pluslist += "No Takeover";
         else pluslist += "Allow Takeover";
     }
@@ -319,12 +316,12 @@ doPosesMenu(key id, integer page) {
     }
     poseCount = llGetListLength(poseList);
     if (poseCount > 12) {
-        poseList = llList2List(poseList, page * 9 - 1, (page + 1) * 9 - 1);
+        poseList = llList2List(poseList, page * 9, (page + 1) * 9 - 1);
         integer prevPage = page - 1;
         integer nextPage = page + 1;
-        if (prevPage = 0) prevPage = llCeil((float)poseCount / 9.0);
-        if (nextPage > llCeil((float)poseCount / 9.0)) nextPage = 1;
-        poseList += [ "Poses " + (string)prevPage, "Main Menu", "Poses " + (string)nextPage ];
+        if (prevPage == 0) prevPage = llFloor((float)poseCount / 9.0);
+        if (nextPage > llFloor((float)poseCount / 9.0)) nextPage = 1;
+        poseList = [ "Poses " + (string)prevPage, "Main Menu", "Poses " + (string)nextPage ] + poseList;
     }
     
     llDialog(id, "Select the pose to put the doll into", poseList, dialogChannel);
@@ -333,11 +330,11 @@ doPosesMenu(key id, integer page) {
 handlemenuchoices(string choice, string name, key id) {
     integer doll = (id == dollID);
     integer carrier = (id == carrierID && !doll);
-    integer controller = (id == MistressID && !doll);
+    integer controller = isMistress(id);
     
     llMessageLinked(LINK_SET, 500, choice + "|" + name, id);
     
-    if (!isCarried && !doll && choice == "Carry") {
+    if (!hasCarrier && !doll && choice == "Carry") {
         // Doll has been picked up...
         carrierID = id;
         carrierName = name;
@@ -360,7 +357,7 @@ handlemenuchoices(string choice, string name, key id) {
     else if (choice == "Report Bug" || choice == "Ask Question" || choice == "Suggestions") {
         llLoadURL(id, "Visit our issues page to report bugs, ask questions or post any suggestions you may have.", "https://github.com/emmamei/cdkey/issues");
     }
-    else if (isCarried && carrier && choice == "Place Down") {
+    else if (choice == "Place Down" && carrier) {
         // Doll has been placed down...
         llMessageLinked(LINK_SET, 305, llGetScriptName() + "|uncarry|" + carrierName, carrierID);
         carrierID = NULL_KEY;
@@ -380,7 +377,7 @@ handlemenuchoices(string choice, string name, key id) {
     }
     else if (doll && choice == "Allow Takeover") {
         llOwnerSay("Anyone carrying you may now choose to be your controller.");
-        if (isCarried) {
+        if (hasCarrier) {
             lmSendToAgent(dollName + " seems willing to let you take permanant control of her key now. " +
                             "Maybe you could claim " + dollName + " as your own? (Be Controller from the menu).", carrierID);
         }
@@ -486,7 +483,7 @@ handlemenuchoices(string choice, string name, key id) {
     }
     else if (choice == "Allow Takeover") {
         llOwnerSay("Anyone carrying you may now choose to be your controller.");
-        if (isCarried) {
+        if (hasCarrier) {
             lmSendToAgent(dollName + " seems willing to let you take permanant control of her key now. " +
                             "Maybe you could claim " + dollName + " as your own? (Be Controller from the menu).", carrierID);
         }
@@ -535,7 +532,7 @@ handlemenuchoices(string choice, string name, key id) {
     
 #ifdef ADULT_MODE
     // Strip items... only for Pleasure Doll and Slut Doll Types...
-    if (id == carrierID || id == dollID || (hasController && id == MistressID)) {
+    if (id == carrierID || id == dollID || ((numControllers != 0) && isMistress(id))) {
         if (choice == "Top") {
             llMessageLinked(LINK_SET, 305, llGetScriptName() + "|stripTop", id);
         }
@@ -563,19 +560,22 @@ handlemenuchoices(string choice, string name, key id) {
 
 newController(key id) {
     if (carrierID) {
-        llMessageLinked(LINK_SET, 300, "takeoverAllowed|" + (string)0, id);
-        llMessageLinked(LINK_SET, 300, "hasController|" + (string)1, id);
-        llMessageLinked(LINK_SET, 300, "MistressID|" + (string)(MistressID = carrierID), id);
-        llMessageLinked(LINK_SET, 300, "mistressName|" + (string)(mistressName = carrierName), id);
-        if (id == carrierID) {
-            llOwnerSay("Your carrier, " + mistressName + ", has become your controller.");
-        } else if (id == dollID) {
-            llOwnerSay("You have accepted your carrier " + mistressName + " as you controller, they now " +
-                       "have complete control over dolly.");
-            lmSendToAgent("The dolly " + dollName + " has fully accepted your control of them.", MistressID);
+        if (numControllers < MAX_USER_CONTROLLERS) {
+            MistressList += id;
+            MistressNameList += carrierName;
         }
+        llMessageLinked(LINK_SET, 300, "MistressList|" + llDumpList2String(MistressList, "|"), id);
+        llMessageLinked(LINK_SET, 300, "MistressNameList|" + llDumpList2String(MistressNameList, "|"), id);
+        if (id == carrierID) {
+            llOwnerSay("Your carrier, " + carrierName + ", has become your controller.");
+        } else if (id == dollID) {
+            llOwnerSay("You have accepted your carrier " + carrierName + " as you controller, they now " +
+                       "have complete control over dolly.");
+            lmSendToAgent("The dolly " + dollName + " has fully accepted your control of them.", id);
+        }
+        llOwnerSay("Your controllers are now: " + llList2CSV(MistressNameList));
         
-        if (!quiet) llSay(0, mistressName + " has become controller of the doll " + dollName + ".");
+        if (!quiet) llSay(0, carrierName + " has become controller of the doll " + dollName + ".");
     
         // Note that the response goes to 9999 - a nonsense channel
         string msg = "You are now controller of " + dollName + ". See " + WEB_DOMAIN + "controller.htm for more information.";
@@ -611,13 +611,14 @@ default
         list split = llParseString2List(data, [ "|" ], []);
         
         if (code == 101) {
-            string name = llList2String(split, 0);
-            split = llList2List(split, 1, -1);
+            string script = llList2String(split, 0);
+            string name = llList2String(split, 1);
+            split = llList2List(split, 2, -1);
             
             if (!configured) {
                 if (name == "controller") {
-                    MistressID == llList2String(split, 0);
-                    mistressQuery = llRequestDisplayName(MistressID);
+                    MistressList == split;
+                    mistressQuery = llRequestDisplayName(llList2Key(split, 0));
                 }
             }
         }
@@ -628,7 +629,7 @@ default
             llListenRemove(dialogHandle);
             dialogHandle = llListen(dialogChannel, "", "", "");
             
-            lmInitializationCompleted(code);
+            lmInitState(code);
         }
         else if (code == 106) {
             
@@ -662,9 +663,9 @@ default
                 else if (name == "takeoverAllowed")       takeoverAllowed = (integer)value;
                 else if (name == "dollType")
                     dollType = llGetSubString(llToUpper(value), 0, 0) + llGetSubString(llToLower(value), 1, -1);
-                else if (name == "MistressID") {
-                    MistressID = (key)value;
-                    mistressQuery = llRequestDisplayName(MistressID);
+                else if (name == "MistressList") {
+                    MistressList = llList2List(split, 2, -1);
+                    mistressQuery = llRequestDisplayName(llList2Key(MistressList, 0));
                 }
             }
         }        
@@ -705,8 +706,9 @@ default
     
     dataserver(key query_id, string data) {
         if (query_id == mistressQuery) {
-            mistressName = data;
-            lmSendConfig("mistressName", mistressName);
+            MistressNameList = [ data ];
+            lmSendConfig("MistressNameList", llDumpList2String(MistressNameList, "|"));
         }
     }
 }
+

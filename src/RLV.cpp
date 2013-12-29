@@ -95,7 +95,7 @@ postCheckRLV()
     RLVck = 0;
     
     if (startup == 1) {
-        lmInitializationCompleted(104);
+        lmInitState(104);
         startup = 2;
     }
     else {
@@ -160,7 +160,7 @@ initializeRLV(integer refresh) {
 #ifdef SIM_FRIENDLY
         if (lowScriptMode) llSetTimerEvent(30.0);
 #endif
-        lmInitializationCompleted(105);
+        lmInitState(105);
         startup = 0;
     }
 }
@@ -444,13 +444,13 @@ default {
             checkRLV();
         }
         else if (code == 106) {
-            if (id == NULL_KEY && hasController && !detachable && !locked) {
+            if (id == NULL_KEY && !detachable && !locked) {
                 // Undetachable key with controller is detached while RLV lock
                 // is not available inform Mistress.
                 // We send no message if the key is RLV locked as RLV will reattach
                 // automatically this prevents neusance messages when defaultwear is
                 // permitted.
-                lmSendToAgent(dollName + " has detached their key while undetachable.", MistressID);
+                llMessageLinked(LINK_THIS, 15, dollName + " has detached their key while undetachable.", scriptkey);
             }
         }
         else if (code == 135) {
@@ -525,9 +525,7 @@ default {
                 llOwnerSay("You have " + mins + " minutes of life remaning.");
             }
             else if (cmd == "collapse") {
-                if (hasController) {
-                    llMessageLinked(LINK_SET, 11, dollName + " has collapsed at this location: " + llList2String(split, 1), MistressID);
-                }
+                llMessageLinked(LINK_SET, 15, dollName + " has collapsed at this location: " + wwGetSLUrl(), scriptkey);
                 
                 // Turn everything off: Dolly is down
                 afkOrCollapse("Collapse", 1);

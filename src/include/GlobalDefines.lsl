@@ -11,7 +11,7 @@
 #include "config.h"
 
 #define hasCarrier (carrierID != NULL_KEY)    
-#define hasController (MistressID != NULL_KEY)
+#define numControllers llGetListLength(USER_CONTROLLERS)
 #ifndef DEVELOPER_MODE
 #define isAttached (llGetAttached() == ATTACH_BACK)
 #define isAllowedRLV (llGetAttached() == ATTACH_BACK)
@@ -66,6 +66,10 @@
 #define POSE_LIMIT 300.0
 #define CARRY_TIMEOUT 60.0
 
+// Max Controllers - Set a limit on the number of user defined controllers so the list
+// cannot grow to arbitrary lengths and consume all memory.
+#define MAX_USER_CONTROLLERS 12
+
 #define SCRIPT_NAME llGetScriptName()
 
 #define ATTACH_BACK 9
@@ -98,7 +102,7 @@
 
 // Defines for various virtual functions to save typing and memory by inlining
 #define isInteger(input) ((string)((integer)input) == input)
-#define isMistress(id) (llListFindList(ALL_CONTROLLERS, [ id ]) != -1)
+#define isMistress(id) ((llListFindList(ALL_CONTROLLERS, [ id ]) != -1) && !isDoll)
 #define getLinkDesc(linknum) llList2String(llGetLinkPrimitiveParams(linknum, [ PRIM_DESC ]), 0)
 #define getObjectScriptTime(id) (1000.0 * llList2Float(llGetObjectDetails(id, [ OBJECT_SCRIPT_TIME ]), 0))
 #define getScriptTime() formatFloat(getObjectScriptTime(llGetKey()), 3) + "ms"

@@ -6,11 +6,11 @@
 key carrierID               = NULL_KEY;
 key dresserID               = NULL_KEY;
 key dollID                  = NULL_KEY;
-key MistressID              = NULL_KEY;
 key poserID                 = NULL_KEY;
 key scriptkey               = NULL_KEY;
 
 list MistressList           = [];
+list MistressNameList	    = [];
 
 string carrierName;
 string dollName;

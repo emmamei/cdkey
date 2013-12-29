@@ -320,7 +320,7 @@ default {
                 lmSendConfig("lowScriptMode", "1");
                 sleepMenu();
             }
-            else if (lowScriptMode && !afk && llGetRegionTimeDilation() > LAG_LOW_THRESHOLD) {
+            else if (lowScriptMode && !afk && llGetRegionTimeDilation() > DILATION_LOW) {
                 lowScriptMode = 0;
                 lmSendConfig("lowScriptMode", "0");
                 wakeMenu();
@@ -341,13 +341,7 @@ default {
                                 "you can use login a Linden Lab viewer to perform a script reset.");
                 else if (rlvWait && (llGetTime() < 180.0))
                     llOwnerSay("Key is currently still checking your RLV status please wait until the check completes and then try again.");
-                else {
-                    if (hasController) {
-                        sendMsg(MistressID, dollName + " is resetting the script in her key, if you are not in her preferences notecard " +
-                                            "you will no longer be her controller when the process completes.");
-                    }
-                    llResetScript();
-                }
+                else llResetScript();
             }
 #ifdef SIM_FRIENDLY
             llSetTimerEvent(60.0);
@@ -527,14 +521,14 @@ default {
 #ifdef SIM_FRIENDLY
         else if (!startup) {
             float timeDilation = llGetRegionTimeDilation();
-            if (!lowScriptMode && !afk && timeDilation < LAG_HIGH_THRESHOLD) {
+            if (!lowScriptMode && !afk && timeDilation < DILATION_HIGH) {
                 llOwnerSay("Sim lag detected going into low activity mode");
                 
                 lmSendConfig("lowScriptMode", "1");
                 lowScriptMode = 1;
                 sleepMenu();
             }
-            else if (lowScriptMode && !afk && timeDilation > LAG_LOW_THRESHOLD) {
+            else if (lowScriptMode && !afk && timeDilation > DILATION_LOW) {
                 llOwnerSay("Sim lag has improved scripts returning to normal mode");
                 
                 lmSendConfig("lowScriptMode", "0");
@@ -546,3 +540,4 @@ default {
 #endif
     }
 }
+

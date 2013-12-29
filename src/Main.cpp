@@ -81,6 +81,8 @@ integer signOn;
 integer takeoverAllowed;
 integer warned;
 
+integer carryMoved;
+
 #ifdef DEVELOPER_MODE
 integer timeReporting = 1;
 #endif
@@ -204,22 +206,19 @@ initFinal() {
     if (collapsed) lmInternalCommand("collapse", wwGetSLUrl(), NULL_KEY);
     
     if (!canDress) llOwnerSay("Other people cannot outfit you.");
-    if (hasController && mistressName != "") llOwnerSay("Your Mistress is " + mistressName);
     
-    if (hasController) {
-        lmSendToAgent(dollName + " has logged in without RLV at " + wwGetSLUrl(), MistressID);
-        string msg = dollName + " has logged in with";
-        if (RLVok) msg += "out";
-        msg += " RLV at " + wwGetSLUrl();
-        lmSendToAgent(msg, MistressID);
-    }
+    lmSendToAgent(dollName + " has logged in without RLV at " + wwGetSLUrl(), MistressID);
+    string msg = dollName + " has logged in with";
+    if (RLVok) msg += "out";
+    msg += " RLV at " + wwGetSLUrl();
+    llMessageLinked(LINK_THIS, 15, msg, scriptkey);
     
     setWindRate();
     
     clearAnim = 1;
     ifPermissions();
     
-    lmInitializationCompleted(105);
+    lmInitState(105);
     llSleep(0.5);
     llSetTimerEvent(1.0);
 #ifdef SIM_FRIENDLY
@@ -249,7 +248,7 @@ ifPermissions() {
         
         if (perm & PERMISSION_TRIGGER_ANIMATION && isAttached) {
             if (keyAnimation != "") {
-                llWhisper(LockMeisterChannel, (string)dollID + "bootoff");
+                llWhisper(LOCKMEISTER_CHANNEL, (string)dollID + "bootoff");
                 
                 list animList; integer i; integer animCount; key animKey = llGetInventoryKey(keyAnimation);
                 while ((animList = llGetAnimationList(dollID)) != [ animKey ]) {
@@ -268,7 +267,7 @@ ifPermissions() {
                         llStopAnimation(animKey);
                 }
                 clearAnim = 0;
-                llWhisper(LockMeisterChannel, (string)dollID + "booton");
+                llWhisper(LOCKMEISTER_CHANNEL, (string)dollID + "booton");
             }
         }
         
@@ -292,12 +291,6 @@ ifPermissions() {
         if (perm & PERMISSION_ATTACH && !llGetAttached()) llAttachToAvatar(ATTACH_BACK);
 #endif
     }
-}
-
-turnToTarget(vector target) {
-    vector pointTo = target - llGetPos();
-    float  turnAngle = llAtan2(pointTo.x, pointTo.y);
-    lmRunRLV("setrot:" + (string)(turnAngle) + "=force");
 }
 
 carry(string name, key id) {
@@ -495,19 +488,19 @@ default {
                 // This message is intentionally excluded from the quiet key setting as it is not good for
                 // dolls to simply go down silently.
                 llSay(0, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on their key.)");
-		
-		// We only collapse when we run out of time on the key so inline the collapse functionality
-		collapsed = 1;
-		keyAnimation = ANIMATION_COLLAPSED;
-		lmInternalCommand("collapse", (string)timeLeftOnKey, NULL_KEY);
-		
-		// Skip redundant link messages.
-		// lmSendConfig("keyAnimation", keyAnimation);			// Inferred and ANIMATION_COLLAPSED is gloabally defined
-		// lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);	// Again collapsed = no time inferrable
-		
-		// Skip call to setWindRate() this function is heavily overused we only make practical use of the
-		// value once per tick.  Updating more frequently is at best a waste at worst it's even a bug.
-		// setWindRate();
+        
+        // We only collapse when we run out of time on the key so inline the collapse functionality
+        collapsed = 1;
+        keyAnimation = ANIMATION_COLLAPSED;
+        lmInternalCommand("collapse", (string)timeLeftOnKey, NULL_KEY);
+        
+        // Skip redundant link messages.
+        // lmSendConfig("keyAnimation", keyAnimation);            // Inferred and ANIMATION_COLLAPSED is gloabally defined
+        // lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);    // Again collapsed = no time inferrable
+        
+        // Skip call to setWindRate() this function is heavily overused we only make practical use of the
+        // value once per tick.  Updating more frequently is at best a waste at worst it's even a bug.
+        // setWindRate();
             }
         }
     }
@@ -532,7 +525,9 @@ default {
                 carryExpire = llGetTime() + CARRY_TIMEOUT;  // Give a small timeout before uncarrying
                                                             // this way carry can continue through a TP
             if (carryMoved) {
-                turnToTarget(carrierPos);
+                vector pointTo = target - llGetPos();
+                float  turnAngle = llAtan2(pointTo.x, pointTo.y);
+                lmRunRLV("setrot:" + (string)(turnAngle) + "=force");
                 carryMoved = 0;
             }
         }
@@ -580,7 +575,7 @@ default {
         else if (code == 104) {
             if (llList2String(split, 0) != "Start") return;
             initializeStart();
-            lmInitializationCompleted(104);
+            lmInitState(104);
         }
         
         else if (code == 105) {
@@ -783,8 +778,7 @@ default {
                     (llGetTime() - lastEmergencyTime > EMERGENCY_LIMIT_TIME)) {
 
                     if (collapsed) {
-                        if (hasController)
-                            lmSendToAgent(dollName + " has activated the emergency winder.", MistressID);
+                        llMessageLinked(LINK_THIS, 15, dollName + " has activated the emergency winder.", scriptkey);
 
                         windKey();
                         lastEmergencyTime = llGetTime();
@@ -875,12 +869,12 @@ default {
                     llOwnerSay("Key is unwinding at an accelerated rate of " + formatFloat(windRate, 1) + "x.");
                 }
 
-                if (MistressID) {
+                /*if (MistressID) {
                     llOwnerSay("Controller: " + mistressName);
                 }
                 else {
                     llOwnerSay("Controller: none");
-                }
+                }*/
 
                 if (keyAnimation != ANIMATION_COLLAPSED && keyAnimation != "") {
                 //    llOwnerSay(dollID, "Current pose: " + currentAnimation);

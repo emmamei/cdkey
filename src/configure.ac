@@ -35,7 +35,7 @@ AS_IF(test "$DEBUG_LEVEL" = "8"], AC_DEFINE([DEBUG_LEVEL], [8]) )
 AS_IF(test "$DEBUG_LEVEL" = "9"], AC_DEFINE([DEBUG_LEVEL], [9]) )
 AS_IF([test "x$enable_devel" = "xyes"], AC_DEFINE([DEBUG_LEVEL], [5]), AC_DEFINE([DEBUG_LEVEL], [0]) )
 
-AS_IF([test "$DEBUG_TARGET" = "DEBUG"], AC_DEFINE([DEBUG_TARGET], [DEBUG]), AC_DEFINE([DEBUG_TARGET], [OWNER]) )
+AS_IF([test "$DEBUG_TARGET" = "DEBUG"], AC_DEFINE([DEBUG_TARGET], [2]), AC_DEFINE([DEBUG_TARGET], [1]) )
 
 AC_ARG_VAR([DEBUG_LEVEL], [enables additional debugging messages up to threshold])
 AC_ARG_VAR([DEBUG_TARGET], [sets the target for debugging messages])

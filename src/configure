@@ -3106,10 +3106,10 @@ else
 fi
 
 if test "$DEBUG_TARGET" = "DEBUG"; then :
-  $as_echo "#define DEBUG_TARGET DEBUG" >>confdefs.h
+  $as_echo "#define DEBUG_TARGET 2" >>confdefs.h
 
 else
-  $as_echo "#define DEBUG_TARGET OWNER" >>confdefs.h
+  $as_echo "#define DEBUG_TARGET 1" >>confdefs.h
 
 fi
 
