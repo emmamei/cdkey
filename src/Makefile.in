@@ -29,13 +29,12 @@ INCLUDES=include/config.h \
 	include/Utility.lsl
 
 all: $(OUT)
-	@SED@ -i -e 's/^#.*$$//' $^
 
-%.lsl: %.cpp $(INCLUDES)
-	@CPP@ -C -nostdinc -o $@ $<
+.lslp.lsl:
+	@CPP@ -C -P -nostdinc -o $@ $<
 
-$(OUTPATH)/%.lsl: %.lsl
-	@MKDIR_P@ $(OUTPATH); cp $< $@
+$(OUTPATH)/%.lsl: %.lslp
+	cp $< $@
 
 clean:
 	rm -f *.lsl

@@ -1,6 +1,5 @@
-AC_INIT([Community Doll Key Development Branch],[28-Dec-13],[https://github.com/emmamei/cdkey/issues],[cdkey-dev],[https://github.com/emmamei/cdkey])
+AC_INIT([Community Doll Key],[28-Dec-13],[https://github.com/emmamei/cdkey/issues],[cdkey-dev],[https://github.com/emmamei/cdkey])
 AC_PREREQ([2.69])
-AC_CONFIG_SUBDIRS([src])
 AC_PREFIX([${PWD}/key])
 AC_PROG_CPP
 AC_PROG_MAKE_SET
@@ -48,8 +47,7 @@ AH_TEMPLATE([INTRO_STARTUP],  [enable the start up introduction/hypno text provi
 AH_TEMPLATE([SIM_FRIENDLY],   [enable lag reduction mode when detecting sustained high time dilation in the local region. This slightly delays certain events and turns off non essential candy to produce a large drop in script time])
 AH_TEMPLATE([TESTER_MODE],    [enable testing and debugging features and allows the doll to access normally inaccessible functions like strip and wind])
 
-#AC_CONFIG_ITEMS([include/config.h])
-AC_CONFIG_HEADERS([include/config.h:include/config.h.in])
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_HEADERS([src/include/config.h])
+AC_CONFIG_FILES([Makefile src/Makefile])
 
 AC_OUTPUT

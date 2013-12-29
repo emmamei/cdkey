@@ -1,0 +1,37 @@
+# makefile
+
+SHELL=/bin/sh
+
+SUBDIRS=src
+OUTDIRS=key
+
+all: $(SUBDIRS)
+	@MKDIR_P@ $(OUTDIRS)
+	make -s -C $^ $@
+
+clean:
+	rm -rf key src/*.lsl
+
+configure: configure.ac
+	autoconf
+
+config.status: configure
+	./config.status --recheck
+
+distclean:
+	make -s clean
+	rm -rf config.log config.status Makefile
+
+Makefile: Makefile.in config.status
+	./config.status
+
+src/include/config.h.in: stamp-h.in
+stamp-h.in: configure.ac
+	autoheader
+	echo timestamp > stamp-h.in
+
+src/include/config.h: stamp-h config.h.in config.status
+	./config.status
+
+stamp-h: config.h.in config.status
+	./config.status
