@@ -515,8 +515,11 @@ handlemenuchoices(string choice, string name, key id) {
     else if (controller && choice == "Can AFK")
         lmSendConfig("canAFK", (string)1);
     else if (controller && choice == "Drop Control") {
-        lmSendConfig("MistressID", (string)NULL_KEY);
-        lmSendConfig("mistressName", "");
+        integer index = llListFindList(MistressList, [ id ]);
+        if (index != -1) {
+            MistressList = llDeleteSubList(MistressList, index, index);
+            MistressNameList = llDeleteSubList(MistressList, index, index);
+        }
     }
     else if (doll && choice == "Reload Config") llResetOtherScript("Start");
     
@@ -561,17 +564,17 @@ handlemenuchoices(string choice, string name, key id) {
 
 newController(key id) {
     if (carrierID) {
-        if (numControllers < MAX_USER_CONTROLLERS) {
-            MistressList = llListSort(MistressList + [ id ], 1, 1);
+        if (numControllers < MAX_USER_CONTROLLERS && llListFindList(MistressList, [ carrierID ]) == -1) {
+            MistressList = llListSort(MistressList + [ carrierID ], 1, 1);
             reloadMistressNames();
         }
-        llMessageLinked(LINK_THIS, 300, "MistressList|" + llDumpList2String(MistressList, "|"), id);
+        lmSendConfig("MistressList", llDumpList2String(MistressList, "|"));
         if (id == carrierID) {
             llOwnerSay("Your carrier, " + carrierName + ", has become your controller.");
         } else if (id == dollID) {
             llOwnerSay("You have accepted your carrier " + carrierName + " as you controller, they now " +
                        "have complete control over dolly.");
-            lmSendToAgent("The dolly " + dollName + " has fully accepted your control of them.", id);
+            lmSendToAgent("The dolly " + dollName + " has fully accepted your control of them.", carrierID);
         }
         reloadMistressNames();
         
@@ -623,7 +626,13 @@ default
     link_message(integer sender, integer code, string data, key id) {
         list split = llParseString2List(data, [ "|" ], []);
         
-        if (code == 101) {
+        if (code == 15) {
+            integer i;
+            for (i = 0; i < llGetListLength(MistressList); i++) {
+                llMessageLinked(LINK_THIS, 11, data, llList2Key(MistressList, i));
+            }
+        }
+        else if (code == 101) {
             string script = llList2String(split, 0);
             string name = llList2String(split, 1);
             split = llList2List(split, 2, -1);
