@@ -13,20 +13,22 @@ list types;
 integer lineno;
 string transform;
 
-integer cd8666;
-integer cd8667;
-integer cd8665;
+//integer cd8666;
+//integer cd8667;
+//integer cd8665;
 
-integer listen_id_8666;
-integer listen_id_8667;
-integer listen_id_8665;
-integer listen_id_ask;
+integer dialogChannel;
+
+//integer listen_id_8666;
+//integer listen_id_8667;
+//integer listen_id_8665;
+//integer listen_id_ask;
 integer minMinutes = 0;
 //integer maxMinutes;
 //integer avoid;
-integer channel_dialog;
-integer channelHUD;
-integer channelAsk;
+//integer channel_dialog;
+//integer channelHUD;
+//integer channelAsk;
 integer configured;
 integer RLVok;
 
@@ -56,29 +58,31 @@ setup()  {
     dollname = llGetDisplayName(dollID);
     stateName = "Regular";
 
-    integer ncd = ( -1 * (integer)("0x"+llGetSubString((string)llGetKey(),-5,-1)) ) -1;
-    if (channel_dialog != ncd) {
+    //integer ncd = ( -1 * (integer)("0x"+llGetSubString((string)llGetKey(),-5,-1)) ) -1;
+    //if (channel_dialog != ncd) {
+        
+    dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -8, -1));
 
-        llListenRemove(listen_id_8666);
-        llListenRemove(listen_id_8665);
-        llListenRemove(listen_id_8667);
-        llListenRemove(listen_id_ask);
+    //llListenRemove(listen_id_8666);
+    //llListenRemove(listen_id_8665);
+    //llListenRemove(listen_id_8667);
+    //llListenRemove(listen_id_ask);
 
-        channel_dialog = ncd;
-        cd8666 = channel_dialog - 8666;
-        cd8665 = cd8666 - 1;
-        cd8667 = cd8666 + 1;
+    //channel_dialog = ncd;
+    //cd8666 = channel_dialog - 8666;
+    //cd8665 = cd8666 - 1;
+    //cd8667 = cd8666 + 1;
 
-        listen_id_8665 = llListen( cd8665, "", "", "");
-        listen_id_8666 = llListen( cd8666, "", "", "");
-        listen_id_8667 = llListen( cd8667, "", "", "");
+    //listen_id_8665 = llListen( cd8665, "", "", "");
+    //listen_id_8666 = llListen( cd8666, "", "", "");
+    //listen_id_8667 = llListen( cd8667, "", "", "");
 
-        channelHUD = ( -1 * (integer)("0x"+llGetSubString((string)llGetOwner(),-5,-1)) )  - 1114;
-        channelAsk = channelHUD - 1;
-        listen_id_ask = llListen( cd8665, "", "", "");
-    }
+    //channelHUD = ( -1 * (integer)("0x"+llGetSubString((string)llGetOwner(),-5,-1)) )  - 1114;
+    //channelAsk = channelHUD - 1;
+    //listen_id_ask = llListen( cd8665, "", "", "");
+    //}
 
-    sendStateName();
+    //sendStateName();
 }
 
 setDollType(string choice, integer force) {
@@ -93,7 +97,10 @@ setDollType(string choice, integer force) {
     if (choice == "Yes") stateName = transform;
     else stateName = choice;
 
-    sendStateName();
+    // I am unsure what this function is doing it seems like
+    // a possible hangover but maybe I am missing something.
+    // Commenting for now until confirmed.
+    //sendStateName();
 
     currentState = stateName;
     clothingprefix = "*" + stateName;
@@ -116,7 +123,7 @@ setDollType(string choice, integer force) {
     }
 }
 
-sendStateName() {
+/*sendStateName() {
     string stateToSend = stateName;
 
     // convert state names as needed
@@ -136,7 +143,7 @@ sendStateName() {
     }
 
     llSay(channelHUD,stateToSend);
-}
+}*/
     
 reloadTypeNames() {
     string typeName;
@@ -241,33 +248,86 @@ default {
     link_message(integer source, integer code, string data, key id) {
         list split = llParseString2List(data, [ "|" ], []);
         string choice = llList2String(split, 0);
+        string name = llList2String(split, 1);
         
-        if (code == 500 && choice == "Type of Doll") {
+        if (code == 500) {
+            debugSay(5, name + " " + choice);
+            debugSay(5, llList2CSV(types));
+            if (choice == "Transform Options") {
+                list choices;
 
-            // Doll must remain in a type for a period of time
-            if (minMinutes > 0) {
-                // Since the output goes to the listener "handle" of 9999, it is discarded silently
-                llDialog(id,"The Doll " + dollname + " cannot be transformed right now. The Doll was recently transformed. Dolly can be transformed in " + (string)minMinutes + " minutes.",["OK"], 9999);
-            }
-            else {
-                string msg = "These change the personality of " + dollname + " This Doll is currently a " + stateName + " Doll. What type of doll do you want the Doll to be?";
-                list choices = types;
-
-                llOwnerSay(choice + " is looking at your doll types.");
-
-                if (id == dollID) {
-                    choices += "Options";
-                }
-
-                integer channel;
-
-                if (mustAgreeToType) {
-                    channel = cd8665;
+                if (mustAgreeToType == TRUE) {
+                    choices = ["No Verify"];
                 } else {
-                    channel = cd8666;
+                    choices = ["Verify"];
                 }
 
-                llDialog(id, msg, choices, channel);
+                if (showPhrases == TRUE) {
+                    choices += ["No Phrases"];
+                } else {
+                    choices += ["Phrases"];
+                }
+
+                llDialog(dollID, "Options", choices, dialogChannel);
+            }
+            else if (choice == "Verify") {
+                mustAgreeToType = TRUE;
+                llOwnerSay("Changes in Doll Types will be verified.");
+            }
+            else if (choice == "No Verify") {
+                mustAgreeToType = FALSE;
+                llOwnerSay("Changes in Doll Types will not be verified.");
+            }
+            else if (choice == "No Phrases") {
+                showPhrases = FALSE;
+                llOwnerSay("No hypnotic phrases will be displayed.");
+            }
+            else if (choice == "Phrases") {
+                showPhrases = TRUE;
+                llOwnerSay("Hypnotic phrases will be displayed.");
+            }
+            else if (choice == "Type of Doll") {
+                // Doll must remain in a type for a period of time
+                if (minMinutes > 0) {
+                    // Since the output goes to the listener "handle" of 9999, it is discarded silently
+                    llDialog(id,"The Doll " + dollname + " cannot be transformed right now. The Doll was recently transformed. Dolly can be transformed in " + (string)minMinutes + " minutes.",["OK"], 9999);
+                }
+                else {
+                    string msg = "These change the personality of " + dollname + " This Doll is currently a " + stateName + " Doll. What type of doll do you want the Doll to be?";
+                    list choices = types;
+
+                    llOwnerSay(name + " is looking at your doll types.");
+
+                    if (id == dollID) {
+                        choices += "Transform Options";
+                    }
+
+                    llDialog(id, msg, choices, dialogChannel);
+                }
+            }
+            else if ((llListFindList(types, [ choice ]) != -1) || (choice == "Transform")) {
+                if (mustAgreeToType) {
+                    transform = choice;
+                    list choices = ["Transform", "Dont Transform"];
+
+                    string msg = "Do you wish to transform to a " + choice + " Doll?";
+
+                    llDialog(dollID, msg, choices, dialogChannel);
+                    
+                    // Return for now until we get confirmation
+                    return;
+                    //avoid = TRUE;
+                }
+                
+                //avoid = FALSE;
+                debugSay(5, "transform = " + (string)transform);
+                debugSay(5, "choice = " + (string)choice);
+                debugSay(5, "stateName = " + (string)stateName);
+                
+                if (choice == "Transform") choice = transform;
+
+                if (!startup) setDollType(choice, 0);
+                lmSendConfig("dollType", stateName);
             }
         }
         
@@ -285,8 +345,6 @@ default {
             startup = 1;
     
             llSetTimerEvent(60.0);   // every minute
-    
-            cd8666 = ( -1 * (integer)("0x"+llGetSubString((string)llGetKey(),-5,-1)) ) - 8666;
     
             lmInitState(104);
         }
@@ -322,74 +380,16 @@ default {
     //----------------------------------------
     // LISTEN
     //----------------------------------------
-    listen(integer channel, string name, key id, string choice) {
-        if (choice == "Options") {
-            list choices;
-
-            if (mustAgreeToType == TRUE) {
-                choices = ["no verify"];
-            } else {
-                choices = ["verify"];
-            }
-
-            if (showPhrases == TRUE) {
-                choices += ["no phrases"];
-            } else {
-                choices += ["phrases"];
-            }
-
-            llDialog(dollID,"Options",choices, cd8667);
-        }
+    /*listen(integer channel, string name, key id, string choice) {
+        
 
         // Verify current Transform choice
-        else if (channel == cd8665) {
-            transform = choice;
-            list choices = ["Yes", "No"];
-
-            string msg = "Do you wish to transform to a " + choice + " Doll?";
-
-            llDialog(dollID, msg, choices, cd8667);
-            //avoid = TRUE;
-        }
-        
-        // Make transformation
-        else if (channel == cd8666 && \
-            choice != "OK" && choice != "No") {
-
-            //avoid = FALSE;
-#ifdef DEVELOPER_MODE
-            debugSay(5, "transform = " + (string)transform);
-            debugSay(5, "choice = " + (string)choice);
-            debugSay(5, "stateName = " + (string)stateName);
-#endif
-
-            if (!startup) setDollType(choice, 0);
-            lmSendConfig("dollType", stateName);
-        // Set options - "Options"
-        } else if (channel == cd8667) {
-            if (choice == "verify") {
-                mustAgreeToType = TRUE;
-                llOwnerSay("Changes in Doll Types will be verified.");
-            }
-            else if (choice == "no verify") {
-                mustAgreeToType = FALSE;
-                llOwnerSay("Changes in Doll Types will not be verified.");
-            }
-            else if (choice == "no phrases") {
-                showPhrases = FALSE;
-                llOwnerSay("No hypnotic phrases will be displayed.");
-            }
-            else if (choice == "phrases") {
-                showPhrases = TRUE;
-                llOwnerSay("Hypnotic phrases will be displayed.");
-            }
-        }
-        else if (channel == channelAsk) {
+        if (channel == channelAsk) {
             if (choice == "ask") {
                 sendStateName();
             }
         }
-    }
+    }*/
 
     //----------------------------------------
     // DATASERVER

@@ -12,6 +12,7 @@ key poserID = NULL_KEY;
 key dollID = NULL_KEY;
 
 key mistressQuery;
+integer mistressQueryIndex;
 
 float timeLeftOnKey;
 float windRate = 1.0;
@@ -332,7 +333,7 @@ handlemenuchoices(string choice, string name, key id) {
     integer carrier = (id == carrierID && !doll);
     integer controller = isMistress(id);
     
-    llMessageLinked(LINK_SET, 500, choice + "|" + name, id);
+    llMessageLinked(LINK_THIS, 500, choice + "|" + name, id);
     
     if (!hasCarrier && !doll && choice == "Carry") {
         // Doll has been picked up...
@@ -347,11 +348,11 @@ handlemenuchoices(string choice, string name, key id) {
         llGiveInventory(id,NOTECARD_HELP);
     }
     else if (choice == "Join Group") {
-        llOwnerSay("Here is your link to the community dolls group profile secondlife:///app/group/0f0c0dd5-a611-2529-d5c7-1284fb719003/about");
+        llOwnerSay("Here is your link to the community dolls group profile secondlife:///app/group/0f0c0dd5-a6LI-2529-d5c7-1284fb719003/about");
         llDialog(id, "To join the community dolls group open your chat history (CTRL+H) and click the group link there.  Just click the Join Group button when the group profile opens.", [ "OK" ], 9999);
     }
     else if (choice == "Visit CD Room") {
-        if (id == dollID) llMessageLinked(LINK_SET, 305, llGetScriptName() + "|TP|" + LANDMARK_CDROOM, id);
+        if (id == dollID) llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|TP|" + LANDMARK_CDROOM, id);
         else llGiveInventory(id, LANDMARK_CDROOM);
     }
     else if (choice == "Report Bug" || choice == "Ask Question" || choice == "Suggestions") {
@@ -359,12 +360,12 @@ handlemenuchoices(string choice, string name, key id) {
     }
     else if (choice == "Place Down" && carrier) {
         // Doll has been placed down...
-        llMessageLinked(LINK_SET, 305, llGetScriptName() + "|uncarry|" + carrierName, carrierID);
+        llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|uncarry|" + carrierName, carrierID);
         carrierID = NULL_KEY;
         carrierName = "";
     }
     else if (choice == "Type of Doll") {
-        llMessageLinked(LINK_SET, 17, name, id);
+        llMessageLinked(LINK_THIS, 17, name, id);
     }
     else if ((keyAnimation == "" || (!doll || poserID == dollID)) && llGetSubString(choice, 0, 4) == "Poses") {
         integer page = 1; integer len = llStringLength(choice);
@@ -421,15 +422,15 @@ handlemenuchoices(string choice, string name, key id) {
         lmInternalCommand("detach", "", id);
     else if (choice == "Invisible") {
         lmSendConfig("visible", (string)0);
-        llSetLinkAlpha(LINK_SET, 0, ALL_SIDES);
+        llSetLinkAlpha(LINK_THIS, 0, ALL_SIDES);
         llOwnerSay("Your key fades from view...");
-        //doFade(LINK_SET, 1.0, 0.0, ALL_SIDES, 0.1);
+        //doFade(LINK_THIS, 1.0, 0.0, ALL_SIDES, 0.1);
     }
     else if (choice == "Visible") {
         lmSendConfig("visible", (string)1);
-        llSetLinkAlpha(LINK_SET, 1, ALL_SIDES);
+        llSetLinkAlpha(LINK_THIS, 1, ALL_SIDES);
         llOwnerSay("Your key appears magically.");
-        //doFade(LINK_SET, 0.0, 1.0, ALL_SIDES, 0.1);
+        //doFade(LINK_THIS, 0.0, 1.0, ALL_SIDES, 0.1);
     }
     else if (choice == "Reload Config") {
         llResetOtherScript("Start");
@@ -534,19 +535,19 @@ handlemenuchoices(string choice, string name, key id) {
     // Strip items... only for Pleasure Doll and Slut Doll Types...
     if (id == carrierID || id == dollID || ((numControllers != 0) && isMistress(id))) {
         if (choice == "Top") {
-            llMessageLinked(LINK_SET, 305, llGetScriptName() + "|stripTop", id);
+            llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|stripTop", id);
         }
         else if (choice == "Bra") {
-            llMessageLinked(LINK_SET, 305, llGetScriptName() + "|stripBra", id);
+            llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|stripBra", id);
         }
         else if (choice == "Bottom") {
-            llMessageLinked(LINK_SET, 305, llGetScriptName() + "|stripBottom", id);
+            llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|stripBottom", id);
         }
         else if (choice == "Panties") {
-            llMessageLinked(LINK_SET, 305, llGetScriptName() + "|stripPanties", id);
+            llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|stripPanties", id);
         }
         else if (choice == "Shoes") {
-            llMessageLinked(LINK_SET, 305, llGetScriptName() + "|stripShoes", id);
+            llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|stripShoes", id);
         }
 
         if (llListFindList(["Top", "Bra", "Bottom", "Panties", "Shoes", "Strip"], [ choice ]) != -1)
@@ -561,11 +562,10 @@ handlemenuchoices(string choice, string name, key id) {
 newController(key id) {
     if (carrierID) {
         if (numControllers < MAX_USER_CONTROLLERS) {
-            MistressList += id;
-            MistressNameList += carrierName;
+            MistressList = llListSort(MistressList + [ id ], 1, 1);
+            reloadMistressNames();
         }
-        llMessageLinked(LINK_SET, 300, "MistressList|" + llDumpList2String(MistressList, "|"), id);
-        llMessageLinked(LINK_SET, 300, "MistressNameList|" + llDumpList2String(MistressNameList, "|"), id);
+        llMessageLinked(LINK_THIS, 300, "MistressList|" + llDumpList2String(MistressList, "|"), id);
         if (id == carrierID) {
             llOwnerSay("Your carrier, " + carrierName + ", has become your controller.");
         } else if (id == dollID) {
@@ -573,7 +573,7 @@ newController(key id) {
                        "have complete control over dolly.");
             lmSendToAgent("The dolly " + dollName + " has fully accepted your control of them.", id);
         }
-        llOwnerSay("Your controllers are now: " + llList2CSV(MistressNameList));
+        reloadMistressNames();
         
         if (!quiet) llSay(0, carrierName + " has become controller of the doll " + dollName + ".");
     
@@ -583,6 +583,19 @@ newController(key id) {
     } else {
         llOwnerSay("Unable to accept new controller as you are not currently being carried, your new Mistress needs to " +
                    "be carrying you when the request is accepted for this to work.");
+    }
+}
+
+reloadMistressNames() {
+    if (numControllers != 0) {
+        integer i;
+        
+        // Initialize list
+        MistressNameList = [];
+        for (i = 0; i < llGetListLength(MistressList); i++)  MistressNameList += "";
+        
+        mistressQueryIndex = 0;
+        mistressQuery = llRequestDisplayName(llList2Key(MistressList, mistressQueryIndex));
     }
 }
 
@@ -625,7 +638,7 @@ default
         else if (code == 104 || code == 105) {
             if (llList2String(split, 0) != "Start") return;
             
-            dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -9, -1));
+            dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -8, -1));
             llListenRemove(dialogHandle);
             dialogHandle = llListen(dialogChannel, "", "", "");
             
@@ -663,9 +676,18 @@ default
                 else if (name == "takeoverAllowed")       takeoverAllowed = (integer)value;
                 else if (name == "dollType")
                     dollType = llGetSubString(llToUpper(value), 0, 0) + llGetSubString(llToLower(value), 1, -1);
+                else if (name == "MistressID") {
+                    if (llListFindList(MistressList, [ value ]) == -1) {
+                        MistressList = llListSort(MistressList + [ value ], 1, 1);
+                        reloadMistressNames();
+                    }
+                }
                 else if (name == "MistressList") {
-                    MistressList = llList2List(split, 2, -1);
-                    mistressQuery = llRequestDisplayName(llList2Key(MistressList, 0));
+                    list newList = llListSort(llList2List(split, 2, -1), 1, 1);
+                    if (MistressList != newList) {
+                        MistressList = newList;
+                        reloadMistressNames();
+                    }
                 }
             }
         }        
@@ -706,8 +728,13 @@ default
     
     dataserver(key query_id, string data) {
         if (query_id == mistressQuery) {
-            MistressNameList = [ data ];
-            lmSendConfig("MistressNameList", llDumpList2String(MistressNameList, "|"));
+            MistressNameList += llListReplaceList(MistressNameList, [ data ], mistressQueryIndex, mistressQueryIndex);
+            if (++mistressQueryIndex < numControllers) {
+                mistressQuery = llRequestDisplayName(llList2Key(MistressList, mistressQueryIndex));
+            }
+            else {
+                llOwnerSay("Your controllers are now: " + llList2CSV(MistressNameList));
+            }
         }
     }
 }
