@@ -251,8 +251,6 @@ default {
         string name = llList2String(split, 1);
         
         if (code == 500) {
-            debugSay(5, name + " " + choice);
-            debugSay(5, llList2CSV(types));
             if (choice == "Transform Options") {
                 list choices;
 
@@ -306,7 +304,8 @@ default {
                 }
             }
             else if ((llListFindList(types, [ choice ]) != -1) || (choice == "Transform")) {
-                if (mustAgreeToType) {
+                if (choice == "Transform") choice = transform;
+                else if (mustAgreeToType) {
                     transform = choice;
                     list choices = ["Transform", "Dont Transform"];
 
@@ -323,8 +322,6 @@ default {
                 debugSay(5, "transform = " + (string)transform);
                 debugSay(5, "choice = " + (string)choice);
                 debugSay(5, "stateName = " + (string)stateName);
-                
-                if (choice == "Transform") choice = transform;
 
                 if (!startup) setDollType(choice, 0);
                 lmSendConfig("dollType", stateName);

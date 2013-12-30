@@ -333,6 +333,10 @@ handlemenuchoices(string choice, string name, key id) {
     integer carrier = (id == carrierID && !doll);
     integer controller = isMistress(id);
     
+    integer isOption; // Temporary variable used to determine if an option
+                      // from the options menu was clicked that way we can
+                      // restore it.
+    
     llMessageLinked(LINK_THIS, 500, choice + "|" + name, id);
     
     if (!hasCarrier && !doll && choice == "Carry") {
@@ -444,43 +448,46 @@ handlemenuchoices(string choice, string name, key id) {
         integer minsLeft = llRound(timeLeftOnKey / (60.0 * displayWindRate));
         lmInternalCommand("setAFK", (string)afk + "|0|" + formatFloat(windRate, 1) + "|" + (string)minsLeft, id);
     }
-    else if (choice == "No Detaching")
-        lmSendConfig("detachable", (string)0);
+    
+    // Entering options menu section
+    isOption = 1;
+    if (choice == "No Detaching")
+        lmSendConfig("detachable", (string)(detachable = 0));
     else if (controller && choice == "Detachable") 
-        lmSendConfig("detachable", (string)1);
+        lmSendConfig("detachable", (string)(detachable = 1));
     else if (choice == "Auto TP")
-        lmSendConfig("autoTP", (string)0);
+        lmSendConfig("autoTP", (string)(autoTP = 0));
     else if (controller && choice == "No Auto TP")
-        lmSendConfig("autoTP", (string)1);
-#ifdef ADULT_MODE
+        lmSendConfig("autoTP", (string)(autoTP = 1));
+    #ifdef ADULT_MODE
     else if (choice == "Pleasure Poll") {
         llOwnerSay("You are now a pleasure doll.");
-        lmSendConfig("pleasureDoll", (string)0);
+        lmSendConfig("pleasureDoll", (string)(pleasureDoll = 0));
     }
     else if (choice == "No Pleasure") {
         llOwnerSay("You are no longer a pleasure doll.");
-        lmSendConfig("pleasureDoll", (string)1);
+        lmSendConfig("pleasureDoll", (string)(pleasureDoll = 1));
     }
-#endif
+    #endif
     else if (choice == "No Self TP")
         lmSendConfig("helpless", (string)1);
     else if (controller && choice == "Self TP")
-        lmSendConfig("helpless", (string)0);
+        lmSendConfig("helpless", (string)(helpless = 0));
     else if (choice == "Can Carry") {
         llOwnerSay("Other people can now carry you.");
-        lmSendConfig("canCarry", (string)1);
+        lmSendConfig("canCarry", (string)(canCarry = 1));
     }
     else if (choice == "No Carry") {
         llOwnerSay("Other people can no longer carry you.");
-        lmSendConfig("canCarry", (string)0);
+        lmSendConfig("canCarry", (string)(canCarry = 0));
     }
     else if (choice == "Can Outfit") {
         llOwnerSay("Other people can now outfit you.");
-        lmSendConfig("canDress", (string)1);
+        lmSendConfig("canDress", (string)(canDress = 1));
     }
     else if (choice == "No Outfitting") {
         llOwnerSay("Other people can no longer outfit you.");
-        lmSendConfig("canDress", (string)0);
+        lmSendConfig("canDress", (string)(canDress = 0));
     }
     else if (choice == "Allow Takeover") {
         llOwnerSay("Anyone carrying you may now choose to be your controller.");
@@ -488,40 +495,44 @@ handlemenuchoices(string choice, string name, key id) {
             lmSendToAgent(dollName + " seems willing to let you take permanant control of her key now. " +
                             "Maybe you could claim " + dollName + " as your own? (Be Controller from the menu).", carrierID);
         }
-        lmSendConfig("takeoverAllowed", (string)1);
+        lmSendConfig("takeoverAllowed", (string)(takeoverAllowed = 1));
     }
     else if (choice == "No Takeover") {
         llOwnerSay("There is now no way for someone to become your controller.");
-        lmSendConfig("takeoverAllowed", (string)0);
+        lmSendConfig("takeoverAllowed", (string)(takeoverAllowed = 0));
     }
     else if (choice == "No Warnings") {
         llOwnerSay("No warnings will be given when time remaining is low.");
-        lmSendConfig("doWarnings", (string)0);
+        lmSendConfig("doWarnings", (string)(doWarnings = 0));
     }
     else if (choice == "Warnings") {
         llOwnerSay("Warnings will now be given when time remaining is low.");
-        lmSendConfig("doWarnings", (string)1);
+        lmSendConfig("doWarnings", (string)(doWarnings = 1));
     }
     else if (choice == "No Flying")
         lmSendConfig("canFly", (string)0);
     else if (controller && choice == "Can Fly")
-        lmSendConfig("canFly", (string)1);
+        lmSendConfig("canFly", (string)(canFly = 1));
     else if (choice == "Turn Off Sign")
-        lmSendConfig("signOn", (string)0);
+        lmSendConfig("signOn", (string)(signOn = 0));
     else if (choice == "Turn On Sign")
-        lmSendConfig("signOn", (string)1);
+        lmSendConfig("signOn", (string)(signOn = 1));
     else if (choice == "No AFK")
-        lmSendConfig("canAFK", (string)0);
+        lmSendConfig("canAFK", (string)(canAFK = 0));
     else if (controller && choice == "Can AFK")
-        lmSendConfig("canAFK", (string)1);
-    else if (controller && choice == "Drop Control") {
+        lmSendConfig("canAFK", (string)(canAFK = 1));
+    else
+        isOption = 0; // Not an options menu item after all
+        
+    if (isOption) doOptionsMenu(id);
+    
+    if (controller && choice == "Drop Control") {
         integer index = llListFindList(MistressList, [ id ]);
         if (index != -1) {
             MistressList = llDeleteSubList(MistressList, index, index);
             MistressNameList = llDeleteSubList(MistressList, index, index);
         }
     }
-    else if (doll && choice == "Reload Config") llResetOtherScript("Start");
     
     if ((keyAnimation == "" || (!doll || poserID == dollID)) && llGetInventoryType(choice) == 20) {
         keyAnimation = choice;
@@ -662,41 +673,39 @@ default
             string name = llList2String(split, 1);
             string value = llList2String(split, 2);
             
-            if (script != SCRIPT_NAME) {
-                     if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
-                else if (name == "keyAnimation")             keyAnimation = value;
-                else if (name == "afk")                               afk = (integer)value;
-                else if (name == "autoTP")                         autoTP = (integer)value;
-                else if (name == "canAFK")                         canAFK = (integer)value;
-                else if (name == "canCarry")                     canCarry = (integer)value;
-                else if (name == "canDress")                     canDress = (integer)value;
-                else if (name == "canFly")                         canFly = (integer)value;
-                else if (name == "canSit")                         canSit = (integer)value;
-                else if (name == "canStand")                     canStand = (integer)value;
-                else if (name == "configured")                 configured = (integer)value;
-                else if (name == "detachable")                 detachable = (integer)value;
-                else if (name == "helpless")                     helpless = (integer)value;
-                else if (name == "pleasureDoll")             pleasureDoll = (integer)value;
-                else if (name == "isTransformingKey")   isTransformingKey = (integer)value;
-                else if (name == "isVisible")                     visible = (integer)value;
-                else if (name == "quiet")                           quiet = (integer)value;
-                else if (name == "RLVok")                           RLVok = (integer)value;
-                else if (name == "signOn")                         signOn = (integer)value;
-                else if (name == "takeoverAllowed")       takeoverAllowed = (integer)value;
-                else if (name == "dollType")
-                    dollType = llGetSubString(llToUpper(value), 0, 0) + llGetSubString(llToLower(value), 1, -1);
-                else if (name == "MistressID") {
-                    if (llListFindList(MistressList, [ value ]) == -1) {
-                        MistressList = llListSort(MistressList + [ value ], 1, 1);
-                        reloadMistressNames();
-                    }
+                 if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
+            else if (name == "keyAnimation")             keyAnimation = value;
+            else if (name == "afk")                               afk = (integer)value;
+            else if (name == "autoTP")                         autoTP = (integer)value;
+            else if (name == "canAFK")                         canAFK = (integer)value;
+            else if (name == "canCarry")                     canCarry = (integer)value;
+            else if (name == "canDress")                     canDress = (integer)value;
+            else if (name == "canFly")                         canFly = (integer)value;
+            else if (name == "canSit")                         canSit = (integer)value;
+            else if (name == "canStand")                     canStand = (integer)value;
+            else if (name == "configured")                 configured = (integer)value;
+            else if (name == "detachable")                 detachable = (integer)value;
+            else if (name == "helpless")                     helpless = (integer)value;
+            else if (name == "pleasureDoll")             pleasureDoll = (integer)value;
+            else if (name == "isTransformingKey")   isTransformingKey = (integer)value;
+            else if (name == "isVisible")                     visible = (integer)value;
+            else if (name == "quiet")                           quiet = (integer)value;
+            else if (name == "RLVok")                           RLVok = (integer)value;
+            else if (name == "signOn")                         signOn = (integer)value;
+            else if (name == "takeoverAllowed")       takeoverAllowed = (integer)value;
+            else if (name == "dollType")
+                dollType = llGetSubString(llToUpper(value), 0, 0) + llGetSubString(llToLower(value), 1, -1);
+            else if (name == "MistressID") {
+                if (llListFindList(MistressList, [ value ]) == -1) {
+                    MistressList = llListSort(MistressList + [ value ], 1, 1);
+                    reloadMistressNames();
                 }
-                else if (name == "MistressList") {
-                    list newList = llListSort(llList2List(split, 2, -1), 1, 1);
-                    if (MistressList != newList) {
-                        MistressList = newList;
-                        reloadMistressNames();
-                    }
+            }
+            else if (name == "MistressList") {
+                list newList = llListSort(llList2List(split, 2, -1), 1, 1);
+                if (MistressList != newList) {
+                    MistressList = newList;
+                    reloadMistressNames();
                 }
             }
         }        
@@ -732,6 +741,7 @@ default
         string displayName = llGetDisplayName(id);
         if (displayName != "") name = displayName;
 
+        debugSay(5, "Button clicked: " + choice);
         handlemenuchoices(choice, name, id);
     }
     
