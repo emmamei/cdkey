@@ -207,9 +207,8 @@ initFinal() {
     
     if (!canDress) llOwnerSay("Other people cannot outfit you.");
     
-    lmSendToAgent(dollName + " has logged in without RLV at " + wwGetSLUrl(), MistressID);
     string msg = dollName + " has logged in with";
-    if (RLVok) msg += "out";
+    if (!RLVok) msg += "out";
     msg += " RLV at " + wwGetSLUrl();
     llMessageLinked(LINK_THIS, 15, msg, scriptkey);
     
@@ -373,7 +372,7 @@ default {
             mistressName = data;
             llOwnerSay("Your Mistress is " + mistressName);
         }
-#ifdef ADULT_MODE
+        #ifdef ADULT_MODE
         if (query_id == simRatingQuery) {
             simRating = data;
             llMessageLinked(LINK_SET, 150, simRating, NULL_KEY);
@@ -382,13 +381,13 @@ default {
                 llOwnerSay("Entered " + llGetRegionName() + " rating is " + llToLower(simRating) + " stripping disabled.");
             }
         }
-#endif
+        #endif
     }
 
     //----------------------------------------
     // CHANGED
     //----------------------------------------
-#ifdef ADULT_MODE
+    #ifdef ADULT_MODE
     changed(integer change) {
         if (change & CHANGED_REGION) {
             simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
@@ -402,7 +401,7 @@ default {
             }
         }
     }
-#endif
+    #endif
 
     //----------------------------------------
     // TIMER
@@ -422,9 +421,9 @@ default {
         ifPermissions();
         if (ticks % 30 == 0) {
             lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
-#ifdef DEVELOPER_MODE
+            #ifdef DEVELOPER_MODE
             if (timeReporting) llOwnerSay("Script Time: " + formatFloat(llList2Float(llGetObjectDetails(llGetKey(), [ OBJECT_SCRIPT_TIME ]), 0) * 1000000, 2) + "µs");
-#endif
+            #endif
         }
         
         // Check if doll is posed
@@ -581,11 +580,10 @@ default {
         else if (code == 105) {
             if (llList2String(split, 0) != "Start") return;
             dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -9, -1));
-#ifdef ADULT_MODE
+            #ifdef ADULT_MODE
             simRating = "";
             simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
-#endif
-            initFinal();
+            #endif
         }
         
         else if (code == 135) {
@@ -624,13 +622,13 @@ default {
                 else if (name == "keyLimit")                     keyLimit = (float)value;
                 else if (name == "MistressID")                 MistressID = (key)value;
                 else if (name == "mistressName")             mistressName = value;
-    #ifdef SIM_FRIENDLY
+                #ifdef SIM_FRIENDLY
                 else if (name == "lowScriptMode") {
                     lowScriptMode = (integer)value;
                     if (lowScriptMode) llSetTimerEvent(10.0);
                     else llSetTimerEvent(1.0);
                 }
-    #endif
+                #endif
             }
         }
         
@@ -693,6 +691,7 @@ default {
         else if (code == 350) {
             RLVok = llList2Integer(split, 1);
             rlvAPIversion = llList2String(split, 1);
+            initFinal();
         }
         else if (code == 500) {
             string choice = llList2String(split, 0);
@@ -884,11 +883,11 @@ default {
 
                 lmMemReport();
             }
-#ifdef DEVELOPER_MODE
+            #ifdef DEVELOPER_MODE
             else if (choice == "timereporting") {
                 timeReporting = !timeReporting;
             }
-#endif
+            #endif
         }
     }
 

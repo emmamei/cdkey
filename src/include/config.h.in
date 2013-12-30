@@ -4,6 +4,9 @@
    the key */
 #undef ADULT_MODE
 
+/* */
+#undef DEBUG_BADRLV
+
 /* enable additional debugging messages up to threshold defaults to 0 in
    normal mode or 5 if developer mode is active */
 #undef DEBUG_LEVEL

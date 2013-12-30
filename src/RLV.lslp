@@ -75,7 +75,12 @@ checkRLV()
 { // Run RLV viewer check
     locked = 0;
     if (!RLVok && isAttached) {
+        #ifndef DEBUG_BADRLV
+        // Setting the above debug flag causes the listener to not be open for the check
+        // In effect the same as the viewer having no RLV support as no reply will be heard
+        // all other code works as normal.
         llListenControl(listenHandle, 1);
+        #endif
         llSetTimerEvent(5.0);
         RLVck = 1;
         
