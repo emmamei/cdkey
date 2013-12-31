@@ -230,6 +230,9 @@ doMainMenu(key id) {
         }
     }
     
+    llListenControl(dialogHandle, 1);
+    llSetTimerEvent(60.0);
+    
     msg += "See " + WEB_DOMAIN + manpage + " for more information." ;
     llDialog(id, timeleft + msg, menu, dialogChannel);
 }
@@ -240,12 +243,18 @@ doHelpMenu(key id) {
     list menu = [ "Join Group", "Visit CD Room", "Reset Scripts", "Issue Tracker" ];
     if (llGetInventoryType(NOTECARD_HELP) == INVENTORY_NOTECARD) menu += "Help Notecard";
     
+    llListenControl(dialogHandle, 1);
+    llSetTimerEvent(60.0);
+    
     llDialog(id, msg, menu, dialogChannel);
 }
 
 doOptionsMenu(key id) {    
     string msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
     list pluslist;
+    
+    llListenControl(dialogHandle, 1);
+    llSetTimerEvent(60.0);
     
     if (isController) {
         msg = "See " + WEB_DOMAIN + "controller.htm. Choose what you want to happen. (" + OPTION_DATE + " version)";
@@ -306,6 +315,9 @@ doOptionsMenu(key id) {
 doPosesMenu(key id, integer page) {
     integer poseCount = llGetInventoryNumber(20);
     list poseList; integer i;
+    
+    llListenControl(dialogHandle, 1);
+    llSetTimerEvent(60.0);
     
     for (i = 0; i < poseCount; i++) {
         string poseName = llGetInventoryName(20, i);
@@ -727,7 +739,16 @@ default
             else if (cmd == "mainMenu") doMainMenu(id);
             else if (cmd == "collapse") collapsed = 1;
             else if (cmd == "restore") collapsed = 0;
+            else if (cmd == "dialogListen") {
+                llListenControl(dialogHandle, 1);
+                llSetTimerEvent(60.0);
+            }
         }
+    }
+    
+    timer() {
+        llListenControl(dialogHandle, 0);
+        llSetTimerEvent(0.0);
     }
     
     //----------------------------------------
@@ -743,6 +764,13 @@ default
 
         debugSay(5, "Button clicked: " + choice);
         handlemenuchoices(choice, name, id);
+        
+        // Ideally the listener should be closing here and only reopened when we spawn another menu
+        // other scripts also use the dialog listerner in this script.  Until they are writtent to send
+        // a dialogListen command whenever they respawn a dialog we have to keep the listener open
+        // at any sign of usage.
+        llListenControl(dialogHandle, 1);
+        llSetTimerEvent(60.0);
     }
     
     dataserver(key query_id, string data) {

@@ -14,6 +14,8 @@
 // As of 30 October 2013, this script is unused.
 
 float delayTime = 15.0; // in seconds
+float nextIntro;
+float nextLagCheck;
 
 key dollID = NULL_KEY;
 key MistressID = NULL_KEY;
@@ -22,9 +24,9 @@ string dollName;
 
 key ncPrefsKey;
 key ncPrefsLoadedUUID = NULL_KEY;
+key ncIntroKey;
 string ncName = "Preferences";
 integer ncLine;
-integer replyHandle;
 
 float ncStart;
 integer lastAttachPoint;
@@ -34,6 +36,8 @@ list knownScripts;
 list readyScripts;
 integer quiet;
 integer startup = 1;
+integer introLine;
+integer introLines;
 integer reset;
 integer rlvWait;
 integer RLVok;
@@ -41,13 +45,6 @@ integer RLVok;
 #ifdef SIM_FRIENDLY
 integer afk;
 integer lowScriptMode;
-#endif
-
-#ifdef HYPNO_START
-msg(string s) {
-    llOwnerSay(s);
-    llSleep(delayTime);
-}
 #endif
 
 //---------------------------------------
@@ -238,32 +235,9 @@ sleepMenu() {
 default {
     link_message(integer source, integer code, string data, key id) {
         list split = llParseString2List(data, [ "|" ], []);
-#ifdef HYPNO_START
-        if (code == 200) { // Triggered from Main.lsl
 
-            llOwnerSay("---- Community Doll Key loaded: Version: " + OPTION_DATE);
-            llOwnerSay("---- Key: " + llKey2Name(id));
-
-            // First minute....
-            msg("You feel a key being put on your back, the weight settling in. Imagine that as vividly as you can.");
-            msg("You feel a pinch as tendrils from the key sink into your back, and then a flood of cool relief as they sink in further.");
-            msg("The tendrils are releasing doll hormones into your body, and you feel the rush through every pore in your body.");
-            msg("The hormones are relaxing you and making you feel comfortable with being a doll. Any fears you had have slipped away and are forgotten.");
-
-            // Second minute....
-            msg("You realize how wonderful it would be to be displayed and everyone just admire you for your beauty - and you marvel that you never knew this before.");
-            msg("You now realize how wonderful it is to be liked - more wonderful than you ever knew.");
-            msg("You realize your dependency on the community; this will define you. You now accept and welcome this.");
-            msg("You only now realize how beautiful you are. You were always beautiful - but now it becomes obvious because you are a doll.");
-
-            // Third minute...
-            msg("You realize now that other dolls are your sisters - and understand you like no one else.");
-        }
-        else if (code == 11) {
-#else
         if (code == 11) {
-#endif
-        
+            debugSay(7, "Send message to: " + (string)id + "\n" + data);
             sendMsg(id, llList2String(split,0));
         }
         else if (startup == 1 && code == 104) {
@@ -330,7 +304,6 @@ default {
         else if (code == 350) {
             RLVok = llList2Integer(split, 0);
             rlvWait = 0;
-            llSetTimerEvent(5.0);
         }
         else if (code == 500) {
             string selection = llList2String(split, 0);
@@ -343,9 +316,7 @@ default {
                     llOwnerSay("Key is currently still checking your RLV status please wait until the check completes and then try again.");
                 else llResetScript();
             }
-#ifdef SIM_FRIENDLY
-            llSetTimerEvent(60.0);
-#endif
+            nextLagCheck = llGetTime() + SEC_TO_MIN;
         }
         else if (code == 999) {
             if (reset) llResetScript();
@@ -361,7 +332,7 @@ default {
 #endif
         llTargetOmega(<0,0,0>,0,0);
         
-        llSetObjectName(llList2String(llGetLinkPrimitiveParams(24, [ PRIM_DESC ]), 0) + " " + OPTION_DATE);
+        llSetObjectName(PACKAGE_STRING);
         
         string me = llGetScriptName();
         integer loop; string script;
@@ -376,7 +347,7 @@ default {
             }
         }
         
-        llSetTimerEvent(2.0);
+        llSetTimerEvent(0.5);
     }
     
     //----------------------------------------
@@ -386,7 +357,7 @@ default {
         integer i;
 #ifdef SIM_FRIENDLY
         if (!llGetScriptState("MenuHandler")) wakeMenu();
-        llSetTimerEvent(60.0);
+        nextLagCheck = llGetTime() + SEC_TO_MIN;
 #endif
         for (i = 0; i < num; i++) {
             key id = llDetectedKey(i);
@@ -442,6 +413,12 @@ default {
                 llSleep(3.0);
                 llDetachFromAvatar();
             }
+            else {
+                string name = dollName;
+                integer space = llSubStringIndex(name, " ");
+                if (space != -1) name = llGetSubString(name, 0, space -1);
+                llSetObjectName("Dolly " + name + "'s Key");
+            }
             
             lastAttachPoint = llGetAttached();
             lastAttachAvatar = id;
@@ -472,12 +449,12 @@ default {
         if (change & CHANGED_INVENTORY) {
             if (ncPrefsLoadedUUID != NULL_KEY && llGetInventoryKey(ncName) != ncPrefsLoadedUUID) {
                 wakeMenu();
-                integer channel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -9, -1));
-                replyHandle = llListen(channel, "", "", "");
+                integer channel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -8, -1));
                 
-                llSetTimerEvent(60.0);
+                nextLagCheck = llGetTime() + SEC_TO_MIN;
                 llDialog(llGetOwner(), "Detected a change in your Preferences notecard, would you like to load the new settings?\n\n" +
                   "WARNING: All current data will be lost!", [ "Reload Config", "Keep Settings" ], channel);
+                lmInternalCommand("dialogListen", "", scriptkey);
             }
         }
         if (change & CHANGED_OWNER) {
@@ -489,15 +466,7 @@ default {
         }
     }
     
-    listen(integer channel, string name, key id, string message)
-    {
-        if (message == "Reload Config") {
-            llResetScript();
-        }
-    }
-    
     timer() {
-        llListenRemove(replyHandle);
         llSetTimerEvent(0.0);
         
         if (!reset) {
@@ -520,6 +489,10 @@ default {
         }
 #ifdef SIM_FRIENDLY
         else if (!startup) {
+            llSetTimerEvent(5.0);
+            #ifdef INTRO_STARTUP
+            
+            #endif
             float timeDilation = llGetRegionTimeDilation();
             if (!lowScriptMode && !afk && timeDilation < DILATION_HIGH) {
                 llOwnerSay("Sim lag detected going into low activity mode");
@@ -535,7 +508,6 @@ default {
                 lowScriptMode = 0;
                 wakeMenu();
             }
-            llSetTimerEvent(60.0);
         }
 #endif
     }
