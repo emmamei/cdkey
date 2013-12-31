@@ -91,6 +91,7 @@ integer timeReporting = 1;
 // type of Doll to another - this tracks the current type of doll.
 string dollType = "Regular";
 
+float wearLockExpire;
 float poseExpire;
 float menuSleep;
 float carryExpire;
@@ -426,7 +427,7 @@ default {
             #endif
         }
         
-        // Check if doll is posed
+        // Check if doll is posed and time is up
         if (keyAnimation != "" && keyAnimation != ANIMATION_COLLAPSED) { // Doll posed
             if (poseExpire > 0.0 && poseExpire < llGetTime()) { // Pose expire is set and has passed
                 keyAnimation = "";
@@ -435,6 +436,11 @@ default {
                 poseExpire = 0.0;
                 clearAnim = 1;
             }
+        }
+        
+        // Check wearlock timer
+        if (wearLockExpire != 0.0 && wearLockExpire < llGetTime()) {
+            lmInternalCommand("wearLock", (string)0, NULL_KEY);
         }
 
         integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0);
@@ -679,6 +685,13 @@ default {
                 // Run ifPermissions to clear animations
                 ifPermissions();
             }
+            else if (cmd == "wearLock") {
+                if (llList2Integer(split, 1)) {
+                    wearLockExpire = llGetTime() + WEAR_LOCK_TIME;
+                } else {
+                    wearLockExpire = 0;
+                }
+            }
             else if (cmd == "carry") {
                 string name = llList2String(split, 1);
                 carry(name, id);
@@ -689,7 +702,7 @@ default {
         }
 
         else if (code == 350) {
-            RLVok = llList2Integer(split, 1);
+            RLVok = llList2Integer(split, 0);
             rlvAPIversion = llList2String(split, 1);
             initFinal();
         }

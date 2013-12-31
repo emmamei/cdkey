@@ -18,12 +18,12 @@ list rlvStatus;
 
 string dollName;
 string dollType;
+string myPath;
 string mistressName;
 string carrierName;
 
 integer configured;
-float wearLockExpire;
-float wearLockTime = 300.0;
+integer wearLock;
 
 integer permissionsGranted;
 
@@ -91,10 +91,9 @@ checkRLV()
 
 postCheckRLV()
 { // Handle RLV check result
+    llSetTimerEvent(0.0);
     if (RLVok) llOwnerSay("Logged with Community Doll Key and " + rlvAPIversion + " active...");
     else if (isAttached && !RLVok) llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
-    
-    llMessageLinked(LINK_SET, 350, (string)RLVok + "|" + rlvAPIversion, NULL_KEY);
     
     // Mark RLV check completed
     RLVck = 0;
@@ -104,6 +103,7 @@ postCheckRLV()
         startup = 2;
     }
     else {
+        llMessageLinked(LINK_SET, 350, (string)RLVok + "|" + rlvAPIversion, NULL_KEY);
         initializeRLV(0);
     }
 }
@@ -135,36 +135,40 @@ initializeRLV(integer refresh) {
         else baseRLV += "unsit=y,";
         if (!canSit) baseRLV += "sit=n,";
         else baseRLV += "sit=y,";
-        if (!canWear || wearLockExpire > 0) baseRLV += "addoutfit=n,addattach=n,";
-        else baseRLV += "addoutfit=y,addattach=y,";
-        if (!canUnwear || wearLockExpire > 0) baseRLV += "remoutfit=n,remattach=n";
-        else baseRLV += "remoutfit=y,remattach=y";
+        if (!canWear) baseRLV += "unsharedwear=n,";
+        else baseRLV += "unsharedwear=y,";
+        if (!canUnwear) baseRLV += "unsharedunwear=n";
+        else baseRLV += "unsharedunwear=y";
+        
+        if (wearLock) doRLV("Dress", "unsharedwear=n,unshareunwear=n,attachallthis:=n,detachallthis:=n");
         
         doRLV("Base", baseRLV);
     
         // if Doll is one of the developers... dont lock:
         // prevents inadvertent lock-in during development
-#ifndef DEVELOPER_MODE
+        #ifndef DEVELOPER_MODE
         // We lock the key on here - but in the menu system, it appears
         // unlocked and detachable: this is because it can be detached 
         // via the menu. To make the key truly "undetachable", we get
         // rid of the menu item to unlock it
         doRLV("Base", "detach=n,editobj:" + (string)llGetKey() + "=add");  //locks key
         if (!refresh) locked = 1;
-#else
+        #else
+        llListenControl(listenHandle, 1);
+        doRLV("Base", "getpathnew=" + (string)channel);
         if (!refresh) {
             if (!quiet) llSay(0, "Developer Key not locked.");
             else llOwnerSay("Developer key not locked.");
         }
-#endif
+        #endif
     }
     
     if (!refresh) {
         RLVstarted = 1;
         llSetTimerEvent(1.0);
-#ifdef SIM_FRIENDLY
+        #ifdef SIM_FRIENDLY
         if (lowScriptMode) llSetTimerEvent(30.0);
-#endif
+        #endif
         lmInitState(105);
         startup = 0;
     }
@@ -299,10 +303,10 @@ afkOrCollapse(string type, integer set) {
     string RLV;
     
     if (set) {
-        RLV = "addoutfit=n,remoutfit=n,addattach=n,remattach=n,fly=n,sit=n,unsit=n,tplm=n,tploc=n,temprun=n,";
-        RLV += "alwaysrun=n,sendchat=n,tplure=n,sittp=n,standtp=n,shownames=n,showhovertextall=n,";
-        RLV += "redirchat:999=add,rediremote:999=add,";
-        RLV += getAttachLockRLV() + ",";
+        RLV = "unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n,";
+        RLV += "fly=n,sit=n,unsit=n,tplm=n,tploc=n,temprun=n,alwaysrun=n,sendchat=n,tplure=n,";
+        RLV += "sittp=n,standtp=n,shownames=n,showhovertextall=n,redirchat:999=add,rediremote:999=add,";
+        //RLV += getAttachLockRLV() + ",";
         RLV += getAutoTPList();
     }
     else RLV = "clear";
@@ -310,13 +314,8 @@ afkOrCollapse(string type, integer set) {
     doRLV(type, RLV);
 }
 
-string getAttachLockRLV() {
-    list points = [ "spine", "chest", "skull", "left shoulder", "right shoulder", "left hand", "right hand", "left foot", "right foot", "pelvis", "mouth", "chin", "left ear", "right ear", "left eyeball", "right eyeball", "nose", "r upper arm", "r forearm", "l upper arm", "l forearm", "right hip", "r upper leg", "r lower leg", "left hip", "l upper leg", "l lower leg", "stomach", "left pec", "right pec", "center 2", "top right", "top", "top left", "center", "bottom left", "bottom", "bottom right", "neck" ];
-#ifdef DEVELOPER_MODE   // Skip locking spine in developer mode
-    return "detach:" + llDumpList2String(llList2List(points, 1, -1), "=n,detach:") + "=n";
-#else
-    return "detach:" + llDumpList2String(points, "=n,detach:") + "=n";
-#endif
+string getAttachName() {
+    return llList2String(llParseString2List("chest|skull|left shoulder|right shoulder|left hand|right hand|left foot|right foot|spine|pelvis|mouth|chin|left ear|right ear|left eyeball|right eyeball|nose|r upper arm|r forearm|l upper arm|l forearm|right hip|r upper leg|r lower leg|left hip|l upper leg|l lower leg|stomach|left pec|right pec|center 2|top right|top|top left|center|bottom left|bottom|bottom right|neck|root", [ "|" ], []), llGetAttached() - 1);
 }
 
 // Only useful if @tplure and @accepttp are off and denied by default...
@@ -356,14 +355,6 @@ default {
             llSetTimerEvent(5.0 * RLVck++);
         } else if (RLVck != 0) {
             postCheckRLV();
-        } else {
-            if (wearLockExpire > 0.0) {
-                wearLockExpire -= llGetAndResetTime();
-                if (wearLockExpire <= 0.0) {
-                    doRLV("Dress", "clear");
-                    wearLockExpire = 0.0;
-                }
-            }
         }
     }
     
@@ -384,6 +375,10 @@ default {
                 RLVok = 1;
                 rlvAPIversion = llStringTrim(msg, STRING_TRIM);
                 postCheckRLV();
+            }
+            else {
+                myPath = msg;
+                doRLV("Base", "detachthis_except:" + myPath + "=add");
             }
             
             llListenControl(listenHandle, 0);
@@ -479,6 +474,7 @@ default {
                     if (RLVstarted) initializeRLV(1);
                 } else {            
                          if (name == "detachable")               detachable = (integer)value;
+                    else if (name == "barefeet")                   barefeet = value;
                     else if (name == "dollType")                   dollType = value;
                     else if (name == "MistressID")               MistressID = (key)value;
                     else if (name == "mistressName")           mistressName = value;
@@ -549,33 +545,29 @@ default {
                 string stripped;
                 if (cmd == "stripTop") {
                     stripped = "top";
-                    doRLV("Dress", "remoutfit=y,remattach=y,detach:stomach=force,detach:left shoulder=force,detach:right shoulder=force,detach:left hand=force,detach:right hand=force,detach:r upper arm=force,detach:r forearm=force,detach:l upper arm=force,detach:l forearm=force,detach:chest=force,detach:left pec=force,detach:right pec=force,remoutfit:gloves=force,remoutfit:jacket=force,remoutfit:shirt=force,addoutfit=n,addattach=n,remoutfit=n,remattach=n");
-                    wearLockExpire = (float)wearLockTime;
+                    doRLV("Dress", "detach:stomach=force,detach:left shoulder=force,detach:right shoulder=force,detach:left hand=force,detach:right hand=force,detach:r upper arm=force,detach:r forearm=force,detach:l upper arm=force,detach:l forearm=force,detach:chest=force,detach:left pec=force,detach:right pec=force,remoutfit:gloves=force,remoutfit:jacket=force,remoutfit:shirt=force");
                 }
                 else if (cmd == "stripBra") {
                     stripped = "bra";
-                    doRLV("Dress", "remoutfit=y,remattach=y,remoutfit:undershirt=force,addoutfit=n,addattach=n,remoutfit=n,remattach=n");
-                    wearLockExpire = (float)wearLockTime;
+                    doRLV("Dress", "remoutfit=y,remattach=y,remoutfit:undershirt=force");
                 }
                 else if (cmd == "stripBottom") {
                     stripped = "bottoms";
-                    doRLV("Dress", "remoutfit=y,remattach=y,,detach:chin=force,detach:r upper leg=force,detach:r lower leg=force,detach:l upper leg=force,detach:l lower leg=force,detach:pelvis=force,detach:right hip=force,detach:left hip=force,remoutfit:pants=force,remoutfit:skirt=force,addoutfit=n,addattach=n,remoutfit=n,remattach=n");
-                    wearLockExpire = (float)wearLockTime;
+                    doRLV("Dress", "detach:chin=force,detach:r upper leg=force,detach:r lower leg=force,detach:l upper leg=force,detach:l lower leg=force,detach:pelvis=force,detach:right hip=force,detach:left hip=force,remoutfit:pants=force,remoutfit:skirt=force");
                 }
                 else if (cmd == "stripPanties") {
                     stripped = "panties";
-                    doRLV("Dress", "remoutfit=y,remattach=y,remoutfit:underpants=force,addoutfit=n,addattach=n,remoutfit=n,remattach=n");
-                    wearLockExpire = (float)wearLockTime;
+                    doRLV("Dress", "remoutfit:underpants=force");
                 }
                 else if (cmd == "stripShoes") {
                     stripped = "shoes";
                     string attachFeet;
                     if (barefeet != "") attachFeet = "attachallover:" + barefeet + "=force,";
-                    doRLV("Dress", "remoutfit=y,remattach=y,addoutfit=y,addattach=y,detach:l lower leg=force,detach:r lower leg=force,detach:right foot=force,detach:left foot=force,remoutfit:shoes=force,remoutfit:socks=force," + attachFeet + "addoutfit=n,addattach=n,remoutfit=n,remattach=n");
-                    wearLockExpire = (float)wearLockTime;
+                    doRLV("Dress", "detach:l lower leg=force,detach:r lower leg=force,detach:right foot=force,detach:left foot=force,remoutfit:shoes=force,remoutfit:socks=force," + attachFeet);
                 }
-                if (!quiet) llSay(0, "The dolly " + dollName + " has her " + stripped + " stripped off her and may not redress for " + (string)llRound(wearLockExpire / 60.0) + " minutes.  (Timer resets if dolly is stripped again)");
-                else llOwnerSay("You have had your " + stripped + " stripped off you and may not redress for " + (string)llRound(wearLockExpire / 60.0) + " minutes.");
+                lmInternalCommand("wearLock", (string)(wearLock = 1), NULL_KEY);
+                if (!quiet) llSay(0, "The dolly " + dollName + " has her " + stripped + " stripped off her and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes.  (Timer resets if dolly is stripped again)");
+                else llOwnerSay("You have had your " + stripped + " stripped off you and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes.");
             }
 #endif
             else if (cmd == "carry") {
@@ -607,8 +599,9 @@ default {
                 else llDetachFromAvatar();
             }
             else if (cmd == "wearLock") {
-                wearLockExpire = (float)wearLockTime;
-                doRLV(script, "addoutfit=n,addattach=n,remoutfit=n,remoutfit=n");
+                wearLock = llList2Integer(split, 0);
+                if (wearLock) doRLV("Dress", "unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
+                else doRLV("Dress", "clear");
             }
         }
         else if (code == 315) {
@@ -616,9 +609,7 @@ default {
             string cmd = llList2String(split, 1);
             split = llList2List(split, 2, -1);
             
-            if ((wearLockExpire > 0.0 || !canWear || !canUnwear) && script == "Dress" && id != dollID)
-                doRLV(script, "remoutfit=y,remattach=y,addoutfit=y,addattach=y," + cmd + ",remoutfit=n,remattach=n,addoutfit=n,addattach=n");
-            else doRLV(script, cmd);
+            doRLV(script, cmd);
         }
     }
 }

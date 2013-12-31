@@ -199,7 +199,7 @@ doMainMenu(key id) {
         menu += "Help/Support";
 
         // Hide the general "Carry" option for all but Mistress when one exists
-        if (isMistress(id) || (numControllers == 0)) {
+        if (!isDoll && (isMistress(id) || (numControllers == 0))) {
             if (canCarry) {
                 msg =  msg +
                        "Carry option picks up " + dollName + " and temporarily" +
