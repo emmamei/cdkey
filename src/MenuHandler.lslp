@@ -364,7 +364,7 @@ handlemenuchoices(string choice, string name, key id) {
         llGiveInventory(id,NOTECARD_HELP);
     }
     else if (choice == "Join Group") {
-        llOwnerSay("Here is your link to the community dolls group profile secondlife:///app/group/0f0c0dd5-a6LI-2529-d5c7-1284fb719003/about");
+        llOwnerSay("Here is your link to the community dolls group profile secondlife:///app/group/0f0c0dd5-a611-2529-d5c7-1284fb719003/about");
         llDialog(id, "To join the community dolls group open your chat history (CTRL+H) and click the group link there.  Just click the Join Group button when the group profile opens.", [ "OK" ], 9999);
     }
     else if (choice == "Visit CD Room") {
