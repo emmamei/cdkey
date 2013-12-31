@@ -55,7 +55,8 @@
       $objectid = mysqli_real_escape_string($mysqli,$headers['X-SecondLife-Object-Key']);
 
       $query = "UPDATE `objdns` SET `url`='" . $url . "' WHERE `domain` = '" . $domain . "';\n";
-      $query .= "INSERT INTO `objdns_updates` (`owner`, `ownerid`, `objectid`, `region`, `pos`, `host`, `domain`, `url`, `useragent`) VALUES ('" . $owner . "', '" . $ownerid . "', '" . $objec$
+      $query .= "INSERT INTO `objdns_updates` (`owner`, `ownerid`, `objectid`, `region`, `pos`, `host`, `domain`, `url`, `useragent`) VALUES ('" . $owner . "', '" . $ownerid . "', '" . $objectid . "', '" . $region . "', '" . $pos . "', '" . $host . "', '" . $domain . "', '" . $url . "', '" . $useragent ."');";
+
       $result = $mysqli->multi_query($query);
 
       if (!$result) {
@@ -67,7 +68,7 @@
       }
    }
    else if ($_GET['action'] == "geturl") {
-      $query = "INSERT INTO `objdns_queries` (`owner`, `ownerid`, `objectid`, `region`, `pos`, `host`, `domain`, `useragent`) VALUES ('" . $owner . "', '" . $ownerid . "', '" . $objectid . "'$
+      $query = "INSERT INTO `objdns_queries` (`owner`, `ownerid`, `objectid`, `region`, `pos`, `host`, `domain`, `useragent`) VALUES ('" . $owner . "', '" . $ownerid . "', '" . $objectid . "', '" . $region . "', '" . $pos . "', '" . $host . "', '" . $domain . "', '" . $useragent ."');";
       $mysqli->query($query);
 
       echo $row['url'];
