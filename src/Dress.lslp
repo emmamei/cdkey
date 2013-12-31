@@ -50,6 +50,7 @@ string msgx; // could be "msg" but that is used elsewhere?
 
 string clothingFolder; // This contains clothing to be worn
 string outfitsFolder;  // This contains folders of clothing to be worn
+string activeFolder; // This is the lookup folder to search 
 
 integer listen_id_outfitrequest;
 integer listen_id_2555;
@@ -59,6 +60,7 @@ integer listen_id_2669;
 integer listen_id_2670;
 
 integer startup = 1;
+integer RLVok;
 
 integer outfitPage;
 
@@ -147,6 +149,13 @@ integer isPlusItem(string f) {
     return (prefix == "+");
 }
 
+setActiveFolder() {
+    if (outfitsFolder == "" && clothingFolder == "") activeFolder = "";
+    else if (outfitsFolder != "" && clothingFolder != "") activeFolder = outfitsFolder + "/" + clothingFolder;
+    else if (outfitsFolder != "") activeFolder = outfitsFolder;
+    else activeFolder = clothingFolder;
+}
+
 removeListeners() {
     llListenRemove(listen_id_2555);
     llListenRemove(listen_id_outfitrequest3);
@@ -187,16 +196,17 @@ addListeners(string dollID) {
 listInventoryOn(string channel) {
     candresstimeout = 8;
 
-    debugSay(5, ">> clothingFolder = " + (string)clothingFolder);
-    debugSay(5, ">> outfitsFolder = " + (string)outfitsFolder);
+    integer level = 5;
+    if (startup != 0) level = 7;
+    debugSay(level, ">> clothingFolder = " + clothingFolder);
+    debugSay(level, ">> outfitsFolder = " + outfitsFolder);
+    debugSay(level, ">> activeFolder = " + activeFolder);
                 
-    if (clothingFolder == "") {
-        llMessageLinked(LINK_SET, 315, SCRIPT_NAME + "|getinv=" + channel, NULL_KEY);
-    }
-    else {
-        debugSay(5, "cmd = getinv:" + clothingFolder + "=" + channel);
-        llMessageLinked(LINK_SET, 315, SCRIPT_NAME + "|getinv:" + clothingFolder + "=" + channel, NULL_KEY);
-    }
+    if (outfitsFolder == "") activeFolder = "";
+    else activeFolder = outfitsFolder;
+    
+    debugSay(5, "cmd = getinv:" + activeFolder + "=" + channel);
+    if (RLVok) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|getinv:" + activeFolder + "=" + channel, NULL_KEY);
 }
 
 setup()  {
@@ -222,14 +232,12 @@ setup()  {
         setupID = dollID;
     }
     
-    if (startup == 1) {
-        outfitsFolder = "";
-        listInventoryOn("2555");
-    }
-    else {
-        listInventoryOn("2555");
-        llSetTimerEvent(10.0);  //clock is accessed every ten seconds;
-    }
+
+    outfitsFolder = "";
+    clothingFolder = "";
+    activeFolder = "";
+    
+    llSetTimerEvent(10.0);  //clock is accessed every ten seconds;
 }
 
 //========================================
@@ -260,20 +268,21 @@ default {
         list split = llParseString2List(data, [ "|" ], []);
         
         if (code == 104) {
-            if (llList2String(split, 0) != "RLV") return;
-            clothingFolder = "";
+            if (llList2String(split, 0) != "Start") return;
+            startup = 1;
             channel_dialog = 0;
+            setup();
+            lmInitState(104);
         }
         else if (code == 105) {
             if (llList2String(split, 0) != "Start") return;
-            if (startup == 2) {
-                lmInitState(105);
-                startup = 0;
-            }
+            startup = 2;
+            setup();
+            lmInitState(105);
         }
-#ifdef DEVELOPER_MODE
+        #ifdef DEVELOPER_MODE
         else if (code == 135) memReport();
-#endif
+        #endif
         else if (code == 300) {
             string script = llList2String(split, 0);
             string name = llList2String(split, 1);
@@ -281,30 +290,27 @@ default {
             
             if (script != SCRIPT_NAME) {
                 if (name == "clothingFolder") {
-                    string oldclothingprefix = clothingFolder;
-                    debugSay(5, ">on link #2");
-                    debugSay(5, ">>oldclothingprefix = " + oldclothingprefix);
-                    debugSay(5, ">>outfitsFolder = " + outfitsFolder);
-                    debugSay(5, ">>clothingFolder = " + clothingFolder);
-                    debugSay(5, ">>choice = " + value);
-                    if (outfitsFolder != "") {
-                        clothingFolder = outfitsFolder + "/" +  value;
-                    }
-                    else {
-                        clothingFolder = value;
-                    }
-        
-                    debugSay(5, ">>clothingFolder = " + clothingFolder);
-                    if (clothingFolder != oldclothingprefix) {
-        
+                    string oldclothingprefix = activeFolder;
+                    clothingFolder = value;
+                    setActiveFolder();
+                    
+                    if (activeFolder != oldclothingprefix) {
+                        integer level = 5;
+                        if (startup != 0) level = 7;
+                        debugSay(level, ">on link #2");
+                        debugSay(level, ">>oldActiveFolder = " + oldclothingprefix);
+                        debugSay(level, ">>outfitsFolder = " + outfitsFolder);
+                        debugSay(level, ">>clothingFolder = " + clothingFolder);
+                        debugSay(level, ">>activeFolder = " + activeFolder);
+                        
                         xfolder = "~normalself";
-                        //llMessageLinked(LINK_SET, 315, SCRIPT_NAME + "|attach:" + clothingFolder + "/~normalself=force", NULL_KEY);
-                        llMessageLinked(LINK_SET, 315, SCRIPT_NAME + "|attach:" + xfolder + "=force," + 
+                        //if (RLVok) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|attach:" + clothingFolder + "/~normalself=force", NULL_KEY);
+                        if (RLVok) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|attach:" + xfolder + "=force," + 
                                                                       "getinvworn:" + xfolder + "=2668", NULL_KEY);
         
                         // FIXME: Make sure...
                         //llSleep(2.0);
-                        //llMessageLinked(LINK_SET, 315, SCRIPT_NAME + "|attach:~normalself=force", NULL_KEY);
+                        //if (RLVok) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|attach:~normalself=force", NULL_KEY);
                     }
                 }
             }
@@ -324,7 +330,8 @@ default {
             }
         }
         else if (code == 350) {
-            if (startup == 1) setup();
+            RLVok = llList2Integer(split, 0);
+            listInventoryOn("2555");
         }
         // Choice #500: (From Main Menu) Dress Dolly
         else if (code == 500)  {
@@ -382,6 +389,7 @@ default {
             list Outfits = llParseString2List(choice, [","], []); //what are brackets at end?
             integer iStop = llGetListLength(Outfits);
             string oldbigprefix = outfitsFolder;
+            string oldActiveFolder = activeFolder;
             integer n;
             string itemname;
 
@@ -407,17 +415,34 @@ default {
                 }
             }
 
-            // if prefix changes, change clothingFolder to match
-            if (outfitsFolder != oldbigprefix) {  //outfits-don't-match-type bug only occurs when big prefix is changed
-                clothingFolder = outfitsFolder;
+            if (startup == 0) {
+                // if prefix changes, change clothingFolder to match
+                if (outfitsFolder != oldbigprefix) {  //outfits-don't-match-type bug only occurs when big prefix is changed
+                    clothingFolder = "";
+                }
             }
+            
+            if (startup == 2) {
+                startup = 0;
+            }
+            
+            integer level = 5;
+            if (startup != 0) level = 7;
+            debugSay(level, ">oldActiveFolder = " + oldbigprefix);
+            debugSay(level, ">outfitsFolder = " + outfitsFolder);
+            debugSay(level, ">clothingFolder = " + clothingFolder);
+            setActiveFolder();
+            debugSay(level, ">activeFolder = " + activeFolder);
+            
+            if (oldActiveFolder != activeFolder) {
+                xfolder = "~normalself";
+                //if (RLVok) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|attach:" + clothingFolder + "/~normalself=force", NULL_KEY);
+                if (RLVok) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|attach:" + xfolder + "=force," + 
+                                                              "getinvworn:" + xfolder + "=2668", NULL_KEY);
 
-            debugSay(5, ">oldbigprefix = " + oldbigprefix);
-            debugSay(5, ">outfitsFolder = " + outfitsFolder);
-            debugSay(5, ">clothingFolder = " + clothingFolder);
-            if (startup == 1) {
-                startup = 2;
-                lmInitState(104);
+                // FIXME: Make sure...
+                //llSleep(2.0);
+                //if (RLVok) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|attach:~normalself=force", NULL_KEY);
             }
         }
 
@@ -438,14 +463,15 @@ default {
             if (iStop == 0) {   // folder is bereft of files, switching to regular folder
 
                 // No files found; leave the prefix alone and don't change
-                llOwnerSay("There are no outfits in your " + clothingFolder + " folder.");
-                debugSay(5, "There are no outfits in your " + clothingFolder + " folder.");
+                llOwnerSay("There are no outfits in your " + activeFolder + " folder.");
+                debugSay(5, "There are no outfits in your " + activeFolder + " folder.");
                 // Didnt find any outfits in the standard folder, try the
                 // "extended" folder containing (we hope) outfits....
 
                 if (outfitsFolder) {
-                    clothingFolder = outfitsFolder + "/";
-                    llOwnerSay("Trying the " + clothingFolder + " folder.");
+                    clothingFolder = "";
+                    setActiveFolder();
+                    llOwnerSay("Trying the " + activeFolder + " folder.");
                     listInventoryOn("2665"); // recursion
                 }
                 //else {
@@ -571,7 +597,7 @@ default {
                     newoutfit = choice;
                 }
                 else {
-                    newoutfit = clothingFolder + "/" + choice;
+                    newoutfit = activeFolder + "/" + choice;
                 }
 
                 newoutfitwordend = llStringLength(newoutfit)  - 1;
@@ -609,7 +635,7 @@ default {
                 // items and another outfit using other items - such as
                 // one outfit using a miniskirt and one a long dress.
                 //
-                llMessageLinked(LINK_SET, 315, SCRIPT_NAME + "|getpathnew:pants=2670," +
+                if (RLVok) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|getpathnew:pants=2670," +
                                                              "getpathnew:shirt=2670," +
                                                              "getpathnew:jacket=2670," +
                                                              "getpathnew:skirt=2670," + 
@@ -623,29 +649,29 @@ default {
                 if ( isPlusItem(oldoutfitname) &&
                     !isPlusItem(newoutfitname)) {  // only works well assuming in regular
 
-                    llMessageLinked(LINK_SET, 315, SCRIPT_NAME + "|attach:~normalself=force", NULL_KEY);
+                    if (RLVok) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|attach:~normalself=force", NULL_KEY);
                     llSleep(4.0);
                 }
 
                 // First, replace current outfit with new (or replace)
-                llMessageLinked(LINK_SET, 315, SCRIPT_NAME + "|attach:" + newoutfit + "=force", NULL_KEY);
+                if (RLVok) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|attach:" + newoutfit + "=force", NULL_KEY);
                 llSleep(4.0);
 
                 // Add items that cant replace what is already there
-                llMessageLinked(LINK_SET, 315, SCRIPT_NAME + "|attachallover:" + newoutfit + "=force", NULL_KEY);
+                if (RLVok) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|attachallover:" + newoutfit + "=force", NULL_KEY);
                 llSleep(4.0);
 
                 // Remove rest of old outfit (using memorized former outfit)
                 if (oldoutfit != "") {
                     if (oldoutfit != newoutfit) {
-                        llMessageLinked(LINK_SET, 315, SCRIPT_NAME + "|detachall:" + oldoutfit + "=force", NULL_KEY);
+                        if (RLVok) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|detachall:" + oldoutfit + "=force", NULL_KEY);
                         llSleep(4.0);
                     }
                 }
 
                 // Remove rest of old outfit (using path from attachments)
                 if (oldoutfitpath != "") {
-                    llMessageLinked(LINK_SET, 315, SCRIPT_NAME + "|detachall:" + oldoutfitpath + "=force", NULL_KEY);
+                    if (RLVok) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|detachall:" + oldoutfitpath + "=force", NULL_KEY);
                     llSleep(4.0);
                     oldoutfitpath = "";
                 }
@@ -664,7 +690,7 @@ default {
                     //
                     // This could also be expanded to create a Nude dress selection -
                     // such as for use when going to nude beaches and such.
-                    llMessageLinked(LINK_SET, 315, SCRIPT_NAME + "|attach:~nude=force", NULL_KEY);
+                    if (RLVok) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|attach:~nude=force", NULL_KEY);
                     llSleep(4.0);
                 }
 
@@ -687,8 +713,8 @@ default {
             debugSay(5, ">> @getinvworn:" + xfolder);
             if ((llGetSubString(choice,2,2)) != "3") {
                 llSleep(4.0);
-                llMessageLinked(LINK_SET, 315, SCRIPT_NAME + "|attach:" + xfolder + "=force", NULL_KEY);
-                llMessageLinked(LINK_SET, 315, SCRIPT_NAME + "|getinvworn:" + xfolder + "=2668", NULL_KEY);
+                if (RLVok) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|attach:" + xfolder + "=force", NULL_KEY);
+                if (RLVok) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|getinvworn:" + xfolder + "=2668", NULL_KEY);
             }
         }
 
@@ -701,8 +727,8 @@ default {
             debugSay(5, ">> @getinvworn:" + xfolder);
             if ((llGetSubString(choice,2,2)) != "1") {
                 llSleep(4.0);
-                llMessageLinked(LINK_SET, 315, SCRIPT_NAME + "|detach:" + xfolder + "=force", NULL_KEY);
-                llMessageLinked(LINK_SET, 315, SCRIPT_NAME + "|getinvworn:" + xfolder + "=2669", NULL_KEY);
+                if (RLVok) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|detach:" + xfolder + "=force", NULL_KEY);
+                if (RLVok) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|getinvworn:" + xfolder + "=2669", NULL_KEY);
             }
         }
 

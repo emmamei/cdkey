@@ -117,6 +117,8 @@ setDollType(string choice, integer force) {
     if (!quiet) llSay(0, dollname + " has become a " + stateName + " Doll.");
     else llOwnerSay("You have become a " + stateName + " Doll.");
     
+    lmSendConfig("dollType", stateName);
+    
     if (startup == 2) {
         lmInitState(105);
         startup = 0;
@@ -324,7 +326,6 @@ default {
                 debugSay(5, "stateName = " + (string)stateName);
 
                 if (!startup) setDollType(choice, 0);
-                lmSendConfig("dollType", stateName);
             }
         }
         
@@ -340,9 +341,7 @@ default {
             setup();
             reloadTypeNames();
             startup = 1;
-    
             llSetTimerEvent(60.0);   // every minute
-    
             lmInitState(104);
         }
         
@@ -351,6 +350,7 @@ default {
             startup = 2;
             RLVok = 0;
             setDollType(stateName, 1);
+            lmInitState(105);
         }
         
         else if (code == 135) memReport();

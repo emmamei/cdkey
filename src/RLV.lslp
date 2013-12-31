@@ -98,14 +98,8 @@ postCheckRLV()
     // Mark RLV check completed
     RLVck = 0;
     
-    if (startup == 1) {
-        lmInitState(104);
-        startup = 2;
-    }
-    else {
-        llMessageLinked(LINK_SET, 350, (string)RLVok + "|" + rlvAPIversion, NULL_KEY);
-        initializeRLV(0);
-    }
+    initializeRLV(0);
+    llMessageLinked(LINK_SET, 350, (string)RLVok + "|" + rlvAPIversion, NULL_KEY);
 }
 
 initializeRLV(integer refresh) {
@@ -155,12 +149,16 @@ initializeRLV(integer refresh) {
         if (!refresh) locked = 1;
         #else
         llListenControl(listenHandle, 1);
+        if (myPath != "") doRLV("Base", "detachthis_except:" + myPath + "=add");
         doRLV("Base", "getpathnew=" + (string)channel);
         if (!refresh) {
             if (!quiet) llSay(0, "Developer Key not locked.");
             else llOwnerSay("Developer key not locked.");
         }
         #endif
+    }
+    else {
+        llListenControl(listenHandle, 0);
     }
     
     if (!refresh) {
@@ -371,6 +369,7 @@ default {
 
     listen(integer chan, string name, key id, string msg) {
         if (chan == channel) {
+            debugSay(5, "RLV Reply: " + msg);
             if (!RLVok) {
                 RLVok = 1;
                 rlvAPIversion = llStringTrim(msg, STRING_TRIM);
@@ -379,9 +378,8 @@ default {
             else {
                 myPath = msg;
                 doRLV("Base", "detachthis_except:" + myPath + "=add");
+                llListenControl(listenHandle, 0);
             }
-            
-            llListenControl(listenHandle, 0);
         }
     }
     
@@ -437,11 +435,12 @@ default {
             dollID = llGetOwner();
             dollName = llGetDisplayName(dollID);
             listenerStart();
-            checkRLV();
+            lmInitState(104);
         }
         else if (code == 105) {
             if (llList2String(split, 0) != "Start") return;
             checkRLV();
+            lmInitState(105);
         }
         else if (code == 106) {
             if (id == NULL_KEY && !detachable && !locked) {
