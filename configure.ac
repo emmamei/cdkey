@@ -43,7 +43,7 @@ AC_ARG_VAR([DEBUG_LEVEL], [enables additional debugging messages up to threshold
 AC_ARG_VAR([DEBUG_TARGET], [sets the target for debugging messages])
 
 AH_TEMPLATE([ADULT_MODE],     [enable the inclusion of adult features such as stripping and slut doll in the key])
-AH_TEMPLATE([DEBUG_BADRLV]),  [enable a test mode with minimal code changes in which RLV support always fails effectively disable the listener for the check reply])
+AH_TEMPLATE([DEBUG_BADRLV],   [enable a test mode with minimal code changes in which RLV support always fails effectively disable the listener for the check reply])
 AH_TEMPLATE([DEBUG_LEVEL],    [enable additional debugging messages up to threshold defaults to 0 in normal mode or 5 if developer mode is active])
 AH_TEMPLATE([DEBUG_TARGET],   [sets the target for debugging messages either DEBUG to send on debug channel or OWNER to use ownersay])
 AH_TEMPLATE([DEVELOPER_MODE], [enable developer support features such as not using RLV locks which would prevent editing the scripts or notecards, collection and reporting of performance statistics etc])

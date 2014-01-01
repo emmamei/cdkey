@@ -26,6 +26,13 @@
 #define isWindingDown (!collapsed && isAttached && dollType != "Builder" && dollType != "Key")
 #define mainTimerEnable (configured && isAttached && RLVchecked)
 
+// Dress module prefix test defines
+#define isGroupItem(f) (llGetSubString(f,0,0) == "#")
+#define isHiddenItem(f) (llGetSubString(f,0,0) == "~")
+#define isPlusItem(f) (llGetSubString(f,0,0) == "+")
+#define isTransformingItem(f) (llGetSubString(f,0,0) == "*")
+#define isParentFolder(f) (llGetSubString(f,0,0) == ">")
+
 // Collapse animation - and documentation
 #define ANIMATION_COLLAPSED "collapse"
 // Carry distance for the new carry code
@@ -108,6 +115,9 @@
 #define getScriptTime() formatFloat(getObjectScriptTime(llGetKey()), 3) + "ms"
 #define getWindRate() llList2Float(llGetPrimitiveParams([ PRIM_OMEGA ]), 1) / (TWO_PI / 15.0)
 #define timerNextFrame() llSetTimerEvent(0.01 * mainTimerEnable)
+
+#define uncarry() lmInternalCommand("uncarry", "", scriptkey)
+#define uncollapse() lmInternalCommand("uncollapse", "", scriptkey)
 
 // Keys of important people in life of the Key:
 #define AGENT_CHRISTINA_HALPIN "42c7aaec-38bc-4b0c-94dd-ae562eb67e6d"

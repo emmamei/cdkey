@@ -93,8 +93,10 @@ string dollType = "Regular";
 
 float wearLockExpire;
 float poseExpire;
-float menuSleep;
 float carryExpire;
+float lastRandomTime;
+float menuSleep;
+float lastTickTime;
 float windamount   = 1800.0; // 30 * SEC_TO_MIN;    // 30 minutes
 float keyLimit     = 10800.0;
 float windRate;
@@ -126,10 +128,10 @@ setDollType(string choice) {
     // change to new Doll Type
     dollType = llGetSubString(llToUpper(choice), 0, 0) + llGetSubString(llToLower(choice), 1, -1);
     
-#ifdef ADULT_MODE
+    #ifdef ADULT_MODE
     // new type is slut Doll
     if (dollType == "Slut") llOwnerSay("As a slut Doll, you can be stripped.");
-#endif
+    #endif
     
     // new type is builder or key doll
     if (dollType == "Builder" || dollType == "Key")
@@ -177,7 +179,6 @@ doWind(string name, key id) {
     if (collapsed) uncollapse();
     else lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
 
-    llSleep(0.1);
     lmInternalCommand("mainMenu", name, id);
 }
 
@@ -186,9 +187,9 @@ initializeStart() {
     dollName = llGetDisplayName(dollID);
             
     chatHandle = llListen(chatChannel, "", dollID, "");
-#ifdef ADULT_MODE
+    #ifdef ADULT_MODE
     simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
-#endif
+    #endif
 
     clearAnim = 1;
     ifPermissions();
@@ -219,11 +220,10 @@ initFinal() {
     ifPermissions();
     
     lmInitState(105);
-    llSleep(0.5);
     llSetTimerEvent(1.0);
-#ifdef SIM_FRIENDLY
+    #ifdef SIM_FRIENDLY
     if (lowScriptMode) llSetTimerEvent(10.0);
-#endif
+    #endif
 }
 
 ifPermissions() {
@@ -272,7 +272,8 @@ ifPermissions() {
         }
         
         if (perm & PERMISSION_TAKE_CONTROLS && isAttached) {
-            if (lockPos != ZERO_VECTOR) {
+            if (keyAnimation != "" || afk) {
+                if (lockPos == ZERO_VECTOR) lockPos = llGetPos();
                 if (llVecDist(llGetPos(), lockPos) > 1.0) {
                     llTargetRemove(targetHandle);
                     targetHandle = llTarget(lockPos, 1.0);
@@ -280,16 +281,21 @@ ifPermissions() {
                 }
                 llTakeControls(CONTROL_ALL, 1, 0);
             }
-            else {
+            else if (lockPos != ZERO_VECTOR) {
+                lockPos = ZERO_VECTOR;
                 llTargetRemove(targetHandle);
                 llStopMoveToTarget();
+                if (carrierID != NULL_KEY) {
+                    vector carrierPos = llList2Vector(llGetObjectDetails(carrierID, [ OBJECT_POS ]), 0);
+                    targetHandle = llTarget(carrierPos, CARRY_RANGE);
+                }
                 llTakeControls(CONTROL_MOVE, 1, 1);
             }
         }
         
-#ifndef DEVELOPER_MODE
+        #ifndef DEVELOPER_MODE
         if (perm & PERMISSION_ATTACH && !llGetAttached()) llAttachToAvatar(ATTACH_BACK);
-#endif
+        #endif
     }
 }
 
@@ -314,7 +320,7 @@ carry(string name, key id) {
     }
 }
 
-uncarry() {
+/*uncarry() {
     carrierID = NULL_KEY;
     carrierName = "";
     
@@ -323,9 +329,9 @@ uncarry() {
         llTargetRemove(targetHandle);
         llStopMoveToTarget();
     }
-}
+}*/
 
-uncollapse() {
+/*uncollapse() {
     clearAnim = 1;
     collapsed = 0;
     keyAnimation = "";
@@ -335,7 +341,7 @@ uncollapse() {
     lmInternalCommand("restore", "", NULL_KEY);
     lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
     ifPermissions();
-}
+}*/
 
 //========================================
 // STATES
@@ -426,6 +432,18 @@ default {
             if (timeReporting) llOwnerSay("Script Time: " + formatFloat(llList2Float(llGetObjectDetails(llGetKey(), [ OBJECT_SCRIPT_TIME ]), 0) * 1000000, 2) + "µs");
             #endif
         }
+
+        integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0);
+        // When Dolly is "away" - enter AFK
+        // Also set away when 
+        if (autoAFK && (afk != dollAway)) {
+            afk = dollAway;
+            if (afk) lockPos = llGetPos();
+            else lockPos = ZERO_VECTOR;
+            displayWindRate = setWindRate();
+            lmInternalCommand("setAFK", (string)afk + "|1|" + formatFloat(windRate, 1) + "|" + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate)), NULL_KEY);
+        }
+        else displayWindRate = setWindRate();
         
         // Check if doll is posed and time is up
         if (keyAnimation != "" && keyAnimation != ANIMATION_COLLAPSED) { // Doll posed
@@ -442,18 +460,6 @@ default {
         if (wearLockExpire != 0.0 && wearLockExpire < llGetTime()) {
             lmInternalCommand("wearLock", (string)0, NULL_KEY);
         }
-
-        integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0);
-        // When Dolly is "away" - enter AFK
-        // Also set away when 
-        if (autoAFK && (afk != dollAway)) {
-            afk = dollAway;
-            if (afk) lockPos = llGetPos();
-            else lockPos = ZERO_VECTOR;
-            displayWindRate = setWindRate();
-            lmInternalCommand("setAFK", (string)afk + "|1|" + formatFloat(windRate, 1) + "|" + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate)), NULL_KEY);
-        }
-        else displayWindRate = setWindRate();
         
         // Update sign if appropriate
         string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
@@ -474,6 +480,7 @@ default {
         if (windRate != 0.0) {
             float thisTimerEvent;
             timeLeftOnKey -= (((thisTimerEvent = llGetTime()) - lastTimerEvent) * windRate);
+            debugSay(9, "Timer: Last=" + (string)lastTimerEvent + " This=" + (string)thisTimerEvent + " Delta=" + (string)(thisTimerEvent - lastTimerEvent) + " Rate=" + (string)windRate + " Scaled=" + (string)((thisTimerEvent - lastTimerEvent) * windRate) + " Left=" + (string)timeLeftOnKey);
             lastTimerEvent = thisTimerEvent;
             
             minsLeft = llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate));
@@ -493,19 +500,12 @@ default {
                 // This message is intentionally excluded from the quiet key setting as it is not good for
                 // dolls to simply go down silently.
                 llSay(0, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on their key.)");
-        
-        // We only collapse when we run out of time on the key so inline the collapse functionality
-        collapsed = 1;
-        keyAnimation = ANIMATION_COLLAPSED;
-        lmInternalCommand("collapse", (string)timeLeftOnKey, NULL_KEY);
-        
-        // Skip redundant link messages.
-        // lmSendConfig("keyAnimation", keyAnimation);            // Inferred and ANIMATION_COLLAPSED is gloabally defined
-        // lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);    // Again collapsed = no time inferrable
-        
-        // Skip call to setWindRate() this function is heavily overused we only make practical use of the
-        // value once per tick.  Updating more frequently is at best a waste at worst it's even a bug.
-        // setWindRate();
+
+                lmInternalCommand("collapse", (string)timeLeftOnKey, NULL_KEY);
+                
+                // Skip call to setWindRate() this function is heavily overused we only make practical use of the
+                // value once per tick.  Updating more frequently is at best a waste at worst it's even a bug.
+                // setWindRate();
             }
         }
     }
@@ -590,12 +590,11 @@ default {
             simRating = "";
             simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
             #endif
+            lmInitState(105);
         }
         
         else if (code == 135) {
-            llSleep(0.5);
             memReport();
-            llSleep(0.5);
         }
         
         else if (code == 300) {
@@ -628,6 +627,7 @@ default {
                 else if (name == "keyLimit")                     keyLimit = (float)value;
                 else if (name == "MistressID")                 MistressID = (key)value;
                 else if (name == "mistressName")             mistressName = value;
+                else if (name == "dollType")                     dollType = value;
                 #ifdef SIM_FRIENDLY
                 else if (name == "lowScriptMode") {
                     lowScriptMode = (integer)value;
@@ -669,7 +669,6 @@ default {
                 
                 // Force unsit and block sitting before posing
                 lmRunRLV("unsit=force");
-                llSleep(0.2);   // delay to let the command execute
                 
                 // Run ifPermissions to pose the doll
                 // This will also prevent movement while posed
@@ -697,7 +696,28 @@ default {
                 carry(name, id);
             }
             else if (cmd == "uncarry") {
-                uncarry();
+                //uncarry();
+                carrierID = NULL_KEY;
+                carrierName = "";
+                
+                if (lockPos == ZERO_VECTOR) {
+                    // We were following carrier so we clear the target
+                    llTargetRemove(targetHandle);
+                    llStopMoveToTarget();
+                }
+            }
+            else if (cmd == "collapse") {
+                collapsed = 1;
+                keyAnimation = ANIMATION_COLLAPSED;
+            }
+            else if (cmd == "uncollapse") {
+                clearAnim = 1;
+                collapsed = 0;
+                keyAnimation = "";
+                //lmSendConfig("keyAnimation", keyAnimation);
+                setWindRate();
+                //lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
+                ifPermissions();
             }
         }
 

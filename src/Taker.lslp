@@ -27,7 +27,11 @@ setup() {
 }
 
 default {
-    state_entry() { lmScriptReset(); }
+    state_entry() { 
+        lmScriptReset();
+        
+        scriptkey = llGenerateKey();
+    }
 
     timer() {
         // countdown...
@@ -44,8 +48,9 @@ default {
         if (code == 104 || code == 105) {
             if (llList2String(split, 0) != "Start") return;
             setup();
-            lmInitializationCompleted(code);
+            lmInitState(code);
         }
+        else if (code == 135) memReport();
     }
 
     listen(integer channel, string name, key id, string choice) {

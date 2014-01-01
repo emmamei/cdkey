@@ -98,6 +98,7 @@ postCheckRLV()
     // Mark RLV check completed
     RLVck = 0;
     
+    lmInitState(105);
     initializeRLV(0);
     llMessageLinked(LINK_SET, 350, (string)RLVok + "|" + rlvAPIversion, NULL_KEY);
 }
@@ -110,7 +111,8 @@ initializeRLV(integer refresh) {
             rlvStatus = [];
         }
         
-        doRLV("UserBase", userBaseRLVcmd);
+        if (userBaseRLVcmd != "")
+            doRLV("UserBase", userBaseRLVcmd);
         
         afkOrCollapse("Collapsed", collapsed);
         afkOrCollapse("AFK", afk);
@@ -163,24 +165,17 @@ initializeRLV(integer refresh) {
     
     if (!refresh) {
         RLVstarted = 1;
-        llSetTimerEvent(1.0);
-        #ifdef SIM_FRIENDLY
-        if (lowScriptMode) llSetTimerEvent(30.0);
-        #endif
-        lmInitState(105);
+        llSetTimerEvent(0.0);
         startup = 0;
     }
 }
 
-string autoTPAllowed(string script, key userID) {
-    return "tplure:"   + (string)userID + "=add,accepttp:" + (string)userID + "=add";
-}
-
 doRLV(string script, string commandString) {
-    if (RLVok) {
-        integer commandLoop; string sendCommands = "";
-        integer charLimit = 1000;   // Secondlife supports chat messages up to 1024 chars
-                                    // here we avoid sending over 1000 at a time for safety
+    if (isAttached && RLVok) {
+        integer commandLoop; string sendCommands = ""; string confCommands = "";
+        integer charLimit = 896;    // Secondlife supports chat messages up to 1024 chars
+                                    // here we avoid sending over 896 at a time for safety
+                                    // links will be longer due the the prefix.
         integer scriptIndex = llListFindList(rlvSources, [ script ]);
         list commandList = llParseString2List(commandString, [ "," ], []);
         
@@ -199,9 +194,15 @@ doRLV(string script, string commandString) {
             
             if (llStringLength(sendCommands + fullCmd + ",") > charLimit) {
                 llOwnerSay(llGetSubString("@" + sendCommands, 0, -2));
-                llMessageLinked(LINK_SET, 320, script + "|" + llGetSubString(sendCommands, 0, -2), NULL_KEY);
                 sendCommands = "";
             }
+            //sendCommands += fullCmd + ",";
+            if (llStringLength(confCommands + fullCmd + ",") > charLimit) {
+                lmConfirmRLV(script, llGetSubString(confCommands, 0, -2));
+                //debugSay(llGetSubString(confCommands, 0, -2));
+                confCommands = "";
+            }
+            //confCommands += fullCmd + ",";
             
             if (cmd != "clear") {
                 if (param == "n" || param == "add") {
@@ -209,14 +210,21 @@ doRLV(string script, string commandString) {
                     if (cmdIndex == -1) { // New restriction add to list and send to viewer
                         rlvStatus += [ cmd, script ];
                         sendCommands += fullCmd + ",";
+                        // + symbol confirms that our restriction has been added and it was not in effect from another
+                        //   script.  The restriction has now been sent to the viewer and currently we have full control
+                        //   of it.
+                        confCommands += "+" + cmd + ",";
                     }
                     else { // Duplicate restriction, note but do not send again
                         string scripts = llList2String(rlvStatus, cmdIndex + 1);
-                        list scriptList = llParseString2List(scripts, [ "|" ], []);
+                        list scriptList = llParseString2List(scripts, [ "," ], []);
                         integer myIndex = llListFindList(scriptList, [ script ]);
                         if (myIndex == -1) {
+                            // ^ symbol confirms our restriction has been added but was already set by another script
+                            //   both scripts must release this restriction before it will be removed.
+                            confCommands += "^" + cmd + ",";
                             scriptList = llListSort(scriptList + [ script ], 1, 1);
-                            rlvStatus = llListReplaceList(rlvStatus, [ cmd, llDumpList2String(scriptList, "|") ],
+                            rlvStatus = llListReplaceList(rlvStatus, [ cmd, llDumpList2String(scriptList, ",") ],
                                                           cmdIndex, cmdIndex + 1);
                         }
                     }
@@ -225,61 +233,92 @@ doRLV(string script, string commandString) {
                     integer cmdIndex = llListFindList(rlvStatus, [ cmd ]);
                     if (cmdIndex != -1) { // Restriction does exist from one or more scripts
                         string scripts = llList2String(rlvStatus, cmdIndex + 1);
-                        list scriptList = llParseString2List(scripts, [ "|" ], []);
+                        list scriptList = llParseString2List(scripts, [ "," ], []);
                         integer myIndex = llListFindList(scriptList, [ script ]);
                         if (myIndex != -1) { // This script is one of the restriction issuers clear it
                             scriptList = llDeleteSubList(scriptList, myIndex, myIndex);
                             if (scriptList == []) { // All released delete old record and send to viewer
                                 rlvStatus = llDeleteSubList(rlvStatus, cmdIndex, cmdIndex + 1);
                                 sendCommands += fullCmd + ",";
-                            } else { // Restriction still holds due to other scripts but release for this one
-                                rlvStatus = llListReplaceList(rlvStatus, [ cmd, llDumpList2String(scriptList, "|") ],
+                                // - symbol means we were the only script holding this restriction it has been
+                                //   deleted from the viewer.
+                                confCommands += "-" + cmd + ",";
+                            }
+                            else {
+                                // ~ symbol means we cleared our restriction but it is still enforced by at least
+                                //   one other script.
+                                confCommands += "~" + cmd + ",";
+                                rlvStatus = llListReplaceList(rlvStatus, [ cmd, llDumpList2String(scriptList, ",") ],
                                                               cmdIndex, cmdIndex + 1);
                             }
                         }
+                        else confCommands += "!" + cmd + ","; // ! symbol means the restriction exists but not for this script
                     }
+                    else confCommands += "#" + cmd + ","; // # symbol indicates an attempt to clear a non existant restriction
                 }
                 else {
                     // Oneshot command
                     sendCommands += fullCmd + ",";
+                    confCommands += fullCmd + ",";
                 }
             }
             else if (cmd == "clear") {
-                integer i;
+                integer i; integer matches; integer reduced; integer cleared; integer held;
                 for (i = 0; i < llGetListLength(rlvStatus); i = i + 2) {
                     string thisCmd = llList2String(rlvStatus, i);
                     if (llSubStringIndex(thisCmd, param) != -1) { // Restriction matches clear param
+                        matches++;
                         string scripts = llList2String(rlvStatus, i + 1);
-                        list scriptList = llParseString2List(scripts, [ "|" ], []);
+                        list scriptList = llParseString2List(scripts, [ "," ], []);
                         integer myIndex = llListFindList(scriptList, [ script ]);
                         if (myIndex != -1) { // This script is one of the restriction issuers clear it
                             scriptList = llDeleteSubList(scriptList, myIndex, myIndex);
+                            reduced++;
                             if (scriptList == []) { // All released delete old record and send to viewer
                                 rlvStatus = llDeleteSubList(rlvStatus, i, i + 1);
                                 i = i - 2;
+                                cleared++;
                                 if (llStringLength(sendCommands + thisCmd + "=y,") > charLimit) {
                                     llOwnerSay(llGetSubString("@" + sendCommands, 0, -2));
-                                    llMessageLinked(LINK_SET, 320, script + "|" + llGetSubString(sendCommands, 0, -2), NULL_KEY);
                                     sendCommands = "";
                                 }
                                 sendCommands += thisCmd + "=y,";
                             } else { // Restriction still holds due to other scripts but release for this one
-                                rlvStatus = llListReplaceList(rlvStatus, [ thisCmd, llDumpList2String(scriptList, "|") ],
+                                held++;
+                                rlvStatus = llListReplaceList(rlvStatus, [ thisCmd, llDumpList2String(scriptList, ",") ],
                                                               i, i + 1);
                             }
                         }
                     }
                 }
+                // Clear command confirmations are a little more complex as they can have many matches, the reply gives the
+                // records affected counts as follows clear=param/matches/reduced/cleared/held
+                //  * Matches: At least one restriction matching this param exists which may or may not be ours.
+                //  * Reduced: Matching restrictions of ours which have now been eliminated by the clear command they may be held by others.
+                //  * Cleared: Number of reduced restrictions which were completly cleared and removed from the viewer.
+                //  * Held: Number of reduced restrictions which were also held by others scripts and remain in effect.
+                string clrCmd = fullCmd + "/" + (string)matches + "/" + (string)reduced + "/" + (string)cleared + "/" + (string)held;
+                if (llStringLength(confCommands + clrCmd + ",") > charLimit) {
+                    lmConfirmRLV(script, llGetSubString(confCommands, 0, -2));
+                    //debugSay(llGetSubString(confCommands, 0, -2));
+                    confCommands = "";
+                }
+                confCommands += clrCmd + ",";
             }
         }
         
-        if (sendCommands != "") {
-            llOwnerSay(llGetSubString("@" + sendCommands, 0, -2));
-            llMessageLinked(LINK_SET, 320, script + "|" + llGetSubString(sendCommands, 0, -2), NULL_KEY);
+        if (sendCommands != "") llOwnerSay(llGetSubString("@" + sendCommands, 0, -2));
+        if (confCommands != "") {
+            lmConfirmRLV(script, llGetSubString(confCommands, 0, -2));
+            //debugSay(llGetSubString(confCommands, 0, -2));
         }
         
         //llOwnerSay("RLV Sources " + llList2CSV(rlvSources));
-        //llOwnerSay("RLV Status " + llDumpList2String(llList2ListStrided(rlvStatus, 0, -1, 2), "/"));
+        debugSay(9, "Active RLV: " + llDumpList2String(llList2ListStrided(rlvStatus, 0, -1, 2), "/"));
+        integer i;
+        for (i = 0; i < llGetListLength(rlvStatus); i += 2) {
+            debugSay(9, llList2String(rlvStatus, i) + "\t" + llList2String(rlvStatus, i + 1));
+        }
     }
 }
 
@@ -319,7 +358,7 @@ string getAttachName() {
 // Only useful if @tplure and @accepttp are off and denied by default...
 string getAutoTPList() {
     list allow = [ AGENT_CHRISTINA_HALPIN, AGENT_GREIGHIGHLAND_RESIDENT, AGENT_MAYSTONE_RESIDENT, AGENT_SILKY_MESMERISER ];
-    if (MistressID != NULL_KEY) allow += MistressID;
+    if (MistressList != []) allow += MistressList;
     if (carrierID != NULL_KEY) allow += carrierID;
     integer loop; key userID;
     string RLV = "tplure:" + llDumpList2String(allow, "=add,tplure:") + "=add,";
@@ -458,7 +497,8 @@ default {
         else if (code == 300) { // RLV Config
             string script = llList2String(split, 0);
             string name = llList2String(split, 1);
-            string value = llList2String(split, 2);
+            split = llList2List(split, 2, -1);
+            string value = llList2String(split, 0);
             
             if (script != SCRIPT_NAME) {
                 if (llListFindList([ "autoTP", "canFly", "canSit", "canStand", "canWear", "canUnwear", "helpless" ], [ name ]) != -1) {
@@ -476,6 +516,7 @@ default {
                     else if (name == "barefeet")                   barefeet = value;
                     else if (name == "dollType")                   dollType = value;
                     else if (name == "MistressID")               MistressID = (key)value;
+                    else if (name == "MistressList")           MistressList = split;
                     else if (name == "mistressName")           mistressName = value;
                     else if (name == "quiet")                         quiet = (integer)value;
                     else if (name == "userBaseRLVcmd") {
@@ -533,7 +574,7 @@ default {
                 if (userCollapseRLVcmd != "")
                     doRLV("UserCollapse", userCollapseRLVcmd);
             }
-            else if (cmd == "restore") {
+            else if (cmd == "uncollapse") {
                 // Clear collapse restrictions
                 doRLV("Collapse", "clear");
                 // Clear user collapse restrictions
@@ -588,6 +629,8 @@ default {
                 if (!quiet) llSay(0, dollName + " was" + mid + "has" + end);
                 else llOwnerSay("You were" + mid + "have" + end);
             }
+            else if (cmd == "setPose") doRLV("Pose", "chatnormal=n,edit=n,fartouch=n,fly=n,rez=n,showinv=n,sit=n," +                                                      "tplm=n,tploc=n,unsit=n");
+            else if (cmd == "doUnpose") doRLV("Pose", "clear");
             else if (cmd == "TP") {
                 string lm = llList2String(split, 0);
                 llRegionSayTo(id, 0, "Teleporting dolly " + dollName + " to  landmark " + lm + ".");

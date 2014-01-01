@@ -25,7 +25,6 @@ string dollName;
 key ncPrefsKey;
 key ncPrefsLoadedUUID = NULL_KEY;
 key ncIntroKey;
-string ncName = "Preferences";
 integer ncLine;
 
 float ncStart;
@@ -40,7 +39,7 @@ integer introLine;
 integer introLines;
 integer reset;
 integer rlvWait;
-integer RLVok;
+integer RLVok = -1;
 
 #ifdef SIM_FRIENDLY
 integer afk;
@@ -155,22 +154,22 @@ initConfiguration() {
     ncStart = llGetTime();
     
     // Check to see if the file exists and is a notecard
-    if (llGetInventoryType(ncName) == INVENTORY_NOTECARD) {
+    if (llGetInventoryType(NOTECARD_PREFERENCES) == INVENTORY_NOTECARD) {
 
         // Start reading from first line (which is 0)
         ncLine = 0;
-        ncPrefsKey = llGetNotecardLine(ncName, ncLine);
+        ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ncLine);
 
     } else {
 
         // File missing - report for debugging only
-        sendMsg(dollID, "No configuration found (" + ncName + ")");
+        sendMsg(dollID, "No configuration found (" + NOTECARD_PREFERENCES + ")");
     }
 }
 
 doneConfiguration() {
     if (startup == 1) {
-        ncPrefsLoadedUUID = llGetInventoryKey(ncName);
+        ncPrefsLoadedUUID = llGetInventoryKey(NOTECARD_PREFERENCES);
         //sendMsg(dollID, (string)ncPrefsLoadedUUID);
         llMessageLinked(LINK_SET, 102, "", NULL_KEY);
         startup = 2;
@@ -186,18 +185,14 @@ initializationCompleted() {
     if (!quiet && llGetAttached() == ATTACH_BACK)
         llSay(0, llGetDisplayName(llGetOwner()) + " is now a dolly - anyone may play with their Key.");
 
-#ifdef DEVELOPER_MODE
-    llMessageLinked(LINK_SET, 135, llGetScriptName(), NULL_KEY);
-    memReport();
-#endif
-    llSleep(1.0);
     string msg = "Initialization completed";
-#ifdef DEVELOPER_MODE
+    #ifdef DEVELOPER_MODE
     msg += " in " + formatFloat(llGetTime(), 2) + "s";
-#endif
+    #endif
     msg += " key ready";
     sendMsg(dollID, msg);
     
+    llMessageLinked(LINK_SET, 135, llGetScriptName(), NULL_KEY);
     startup = 0;
 }
 
@@ -241,24 +236,22 @@ default {
             sendMsg(id, llList2String(split,0));
         }
         else if (startup == 1 && code == 104) {
-            if (llList2String(split, 0) == "Start") return;
             if (llListFindList(readyScripts, [ llList2String(split,0) ]) == -1) {
                 readyScripts += llList2String(split,0);
+                if (notReady() == []) initConfiguration();
             }
-            if (notReady() == []) initConfiguration();
         }
         else if (startup == 2 && code == 105) {
-            if (llList2String(split, 0) == "Start") return;
             if (llListFindList(readyScripts, [ llList2String(split,0) ]) == -1) {
                 readyScripts += llList2String(split,0);
+                if (notReady() == []) initializationCompleted();
             }
-            if (notReady() == []) initializationCompleted();
         }
-#ifdef DEVELOPER_MODE
-        else if (code == 135 && llList2String(split, 0) != SCRIPT_NAME) {
+        #ifdef DEVELOPER_MODE
+        else if (code == 135) {
             memReport();
         }
-#endif
+        #endif
         else if (code == 300) {
             string name = llList2String(split, 0);
             integer value = llList2Integer(split, 1);
@@ -312,7 +305,7 @@ default {
                 if (RLVok)
                     llOwnerSay("Unable to reset scripts while running with RLV enabled, please relog without RLV disabled or " +
                                 "you can use login a Linden Lab viewer to perform a script reset.");
-                else if (rlvWait && (llGetTime() < 180.0))
+                else if (RLVok == -1 && (llGetTime() < 180.0))
                     llOwnerSay("Key is currently still checking your RLV status please wait until the check completes and then try again.");
                 else llResetScript();
             }
@@ -347,6 +340,13 @@ default {
             }
         }
         
+        if (llGetAttached()) {
+            string name = dollName;
+            integer space = llSubStringIndex(name, " ");
+            if (space != -1) name = llGetSubString(name, 0, space -1);
+            llSetObjectName("Dolly " + name + "'s Key");
+        }
+        
         llSetTimerEvent(0.5);
     }
     
@@ -368,6 +368,7 @@ default {
     
     on_rez(integer start) {
         rlvWait = 1;
+        RLVok = -1;
         if (startup) llResetScript();
         else startup = 2;
 #ifdef SIM_FRIENDLY
@@ -403,6 +404,11 @@ default {
         } else {
             llMessageLinked(LINK_SET, 106, "attached|" + (string)llGetAttached(), id);
             
+            string name = dollName;
+            integer space = llSubStringIndex(name, " ");
+            if (space != -1) name = llGetSubString(name, 0, space -1);
+            llSetObjectName("Dolly " + name + "'s Key");
+            
             if (llGetAttached() != ATTACH_BACK) {
                 llMessageLinked(LINK_SET, 311, "windDown|0", id);
                 
@@ -410,14 +416,8 @@ default {
                            "belatedly realize that it must be attached to your spine.");
                 llOwnerSay("@clear,detachme=force");
                 
-                llSleep(3.0);
+                llSleep(2.0);
                 llDetachFromAvatar();
-            }
-            else {
-                string name = dollName;
-                integer space = llSubStringIndex(name, " ");
-                if (space != -1) name = llGetSubString(name, 0, space -1);
-                llSetObjectName("Dolly " + name + "'s Key");
             }
             
             lastAttachPoint = llGetAttached();
@@ -440,14 +440,14 @@ default {
                     list split = llParseString2List(value, [ "|" ], []);
                     processConfiguration(name, split);
                 }
-                ncPrefsKey = llGetNotecardLine(ncName, ++ncLine);
+                ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ++ncLine);
             }
         }
     }
     
     changed(integer change) {
         if (change & CHANGED_INVENTORY) {
-            if (ncPrefsLoadedUUID != NULL_KEY && llGetInventoryKey(ncName) != ncPrefsLoadedUUID) {
+            if (ncPrefsLoadedUUID != NULL_KEY && llGetInventoryKey(NOTECARD_PREFERENCES) != ncPrefsLoadedUUID) {
                 wakeMenu();
                 integer channel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -8, -1));
                 
@@ -460,8 +460,7 @@ default {
         if (change & CHANGED_OWNER) {
             llOwnerSay("Deleting old preferences notecard on owner change.");
             llOwnerSay("Look at PreferencesExample to see how to make yours.");
-            llRemoveInventory(ncName);
-            llSleep(5);
+            while (llGetInventoryType(NOTECARD_PREFERENCES) != INVENTORY_NONE) llRemoveInventory(NOTECARD_PREFERENCES);
             llResetScript();
         }
     }
@@ -479,13 +478,15 @@ default {
             llMessageLinked(LINK_SET, 104, llGetScriptName() + "|0", NULL_KEY);
 #endif
         }
-        else if (startup && llGetTime() > 90.0) {
+        else if (startup && RLVok != -1 && llGetTime() > 90.0) {
             lowScriptMode = 0;
             sendMsg(dollID, "Startup failure detected one or more scripts may have crashed, resetting");
 
-#ifdef DEVELOPER_MODE
+            #ifdef DEVELOPER_MODE
             sendMsg(dollID, "The following scripts did not report: " + llList2CSV(notReady()));
-#endif
+            #endif
+            
+            llResetScript();
         }
 #ifdef SIM_FRIENDLY
         else if (!startup) {

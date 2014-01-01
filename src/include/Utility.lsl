@@ -24,7 +24,7 @@ memReport() {
        used_memory = memory_limit - free_memory;
     }
     
-    llSleep(1.0);
+    //llSleep(1.0);
     llOwnerSay(SCRIPT_NAME + ": Memory " + formatFloat(used_memory/1024.0, 2) + "/" + (string)llRound((memory_limit)/1024.0) + "kB, " + formatFloat(free_memory/1024.0, 2) + " kB free");
 }
 #else

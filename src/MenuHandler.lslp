@@ -124,8 +124,13 @@ doMainMenu(key id) {
                 menu += "Unpose";
             }
 
-            if ((numControllers < MAX_USER_CONTROLLERS) && takeoverAllowed) {
-                menu += "Be Controller";
+            if (!isMistress(id)) {
+                if ((numControllers < MAX_USER_CONTROLLERS) && takeoverAllowed) {
+                    menu += "Be Controller";
+                }
+                else if (numControllers < MAX_USER_CONTROLLERS) {
+                    menu += "Request Control";
+                }
             }
 
 #ifdef ADULT_MODE
@@ -242,6 +247,7 @@ doHelpMenu(key id) {
                 "key and to connect with the community.";
     list menu = [ "Join Group", "Visit CD Room", "Reset Scripts", "Issue Tracker" ];
     if (llGetInventoryType(NOTECARD_HELP) == INVENTORY_NOTECARD) menu += "Help Notecard";
+    menu += "Check Update";
     
     llListenControl(dialogHandle, 1);
     llSetTimerEvent(60.0);
@@ -258,7 +264,7 @@ doOptionsMenu(key id) {
     
     if (isController) {
         msg = "See " + WEB_DOMAIN + "controller.htm. Choose what you want to happen. (" + OPTION_DATE + " version)";
-        pluslist += "drop control";
+        pluslist += "Drop Control";
     }
     
     if (!canDress) pluslist += "Can Outfit";
@@ -299,7 +305,7 @@ doOptionsMenu(key id) {
     else pluslist += "Pleasure Doll";
 #endif
 
-    if (numControllers < MAX_USER_CONTROLLERS) {
+    if (isDoll && (numControllers < MAX_USER_CONTROLLERS)) {
         if (takeoverAllowed) pluslist += "No Takeover";
         else pluslist += "Allow Takeover";
     }
@@ -309,6 +315,7 @@ doOptionsMenu(key id) {
         else pluslist += "Turn On Sign";
     }
 
+    debugSay(5, msg + "\n\n" + llList2CSV(pluslist));
     llDialog(id, msg, pluslist, dialogChannel);
 }
 
@@ -356,6 +363,7 @@ handlemenuchoices(string choice, string name, key id) {
         carrierID = id;
         carrierName = name;
         lmInternalCommand("carry", carrierName, carrierID);
+        doMainMenu(id);
     }
     else if (choice == "Help/Support") {
         doHelpMenu(id);
@@ -398,7 +406,7 @@ handlemenuchoices(string choice, string name, key id) {
             lmSendToAgent(dollName + " seems willing to let you take permanant control of her key now. " +
                             "Maybe you could claim " + dollName + " as your own? (Be Controller from the menu).", carrierID);
         }
-        lmSendConfig("takeoverAllowed", (string)1);
+        lmSendConfig("takeoverAllowed", (string)(takeoverAllowed = 1));
     }
     else if (choice == "Dress") {
         if (!doll) llOwnerSay(name + " is looking at your dress menu");
@@ -482,7 +490,7 @@ handlemenuchoices(string choice, string name, key id) {
     }
     #endif
     else if (choice == "No Self TP")
-        lmSendConfig("helpless", (string)1);
+        lmSendConfig("helpless", (string)(helpless = 1));
     else if (controller && choice == "Self TP")
         lmSendConfig("helpless", (string)(helpless = 0));
     else if (choice == "Can Carry") {
@@ -544,6 +552,7 @@ handlemenuchoices(string choice, string name, key id) {
             MistressList = llDeleteSubList(MistressList, index, index);
             MistressNameList = llDeleteSubList(MistressList, index, index);
         }
+        reloadMistressNames();
     }
     
     if ((keyAnimation == "" || (!doll || poserID == dollID)) && llGetInventoryType(choice) == 20) {
@@ -599,7 +608,6 @@ newController(key id) {
                        "have complete control over dolly.");
             lmSendToAgent("The dolly " + dollName + " has fully accepted your control of them.", carrierID);
         }
-        reloadMistressNames();
         
         if (!quiet) llSay(0, carrierName + " has become controller of the doll " + dollName + ".");
     
@@ -623,6 +631,8 @@ reloadMistressNames() {
         mistressQueryIndex = 0;
         mistressQuery = llRequestDisplayName(llList2Key(MistressList, mistressQueryIndex));
     }
+    
+    lmSendConfig("MistressList", llDumpList2String(MistressList, "|"));
 }
 
 float setWindRate() {
@@ -662,8 +672,8 @@ default
             
             if (!configured) {
                 if (name == "controller") {
-                    MistressList == split;
-                    mistressQuery = llRequestDisplayName(llList2Key(split, 0));
+                    MistressList += llListSort(MistressList + [ llList2String(split, 0) ], 1, 1);
+                    reloadMistressNames();
                 }
             }
         }
@@ -708,7 +718,7 @@ default
             else if (name == "dollType")
                 dollType = llGetSubString(llToUpper(value), 0, 0) + llGetSubString(llToLower(value), 1, -1);
             else if (name == "MistressID") {
-                if (llListFindList(MistressList, [ value ]) == -1) {
+                if ((key)value != NULL_KEY && llListFindList(MistressList, [ value ]) == -1) {
                     MistressList = llListSort(MistressList + [ value ], 1, 1);
                     reloadMistressNames();
                 }
@@ -737,8 +747,14 @@ default
                 carrierName = "";
             }
             else if (cmd == "mainMenu") doMainMenu(id);
-            else if (cmd == "collapse") collapsed = 1;
-            else if (cmd == "restore") collapsed = 0;
+            else if (cmd == "collapse") {
+                keyAnimation = ANIMATION_COLLAPSED;
+                collapsed = 1;
+            }
+            else if (cmd == "uncollapse") {
+                keyAnimation = "";
+                collapsed = 0;
+            }
             else if (cmd == "dialogListen") {
                 llListenControl(dialogHandle, 1);
                 llSetTimerEvent(60.0);
@@ -775,7 +791,8 @@ default
     
     dataserver(key query_id, string data) {
         if (query_id == mistressQuery) {
-            MistressNameList += llListReplaceList(MistressNameList, [ data ], mistressQueryIndex, mistressQueryIndex);
+            MistressNameList = llListReplaceList(MistressNameList, [ data ], mistressQueryIndex, mistressQueryIndex);
+            
             if (++mistressQueryIndex < numControllers) {
                 mistressQuery = llRequestDisplayName(llList2Key(MistressList, mistressQueryIndex));
             }
