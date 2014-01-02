@@ -289,10 +289,10 @@ float windKey() {
         return windamount;
     }
         
-    // Eles return limit - timeleft
+    // Else return limit - timeleft
     else {
         // Inform doll of full wind
-        llOwnerSay("You have been fully wound - " + (string)llRound(keyLimit / 60.0) + " minutes remaining.");
+        //llOwnerSay("You have been fully wound - " + (string)llRound(keyLimit / 60.0) + " minutes remaining.");
         timeLeftOnKey += windLimit;
         return windLimit;
     }
@@ -302,17 +302,17 @@ doWind(string name, key id) {
     integer winding = llFloor(windKey() / 60.0);
 
     if (winding > 0) {
-        llMessageLinked(LINK_SET, 11, "You have given " + dollName + " " + (string)winding + " more minutes of life.", id);
-    }
+        if (timeLeftOnKey == keyLimit) {
+            llMessageLinked(LINK_SET, 11, "You have given " + dollName + " " + (string)winding + " more minutes of life.", id);
 
-    if (timeLeftOnKey == keyLimit) {
-        if (!quiet) llSay(0, dollName + " has been fully wound by " + name + ".");
-        else llMessageLinked(LINK_SET, 11, dollName + " is now fully wound.", id);
-    } else {
-        llMessageLinked(LINK_SET, 11, "Doll is now at " + formatFloat((float)timeLeftOnKey * 100.0 / (float)keyLimit, 2) + "% of capacity.", id);
+            if (!quiet) llSay(0, dollName + " has been fully wound by " + name + ".");
+            else llMessageLinked(LINK_SET, 11, dollName + " is now fully wound.", id);
+        } else {
+            llMessageLinked(LINK_SET, 11, "You have given " + dollName + " " + (string)winding + " more minutes of life (" + formatFloat((float)timeLeftOnKey * 100.0 / (float)keyLimit, 2) + "% capacity).", id);
+        }
+        // Is this too spammy?
+        llOwnerSay("Have you remembered to thank " + name + " for winding you?");
     }
-    // Is this too spammy?
-    llOwnerSay("Have you remembered to thank " + name + " for winding you?");
 
     if (collapsed) uncollapse();
     else llMessageLinked(LINK_SET, 300, "timeLeftOnKey|" + (string)timeLeftOnKey, NULL_KEY);
