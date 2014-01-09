@@ -45,6 +45,8 @@ default {
     link_message(integer sender, integer code, string data, key id) {
         list split = llParseString2List(data, [ "|" ], []);
         
+        scaleMem();
+        
         if (code == 104 || code == 105) {
             if (llList2String(split, 0) != "Start") return;
             setup();

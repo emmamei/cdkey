@@ -140,9 +140,11 @@ string dateString(list timelist, string seperator, integer long) {
 }
 
 string timeString(list timelist) {
-    string  hourstr     = llGetSubString ( (string) (100 + llList2Integer(timelist, 3) ), -2, -1);
-    string  minutestr   = llGetSubString ( (string) (100 + llList2Integer(timelist, 4) ), -2, -1);
-    string  secondstr   = llGetSubString ( (string) (100 + llList2Integer(timelist, 5) ), -2, -1);
+    integer index = 0;
+    if (llGetListLength(timelist) == 6) index += 3;
+    string  hourstr     = llGetSubString ( (string) (100 + llList2Integer(timelist, index++) ), -2, -1);
+    string  minutestr   = llGetSubString ( (string) (100 + llList2Integer(timelist, index++) ), -2, -1);
+    string  secondstr   = llGetSubString ( (string) (100 + llList2Integer(timelist, index++) ), -2, -1);
     return  hourstr + ":" + minutestr + ":" + secondstr;
 }
 
@@ -172,5 +174,29 @@ integer dateTime2Unix(integer year, integer month, integer day, integer hour, in
 
     return time;
 }
-
+/*
+ * ----------------------------------------
+ * MEMORY SCALING
+ * ----------------------------------------
+ */
+scaleMem() {
+   integer free = llGetFreeMemory();
+   integer used = llGetUsedMemory();
+   integer limit = llGetMemoryLimit();
+   integer newlimit = limit;
+   if ((llGetFreeMemory() + llGetUsedMemory()) < (llGetMemoryLimit() * 1.05)) {
+      // If this fails it is probably an LSL2 compiled script not mono and the
+      // rest can't apply.
+      if ((llGetFreeMemory() > 8192 && llGetMemoryLimit() > 16384) || (llGetFreeMemory() < 4096 && llGetMemoryLimit() < 65536)) {
+         newlimit = llCeil((llGetUsedMemory() + 6144) / 1024) * 1024;
+	 if (newlimit < 16384) newlimit=16384;
+         else if (newlimit > 65536) newlimit=65536;
+      }
+      if (newlimit != limit) {
+         llSetMemoryLimit(newlimit);
+         debugSay(5, "Memory limit changed from " + formatFloat((float)limit / 1024.0, 2) + "kB to " + formatFloat((float)newlimit / 1024.0, 2) + "kB (" + formatFloat((float)(newlimit - limit) / 1024.0, 2) + "kB) " + formatFloat((float)llGetFreeMemory() / 1024.0, 2) + "kB free");
+      }
+   }
+}
 #endif // UTILITY_LSL
+

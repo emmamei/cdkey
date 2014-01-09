@@ -2,15 +2,15 @@
 
 SHELL=/bin/sh
 
-SUBDIRS=src
-OUTDIRS=key
+SUBDIRS=./src
+OUTDIRS=./key
 
 all: $(SUBDIRS)
 	@MKDIR_P@ $(OUTDIRS)
-	make -s -C $^ $@
+	make -C $^ $@
 
 clean:
-	rm -rf key src/*.lsl
+	rm -rf ./key ./src/*.cpp
 
 configure: configure.ac
 	autoconf

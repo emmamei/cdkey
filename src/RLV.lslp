@@ -32,7 +32,6 @@ integer canFly = 1;
 integer canSit = 1;
 integer canStand = 1;
 integer canWear = 1;
-integer canUnwear = 1;
 integer detachable = 1;
 integer helpless;
 
@@ -131,15 +130,25 @@ initializeRLV(integer refresh) {
         else baseRLV += "unsit=y,";
         if (!canSit) baseRLV += "sit=n,";
         else baseRLV += "sit=y,";
-        if (!canWear) baseRLV += "unsharedwear=n,";
-        else baseRLV += "unsharedwear=y,";
-        if (!canUnwear) baseRLV += "unsharedunwear=n";
-        else baseRLV += "unsharedunwear=y";
+        if (!canWear) baseRLV += "unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n";
+        else baseRLV += "unsharedwear=y,unsharedunwear=y,attachallthis:=y,detachallthis:=y";
         
         if (wearLock) doRLV("Dress", "unsharedwear=n,unshareunwear=n,attachallthis:=n,detachallthis:=n");
         
         doRLV("Base", baseRLV);
-    
+        
+        if (afk) afkOrCollapse("AFK", 1);
+        else doRLV("AFK", "clear");
+        
+        if (collapsed) {
+            afkOrCollapse("Collapsed", 1);
+            if (userCollapseRLVcmd != "") doRLV("UserCollapsed", userCollapseRLVcmd);
+        }
+        else {
+            doRLV("Collapsed", "clear");
+            doRLV("UserCollapsed", "clear");
+        }
+        
         // if Doll is one of the developers... dont lock:
         // prevents inadvertent lock-in during development
         #ifndef DEVELOPER_MODE
@@ -150,9 +159,11 @@ initializeRLV(integer refresh) {
         doRLV("Base", "detach=n,editobj:" + (string)llGetKey() + "=add");  //locks key
         if (!refresh) locked = 1;
         #else
-        llListenControl(listenHandle, 1);
         if (myPath != "") doRLV("Base", "detachthis_except:" + myPath + "=add");
-        doRLV("Base", "getpathnew=" + (string)channel);
+        else {
+            llListenControl(listenHandle, 1);
+            doRLV("Base", "getpathnew=" + (string)channel);
+        }
         if (!refresh) {
             if (!quiet) llSay(0, "Developer Key not locked.");
             else llOwnerSay("Developer key not locked.");
@@ -165,7 +176,6 @@ initializeRLV(integer refresh) {
     
     if (!refresh) {
         RLVstarted = 1;
-        llSetTimerEvent(0.0);
         startup = 0;
     }
 }
@@ -192,12 +202,12 @@ doRLV(string script, string commandString) {
             param = llList2String(parts, 1);
             cmd = llList2String(parts, 0);
             
-            if (llStringLength(sendCommands + fullCmd + ",") > charLimit) {
+            if (llStringLength(sendCommands + fullCmd + ",?") > charLimit) {
                 llOwnerSay(llGetSubString("@" + sendCommands, 0, -2));
                 sendCommands = "";
             }
             //sendCommands += fullCmd + ",";
-            if (llStringLength(confCommands + fullCmd + ",") > charLimit) {
+            if (llStringLength(confCommands + fullCmd + ",?") > charLimit) {
                 lmConfirmRLV(script, llGetSubString(confCommands, 0, -2));
                 //debugSay(llGetSubString(confCommands, 0, -2));
                 confCommands = "";
@@ -207,7 +217,7 @@ doRLV(string script, string commandString) {
             if (cmd != "clear") {
                 if (param == "n" || param == "add") {
                     integer cmdIndex = llListFindList(rlvStatus, [ cmd ]);
-                    if (cmdIndex == -1) { // New restriction add to list and send to viewer
+                    if (cmdIndex == -1 ) { // New restriction add to list and send to viewer
                         rlvStatus += [ cmd, script ];
                         sendCommands += fullCmd + ",";
                         // + symbol confirms that our restriction has been added and it was not in effect from another
@@ -215,6 +225,7 @@ doRLV(string script, string commandString) {
                         //   of it.
                         confCommands += "+" + cmd + ",";
                     }
+                    else if (llGetSubString(cmd, -8, -1) == "_except") sendCommands += fullCmd + ",";
                     else { // Duplicate restriction, note but do not send again
                         string scripts = llList2String(rlvStatus, cmdIndex + 1);
                         list scriptList = llParseString2List(scripts, [ "," ], []);
@@ -252,9 +263,7 @@ doRLV(string script, string commandString) {
                                                               cmdIndex, cmdIndex + 1);
                             }
                         }
-                        else confCommands += "!" + cmd + ","; // ! symbol means the restriction exists but not for this script
                     }
-                    else confCommands += "#" + cmd + ","; // # symbol indicates an attempt to clear a non existant restriction
                 }
                 else {
                     // Oneshot command
@@ -297,13 +306,15 @@ doRLV(string script, string commandString) {
                 //  * Reduced: Matching restrictions of ours which have now been eliminated by the clear command they may be held by others.
                 //  * Cleared: Number of reduced restrictions which were completly cleared and removed from the viewer.
                 //  * Held: Number of reduced restrictions which were also held by others scripts and remain in effect.
-                string clrCmd = fullCmd + "/" + (string)matches + "/" + (string)reduced + "/" + (string)cleared + "/" + (string)held;
-                if (llStringLength(confCommands + clrCmd + ",") > charLimit) {
-                    lmConfirmRLV(script, llGetSubString(confCommands, 0, -2));
-                    //debugSay(llGetSubString(confCommands, 0, -2));
-                    confCommands = "";
+                if (reduced != 0 || cleared != 0 || held != 0) { // Send confirm link only for changes
+                    string clrCmd = fullCmd + "/" + (string)matches + "/" + (string)reduced + "/" + (string)cleared + "/" + (string)held;
+                    if (llStringLength(confCommands + clrCmd + ",") > charLimit) {
+                        lmConfirmRLV(script, llGetSubString(confCommands, 0, -2));
+                        //debugSay(llGetSubString(confCommands, 0, -2));
+                        confCommands = "";
+                    }
+                    confCommands += clrCmd + ",";
                 }
-                confCommands += clrCmd + ",";
             }
         }
         
@@ -343,7 +354,6 @@ afkOrCollapse(string type, integer set) {
         RLV = "unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n,";
         RLV += "fly=n,sit=n,unsit=n,tplm=n,tploc=n,temprun=n,alwaysrun=n,sendchat=n,tplure=n,";
         RLV += "sittp=n,standtp=n,shownames=n,showhovertextall=n,redirchat:999=add,rediremote:999=add,";
-        //RLV += getAttachLockRLV() + ",";
         RLV += getAutoTPList();
     }
     else RLV = "clear";
@@ -375,6 +385,10 @@ default {
         dollID = llGetOwner();
         scriptName = llGetScriptName();
         lmScriptReset();
+        
+        // RLV.lsl memory usage varies very rapidly memory scaling is not
+        // an option here.
+        llSetMemoryLimit(64 * 1024);
     }
     
     on_rez(integer start) {
@@ -409,12 +423,12 @@ default {
     listen(integer chan, string name, key id, string msg) {
         if (chan == channel) {
             debugSay(5, "RLV Reply: " + msg);
-            if (!RLVok) {
+            if (!RLVok && llGetSubString(msg, 0, 13) == "RestrainedLove") {
                 RLVok = 1;
                 rlvAPIversion = llStringTrim(msg, STRING_TRIM);
                 postCheckRLV();
             }
-            else {
+            else if (RLVok && llGetSubString(msg, 0, 13) != "RestrainedLove") {
                 myPath = msg;
                 doRLV("Base", "detachthis_except:" + myPath + "=add");
                 llListenControl(listenHandle, 0);
@@ -427,7 +441,7 @@ default {
     //----------------------------------------
 
     link_message(integer sender, integer code, string data, key id) {
-        list split = llParseString2List(data, [ "|" ], []);
+        list split = llParseStringKeepNulls(data, [ "|" ], []);
 
         // valid numbers:
         //    101: Initial configuration from Preferences
@@ -501,13 +515,14 @@ default {
             string value = llList2String(split, 0);
             
             if (script != SCRIPT_NAME) {
-                if (llListFindList([ "autoTP", "canFly", "canSit", "canStand", "canWear", "canUnwear", "helpless" ], [ name ]) != -1) {
+                if (llListFindList([ "afk", "autoTP", "canFly", "canSit", "canStand", "canWear", "collapsed", "helpless" ], [ name ]) != -1) {
                          if (name == "autoTP")                       autoTP = (integer)value;
+                    else if (name == "afk")                             afk = (integer)value;
+                    else if (name == "collapsed")                 collapsed = (integer)value;
                     else if (name == "canFly")                       canFly = (integer)value;
                     else if (name == "canSit")                       canSit = (integer)value;
                     else if (name == "canStand")                   canStand = (integer)value;
                     else if (name == "canWear")                     canWear = (integer)value;
-                    else if (name == "canUnwear")                 canUnwear = (integer)value;
                     else if (name == "helpless")                   helpless = (integer)value;
                     
                     if (RLVstarted) initializeRLV(1);
@@ -515,7 +530,7 @@ default {
                          if (name == "detachable")               detachable = (integer)value;
                     else if (name == "barefeet")                   barefeet = value;
                     else if (name == "dollType")                   dollType = value;
-                    else if (name == "MistressID")               MistressID = (key)value;
+                    else if (name == "MistressID")            MistressList += (key)value;
                     else if (name == "MistressList")           MistressList = split;
                     else if (name == "mistressName")           mistressName = value;
                     else if (name == "quiet")                         quiet = (integer)value;
@@ -527,15 +542,6 @@ default {
                         if (userCollapseRLVcmd == "") userCollapseRLVcmd = value;
                         else userCollapseRLVcmd += "," +value;
                     }
-#ifdef SIM_FRIENDLY
-                    else if (name == "lowScriptMode") {
-                        lowScriptMode = (integer)value;
-                        if (RLVstarted) {
-                            if (lowScriptMode) llSetTimerEvent(30.0);
-                            else llSetTimerEvent(1.0);
-                        }
-                    }
-#endif
                 }
             }
         }
@@ -551,7 +557,6 @@ default {
                 string mins = llList2String(split, 3);
                 
                 if (afk) {
-                    // AFK turns everything off
                     afkOrCollapse("AFK", 1);
                     
                     if (auto)
@@ -560,7 +565,6 @@ default {
                         llOwnerSay("You are now away from keyboard (AFK). Wind down rate has slowed to " + rate + "x however and movements and abilities are restricted.");
                 } else {
                     doRLV("AFK", "clear");
-        
                     llOwnerSay("You are now no longer away from keyboard (AFK). Movements are unrestricted and winding down proceeds at normal rate.");
                 }
                 llOwnerSay("You have " + mins + " minutes of life remaning.");
@@ -569,16 +573,16 @@ default {
                 llMessageLinked(LINK_SET, 15, dollName + " has collapsed at this location: " + wwGetSLUrl(), scriptkey);
                 
                 // Turn everything off: Dolly is down
-                afkOrCollapse("Collapse", 1);
+                afkOrCollapse("Collapsed", 1);
                 // Add user defined restrictions
                 if (userCollapseRLVcmd != "")
-                    doRLV("UserCollapse", userCollapseRLVcmd);
+                    doRLV("UserCollapsed", userCollapseRLVcmd);
             }
             else if (cmd == "uncollapse") {
                 // Clear collapse restrictions
-                doRLV("Collapse", "clear");
+                doRLV("Collapsed", "clear");
                 // Clear user collapse restrictions
-                doRLV("UserCollapse", "clear");
+                doRLV("UserCollapsed", "clear");
             }
 #ifdef ADULT_MODE
             else if (llGetSubString(cmd, 0, 4) == "strip") {
@@ -629,7 +633,7 @@ default {
                 if (!quiet) llSay(0, dollName + " was" + mid + "has" + end);
                 else llOwnerSay("You were" + mid + "have" + end);
             }
-            else if (cmd == "setPose") doRLV("Pose", "chatnormal=n,edit=n,fartouch=n,fly=n,rez=n,showinv=n,sit=n," +                                                      "tplm=n,tploc=n,unsit=n");
+            else if (cmd == "setPose") doRLV("Pose", "attachallthis:=n,chatnormal=n,edit=n,fartouch=n,fly=n,rez=n,showinv=n,sit=n," +                                                      "touchattachother=n,tplm=n,tploc=n,unsit=n,unsharedwear=n");
             else if (cmd == "doUnpose") doRLV("Pose", "clear");
             else if (cmd == "TP") {
                 string lm = llList2String(split, 0);

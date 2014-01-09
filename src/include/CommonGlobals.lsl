@@ -10,13 +10,14 @@ key poserID                 = NULL_KEY;
 key scriptkey               = NULL_KEY;
 
 list MistressList           = [];
-list MistressNameList	    = [];
 
 string carrierName;
+string dresserName;
+string poserName;
 string dollName;
 string dollType             = "Regular";
 string keyAnimation;
-string mistressName         = "";
+//string mistressName         = "";
 #ifdef ADULT_MODE  
 string simRating;
 #endif

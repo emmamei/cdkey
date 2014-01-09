@@ -1,4 +1,4 @@
-AC_INIT([Community Doll Key],[28-Dec-13],[https://github.com/emmamei/cdkey/issues],[cdkey-dev],[https://github.com/emmamei/cdkey])
+AC_INIT([Community Doll Key],[09-Jan-14],[https://github.com/emmamei/cdkey/issues],[cdkey-dev],[https://github.com/emmamei/cdkey])
 AC_PREREQ([2.69])
 AC_PREFIX([${PWD}/key])
 AC_PROG_CPP

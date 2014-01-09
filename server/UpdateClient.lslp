@@ -2,11 +2,13 @@
 
 key requestName;
 key requestUpdate;
+key requestKey;
+list unresolvedNames;
 integer lastUpdateCheck;
 integer requestIndex = -1;
-integer myVersion = 1000000;
+integer myVersion = 140102;
 
-string serviceURL = "https://api.silkytech.com/cdkey/service.php?action=";
+string serviceURL = "https://api.silkytech.com/";
 string serverURL;
 
 list serverNames = [
@@ -29,6 +31,18 @@ default
         }
     }
     
+    touch_start(integer num) {
+        integer index = llListFindList(unresolvedNames, [ llDetectedName(0) ]);
+        if (index != -1) {
+            llOwnerSay("Identified Mistress " + llDetectedName(0) + " on key touch");
+            unresolvedNames = llDeleteSubList(unresolvedNames, index, index);
+            lmSendConfig("MistressID", (string)llDetectedKey(0));
+            llHTTPRequest(serviceURL + "name2key/add/", [ HTTP_METHOD, "POST", HTTP_MIMETYPE, "application/x-www-form-urlencoded", HTTP_VERIFY_CERT, FALSE ],
+                "name=" + llEscapeURL(llDetectedName(0)) + "&" +
+                "uuid=" + llEscapeURL(llDetectedKey(0)));
+        }
+    }
+    
     on_rez(integer start) {
         llResetScript();
     }
@@ -38,6 +52,19 @@ default
             if (status == 200) {
                 serverURL = body;
                 state goturl;
+            }
+        }
+        if (request == requestKey) {
+            integer index = llSubStringIndex(body, "=");
+            string name = llGetSubString(body, 0, index - 1);
+            string uuid = llGetSubString(body, index + 1, -1);
+            if (uuid == "NOT FOUND") {
+                llOwnerSay("Failed to find " + name + " in the name2key database, please check the name is correct and in legacy name format.  If the name is correct it is probably safe to ignore this message and the database will be updated when " + name + " touches your key next.");
+            }
+            else {
+                index = llListFindList(unresolvedNames, [ name ]);
+                unresolvedNames = llDeleteSubList(unresolvedNames, index, index);
+                lmSendConfig("MistressID", uuid);
             }
         }
         if (status == 403) {
@@ -58,12 +85,23 @@ default
     link_message(integer sender, integer code, string data, key id) {
         list split = llParseString2List(data, [ "|" ], []);
         
+        scaleMem();
+        
         if (code == 104 || code == 105) {
             if (llList2String(split, 0) != "Start") return;
             lmInitState(code);
         }
         else if (code == 135) {
             memReport();
+        }
+        else if (code == 300) {
+            string name = llList2String(split, 1);
+            string value = llList2String(split, 2);
+            
+            if (name == "MistressByName") {
+                debugSay(5, "Looking up name " + value);
+                requestKey = llHTTPRequest(serviceURL + "name2key/lookup/" + llEscapeURL(value) + "/", [ HTTP_METHOD, "POST", HTTP_MIMETYPE, "application/x-www-form-urlencoded", HTTP_VERIFY_CERT, FALSE ], "");
+            }
         }
         else if (code == 500) {
             string selection = llList2String(split, 0);
@@ -77,14 +115,14 @@ default
     }
 
     timer() {
-        requestName = llHTTPRequest(serviceURL + "geturl&domain=" + llEscapeURL(llList2String(serverNames, requestIndex)), [ HTTP_METHOD, "GET", HTTP_VERIFY_CERT, FALSE ], "");
+        requestName = llHTTPRequest(serviceURL + "objdns/lookup/" + llEscapeURL(llList2String(serverNames, requestIndex)) + "/", [ HTTP_METHOD, "GET", HTTP_VERIFY_CERT, FALSE ], "");
     }
 }
 
 state goturl {
     state_entry() {
         debugSay(5, "state gotURL " + serverURL);
-        if (lastUpdateCheck <= (llGetUnixTime() - 43200)) {
+        if (lastUpdateCheck <= (llGetUnixTime() - 10800)) {
             requestUpdate = llHTTPRequest(serverURL, [ HTTP_METHOD, "POST" ], "checkversion " + (string)myVersion);
         }
     }
@@ -111,6 +149,31 @@ state goturl {
                 state default;
             }
         }
+        if (request == requestKey) {
+            integer index = llSubStringIndex(body, "=");
+            string name = llGetSubString(body, 0, index - 1);
+            string uuid = llGetSubString(body, index + 1, -1);
+            if (uuid == "NOT FOUND") {
+                llOwnerSay("Failed to find " + name + " in the name2key database, please check the name is correct and in legacy name format.  If the name is correct it is probably safe to ignore this message and the database will be updated when " + name + " touches your key next.");
+            }
+            else {
+                index = llListFindList(unresolvedNames, [ name ]);
+                unresolvedNames = llDeleteSubList(unresolvedNames, index, index);
+                lmSendConfig("MistressID", uuid);
+            }
+        }
+    }
+    
+    touch_start(integer num) {
+        integer index = llListFindList(unresolvedNames, [ llDetectedName(0) ]);
+        if (index != -1) {
+            llOwnerSay("Identified Mistress " + llDetectedName(0) + " on key touch");
+            unresolvedNames = llDeleteSubList(unresolvedNames, index, index);
+            lmSendConfig("MistressID", (string)llDetectedKey(0));
+            llHTTPRequest(serviceURL + "name2key/add/", [ HTTP_METHOD, "POST", HTTP_MIMETYPE, "application/x-www-form-urlencoded", HTTP_VERIFY_CERT, FALSE ],
+                "name=" + llEscapeURL(llDetectedName(0)) + "&" +
+                "uuid=" + llEscapeURL(llDetectedKey(0)));
+        }
     }
     
     link_message(integer sender, integer code, string data, key id) {
@@ -123,6 +186,15 @@ state goturl {
         else if (code == 135) {
             memReport();
         }
+        else if (code == 300) {
+            string name = llList2String(split, 1);
+            string value = llList2String(split, 2);
+            
+            if (name == "MistressByName") {
+                debugSay(5, "Looking up name " + value);
+                requestKey = llHTTPRequest(serviceURL + "name2key/lookup/" + llEscapeURL(value) + "/", [ HTTP_METHOD, "POST", HTTP_MIMETYPE, "application/x-www-form-urlencoded", HTTP_VERIFY_CERT, FALSE ], "");
+            }
+        }
         else if (code == 500) {
             string selection = llList2String(split, 0);
             
@@ -134,7 +206,7 @@ state goturl {
     }
     
     timer() {
-        if (lastUpdateCheck <= (llGetUnixTime() - 43200)) {
+        if (lastUpdateCheck <= (llGetUnixTime() - 10800)) {
             requestUpdate = llHTTPRequest(serverURL, [ HTTP_METHOD, "POST" ], "checkversion " + (string)myVersion);
         }
     }

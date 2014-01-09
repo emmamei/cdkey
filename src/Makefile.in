@@ -3,15 +3,15 @@
 SHELL=/bin/sh
 OUTPATH=../key
 
-.SUFFIXES: .lsl
+.SUFFIXES: .lslp .lsl
 
-SRC=Dress.cpp \
-	Main.cpp \
-	MenuHandler.cpp \
-	RLV.cpp \
-	Start.cpp \
-	Taker.cpp \
-	Transform.cpp
+SRC=Dress.lslp \
+	Main.lslp \
+	MenuHandler.lslp \
+	RLV.lslp \
+	Start.lslp \
+	Taker.lslp \
+	Transform.lslp
 
 OUT=$(OUTPATH)/Dress.lsl \
 	$(OUTPATH)/Main.lsl \
@@ -30,11 +30,11 @@ INCLUDES=include/config.h \
 
 all: $(OUT)
 
-.lslp.lsl:
-	@CPP@ -C -P -nostdinc -o $@ $<
+.lslp.cpp:
+	cat $< >$@
 
-$(OUTPATH)/%.lsl: %.lslp
-	cp $< $@
+$(OUTPATH)/%.lsl: %.cpp $(INCLUDES)
+	@CPP@ -C -P -nostdinc -o $@ $<
 
 clean:
 	rm -f *.lsl

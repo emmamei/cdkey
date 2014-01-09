@@ -4,7 +4,8 @@
    the key */
 #undef ADULT_MODE
 
-/* */
+/* enable a test mode with minimal code changes in which RLV support always
+   fails effectively disable the listener for the check reply */
 #undef DEBUG_BADRLV
 
 /* enable additional debugging messages up to threshold defaults to 0 in

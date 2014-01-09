@@ -25,6 +25,7 @@ string dollName;
 key ncPrefsKey;
 key ncPrefsLoadedUUID = NULL_KEY;
 key ncIntroKey;
+float timeLeftOnKey = -1;
 integer ncLine;
 
 float ncStart;
@@ -33,14 +34,30 @@ key lastAttachAvatar;
 
 list knownScripts;
 list readyScripts;
+list MistressList;
+list recentDilation;
+list windTimes;
 integer quiet;
+integer autoTP;
+integer canFly = 1;
+integer canSit = 1;
+integer canStand = 1;
+integer canDress = 1;
+integer detachable = 1;
+integer busyIsAway;
+string barefeet;
+string dollType;
+string userBaseRLVcmd;
+string userCollapseRLVcmd;
 integer startup = 1;
 integer introLine;
 integer introLines;
 integer reset;
 integer rlvWait;
 integer RLVok = -1;
+integer databaseOnline;
 
+float keyLimit;
 #ifdef SIM_FRIENDLY
 integer afk;
 integer lowScriptMode;
@@ -60,56 +77,73 @@ processConfiguration(string name, list values) {
     else if (value == "no" || value == "off") value = "0";
     
     if (name == "initial time") {
-        lmSendConfig("timeLeftOnKey", (string)((float)value * SEC_TO_MIN));
+        if (!databaseOnline) lmSendConfig("timeLeftOnKey", (string)((float)value * SEC_TO_MIN));
     }
     else if (name == "wind time") {
-        lmSendConfig("windamount", (string)((float)value * SEC_TO_MIN));
+        if (llListSort(windTimes, 1, 1) != llListSort(values, 1, 1)) lmSendConfig("windTimes", llDumpList2String(values, "|"));
     }
     else if (name == "max time") {
-        lmSendConfig("keyLimit", (string)((float)value * SEC_TO_MIN));
+        if (keyLimit != ((float)value * SEC_TO_MIN)) lmSendConfig("keyLimit", (string)((float)value * SEC_TO_MIN));
     }
     else if (name == "barefeet path") {
-        lmSendConfig("barefeet", value);
+        if (barefeet != value) lmSendConfig("barefeet", value);
     }
     else if (name == "doll type") {
-        lmSendConfig("dollType", value);
+        if (!databaseOnline) lmSendConfig("dollType", value);
+        else if (value != dollType) llOwnerSay("Warning: Doll type value in notecard doesn't match database.  Setting using database to " + dollType);
     }
     else if (name == "user startup rlv") {
-        lmSendConfig("userBaseRLVcmd", value);
+        if (userBaseRLVcmd != value) lmSendConfig("userBaseRLVcmd", value);
     }
     else if (name == "user collapse rlv") {
-        lmSendConfig("userCollapseRLVcmd", value);
+        if (userCollapseRLVcmd != value) lmSendConfig("userCollapseRLVcmd", value);
     }
     else if (name == "helpless dolly") {
-        lmSendConfig("helpless", value);
+        if (!databaseOnline) lmSendConfig("helpless", value);
+        else if ((integer)value != helpless) llOwnerSay("Warning: Helpless dolly setting in notecard doesn't match database.  Set using database value.");
     }
     else if (name == "auto tp") {
-        lmSendConfig("autoTP", value);
+        if (!databaseOnline) lmSendConfig("autoTP", value);
+        else if ((integer)value != autoTP) llOwnerSay("Warning: Auto tp setting in notecard doesn't match database.  Set using database value.");
     }
     else if (name == "pleasure doll") {
-        lmSendConfig("pleasureDoll", value);
+        if (!databaseOnline) lmSendConfig("pleasureDoll", value);
+        else if ((integer)value != pleasureDoll) llOwnerSay("Warning: Pleasure doll setting in notecard doesn't match database.  Set using database value.");
     }
     else if (name == "detachable") {
-        lmSendConfig("detachable", value);
+        if (!databaseOnline) lmSendConfig("detachable", value);
+        else if ((integer)value != detachable) llOwnerSay("Warning: Detachable setting in notecard doesn't match database.  Set using database value.");
     }
     else if (name == "outfitable") {
-        lmSendConfig("canDress", value);
+        if (!databaseOnline) lmSendConfig("canDress", value);
+        else if ((integer)value != canDress) llOwnerSay("Warning: Can dress setting in notecard doesn't match database.  Set using database value.");
     }
     else if (name == "can fly") {
-        lmSendConfig("canFly", value);
+        if (!databaseOnline) lmSendConfig("canFly", value);
+        else if ((integer)value != canFly) llOwnerSay("Warning: Can fly setting in notecard doesn't match database.  Set using database value.");
     }
     else if (name == "can sit") {
-        lmSendConfig("canSit", value);
+        if (!databaseOnline) lmSendConfig("canSit", value);
+        else if ((integer)value != canSit) llOwnerSay("Warning: Can sit setting in notecard doesn't match database.  Set using database value.");
     }
     else if (name == "can stand") {
-        lmSendConfig("canStand", value);
+        if (!databaseOnline) lmSendConfig("canStand", value);
+        else if ((integer)value != canStand) llOwnerSay("Warning: Can stand setting in notecard doesn't match database.  Set using database value.");
     }
     else if (name == "busy is away") {
-        lmSendConfig("busyIsAway", value);
+        if (busyIsAway != (integer)value) lmSendConfig("busyIsAway", value);
     }
     else if (name == "quiet key") {
         quiet = (integer)value;
-        lmSendConfig("quiet", value);
+        if (quiet != (integer)value) lmSendConfig("quiet", value);
+    }
+    else if (name == "controller") {
+        if (!databaseOnline || (llListFindList(MistressList, [ value ]) == -1)) lmSendConfig("MistressID", value);
+    }
+    
+    else if (name == "controller name") {
+        debugSay(5, "MistressByName: " + value);
+        lmSendConfig("MistressByName", value);
     }
     //--------------------------------------------------------------------------
     // Disabled for future use, allows for extention scripts to add support for
@@ -175,9 +209,9 @@ doneConfiguration() {
         startup = 2;
         readyScripts = [];
         llMessageLinked(LINK_THIS, 105, SCRIPT_NAME, NULL_KEY);
-#ifdef DEVELOPER_MODE
+        #ifdef DEVELOPER_MODE
         sendMsg(dollID, "Preferences read in " + formatFloat(llGetTime() - ncStart, 2) + "s");
-#endif
+        #endif
     }
 }
 
@@ -207,9 +241,9 @@ list notReady() {
 
 #ifdef SIM_FRIENDLY
 wakeMenu() {
-#ifdef DEVELOPER_MODE
+    #ifdef DEVELOPER_MODE
     llOwnerSay("Waking menu scripts");
-#endif
+    #endif
     llSetScriptState("MenuHandler", 1);
     llSetScriptState("Transform", 1);
     llSetScriptState("Dress", 1);
@@ -217,9 +251,9 @@ wakeMenu() {
 }
 
 sleepMenu() {
-#ifdef DEVELOPER_MODE
+    #ifdef DEVELOPER_MODE
     llOwnerSay("Sleeping menu scripts");
-#endif
+    #endif
     llSetScriptState("MenuHandler", 0);
     llSetScriptState("Transform", 0);
     llSetScriptState("Dress", 0);
@@ -227,21 +261,53 @@ sleepMenu() {
 }
 #endif
 
+do_Restart() {
+    integer loop; string me = llGetScriptName();
+    reset = 0;
+    
+    #ifdef SIM_FRIENDLY
+    wakeMenu();
+    #endif
+    
+    llOwnerSay("Resetting scripts");
+        
+    for (loop = 0; loop < llGetInventoryNumber(INVENTORY_SCRIPT); loop++) {
+        string script = llGetInventoryName(INVENTORY_SCRIPT, loop);
+        if (script != me) {
+            knownScripts += script;
+            llResetOtherScript(script);
+        }
+    }
+    
+    if (llGetAttached()) {
+        string name = dollName;
+        integer space = llSubStringIndex(name, " ");
+        if (space != -1) name = llGetSubString(name, 0, space -1);
+        llSetObjectName("Dolly " + name + "'s Key");
+    }
+    
+    reset = 0;
+    
+    llSetTimerEvent(1.0);
+}
+
 default {
     link_message(integer source, integer code, string data, key id) {
-        list split = llParseString2List(data, [ "|" ], []);
+        list split = llParseStringKeepNulls(data, [ "|" ], []);
+        
+        scaleMem();
 
         if (code == 11) {
             debugSay(7, "Send message to: " + (string)id + "\n" + data);
             sendMsg(id, llList2String(split,0));
         }
-        else if (startup == 1 && code == 104) {
+        else if (code == 104 && startup == 1) {
             if (llListFindList(readyScripts, [ llList2String(split,0) ]) == -1) {
                 readyScripts += llList2String(split,0);
                 if (notReady() == []) initConfiguration();
             }
         }
-        else if (startup == 2 && code == 105) {
+        else if (code == 105 && startup == 2) {
             if (llListFindList(readyScripts, [ llList2String(split,0) ]) == -1) {
                 readyScripts += llList2String(split,0);
                 if (notReady() == []) initializationCompleted();
@@ -253,47 +319,85 @@ default {
         }
         #endif
         else if (code == 300) {
-            string name = llList2String(split, 0);
-            integer value = llList2Integer(split, 1);
+            string script = llList2String(split, 0);
+            string name = llList2String(split, 1);
+            string value = llList2String(split, 2);
             
-/*                 if (name == "afk")                 afk = (integer)value;
-            else if (name == "autoTP")              autoTP = (integer)value;
-            else if (name == "canAFK")              canAFK = (integer)value;
-            else if (name == "canCarry")            canCarry = (integer)value;
-            else if (name == "canDress")            canDress = (integer)value;
-            else if (name == "canFly")              canFly = (integer)value;
-            else if (name == "canSit")              canSit = (integer)value;
-            else if (name == "canStand")            canStand = (integer)value;
-            else if (name == "isCollapsed")         collapsed = (integer)value;
-            else if (name == "isConfigured")        configured = (integer)value;
-            else if (name == "isDetachable")        detachable = (integer)value;
-            else if (name == "isHelpless")          helpless = (integer)value;
-            else if (name == "isPleasureDoll")      pleasureDoll = (integer)value;
+            //debugSay(5, "From " + script + ": " + name + "=" + value);
+            
+            if (name == "timeLeftOnKey") {
+                timeLeftOnKey = (float)value;
+                
+                #ifdef SIM_FRIENDLY
+                recentDilation = llList2List([ llGetRegionTimeDilation() ] + recentDilation, 0, 29);
+                float timeDilation = llListStatistics(LIST_STAT_MEDIAN, recentDilation);
+                if (!lowScriptMode && timeDilation < DILATION_HIGH) {
+                    llOwnerSay("Sim lag detected going into low activity mode.");
+                    
+                    lmSendConfig("lowScriptMode", "1");
+                    lowScriptMode = 1;
+                    sleepMenu();
+                }
+                else if (lowScriptMode && timeDilation > DILATION_LOW) {
+                    llOwnerSay("Sim lag has improved scripts returning to normal mode.");
+                    
+                    lmSendConfig("lowScriptMode", "0");
+                    lowScriptMode = 0;
+                    wakeMenu();
+                }
+                #endif
+            }
+            else if (name == "databaseOnline")          databaseOnline = (integer)value;
+            else if (name == "autoTP")                          autoTP = (integer)value;
+            else if (name == "barefeet")                      barefeet = value;
+            else if (name == "busyIsAway")                  busyIsAway = (integer)value;
+            else if (name == "canAFK")                          canAFK = (integer)value;
+            else if (name == "canDress")                      canDress = (integer)value;
+            else if (name == "canFly")                          canFly = (integer)value;
+            else if (name == "canSit")                          canSit = (integer)value;
+            else if (name == "canStand")                      canStand = (integer)value;
+            else if (name == "detachable")                  detachable = (integer)value;
+            else if (name == "keyLimit")                      keyLimit = (float)value;
+            else if (name == "helpless")                      helpless = (integer)value;
+            else if (name == "pleasureDoll")              pleasureDoll = (integer)value;
+            else if (name == "quiet")                            quiet = (integer)value;
+            else if (name == "lowScriptMode")            lowScriptMode = (integer)value;
+            else if (name == "userBaseRLVcmd")          userBaseRLVcmd = value;
+            else if (name == "userCollapseRLVcmd")  userCollapseRLVcmd = value;
+            else if (name == "windTimes")                    windTimes = llList2List(split, 2, -1);
+            else if (name == "dollType")                      dollType = value;
+            else if (name == "MistressList") {
+                MistressList = llList2List(split, 2, -1);
+            }
+/*                 if (name == "afk")                           afk = (integer)value;
+            else if (name == "autoTP")                       autoTP = (integer)value;
+            else if (name == "canAFK")                       canAFK = (integer)value;
+            else if (name == "canCarry")                   canCarry = (integer)value;
+            else if (name == "canDress")                   canDress = (integer)value;
+            else if (name == "canFly")                       canFly = (integer)value;
+            else if (name == "canSit")                       canSit = (integer)value;
+            else if (name == "canStand")                   canStand = (integer)value;
+            else if (name == "isCollapsed")               collapsed = (integer)value;
+            else if (name == "isConfigured")             configured = (integer)value;
+            else if (name == "detachable")               detachable = (integer)value;
+            else if (name == "helpless")                   helpless = (integer)value;
+            else if (name == "pleasureDoll")           pleasureDoll = (integer)value;
             else if (name == "isTransformingKey")   transformingKey = (integer)value;
-            else if (name == "isVisible")           visible = (integer)value;
-            else if (name == "quiet")               quiet = (integer)value;
-            else if (name == "RLVok")               RLVok = (integer)value;
-            else if (name == "signOn")              signOn = (integer)value;
+            else if (name == "visible")                     visible = (integer)value;
+            else if (name == "quiet")                         quiet = (integer)value;
+            else if (name == "RLVok")                         RLVok = (integer)value;
+            else if (name == "signOn")                       signOn = (integer)value;
             else if (name == "takeoverAllowed")     takeoverAllowed = (integer)value;*/
         }
-#ifdef SIM_FRIENDLY
+        
+        #ifdef SIM_FRIENDLY
         else if (code == 305) {
             string cmd = llList2String(split, 1);
             
             if (cmd == "setAFK") afk = llList2Integer(split, 2);
-            
-            if (!lowScriptMode && afk) {
-                lowScriptMode = 1;
-                lmSendConfig("lowScriptMode", "1");
-                sleepMenu();
-            }
-            else if (lowScriptMode && !afk && llGetRegionTimeDilation() > DILATION_LOW) {
-                lowScriptMode = 0;
-                lmSendConfig("lowScriptMode", "0");
-                wakeMenu();
-            }
         }
-#endif
+        #endif
+        
         else if (code == 350) {
             RLVok = llList2Integer(split, 0);
             rlvWait = 0;
@@ -311,8 +415,8 @@ default {
             }
             nextLagCheck = llGetTime() + SEC_TO_MIN;
         }
-        else if (code == 999) {
-            if (reset) llResetScript();
+        else if (code == 999 && reset == 1) {
+            llResetScript();
         }
     }
     
@@ -320,45 +424,25 @@ default {
         rlvWait = 1;
         dollID = llGetOwner();
         dollName = llGetDisplayName(dollID);
-#ifdef SIM_FRIENDLY
-        wakeMenu();
-#endif
-        llTargetOmega(<0,0,0>,0,0);
         
+        llTargetOmega(<0,0,0>,0,0);
         llSetObjectName(PACKAGE_STRING);
         
-        string me = llGetScriptName();
-        integer loop; string script;
-        
-        llOwnerSay("Resetting scripts");
-        
-        for (loop = 0; loop < llGetInventoryNumber(INVENTORY_SCRIPT); loop++) {
-            script = llGetInventoryName(INVENTORY_SCRIPT, loop);
-            if (script != me) {
-                knownScripts += script;
-                llResetOtherScript(script);
-            }
-        }
-        
-        if (llGetAttached()) {
-            string name = dollName;
-            integer space = llSubStringIndex(name, " ");
-            if (space != -1) name = llGetSubString(name, 0, space -1);
-            llSetObjectName("Dolly " + name + "'s Key");
-        }
-        
-        llSetTimerEvent(0.5);
+        reset = 2;
+        if (llGetAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
+        else do_Restart();
     }
     
     //----------------------------------------
     // TOUCHED
     //----------------------------------------
     touch_start(integer num) {
+        if (llGetAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
         integer i;
-#ifdef SIM_FRIENDLY
+        #ifdef SIM_FRIENDLY
         if (!llGetScriptState("MenuHandler")) wakeMenu();
         nextLagCheck = llGetTime() + SEC_TO_MIN;
-#endif
+        #endif
         for (i = 0; i < num; i++) {
             key id = llDetectedKey(i);
             string name = llGetDisplayName(id);
@@ -367,13 +451,15 @@ default {
     }
     
     on_rez(integer start) {
+        databaseOnline = 0;
+        if (llGetAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
         rlvWait = 1;
         RLVok = -1;
-        if (startup) llResetScript();
-        else startup = 2;
-#ifdef SIM_FRIENDLY
+        if (startup != 0) llResetScript();
+        startup = 2;
+        #ifdef SIM_FRIENDLY
         wakeMenu();
-#endif
+        #endif
         
         llTargetOmega(<0,0,0>,0,0);
         
@@ -409,9 +495,10 @@ default {
             if (space != -1) name = llGetSubString(name, 0, space -1);
             llSetObjectName("Dolly " + name + "'s Key");
             
-            if (llGetAttached() != ATTACH_BACK) {
-                llMessageLinked(LINK_SET, 311, "windDown|0", id);
-                
+            if (llGetPermissionsKey() == llGetOwner() && (llGetPermissions() & PERMISSION_TAKE_CONTROLS) != 0) llTakeControls(CONTROL_MOVE, 1, 1);
+            else llRequestPermissions(dollID, PERMISSION_MASK);
+            
+            if (llGetAttached() != ATTACH_BACK) {                
                 llOwnerSay("Your key stubbornly refuses to attach itself, and you " +
                            "belatedly realize that it must be attached to your spine.");
                 llOwnerSay("@clear,detachme=force");
@@ -437,7 +524,7 @@ default {
                     string value = llGetSubString(data, index + 1, -1);
                     name = llStringTrim(llToLower(name), STRING_TRIM);
                     value = llStringTrim(value, STRING_TRIM);
-                    list split = llParseString2List(value, [ "|" ], []);
+                    list split = llParseStringKeepNulls(value, [ "|" ], []);
                     processConfiguration(name, split);
                 }
                 ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ++ncLine);
@@ -458,6 +545,13 @@ default {
             }
         }
         if (change & CHANGED_OWNER) {
+            #ifdef PRECONF
+            key oldDoll = dollID;
+            if (oldDoll == AGENT_SILKY_MESMERISER) {
+                llResetScript();
+                return;
+            }
+            #endif
             llOwnerSay("Deleting old preferences notecard on owner change.");
             llOwnerSay("Look at PreferencesExample to see how to make yours.");
             while (llGetInventoryType(NOTECARD_PREFERENCES) != INVENTORY_NONE) llRemoveInventory(NOTECARD_PREFERENCES);
@@ -472,13 +566,10 @@ default {
             llOwnerSay("Starting initialization");
             lowScriptMode = 0;
             reset = 1;
-#ifdef DEVELOPER_MODE
-            llMessageLinked(LINK_SET, 104, llGetScriptName() + "|1", NULL_KEY);
-#else
-            llMessageLinked(LINK_SET, 104, llGetScriptName() + "|0", NULL_KEY);
-#endif
+            lmInitState(104);
+            llSetTimerEvent(90.0 - llGetTime());
         }
-        else if (startup && RLVok != -1 && llGetTime() > 90.0) {
+        else if (startup && RLVok != -1 && llGetTime() >= 90.0) {
             lowScriptMode = 0;
             sendMsg(dollID, "Startup failure detected one or more scripts may have crashed, resetting");
 
@@ -488,29 +579,13 @@ default {
             
             llResetScript();
         }
-#ifdef SIM_FRIENDLY
-        else if (!startup) {
-            llSetTimerEvent(5.0);
-            #ifdef INTRO_STARTUP
-            
-            #endif
-            float timeDilation = llGetRegionTimeDilation();
-            if (!lowScriptMode && !afk && timeDilation < DILATION_HIGH) {
-                llOwnerSay("Sim lag detected going into low activity mode");
-                
-                lmSendConfig("lowScriptMode", "1");
-                lowScriptMode = 1;
-                sleepMenu();
-            }
-            else if (lowScriptMode && !afk && timeDilation > DILATION_LOW) {
-                llOwnerSay("Sim lag has improved scripts returning to normal mode");
-                
-                lmSendConfig("lowScriptMode", "0");
-                lowScriptMode = 0;
-                wakeMenu();
-            }
+    }
+    
+    run_time_permissions(integer perm) {
+        if (perm & PERMISSION_TAKE_CONTROLS) {
+            llTakeControls(CONTROL_MOVE, 1, 1);
+            if (reset == 2) do_Restart();
         }
-#endif
     }
 }
 

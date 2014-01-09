@@ -6,7 +6,7 @@
 #define GLOBAL_DEFINES
 
 // The date of this code in this key, we should really look into a proper version numbering system sometime
-#define OPTION_DATE "23/Dec/13"
+#define OPTION_DATE PACKAGE_VERSION
 
 #include "config.h"
 
@@ -19,19 +19,25 @@
 #define isAttached ((llGetAttached() == ATTACH_BACK) || (llGetAttached() == ATTACH_HUD_CENTER_1) || (llGetAttached() == ATTACH_HUD_CENTER_2))
 #define isAllowedRLV ((llGetAttached() == ATTACH_BACK) || (llGetAttached() == ATTACH_HUD_CENTER_2))
 #endif
-#define isCarrier ((id == carrierID) && !isDoll)
-#define isDoll (id == dollID)
 #define isDollAway ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0)
-#define isController (isMistress(id) && !isDoll)
 #define isWindingDown (!collapsed && isAttached && dollType != "Builder" && dollType != "Key")
 #define mainTimerEnable (configured && isAttached && RLVchecked)
+#define MistressNameList "secondlife:///app/agent/" + llDumpList2String(MistressList, "/displayname, secondlife:///app/agent/") + "/displayname"
+
+#define isDoll (id == dollID)
+#define isCarrier (id == carrierID) && !isDoll
+#define isBuiltin (llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1)
+#define isMistress (llListFindList(USER_CONTROLLERS, [ (string)id ]) != -1)
+#define isController (isBuiltin || isMistress) && !isDoll
 
 // Dress module prefix test defines
 #define isGroupItem(f) (llGetSubString(f,0,0) == "#")
 #define isHiddenItem(f) (llGetSubString(f,0,0) == "~")
 #define isPlusItem(f) (llGetSubString(f,0,0) == "+")
+#define isStandAloneItem(f) (llGetSubString(f,0,0) == "=")
 #define isTransformingItem(f) (llGetSubString(f,0,0) == "*")
 #define isParentFolder(f) (llGetSubString(f,0,0) == ">")
+#define isChrootFolder(f) (llGetSubString(f,0,1) == "!>")
 
 // Collapse animation - and documentation
 #define ANIMATION_COLLAPSED "collapse"
@@ -109,7 +115,6 @@
 
 // Defines for various virtual functions to save typing and memory by inlining
 #define isInteger(input) ((string)((integer)input) == input)
-#define isMistress(id) ((llListFindList(ALL_CONTROLLERS, [ id ]) != -1) && !isDoll)
 #define getLinkDesc(linknum) llList2String(llGetLinkPrimitiveParams(linknum, [ PRIM_DESC ]), 0)
 #define getObjectScriptTime(id) (1000.0 * llList2Float(llGetObjectDetails(id, [ OBJECT_SCRIPT_TIME ]), 0))
 #define getScriptTime() formatFloat(getObjectScriptTime(llGetKey()), 3) + "ms"

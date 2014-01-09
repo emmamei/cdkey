@@ -102,22 +102,24 @@ setDollType(string choice, integer force) {
     // Commenting for now until confirmed.
     //sendStateName();
 
-    currentState = stateName;
-    clothingprefix = "*" + stateName;
-    currentphrases = [];
-    lineno = 0;
+    if (currentState != stateName) {
+        currentState = stateName;
+        clothingprefix = "*" + stateName;
+        currentphrases = [];
+        lineno = 0;
+        
+        if (llGetInventoryType("*" + stateName) == INVENTORY_NOTECARD) kQuery = llGetNotecardLine("*" + stateName,0);
     
-    if (llGetInventoryType("*" + stateName) == INVENTORY_NOTECARD) kQuery = llGetNotecardLine("*" + stateName,0);
-
-    lmSendConfig("clothingFolder", clothingprefix);
-    llSleep(1.0);
-
-    lmInternalCommand("randomDress", "", NULL_KEY);
-
-    if (!quiet) llSay(0, dollname + " has become a " + stateName + " Doll.");
-    else llOwnerSay("You have become a " + stateName + " Doll.");
+        lmSendConfig("clothingFolder", clothingprefix);
+        llSleep(1.0);
     
-    lmSendConfig("dollType", stateName);
+        lmInternalCommand("randomDress", "", NULL_KEY);
+    
+        if (!quiet) llSay(0, dollname + " has become a " + stateName + " Doll.");
+        else llOwnerSay("You have become a " + stateName + " Doll.");
+    
+        lmSendConfig("dollType", stateName);
+    }
     
     if (startup == 2) {
         lmInitState(105);
@@ -252,6 +254,8 @@ default {
         string choice = llList2String(split, 0);
         string name = llList2String(split, 1);
         
+        scaleMem();
+        
         if (code == 500) {
             if (choice == "Transform Options") {
                 list choices;
@@ -271,19 +275,19 @@ default {
                 llDialog(dollID, "Options", choices, dialogChannel);
             }
             else if (choice == "Verify") {
-                mustAgreeToType = TRUE;
+                lmSendConfig("mustAgreeToType", (string)(mustAgreeToType = 1));
                 llOwnerSay("Changes in Doll Types will be verified.");
             }
             else if (choice == "No Verify") {
-                mustAgreeToType = FALSE;
+                lmSendConfig("mustAgreeToType", (string)(mustAgreeToType = 0));
                 llOwnerSay("Changes in Doll Types will not be verified.");
             }
             else if (choice == "No Phrases") {
-                showPhrases = FALSE;
+                lmSendConfig("showPhrases", (string)(showPhrases = 0));
                 llOwnerSay("No hypnotic phrases will be displayed.");
             }
             else if (choice == "Phrases") {
-                showPhrases = TRUE;
+                lmSendConfig("showPhrases", (string)(showPhrases = 1));
                 llOwnerSay("Hypnotic phrases will be displayed.");
             }
             else if (choice == "Type of Doll") {
@@ -365,7 +369,9 @@ default {
                     stateName = value;
                     if (!startup) setDollType(stateName, 0);
                 }
-                if (name == "quiet") quiet = (integer)value;
+                else if (name == "quiet") quiet = (integer)value;
+                else if (name == "mustAgreeToType") mustAgreeToType = (integer)value;
+                else if (name == "showPhrases") showPhrases = (integer)value;
             }
         }
         

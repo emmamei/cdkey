@@ -26,19 +26,11 @@ float setWindRate() {
     // 2𝜋 radians per rotation.  This sets a normal rotation rate of 4 rpm about the
     // Z axis multiplied by the wind rate this way the key will visually run faster as
     // the dolly begins using their time faster.
-    llTargetOmega(llVecNorm(<0.0, 0.0, 1.0>), windRate * (TWO_PI / 15.0), 1);
-    
-    return newWindRate;
-}
+    llTargetOmega(llVecNorm(<0.0, 0.0, 1.0>), windRate * (TWO_PI / 10.0), 1);
 
-integer setFlags(integer clear, integer set) {
-    integer oldFlags = globalFlags;
-    globalFlags = (globalFlags & ~clear) | set;
-    if (globalFlags != oldFlags) {
-        lmSendConfig("globalFlags", "0x" + bits2nybbles(globalFlags));
-        return 1;
-    }
-    else return 0;
+    //debugSay(9, "Vector: " + (string)(llVecNorm(<0.0, 0.0, 1.0>)) + "\nRate: " + formatFloat(windRate * (TWO_PI / 10.0), 2));
+
+    return newWindRate;
 }
 
 #endif // KEY_SHARED_FUNC_LSL
