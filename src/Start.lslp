@@ -78,7 +78,7 @@ processConfiguration(string name, list values) {
     else if (value == "no" || value == "off") value = "0";
     
     if (name == "initial time") {
-        if (!databaseOnline) lmSendConfig("timeLeftOnKey", (string)((float)value * SEC_TO_MIN));
+        lmSendConfig("timeLeftOnKey", (string)((float)value * SEC_TO_MIN));
     }
     else if (name == "wind time") {
         if (llListSort(windTimes, 1, 1) != llListSort(values, 1, 1)) lmSendConfig("windTimes", llDumpList2String(values, "|"));
@@ -90,8 +90,7 @@ processConfiguration(string name, list values) {
         if (barefeet != value) lmSendConfig("barefeet", value);
     }
     else if (name == "doll type") {
-        if (!databaseOnline) lmSendConfig("dollType", value);
-        else if (value != dollType) llOwnerSay("Warning: Doll type value in notecard doesn't match database.  Setting using database to " + dollType);
+        lmSendConfig("dollType", value);
     }
     else if (name == "user startup rlv") {
         if (userBaseRLVcmd != value) lmSendConfig("userBaseRLVcmd", value);
@@ -100,36 +99,28 @@ processConfiguration(string name, list values) {
         if (userCollapseRLVcmd != value) lmSendConfig("userCollapseRLVcmd", value);
     }
     else if (name == "helpless dolly") {
-        if (!databaseOnline) lmSendConfig("helpless", value);
-        else if ((integer)value != helpless) llOwnerSay("Warning: Helpless dolly setting in notecard doesn't match database.  Set using database value.");
+        lmSendConfig("helpless", value);
     }
     else if (name == "auto tp") {
-        if (!databaseOnline) lmSendConfig("autoTP", value);
-        else if ((integer)value != autoTP) llOwnerSay("Warning: Auto tp setting in notecard doesn't match database.  Set using database value.");
+        lmSendConfig("autoTP", value);
     }
     else if (name == "pleasure doll") {
-        if (!databaseOnline) lmSendConfig("pleasureDoll", value);
-        else if ((integer)value != pleasureDoll) llOwnerSay("Warning: Pleasure doll setting in notecard doesn't match database.  Set using database value.");
+        lmSendConfig("pleasureDoll", value);
     }
     else if (name == "detachable") {
-        if (!databaseOnline) lmSendConfig("detachable", value);
-        else if ((integer)value != detachable) llOwnerSay("Warning: Detachable setting in notecard doesn't match database.  Set using database value.");
+        lmSendConfig("detachable", value);
     }
     else if (name == "outfitable") {
-        if (!databaseOnline) lmSendConfig("canDress", value);
-        else if ((integer)value != canDress) llOwnerSay("Warning: Can dress setting in notecard doesn't match database.  Set using database value.");
+        lmSendConfig("canDress", value);
     }
     else if (name == "can fly") {
-        if (!databaseOnline) lmSendConfig("canFly", value);
-        else if ((integer)value != canFly) llOwnerSay("Warning: Can fly setting in notecard doesn't match database.  Set using database value.");
+        lmSendConfig("canFly", value);
     }
     else if (name == "can sit") {
-        if (!databaseOnline) lmSendConfig("canSit", value);
-        else if ((integer)value != canSit) llOwnerSay("Warning: Can sit setting in notecard doesn't match database.  Set using database value.");
+        lmSendConfig("canSit", value);
     }
     else if (name == "can stand") {
-        if (!databaseOnline) lmSendConfig("canStand", value);
-        else if ((integer)value != canStand) llOwnerSay("Warning: Can stand setting in notecard doesn't match database.  Set using database value.");
+        lmSendConfig("canStand", value);
     }
     else if (name == "busy is away") {
         if (busyIsAway != (integer)value) lmSendConfig("busyIsAway", value);
@@ -139,7 +130,7 @@ processConfiguration(string name, list values) {
         if (quiet != (integer)value) lmSendConfig("quiet", value);
     }
     else if (name == "controller") {
-        if (!databaseOnline || (llListFindList(MistressList, [ value ]) == -1)) lmSendConfig("MistressID", value);
+        if (llListFindList(MistressList, [ value ]) == -1) lmSendConfig("MistressID", value);
     }
     
     else if (name == "controller name") {
@@ -185,45 +176,39 @@ string findString(string msg) {
 }
 
 initConfiguration() {
-    sendMsg(dollID, "Loading preferences notecard");
-    ncStart = llGetTime();
-    
     // Check to see if the file exists and is a notecard
     if (llGetInventoryType(NOTECARD_PREFERENCES) == INVENTORY_NOTECARD) {
-        if (offlineMode || (ncPrefsLoadedUUID == NULL_KEY) || (ncPrefsLoadedUUID != llGetInventoryKey(NOTECARD_PREFERENCES))) {
+        if (databaseOnline && (offlineMode || (ncPrefsLoadedUUID == NULL_KEY) || (ncPrefsLoadedUUID != llGetInventoryKey(NOTECARD_PREFERENCES)))) {
+            sendMsg(dollID, "Loading preferences notecard");
+            ncStart = llGetTime();
+            
             // Start reading from first line (which is 0)
             ncLine = 0;
             ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ncLine);
         }
         else {
             debugSay(5, "Skipping preferences notecard as it is unchanged");
-            startup = 2;
-            llMessageLinked(LINK_THIS, 102, "", NULL_KEY);
-            lmInitState(105);
+            doneConfiguration(0);
         }
     } else {
-
         // File missing - report for debugging only
-        sendMsg(dollID, "No configuration found (" + NOTECARD_PREFERENCES + ")");
-        startup = 2;
-        llMessageLinked(LINK_THIS, 102, "", NULL_KEY);
-        lmInitState(105);
+        debugSay(5, "No configuration found (" + NOTECARD_PREFERENCES + ")");
+        doneConfiguration(0);
     }
 }
 
-doneConfiguration() {
-    if (startup == 1) {
+doneConfiguration(integer read) {
+    if (startup == 1 && read) {
         ncPrefsLoadedUUID = llGetInventoryKey(NOTECARD_PREFERENCES);
         lmSendConfig("ncPrefsLoadedUUID", (string)ncPrefsLoadedUUID);
-        //sendMsg(dollID, (string)ncPrefsLoadedUUID);
-        llMessageLinked(LINK_THIS, 102, "", NULL_KEY);
-        startup = 2;
-        readyScripts = [];
-        llMessageLinked(LINK_THIS, 105, SCRIPT_NAME, NULL_KEY);
         #ifdef DEVELOPER_MODE
         sendMsg(dollID, "Preferences read in " + formatFloat(llGetTime() - ncStart, 2) + "s");
         #endif
     }
+    readyScripts = [];
+    llMessageLinked(LINK_THIS, 102, "", NULL_KEY);
+    startup = 2;
+    lmInitState(105);
 }
 
 initializationCompleted() {
@@ -236,9 +221,9 @@ initializationCompleted() {
     #endif
     msg += " key ready";
     sendMsg(dollID, msg);
-    
-    llMessageLinked(LINK_SET, 135, llGetScriptName(), NULL_KEY);
     startup = 0;
+    llSleep(5.0);
+    llMessageLinked(LINK_SET, 135, llGetScriptName(), NULL_KEY);
 }
 
 list notReady() {
@@ -528,7 +513,7 @@ default {
     dataserver(key query_id, string data) {
         if (query_id == ncPrefsKey) {
             if (data == EOF) {
-                doneConfiguration();
+                doneConfiguration(1);
             }
             else {
                 if (data != "" && llGetSubString(data, 0, 0) != "#") {
