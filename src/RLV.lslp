@@ -26,6 +26,7 @@ integer configured;
 integer wearLock;
 
 integer permissionsGranted;
+integer initState;
 
 integer autoTP;
 integer canFly = 1;
@@ -97,9 +98,9 @@ postCheckRLV()
     // Mark RLV check completed
     RLVck = 0;
     
-    lmInitState(105);
-    initializeRLV(0);
-    llMessageLinked(LINK_SET, 350, (string)RLVok + "|" + rlvAPIversion, NULL_KEY);
+    llListenControl(listenHandle, 1);
+    doRLV("Base", "getpathnew=" + (string)channel);
+    if (initState == 105) initializeRLV(0);
 }
 
 initializeRLV(integer refresh) {
@@ -108,45 +109,6 @@ initializeRLV(integer refresh) {
             llOwnerSay("Enabling RLV mode");
             rlvSources = [];
             rlvStatus = [];
-        }
-        
-        if (userBaseRLVcmd != "")
-            doRLV("UserBase", userBaseRLVcmd);
-        
-        afkOrCollapse("Collapsed", collapsed);
-        afkOrCollapse("AFK", afk);
-        
-        if (collapsed) doRLV("UserCollapsed", userCollapseRLVcmd);
-        else doRLV("UserCollapsed", "clear");
-        
-        string baseRLV = "accepttp=";
-        if (autoTP) baseRLV += "add,";
-        else baseRLV += "rem,";
-        if (helpless) baseRLV += "tplm=n,tploc=n,";
-        else baseRLV += "tplm=y,tploc=y,";
-        if (!canFly) baseRLV += "fly=n,";
-        else baseRLV += "fly=y,";
-        if (!canStand) baseRLV += "unsit=n,";
-        else baseRLV += "unsit=y,";
-        if (!canSit) baseRLV += "sit=n,";
-        else baseRLV += "sit=y,";
-        if (!canWear) baseRLV += "unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n";
-        else baseRLV += "unsharedwear=y,unsharedunwear=y,attachallthis:=y,detachallthis:=y";
-        
-        if (wearLock) doRLV("Dress", "unsharedwear=n,unshareunwear=n,attachallthis:=n,detachallthis:=n");
-        
-        doRLV("Base", baseRLV);
-        
-        if (afk) afkOrCollapse("AFK", 1);
-        else doRLV("AFK", "clear");
-        
-        if (collapsed) {
-            afkOrCollapse("Collapsed", 1);
-            if (userCollapseRLVcmd != "") doRLV("UserCollapsed", userCollapseRLVcmd);
-        }
-        else {
-            doRLV("Collapsed", "clear");
-            doRLV("UserCollapsed", "clear");
         }
         
         // if Doll is one of the developers... dont lock:
@@ -159,16 +121,59 @@ initializeRLV(integer refresh) {
         doRLV("Base", "detach=n,editobj:" + (string)llGetKey() + "=add");  //locks key
         if (!refresh) locked = 1;
         #else
-        if (myPath != "") doRLV("Base", "detachthis_except:" + myPath + "=add");
-        else {
-            llListenControl(listenHandle, 1);
-            doRLV("Base", "getpathnew=" + (string)channel);
-        }
+        if (myPath != "") doRLV("Base", "attachallthis_except:" + myPath + "=add,detachallthis_except:" + myPath + "=add");
         if (!refresh) {
             if (!quiet) llSay(0, "Developer Key not locked.");
             else llOwnerSay("Developer key not locked.");
         }
+        
+        if (myPath != "") {
         #endif
+            if (userBaseRLVcmd != "")
+                doRLV("UserBase", userBaseRLVcmd);
+            
+            afkOrCollapse("Collapsed", collapsed);
+            afkOrCollapse("AFK", afk);
+            
+            if (collapsed) doRLV("UserCollapsed", userCollapseRLVcmd);
+            else doRLV("UserCollapsed", "clear");
+            
+            string baseRLV = "accepttp=";
+            if (autoTP) baseRLV += "add,";
+            else baseRLV += "rem,";
+            if (helpless) baseRLV += "tplm=n,tploc=n,";
+            else baseRLV += "tplm=y,tploc=y,";
+            if (!canFly) baseRLV += "fly=n,";
+            else baseRLV += "fly=y,";
+            if (!canStand) baseRLV += "unsit=n,";
+            else baseRLV += "unsit=y,";
+            if (!canSit) baseRLV += "sit=n,";
+            else baseRLV += "sit=y,";
+            if (!canWear) baseRLV += "unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n";
+            else baseRLV += "unsharedwear=y,unsharedunwear=y,attachallthis:=y,detachallthis:=y";
+            
+            if (wearLock) doRLV("Dress", "unsharedwear=n,unshareunwear=n,attachallthis:=n,detachallthis:=n");
+            
+            doRLV("Base", baseRLV);
+            
+            if (afk) afkOrCollapse("AFK", 1);
+            else doRLV("AFK", "clear");
+            
+            if (collapsed) {
+                afkOrCollapse("Collapsed", 1);
+                if (userCollapseRLVcmd != "") doRLV("UserCollapsed", userCollapseRLVcmd);
+            }
+            else {
+                doRLV("Collapsed", "clear");
+                doRLV("UserCollapsed", "clear");
+            }
+        #ifdef DEVELOPER_MODE
+        }
+        #endif
+        if (!refresh) {
+            llMessageLinked(LINK_SET, 350, (string)RLVok + "|" + rlvAPIversion, NULL_KEY);
+            lmInitState(105);
+        }
     }
     else {
         llListenControl(listenHandle, 0);
@@ -395,6 +400,7 @@ default {
         RLVstarted = 0;
         RLVok = 0;
         locked = 0;
+        startup = 0;
     }
     
     //----------------------------------------
@@ -430,7 +436,7 @@ default {
             }
             else if (RLVok && llGetSubString(msg, 0, 13) != "RestrainedLove") {
                 myPath = msg;
-                doRLV("Base", "detachthis_except:" + myPath + "=add");
+                initializeRLV(1);
                 llListenControl(listenHandle, 0);
             }
         }
@@ -488,11 +494,15 @@ default {
             dollID = llGetOwner();
             dollName = llGetDisplayName(dollID);
             listenerStart();
+            checkRLV();
+            initState = code;
             lmInitState(104);
         }
         else if (code == 105) {
             if (llList2String(split, 0) != "Start") return;
-            checkRLV();
+            initState = code;
+            if (!startup) checkRLV();
+            else if (RLVck == 0) initializeRLV(0);
             lmInitState(105);
         }
         else if (code == 106) {

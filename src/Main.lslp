@@ -201,7 +201,8 @@ initializeStart() {
 }
 
 initFinal() {
-    llOwnerSay("You have " + (string)llRound(timeLeftOnKey / 60.0) + " minutes of life remaning.");
+    float displayRate = setWindRate();
+    llOwnerSay("You have " + (string)llRound(timeLeftOnKey / 60.0 / displayRate) + " minutes of life remaning.");
     lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
 
     // 
@@ -223,7 +224,6 @@ initFinal() {
     clearAnim = 1;
     ifPermissions();
     
-    lmInitState(105);
     llSetTimerEvent(2.0);
     #ifdef SIM_FRIENDLY
     if (lowScriptMode) llSetTimerEvent(12.0);

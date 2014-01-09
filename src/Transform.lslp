@@ -121,10 +121,7 @@ setDollType(string choice, integer force) {
         lmSendConfig("dollType", stateName);
     }
     
-    if (startup == 2) {
-        lmInitState(105);
-        startup = 0;
-    }
+    if (startup == 2) startup = 0;
 }
 
 /*sendStateName() {

@@ -45,6 +45,7 @@ integer canStand = 1;
 integer canDress = 1;
 integer detachable = 1;
 integer busyIsAway;
+integer offlineMode;
 string barefeet;
 string dollType;
 string userBaseRLVcmd;
@@ -189,23 +190,33 @@ initConfiguration() {
     
     // Check to see if the file exists and is a notecard
     if (llGetInventoryType(NOTECARD_PREFERENCES) == INVENTORY_NOTECARD) {
-
-        // Start reading from first line (which is 0)
-        ncLine = 0;
-        ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ncLine);
-
+        if (offlineMode || (ncPrefsLoadedUUID == NULL_KEY) || (ncPrefsLoadedUUID != llGetInventoryKey(NOTECARD_PREFERENCES))) {
+            // Start reading from first line (which is 0)
+            ncLine = 0;
+            ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ncLine);
+        }
+        else {
+            debugSay(5, "Skipping preferences notecard as it is unchanged");
+            startup = 2;
+            llMessageLinked(LINK_THIS, 102, "", NULL_KEY);
+            lmInitState(105);
+        }
     } else {
 
         // File missing - report for debugging only
         sendMsg(dollID, "No configuration found (" + NOTECARD_PREFERENCES + ")");
+        startup = 2;
+        llMessageLinked(LINK_THIS, 102, "", NULL_KEY);
+        lmInitState(105);
     }
 }
 
 doneConfiguration() {
     if (startup == 1) {
         ncPrefsLoadedUUID = llGetInventoryKey(NOTECARD_PREFERENCES);
+        lmSendConfig("ncPrefsLoadedUUID", (string)ncPrefsLoadedUUID);
         //sendMsg(dollID, (string)ncPrefsLoadedUUID);
-        llMessageLinked(LINK_SET, 102, "", NULL_KEY);
+        llMessageLinked(LINK_THIS, 102, "", NULL_KEY);
         startup = 2;
         readyScripts = [];
         llMessageLinked(LINK_THIS, 105, SCRIPT_NAME, NULL_KEY);
@@ -347,6 +358,8 @@ default {
                 }
                 #endif
             }
+            else if (name == "ncPrefsLoadedUUID")    ncPrefsLoadedUUID = (key)value;
+            else if (name == "offlineMode")                offlineMode = (integer)value;
             else if (name == "databaseOnline")          databaseOnline = (integer)value;
             else if (name == "autoTP")                          autoTP = (integer)value;
             else if (name == "barefeet")                      barefeet = value;
