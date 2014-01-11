@@ -71,7 +71,7 @@ integer PERMISSION_MASK = 0x8034;
 // This mask will capture all of the dolls controls
 integer CONTROL_ALL = 0x5000033f;
 // This mask just grabs the basic movement keys
-integer CONTROL_MOVE = 0x15;
+integer CONTROL_MOVE = 0x335;
 // This is the distance away the doll will be carried
 float CARRY_RANGE = 1.5;
 
@@ -434,8 +434,9 @@ ifPermissions() {
             }
 
             if (perm & PERMISSION_TAKE_CONTROLS) {
-                if (collapsed || posed || afk) llTakeControls(CONTROL_ALL,  1, 0);
-                else                           llTakeControls(CONTROL_MOVE, 1, 1);
+                // if collapsed or posed doll loses ability to move
+                if (collapsed || posed) llTakeControls(CONTROL_ALL,  1, 0);
+                else                    llTakeControls(CONTROL_MOVE, 1, 1);
             }
         }
 
@@ -623,6 +624,7 @@ default {
         // WINDING DOWN.....
         if (windRate != 0.0) {
             timeLeftOnKey -= (llGetAndResetTime() * windRate);
+            if (timeLeftOnKey < 0.0) timeLeftOnKey = 0.0;
 
             if (doWarnings && (minsLeft == 30 || minsLeft == 15 || minsLeft == 10 || minsLeft ==  5 || minsLeft ==  2) && !warned) {
                 // FIXME: This can be seen as a spammy message - especially if there are too many warnings
