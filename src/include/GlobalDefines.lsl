@@ -28,7 +28,7 @@
 #define isCarrier (id == carrierID) && !isDoll
 #define isBuiltin (llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1)
 #define isMistress (llListFindList(USER_CONTROLLERS, [ (string)id ]) != -1)
-#define isController (isBuiltin || isMistress) && !isDoll
+#define isController (llListFindList(BUILTIN_CONTROLLERS + MistressList, [ (string)id ]) != -1) && !isDoll
 
 // Dress module prefix test defines
 #define isGroupItem(f) (llGetSubString(f,0,0) == "#")
@@ -58,7 +58,7 @@
 // Name of the intro text notecard
 #define NOTECARD_INTRO "IntroText"
 // Permissions scripts should request
-#define PERMISSION_MASK 0x8034
+#define PERMISSION_MASK 0x8434
 // Wind down rate factor in AFK mode
 #define RATE_AFK 0.5
 // Wind down rate factor in standard mode
@@ -102,8 +102,7 @@
 // Link messages
 #define lmSendToAgent(msg, id) llMessageLinked(LINK_THIS, 11, msg, id)
 #define lmPrefsComplete(count) llMessageLinked(LINK_THIS, 102, SCRIPT_NAME + "|" + (string)(count), scriptkey)
-#define lmMemReport() llMessageLinked(LINK_THIS, 135, SCRIPT_NAME, scriptkey)
-#define lmSendConfig(name, value) llMessageLinked(LINK_THIS, 300, SCRIPT_NAME + "|" + name + "|" + value, scriptkey)
+#define lmMemReport(delay) llMessageLinked(LINK_THIS, 135, SCRIPT_NAME + "|" + (string)delay, scriptkey)
 #define lmInternalCommand(command, parameter, id) llMessageLinked(LINK_THIS, 305, SCRIPT_NAME + "|" + command + "|" + parameter, id)
 #define lmRLVreport(active, apistring, apiversion) llMessageLinked(LINK_THIS, 350, SCRIPT_NAME + "|" + (string)active + "|" + apistring + "|" + (string)apiversion, scriptkey)
 #define lmRunRLV(command) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|" + command, scriptkey)
@@ -112,6 +111,7 @@
 #define lmOwnerCheckFail() llMessageLinked(LINK_THIS, 999, SCRIPT_NAME + "|" + (string)CHANGED_OWNER, scriptkey)
 #define lmSendConfig(name, value) llMessageLinked(LINK_THIS, 300, SCRIPT_NAME + "|" + name + "|" + value, scriptkey)
 #define lmInitState(code) llMessageLinked(LINK_THIS, code, SCRIPT_NAME, scriptkey)
+#define lmMenuReply(choice, name, id) llMessageLinked(LINK_THIS, 500, choice + "|" + name, id)
 
 // Defines for various virtual functions to save typing and memory by inlining
 #define isInteger(input) ((string)((integer)input) == input)

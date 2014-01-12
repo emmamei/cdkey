@@ -52,7 +52,10 @@ default {
             setup();
             lmInitState(code);
         }
-        else if (code == 135) memReport();
+        else if (code == 135) {
+            float delay = llList2Float(split, 1);
+            memReport(delay);
+        }
     }
 
     listen(integer channel, string name, key id, string choice) {

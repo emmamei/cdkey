@@ -222,8 +222,7 @@ initializationCompleted() {
     msg += " key ready";
     sendMsg(dollID, msg);
     startup = 0;
-    llSleep(5.0);
-    llMessageLinked(LINK_SET, 135, llGetScriptName(), NULL_KEY);
+    lmMemReport(5.0);
 }
 
 list notReady() {
@@ -297,6 +296,11 @@ default {
             debugSay(7, "Send message to: " + (string)id + "\n" + data);
             sendMsg(id, llList2String(split,0));
         }
+        else if (code == 15) {
+            integer i;
+            for (i = 0; i < llGetListLength(MistressList); i++)
+                sendMsg(llList2Key(MistressList, i), llList2String(split,0));
+        }
         else if (code == 104 && startup == 1) {
             if (llListFindList(readyScripts, [ llList2String(split,0) ]) == -1) {
                 readyScripts += llList2String(split,0);
@@ -309,11 +313,10 @@ default {
                 if (notReady() == []) initializationCompleted();
             }
         }
-        #ifdef DEVELOPER_MODE
         else if (code == 135) {
-            memReport();
+            float delay = llList2Float(split, 1);
+            memReport(delay);
         }
-        #endif
         else if (code == 300) {
             string script = llList2String(split, 0);
             string name = llList2String(split, 1);

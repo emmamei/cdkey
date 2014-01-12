@@ -257,17 +257,11 @@ default {
             if (choice == "Transform Options") {
                 list choices;
 
-                if (mustAgreeToType == TRUE) {
-                    choices = ["No Verify"];
-                } else {
-                    choices = ["Verify"];
-                }
+                if (mustAgreeToType == TRUE) choices = ["No Verify"];
+                else choices = ["Verify"];
 
-                if (showPhrases == TRUE) {
-                    choices += ["No Phrases"];
-                } else {
-                    choices += ["Phrases"];
-                }
+                if (showPhrases == TRUE) choices += ["No Phrases"];
+                else choices += ["Phrases"];
 
                 llDialog(dollID, "Options", choices, dialogChannel);
             }
@@ -294,7 +288,7 @@ default {
                     llDialog(id,"The Doll " + dollname + " cannot be transformed right now. The Doll was recently transformed. Dolly can be transformed in " + (string)minMinutes + " minutes.",["OK"], 9999);
                 }
                 else {
-                    string msg = "These change the personality of " + dollname + " This Doll is currently a " + stateName + " Doll. What type of doll do you want the Doll to be?";
+                    string msg = "These change the personality of " + dollname + " This Doll is currently a " + currentState + " Doll. What type of doll do you want the Doll to be?";
                     list choices = types;
 
                     llOwnerSay(name + " is looking at your doll types.");
@@ -322,11 +316,11 @@ default {
                 }
                 
                 //avoid = FALSE;
-                debugSay(5, "transform = " + (string)transform);
-                debugSay(5, "choice = " + (string)choice);
-                debugSay(5, "stateName = " + (string)stateName);
+                debugSay(5, "transform = " + transform);
+                debugSay(5, "choice = " + choice);
+                debugSay(5, "stateName = " + stateName);
 
-                if (!startup) setDollType(choice, 0);
+                if (!startup && ((stateName = choice) != currentState)) setDollType(stateName, 0);
             }
         }
         
@@ -334,7 +328,7 @@ default {
             // Trigger Transforming Key setting
             lmSendConfig("isTransformingKey", "1");
             configured = 1;
-            setDollType(stateName, 1);
+            if (stateName != currentState) setDollType(stateName, 1);
         }
         
         else if (code == 104) {
@@ -347,29 +341,31 @@ default {
         }
         
         else if (code == 105) {
-            if (llList2String(split, 0) != "Dress") return;
+            if (llList2String(split, 0) != "Start") return;
             startup = 2;
             RLVok = 0;
             setDollType(stateName, 1);
             lmInitState(105);
         }
         
-        else if (code == 135) memReport();
+        else if (code == 135) {
+            float delay = llList2Float(split, 1);
+            memReport(delay);
+        }
         
         else if (code == 300) {
             string script = llList2String(split, 0);
             string name = llList2String(split, 1);
             string value = llList2String(split, 2);
             
-            if (script != SCRIPT_NAME) {
-                if (name == "dollType") {
-                    stateName = value;
-                    if (!startup) setDollType(stateName, 0);
-                }
-                else if (name == "quiet") quiet = (integer)value;
-                else if (name == "mustAgreeToType") mustAgreeToType = (integer)value;
-                else if (name == "showPhrases") showPhrases = (integer)value;
+            if (name == "dollType") {
+                if (!startup && ((stateName = value) != currentState)) setDollType(stateName, 0);
             }
+            else if (name == "quiet") quiet = (integer)value;
+            else if (name == "stateName") stateName = value;
+            else if (name == "currentState") currentState = value;
+            else if (name == "mustAgreeToType") mustAgreeToType = (integer)value;
+            else if (name == "showPhrases") showPhrases = (integer)value;
         }
         
         else if (code == 350) {

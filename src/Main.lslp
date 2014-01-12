@@ -100,6 +100,7 @@ float lastRandomTime;
 float menuSleep;
 float lastTickTime;
 float windamount      = 1800.0; // 30 * SEC_TO_MIN;    // 30 minutes
+float defaultwind     = windamount;
 float keyLimit        = 10800.0;
 float windRate;
 float timeLeftOnKey   = windamount;
@@ -148,7 +149,8 @@ float windKey() {
     if (windLimit <= 0) return 0;
 
     // Return windamount if less than remaining capacity
-    else if (windLimit >= windamount) {
+    else if (windLimit >= (windamount + 60.0)) { // Avoid creating a 0 minute wind situation by treating less than a minute from full as
+                                                 // a full wind.
         timeLeftOnKey += windamount;
         return windamount;
     }
@@ -174,14 +176,15 @@ doWind(string name, key id) {
         } else {
             lmSendToAgent("Doll is now at " + formatFloat((float)timeLeftOnKey * 100.0 / (float)keyLimit, 2) + "% of capacity.", id);
         }
-        // Is this too spammy?
-        llOwnerSay("Have you remembered to thank " + name + " for winding you?");
         
         if (collapsed) uncollapse();
         else lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
+        llSleep(1.0); // Make sure that the uncollapse RLV runs before sending the message containing winder name.
+        // Is this too spammy?
+        llOwnerSay("Have you remembered to thank " + name + " for winding you?");
     }
     
-    if (timeLeftOnKey < keyLimit) {
+    if (timeLeftOnKey < keyLimit) { // Reshow the wind menu but only if the doll still needs winding
         lmInternalCommand("windMenu", name, id);
     }
 }
@@ -201,13 +204,11 @@ initializeStart() {
 }
 
 initFinal() {
+    if (timeLeftOnKey > keyLimit) timeLeftOnKey = keyLimit;
+    
     float displayRate = setWindRate();
     llOwnerSay("You have " + (string)llRound(timeLeftOnKey / 60.0 / displayRate) + " minutes of life remaning.");
     lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
-
-    // 
-    // When rezzed.... if currently being carried, drop..
-    if (carrierID) uncarry();
 
     // When rezzed.... if collapsed... no escape!
     if (collapsed) lmInternalCommand("collapse", wwGetSLUrl(), NULL_KEY);
@@ -218,17 +219,6 @@ initFinal() {
     if (!RLVok) msg += "out";
     msg += " RLV at " + wwGetSLUrl();
     llMessageLinked(LINK_THIS, 15, msg, scriptkey);
-    
-    setWindRate();
-    
-    clearAnim = 1;
-    ifPermissions();
-    
-    llSetTimerEvent(2.0);
-    #ifdef SIM_FRIENDLY
-    if (lowScriptMode) llSetTimerEvent(12.0);
-    #endif
-    timerStarted = 1;
 }
 
 ifPermissions() {
@@ -277,7 +267,7 @@ ifPermissions() {
         }
         
         if (perm & PERMISSION_TAKE_CONTROLS && isAttached) {
-            if (keyAnimation != "" || afk) {
+            if (keyAnimation != "") {
                 if (lockPos == ZERO_VECTOR) lockPos = llGetPos();
                 if (llVecDist(llGetPos(), lockPos) > 1.0) {
                     llTargetRemove(targetHandle);
@@ -431,6 +421,8 @@ default {
         // Increment a counter
         ticks++;
         
+        //debugSay(5, "afk=" + (string)afk + " velocity=" + (string)llGetVel() + " speed=" + formatFloat(llVecMag(llGetVel()), 2) + "m/s (llVecMag(llGetVel()))");
+        
         ifPermissions();
         if (ticks % 10 == 0) lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
         if (ticks % 30 == 0) {
@@ -450,22 +442,6 @@ default {
         }
         else displayWindRate = setWindRate();
         
-        // Check if doll is posed and time is up
-        if (keyAnimation != "" && keyAnimation != ANIMATION_COLLAPSED) { // Doll posed
-            if (poseExpire > 0.0 && poseExpire < llGetTime()) { // Pose expire is set and has passed
-                keyAnimation = "";
-                lockPos = ZERO_VECTOR;
-                lmSendConfig("keyAnimation", keyAnimation);
-                poseExpire = 0.0;
-                clearAnim = 1;
-            }
-        }
-        
-        // Check wearlock timer
-        if (wearLockExpire != 0.0 && wearLockExpire < llGetTime()) {
-            lmInternalCommand("wearLock", (string)(wearLock = 0), NULL_KEY);
-        }
-        
         // Update sign if appropriate
         string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
         if (collapsed && primText != "Disabled Dolly!") llSetText("Disabled Dolly!", <1.0, 0.0, 0.0>, 1.0);
@@ -481,12 +457,12 @@ default {
         wind rate to be 0.
         Others which cause this effect are not being attached to spine
         and being doll type Builder or Key*/
-        
+        float thisTimerEvent = llGetTime();
         if (windRate != 0.0) {
-            float thisTimerEvent;
             timeLeftOnKey -= (((thisTimerEvent = llGetTime()) - lastTimerEvent) * windRate);
+            if (timeLeftOnKey < 0.0) timeLeftOnKey = 0.0;
+            
             debugSay(9, "Timer: Last=" + (string)lastTimerEvent + " This=" + (string)thisTimerEvent + " Delta=" + (string)(thisTimerEvent - lastTimerEvent) + " Rate=" + (string)windRate + " Scaled=" + (string)((thisTimerEvent - lastTimerEvent) * windRate) + " Left=" + (string)timeLeftOnKey);
-            lastTimerEvent = thisTimerEvent;
             
             minsLeft = llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate));
 
@@ -513,6 +489,33 @@ default {
                 // setWindRate();
             }
         }
+        
+        // Check if doll is posed and time is up
+        if (keyAnimation != "" && keyAnimation != ANIMATION_COLLAPSED) { // Doll posed
+            if (poseExpire != 0.0) {
+                poseExpire -= thisTimerEvent - lastTimerEvent;
+                if (poseExpire < 0.0) { // Pose expire is set and has passed
+                    keyAnimation = "";
+                    lockPos = ZERO_VECTOR;
+                    lmSendConfig("keyAnimation", keyAnimation);
+                    poseExpire = 0.0;
+                    clearAnim = 1;
+                }
+                lmSendConfig("poseExpire", (string)(poseExpire)); // Save as time remaining so it works for other scripts
+            }
+        }
+        
+        // Check wearlock timer
+        if (wearLockExpire != 0.0) {
+            wearLockExpire -= thisTimerEvent - lastTimerEvent;
+            if (wearLockExpire < llGetTime()) {
+                lmInternalCommand("wearLock", (string)(wearLock = 0), NULL_KEY);
+                wearLockExpire = 0.0;
+            }
+            lmSendConfig("wearLockExpire", (string)(wearLockExpire)); // Save as time remaining so it works for other scripts
+        }
+        
+        lastTimerEvent = thisTimerEvent;
     }
     
     //----------------------------------------
@@ -563,8 +566,34 @@ default {
             }
             else if (carrierID != NULL_KEY && llGetTime() > carryExpire) uncarry();
         }
-        else if (keyAnimation != "" || afk) {
+        else if (keyAnimation != "") {
             llMoveToTarget(lockPos, 0.7);
+        }
+    }
+    
+    //----------------------------------------
+    // CONTROL
+    //----------------------------------------
+    // Control event allows us to respond to control inputs made by the
+    // avatar which has granted the script PERMISSION_TAKE_CONTROLS.
+    //
+    // In our case it is used here with physics calls to slow movement for
+    // a doll when in AFK mode.  This will work regardless of whether the
+    // doll is in RLV or not though RLV is a bonus as it allows preventing
+    // running.
+    control(key id, integer level, integer edge) { // Event params are key avatar id, integer level representing keys currently held and integer edge
+                                                   // representing keys which have been pressed or released in this period (Since last control event).
+        if (afk && id == dollID) {                                      // Test input it actually from the doll and afk is active
+            if (edge & (CONTROL_FWD | CONTROL_BACK) != 0)
+                llRotLookAt(llGetCameraRot(), 0.2, 0.5);
+            if ((level & edge) & CONTROL_FWD)                           // When the doll begins holding the forward control (arrow or W both count)
+                llSetForce(<-1.0, 0.0, 0.0> * 115.0 * llGetMass(), 1);  // Set a physical force to resist but not prevent forward movement (+ve local x axis)
+            else if ((level & edge) & CONTROL_BACK)                     // When the doll begins holding the backward arrow or S key
+                llSetForce(<1.0, 0.0, 0.0> * 115.0 * llGetMass(), 1);   // Set a physical force to resist but not prevent backwards movement (-ve local x axis)
+            else if ((~level & edge) & (CONTROL_FWD | CONTROL_BACK)) {  // Where the doll releases the forward/backward arrows W or S keys
+                if ((level & (CONTROL_FWD | CONTROL_BACK)) == 0)        // Confirm that they are not holding any other forward or backward control also
+                    llSetForce(ZERO_VECTOR, 1);                         // If not cancel the force immidiately to prevent them being thrown accross sim
+            }
         }
     }
     
@@ -597,11 +626,28 @@ default {
             simRating = "";
             simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
             #endif
+            // When rezzed.... if collapsed... no escape!
+            if (collapsed) lmInternalCommand("collapse", wwGetSLUrl(), NULL_KEY);
+            
+                // When rezzed.... if currently being carried, drop..
+            if (carrierID) uncarry();
+            
+            setWindRate();
+            
+            clearAnim = 1;
+            ifPermissions();
+            
+            llSetTimerEvent(2.0);
+            #ifdef SIM_FRIENDLY
+            if (lowScriptMode) llSetTimerEvent(12.0);
+            #endif
+            timerStarted = 1;
             lmInitState(105);
         }
         
         else if (code == 135) {
-            memReport();
+            float delay = llList2Float(split, 1);
+            memReport(delay);
         }
         
         else if (code == 300) {
@@ -630,8 +676,12 @@ default {
             else if (name == "signOn")                         signOn = (integer)value;
             else if (name == "takeoverAllowed")       takeoverAllowed = (integer)value;
             else if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
+            else if (name == "windRate")                     windRate = (float)value;
             else if (name == "windamount")                 windamount = (float)value;
+            else if (name == "defaultwind")               defaultwind = (float)value;
             else if (name == "keyLimit")                     keyLimit = (float)value;
+            else if (name == "wearLockExpire")         wearLockExpire = (float)value;
+            else if (name == "poseExpire")                 poseExpire = (float)value;
             else if (name == "MistressID")                 MistressID = (key)value;
             else if (name == "mistressName")             mistressName = value;
             else if (name == "dollType")                     dollType = value;
@@ -653,9 +703,6 @@ default {
             
             if (cmd == "setAFK") {
                 afk = llList2Integer(split, 0);
-                    
-                if (afk) lockPos = llGetPos();
-                else lockPos = ZERO_VECTOR;
                 
                 ifPermissions();
                 
@@ -678,7 +725,7 @@ default {
                 lmSendConfig("keyAnimation", keyAnimation);
                 
                 // If not a display doll set an expire time
-                if (dollType != "Display") poseExpire = llGetTime() + POSE_LIMIT;
+                if (dollType != "Display") poseExpire = POSE_LIMIT;
                 
                 // Force unsit and block sitting before posing
                 lmRunRLV("unsit=force");
@@ -698,11 +745,8 @@ default {
                 ifPermissions();
             }
             else if (cmd == "wearLock") {
-                if (llList2Integer(split, 0)) {
-                    wearLockExpire = llGetTime() + WEAR_LOCK_TIME;
-                } else {
-                    wearLockExpire = 0;
-                }
+                if (llList2Integer(split, 0)) wearLockExpire = WEAR_LOCK_TIME;
+                else wearLockExpire = 0.0;
             }
             else if (cmd == "carry") {
                 string name = llList2String(split, 0);
@@ -748,9 +792,8 @@ default {
             string name = llList2String(split, 1);
 
             if (llGetSubString(choice, 0, 3) == "Wind") {
-                integer space = llSubStringIndex(choice, " ");
-                if (space != -1) {
-                    windamount = (float)llGetSubString(choice, space + 1, -1) * SEC_TO_MIN;
+                if (llStringLength(choice) > 5) {
+                    windamount = (float)llGetSubString(choice, 5, -1) * SEC_TO_MIN;
                     doWind(name, id);
                 }
             }
@@ -834,7 +877,8 @@ default {
 
                     if (collapsed) {
                         llMessageLinked(LINK_THIS, 15, dollName + " has activated the emergency winder.", scriptkey);
-
+                        
+                        windamount = defaultwind;
                         windKey();
                         lastEmergencyTime = llGetTime();
 
@@ -937,7 +981,7 @@ default {
                     llOwnerSay("Doll is posed.");
                 }
 
-                lmMemReport();
+                lmMemReport(2.0);
             }
             #ifdef DEVELOPER_MODE
             else if (choice == "timereporting") {

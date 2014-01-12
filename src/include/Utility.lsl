@@ -16,14 +16,15 @@ string wwGetSLUrl() {
 }
 
 #ifdef DEVELOPER_MODE
-memReport() {
+memReport(float delay) {
+    if (delay != 0.0) llSleep(delay);
     float memory_limit = (float)llGetMemoryLimit();
     float free_memory = (float)llGetFreeMemory();
     float used_memory = (float)llGetUsedMemory();
-    if (used_memory == memory_limit && free_memory > 0 && memory_limit == 16384) { // LSL2 compiled script
-       used_memory = memory_limit - free_memory;
+    if (((used_memory + free_memory) > (memory_limit * 1.05)) && (memory_limit <= 16384)) { // LSL2 compiled script
+       memory_limit = 16384;
+       used_memory = 16384 - free_memory;
     }
-    
     llOwnerSay(SCRIPT_NAME + ": Memory " + formatFloat(used_memory/1024.0, 2) + "/" + (string)llRound((memory_limit)/1024.0) + "kB, " + formatFloat(free_memory/1024.0, 2) + " kB free");
 }
 #else
@@ -183,18 +184,20 @@ scaleMem() {
    integer used = llGetUsedMemory();
    integer limit = llGetMemoryLimit();
    integer newlimit = limit;
-   if ((llGetFreeMemory() + llGetUsedMemory()) < (llGetMemoryLimit() * 1.05)) {
+   integer short = 1024;
+   if ((free + used) <= (limit * 1.05)) {
       // If this fails it is probably an LSL2 compiled script not mono and the
       // rest can't apply.
-      if ((llGetFreeMemory() > 8192 && llGetMemoryLimit() > 16384) || (llGetFreeMemory() < 4096 && llGetMemoryLimit() < 65536)) {
-         newlimit = llCeil((llGetUsedMemory() + 6144) / 1024) * 1024;
-	 if (newlimit < 16384) newlimit=16384;
-         else if (newlimit > 65536) newlimit=65536;
-      }
+      newlimit = llCeil((float)(limit - (free - 6144)) / 1024.0) * 1024;
+
+      if (newlimit < 16384) newlimit=16384;
+      else if (newlimit > 65536) newlimit=65536;
+
       if (newlimit != limit) {
          llSetMemoryLimit(newlimit);
-         debugSay(5, "Memory limit changed from " + formatFloat((float)limit / 1024.0, 2) + "kB to " + formatFloat((float)newlimit / 1024.0, 2) + "kB (" + formatFloat((float)(newlimit - limit) / 1024.0, 2) + "kB) " + formatFloat((float)llGetFreeMemory() / 1024.0, 2) + "kB free");
+         debugSay(7, "Memory limit changed from " + formatFloat((float)limit / 1024.0, 2) + "kB to " + formatFloat((float)newlimit / 1024.0, 2) + "kB (" + formatFloat((float)(newlimit - limit) / 1024.0, 2) + "kB) " + formatFloat((float)llGetFreeMemory() / 1024.0, 2) + "kB free");
       }
+      //debugSay(5, SCRIPT_NAME + ":  free=" + (string)free + " used=" + (string)used + " short=" + (string)short + " limit=" + (string)limit + " newlimit=" + (string)newlimit);
    }
 }
 #endif // UTILITY_LSL
