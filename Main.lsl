@@ -108,7 +108,7 @@ float defLimit     = 7200.0; // 180 * ticks;   // 180 minutes - worksafe (3h)
 float keyLimit     = defLimit;
 //integer posedlimit    = 30;     // 5 minutes
 float hackLimit    = 720.0; // 6 * 60 * ticks;   // 6 hours
-float demoLimit    = 30.0; // 5 minutes
+float demoLimit    = 300.0; // 5 minutes
 
 float RATE_STANDARD = 1.0;
 float RATE_AFK = 0.5;
@@ -250,7 +250,7 @@ setDollType(string choice) {
     if (collapsed)   llSetText("Disabled Dolly!",        <1.0, 0.0, 0.0>, 1.0);
     else if (afk)    llSetText(dollType + " Doll (AFK)", <1.0, 1.0, 0.0>, 1.0);
     else if (signOn) llSetText(dollType + " Doll",       <1.0, 1.0, 1.0>, 1.0);
-    else if          llSetText("",                       <1.0, 1.0, 1.0>, 1.0);
+    else             llSetText("",                       <1.0, 1.0, 1.0>, 1.0);
 
     // new type is slut Doll
     if (dollType == "Slut") {
@@ -278,7 +278,7 @@ stopAnimations() {
 
 float windKey() {
     float windLimit = keyLimit - timeLeftOnKey;
-    if (demoMode) windLimit = demoLimit - timeLeftOnKey;
+    //if (demoMode) windLimit = demoLimit - timeLeftOnKey;
     
     // Return if winding is irrelevant
     if (windLimit <= 0) return 0;
@@ -593,10 +593,11 @@ default {
 
         // Update sign if appropriate
         string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
-        if (collapsed &&   primText != "Disabled Dolly!")          llSetText("Disabled Dolly!",        <1.0, 0.0, 0.0>, 1.0);
-        else if (afk &&    primText != dollType + " Doll (AFK)")   llSetText(dollType + " Doll (AFK)", <1.0, 1.0, 0.0>, 1.0);
-        else if (signOn && primText != dollType + " Doll")         llSetText(dollType + " Doll",       <1.0, 1.0, 1.0>, 1.0);
-        else if (primText != "")                                   llSetText("",                       <1.0, 1.0, 1.0>, 1.0);
+        if (collapsed || afk || signOn) {
+            if (collapsed &&   primText != "Disabled Dolly!")          llSetText("Disabled Dolly!",        <1.0, 0.0, 0.0>, 1.0);
+            else if (afk &&    primText != dollType + " Doll (AFK)")   llSetText(dollType + " Doll (AFK)", <1.0, 1.0, 0.0>, 1.0);
+            else if (signOn && primText != dollType + " Doll")         llSetText(dollType + " Doll",       <1.0, 1.0, 1.0>, 1.0);
+        } else if (primText != "")                                   llSetText("",                       <1.0, 1.0, 1.0>, 1.0);
 
         // Increment a counter
         ticks++;
@@ -858,14 +859,16 @@ default {
             }
             // Demo: short time span
             else if (choice == "demo") {
-                if (keyLimit > 30) {
-                    keyLimit = 5 * ticks;   // 5 minutes
-                    timeLeftOnKey = keyLimit;
+                if (demoMode == 0) {
+                    keyLimit = demoLimit;   // 5 minutes
+                    if (timeLeftOnKey > keyLimit) timeLeftOnKey = keyLimit;
+                    demoMode = 1;
                     llOwnerSay("Key set to run in demo mode: time limit set to 5 minutes.");
                 } else {
                     // Note that the LIMIT is restored.... but the time left on key is unchanged
                     keyLimit = defLimit; // restore default
-                    llOwnerSay("Key set to run normally: time limit set to " + (string)llRound(defLimit / ticks) + " minutes.");
+                    demoMode = 0;
+                    llOwnerSay("Key set to run normally: time limit set to " + (string)llRound(defLimit/60) + " minutes.");
                 }
             }
             else if (choice == "poses") {
