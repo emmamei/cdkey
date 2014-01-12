@@ -246,11 +246,12 @@ setDollType(string choice) {
     // change to new Doll Type
     dollType = llGetSubString(llToUpper(choice), 0, 0) + llGetSubString(llToLower(choice), 1, -1);
 
-    // Update sign if turned on
-    if (collapsed) llSetText("Disabled Dolly!", <1,0,0>, 1);
-    else if (afk) llSetText(dollType + " Doll (AFK)", <1,1,0>, 1);
-    else if (signOn) llSetText(dollType + " Doll", <1,1,1>, 1);
-    else llSetText("", <1,1,1>, 1);
+    // Update sign if appropriate
+    string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
+    if (collapsed &&   primText != "Disabled Dolly!")          llSetText("Disabled Dolly!",        <1.0, 0.0, 0.0>, 1.0);
+    else if (afk &&    primText != dollType + " Doll (AFK)")   llSetText(dollType + " Doll (AFK)", <1.0, 1.0, 0.0>, 1.0);
+    else if (signOn && primText != dollType + " Doll")         llSetText(dollType + " Doll",       <1.0, 1.0, 1.0>, 1.0);
+    else if (primText != "")                                   llSetText("",                       <1.0, 1.0, 1.0>, 1.0);
 
     // new type is slut Doll
     if (dollType == "Slut") {
