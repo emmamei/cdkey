@@ -607,12 +607,13 @@ default {
         ifPermissions();
 
         integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY)) != 0);
+        float displayWindRate;
         // When Dolly is "away" - enter AFK
         // Also set away when 
         if (autoAFK && (afk != dollAway)) {
             afk = dollAway;
             displayWindRate = setWindRate();
-            llMessageLinked(LINK_THIS, 305, "setAFK", (string)afk + "|1|" + formatFloat(windRate, 1) + "|" + (string)llRound(timeLeftOnKey / (60 * displayWindRate)), NULL_KEY);
+            llMessageLinked(LINK_THIS, 305, "setAFK|" + (string)afk + "|1|" + formatFloat(windRate, 1) + "|" + (string)llRound(timeLeftOnKey / (60 * displayWindRate)), NULL_KEY);
         }
         else displayWindRate = setWindRate();
 
@@ -626,6 +627,7 @@ default {
         if (windRate != 0.0) {
             timeLeftOnKey -= (llGetAndResetTime() * windRate);
             if (timeLeftOnKey < 0.0) timeLeftOnKey = 0.0;
+            minsLeft = llRound(timeLeftOnKey / (60.0 * displayWindRate));
 
             if (doWarnings && (minsLeft == 30 || minsLeft == 15 || minsLeft == 10 || minsLeft ==  5 || minsLeft ==  2) && !warned) {
                 // FIXME: This can be seen as a spammy message - especially if there are too many warnings
@@ -966,12 +968,15 @@ default {
 
             }
             else if (choice == "stat") {
-                float p = timeLeftOnKey * 100.0 / keyLimit;
+                float displayRate = setWindRate();
+                float t1 = timeLeftOnKey / (60.0 * displayRate);
+                float t2 = keyLimit / (60.0 * displayRate);
+                float p = t1 * 100.0 / t2;
 
-                string s = "Time: " + (string)llRound((timeLeftOnKey)/60) + "/" +
-                            (string)llRound((keyLimit)/60) + " min (" + formatFloat(p, 2) + "% capacity)";
+                string s = "Time: " + (string)llRound(t1) + "/" +
+                            (string)llRound(t2) + " min (" + formatFloat(p, 2) + "% capacity)";
                 if (afk) {
-                    s += " (current wind rate " + formatFloat(setWindRate(), 1) + "x)";
+                    s += " (current wind rate " + formatFloat(displayRate, 1) + "x)";
                 }
                 llOwnerSay(s);
             }
