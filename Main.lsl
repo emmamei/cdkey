@@ -606,22 +606,15 @@ default {
 
         ifPermissions();
 
-        integer agentInfo = llGetAgentInfo(dollID);
-        integer newAFK;
+        integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY)) != 0);
         // When Dolly is "away" - enter AFK
-        if (agentInfo & AGENT_AWAY) {
-            newAFK = 1;
-            autoAFK = 1;
-        } else if (afk && autoAFK) {
-            newAFK = 0;
-            autoAFK = 0;
+        // Also set away when 
+        if (autoAFK && (afk != dollAway)) {
+            afk = dollAway;
+            displayWindRate = setWindRate();
+            llMessageLinked(LINK_THIS, 305, "setAFK", (string)afk + "|1|" + formatFloat(windRate, 1) + "|" + (string)llRound(timeLeftOnKey / (60 * displayWindRate)), NULL_KEY);
         }
-        if (newAFK != afk) {
-            setWindRate();
-            integer minsLeft;
-            if (windRate > 0.0) minsLeft = llRound(timeLeftOnKey / (60.0 * windRate));
-            llMessageLinked(LINK_SET, 305, llGetScriptName() + "|setAFK|" + (string)(afk = newAFK) + "|" + (string)autoAFK + "|" + formatFloat(windRate, 1) + "|" + (string)minsLeft, NULL_KEY);
-        }
+        else displayWindRate = setWindRate();
 
         // A specific test for collapsed status is no longer required here
         // as being collapsed is one of several conditions which forces the
@@ -787,17 +780,16 @@ default {
 
             if (cmd == "setAFK") {
                 afk = llList2Integer(split, 0);
+                
+                ifPermissions();
+                
                 integer autoSet = llList2Integer(split, 1);
-                setWindRate();
-
+                
                 if (!autoSet) {
-                    integer agentInfo = llGetAgentInfo(dollID);
-                    if ((agentInfo & AGENT_AWAY) && afk) autoAFK = 1;
-                    else if (!(agentInfo & AGENT_AWAY) && !afk) autoAFK = 1;
+                    integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY)) != 0);
+                    if (dollAway == afk) autoAFK = 1;
                     else autoAFK = 0;
                 }
-
-                ifPermissions();
             }
             else if (cmd == "carry") {
                 string name = llList2String(split, 0);
