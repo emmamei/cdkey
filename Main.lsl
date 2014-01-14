@@ -75,6 +75,8 @@ integer CONTROL_ALL = 0x5000033f;
 integer CONTROL_MOVE = 0x335;
 // This is the distance away the doll will be carried
 float CARRY_RANGE = 1.5;
+// This is the time that poses will last by default (not display dolls)
+float POSE_LIMIT = 300.0;
 
 string rlvAPIversion;
 
@@ -111,6 +113,7 @@ float keyLimit     = defLimit;
 float hackLimit    = 720.0; // 6 * 60 * ticks;   // 6 hours
 float demoLimit    = 300.0; // 5 minutes
 
+float poseExpire;
 float RATE_STANDARD = 1.0;
 float RATE_AFK = 0.5;
 float windRate;
@@ -436,7 +439,7 @@ ifPermissions() {
 
             if (perm & PERMISSION_TAKE_CONTROLS) {
                 // if collapsed or posed doll loses ability to move
-                if (collapsed || posed) llTakeControls(CONTROL_ALL,  1, 0);
+                if (keyAnimation != "") llTakeControls(CONTROL_ALL,  1, 0);
                 else                    llTakeControls(CONTROL_MOVE, 1, 1);
             }
         }
@@ -591,6 +594,7 @@ default {
         //    3. Is Doll away?
         //    4. Wind down
         //    5. How far away is carrier? ("follow")
+        float timerInterval = llGetAndResetTime(); // How long since the timer last fired?
 
         // Update sign if appropriate
         string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
@@ -598,7 +602,7 @@ default {
             if (collapsed &&   primText != "Disabled Dolly!")          llSetText("Disabled Dolly!",        <1.0, 0.0, 0.0>, 1.0);
             else if (afk &&    primText != dollType + " Doll (AFK)")   llSetText(dollType + " Doll (AFK)", <1.0, 1.0, 0.0>, 1.0);
             else if (signOn && primText != dollType + " Doll")         llSetText(dollType + " Doll",       <1.0, 1.0, 1.0>, 1.0);
-        } else if (primText != "")                                   llSetText("",                       <1.0, 1.0, 1.0>, 1.0);
+        } else if (primText != "")                                     llSetText("",                       <1.0, 1.0, 1.0>, 1.0);
 
         // Check winder recharge
         if (winderRechargeTime != 0.0) {
@@ -633,8 +637,9 @@ default {
         // and
         //--------------------------------
         // WINDING DOWN.....
+        
         if (windRate != 0.0) {
-            timeLeftOnKey -= (llGetAndResetTime() * windRate);
+            timeLeftOnKey -= timerInterval * windRate;
             if (timeLeftOnKey < 0.0) timeLeftOnKey = 0.0;
             minsLeft = llRound(timeLeftOnKey / (60.0 * displayWindRate));
 
@@ -655,6 +660,16 @@ default {
                 // This message is intentionally excluded from the quiet key setting as it is not good for
                 // dolls to simply go down silently.
                 llSay(0, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on their key.)");
+            }
+        }
+        
+        // Check if doll is posed and time is up
+        if (keyAnimation != "" && keyAnimation != ANIMATION_COLLAPSED) { // Doll posed
+            if (poseExpire != 0.0) {
+                poseExpire -= timerInterval;
+                if (poseExpire < 0.0) { // Pose expire is set and has passed
+                    llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|doUnpose", NULL_KEY);
+                }
             }
         }
     }
@@ -801,6 +816,29 @@ default {
                     if (dollAway == afk) autoAFK = 1;
                     else autoAFK = 0;
                 }
+            }
+            else if (!collapsed && cmd == "setPose") {
+                keyAnimation = llList2String(split, 0);
+                llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|keyAnimation|" + keyAnimation, NULL_KEY);
+                
+                // If not a display doll set an expire time
+                if (dollType != "Display") poseExpire = POSE_LIMIT;
+                
+                // Force unsit before posing
+                llMessageLinked(LINK_THIS, 315, llGetScriptName() + "|unsit=force", NULL_KEY);
+                
+                // Run ifPermissions to pose the doll
+                // This will also prevent movement while posed
+                ifPermissions();
+            }
+            else if (cmd == "doUnpose") {
+                keyAnimation = "";
+                llMessageLinked(LINK_THIS, 300, llGetScriptName() + "|keyAnimation|" + keyAnimation, NULL_KEY);
+                poseExpire = 0.0; // Clear timers
+                clearAnims = 1; // Set signal for animation clear
+                
+                // Run ifPermissions to clear animations
+                ifPermissions();
             }
             else if (cmd == "carry") {
                 string name = llList2String(split, 0);

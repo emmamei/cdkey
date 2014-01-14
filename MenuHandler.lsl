@@ -9,6 +9,7 @@ key        DevTwo = "2fff40f0-ea4a-4b52-abb8-d4bf6b1c98c9";   // Silky Mesmerise
 // Current Controller - or Mistress
 key MistressID = MasterBuilder;
 key carrierID;
+key poserID;
 key dollID;
 
 key mistressQuery;
@@ -279,14 +280,14 @@ doMainMenu(key id) {
             }
         }
 
-        if (pose) {
+        if (keyAnimation != "" && keyAnimation != ANIMATION_COLLAPSED) {
             //msg += "Doll is currently in the " + currentAnimation + " pose. ";
             msg += "Doll is currently posed.\n";
         }
-
-        if (pose) menu += "Unpose";
-
-        menu += "Pose";
+    
+        if (keyAnimation != "" && (id != dollID || poserID == dollID)) menu += "Unpose";
+    
+        if (keyAnimation == "" || (id != dollID || poserID == dollID)) menu += "Poses";
     }
 
     // If toucher is Mistress and NOT self...
@@ -431,6 +432,46 @@ handlemenuchoices(string choice, string name, key id) {
         llDialog(id, "Take off:",
             ["Top", "Bra", "Bottom", "Panties", "Shoes"],
             dialogChannel);
+    }
+    else if (llGetSubString(choice, 0, 4) == "Poses") {
+        integer page = 1; integer len = llStringLength(choice);
+        if (len > 5) page = (integer)llGetSubString(choice, 6 - len, -1);
+        integer poseCount = llGetInventoryNumber(20);
+        list poseList; integer i;
+        
+        for (i = 0; i < poseCount; i++) {
+            string poseName = llGetInventoryName(20, i);
+            if (poseName != ANIMATION_COLLAPSED &&
+                llGetSubString(poseName, 0, 0) != ".") {
+                if (poseName != keyAnimation) poseList += poseName;
+                else poseList += "* " + poseName;
+            }
+        }
+        poseCount = llGetListLength(poseList);
+        if (poseCount > 12) {
+            poseList = llList2List(poseList, page * 9, (page + 1) * 9 - 1);
+            integer prevPage = page - 1;
+            integer nextPage = page + 1;
+            if (prevPage == 0) prevPage = llFloor((float)poseCount / 9.0);
+            if (nextPage > llFloor((float)poseCount / 9.0)) nextPage = 1;
+            poseList = [ "Poses " + (string)prevPage, "Main Menu", "Poses " + (string)nextPage ] + poseList;
+        }
+        
+        llDialog(id, "Select the pose to put the doll into", poseList, dialogChannel);
+    }
+    else if (choice == "Unpose") {
+        keyAnimation = "";
+        llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|doUnpose", id);
+    }
+    else if (llGetInventoryType(choice) == 20) {
+        keyAnimation = choice;
+        llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|setPose|" + choice, id);
+        poserID = id;
+    }
+    else if (llGetInventoryType(llGetSubString(choice, 2, -1)) == 20) {
+        keyAnimation = llGetSubString(choice, 2, -1);
+        llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|setPose|" + llGetSubString(choice, 2, -1), id);
+        poserID = id;
     }
     else if (choice == "Be Controller") {
         llMessageLinked(LINK_SET, 300, "takeoverAllowed|" + (string)(takeoverAllowed = 0), id);
