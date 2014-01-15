@@ -211,7 +211,7 @@ doMainMenu(key id) {
         // Doll's carrier clicked on key
         else if (id == carrierID) {
             msg = "Place Down frees " + dollName + " when you are done with her";
-            menu += ["Place Down","Pose"];
+            menu += ["Place Down","Poses"];
             if (pose) menu += "Unpose";
 
             if (!hasController) {
@@ -409,12 +409,6 @@ handlemenuchoices(string choice, string name, key id) {
         carrierName = "";
     }
     else if (choice == "Type of Doll") { llMessageLinked(LINK_SET, 17, name, id); }
-    else if ((!pose || !doll) && choice == "Pose") { llMessageLinked(LINK_SET, 22, "menu", id); }
-    else if ((pose && !doll) && choice == "Unpose") {
-        //doUnpose(ToucherID);
-        pose = 0;
-        //aoChange("on");
-    }
     else if (doll && choice == "Allow Takeover") {
         llMessageLinked(LINK_SET, 300, "takeoverAllowed|" + (string)(takeoverAllowed = 1), id);
     }
