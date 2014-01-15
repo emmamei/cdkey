@@ -338,7 +338,7 @@ initializeStart ()  {
 }
 
 initFinal() {
-    llOwnerSay("You have " + (string)llRound((timeLeftOnKey)/60) + " minutes of life remaning.");
+    llOwnerSay("You have " + (string)llRound((timeLeftOnKey)/60.0) + " minutes of life remaning.");
     llMessageLinked(LINK_SET, 300, "timeLeftOnKey|" + (string)timeLeftOnKey, NULL_KEY);
 
     // When rezzed.... if currently being carried, drop..
@@ -909,7 +909,7 @@ default {
                     // Note that the LIMIT is restored.... but the time left on key is unchanged
                     keyLimit = defLimit; // restore default
                     demoMode = 0;
-                    llOwnerSay("Key set to run normally: time limit set to " + (string)llRound(defLimit/60) + " minutes.");
+                    llOwnerSay("Key set to run normally: time limit set to " + (string)llRound(defLimit/60.0) + " minutes.");
                 }
             }
             else if (choice == "poses") {
@@ -962,7 +962,7 @@ default {
             }
             else if (choice == "xstats") {
                 llOwnerSay("AFK time factor: " + formatFloat(0.5, 1) + "x");
-                llOwnerSay("Wind amount: " + (string)llRound((windamount)/60) + " minutes.");
+                llOwnerSay("Wind amount: " + (string)llRound((windamount)/60.0) + " minutes.");
 
                 {
                     string s;
@@ -1028,8 +1028,8 @@ default {
             }
             else if (choice == "stats") {
                 setWindRate();
-                llOwnerSay("Time remaining: " + (string)llRound((timeLeftOnKey)/60) + " minutes of " +
-                            (string)llRound((keyLimit)/60) + " minutes.");
+                llOwnerSay("Time remaining: " + (string)llRound((timeLeftOnKey)/60.0) + " minutes of " +
+                            (string)llRound((keyLimit)/60.0) + " minutes.");
                 if (windRate < 1.0) {
                     llOwnerSay("Key is unwinding at a slowed rate of " + formatFloat(windRate, 1) + "x.");
                 } else if (windRate > 1.0) {
