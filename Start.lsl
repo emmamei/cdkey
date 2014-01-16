@@ -59,6 +59,10 @@ memReport() {
 }
 
 sendMsg(key target, string msg) {
+    if (target == NULL_KEY) {
+        llSay(DEBUG_CHANNEL, "NULL KEY in sendMsg: " + msg);
+        return;
+    }
     if (llGetSubString(msg, 0, 0) == "%" && llGetSubString(msg, -1, -1) == "%") {
         msg = findString(msg);
     }
