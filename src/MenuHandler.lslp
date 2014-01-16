@@ -19,6 +19,7 @@ list windTimes = [ 30 ];
 float timeLeftOnKey;
 float windDefault = 1800.0;
 float windRate = 1.0;
+float baseWindRate = 1.0;
 
 integer afk;
 integer autoAFK = 1;
@@ -49,11 +50,14 @@ integer takeoverAllowed;
 integer warned;
 integer offlineMode;
 integer wearLock;
+integer dbConfig;
 
 integer dialogChannel;
 integer dialogHandle;
 string isDollName;
 string dollType = "Regular";
+string pronounHerDoll = "Her";
+string pronounSheDoll = "She";
 
 string carrierName;
 string mistressName;
@@ -125,7 +129,7 @@ doMainMenu(key id) {
 
         // Doll's carrier clicked on key
         else if (isCarrier) {
-            msg = "Place Down frees " + dollName + " when you are done with her";
+            msg = "Place Down frees " + dollName + " when you are done with " + pronounHerDoll;
             menu += ["Place Down","Poses"];
             if (keyAnimation != "") {
                 menu += "Unpose";
@@ -142,7 +146,7 @@ doMainMenu(key id) {
 
             #ifdef ADULT_MODE
             // Is doll strippable?
-            if (RLVok && ((pleasureDoll || dollType == "Slut") && RLVok && (simRating == "MATURE" || simRating == "ADULT"))) {
+            if ((pleasureDoll || dollType == "Slut") && RLVok && (simRating == "MATURE" || simRating == "ADULT")) {
                 menu += "Strip";
             }
             #endif
@@ -177,7 +181,7 @@ doMainMenu(key id) {
             
             #ifdef TESTER_MODE
             #ifdef ADULT_MODE
-            if (RLVok) menu += "Strip";
+            menu += "Strip";
             #endif
             menu += "Wind";
             #endif
@@ -193,17 +197,18 @@ doMainMenu(key id) {
             if (visible) menu += "Invisible";
             else menu += "Visible";
         }
-        manpage = "communitydoll.htm";
-    
-        // Toucher is not Doll.... could be anyone
-        msg =  dollName + " is a doll and likes to be treated like " +
-               "a doll. So feel free to use these options.\n";
-    }
-    if (!isDoll || !collapsed) {
+        else {
+            manpage = "communitydoll.htm";
+        
+            // Toucher is not Doll.... could be anyone
+            msg =  dollName + " is a doll and likes to be treated like " +
+                   "a doll. So feel free to use these options.\n";
+        }
+               
         menu += "Help/Support";
         
         // Can the doll be dressed? Add menu button
-        if (RLVok && (canDress || (isDoll && canWear && !wearLock))) {
+        if (canDress || (isDoll && canWear && !wearLock)) {
             menu += "Dress";
         }
     
@@ -211,37 +216,39 @@ doMainMenu(key id) {
         if (isTransformingKey) {
             menu += "Type of Doll";
         }
-    
+
         // Hide the general "Carry" option for all but Mistress when one exists
         if ((isController && !isDoll) || (numControllers == 0)) {
             if (canCarry) {
                 msg =  msg +
                        "Carry option picks up " + dollName + " and temporarily" +
                        " makes the Dolly exclusively yours.\n";
-    
+
                 menu += "Carry";
             }
         }
-    
+
         if (keyAnimation != "") {
             //msg += "Doll is currently in the " + currentAnimation + " pose. ";
             msg += "Doll is currently posed.\n";
         }
-    
+
         if (keyAnimation != "" && (!isDoll || poserID == dollID)) menu += "Unpose";
-    
+
         if (keyAnimation == "" || (!isDoll || poserID == dollID)) menu += "Poses";
-    
-        // If toucher is Mistress and NOT self...
-        //
-        // That is, you can't be your OWN Mistress...
-        if (isController) {
-            menu += "Use Control";
-        }
+    }
+
+    // If toucher is Mistress and NOT self...
+    //
+    // That is, you can't be your OWN Mistress...
+    if (isController && !isDoll) {
+        menu += "Use Control";
     }
     
     llListenControl(dialogHandle, 1);
     llSetTimerEvent(60.0);
+    
+    if (!RLVok) msg += "No RLV detected some features unavailable.\n";
     
     msg += "See " + WEB_DOMAIN + manpage + " for more information." ;
     llDialog(id, timeleft + msg, menu, dialogChannel);
@@ -275,14 +282,10 @@ newController(key id) {
 }
 
 doWindMenu(key id) {
-    if (llListFindList(blacklist, [ (string)id ]) != -1) return;
-    
-    if (llGetListLength(windTimes) == 1) {
-        doMainMenu(id);
-        return;
-    }
     float displayWindRate = setWindRate();
     integer minsLeft = llRound(timeLeftOnKey / (60.0 * displayWindRate));
+    
+    if (llListFindList(blacklist, [ (string)id ]) != -1) return;
     
     string timeleft;
     if (minsLeft > 0) {
@@ -315,19 +318,6 @@ doWindMenu(key id) {
     llDialog(id, timeleft + msg, buttons, dialogChannel);
 }
 
-float setWindRate() {
-    float newWindRate = RATE_STANDARD;
-    integer windDown = !(!isAttached || collapsed || (dollType == "Builder" || dollType == "Key"));
-    if (afk) newWindRate *= RATE_AFK;
-    
-    if (windRate != (newWindRate * (float)windDown)) {
-        if (windRate == 0.0) llResetTime();
-        windRate = newWindRate * (float)windDown;
-    }
-    
-    return newWindRate;
-}
-
 default
 {
     state_entry() {
@@ -339,14 +329,18 @@ default
     link_message(integer sender, integer code, string data, key id) {
         list split = llParseString2List(data, [ "|" ], []);
         
-        if (code == 104 || code == 105) {
+        if (code == 102) {
+            if (llList2String(split, 0) == "OnlineServices") dbConfig = 1;
+            else if (llList2String(split, 0) == "Start") configured = 1;
+        }
+        else if (code == 104 || code == 105) {
             if (llList2String(split, 0) != "Start") return;
             
-            if (code == 104) {
-                dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -8, -1));
-                llListenRemove(dialogHandle);
-                dialogHandle = llListen(dialogChannel, "", "", "");
-            }
+            dbConfig = 0;
+            
+            dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -8, -1));
+            llListenRemove(dialogHandle);
+            dialogHandle = llListen(dialogChannel, "", "", "");
             
             lmInitState(code);
         }
@@ -364,7 +358,10 @@ default
             split = llList2List(split, 2, -1);
             
                  if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
+            else if (name == "baseWindRate")             baseWindRate = (float)value;
             else if (name == "keyAnimation")             keyAnimation = value;
+            else if (name == "pronounHerDoll")         pronounHerDoll = value;
+            else if (name == "pronounSheDoll")         pronounSheDoll = value;
             else if (name == "afk")                               afk = (integer)value;
             else if (name == "autoTP")                         autoTP = (integer)value;
             else if (name == "canAFK")                         canAFK = (integer)value;
@@ -395,14 +392,13 @@ default
                     split = llDeleteSubList(split, 0, 2);
                     //debugSay(5, "windTimes " + llList2CSV(windTimes) + "\nsplit " + llList2CSV(split));
                 } while (llGetListLength(split) > 0);
-                lmSendConfig("defaultwind", (string)(llListStatistics(LIST_STAT_MEDIAN, windTimes) * SEC_TO_MIN));
             }
             else if (name == "dollType")
                 dollType = llGetSubString(llToUpper(value), 0, 0) + llGetSubString(llToLower(value), 1, -1);
             else if (name == "MistressID") {
                 if ((key)value != NULL_KEY && llListFindList(MistressList, [ (string)value ]) == -1) {
                     MistressList = llListSort(MistressList + [ (string)value ], 1, 1);
-                    lmSendConfig("MistressList", llDumpList2String(MistressList, "|"));
+                    if (dbConfig) lmSendConfig("MistressList", llDumpList2String(MistressList, "|"));
                 }
             }
             else if (name == "MistressList") {
@@ -427,8 +423,6 @@ default
                 carrierName = "";
             }
             else if (cmd == "setAFK") afk = llList2Integer(split, 0);
-            else if (cmd == "mainMenu") doMainMenu(id);
-            else if (cmd == "windMenu") doWindMenu(id);
             else if (cmd == "collapse") {
                 keyAnimation = ANIMATION_COLLAPSED;
                 collapsed = 1;
@@ -441,6 +435,13 @@ default
                 llListenControl(dialogHandle, 1);
                 llSetTimerEvent(60.0);
             }
+            
+            if (llListFindList(blacklist, [ (string)id ]) != -1) {
+                lmSendToAgent("You are not permitted to access this key.", id);
+                return;
+            }
+            else if (cmd == "mainMenu") doMainMenu(id);
+            else if (cmd == "windMenu") doWindMenu(id);
         }
         else if (code == 350) {
             RLVok = llList2Integer(split, 0);
@@ -479,6 +480,7 @@ default
             lmSendToAgent("You are not permitted to access this key.", id);
             return;
         }
+        
         string displayName = llGetDisplayName(id);
         if (displayName != "") name = displayName;
 
@@ -497,13 +499,6 @@ default
                 carrierName = name;
                 lmInternalCommand("carry", carrierName, carrierID);
                 doMainMenu(id);
-            }
-            else if (choice == "Wind") {
-                if (llGetListLength(windTimes) == 1) {
-                    llMessageLinked(LINK_THIS, 500, choice + " " + llList2String(windTimes, 0) + "|" + name, id);
-                } else {
-                    doWindMenu(id);
-                }
             }
             else if (choice == "Help/Support") {
                 string msg = "Here you can find various options to get help with your " +
@@ -588,9 +583,9 @@ default
             }
             else if (isCarrier && !takeoverAllowed && choice == "Request Control") {
                 if (id) {
-                    lmSendToAgent("You have asked " + dollName + " to grant you permanant contol of her key. " +
-                                  "If she accepts this dolly will become yours, please wait for her response.\n\n" +
-                                  "Place the doll down before she accepts to cancel your request.", id);
+                    lmSendToAgent("You have asked " + dollName + " to grant you permanant contol of " + llToLower(pronounHerDoll) + " key. " +
+                                  "If " + llToLower(pronounSheDoll) + " accepts this dolly will become yours, please wait for " + llToLower(pronounHerDoll) + " response.\n\n" +
+                                  "Place the doll down before " + llToLower(pronounSheDoll) + " accepts to cancel your request.", id);
                     llDialog(dollID, name + " has requested to take permanant control of your key. " +
                              "If you accept then you will not be able to remove them yourself, become " + name + "'s dolly?",
                              [ "Accept Control", "Refuse Control" ], dialogChannel);
@@ -601,7 +596,7 @@ default
             }
             else if (isDoll && choice == "Refuse Control") {
                 if (carrierID) {
-                    lmSendToAgent("The dolly " + dollName + " refuses to allow you to take permanant control of her. ", carrierID);
+                    lmSendToAgent("The dolly " + dollName + " refuses to allow you to take permanant control of " + llToLower(pronounHerDoll) + ". ", carrierID);
                 }
             }
             else if (choice == "Use Control" || choice == "Options") {
@@ -611,8 +606,7 @@ default
                 llListenControl(dialogHandle, 1);
                 llSetTimerEvent(60.0);
                 
-                if (RLVok) pluslist = [ "Abilities Menu" ];
-                pluslist += [ "Features Menu", "Access Menu" ];
+                pluslist = [ "Abilities Menu", "Features Menu", "Access Menu" ];
                 
                 if (isController) {
                     msg = "See " + WEB_DOMAIN + "controller.htm. Choose what you want to happen. (" + OPTION_DATE + " version)";
@@ -652,14 +646,14 @@ default
                 string msg = "Manage key access options. (" + OPTION_DATE + " version)";
                 list pluslist;
                 
-                if (llGetListLength(blacklist) < 12) pluslist += [ "✚ Blacklist" ];
+                if (llGetListLength(blacklist) < 12) pluslist += [ "✔ Blacklist" ];
                 else pluslist += [ "﻿" ];
                 if (llGetListLength(blacklist) > 0) pluslist += [ "✘ Blacklist", "List Blacklist" ];
                 else pluslist += [ "﻿", "﻿" ];
                 
                 llDialog(id, msg, pluslist, dialogChannel);
             }
-            else if (choice == "✚ Blacklist") {
+            else if (choice == "✔ Blacklist") {
                 llSensor("", "", AGENT, 20.0, TWO_PI);
             }
             else if (choice == "✘ Blacklist") {
@@ -747,7 +741,7 @@ default
             else if (isDoll && choice == "Allow Takeover") {
                 llOwnerSay("Anyone carrying you may now choose to be your controller.");
                 if (hasCarrier) {
-                    lmSendToAgent(dollName + " seems willing to let you take permanant control of her key now. " +
+                    lmSendToAgent(dollName + " seems willing to let you take permanant control of " + llToLower(pronounHerDoll) + " key now. " +
                                     "Maybe you could claim " + dollName + " as your own? (Be Controller from the menu).", carrierID);
                 }
                 lmSendConfig("takeoverAllowed", (string)(takeoverAllowed = 1));
@@ -846,8 +840,8 @@ default
                 if (doWarnings) pluslist += "No Warnings";
                 else pluslist += "Warnings";
                 
-                if (RLVok && !canDress) pluslist += "Can Outfit";
-                else if (RLVok) pluslist += "No Outfitting";
+                if (!canDress) pluslist += "Can Outfit";
+                else pluslist += "No Outfitting";
             
                 if (!canCarry) pluslist += "Can Carry";
                 else pluslist += "No Carry";

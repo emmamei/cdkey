@@ -64,20 +64,23 @@
 // Wind down rate factor in standard mode
 #define RATE_STANDARD 1.0
 // Time dilation at which we go to reduced activity
-#define DILATION_HIGH 0.950
+#define DILATION_HIGH 0.90
 // Time dilation at which we return to normal mode
-#define DILATION_LOW 0.975
+#define DILATION_LOW 0.95
 // LockMeister/FS AO channel
 #define LOCKMEISTER_CHANNEL -8888
 // Seconds per minute
 #define SEC_TO_MIN 60
 // Community dolls website
 #define WEB_DOMAIN "http://communitydolls.com/"
+// Maximum number of @getinvworn failures while dressing
+#define MAX_DRESS_FAILURES 5
 // Timeouts
 #define WEAR_LOCK_TIME 600.0
 #define DEMO_LIMIT 300.0
 #define POSE_LIMIT 300.0
 #define CARRY_TIMEOUT 60.0
+#define JAM_DEFAULT_TIME 90.0
 
 // Max Controllers - Set a limit on the number of user defined controllers so the list
 // cannot grow to arbitrary lengths and consume all memory.

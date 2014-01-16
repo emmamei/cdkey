@@ -40,10 +40,13 @@ integer helpless;
 integer afk;
 integer collapsed;
 integer quiet;
+integer badAttach;
 integer RLVck;
+integer RLVpathck;
 integer RLVok;
 integer locked;
 integer startup = 1;
+integer initState = 104;
 
 integer channel;
 integer listenHandle;
@@ -58,6 +61,8 @@ string userCollapseRLVcmd;
 string scriptName;
 string barefeet;
 string wearLockRLV;
+string pronounHerDoll = "Her";
+string pronounSheDoll = "She";
 
 //========================================
 // FUNCTIONS
@@ -100,13 +105,13 @@ postCheckRLV()
     // Mark RLV check completed
     RLVck = 0;
     
-    doRLV("Base", "getpathnew=" + (string)channel);
-    if (initState == 105) initializeRLV(0);
+    initializeRLV(0);
 }
 
 initializeRLV(integer refresh) {
+    if ((refresh && !RLVok) || (!refresh && RLVstarted) || myPath == "") return;
     if (RLVok && isAttached) {
-        if (!refresh) {
+        if (!RLVstarted) {
             llOwnerSay("Enabling RLV mode");
             rlvSources = [];
             rlvStatus = [];
@@ -120,13 +125,17 @@ initializeRLV(integer refresh) {
         // via the menu. To make the key truly "undetachable", we get
         // rid of the menu item to unlock it
         doRLV("Base", "detach=n,editobj:" + (string)llGetKey() + "=add");  //locks key
-        if (!refresh) locked = 1;
+        locked = 1; // Note the locked variable also remains false for developer mode keys
+                    // This way controllers are still informed of unauthorized detaching so developer dolls are still accountable
+                    // With this is the implicit assumption that controllers of developer dolls will be understanding and accepting of
+                    // the occasional necessity of detaching during active development if this proves false we may need to fudge this
+                    // in the section bellow the #else preprocessor directive.
         #else
         if (myPath != "") {
             doRLV("Base", "attachallthis_except:" + myPath + "=add,detachallthis_except:" + myPath + "=add");
             llListenControl(listenHandle, 0);
         }
-        if (!refresh) {
+        if (!RLVstarted) {
             if (!quiet) llSay(0, "Developer Key not locked.");
             else llOwnerSay("Developer key not locked.");
         }
@@ -158,22 +167,20 @@ initializeRLV(integer refresh) {
                 if (collapsed && userCollapseRLVcmd != "") doRLV("UserCollapsed", userCollapseRLVcmd);
             }
             else {
-                doRLV("Power", "clear");
+                afkOrCollapse("Power", 0);
             }
             if (!collapsed) doRLV("User:Power", "clear");
         #ifdef DEVELOPER_MODE
         }
         #endif
-        if (!refresh) {
+        if (!RLVstarted) {
             llMessageLinked(LINK_SET, 350, (string)RLVok + "|" + rlvAPIversion, NULL_KEY);
-            lmInitState(105);
         }
+        
+        if (!RLVstarted) RLVstarted = 1;
     }
     
-    if (!refresh) {
-        RLVstarted = 1;
-        startup = 0;
-    }
+    startup = 0;
 }
 
 doRLV(string script, string commandString) {
@@ -349,8 +356,12 @@ afkOrCollapse(string type, integer set) {
     string RLV;
     
     if (set) {
-        RLV = "fly=n,sit=n,unsit=n,tplm=n,tploc=n,temprun=n,alwaysrun=n,sendchat=n,tplure=n,";
-        RLV += "sittp=n,standtp=n,shownames=n,showhovertextall=n,redirchat:999=add,rediremote:999=add,";
+        RLV = "fly=n,tplm=n,tploc=n,temprun=n,alwaysrun=n,sendchat=n,";
+        RLV += "sittp=n,standtp=n,shownames=n,";
+        if (collapsed) {
+            RLV += "sit=n,unsit=n,showhovertextall=n,redirchat:999=add,rediremote:999=add,";
+            RLV += "tplure=n,";
+        }
         RLV += getAutoTPList();
     }
     else RLV = "clear";
@@ -381,7 +392,10 @@ default {
     state_entry() {
         dollID = llGetOwner();
         scriptName = llGetScriptName();
+        if (!isAttached) badAttach = 1;
         lmScriptReset();
+        listenerStart();
+        checkRLV();
         
         // RLV.lsl memory usage varies very rapidly memory scaling is not
         // an option here.
@@ -389,10 +403,12 @@ default {
     }
     
     on_rez(integer start) {
+        if (!isAttached) badAttach = 1;
         RLVstarted = 0;
         RLVok = 0;
         locked = 0;
         startup = 0;
+        initState = 105;
     }
     
     //----------------------------------------
@@ -424,11 +440,11 @@ default {
             if (llGetSubString(msg, 0, 13) == "RestrainedLove") {
                 RLVok = 1;
                 rlvAPIversion = llStringTrim(msg, STRING_TRIM);
-                postCheckRLV();
+                doRLV("Base", "getpathnew=" + (string)channel);
             }
             else {
                 myPath = msg;
-                initializeRLV(1);
+                postCheckRLV();
             }
         }
     }
@@ -486,28 +502,24 @@ default {
             if (llList2String(split, 0) != "Start") return;
             dollID = llGetOwner();
             dollName = llGetDisplayName(dollID);
-            listenerStart();
-            checkRLV();
-            initState = code;
-            lmInitState(104);
+            if (initState == 104) lmInitState(initState++);
         }
         else if (code == 105) {
             if (llList2String(split, 0) != "Start") return;
-            initState = code;
-            if (startup && RLVck == 0) initializeRLV(0);
-            else if (!startup) checkRLV();
-            lmInitState(105);
+            if (!startup) checkRLV();
+            if (initState == 105) lmInitState(initState++);
         }
         else if (code == 106) {
             if (id == NULL_KEY && !detachable && !locked) {
                 // Undetachable key with controller is detached while RLV lock
-                // is not available inform Mistress.
+                // is not available inform any key controllers.
                 // We send no message if the key is RLV locked as RLV will reattach
                 // automatically this prevents neusance messages when defaultwear is
                 // permitted.
-                llMessageLinked(LINK_THIS, 15, dollName + " has detached their key while undetachable.", scriptkey);
+                // Q: Should that be changed? Not sure the message serves much purpose with *verified* RLV and known lock.
+                llMessageLinked(LINK_THIS, 15, dollName + " has detached " + llToLower(pronounHerDoll) + " key while undetachable.", scriptkey);
             }
-            if (RLVck == 0) checkRLV();
+            else if (id != NULL_KEY && badAttach) llResetOtherScript("Start");
         }
         else if (code == 135) {
             float delay = llList2Float(split, 1);
@@ -537,6 +549,8 @@ default {
                 else if (name == "MistressID")            MistressList += (key)value;
                 else if (name == "MistressList")           MistressList = split;
                 else if (name == "mistressName")           mistressName = value;
+                else if (name == "pronounHerDoll")       pronounHerDoll = value;
+                else if (name == "pronounSheDoll")       pronounSheDoll = value;
                 else if (name == "quiet")                         quiet = (integer)value;
                 else if (name == "userBaseRLVcmd") {
                     if (userBaseRLVcmd == "") userBaseRLVcmd = value;
@@ -579,7 +593,7 @@ default {
                 collapsed = 0;
                 initializeRLV(1);
             }
-#ifdef ADULT_MODE
+            #ifdef ADULT_MODE
             else if (llGetSubString(cmd, 0, 4) == "strip") {
                 string stripped;
                 if (cmd == "stripTop") {
@@ -606,8 +620,8 @@ default {
                 }
                 lmInternalCommand("wearLock", (string)(wearLock = 1), NULL_KEY);
                 initializeRLV(1);
-                if (!quiet) llSay(0, "The dolly " + dollName + " has her " + stripped + " stripped off her and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes.  (Timer resets if dolly is stripped again)");
-                else llOwnerSay("You have had your " + stripped + " stripped off you and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes.");
+                if (!quiet) llSay(0, "The dolly " + dollName + " has " + llToLower(pronounHerDoll) + " " + stripped + " stripped off " + llToLower(pronounHerDoll) + " and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes.  (Timer will start over for dolly if " + llToLower(pronounSheDoll) + " is stripped again)");
+                else llOwnerSay("You have had your " + stripped + " stripped off you and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes, your time will restart if you are stripped again.");
             }
 #endif
             else if (cmd == "carry") {

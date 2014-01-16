@@ -39,6 +39,7 @@ string oldoutfitpath;
 // other we use MenuHandlers link 500's
 integer dialogChannel;
 integer rlvBaseChannel;
+integer change;
 
 integer wearLock;
 
@@ -68,6 +69,7 @@ integer canWear;
 integer collapsed;
 
 integer startup = 1;
+integer dressingFailures;
 integer RLVok;
 
 integer outfitPage;
@@ -216,7 +218,7 @@ addListeners(string dollID) {
 }*/
 
 rlvRequest(string rlv, integer channel) {
-    candresstimeout = 3;
+    if (candresstimeout < 3) candresstimeout = 3;
     if (channel == 2555) listen_id_2555 = llListen(rlvBaseChannel - 2555, "", llGetOwner(), "");
     if (channel == 2665) listen_id_2665 = llListen(rlvBaseChannel - 2665, "", llGetOwner(), "");
     if (channel == 2666) listen_id_2666 = llListen(rlvBaseChannel - 2666, "", llGetOwner(), "");
@@ -226,6 +228,7 @@ rlvRequest(string rlv, integer channel) {
         debugSay(5, "cmd = " + rlv + (string)(rlvBaseChannel - channel));
         lmRunRLV(rlv + (string)(rlvBaseChannel - channel));
     }
+    llSetTimerEvent(10.0);
 }
 
 listInventoryOn(string channel) {
@@ -266,6 +269,35 @@ default {
     
     on_rez(integer start) {
         startup = 2;
+    }
+    
+    timer() {
+        if (candresstimeout-- == 0) {
+            candresstemp = TRUE;
+            llListenRemove(listen_id_2555);
+            llListenRemove(listen_id_2665);
+            llListenRemove(listen_id_2666);
+            llListenRemove(listen_id_2668);
+            llListenRemove(listen_id_2669);
+        
+            // And remove the temp locks we used
+            // RLV.lsl knows which are ours and that is all this clears
+            lmRunRLV("clear");
+            
+            if (change) {
+                llOwnerSay("Change to new outfit " + newoutfitname + " complete.");
+                change = 0;
+
+                if (dresserID != NULL_KEY && dresserID != dollID) wearLock = 1;
+                
+                lmInternalCommand("wearLock", (string)wearLock, scriptkey);
+                if (afk || !canWear || collapsed || wearLock) lmRunRLV("unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
+            }
+            
+            llSetTimerEvent(0.0);
+            
+            dresserID = NULL_KEY;
+        }
     }
 
     //----------------------------------------
@@ -323,20 +355,6 @@ default {
             else if (name == "canWear") canWear = (integer)value;
             else if (name == "collapsed") collapsed = (integer)value;
             else if (name == "wearLock") wearLock = (integer)value;
-            else if (name == "timeLeftOnKey") {
-                // Hooking into the link broadcast from Main and using that
-                // as a trigger for this saves us also running a local timer
-                // for this simple task 
-                if (candresstimeout-- == 0) {
-                    candresstemp = TRUE;
-                    llListenRemove(listen_id_2555);
-                    llListenRemove(listen_id_2665);
-                    llListenRemove(listen_id_2666);
-                    llListenRemove(listen_id_2668);
-                    llListenRemove(listen_id_2669);
-                }
-                //debugSay(5, "candresstimeout = " + (string)candresstimeout);
-            }
         }
         else if (code == 305) {
             string cmd = llList2String(split, 0);
@@ -422,6 +440,8 @@ default {
                         lmRunRLV("detach=n");
                         #endif
                         candresstemp = FALSE;
+                        dressingFailures = 0;
+                        change = 1;
         
                         lmSendConfig("oldoutfitname", (oldoutfitname = newoutfitname));
                         lmSendConfig("oldoutfitpath", (oldoutfitpath = newoutfitpath));
@@ -490,7 +510,7 @@ default {
                         //if (isPlusItem(oldoutfitname) &&
                         //    !isPlusItem(newoutfitname)) {  // only works well assuming in regular
         
-                            if (RLVok) lmRunRLV("attachall:" + avatarFolder + "~normalself=force,detachthis:" + avatarFolder + "~normalself=n");
+                            if (RLVok) lmRunRLV("attach:" + avatarFolder + "~normalself=force,detachthis:" + avatarFolder + "~normalself=n");
                             llSleep(1.0);
                         //}
                         
@@ -512,13 +532,13 @@ default {
                             // Do this right off the bat and also lock it.  This makes more
                             // sense especially with multi layer wearables this makes sure
                             // that the underlayers go in first.
-                            if (RLVok) lmRunRLV("attachall:" + avatarFolder + "~nude=force");
+                            if (RLVok) lmRunRLV("attach:" + avatarFolder + "~nude=force");
                             llSleep(1.0);
                         //}
         
                         // Add items that cant replace what is already there
-                        if (RLVok) lmRunRLV("attachalloverorreplace:" + newoutfit + "=force,detachallthis:" + newoutfit + "=n," +
-                                 "detachallthis:" + avatarFolder + "~nude=n");
+                        if (RLVok) lmRunRLV("attachalloverorreplace:" + newoutfit + "=force,detachthis:" + newoutfit + "=n," +
+                                 "detachthis:" + avatarFolder + "~nude=n");
                         llSleep(1.0);
         
                         // Remove rest of old outfit (using path from attachments)
@@ -535,32 +555,19 @@ default {
                                  "detachallthis:underpants=force,detachallthis:undershirt=force");
                         llSleep(1.0);
                         
-                        if (RLVok) lmRunRLV("attachall:" + newoutfit + "=force");
+                        if (RLVok) lmRunRLV("attachover:" + newoutfit + "=force");
                         
                         llSleep(2.0);
                         
                         // And now send an attempt to clean up any remaining stray pieces
-                        //string parts = "gloves|jacket|pants|shirt|shoes|skirt|socks|underpants|undershirt|alpha|pelvis|left foot|right foot|r lower leg|l lower leg|r forearm|l forearm|r upper arm|l upper arm|r upper leg|l upper leg";
-                        //if (RLVok) lmRunRLV("detachallthis:" + llDumpList2String(llParseString2List(parts, [ "|" ], []), "=force,detachallthis:") + "=force");
-        
-                        candresstimeout = 2;
-        
-                        llOwnerSay("Change to new outfit " + newoutfitname + " complete.");
-                        
-                        // And remove the temp locks we used
-                        // RLV.lsl knows which are ours and that is all this clears
-                        lmRunRLV("clear");
+                        string parts = "gloves|jacket|pants|shirt|shoes|skirt|socks|underpants|undershirt|alpha|pelvis|left foot|right foot|r lower leg|l lower leg|r forearm|l forearm|r upper arm|l upper arm|r upper leg|l upper leg";
+                        if (RLVok) lmRunRLV("detachthis:" + llDumpList2String(llParseString2List(parts, [ "|" ], []), "=force,detachthis:") + "=force");
                         
                         xfolder = avatarFolder + "~normalself";
                         rlvRequest("getinvworn:" + xfolder + "=", 2668);
                         
                         yfolder = oldoutfitpath;
                         if (yfolder != "") rlvRequest("getinvworn:" + yfolder + "=", 2669);
-                        
-                        if (id != dollID) wearLock = 1;
-                        
-                        lmInternalCommand("wearLock", (string)wearLock, scriptkey);
-                        if (afk || !canWear || collapsed || wearLock) lmRunRLV("unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
                     }
                 }
             }
@@ -621,7 +628,6 @@ default {
             // as Dressup/, or outfits/, or Outfits/ ...
             for (n = 0; n < iStop; n++) {
                 itemname = llList2String(Outfits, n);
-                scaleMem();
 
                 // If there are more than one of these folders in #RLV,
                 // then the last one read will be used...
@@ -714,7 +720,6 @@ default {
                     // Doll Type (Transformation) folders...
                     //
                     // Note this skips *Regular too
-                    scaleMem();
 
                     if (!isHiddenItem(itemname) && !isTransformingItem(itemname) && !isGroupItem(itemname)) {
                         total += 1;
@@ -759,15 +764,14 @@ default {
                     !isHiddenItem(itemname) &&
                     !isGroupItem(itemname) &&
                     !isTransformingItem(itemname) &&
-                    itemname != oldoutfitname) {
+                    itemname != newoutfitname) {
 
                     outfitsList += itemname;
-                    scaleMem();
                 }
             }
 
             // Sort: slow bubble sort
-            outfitsList = llListSort(outfitsList,1,TRUE);
+            outfitsList = llListSort(outfitsList, 1, TRUE);
 
             // Now create appropriate menu page from full outfits list
             integer total = 0;
@@ -813,15 +817,20 @@ default {
             llListenRemove(listen_id_2668);
             debugSay(5, ">> @getinvworn:" + xfolder);
             debugSay(5, ">>> " + choice);
-            if ((llGetSubString(choice,1,1) != "0" && llGetSubString(choice,1,1) != "3") ||
-                (llGetSubString(choice,2,2) != "0" && llGetSubString(choice,2,2) != "3")) {
+            if (((llGetSubString(choice,1,1) != "0" && llGetSubString(choice,1,1) != "3") ||
+                (llGetSubString(choice,2,2) != "0" && llGetSubString(choice,2,2) != "3")) &&
+                ++dressingFailures <= MAX_DRESS_FAILURES) {
                 llSleep(4.0);
                 if (RLVok) {
-                    if (afk || !canWear || collapsed || wearLock) lmRunRLV("attachallthis:=y,attachallover:" + xfolder + "=force,attachallthis:=n");
-                    else lmRunRLV("attachallover:" + yfolder + "=force");
+                    if (afk || !canWear || collapsed || wearLock) lmRunRLV("attachthis:=y,attachover:" + xfolder + "=force,attachthis:=n");
+                    else lmRunRLV("attachover:" + xfolder + "=force");
                     rlvRequest("getinvworn:" + xfolder + "=", 2668);
                     candresstimeout++;
                 }
+            }
+            else if (dressingFailures > MAX_DRESS_FAILURES) {
+                llOwnerSay("Something seems to be preventing all outfit items being added or removed correctly, dressing cancelled");
+                candresstimeout = 1;
             }
             else {
                 if (xfolder == avatarFolder + "~normalself") xfolder = avatarFolder + "~nude";
@@ -845,15 +854,20 @@ default {
             llListenRemove(listen_id_2669);
             debugSay(5, ">> @getinvworn:" + yfolder);
             debugSay(5, ">>> " + choice);
-            if ((llGetSubString(choice,1,1) != "0" && llGetSubString(choice,1,1) != "1") ||
-                (llGetSubString(choice,2,2) != "0" && llGetSubString(choice,2,2) != "1")) {
+            if (((llGetSubString(choice,1,1) != "0" && llGetSubString(choice,1,1) != "1") ||
+                (llGetSubString(choice,2,2) != "0" && llGetSubString(choice,2,2) != "1")) &&
+                ++dressingFailures <= MAX_DRESS_FAILURES) {
                 llSleep(4.0);
                 if (RLVok) {
-                    if (afk || !canWear || collapsed || wearLock) lmRunRLV("detachallthis:=y,detachall:" + yfolder + "=force,detachallthis:=n");
-                    else lmRunRLV("detachall:" + yfolder + "=force");
+                    if (afk || !canWear || collapsed || wearLock) lmRunRLV("detachthis:=y,detach:" + yfolder + "=force,detachthis:=n");
+                    else lmRunRLV("detach:" + yfolder + "=force");
                     rlvRequest("getinvworn:" + yfolder + "=", 2669);
                     candresstimeout++;
                 }
+            }
+            else if (dressingFailures > MAX_DRESS_FAILURES) {
+                llOwnerSay("Something seems to be preventing all outfit items being added or removed correctly, dressing cancelled");
+                candresstimeout = 1;
             }
             else {
                 candresstimeout--;

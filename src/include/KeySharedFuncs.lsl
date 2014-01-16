@@ -13,7 +13,7 @@ float setWindRate() {
     integer agentInfo = llGetAgentInfo(dollID);
     integer windDown = isAttached && !collapsed && dollType != "Builder" && dollType != "Key";
     
-    newWindRate = 1.0;
+    newWindRate = baseWindRate;
     if (afk) newWindRate *= 0.5;
     
     if (windRate != newWindRate * windDown) {
