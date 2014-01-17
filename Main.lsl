@@ -55,10 +55,10 @@ integer quiet;
 integer minsLeft;
 integer clearAnims;
 //integer canPose;
-float lastEmergencyTime;
+integer lastEmergencyTime;
 integer emergencyLimitHours = 12;
 integer emergencyLimitTime = 43200; // (60 * 60 * emergencyLimitHours) // measured in seconds
-float winderRechargeTime;
+integer emergencyTimeElapsed;
 integer RLVok;
 integer RLVck;
 integer demoMode;
@@ -604,14 +604,6 @@ default {
             else if (signOn && primText != dollType + " Doll")         llSetText(dollType + " Doll",       <1.0, 1.0, 1.0>, 1.0);
         } else if (primText != "")                                     llSetText("",                       <1.0, 1.0, 1.0>, 1.0);
 
-        // Check winder recharge
-        if (winderRechargeTime != 0.0) {
-
-            winderRechargeTime -= timerInterval;
-
-            if (winderRechargeTime < 0.0) winderRechargeTime = 0.0;
-        }
-
         // Increment a counter
         ticks++;
 
@@ -939,15 +931,17 @@ default {
             else if (choice == "wind") {
                 // Give this a time limit: can only be done once
                 // in - say - 6 hours... at least maxwindtime *2 or *3.
+                emergencyTimeElapsed = llGetUnixTime() - lastEmergencyTime;
 
-                if (winderRechargeTime == 0.0) {
+                if (emergencyTimeElapsed > emergencyLimitTime) {
 
                     if (collapsed) {
+                        lastEmergencyTime = llGetUnixTime();
+
                         if (hasController)
                             llMessageLinked(LINK_SET, 11, dollName + " has activated the emergency winder.", MistressID);
 
                         windKey();
-                        winderRechargeTime = emergencyLimitTime;
 
                         uncollapse();
 
