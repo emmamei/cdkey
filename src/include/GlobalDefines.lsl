@@ -125,7 +125,7 @@
 #define timerNextFrame() llSetTimerEvent(0.01 * mainTimerEnable)
 
 #define uncarry() lmInternalCommand("uncarry", "", scriptkey)
-#define uncollapse() lmInternalCommand("uncollapse", "", scriptkey)
+#define uncollapse(timeSent) lmInternalCommand("uncollapse", (string)timeSent, scriptkey)
 
 // Keys of important people in life of the Key:
 #define AGENT_CHRISTINA_HALPIN "42c7aaec-38bc-4b0c-94dd-ae562eb67e6d"

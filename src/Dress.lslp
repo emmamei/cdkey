@@ -279,19 +279,19 @@ default {
             llListenRemove(listen_id_2666);
             llListenRemove(listen_id_2668);
             llListenRemove(listen_id_2669);
-        
-            // And remove the temp locks we used
-            // RLV.lsl knows which are ours and that is all this clears
-            lmRunRLV("clear");
             
             if (change) {
+                // And remove the temp locks we used
+                // RLV.lsl knows which are ours and that is all this clears
+                lmRunRLV("clear");
+                
                 llOwnerSay("Change to new outfit " + newoutfitname + " complete.");
                 change = 0;
 
                 if (dresserID != NULL_KEY && dresserID != dollID) wearLock = 1;
                 
                 lmInternalCommand("wearLock", (string)wearLock, scriptkey);
-                if (afk || !canWear || collapsed || wearLock) lmRunRLV("unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
+                if (!afk || canWear || collapsed || wearLock) lmRunRLV("unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
             }
             
             llSetTimerEvent(0.0);
@@ -500,7 +500,7 @@ default {
                                                                      "getpathnew:skirt=2670," + 
                                                                      "getpathnew:underpants=2670," +                                                                                                                          "getpathnew:undershirt=2670", NULL_KEY);*/
                             
-                            if (RLVok) lmRunRLV("attachallthis:=y,detachallthis:=y,touchall=n,showinv=n");
+                            if (RLVok) lmRunRLV("clear,touchall=n,showinv=n");
                             llSleep(1.0);
         
                         // Original outfit was a complete avi reset....

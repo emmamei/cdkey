@@ -55,7 +55,7 @@ string dollGender = "Female";
 string pronounHerDoll = "Her";
 string pronounSheDoll = "She";
 integer startup;
-integer initState = 104;
+integer initState = 103;
 integer introLine;
 integer introLines;
 integer reset;
@@ -227,7 +227,7 @@ doneConfiguration(integer read) {
     readyScripts = [];
     llMessageLinked(LINK_THIS, 102, llGetScriptName(), NULL_KEY);
     startup = 2;
-    lmInitState(initState);
+    if (initState == 104) lmInitState(++initState);
 }
 
 initializationCompleted() {
@@ -244,6 +244,9 @@ initializationCompleted() {
     startup = 0;
     lmMemReport(5.0);
     llSetTimerEvent(0.0);
+    
+    llMessageLinked(LINK_THIS, 110, "Start", NULL_KEY);
+    initState = 104;
 }
 
 list notReady() {
@@ -322,18 +325,17 @@ default {
             for (i = 0; i < llGetListLength(MistressList); i++)
                 sendMsg(llList2Key(MistressList, i), llList2String(split,0));
         }
-        else if (code == 104 && initState == code) {
+        else if (code == 104) {
             if (llListFindList(readyScripts, [ llList2String(split,0) ]) == -1) {
                 readyScripts += llList2String(split,0);
                 //debugSay(5, "State 104\nReady: " + llList2CSV(readyScripts) + "\nNot Ready: " + llList2CSV(notReady()));
                 if (notReady() == []) {
-                    initState = 105;
                     initConfiguration();
                 }
             }
             else debugSay(1, "WARNING: Script " + llList2String(split,0) + " is sending excessive signal 104");
         }
-        else if (code == 105 && initState == code) {
+        else if (code == 105) {
             if (llListFindList(readyScripts, [ llList2String(split,0) ]) == -1) {
                 readyScripts += llList2String(split,0);
                 //debugSay(5, "State 105\nReady: " + llList2CSV(readyScripts) + "\nNot Ready: " + llList2CSV(notReady()));
@@ -475,11 +477,6 @@ default {
         if (!llGetScriptState("MenuHandler")) wakeMenu();
         nextLagCheck = llGetTime() + SEC_TO_MIN;
         #endif
-        for (i = 0; i < num; i++) {
-            key id = llDetectedKey(i);
-            string name = llGetDisplayName(id);
-            lmInternalCommand("mainMenu", name, id);
-        }
     }
     
     on_rez(integer start) {
@@ -509,7 +506,7 @@ default {
             if (script != me) knownScripts += script;
         }
         
-        llMessageLinked(LINK_SET, 105, llGetScriptName(), NULL_KEY);
+        if (initState == 104) lmInitState(++initState);
     }
     
     attach(key id) {
@@ -600,7 +597,7 @@ default {
             llOwnerSay("Starting initialization");
             lowScriptMode = 0;
             startup = 1;
-            lmInitState(initState);
+            if (initState == 103) lmInitState(++initState);
             llSetTimerEvent(90.0 - llGetTime());
         }
         else if (startup && RLVok != -1 && llGetTime() >= 90.0) {

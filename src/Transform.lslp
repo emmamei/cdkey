@@ -38,7 +38,7 @@ integer startup = 1;
 
 string currentState;
 integer dbConfig;
-integer winddown;
+integer initState = 104;
 integer mustAgreeToType;
 integer showPhrases = TRUE;
 integer isTransformingKey;
@@ -174,7 +174,7 @@ default {
     state_entry() { lmScriptReset(); }
 
     //----------------------------------------
-    // ON REZ
+    // ON REZ!startup
     //----------------------------------------
     on_rez(integer iParam) {
         dbConfig = 0;
@@ -273,14 +273,17 @@ default {
             reloadTypeNames();
             startup = 1;
             llSetTimerEvent(60.0);   // every minute
-            lmInitState(104);
+            if (initState == 104) lmInitState(initState++);
         }
         
         else if (code == 105) {
-            if (llList2String(split, 0) != "Dress") return;
-            startup = 2;
-            RLVok = 0;
-            lmInitState(105);
+            if (llList2String(split, 0) != "Start") return;
+            if (initState == 105) lmInitState(initState++);
+        }
+        
+        else if (code == 110) {
+            initState = 105;
+            startup = 0;
         }
         
         else if (code == 135) {
@@ -296,7 +299,7 @@ default {
             if (script != SCRIPT_NAME) {
                 if (name == "dollType") {
                     stateName = value;
-                    if (!startup) setDollType(stateName, 0);
+                    if (stateName != currentState) setDollType(stateName, 0);
                 }
                 else if (name == "quiet") quiet = (integer)value;
                 else if (name == "mustAgreeToType") mustAgreeToType = (integer)value;
@@ -382,8 +385,9 @@ default {
                 debugSay(5, "transform = " + (string)transform);
                 debugSay(5, "choice = " + (string)choice);
                 debugSay(5, "stateName = " + (string)stateName);
+                debugSay(5, "currentState = " + (string)currentState);
 
-                if (!startup) setDollType(choice, 0);
+                if (stateName != currentState) setDollType(choice, 0);
             }
         }
     }

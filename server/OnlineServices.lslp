@@ -39,6 +39,8 @@ list serverNames = [
     "cdkeyserver2.secondlife.silkytech.com"
 ];
 
+list oldAvatars;
+
 queForSave(string name, string value) {
     integer index = llListFindList(dbPostParams, [ name ]);
     if (index != -1 && index % 2 == 0) 
@@ -114,6 +116,7 @@ default
     
     http_response(key request, integer status, list meta, string body) {
         debugSay(9, "HTTP " + (string)status + ": " + body);
+        
         if (request == requestUpdate) {
             if (llGetSubString(body, 0, 21) == "checkversion versionok") {
                 if (llStringLength(body) > 22) updateCheck = (integer)llGetSubString(body, 23, -1);
@@ -158,6 +161,7 @@ default
         }
         else if (request == requestLoadDB) {
             string error = "HTTPdb - Database access ";
+            llSleep(0.1);
             if (status == 200) {
                 lmSendConfig("databaseOnline", (string)(databaseOnline = 1));
                 
@@ -168,11 +172,13 @@ default
                 integer i;
                 
                 for (i = 0; i < llGetListLength(lines); i++) {
-                    string line = llList2String(lines, i);
-                    integer sep = llSubStringIndex(line, "=");
-                    string Key = llGetSubString(line, 0, sep - 1);
-                    string Value = llGetSubString(line, sep + 1, -1);
                     scaleMem();
+                    
+                    string line = llList2String(lines, i);
+                    list split = llParseStringKeepNulls(line, [ "=" ], []);
+                    string Key = llList2String(split, 0);
+                    string Value = llList2String(split, 1);
+                    
                     if (Value == line) Value = "";
                     if (Key != "useHTTPS" && Key != "HTTPinterval" && Key != "HTTPthrottle") lmSendConfig(Key, Value);
                     else {

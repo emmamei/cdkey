@@ -338,7 +338,7 @@ default
             
             dbConfig = 0;
             
-            dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -8, -1));
+            if (code == 104) dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -8, -1));
             llListenRemove(dialogHandle);
             dialogHandle = llListen(dialogChannel, "", "", "");
             
@@ -458,14 +458,23 @@ default
     sensor(integer num) {
         integer i;
         for (i = 0; i < num; i++) {
-            dialogKeys += llDetectedKey(0);
-            dialogNames += llGetDisplayName(llDetectedKey(0));
-            dialogButtons += llGetSubString(llGetDisplayName(llDetectedKey(0)), 0, 23);
+            dialogKeys += llDetectedKey(i);
+            dialogNames += llDetectedName(i);
+            dialogButtons += llGetSubString(llDetectedName(i), 0, 23);
         }
+        
+        llSetTimerEvent(60.0);
+        blacklistHandle = llListen(dialogChannel + 1, "", dollID, "");
+        llDialog(dollID, "Select the avatar to be added to the blacklist.", dialogButtons, dialogChannel + 1);
     }
     
     no_sensor() {
-        llDialog(llGetOwner(), "No avatars detected within chat range", [ "OK" ], 9999);
+        llDialog(dollID, "No avatars detected within chat range", [ "OK" ], 9999);
+    }
+    
+    touch_start(integer num) {
+        integer i;
+        for (i = 0; i < num; i++) doMainMenu(llDetectedKey(i));
     }
     
     //----------------------------------------
@@ -534,39 +543,6 @@ default
             }
             else if (choice == "Type of Doll") {
                 llMessageLinked(LINK_THIS, 17, name, id);
-            }
-            else if ((keyAnimation == "" || (!isDoll || poserID == dollID)) && llGetSubString(choice, 0, 4) == "Poses") {
-                integer page = 1; integer len = llStringLength(choice);
-                if (len > 5) page = (integer)llGetSubString(choice, 6 - len, -1);
-                integer poseCount = llGetInventoryNumber(20);
-                list poseList; integer i;
-                
-                llListenControl(dialogHandle, 1);
-                llSetTimerEvent(60.0);
-                
-                for (i = 0; i < poseCount; i++) {
-                    string poseName = llGetInventoryName(20, i);
-                    if (poseName != ANIMATION_COLLAPSED &&
-                        llGetSubString(poseName, 0, 0) != ".") {
-                        if (poseName != keyAnimation) poseList += poseName;
-                        else poseList += "* " + poseName;
-                    }
-                }
-                poseCount = llGetListLength(poseList);
-                if (poseCount > 12) {
-                    poseList = llList2List(poseList, page * 9, (page + 1) * 9 - 1);
-                    integer prevPage = page - 1;
-                    integer nextPage = page + 1;
-                    if (prevPage == 0) prevPage = llFloor((float)poseCount / 9.0);
-                    if (nextPage > llFloor((float)poseCount / 9.0)) nextPage = 1;
-                    poseList = [ "Poses " + (string)prevPage, "Main Menu", "Poses " + (string)nextPage ] + poseList;
-                }
-                
-                llDialog(id, "Select the pose to put the doll into", poseList, dialogChannel);
-            }
-            else if ((!isDoll || poserID == dollID) && choice == "Unpose") {
-                keyAnimation = "";
-                lmInternalCommand("doUnpose", "", id);
             }
             else if (choice == "Dress") {
                 if (!isDoll) llOwnerSay(name + " is looking at your dress menu");
@@ -663,7 +639,7 @@ default
                     dialogButtons += llGetSubString(llList2String(blacklistNames, i), 0, 23);
                 }
                 dialogNames = blacklistNames;
-                blacklistHandle = llListen(dialogChannel + 1, "", "", "");
+                blacklistHandle = llListen(dialogChannel + 1, "", dollID, "");
                 llDialog(id, msg, dialogButtons, dialogChannel + 1);
                 llSetTimerEvent(60.0);
             }
@@ -858,16 +834,6 @@ default
                     MistressList = llDeleteSubList(MistressList, index, index);
                     lmSendConfig("MistressList", llDumpList2String(MistressList, "|"));
                 }
-            }
-            if ((keyAnimation == "" || (!isDoll || poserID == dollID)) && llGetInventoryType(choice) == 20) {
-                keyAnimation = choice;
-                lmInternalCommand("setPose", choice, id);
-                poserID = id;
-            }
-            else if ((keyAnimation == "" || (!isDoll || poserID == dollID)) && llGetInventoryType(llGetSubString(choice, 2, -1)) == 20) {
-                keyAnimation = llGetSubString(choice, 2, -1);
-                lmInternalCommand("setPose", llGetSubString(choice, 2, -1), id);
-                poserID = id;
             }
             
         #ifdef ADULT_MODE
