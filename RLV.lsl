@@ -3,7 +3,7 @@
 // vim:sw=4 et nowrap:
 //
 // DATE: 8 December 2013
-                  
+
 //========================================
 // VARIABLES
 //========================================
@@ -128,23 +128,23 @@ processConfiguration(string name, list values) {
     else if (name == "user startup rlv") {
         string rlv = llList2String(values, 0);
         if (llGetSubString(rlv, 0, 0) == "@") rlv = llGetSubString(rlv, 1, -1);
-        
+
         if (addBaseRLVcmd == "") addBaseRLVcmd = rlv;
         else addBaseRLVcmd += "," + rlv;
-        
+
         doRLV(scriptName, addBaseRLVcmd);
     }
     else if (name == "user collapse rlv") {
         string rlv = llList2String(values, 0);
         if (llGetSubString(rlv, 0, 0) == "@") rlv = llGetSubString(rlv, 1, -1);
-        
+
         if (addCollapseRLVcmd == "") addCollapseRLVcmd = rlv;
         else addCollapseRLVcmd += "," + rlv;
     }
     else if (name == "user restore rlv") {
         string rlv = llList2String(values, 0);
         if (llGetSubString(rlv, 0, 0) == "@") rlv = llGetSubString(rlv, 1, -1);
-        
+
         if (addRestoreRLVcmd == "") addRestoreRLVcmd = rlv;
         else addRestoreRLVcmd += "," + rlv;
     }
@@ -168,7 +168,7 @@ string formatFloat(float val, integer dp)
 memReport() {
     float free_memory = (float)llGetFreeMemory();
     float used_memory = (float)llGetUsedMemory();
-    
+
     if (devKey()) llOwnerSay(llGetScriptName() + ": Memory " + formatFloat(used_memory/1024.0, 2) + "/" + (string)llRound((used_memory + free_memory)/1024.0) + "kB, " + formatFloat(free_memory/1024.0, 2) + " kB free");
 }
 
@@ -183,6 +183,8 @@ listenerStart() {
 //----------------------------------------
 checkRLV() { // Run RLV viewer check
     locked = 0;
+
+    // Don't run the RLVcheck if not attached to back
     ATHok = llGetAttached() == ATTACH_BACK;
     if (ATHok) {
         if (RLVck == 0) {
@@ -191,18 +193,20 @@ checkRLV() { // Run RLV viewer check
             rlvAPIversion = "";
             RLVck = 1;
         }
-        
+
         llOwnerSay("@clear,versionnew=" + (string)channel);
-    } else postCheckRLV();
+    } else
+        // Use this to fail early: not attached to back, so no RLV will be used
+        processRLVResult();
 }
 
-postCheckRLV() { // Handle RLV check result
+processRLVResult() { // Handle RLV check result
     if (RLVok) llOwnerSay("Logged with Community Doll Key and " + rlvAPIversion + " active...");
     else if (ATHok && !RLVok) llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
-    
+
     // Mark RLV check completed
     RLVck = 0;
-    
+
     if (configured) initializeRLV();
     llMessageLinked(LINK_SET, 103, scriptName, NULL_KEY);
 }
@@ -210,18 +214,18 @@ postCheckRLV() { // Handle RLV check result
 initializeRLV() {
     if (RLVok && ATHok) {
         llOwnerSay("Enabling RLV mode");
-        
+
         rlvSources = [];
         rlvStatus = [];
-        
+
         doRLV("UserBase", addBaseRLVcmd);
-        
+
         afkOrCollapse("Collapsed", collapsed);
         afkOrCollapse("AFK", afk);
 
         if (collapsed)  doRLV("UserCollapsed", addCollapseRLVcmd);
         else            doRLV("UserCollapsed", addRestoreRLVcmd);
-    
+
         if ( autoTP)                           doRLV("Base", "accepttp=add");
         if ( helpless)                         doRLV("Base", "tplm=n,tploc=n");
         if (!canFly)                           doRLV("Base", "fly=n");
@@ -244,12 +248,14 @@ initializeRLV() {
             else llOwnerSay("Developer key not locked.");
         }
     }
-    
+
     RLVstarted = 1;
     llSetTimerEvent(1);
     llMessageLinked(LINK_SET, 350, (string)RLVok + "|" + rlvAPIversion, NULL_KEY);
 }
 
+// this adds a list of people who can always rescue a dolly
+// puts them on the exception list
 allowRescue(string script) {
     list allow = [ MistressID, MasterBuilder, MasterWinder, DevOne, DevTwo ];
     integer index;
@@ -271,22 +277,22 @@ doRLV(string script, string commandString) {
                                     // links will be longer due the the prefix.
         integer scriptIndex = llListFindList(rlvSources, [ script ]);
         list commandList = llParseString2List(commandString, [ "," ], []);
-        
+
         if (scriptIndex == -1) {
             scriptIndex = llGetListLength(rlvSources);
             rlvSources += script;
         }
-        
+
         for (commandLoop = 0; commandLoop < llGetListLength(commandList); commandLoop++) {
             string fullCmd; list parts; string param; string cmd;
-            
+
             scaleMem();
-            
+
             fullCmd = llStringTrim(llList2String(commandList, commandLoop), STRING_TRIM);
             parts = llParseString2List(fullCmd, [ "=" ], []);
             param = llList2String(parts, 1);
             cmd = llList2String(parts, 0);
-            
+
             if (llStringLength(sendCommands + fullCmd + ",?") > charLimit) {
                 llOwnerSay(llGetSubString("@" + sendCommands, 0, -2));
                 sendCommands = "";
@@ -298,7 +304,7 @@ doRLV(string script, string commandString) {
                 //confCommands = "";
             //}
             //confCommands += fullCmd + ",";
-            
+
             if (cmd != "clear") {
                 if (param == "n" || param == "add") {
                     integer cmdIndex = llListFindList(rlvStatus, [ cmd ]);
@@ -402,13 +408,13 @@ doRLV(string script, string commandString) {
                 //}
             }
         }
-        
+
         if (sendCommands != "") llOwnerSay(llGetSubString("@" + sendCommands, 0, -2));
         //if (confCommands != "") {
         //    lmConfirmRLV(script, llGetSubString(confCommands, 0, -2));
             //debugSay(llGetSubString(confCommands, 0, -2));
         //}
-        
+
         //llOwnerSay("RLV Sources " + llList2CSV(rlvSources));
         //debugSay(9, "Active RLV: " + llDumpList2String(llList2ListStrided(rlvStatus, 0, -1, 2), "/"));
         //integer i;
@@ -426,9 +432,9 @@ rlvTeleportToVector(vector global) {
     string locx = (string)llFloor(global.x);
     string locy = (string)llFloor(global.y);
     string locz = (string)llFloor(global.z);
-    
+
     llOwnerSay("Dolly is now teleporting.");
-    
+
     llOwnerSay("@tpto:" + locx + "/" + locy + "/" + locz + "=force");
 }
 
@@ -436,12 +442,12 @@ afkOrCollapse(string type, integer set) {
     if (set) {
 
         lockAttachments(type, set);
-        
+
         doRLV(type, "fly=n,sit=n,unsit=n,tplm=n,tploc=n,tplure=n,standtp=n,sittp=n," +
                     "addoutfit=n,addattach=n,remoutfit=n,remattach=n," +
                     "temprun=n,alwaysrun=n,sendchat=n,showhovertextall=n," +
                     "redirchat:999=add,rediremote:999=add");
-                    
+
         allowRescue(type);
         if (carried) autoTPAllowed(type, carrierID);
     }
@@ -449,7 +455,7 @@ afkOrCollapse(string type, integer set) {
 
 lockAttachments(string type, integer set) {
     list points = [ "spine", "chest", "skull", "left shoulder", "right shoulder", "left hand",
-                    "right hand", "left foot", "right foot", "pelvis", "mouth", "chin", 
+                    "right hand", "left foot", "right foot", "pelvis", "mouth", "chin",
                     "left ear", "right ear", "left eyeball", "right eyeball", "nose",
                     "r upper arm", "r forearm", "l upper arm", "l forearm", "right hip",
                     "r upper leg", "r lower leg", "left hip", "l upper leg", "l lower leg",
@@ -474,7 +480,7 @@ default {
         scriptName = llGetScriptName();
         llMessageLinked(LINK_SET, 999, llGetScriptName(), NULL_KEY);
     }
-    
+
     //----------------------------------------
     // TIMER
     //----------------------------------------
@@ -484,7 +490,7 @@ default {
             RLVck++;
             if (ATHok && RLVck != 6) llOwnerSay("@clear,versionnew=" + (string)channel);
         } else if (RLVck != 0) {
-            postCheckRLV();
+            processRLVResult();
         } else {
             if (wearLockExpire > 0.0) {
                 wearLockExpire -= llGetAndResetTime();
@@ -495,7 +501,7 @@ default {
             }
         }
     }
-    
+
     //----------------------------------------
     // DATASERVER
     //----------------------------------------
@@ -505,7 +511,7 @@ default {
             rlvTeleportToVector(loc);
         }
     }
-    
+
     //----------------------------------------
     // LISTEN
     //----------------------------------------
@@ -514,21 +520,21 @@ default {
             if (RLVck != 0) {
                 RLVok = 1;
                 rlvAPIversion = llStringTrim(msg, STRING_TRIM);
-                postCheckRLV();
+                processRLVResult();
             } else {
                 list split = llParseString2List(msg, [ "|" ], []);
                 integer i;
-                
+
                 for (i = 0; i < llGetListLength(split); i++) {
                     string path = llStringTrim(llToLower(llList2String(split, 0)), STRING_TRIM);
                     if (llSubStringIndex(path, "key") != -1) myPath = llList2String(split, 0);
                 }
             }
-            
+
             llListenControl(listenHandle, 0);
         }
     }
-    
+
     //----------------------------------------
     // LINK_MESSAGE
     //----------------------------------------
@@ -572,7 +578,7 @@ default {
         //    * stripPanties
         //    * stripShoes
         //    * carried
-        
+
         if (num == 16)
             dollType = llList2String(parameterList, 0);
         else if (num == 101) {
@@ -586,7 +592,7 @@ default {
         else if (num == 104) {
             dollID = llGetOwner();
             dollName = llGetDisplayName(dollID);
-            
+
             listenerStart();
             checkRLV();
         }
@@ -596,7 +602,7 @@ default {
             ATHok = llGetAttached() == ATTACH_BACK;
             RLVstarted = 0;
             llResetTime();
-            
+
             checkRLV();
         }
         else if (num == 106) {
@@ -680,21 +686,21 @@ default {
             string script = llList2String(parameterList, 0);
             string cmd = llList2String(parameterList, 1);
             parameterList = llList2List(parameterList, 2, -1);
-            
+
             if (cmd == "setAFK") {
                 afk = llList2Integer(parameterList, 0);
                 integer auto = llList2Integer(parameterList, 1);
                 string rate = llList2String(parameterList, 2);
                 string mins = llList2String(parameterList, 3);
-                
+
                 if (afk) {
-                    
+
                     // set sign to "afk"
                     llSetText(dollType + " Doll (AFK)", <1,1,0>, 1);
-    
+
                     // AFK turns everything off
                     afkOrCollapse("AFK", 1);
-                    
+
                     if (auto)
                         llOwnerSay("Automatically entering AFK mode. Wind down rate has slowed to " + rate + "x however and movements and abilities are restricted.");
                     else
@@ -703,9 +709,9 @@ default {
                     // set sign back to normal
                     if (signOn) llSetText(dollType + " Doll", <1,1,1>, 1);
                     else llSetText("", <1,1,1>, 1);
-                    
+
                     doRLV("AFK", "clear");
-        
+
                     llOwnerSay("You are now no longer away from keyboard (AFK). Movements are unrestricted and winding down proceeds at normal rate.");
                 }
                 llOwnerSay("You have " + mins + " minutes of life remaning.");
@@ -716,28 +722,28 @@ default {
                 if (hasController) {
                     llMessageLinked(LINK_SET, 11, dollName + " has collapsed at this location: " + llList2String(parameterList, 1), MistressID);
                 }
-            
+
                 // Set this so an "animated" but disabled dolly can be identified
                 llSetText("Disabled Dolly!", <1,0,0>, 1);
-            
+
                 // Key is made visible again when collapsed
                 llSetLinkAlpha(LINK_SET, 1, ALL_SIDES);
-                
+
                 // Turn everything off: Dolly is down
                 afkOrCollapse("Collapse", 1);
                 doRLV("UserCollapse", addCollapseRLVcmd);
             }
             else if (cmd == "restore") {
                 collapsed = 0;
-                
+
                 // If key was set to be invisible hide it again now
                 if (!visible) llSetLinkAlpha(LINK_SET, 0, ALL_SIDES);
-                
+
                 doRLV("Collapse", "clear");
                 doRLV("UserCollapse", "clear");
                 //afkOrCollapse("Collapsed", 0);
                 //doRLV("UserCollapsed", addRestoreRLVcmd);
-                
+
             }
             else if (llGetSubString(cmd, 0, 4) == "strip") {
                 string stripped;
@@ -775,10 +781,10 @@ default {
                 carrierID = id;
                 carrierName = llList2String(parameterList, 0);
                 carried = 1;
-                
+
                 // No TP allowed for Doll
                 doRLV("Carry", "tplm=n,tploc=n,accepttp=rem,tplure=n,accepttp:" + (string)carrierID + "=add,tplure:" + (string)carrierID  + "=add,showinv=n");
-    
+
                 // Allow rescuers to AutoTP
                 allowRescue("Carry");
             }
@@ -788,7 +794,7 @@ default {
                 carrierID = NULL_KEY;
                 carrierName = "";
                 carried = 0;
-            
+
                 if (!quiet) llSay(0, dollName + " was being carried by " + llList2String(parameterList, 0) + " and has been set down.");
                 else llOwnerSay("You were being carried by " + llList2String(parameterList, 0) + " and have now been set down.");
             }
@@ -810,7 +816,7 @@ default {
             string script = llList2String(parameterList, 0);
             string cmd = llList2String(parameterList, 1);
             parameterList = llList2List(parameterList, 2, -1);
-            
+
             //if ((wearLockExpire > 0.0 || !canWear || !canUnwear) && script == "Dress" && id != dollID) {
             //    doRLV(script, "remoutfit=y,remattach=y,addoutfit=y,addattach=y," + cmd + ",remoutfit=n,remattach=n,addoutfit=n,addattach=n");
             //}
