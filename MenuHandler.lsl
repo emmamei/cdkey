@@ -7,7 +7,7 @@ key        DevOne = "c5e11d0a-694f-46cc-864b-e42340890934";   // MayStone
 key        DevTwo = "2fff40f0-ea4a-4b52-abb8-d4bf6b1c98c9";   // Silky Mesmeriser
 
 // Current Controller - or Mistress
-key MistressID = MasterBuilder;
+key MistressID;
 key carrierID;
 key poserID;
 key dollID;
@@ -584,7 +584,7 @@ handlemenuchoices(string choice, string name, key id) {
     else if (controller && choice == "can AFK")
         llMessageLinked(LINK_SET, 300, "canAFK|" + (string)(canAFK = 1), id);
     else if (controller && choice == "drop control") {
-        llMessageLinked(LINK_SET, 300, "MistressID|" + (string)(MistressID = MasterBuilder), id);
+        llMessageLinked(LINK_SET, 300, "MistressID|" + (string)(MistressID = NULL_KEY), id);
         llMessageLinked(LINK_SET, 300, "hasController|" + (string)(hasController = 0), id);
     }
 
@@ -676,7 +676,7 @@ default
             else if (name == "timeLeftOnKey") timeLeftOnKey = (float)value;
             else if (name == "MistressID") {
                 MistressID = (key)value;
-                hasController = !(MistressID == MasterBuilder);
+                hasController = !(MistressID == NULL_KEY);
                 mistressQuery = llRequestDisplayName(MistressID);
             }
         }

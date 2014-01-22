@@ -87,7 +87,7 @@ key        DevOne = "c5e11d0a-694f-46cc-864b-e42340890934";   // MayStone
 key        DevTwo = "2fff40f0-ea4a-4b52-abb8-d4bf6b1c98c9";   // Silky Mesmeriser
 
 // Current Controller - or Mistress
-key MistressID = MasterBuilder;
+key MistressID;
 
 key dollID;
 key carrierID;
@@ -783,7 +783,7 @@ default {
 
             else if (name == "MistressID") {
                 MistressID = (key)value;
-                hasController = !(MistressID == MasterBuilder);
+                hasController = !(MistressID == NULL_KEY);
                 mistressQuery = llRequestDisplayName(MistressID);
             }
             else if (name == "afk") {
