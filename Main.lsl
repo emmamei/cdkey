@@ -622,11 +622,9 @@ default {
         }
         else displayWindRate = setWindRate();
 
-        // A specific test for collapsed status is no longer required here
-        // as being collapsed is one of several conditions which forces the
+        // A specific test for collapsed status is no longer appropriate here
+        // as being collapsed is only one of several conditions which forces the
         // wind rate to be 0.
-        // Others which cause this effect are not being attached to spine
-        // and
         //--------------------------------
         // WINDING DOWN.....
         
@@ -655,7 +653,9 @@ default {
             }
         }
         
-        // Check if doll is posed and time is up
+        //--------------------------------
+        // POSE TIME UP?
+
         if (keyAnimation != "" && keyAnimation != ANIMATION_COLLAPSED) { // Doll posed
             if (poseExpire != 0.0) {
                 poseExpire -= timerInterval;
@@ -720,11 +720,13 @@ default {
             isTransformingKey = 1;
         }
 
+        // 101: Process configuration
         else if (num == 101) {
             if (!configured)
                 processConfiguration(llList2String(parameterList, 0), llList2List(parameterList, 1, -1));
         }
 
+        // 102: Configuration complete
         else if (num == 102) {
             configured = 1;
             initFinal();
