@@ -454,7 +454,7 @@ afkOrCollapse(string type, integer set) {
 }
 
 lockAttachments(string type, integer set) {
-    list points = [ "spine", "chest", "skull", "left shoulder", "right shoulder", "left hand",
+    list points = [ "chest", "skull", "left shoulder", "right shoulder", "left hand",
                     "right hand", "left foot", "right foot", "pelvis", "mouth", "chin",
                     "left ear", "right ear", "left eyeball", "right eyeball", "nose",
                     "r upper arm", "r forearm", "l upper arm", "l forearm", "right hip",
@@ -465,8 +465,8 @@ lockAttachments(string type, integer set) {
     if (set) {
         // Skip locking spine on dev keys, this is for the same reason as we skip the @detach=n and
         // @editobj restrictions.
-        if (!devKey()) doRLV(type, "detach:" + llDumpList2String(points, "=n,detach:") + "=n");
-        else doRLV(type, "detach:" + llDumpList2String(llList2List(points, 1, -1), "=n,detach:") + "=n");
+        if (!devKey()) doRLV(type, "detach:spine=n");
+        doRLV(type, "detach:" + llDumpList2String(points, "=n,detach:") + "=n");
     }
 }
 
