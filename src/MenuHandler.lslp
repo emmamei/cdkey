@@ -120,11 +120,6 @@ doMainMenu(key id) {
         if isDoll {
             msg = "You are being carried by " + carrierName + ".";
             menu = ["OK"];
-
-            // Allows user to permit current carrier to take over and become Mistress
-            if ((numControllers < MAX_USER_CONTROLLERS) && !takeoverAllowed) {
-                menu += "Allow Takeover";
-            }
         }
 
         // Doll's carrier clicked on key
@@ -146,7 +141,7 @@ doMainMenu(key id) {
 
             #ifdef ADULT_MODE
             // Is doll strippable?
-            if ((pleasureDoll || dollType == "Slut") && RLVok && (simRating == "MATURE" || simRating == "ADULT")) {
+            if (RLVok && ((pleasureDoll || dollType == "Slut") && RLVok && (simRating == "MATURE" || simRating == "ADULT"))) {
                 menu += "Strip";
             }
             #endif
@@ -190,7 +185,7 @@ doMainMenu(key id) {
                 menu += "Toggle AFK";
             }
 
-            if (detachable) {
+            if (RLVok && detachable) {
                 menu += "Detach";
             }
 
@@ -208,7 +203,7 @@ doMainMenu(key id) {
         menu += "Help/Support";
         
         // Can the doll be dressed? Add menu button
-        if (canDress || (isDoll && canWear && !wearLock)) {
+        if (RLVok && (canDress || (isDoll && canWear && !wearLock))) {
             menu += "Dress";
         }
     
@@ -228,12 +223,12 @@ doMainMenu(key id) {
             }
         }
 
-        if (keyAnimation != "") {
+        if (keyAnimation != "" && keyAnimation != ANIMATION_COLLAPSED) {
             //msg += "Doll is currently in the " + currentAnimation + " pose. ";
             msg += "Doll is currently posed.\n";
         }
 
-        if (keyAnimation != "" && (!isDoll || poserID == dollID)) menu += "Unpose";
+        if (keyAnimation != "" && keyAnimation != ANIMATION_COLLAPSED && (!isDoll || poserID == dollID)) menu += "Unpose";
 
         if (keyAnimation == "" || (!isDoll || poserID == dollID)) menu += "Poses";
     }
@@ -244,6 +239,10 @@ doMainMenu(key id) {
     if (isController && !isDoll) {
         menu += "Use Control";
     }
+    debugSay(5, (string)(isController));
+    debugSay(5, (string)(!isDoll));
+    debugSay(5, (string)llListFindList(llList2ListStrided(MistressList, 0, -1, 2), [ (string)id ]));
+    debugSay(5, llList2CSV(llList2ListStrided(MistressList, 0, -1, 2)));
     
     llListenControl(dialogHandle, 1);
     llSetTimerEvent(60.0);
@@ -252,33 +251,6 @@ doMainMenu(key id) {
     
     msg += "See " + WEB_DOMAIN + manpage + " for more information." ;
     llDialog(id, timeleft + msg, menu, dialogChannel);
-}
-
-newController(key id) {
-    if (carrierID) {
-        if (numControllers < MAX_USER_CONTROLLERS && llListFindList(MistressList, [ (string)carrierID ]) == -1) {
-            MistressList = llListSort(MistressList + [ (string)carrierID ], 1, 1);
-            lmSendConfig("MistressList", llDumpList2String(MistressList, "|"));
-        }
-        if (isCarrier) {
-            llOwnerSay("Your carrier, " + carrierName + ", has become your controller.");
-        } else if (isDoll) {
-            llOwnerSay("You have accepted your carrier " + carrierName + " as you controller, they now " +
-                       "have complete control over dolly.");
-            lmSendToAgent("The dolly " + dollName + " has fully accepted your control of them.", carrierID);
-        }
-        
-        if (!quiet) llSay(0, carrierName + " has become controller of the doll " + dollName + ".");
-    
-        llOwnerSay("Your controllers are now: " + MistressNameList);
-    
-        // Note that the response goes to 9999 - a nonsense channel
-        string msg = "You are now controller of " + dollName + ". See " + WEB_DOMAIN + "controller.htm for more information.";
-        llDialog(carrierID, msg, ["OK"], 9999);
-    } else {
-        llOwnerSay("Unable to accept new controller as you are not currently being carried, your new Mistress needs to " +
-                   "be carrying you when the request is accepted for this to work.");
-    }
 }
 
 doWindMenu(key id) {
@@ -330,13 +302,11 @@ default
         list split = llParseString2List(data, [ "|" ], []);
         
         if (code == 102) {
-            if (llList2String(split, 0) == "OnlineServices") dbConfig = 1;
-            else if (llList2String(split, 0) == "Start") configured = 1;
+            if (data == "OnlineServices") dbConfig = 1;
+            else if (data == "Start") configured = 1;
         }
         else if (code == 104 || code == 105) {
             if (llList2String(split, 0) != "Start") return;
-            
-            dbConfig = 0;
             
             if (code == 104) dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -8, -1));
             llListenRemove(dialogHandle);
@@ -381,6 +351,7 @@ default
             else if (name == "quiet")                           quiet = (integer)value;
             else if (name == "signOn")                         signOn = (integer)value;
             else if (name == "takeoverAllowed")       takeoverAllowed = (integer)value;
+            else if (name == "poserID")                       poserID = (key)value;
             else if (name == "windTimes") {
                 integer timesCount = llGetListLength(split);
                 integer i;
@@ -393,18 +364,16 @@ default
                     //debugSay(5, "windTimes " + llList2CSV(windTimes) + "\nsplit " + llList2CSV(split));
                 } while (llGetListLength(split) > 0);
             }
-            else if (name == "dollType")
+            else if (name == "dollType") {
                 dollType = llGetSubString(llToUpper(value), 0, 0) + llGetSubString(llToLower(value), 1, -1);
-            else if (name == "MistressID") {
-                if ((key)value != NULL_KEY && llListFindList(MistressList, [ (string)value ]) == -1) {
-                    MistressList = llListSort(MistressList + [ (string)value ], 1, 1);
-                    if (dbConfig) lmSendConfig("MistressList", llDumpList2String(MistressList, "|"));
-                }
             }
             else if (name == "MistressList") {
-                list newList = llListSort(split, 1, 1);
-                //debugSay(5, "newList (" + (string)llGetListLength(newList) + ") " + llList2CSV(newList));
+                list newList = llListSort(llList2List(split, 2, -1), 2, 1);
                 if (MistressList != newList) MistressList = newList;
+            }
+            else if (name == "blacklist") {
+                list newList = llListSort(llList2List(split, 2, -1), 2, 1);
+                if (blacklist != newList) blacklist = newList;
             }
         }        
         else if (code == 305) {
@@ -448,6 +417,10 @@ default
         }
     }
     
+    on_rez(integer start) {
+        dbConfig = 0;
+    }
+    
     timer() {
         llListenControl(dialogHandle, 0);
         llListenRemove(blacklistHandle);
@@ -457,6 +430,7 @@ default
     
     sensor(integer num) {
         integer i;
+        if (num > 12) num = 12;
         for (i = 0; i < num; i++) {
             dialogKeys += llDetectedKey(i);
             dialogNames += llDetectedName(i);
@@ -554,27 +528,6 @@ default
                     dialogChannel);
             }
             #endif
-            else if (isCarrier && takeoverAllowed && choice == "Be Controller") {
-                newController(id);
-            }
-            else if (isCarrier && !takeoverAllowed && choice == "Request Control") {
-                if (id) {
-                    lmSendToAgent("You have asked " + dollName + " to grant you permanant contol of " + llToLower(pronounHerDoll) + " key. " +
-                                  "If " + llToLower(pronounSheDoll) + " accepts this dolly will become yours, please wait for " + llToLower(pronounHerDoll) + " response.\n\n" +
-                                  "Place the doll down before " + llToLower(pronounSheDoll) + " accepts to cancel your request.", id);
-                    llDialog(dollID, name + " has requested to take permanant control of your key. " +
-                             "If you accept then you will not be able to remove them yourself, become " + name + "'s dolly?",
-                             [ "Accept Control", "Refuse Control" ], dialogChannel);
-                }
-            }
-            else if (isDoll && choice == "Accept Control") {
-                newController(id);
-            }
-            else if (isDoll && choice == "Refuse Control") {
-                if (carrierID) {
-                    lmSendToAgent("The dolly " + dollName + " refuses to allow you to take permanant control of " + llToLower(pronounHerDoll) + ". ", carrierID);
-                }
-            }
             else if (choice == "Use Control" || choice == "Options") {
                 string msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
                 list pluslist;
@@ -714,18 +667,6 @@ default
                 llOwnerSay("You are just a dolly and can no longer dress or undress by yourself.");
                 lmSendConfig("canWear", (string)(canWear = 0));
             }
-            else if (isDoll && choice == "Allow Takeover") {
-                llOwnerSay("Anyone carrying you may now choose to be your controller.");
-                if (hasCarrier) {
-                    lmSendToAgent(dollName + " seems willing to let you take permanant control of " + llToLower(pronounHerDoll) + " key now. " +
-                                    "Maybe you could claim " + dollName + " as your own? (Be Controller from the menu).", carrierID);
-                }
-                lmSendConfig("takeoverAllowed", (string)(takeoverAllowed = 1));
-            }
-            else if (isDoll && choice == "No Takeover") {
-                llOwnerSay("There is now no way for someone to become your controller.");
-                lmSendConfig("takeoverAllowed", (string)(takeoverAllowed = 0));
-            }
             else if (choice == "No Warnings") {
                 llOwnerSay("No warnings will be given when time remaining is low.");
                 lmSendConfig("doWarnings", (string)(doWarnings = 0));
@@ -761,33 +702,39 @@ default
                 llListenControl(dialogHandle, 1);
                 llSetTimerEvent(60.0);
                 
-                // One-way option
-                if (detachable) pluslist += "No Detaching";
-                else if (isController) pluslist += "Detachable";
-                
-                // One-way option
-                if (canSit) pluslist += "No Sitting";
-                else if (isController) pluslist += "Can Sit";
-                
-                // One-way option
-                if (canStand) pluslist += "No Standing";
-                else if (isController) pluslist += "Can Stand";
-                
-                // One-way option
-                if (!autoTP) pluslist += "Auto TP";
-                else if (isController) pluslist += "No Auto TP";
-                
-                // One way option
-                if (canWear) pluslist += "No Dress Self";
-                else if (isController) pluslist += "Can Dress Self";
-                
-                // One-way option
-                if (!helpless) pluslist += "No Self TP";
-                else if (isController) pluslist += "Self TP";
-                
-                // One-way option
-                if (canFly) pluslist += "No Flying";
-                else if (isController) pluslist += "Can Fly";
+                if (RLVok) {
+                    // One-way option
+                    if (detachable) pluslist += "No Detaching";
+                    else if (isController) pluslist += "Detachable";
+                    
+                    // One-way option
+                    if (canSit) pluslist += "No Sitting";
+                    else if (isController) pluslist += "Can Sit";
+                    
+                    // One-way option
+                    if (canStand) pluslist += "No Standing";
+                    else if (isController) pluslist += "Can Stand";
+                    
+                    // One-way option
+                    if (!autoTP) pluslist += "Auto TP";
+                    else if (isController) pluslist += "No Auto TP";
+                    
+                    // One way option
+                    if (canWear) pluslist += "No Dress Self";
+                    else if (isController) pluslist += "Can Dress Self";
+                    
+                    // One-way option
+                    if (!helpless) pluslist += "No Self TP";
+                    else if (isController) pluslist += "Self TP";
+                    
+                    // One-way option
+                    if (canFly) pluslist += "No Flying";
+                    else if (isController) pluslist += "Can Fly";
+                }
+                else {
+                    msg += "\n\nDolly does not have an RLV capable viewer of has RLV turned off in her viewer settings.  There are no usable options available.";
+                    pluslist = [ "OK" ];
+                }
                 
                 llDialog(id, msg, pluslist, dialogChannel);
             }
@@ -801,11 +748,6 @@ default
                 if (isTransformingKey) {
                     if (signOn) pluslist += "Turn Off Sign";
                     else pluslist += "Turn On Sign";
-                }
-                
-                if (isDoll && (numControllers < MAX_USER_CONTROLLERS)) {
-                    if (takeoverAllowed) pluslist += "No Takeover";
-                    else pluslist += "Allow Takeover";
                 }
                 
                 #ifdef ADULT_MODE
@@ -829,9 +771,9 @@ default
             }
             
             if (isController && choice == "Drop Control") {
-                integer index = llListFindList(MistressList, [ id ]);
+                integer index = llListFindList(MistressList, [ (string)id ]);
                 if (index != -1) {
-                    MistressList = llDeleteSubList(MistressList, index, index);
+                    MistressList = llDeleteSubList(MistressList, index, index + 1);
                     lmSendConfig("MistressList", llDumpList2String(MistressList, "|"));
                 }
             }

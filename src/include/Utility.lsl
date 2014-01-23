@@ -15,6 +15,29 @@ string wwGetSLUrl() {
     return ("secondlife://" + llEscapeURL(region) +"/" + posx + "/" + posy + "/" + posz);
 }
 
+integer isKeyFormat(string input) {
+    if (llStringLength(input) != 36) return 0;
+    integer i; list dashes = [ 8, 13, 18, 23 ];
+    //string part = llGetSubString(input, 0, 7);
+    //if ((integer)("0x" + part) == 0 && part != "00000000") return 0;
+    if (llGetSubString(input, 8, 8) != "-") return 0;
+    //part = llGetSubString(input, 9, 12);
+    //if ((integer)("0x" + part) == 0 && part != "0000") return 0;
+    if (llGetSubString(input, 13, 13) != "-") return 0;
+    //part = llGetSubString(input, 14, 17);
+    //if ((integer)("0x" + part) == 0 && part != "0000") return 0;
+    if (llGetSubString(input, 18, 18) != "-") return 0;
+    //part = llGetSubString(input, 19, 22);
+    //if ((integer)("0x" + part) == 0 && part != "0000") return 0;
+    if (llGetSubString(input, 23, 23) != "-") return 0;
+    //part = llGetSubString(input, 24, 31);
+    //if ((integer)("0x" + part) == 0 && part != "00000000") return 0;
+    //part = llGetSubString(input, 31, 35);
+    //if ((integer)("0x" + part) == 0 && part != "0000") return 0;
+    
+    return 1;
+}
+
 #ifdef DEVELOPER_MODE
 memReport(float delay) {
     if (delay != 0.0) llSleep(delay);

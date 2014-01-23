@@ -146,8 +146,8 @@ float windKey() {
         wound = windLimit;
     }
     
-    if (collapsed == 1) uncollapse(1);
     lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
+    if (collapsed == 1) uncollapse(1);
     
     return wound;
 }
@@ -155,9 +155,6 @@ float windKey() {
 doWind(string name, key id) {
     float wound = windKey();
     integer winding = llFloor(wound / SEC_TO_MIN);
-    
-    llSleep(0.25);
-    lmInternalCommand("windMenu", name, id);
 
     if (winding > 0) {
         lmSendToAgent("You have given " + dollName + " " + (string)winding + " more minutes of life.", id);
@@ -166,6 +163,7 @@ doWind(string name, key id) {
             if (!quiet) llSay(0, dollName + " has been fully wound by " + name + ".");
             else lmSendToAgent(dollName + " is now fully wound.", id);
         } else {
+            lmInternalCommand("windMenu", name, id);
             lmSendToAgent("Doll is now at " + formatFloat((float)timeLeftOnKey * 100.0 / (float)effectiveLimit, 2) + "% of capacity.", id);
         }
         
@@ -287,11 +285,13 @@ default {
         //debugSay(5, "afk=" + (string)afk + " velocity=" + (string)llGetVel() + " speed=" + formatFloat(llVecMag(llGetVel()), 2) + "m/s (llVecMag(llGetVel()))");
         
         ifPermissions();
+        scaleMem();
+        
         #ifdef DEVELOPER_MODE
         if (ticks % 2 == 0)
             if (timeReporting) llOwnerSay("Script Time: " + formatFloat(llList2Float(llGetObjectDetails(llGetKey(), [ OBJECT_SCRIPT_TIME ]), 0) * 1000000, 2) + "µs");
         #endif
-        if (ticks % 12 == 0) {
+        if (ticks % 4 == 0) {
             lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
             if (wearLockExpire != 0.0) lmSendConfig("wearLockExpire", (string)(wearLockExpire));
             if (winderRechargeTime != 0.0) lmSendConfig("winderRechargeTime", (string)(winderRechargeTime));
@@ -346,6 +346,7 @@ default {
                 // dolls to simply go down silently.
                 llSay(0, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on their key.)");
 
+                lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0.0));
                 lmInternalCommand("collapse", "0", NULL_KEY);
                 
                 // Skip call to setWindRate() this function is heavily overused we only make practical use of the
@@ -390,7 +391,7 @@ default {
         string msg = "Link code: " + (string)code + " Data: " + data;
         if (id) msg += " Key: " + (string)id;
         if (code >= 0 && code <= 0) debugSay(5, msg);
-        else debugSay(8, msg);
+        else debugSay(5, msg);
         list split = llParseString2List(data, [ "|" ], []);
         
         if (code == 102) {
@@ -432,10 +433,7 @@ default {
             if (initState == 105) lmInitState(initState++);
             clearAnim = 1;
             
-            llSetTimerEvent(5.0);
-            #ifdef SIM_FRIENDLY
-            if (lowScriptMode) llSetTimerEvent(12.0);
-            #endif
+            llSetTimerEvent(12.0);
             timerStarted = 1;
 
             if (!isAttached) llSetTimerEvent(60.0);
@@ -445,6 +443,7 @@ default {
         
         else if (code == 135) {
             float delay = llList2Float(split, 1);
+            scaleMem();
             memReport(delay);
         }
         
@@ -522,8 +521,7 @@ default {
             else if (name == "lowScriptMode") {
                 lowScriptMode = (integer)value;
                 if (timerStarted) {
-                    if (lowScriptMode) llSetTimerEvent(12.0);
-                    else llSetTimerEvent(5.0);
+                    llSetTimerEvent(12.0);
                 }
             }
             #endif
@@ -567,11 +565,6 @@ default {
             else if (!collapsed && timeLeftOnKey <= 0) lmInternalCommand("collapse", "0", NULL_KEY);
             
             if (!canDress) llOwnerSay("Other people cannot outfit you.");
-            
-            string msg = dollName + " has logged in with";
-            if (!RLVok) msg += "out";
-            msg += " RLV at " + wwGetSLUrl();
-            llMessageLinked(LINK_THIS, 15, msg, scriptkey);
         }
         else if (code == 500) {
             string choice = llList2String(split, 0);
@@ -779,6 +772,18 @@ default {
                 }
 
                 lmMemReport(2.0);
+            }
+            else if (llGetSubString(choice, 0, 8) == "controller") {
+                string name = llGetSubString(choice, 10, -1);
+                lmInternalCommand("getMistressKey", name, NULL_KEY);
+            }
+            else if (llGetSubString(choice, 0, 8) == "blacklist") {
+                string name = llGetSubString(choice, 10, -1);
+                lmInternalCommand("getBlacklistKey", name, NULL_KEY);
+            }
+            else if (llGetSubString(choice, 0, 10) == "unblacklist") {
+                string name = llGetSubString(choice, 12, -1);
+                lmInternalCommand("getBlacklistKey", name, NULL_KEY);
             }
             #ifdef DEVELOPER_MODE
             else if (choice == "timereporting") {

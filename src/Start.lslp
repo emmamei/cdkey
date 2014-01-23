@@ -15,6 +15,7 @@
 
 float delayTime = 15.0; // in seconds
 float nextIntro;
+float initTimer;
 float nextLagCheck;
 
 key dollID = NULL_KEY;
@@ -35,6 +36,7 @@ key lastAttachAvatar;
 list knownScripts;
 list readyScripts;
 list MistressList;
+list blacklist;
 list recentDilation;
 list windTimes;
 integer quiet;
@@ -146,13 +148,21 @@ processConfiguration(string name, list values) {
         quiet = (integer)value;
         if (quiet != (integer)value) lmSendConfig("quiet", value);
     }
-    else if (name == "controller") {
-        if (llListFindList(MistressList, [ value ]) == -1) lmSendConfig("MistressID", value);
+    else if (name == "blacklist") {
+        if (llListFindList(blacklist, [ value ]) == -1)
+            lmSendConfig("blacklist", llDumpList2String((blacklist = llListSort(blacklist + [ value, llRequestAgentData((key)value, DATA_NAME) ], 2, 1)), "|"));
     }
-    
+    else if (name == "controller") {
+        if (llListFindList(MistressList, [ value ]) == -1)
+            lmSendConfig("MistressList", llDumpList2String((MistressList = llListSort(MistressList + [ value, llRequestAgentData((key)value, DATA_NAME) ], 2, 1)), "|"));
+    }
+    else if (name == "blacklist name") {
+        debugSay(5, "getBlacklistName: " + value);
+        lmInternalCommand("getBlacklistName", value, NULL_KEY);
+    }
     else if (name == "controller name") {
-        debugSay(5, "MistressByName: " + value);
-        lmSendConfig("MistressByName", value);
+        debugSay(5, "getMistressName: " + value);
+        lmInternalCommand("getMistressName", value, NULL_KEY);
     }
     //--------------------------------------------------------------------------
     // Disabled for future use, allows for extention scripts to add support for
@@ -234,18 +244,27 @@ initializationCompleted() {
     if (newAttach && !quiet && isAttached)
         llSay(0, llGetDisplayName(llGetOwner()) + " is now a dolly - anyone may play with their Key.");
     newAttach = 0;
+    
+    llMessageLinked(LINK_THIS, 110, "Start", NULL_KEY);
+
+    initTimer = llGetTime() * 1000;
+
+    memReport(2.0);
+    lmMemReport(0.0);
+    
+    llSleep(0.5);
 
     string msg = "Initialization completed";
     #ifdef DEVELOPER_MODE
-    msg += " in " + formatFloat(llGetTime(), 2) + "s";
+    msg += " in " + formatFloat(initTimer, 2) + "ms";
     #endif
     msg += " key ready";
     sendMsg(dollID, msg);
-    startup = 0;
-    lmMemReport(5.0);
-    llSetTimerEvent(0.0);
     
-    llMessageLinked(LINK_THIS, 110, "Start", NULL_KEY);
+    startup = 3;
+    
+    llSetTimerEvent(1.0);
+    
     initState = 104;
 }
 
@@ -322,8 +341,10 @@ default {
         }
         else if (code == 15) {
             integer i;
-            for (i = 0; i < llGetListLength(MistressList); i++)
-                sendMsg(llList2Key(MistressList, i), llList2String(split,0));
+            for (i = 0; i < llGetListLength(llList2ListStrided(MistressList, 0, -1, 2)); i++) {
+                debugSay(5, "MistressMsg To: " + llList2String(llList2ListStrided(MistressList, 0, -1, 2), i) + "\n" + data);
+                sendMsg(llList2Key(llList2ListStrided(MistressList, 0, -1, 2), i), data);
+            }
         }
         else if (code == 104) {
             if (llListFindList(readyScripts, [ llList2String(split,0) ]) == -1) {
@@ -344,6 +365,7 @@ default {
             else debugSay(1, "WARNING: Script " + llList2String(split,0) + " is sending excessive signal 105");
         }
         else if (code == 135) {
+            if (llList2String(split, 0) == llGetScriptName()) return;
             float delay = llList2Float(split, 1);
             memReport(delay);
         }
@@ -356,25 +378,6 @@ default {
             
             if (name == "timeLeftOnKey") {
                 timeLeftOnKey = (float)value;
-                
-                #ifdef SIM_FRIENDLY
-                recentDilation = llList2List([ llGetRegionTimeDilation() ] + recentDilation, 0, 29);
-                float timeDilation = llListStatistics(LIST_STAT_MEDIAN, recentDilation);
-                if (!lowScriptMode && timeDilation < DILATION_HIGH) {
-                    llOwnerSay("Sim lag detected going into low activity mode.");
-                    
-                    lmSendConfig("lowScriptMode", "1");
-                    lowScriptMode = 1;
-                    sleepMenu();
-                }
-                else if (lowScriptMode && timeDilation > DILATION_LOW) {
-                    llOwnerSay("Sim lag has improved scripts returning to normal mode.");
-                    
-                    lmSendConfig("lowScriptMode", "0");
-                    lowScriptMode = 0;
-                    wakeMenu();
-                }
-                #endif
             }
             else if (name == "ncPrefsLoadedUUID")    ncPrefsLoadedUUID = (key)value;
             else if (name == "offlineMode")                offlineMode = (integer)value;
@@ -398,7 +401,12 @@ default {
             else if (name == "windTimes")                    windTimes = llList2List(split, 2, -1);
             else if (name == "dollType")                      dollType = value;
             else if (name == "MistressList") {
-                MistressList = llList2List(split, 2, -1);
+                list newList = llListSort(llList2List(split, 2, -1), 2, 1);
+                if (MistressList != newList) MistressList = newList;
+            }
+            else if (name == "blacklist") {
+                list newList = llListSort(llList2List(split, 2, -1), 2, 1);
+                if (blacklist != newList) blacklist = newList;
             }
 /*                 if (name == "afk")                           afk = (integer)value;
             else if (name == "autoTP")                       autoTP = (integer)value;
@@ -421,17 +429,44 @@ default {
             else if (name == "takeoverAllowed")     takeoverAllowed = (integer)value;*/
         }
         
-        #ifdef SIM_FRIENDLY
         else if (code == 305) {
+            string script = llList2String(split, 0);
             string cmd = llList2String(split, 1);
+            split = llList2List(split, 2, -1);
             
-            if (cmd == "setAFK") afk = llList2Integer(split, 2);
+            if (cmd == "addRemBlacklist") {
+                string uuid = llList2String(split, 0);
+                string name = llList2String(split, 1);
+                integer index = llListFindList(blacklist, [ uuid ]);
+                
+                if (index == -1) {
+                    llOwnerSay("Adding " + name + " to blacklist");
+                    lmSendConfig("blacklist", llDumpList2String((blacklist = llListSort(blacklist + [ uuid, name ], 2, 1)), "|"));
+                }
+                else {
+                    llOwnerSay("Removing " + name + " from blacklist");
+                    lmSendConfig("blacklist", llDumpList2String((blacklist = llDeleteSubList(blacklist, index, index + 1)), "|"));
+                }
+            }
+            else if (cmd == "addMistress") {
+                string uuid = llList2String(split, 0);
+                string name = llList2String(split, 1);
+                
+                if (llListFindList(MistressList, [ uuid ]) == -1) {
+                    lmSendConfig("MistressList", llDumpList2String((MistressList = llListSort(MistressList + [ uuid, name ], 2, 1)), "|"));
+                }
+            }
+            #ifdef SIM_FRIENDLY
+            else if (cmd == "setAFK") afk = llList2Integer(split, 2);
+            #endif
         }
-        #endif
         
         else if (code == 350) {
             RLVok = llList2Integer(split, 0);
             rlvWait = 0;
+            
+            llSleep(2.0);
+            memReport(0.0);
         }
         else if (code == 500) {
             string selection = llList2String(split, 0);
@@ -561,6 +596,18 @@ default {
                 ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ++ncLine);
             }
         }
+        else {
+            integer index = llListFindList(blacklist, [ query_id ]);
+            if (index != -1) {
+                lmSendConfig("blacklist", llDumpList2String((blacklist = llListReplaceList(blacklist, [ data ], index, index)), "|"));
+            }
+            else {
+                index = llListFindList(MistressList, [ query_id ]);
+                if (index != -1) {
+                    lmSendConfig("MistressList", llDumpList2String((MistressList = llListReplaceList(MistressList, [ data ], index, index)), "|"));
+                }
+            }
+        }
     }
     
     changed(integer change) {
@@ -593,14 +640,14 @@ default {
     timer() {
         llSetTimerEvent(0.0);
         
-        if (!startup) {
+        if (startup == 0) {
             llOwnerSay("Starting initialization");
             lowScriptMode = 0;
             startup = 1;
             if (initState == 103) lmInitState(++initState);
             llSetTimerEvent(90.0 - llGetTime());
         }
-        else if (startup && RLVok != -1 && llGetTime() >= 90.0) {
+        else if (startup != 3 && RLVok != -1 && llGetTime() >= 90.0) {
             lowScriptMode = 0;
             sendMsg(dollID, "Startup failure detected one or more scripts may have crashed, resetting");
 
@@ -609,6 +656,14 @@ default {
             #endif
             
             llResetScript();
+        }
+        else {
+            string msg = dollName + " has logged in with";
+            if (!RLVok) msg += "out";
+            msg += " RLV at " + wwGetSLUrl();
+            llMessageLinked(LINK_THIS, 15, msg, NULL_KEY);
+            
+            llSetTimerEvent(0.0);
         }
     }
     

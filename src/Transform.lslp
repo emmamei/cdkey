@@ -104,27 +104,23 @@ setDollType(string choice, integer force) {
     // Commenting for now until confirmed.
     //sendStateName();
 
-    if (currentState != stateName) {
-        currentState = stateName;
-        clothingprefix = "*" + stateName;
-        currentphrases = [];
-        lineno = 0;
-        
-        if (llGetInventoryType("*" + stateName) == INVENTORY_NOTECARD) kQuery = llGetNotecardLine("*" + stateName,0);
+    currentState = stateName;
+    clothingprefix = "*" + stateName;
+    currentphrases = [];
+    lineno = 0;
     
-        lmSendConfig("clothingFolder", clothingprefix);
-        llSleep(0.25);
-    
-        lmInternalCommand("randomDress", "", NULL_KEY);
-    
-        if (!quiet) llSay(0, dollname + " has become a " + stateName + " Doll.");
-        else llOwnerSay("You have become a " + stateName + " Doll.");
-    
-        lmSendConfig("dollType", stateName);
-        lmSendConfig("currentState", stateName);
-    }
-    
-    if (startup == 2) startup = 0;
+    if (llGetInventoryType("*" + stateName) == INVENTORY_NOTECARD) kQuery = llGetNotecardLine("*" + stateName,0);
+
+    lmSendConfig("clothingFolder", clothingprefix);
+    llSleep(0.25);
+
+    lmInternalCommand("randomDress", "", NULL_KEY);
+
+    if (!quiet) llSay(0, dollname + " has become a " + stateName + " Doll.");
+    else llOwnerSay("You have become a " + stateName + " Doll.");
+
+    lmSendConfig("dollType", stateName);
+    lmSendConfig("currentState", stateName);
 }
 
 /*sendStateName() {
@@ -283,6 +279,7 @@ default {
         
         else if (code == 110) {
             initState = 105;
+            setDollType(stateName, 1);
             startup = 0;
         }
         
@@ -299,7 +296,7 @@ default {
             if (script != SCRIPT_NAME) {
                 if (name == "dollType") {
                     stateName = value;
-                    if (stateName != currentState) setDollType(stateName, 0);
+                    if (!startup && stateName != currentState) setDollType(stateName, 1);
                 }
                 else if (name == "quiet") quiet = (integer)value;
                 else if (name == "mustAgreeToType") mustAgreeToType = (integer)value;
@@ -384,7 +381,7 @@ default {
                 //avoid = FALSE;
                 debugSay(5, "transform = " + (string)transform);
                 debugSay(5, "choice = " + (string)choice);
-                debugSay(5, "stateName = " + (string)stateName);
+                debugSay(5, "stateName = " + (string)(stateName = choice));
                 debugSay(5, "currentState = " + (string)currentState);
 
                 if (stateName != currentState) setDollType(choice, 0);

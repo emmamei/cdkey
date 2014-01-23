@@ -11,7 +11,7 @@
 #include "config.h"
 
 #define hasCarrier (carrierID != NULL_KEY)    
-#define numControllers llGetListLength(USER_CONTROLLERS)
+#define numControllers (llGetListLength(USER_CONTROLLERS) / 2)
 #ifndef DEVELOPER_MODE
 #define isAttached (llGetAttached() == ATTACH_BACK)
 #define isAllowedRLV (llGetAttached() == ATTACH_BACK)
@@ -28,7 +28,7 @@
 #define isCarrier (id == carrierID) && !isDoll
 #define isBuiltin (llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1)
 #define isMistress (llListFindList(USER_CONTROLLERS, [ (string)id ]) != -1)
-#define isController (llListFindList(BUILTIN_CONTROLLERS + MistressList, [ (string)id ]) != -1) && !isDoll
+#define isController (llListFindList(BUILTIN_CONTROLLERS + llList2ListStrided(MistressList, 0, -1, 2), [ (string)id ]) != -1)
 
 // Dress module prefix test defines
 #define isGroupItem(f) (llGetSubString(f,0,0) == "#")
@@ -75,6 +75,8 @@
 #define WEB_DOMAIN "http://communitydolls.com/"
 // Maximum number of @getinvworn failures while dressing
 #define MAX_DRESS_FAILURES 5
+// This defines the config settings that we never expedite HTTP POST for
+#define SKIP_EXPEDITE [ "poseExpire", "timeLeftOnKey", "timeToJamRepair", "wearLockExpire", "winderRechargeTime" ]
 // Timeouts
 #define WEAR_LOCK_TIME 600.0
 #define DEMO_LIMIT 300.0
