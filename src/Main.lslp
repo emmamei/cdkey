@@ -124,6 +124,35 @@ key simRatingQuery;
 //========================================
 // FUNCTIONS
 //========================================
+linkDebug(integer sender, integer code, string data, key id) {
+    integer level = 5;
+         if (llListFindList([ 102, 305, 399 ], [ code ]) != -1)                 level = 2;
+    else if (llListFindList([ 104, 105, 110, 320, 350 ], [ code ]) != -1)       level = 4;
+    //else if (llListFindList([  ], [ code ]) != -1)                            level = 6;
+    else if (llListFindList([ 300, 315, 500 ], [ code ]) != -1)                 level = 7;
+    //else if (llListFindList([  ], [ code ]) != -1)                            level = 8;
+    else if (llListFindList([ 999 ], [ code ]) != -1)                           level = 9;
+    
+    string msg = "LM-DEBUG (" + (string)level + "): " + (string)code + ", " + data;
+    if (id != NULL_KEY) msg += " - " + (string)id;
+    
+    if (DEBUG_LEVEL >= level) llOwnerSay(msg);
+}
+
+string cannoizeName(string name) {
+    // Many new SL users fail to undersand the meaning of "Legacy Name" the name format of the DB
+    // and many older SL residents confuse usernames and legasy names.  This function checks for
+    // the presence of features inidcating we have been supplied with an invalid name which seems tp
+    // be encoded in username format and makes the converstion to the valid legacy name.
+    integer index;
+    
+    if ((index = llSubStringIndex(name, ".") != -1)
+        name = llInsertString(llDeleteSubString(name, index, index), index, " ");
+    else if ((index = llSubStringIndex(name, " ") == -1) name += " resident";
+    
+    return llToLower(name);
+}
+
 float windKey() {
     float windLimit = effectiveLimit - timeLeftOnKey;
     float wound;
@@ -388,10 +417,7 @@ default {
     //----------------------------------------
     // For Transforming Key operations
     link_message(integer source, integer code, string data, key id) {
-        string msg = "Link code: " + (string)code + " Data: " + data;
-        if (id) msg += " Key: " + (string)id;
-        if (code >= 0 && code <= 0) debugSay(5, msg);
-        else debugSay(5, msg);
+        linkDebug(source, code, data, id);
         list split = llParseString2List(data, [ "|" ], []);
         
         if (code == 102) {
@@ -609,7 +635,7 @@ default {
                 }
             }
             else if (choice == "help") {
-                llOwnerSay("%TEXT_HELP%");
+                lmSendToAgent("%TEXT_HELP%", dollID);
             }
             else if (llGetSubString(choice,0,8) == "channel") {
                 string c = llStringTrim(llGetSubString(choice,9,llStringLength(choice) - 1),STRING_TRIM);
@@ -773,8 +799,8 @@ default {
 
                 lmMemReport(2.0);
             }
-            else if (llGetSubString(choice, 0, 8) == "controller") {
-                string name = llGetSubString(choice, 10, -1);
+            else if (llGetSubString(choice, 0, 9) == "controller") {
+                string name = llGetSubString(choice, 11, -1);
                 lmInternalCommand("getMistressKey", name, NULL_KEY);
             }
             else if (llGetSubString(choice, 0, 8) == "blacklist") {
@@ -790,6 +816,13 @@ default {
                 lmSendConfig("timeReporting", (string)(timeReporting = !timeReporting));
             }
             #endif
+            else if (llGetInventoryType(choice) == 20 || llGetSubString(choice, 0, 0) == "." | llGetSubString(choice, 0, 0) == "!") {
+                if (llGetInventoryType(choice) != 20) choice = llGetSubString(choice, 1, -1);
+                lmInternalCommand("setPose", choice, dollID);
+            }
+            else {
+                llOwnerSay("Unrecognised command '" + llList2String(llParseString2List(choice, [ " " ], []), 0) +"' recieved on channel " + (string)chatChannel);
+            }
         }
     }
 

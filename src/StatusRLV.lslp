@@ -1,5 +1,5 @@
 //========================================
-// RLV.lsl
+// StatusRLV.lsl
 //========================================
 //
 // vim:sw=4 et nowrap:
@@ -7,6 +7,11 @@
 // DATE: 8 December 2013
 #include "include/GlobalDefines.lsl"
 //#define DEBUG_BADRLV 1
+//
+// As of 23 January 2014 this script is now state tracking only
+// core RLV command generators are now part of the Avatar script
+// thus we keep this script lightweight with plenty of heap room
+// for it's runtime data needs.
 
 key rlvTPrequest;
 

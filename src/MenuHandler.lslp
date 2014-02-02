@@ -239,10 +239,6 @@ doMainMenu(key id) {
     if (isController && !isDoll) {
         menu += "Use Control";
     }
-    debugSay(5, (string)(isController));
-    debugSay(5, (string)(!isDoll));
-    debugSay(5, (string)llListFindList(llList2ListStrided(MistressList, 0, -1, 2), [ (string)id ]));
-    debugSay(5, llList2CSV(llList2ListStrided(MistressList, 0, -1, 2)));
     
     llListenControl(dialogHandle, 1);
     llSetTimerEvent(60.0);
@@ -254,6 +250,11 @@ doMainMenu(key id) {
 }
 
 doWindMenu(key id) {
+    if (llGetListLength(windTimes) == 1) {
+        doMainMenu(id);
+        return;
+    }
+    
     float displayWindRate = setWindRate();
     integer minsLeft = llRound(timeLeftOnKey / (60.0 * displayWindRate));
     
@@ -288,6 +289,21 @@ doWindMenu(key id) {
     if (demoMode) buttons = [ "Wind 1", "Wind 2", "Wind 5" ]; // If we are in demo mode make our buttons make sense
     
     llDialog(id, timeleft + msg, buttons, dialogChannel);
+}
+
+updateExceptions() {
+    // Exempt builtin or user specified controllers from TP restictions
+    list allow = [ AGENT_CHRISTINA_HALPIN, AGENT_GREIGHIGHLAND_RESIDENT, AGENT_MAYSTONE_RESIDENT, AGENT_SILKY_MESMERISER ] +
+        llList2ListStrided(MistressList, 0, -1, 2);
+    // Also exempt the carrier if any provided they are not already exempted as a controller
+    if ((carrierID != NULL_KEY) && (llListFindList(allow, [ (string)carrierID ]) == -1)) allow += carrierID;
+    
+    // Directly dump the list using the static parts of the RLV command as a seperatior no looping
+    string exceptionRLV = "tplure:" + llDumpList2String(allow, "=add,tplure:") + "=add,";
+    exceptionRLV += "accepttp:" + llDumpList2String(allow, "=add,accepttp:") + "=add";
+
+    // Apply exemptions to base RLV
+    lmRunRLVas("Base", exceptionRLV);
 }
 
 default
@@ -337,6 +353,7 @@ default
             else if (name == "canAFK")                         canAFK = (integer)value;
             else if (name == "canCarry")                     canCarry = (integer)value;
             else if (name == "canDress")                     canDress = (integer)value;
+            else if (name == "canWear")                       canWear = (integer)value;
             else if (name == "canFly")                         canFly = (integer)value;
             else if (name == "canSit")                         canSit = (integer)value;
             else if (name == "canStand")                     canStand = (integer)value;
@@ -369,7 +386,10 @@ default
             }
             else if (name == "MistressList") {
                 list newList = llListSort(llList2List(split, 2, -1), 2, 1);
-                if (MistressList != newList) MistressList = newList;
+                if (MistressList != newList) {
+                    MistressList = newList;
+                    updateExceptions();
+                }
             }
             else if (name == "blacklist") {
                 list newList = llListSort(llList2List(split, 2, -1), 2, 1);
@@ -385,11 +405,15 @@ default
                 // Doll has been picked up...
                 carrierID = id;
                 carrierName = llList2String(split, 0);
+                
+                updateExceptions();
             }
             else if (cmd == "uncarry") {
                 // Doll has been placed down...
                 carrierID = NULL_KEY;
                 carrierName = "";
+                
+                updateExceptions();
             }
             else if (cmd == "setAFK") afk = llList2Integer(split, 0);
             else if (cmd == "collapse") {
@@ -519,7 +543,7 @@ default
                 llMessageLinked(LINK_THIS, 17, name, id);
             }
             else if (choice == "Dress") {
-                if (!isDoll) llOwnerSay(name + " is looking at your dress menu");
+                if (!isDoll) llOwnerSay("secondlife:///app/agent/" + (string)id + "/about is looking at your dress menu");
             }
             #ifdef ADULT_MODE
             else if ((dollType == "Slut" || pleasureDoll) && choice == "Strip") {
@@ -620,6 +644,14 @@ default
                 lmSendConfig("helpless", (string)(helpless = 1));
             else if (isController && choice == "Self TP")
                 lmSendConfig("helpless", (string)(helpless = 0));
+            else if (isController & choice == "Can Dress Self") {
+                llOwnerSay("You are now able to change your own outfits again.");
+                lmSendConfig("canWear", (string)(canWear = 1));
+            }
+            else if (choice == "No Dress Self") {
+                llOwnerSay("You are just a dolly and can no longer dress or undress by yourself.");
+                lmSendConfig("canWear", (string)(canWear = 0));
+            }
             else if (choice == "No Flying")
                 lmSendConfig("canFly", (string)(canFly = 0));
             else if (isController && choice == "Can Fly")
@@ -659,14 +691,6 @@ default
                 llOwnerSay("Other people can no longer outfit you.");
                 lmSendConfig("canDress", (string)(canDress = 0));
             }
-            else if (isController & choice == "Can Dress Self") {
-                llOwnerSay("You are now able to change your own outfits again.");
-                lmSendConfig("canWear", (string)(canWear = 1));
-            }
-            else if (choice == "No Dress Self") {
-                llOwnerSay("You are just a dolly and can no longer dress or undress by yourself.");
-                lmSendConfig("canWear", (string)(canWear = 0));
-            }
             else if (choice == "No Warnings") {
                 llOwnerSay("No warnings will be given when time remaining is low.");
                 lmSendConfig("doWarnings", (string)(doWarnings = 0));
@@ -686,11 +710,11 @@ default
             #ifdef ADULT_MODE
             else if (choice == "Pleasure Doll") {
                 llOwnerSay("You are now a pleasure doll.");
-                lmSendConfig("pleasureDoll", (string)(pleasureDoll = 0));
+                lmSendConfig("pleasureDoll", (string)(pleasureDoll = 1));
             }
             else if (choice == "No Pleasure") {
                 llOwnerSay("You are no longer a pleasure doll.");
-                lmSendConfig("pleasureDoll", (string)(pleasureDoll = 1));
+                lmSendConfig("pleasureDoll", (string)(pleasureDoll = 0));
             }
             #endif
             else isFeature = 0;

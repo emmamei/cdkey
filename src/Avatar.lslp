@@ -34,17 +34,17 @@ integer clearAnim = 1;
 integer collapsed;
 integer confgured;
 integer dialogChannel;
-integer initComplete;
 integer initState = 104;
 integer listenHandle;
 integer locked;
 integer lowScriptMode;
-integer RLVck;
+integer RLVck = -1;
 integer RLVok;
 integer RLVstarted;
 integer startup = 1;
 integer targetHandle;
 integer ticks;
+integer timerOn;
 integer wearLock;
 
 //========================================
@@ -81,7 +81,6 @@ checkRLV()
 
 processRLVResult()
 { // Handle RLV check result
-    llSetTimerEvent(0.0);
     if (RLVok) llOwnerSay("Logged with Community Doll Key and " + rlvAPIversion + " active...");
     else if (isAttached && !RLVok) llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
     
@@ -152,133 +151,113 @@ ifPermissions() {
             }
         }
     }
+    
+    if (poseExpire == 0.0 && timeToJamRepair == 0.0) {
+        llSetTimerEvent(0.0);
+        timerOn = 0;
+    }
+    else {
+        llSetTimerEvent(1.0);
+        if (lowScriptMode) llSetTimerEvent(4.0);
+        if (!timerOn) {
+            llResetTime();
+            timerOn = 1;
+        }
+    }
 }
 
 initializeRLV(integer refresh) {
-    if ((refresh && !RLVok) || (!refresh && RLVstarted)) return;
+    if ((!refresh && RLVstarted) || !RLVok || !isAttached) return;
     #ifdef DEVELOPER_MODE
-    if (myPath == "") return; // Dont enable RLV on devs if @getpathnew is returning no usable result to avoid lockouts.
+    if (myPath == "") { // Dont enable RLV on devs if @getpath is returning no usable result to avoid lockouts.
+        if (RLVok) llSay(DEBUG_CHANNEL, "WARNING: Sanity check failure developer key not found in #RLV see README.dev for more information.");
+        return;
+    }
     #endif
-    if (RLVok && isAttached) {
-        if (!RLVstarted) {
-            llOwnerSay("Enabling RLV mode");
-            rlvSources = [];
-            rlvStatus = [];
-        }
-        
-        if (!RLVstarted) {
-            llMessageLinked(LINK_SET, 350, (string)RLVok + "|" + rlvAPIversion, NULL_KEY);
-        }
-        
-        // if Doll is one of the developers... dont lock:
-        // prevents inadvertent lock-in during development
-        #ifndef DEVELOPER_MODE
-        // We lock the key on here - but in the menu system, it appears
-        // unlocked and detachable: this is because it can be detached 
-        // via the menu. To make the key truly "undetachable", we get
-        // rid of the menu item to unlock it
-        doRLV("Base", "detach=n,editobj:" + (string)llGetKey() + "=add");  //locks key
-        locked = 1; // Note the locked variable also remains false for developer mode keys
-                    // This way controllers are still informed of unauthorized detaching so developer dolls are still accountable
-                    // With this is the implicit assumption that controllers of developer dolls will be understanding and accepting of
-                    // the occasional necessity of detaching during active development if this proves false we may need to fudge this
-                    // in the section bellow the #else preprocessor directive.
-        #else
-        if (myPath != "") {
-            doRLV("Base", "attachallthis_except:" + myPath + "=add,detachallthis_except:" + myPath + "=add");
-            llListenControl(listenHandle, 0);
-        }
-        if (!RLVstarted) {
-            if (!quiet) llSay(0, "Developer Key not locked.");
-            else llOwnerSay("Developer key not locked.");
-        }
-        
-        if (myPath != "") {
-        #endif
-            if (userBaseRLVcmd != "")
-                doRLV("User:Base", userBaseRLVcmd);
-            
-            string baseRLV = "accepttp=";
-            if (autoTP) baseRLV += "add,";
-            else baseRLV += "rem,";
-            if (helpless) baseRLV += "tplm=n,tploc=n,";
-            else baseRLV += "tplm=y,tploc=y,";
-            if (!canFly) baseRLV += "fly=n,";
-            else baseRLV += "fly=y,";
-            if (!canStand) baseRLV += "unsit=n,";
-            else baseRLV += "unsit=y,";
-            if (!canSit) baseRLV += "sit=n,";
-            else baseRLV += "sit=y,";
-            
-            if (!collapsed && carrierID != NULL_KEY) doRLV("Carry", "tplm=n,tploc=n,accepttp=rem,tplure=n,showinv=n," + getAutoTPList());
-            else doRLV("Carry", "clear");
-            
-            if (!collapsed && keyAnimation != "") doRLV("Pose", "fartouch=n,fly=n,showinv=n,sit=n,sittp=n,standtp=n,touchattachother=n,tplm=n,tploc=n,unsit=n");
-            else doRLV("Pose", "clear");
-            
-            if (afk || !canWear || collapsed || wearLock) doRLV("Dress", "unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
-            else doRLV("Dress", "clear");
-            
-            doRLV("Base", baseRLV);
-            
-            if (afk || collapsed) {
-                afkOrCollapse("Power", 1);
-                if (collapsed && userCollapseRLVcmd != "") doRLV("UserCollapsed", userCollapseRLVcmd);
-            }
-            else {
-                afkOrCollapse("Power", 0);
-            }
-            if (!collapsed) doRLV("Power:User", "clear");
-        #ifdef DEVELOPER_MODE
-        }
-        #endif
-        
-        if (!RLVstarted) RLVstarted = 1;
+    string baseRLV;
+    if (!RLVstarted) {
+        llOwnerSay("Enabling RLV mode");
+        rlvSources = [];
+        rlvStatus = [];
     }
     
+    if (!RLVstarted) {
+        llMessageLinked(LINK_SET, 350, (string)RLVok + "|" + rlvAPIversion, NULL_KEY);
+    }
+    
+    // if Doll is one of the developers... dont lock:
+    // prevents inadvertent lock-in during development
+    #ifndef DEVELOPER_MODE
+    // We lock the key on here - but in the menu system, it appears
+    // unlocked and detachable: this is because it can be detached 
+    // via the menu. To make the key truly "undetachable", we get
+    // rid of the menu item to unlock it
+    lmRunRLVas("Base", "detach=n,editobj:" + (string)llGetKey() + "=add");  //locks key
+    locked = 1; // Note the locked variable also remains false for developer mode keys
+                // This way controllers are still informed of unauthorized detaching so developer dolls are still accountable
+                // With this is the implicit assumption that controllers of developer dolls will be understanding and accepting of
+                // the occasional necessity of detaching during active development if this proves false we may need to fudge this
+                // in the section bellow the #else preprocessor directive.
+    #else
+    if (myPath != "") {
+        baseRLV += "clear,attachallthis_except:" + myPath + "=add,detachallthis_except:" + myPath + "=add,";
+        llListenControl(listenHandle, 0);
+    }
+    if (!RLVstarted) {
+        if (!quiet) llSay(0, "Developer Key not locked.");
+        else llOwnerSay("Developer key not locked.");
+    }
+    
+    if (myPath != "") {
+    #endif
+        if (userBaseRLVcmd != "")
+            lmRunRLVas("User:Base", userBaseRLVcmd);
+        
+        if (autoTP) baseRLV += "accepttp=n,";
+        if (helpless) baseRLV += "tplm=n,tploc=n,";
+        if (!canFly) baseRLV += "fly=n,";
+        if (!canStand) baseRLV += "unsit=n,";
+        if (!canSit) baseRLV += "sit=n,";
+        lmRunRLVas("Base", baseRLV);
+        
+        if (afk || !canWear || collapsed || wearLock) lmRunRLVas("Dress", "unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
+        else lmRunRLVas("Dress", "clear");
+    
+        // Handle low and no power modes (afk && collapsed)
+        string RLVpower;
+        if (afk != 0 || collapsed != 0) {
+            if (collapsed) {
+                RLVpower += "sit=n,unsit=n,showhovertextall=n,redirchat:999=add,rediremote:999=add,";
+                RLVpower += "tplure=n";
+                lmRunRLVas("UserCollapsed", userCollapseRLVcmd);
+                // Remove redundant state entiries while collapsed
+                lmRunRLVas("Carry", "clear");
+                lmRunRLVas("Pose", "clear");
+            }
+            else RLVpower = "clear,";
+            RLVpower += "fly=n,tplm=n,tploc=n,temprun=n,alwaysrun=n,sendchat=n,";
+            RLVpower += "sittp=n,standtp=n,shownames=n,";
+        }
+        // If not collapsed clear as we add to leave AFK && !collapsed restrictions
+        else RLVpower = "clear";
+        lmRunRLVas("Power", RLVpower);
+        
+        // Don't replicate state in known core, collapsed blocks all of Carry & Pose too so list these only when necessary
+        if (!collapsed) {            
+            if (carrierID != NULL_KEY)
+                lmRunRLVas("Carry", "tplm=n,tploc=n,accepttp=rem,tplure=n,showinv=n");
+            else lmRunRLVas("Carry", "clear");
+            
+            if ((keyAnimation != "") && (poserID != dollID)) 
+                lmRunRLVas("Pose", "fartouch=n,fly=n,showinv=n,sit=n,sittp=n,standtp=n,touchattachother=n,tplm=n,tploc=n,unsit=n");
+            else lmRunRLVas("Pose", "clear");
+        }
+    #ifdef DEVELOPER_MODE
+    }
+    #endif
+    
+    RLVstarted = 1;
     startup = 0;
-}
-
-afkOrCollapse(string type, integer set) {
-    string RLV;
-    
-    if (set) {
-        RLV = "fly=n,tplm=n,tploc=n,temprun=n,alwaysrun=n,sendchat=n,";
-        RLV += "sittp=n,standtp=n,shownames=n,";
-        if (collapsed) {
-            RLV += "sit=n,unsit=n,showhovertextall=n,redirchat:999=add,rediremote:999=add,";
-            RLV += "tplure=n,";
-        }
-        RLV += getAutoTPList();
-    }
-    else RLV = "clear";
-    
-    doRLV(type, RLV);
-}
-
-// Only useful if @tplure and @accepttp are off and denied by default...
-string getAutoTPList() {
-    list allow = [ AGENT_CHRISTINA_HALPIN, AGENT_GREIGHIGHLAND_RESIDENT, AGENT_MAYSTONE_RESIDENT, AGENT_SILKY_MESMERISER ];
-    if (MistressList != []) allow += llList2ListStrided(MistressList, 0, -1, 2);
-    if (carrierID != NULL_KEY) allow += carrierID;
-    integer loop; key userID;
-    string RLV = "tplure:" + llDumpList2String(allow, "=add,tplure:") + "=add,";
-    RLV += "accepttp:" + llDumpList2String(allow, "=add,accepttp:") + "=add";
-    return RLV;
-}
-
-rlvTeleportToVector(vector global) {
-    string locx = (string)llFloor(global.x);
-    string locy = (string)llFloor(global.y);
-    string locz = (string)llFloor(global.z);
-    
-    llOwnerSay("Dolly is now teleporting.");
-    
-    llOwnerSay("@tpto:" + locx + "/" + locy + "/" + locz + "=force");
-}
-
-doRLV(string module, string command) {
-    llMessageLinked(LINK_THIS, 315, module + "|" + command, NULL_KEY);
 }
 
 default {
@@ -297,6 +276,7 @@ default {
     on_rez(integer start) {
         if (!isAttached) badAttach = 1;
         RLVstarted = 0;
+        RLVck = -1;
         RLVok = 0;
         locked = 0;
         startup = 0;
@@ -335,6 +315,8 @@ default {
                 processRLVResult();
             }
         }
+        if (!RLVok && !RLVstarted) llOwnerSay("@clear,versionnew=" + (string)channel);
+        else if (RLVok && myPath == "") llOwnerSay("@getpathnew=" + (string)channel);
     }
     
     link_message(integer sender, integer code, string data, key id) {
@@ -345,7 +327,7 @@ default {
         if (code == 102) {
             string script = llList2String(split, 0);
             configured = 1;
-            if (!RLVstarted) initializeRLV(0);
+            if (RLVok && !RLVstarted) initializeRLV(0);
         }
         else if (code == 104) {
             string script = llList2String(split, 0);
@@ -397,7 +379,6 @@ default {
             } else {            
                      if (name == "detachable")               detachable = (integer)value;
                 else if (name == "barefeet")                   barefeet = value;
-                else if (name == "dollType")                   dollType = value;
                 else if (name == "lowScriptMode")         lowScriptMode = (integer)value;
                 else if (name == "MistressList")           MistressList = split;
                 else if (name == "pronounHerDoll")       pronounHerDoll = value;
@@ -406,6 +387,20 @@ default {
                 else if (name == "poseExpire")               poseExpire = (float)value;
                 else if (name == "quiet")                         quiet = (integer)value;
                 else if (name == "timeLeftOnKey")         timeLeftOnKey = (float)value;
+                else if (name == "dollType") {
+                    if (dollType == value) return;
+                    else {
+                        if (configured && (keyAnimation != "") && (keyAnimation != ANIMATION_COLLAPSED) && (poserID != dollID)) {
+                            if (value == "Display")
+                                llOwnerSay("As you feel yourself become a display doll you feel a sense of helplessness knowing you will remain posed until released.");
+                            else if (dollType == "Display")
+                                llOwnerSay("You feel yourself transform to a " + value + " doll and know you will soon be free of your pose when the timer ends.");
+                            dollType = value;
+                            lmInternalCommand("setPose", keyAnimation, NULL_KEY);
+                        }
+                        else dollType = value;
+                    }
+                }
                 else if (name == "userBaseRLVcmd") {
                     if (userBaseRLVcmd == "") userBaseRLVcmd = value;
                     else userBaseRLVcmd += "," +value;
@@ -473,15 +468,14 @@ default {
                 lmSendConfig("collapsed", (string)collapsed);
                 lmSendConfig("keyAnimation", (keyAnimation = ANIMATION_COLLAPSED));
                 lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
-                
-                // Run ifPermissions to set collapsed anim
-                ifPermissions();
             }
             else if (cmd == "doUnpose") {
                 if (keyAnimation != ANIMATION_COLLAPSED) {
                     lmSendConfig("lockPos", (string)(lockPos = ZERO_VECTOR));
+                    lmSendConfig("poseExpire", (string)(poseExpire = 0.0));
                     lmSendConfig("keyAnimation", (keyAnimation = ""));
                     lmSendConfig("poserID", (string)(poserID = NULL_KEY));
+                    clearAnim = 1;
                 }
             }
             if (cmd == "setAFK") {
@@ -504,46 +498,41 @@ default {
                 string pose = llList2String(split, 0);
                           
                 // Force unsit before posing
-                doRLV("Pose", "unsit=force");
+                lmRunRLVas("Pose", "unsit=force");
                 
-                // If not a display doll set an expire time
-                if (dollType != "Display") lmSendConfig("poseExpire", (string)(poseExpire = POSE_LIMIT));
+                // Set pose expire timeourt unless we are a display doll or are self posed
+                if ((dollType != "Display") && (poserID != dollID)) lmSendConfig("poseExpire", (string)(poseExpire = POSE_LIMIT));
                 // Also include region name with location so we know to reset if changed.
                 lmSendConfig("lockPos", llGetRegionName() + "|" + (string)(lockPos = llGetPos()));
                 lmSendConfig("keyAnimation", (keyAnimation = pose));
                 lmSendConfig("poserID", (string)poserID);
-                
-                // Run ifPermissions to pose the doll
-                // This will also prevent movement while posed
-                ifPermissions();
             }
             #ifdef ADULT_MODE
             else if (llGetSubString(cmd, 0, 4) == "strip") {
                 string stripped;
                 if (cmd == "stripTop") {
                     stripped = "top";
-                    doRLV("Dress", "detach:stomach=force,detach:left shoulder=force,detach:right shoulder=force,detach:left hand=force,detach:right hand=force,detach:r upper arm=force,detach:r forearm=force,detach:l upper arm=force,detach:l forearm=force,detach:chest=force,detach:left pec=force,detach:right pec=force,remoutfit:gloves=force,remoutfit:jacket=force,remoutfit:shirt=force");
+                    lmRunRLVas("Dress", "detach:stomach=force,detach:left shoulder=force,detach:right shoulder=force,detach:left hand=force,detach:right hand=force,detach:r upper arm=force,detach:r forearm=force,detach:l upper arm=force,detach:l forearm=force,detach:chest=force,detach:left pec=force,detach:right pec=force,remoutfit:gloves=force,remoutfit:jacket=force,remoutfit:shirt=force");
                 }
                 else if (cmd == "stripBra") {
                     stripped = "bra";
-                    doRLV("Dress", "remoutfit=y,remattach=y,remoutfit:undershirt=force");
+                    lmRunRLVas("Dress", "remoutfit=y,remattach=y,remoutfit:undershirt=force");
                 }
                 else if (cmd == "stripBottom") {
                     stripped = "bottoms";
-                    doRLV("Dress", "detach:chin=force,detach:r upper leg=force,detach:r lower leg=force,detach:l upper leg=force,detach:l lower leg=force,detach:pelvis=force,detach:right hip=force,detach:left hip=force,remoutfit:pants=force,remoutfit:skirt=force");
+                    lmRunRLVas("Dress", "detach:chin=force,detach:r upper leg=force,detach:r lower leg=force,detach:l upper leg=force,detach:l lower leg=force,detach:pelvis=force,detach:right hip=force,detach:left hip=force,remoutfit:pants=force,remoutfit:skirt=force");
                 }
                 else if (cmd == "stripPanties") {
                     stripped = "panties";
-                    doRLV("Dress", "remoutfit:underpants=force");
+                    lmRunRLVas("Dress", "remoutfit:underpants=force");
                 }
                 else if (cmd == "stripShoes") {
                     stripped = "shoes";
                     string attachFeet;
                     if (barefeet != "") attachFeet = "attachallover:" + barefeet + "=force,";
-                    doRLV("Dress", "detach:l lower leg=force,detach:r lower leg=force,detach:right foot=force,detach:left foot=force,remoutfit:shoes=force,remoutfit:socks=force," + attachFeet);
+                    lmRunRLVas("Dress", "detach:l lower leg=force,detach:r lower leg=force,detach:right foot=force,detach:left foot=force,remoutfit:shoes=force,remoutfit:socks=force," + attachFeet);
                 }
                 lmInternalCommand("wearLock", (string)(wearLock = 1), NULL_KEY);
-                initializeRLV(1);
                 if (!quiet) llSay(0, "The dolly " + dollName + " has " + llToLower(pronounHerDoll) + " " + stripped + " stripped off " + llToLower(pronounHerDoll) + " and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes.  (Timer will start over for dolly if " + llToLower(pronounSheDoll) + " is stripped again)");
                 else llOwnerSay("You have had your " + stripped + " stripped off you and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes, your time will restart if you are stripped again.");
             }
@@ -558,7 +547,7 @@ default {
                 }
                 
                 // Clear carry restrictions
-                doRLV("Carry", "clear");
+                lmRunRLVas("Carry", "clear");
                 
                 string mid = " being carried by " + llList2String(split, 0) + " and ";
                 string end = " been set down";
@@ -571,8 +560,6 @@ default {
                 lmSendConfig("collapsed", (string)(collapsed = 0));
                 lmSendConfig("keyAnimation", (keyAnimation = ""));
                 lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
-                
-                ifPermissions();
             }
             else if (cmd == "TP") {
                 string lm = llList2String(split, 0);
@@ -588,6 +575,7 @@ default {
                 lmSendConfig("wearLock", (string)wearLock);
             }
             
+            ifPermissions();
             initializeRLV(1);
         }
         else if (code == 500) {
@@ -600,24 +588,30 @@ default {
                 integer poseCount = llGetInventoryNumber(20);
                 list poseList; integer i;
                 
+                llOwnerSay("secondlife:///app/agent/" + (string)id + "/about is looking at your poses menu.");
                 llListenControl(dialogHandle, 1);
-                llSetTimerEvent(60.0);
                 
                 for (i = 0; i < poseCount; i++) {
                     string poseName = llGetInventoryName(20, i);
                     if (poseName != ANIMATION_COLLAPSED &&
-                        llGetSubString(poseName, 0, 0) != ".") {
+                        ((isDoll || isController) || llGetSubString(poseName, 0, 0) != "!") &&
+                        (isDoll || llGetSubString(poseName, 0, 0) != ".")) {
                         if (poseName != keyAnimation) poseList += poseName;
                         else poseList += "* " + poseName;
                     }
                 }
                 poseCount = llGetListLength(poseList);
+                integer pages = 1;
+                if (poseCount > 12) pages = llCeil((float)poseCount / 9.0);
+                llOwnerSay("Anims: " + (string)llGetInventoryNumber(20) + " | Avail Poses: " + (string)poseCount + " | Pages: " + (string)pages +
+                    "\nAvailable: " + llList2CSV(poseList) +
+                    "\nThis Page (" + (string)page + "): " + llList2CSV(llList2List(poseList, (page - 1) * 9, page * 9 - 1)));
                 if (poseCount > 12) {
-                    poseList = llList2List(poseList, page * 9, (page + 1) * 9 - 1);
+                    poseList = llList2List(poseList, (page - 1) * 9, page * 9 - 1);
                     integer prevPage = page - 1;
                     integer nextPage = page + 1;
-                    if (prevPage == 0) prevPage = llFloor((float)poseCount / 9.0);
-                    if (nextPage > llFloor((float)poseCount / 9.0)) nextPage = 1;
+                    if (prevPage == 0) prevPage = 1;
+                    if (nextPage > pages) nextPage = pages;
                     poseList = [ "Poses " + (string)prevPage, "Main Menu", "Poses " + (string)nextPage ] + poseList;
                 }
                 
@@ -640,7 +634,7 @@ default {
     }
     
     timer() {
-        if (initComplete) {
+        if (RLVck == 0) {
             float timerInterval = llGetAndResetTime();
             
             // Check if doll is posed and time is up
@@ -648,6 +642,7 @@ default {
                 if (poseExpire != 0.0) {
                     poseExpire -= timerInterval;
                     if (poseExpire < 0.0) { // Pose expire is set and has passed
+                        lmSendConfig("poseExpire", (string)(poseExpire = 0.0));
                         lmInternalCommand("doUnpose", "", NULL_KEY);
                     }
                 }
@@ -665,13 +660,10 @@ default {
             
             ifPermissions();
             
-            if (ticks++ % 10 == 0) {
+            if (ticks++ % 30 == 0) {
                 if (poseExpire != 0.0) lmSendConfig("poseExpire", (string)poseExpire);
                 if (timeToJamRepair != 0.0) lmSendConfig("timeToJamRepair", (string)timeToJamRepair);
             }
-            
-            if (lowScriptMode) llSetTimerEvent(5.0);
-            else llSetTimerEvent(1.0);
         }
         else {
             if (RLVck != 0 && RLVck <= 6) {
@@ -758,6 +750,20 @@ default {
                 if ((level & (CONTROL_FWD | CONTROL_BACK)) == 0)        // Confirm that they are not holding any other forward or backward control also
                     llSetForce(ZERO_VECTOR, 1);                         // If not cancel the force immidiately to prevent them being thrown accross sim
             }
+        }
+    }
+    
+    dataserver(key request, string data) {
+        if (request == rlvTPrequest) {
+            vector global = llGetRegionCorner() + (vector)data;
+            
+            string locx = (string)llFloor(global.x);
+            string locy = (string)llFloor(global.y);
+            string locz = (string)llFloor(global.z);
+            
+            llOwnerSay("Dolly is now teleporting.");
+            
+            lmRunRLVas("TP", "tpto:" + locx + "/" + locy + "/" + locz + "=force");
         }
     }
     

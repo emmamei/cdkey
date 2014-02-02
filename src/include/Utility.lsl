@@ -100,6 +100,24 @@ string bits2nybbles(integer bits) {
 #define MONTHS_SHORT [ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" ]
 #define MONTHS_FULL [ "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" ]
 
+string formatDuration(float time, integer inDays) {
+    string s = (string)(time % 60);
+    string m = (string)llFloor((time % 3600) / 60);
+    string h = "00"; string d = "0"; string ret;
+    if (inDays) {
+        h = llFloor((time % 86400) / 3600);
+        d = llFloor(time / 86400);
+        ret = d + " days, ";
+    }
+    else hou = llFloor(time / 3600);
+
+    if (llStringLength(h) == 1) h = "0" + h;
+    if (llStringLength(m) == 1) m = "0" + m;
+    if (llStringLength(s) == 1) s = "0" + s;
+
+    return ret + h + ":" + m + ":" + s;
+}
+
 #define isLeapYear(year) !(year & 3)
 #define daysPerYear(year) (365 + isLeapYear(year))
 

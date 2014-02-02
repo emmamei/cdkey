@@ -111,10 +111,12 @@
 #define lmInternalCommand(command, parameter, id) llMessageLinked(LINK_THIS, 305, SCRIPT_NAME + "|" + command + "|" + parameter, id)
 #define lmRLVreport(active, apistring, apiversion) llMessageLinked(LINK_THIS, 350, SCRIPT_NAME + "|" + (string)active + "|" + apistring + "|" + (string)apiversion, scriptkey)
 #define lmRunRLV(command) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|" + command, scriptkey)
+#define lmRunRLVas(vmodule, command) llMessageLinked(LINK_THIS, 315, vmodule + "|" + command, scriptkey)
 #define lmConfirmRLV(forscript, command) llMessageLinked(LINK_THIS, 320, SCRIPT_NAME + "|" + forscript + "|" + command, scriptkey)
 #define lmScriptReset() llMessageLinked(LINK_THIS, 999, SCRIPT_NAME, scriptkey)
 #define lmOwnerCheckFail() llMessageLinked(LINK_THIS, 999, SCRIPT_NAME + "|" + (string)CHANGED_OWNER, scriptkey)
 #define lmSendConfig(name, value) llMessageLinked(LINK_THIS, 300, SCRIPT_NAME + "|" + name + "|" + value, scriptkey)
+#define lmUpdateStatistic(name, value) llMessageLinked(LINK_THIS, 399, SCRIPT_NAME + "|" + name + "|" + value, scriptkey)
 #define lmInitState(code) llMessageLinked(LINK_THIS, code, SCRIPT_NAME, scriptkey)
 #define lmMenuReply(choice, name, id) llMessageLinked(LINK_THIS, 500, choice + "|" + name, id)
 
