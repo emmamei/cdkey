@@ -146,9 +146,9 @@ string cannoizeName(string name) {
     // be encoded in username format and makes the converstion to the valid legacy name.
     integer index;
     
-    if ((index = llSubStringIndex(name, ".") != -1)
+    if ((index = llSubStringIndex(name, ".")) != -1)
         name = llInsertString(llDeleteSubString(name, index, index), index, " ");
-    else if ((index = llSubStringIndex(name, " ") == -1) name += " resident";
+    else if (llSubStringIndex(name, " ") == -1) name += " resident";
     
     return llToLower(name);
 }
@@ -801,15 +801,15 @@ default {
             }
             else if (llGetSubString(choice, 0, 9) == "controller") {
                 string name = llGetSubString(choice, 11, -1);
-                lmInternalCommand("getMistressKey", name, NULL_KEY);
+                lmInternalCommand("getMistressKey", cannoizeName(name), NULL_KEY);
             }
             else if (llGetSubString(choice, 0, 8) == "blacklist") {
                 string name = llGetSubString(choice, 10, -1);
-                lmInternalCommand("getBlacklistKey", name, NULL_KEY);
+                lmInternalCommand("getBlacklistKey", cannoizeName(name), NULL_KEY);
             }
             else if (llGetSubString(choice, 0, 10) == "unblacklist") {
                 string name = llGetSubString(choice, 12, -1);
-                lmInternalCommand("getBlacklistKey", name, NULL_KEY);
+                lmInternalCommand("getBlacklistKey", cannoizeName(name), NULL_KEY);
             }
             #ifdef DEVELOPER_MODE
             else if (choice == "timereporting") {

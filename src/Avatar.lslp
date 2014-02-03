@@ -309,14 +309,15 @@ default {
                 #ifndef DEVELOPER_MODE
                 processRLVResult();
                 #endif
+                if (myPath == "") llOwnerSay("@getpathnew=" + (string)channel);
             }
             else {
                 myPath = msg;
                 processRLVResult();
             }
         }
-        if (!RLVok && !RLVstarted) llOwnerSay("@clear,versionnew=" + (string)channel);
-        else if (RLVok && myPath == "") llOwnerSay("@getpathnew=" + (string)channel);
+        //if (!RLVok && !RLVstarted) llOwnerSay("@clear,versionnew=" + (string)channel);
+        //else if (RLVok && myPath == "") llOwnerSay("@getpathnew=" + (string)channel);
     }
     
     link_message(integer sender, integer code, string data, key id) {
@@ -505,7 +506,7 @@ default {
                 // Also include region name with location so we know to reset if changed.
                 lmSendConfig("lockPos", llGetRegionName() + "|" + (string)(lockPos = llGetPos()));
                 lmSendConfig("keyAnimation", (keyAnimation = pose));
-                lmSendConfig("poserID", (string)poserID);
+                lmSendConfig("poserID", (string)(poserID = id));
             }
             #ifdef ADULT_MODE
             else if (llGetSubString(cmd, 0, 4) == "strip") {
@@ -597,7 +598,7 @@ default {
                         ((isDoll || isController) || llGetSubString(poseName, 0, 0) != "!") &&
                         (isDoll || llGetSubString(poseName, 0, 0) != ".")) {
                         if (poseName != keyAnimation) poseList += poseName;
-                        else poseList += "* " + poseName;
+                        else poseList += [ "* " + poseName ];
                     }
                 }
                 poseCount = llGetListLength(poseList);
