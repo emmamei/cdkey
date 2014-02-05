@@ -818,6 +818,10 @@ default
                 if (!canCarry) pluslist += "Can Carry";
                 else pluslist += "No Carry";
                 
+                // One-way option
+                if (canAFK) pluslist += "No AFK";
+                else if (isController) pluslist += "Can AFK";
+                
                 if (isDoll && !offlineMode) pluslist += "Offline Mode";
                 else if (isDoll) pluslist += "Online Mode";
                 
