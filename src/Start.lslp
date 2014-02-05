@@ -342,7 +342,7 @@ default {
         else if (code == 15) {
             integer i;
             for (i = 0; i < llGetListLength(llList2ListStrided(MistressList, 0, -1, 2)); i++) {
-                debugSay(5, "MistressMsg To: " + llList2String(llList2ListStrided(MistressList, 0, -1, 2), i) + "\n" + data);
+                debugSay(7, "MistressMsg To: " + llList2String(llList2ListStrided(MistressList, 0, -1, 2), i) + "\n" + data);
                 sendMsg(llList2Key(llList2ListStrided(MistressList, 0, -1, 2), i), data);
             }
         }
@@ -467,6 +467,13 @@ default {
             
             llSleep(2.0);
             memReport(0.0);
+            
+            string msg = dollName + " has logged in with";
+            if (!RLVok) msg += "out";
+            msg += " RLV at " + wwGetSLUrl();
+            llMessageLinked(LINK_THIS, 15, msg, NULL_KEY);
+            
+            llSetTimerEvent(0.0);
         }
         else if (code == 500) {
             string selection = llList2String(split, 0);
@@ -612,24 +619,20 @@ default {
     
     changed(integer change) {
         if (change & CHANGED_INVENTORY) {
-            if (ncPrefsLoadedUUID != NULL_KEY && llGetInventoryKey(NOTECARD_PREFERENCES) != ncPrefsLoadedUUID) {
-                wakeMenu();
-                integer channel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -8, -1));
-                
-                nextLagCheck = llGetTime() + SEC_TO_MIN;
-                llDialog(llGetOwner(), "Detected a change in your Preferences notecard, would you like to load the new settings?\n\n" +
-                  "WARNING: All current data will be lost!", [ "Reload Config", "Keep Settings" ], channel);
-                lmInternalCommand("dialogListen", "", scriptkey);
+            if (llGetInventoryType(NOTECARD_PREFERENCES) != INVENTORY_NOTECARD) {
+                key ncKey = llGetInventoryKey(NOTECARD_PREFERENCES);
+                if (ncPrefsLoadedUUID != NULL_KEY && ncKey != NULL_KEY && ncKey != ncPrefsLoadedUUID) {
+                    wakeMenu();
+                    integer channel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -8, -1));
+                    
+                    nextLagCheck = llGetTime() + SEC_TO_MIN;
+                    llDialog(llGetOwner(), "Detected a change in your Preferences notecard, would you like to load the new settings?\n\n" +
+                      "WARNING: All current data will be lost!", [ "Reload Config", "Keep Settings" ], channel);
+                    lmInternalCommand("dialogListen", "", scriptkey);
+                }
             }
         }
         if (change & CHANGED_OWNER) {
-            #ifdef PRECONF
-            key oldDoll = dollID;
-            if (oldDoll == AGENT_SILKY_MESMERISER) {
-                llResetScript();
-                return;
-            }
-            #endif
             llOwnerSay("Deleting old preferences notecard on owner change.");
             llOwnerSay("Look at PreferencesExample to see how to make yours.");
             while (llGetInventoryType(NOTECARD_PREFERENCES) != INVENTORY_NONE) llRemoveInventory(NOTECARD_PREFERENCES);
@@ -656,14 +659,6 @@ default {
             #endif
             
             llResetScript();
-        }
-        else {
-            string msg = dollName + " has logged in with";
-            if (!RLVok) msg += "out";
-            msg += " RLV at " + wwGetSLUrl();
-            llMessageLinked(LINK_THIS, 15, msg, NULL_KEY);
-            
-            llSetTimerEvent(0.0);
         }
     }
     

@@ -15,8 +15,9 @@ list unresolvedBlacklistNames;
 list MistressList;
 list blacklist;
 list HTTP_OPTIONS = [ HTTP_BODY_MAXLENGTH, 16384, HTTP_VERBOSE_THROTTLE, FALSE, HTTP_METHOD ];
-float lastPost;
 float lastAvatarCheck;
+float lastKeyPost;
+float lastPost;
 float HTTPdbStart;
 float HTTPthrottle = 20.0;
 float HTTPinterval = 60.0;
@@ -102,7 +103,8 @@ checkAvatarList() {
     list newAvatars = llListSort(llGetAgentList(AGENT_LIST_REGION, []), 1, 1);
     list curAvatars = newAvatars;
     integer i; integer n = llGetListLength(newAvatars);
-    integer posted;
+    integer posted; float postAge = llGetTime() - lastKeyPost;
+    float HTTPlimit = HTTPinterval * 15.0;
     while (i < n) {
         key uuid;
         if (llListFindList(oldAvatars, [ (uuid = llList2Key(newAvatars, i)) ]) == -1) {
@@ -112,22 +114,24 @@ checkAvatarList() {
                 integer postlen;
                 string adding = "names[" + (string)namepostcount + "]" + "=" + name + "&" +
                                 "uuids[" + (string)namepostcount + "]" + "=" + llEscapeURL(uuid);
-                if ((postlen = (llStringLength(namepost + adding) + 1)) < 3900) {
+                if ((postlen = (llStringLength(namepost + adding) + 1) < 4096) && postAge < HTTPlimit) {
                     if (namepost != "") namepost += "&";
                     namepost += adding;
                     namepostcount++;
                 }
                 else {
-                    debugSay(5, "Doing post, sent = " + (string)namepostcount + ", len = " + (string)llStringLength(namepost));
+                    debugSay(5, "name2key: posting " + (string)namepostcount + " keys (" + (string)llStringLength(namepost) + " bytes) interval: " +
+                                formatDuration(llGetTime() - lastKeyPost, 0) + " mins");
                     while ((requestAddKey = (llHTTPRequest("http://api.silkytech.com/name2key/add", HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE,
                         "application/x-www-form-urlencoded" ], namepost))) == NULL_KEY) {
                             llSleep(1.0);
                     }
-                    posted = 1;
+                    lastKeyPost = llGetTime();
+                    lastPost = lastKeyPost;
                     namepost = "names[0]" + "=" + name + "&" +
                                "uuids[0]" + "=" + llEscapeURL(uuid);
                     namepostcount = 1;
-                    lastPost = llGetTime();
+                    posted = 1;
                 }
             }
             i++;
@@ -137,7 +141,8 @@ checkAvatarList() {
             n--;
         }
     }
-    if (namepost != "" && n != 0) debugSay(5, "Holding post, waiting = " + (string)namepostcount + ", len = " + (string)llStringLength(namepost));
+    if (namepost != "" && n != 0) debugSay(5, "Queued post " + (string)namepostcount + " keys (" + (string)llStringLength(namepost) + " bytes) oldest: " +
+                                formatDuration(llGetTime() - lastKeyPost, 0) + " mins");
     lastAvatarCheck = llGetTime();
     oldAvatars = curAvatars;
 }
@@ -227,8 +232,6 @@ default
     }
     
     http_response(key request, integer status, list meta, string body) {
-        debugSay(5, "HTTP " + (string)status + ": " + body);
-        
         if (request == requestUpdate) {
             if (llGetSubString(body, 0, 21) == "checkversion versionok") {
                 if (llStringLength(body) > 22) updateCheck = (integer)llGetSubString(body, 23, -1);
@@ -272,7 +275,9 @@ default
             }
         }
         else if (request == requestLoadDB) {
+            debugSay(9, "HTTP " + (string)status + ": " + body);
             string error = "HTTPdb - Database access ";
+            
             if (status == 200) {
                 lmSendConfig("databaseOnline", (string)(databaseOnline = 1));
                 
@@ -324,6 +329,7 @@ default
                 llOwnerSay(error);
             }
             llMessageLinked(LINK_THIS, 102, llGetScriptName(), NULL_KEY);
+            return;
         }
         else if (request == requestMistressKey || request == requestBlacklistKey) {
             integer index = llSubStringIndex(body, "=");
@@ -372,6 +378,7 @@ default
             
             debugSay(5, "Posted " + (string)(old + new) + " keys: " + (string)new + " new, " + (string)old + " old");
         }
+        debugSay(5, "HTTP " + (string)status + ": " + body);
     }
     
     link_message(integer sender, integer code, string data, key id) {
@@ -487,11 +494,8 @@ default
             queForSave("lastUpdateCheck", (string)lastUpdateCheck);
             while ((requestUpdate = llHTTPRequest(serverURL, HTTP_OPTIONS + [ "POST" ], "checkversion " + (string)PACKAGE_VERNUM)) == NULL_KEY) llSleep(1.0);
         }
-        if ((lastAvatarCheck + 60.0) < llGetTime()) checkAvatarList();
-        if ((lastPost + HTTPinterval) < llGetTime()) doHTTPpost();
-        else {
-            if ((lastPost + HTTPthrottle) < llGetTime()) doHTTPpost();
-            else llSetTimerEvent(HTTPthrottle);
-        }
+        if ((lastPost + HTTPthrottle) < llGetTime()) doHTTPpost();
+        else if ((lastAvatarCheck + 60.0) < llGetTime()) checkAvatarList();
+        else llSetTimerEvent(HTTPthrottle);
     }
 }

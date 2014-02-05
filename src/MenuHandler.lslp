@@ -52,7 +52,11 @@ integer offlineMode;
 integer wearLock;
 integer dbConfig;
 
+integer blacklistChannel;
+integer controlChannel;
 integer dialogChannel;
+integer blacklistHandle;
+integer controlHandle;
 integer dialogHandle;
 string isDollName;
 string dollType = "Regular";
@@ -66,7 +70,6 @@ string simRating;
 #endif
 string keyAnimation;
 
-integer blacklistHandle;
 list blacklist;
 list blacklistNames;
 list dialogKeys;
@@ -203,7 +206,7 @@ doMainMenu(key id) {
         menu += "Help/Support";
         
         // Can the doll be dressed? Add menu button
-        if (RLVok && (canDress || (isDoll && canWear && !wearLock))) {
+        if (RLVok && ((!isDoll && canDress) || (isDoll && canWear && !wearLock))) {
             menu += "Dress";
         }
     
@@ -324,10 +327,23 @@ default
         else if (code == 104 || code == 105) {
             if (llList2String(split, 0) != "Start") return;
             
-            if (code == 104) dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -8, -1));
-            llListenRemove(dialogHandle);
-            dialogHandle = llListen(dialogChannel, "", "", "");
-            
+            if (code == 104) {
+                dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -8, -1));
+                blacklistChannel = dialogChannel - 666;
+                controlChannel = dialogChannel - 888;
+                if (!blacklistHandle && blacklistChannel) {
+                    blacklistHandle = llListen(blacklistChannel, "", llGetOwner(), "");
+                    llListenControl(blacklistHandle, 0);
+                }
+                if (!controlHandle && controlChannel) {
+                    controlHandle = llListen(controlChannel, "", llGetOwner(), "");
+                    llListenControl(controlHandle, 0);
+                }
+                if (!dialogHandle && dialogChannel) {
+                    dialogHandle = llListen(dialogChannel, "", "", "");
+                    llListenControl(dialogHandle, 0);
+                }
+            }
             lmInitState(code);
         }
         else if (code == 106) {
@@ -354,6 +370,7 @@ default
             else if (name == "canCarry")                     canCarry = (integer)value;
             else if (name == "canDress")                     canDress = (integer)value;
             else if (name == "canWear")                       canWear = (integer)value;
+            else if (name == "wearLock")                     wearLock = (integer)value;
             else if (name == "canFly")                         canFly = (integer)value;
             else if (name == "canSit")                         canSit = (integer)value;
             else if (name == "canStand")                     canStand = (integer)value;
@@ -559,7 +576,8 @@ default
                 llListenControl(dialogHandle, 1);
                 llSetTimerEvent(60.0);
                 
-                pluslist = [ "Abilities Menu", "Features Menu", "Access Menu" ];
+                pluslist = [ "Abilities Menu", "Features Menu" ];
+                if (isDoll) pluslist += "Access Menu";
                 
                 if (isController) {
                     msg = "See " + WEB_DOMAIN + "controller.htm. Choose what you want to happen. (" + OPTION_DATE + " version)";
@@ -596,17 +614,21 @@ default
                 lmInternalCommand("setAFK", (string)afk + "|0|" + formatFloat(windRate, 1) + "|" + (string)minsLeft, id);
             }
             else if (choice == "Access Menu") {
-                string msg = "Manage key access options. (" + OPTION_DATE + " version)";
+                string msg =    "Key Access Menu. (" + OPTION_DATE + " version)\n" +
+                                "These are powerful options allowing you to give someone total control of your key or block someone from touch or even winding your key\n" +
+                                "Good dollies should read their key help before \n" +
+                                "Blacklist - Fully block this avatar from using any key option even winding\n" +
+                                "Controller - Take care choosing your controllers, they have great control over their doll can only be removed by their choice";
                 list pluslist;
                 
-                if (llGetListLength(blacklist) < 12) pluslist += [ "✔ Blacklist" ];
-                else pluslist += [ "﻿" ];
+                if (llGetListLength(blacklist) < 12) pluslist += [ "✚ Blacklist" ];
+                else pluslist += [ "(Full Blacklist)" ];
                 if (llGetListLength(blacklist) > 0) pluslist += [ "✘ Blacklist", "List Blacklist" ];
-                else pluslist += [ "﻿", "﻿" ];
+                else pluslist += [ "(No Blacklist)", "(No Blacklist)" ];
                 
                 llDialog(id, msg, pluslist, dialogChannel);
             }
-            else if (choice == "✔ Blacklist") {
+            else if (choice == "✚ Blacklist") {
                 llSensor("", "", AGENT, 20.0, TWO_PI);
             }
             else if (choice == "✘ Blacklist") {

@@ -35,6 +35,8 @@ integer minsLeft;
 
 float lastEmergencyTime;
 #define EMERGENCY_LIMIT_TIME 43200.0 // 12 Hours = 43200 Seconds
+#define STD_RATE 6.0
+#define LOW_RATE 12.0
 
 string rlvAPIversion;
 
@@ -127,11 +129,12 @@ key simRatingQuery;
 linkDebug(integer sender, integer code, string data, key id) {
     integer level = 5;
          if (llListFindList([ 102, 305, 399 ], [ code ]) != -1)                 level = 2;
-    else if (llListFindList([ 104, 105, 110, 320, 350 ], [ code ]) != -1)       level = 4;
-    //else if (llListFindList([  ], [ code ]) != -1)                            level = 6;
-    else if (llListFindList([ 300, 315, 500 ], [ code ]) != -1)                 level = 7;
-    //else if (llListFindList([  ], [ code ]) != -1)                            level = 8;
-    else if (llListFindList([ 999 ], [ code ]) != -1)                           level = 9;
+    /*else if (llListFindList([ 105, 110, 320, 350 ], [ code ]) != -1)            level = 4;
+    else if (llListFindList([ 9999 ], [ code ]) != -1)                          level = 6;
+    else if (llListFindList([ 104, 300, 315, 500 ], [ code ]) != -1)            level = 7;
+    else if (llListFindList([ 9999 ], [ code ]) != -1)                          level = 8;
+    else if (llListFindList([ 999 ], [ code ]) != -1)                           level = 9;*/
+    else level = 1;
     
     string msg = "LM-DEBUG (" + (string)level + "): " + (string)code + ", " + data;
     if (id != NULL_KEY) msg += " - " + (string)id;
@@ -202,6 +205,7 @@ doWind(string name, key id) {
     }
 }
 
+#ifndef DEVELOPER_MODE
 ifPermissions() {
     key grantor = llGetPermissionsKey();
     integer perm = llGetPermissions();
@@ -214,26 +218,13 @@ ifPermissions() {
     if (!((perm & PERMISSION_MASK) == PERMISSION_MASK))
         llRequestPermissions(dollID, PERMISSION_MASK);
     
-    if (grantor == dollID) {
-        if (perm & PERMISSION_OVERRIDE_ANIMATIONS && isAttached) {
-            if (keyAnimation != "") {
-                llSetAnimationOverride("Standing", keyAnimation);
-            }
-            else llResetAnimationOverride("ALL");
-        }
-        
-        if (perm & PERMISSION_TAKE_CONTROLS && isAttached) {
-            llTakeControls(CONTROL_MOVE, 1, 1);
-        }
-    }
-    #ifndef DEVELOPER_MODE
     if (perm & PERMISSION_ATTACH && !isAttached) llAttachToAvatar(ATTACH_BACK);
-    else if (!isAttached && llGetTime() > 60.0) {
+    else if (!isAttached && llGetTime() > 120.0) {
         llOwnerSay("@acceptpermission=add");
         llRequestPermissions(dollID, PERMISSION_ATTACH);
     }
-    #endif
 }
+#endif
 
 //========================================
 // STATES
@@ -312,19 +303,6 @@ default {
         ticks++;
         
         //debugSay(5, "afk=" + (string)afk + " velocity=" + (string)llGetVel() + " speed=" + formatFloat(llVecMag(llGetVel()), 2) + "m/s (llVecMag(llGetVel()))");
-        
-        ifPermissions();
-        scaleMem();
-        
-        #ifdef DEVELOPER_MODE
-        if (ticks % 2 == 0)
-            if (timeReporting) llOwnerSay("Script Time: " + formatFloat(llList2Float(llGetObjectDetails(llGetKey(), [ OBJECT_SCRIPT_TIME ]), 0) * 1000000, 2) + "µs");
-        #endif
-        if (ticks % 4 == 0) {
-            lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
-            if (wearLockExpire != 0.0) lmSendConfig("wearLockExpire", (string)(wearLockExpire));
-            if (winderRechargeTime != 0.0) lmSendConfig("winderRechargeTime", (string)(winderRechargeTime));
-        }
 
         integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0);
         // When Dolly is "away" - enter AFK
@@ -337,6 +315,14 @@ default {
         }
         else displayWindRate = setWindRate();
         
+        timeLeftOnKey -= timerInterval * windRate;
+        if (timeLeftOnKey < 0) timeLeftOnKey = 0.0;
+        debugSay(9, (string)timerInterval + " * " + (string)windRate + " = " + (string)timeLeftOnKey);
+        
+        #ifndef DEVELOPER_MODE
+        ifPermissions();
+        #endif
+        
         // Update sign if appropriate
         string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
         if (collapsed && primText != "Disabled Dolly!") llSetText("Disabled Dolly!", <1.0, 0.0, 0.0>, 1.0);
@@ -344,70 +330,78 @@ default {
         else if (signOn && primText != dollType + " Doll") llSetText(dollType + " Doll", <1.0, 1.0, 1.0>, 1.0);
         else if (!signOn && !afk && !collapsed && primText != "") llSetText("", <1.0, 1.0, 1.0>, 1.0);
 
-      /*--------------------------------
-        WINDING DOWN.....
-        --------------------------------
-        A specific test for collapsed status is no longer required here
-        as being collapsed is one of several conditions which forces the
-        wind rate to be 0.
-        Others which cause this effect are not being attached to spine
-        and being doll type Builder or Key*/
-        float thisTimerEvent;
-        if (windRate != 0.0) {
-            timeLeftOnKey -= timerInterval * windRate;
-            if (timeLeftOnKey < 0) timeLeftOnKey = 0.0;
+        if (ticks % 10 == 0) {
+            #ifdef DEVELOPER_MODE
+            if (timeReporting) llOwnerSay("Script Time: " + formatFloat(llList2Float(llGetObjectDetails(llGetKey(), [ OBJECT_SCRIPT_TIME ]), 0) * 1000000, 2) + "µs");
+            #endif
             
-            minsLeft = llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate));
-
-            if (doWarnings && (minsLeft == 30 || minsLeft == 15 || minsLeft == 10 || minsLeft ==  5 || minsLeft ==  2) && !warned) {
-                // FIXME: This can be seen as a spammy message - especially if there are too many warnings
-                // FIXME: What do we think about this being gated by the quiet key option?  Should we just leave it without as
-                // it has it's own option, though quiet version still warns the doll so perhaps still of use to some?
-                if (!quiet) llSay(0, dollName + " has " + (string)minsLeft + " minutes left before they run down!");
-                else llOwnerSay("You have " + (string)minsLeft + " minutes left before winding down!");
-                warned = 1; // have warned now: dont repeat same warning
+            lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
+            if (wearLockExpire != 0.0) lmSendConfig("wearLockExpire", (string)(wearLockExpire));
+            if (winderRechargeTime != 0.0) lmSendConfig("winderRechargeTime", (string)(winderRechargeTime));
+            
+            scaleMem();
+            
+          /*--------------------------------
+            WINDING DOWN.....
+            --------------------------------
+            A specific test for collapsed status is no longer required here
+            as being collapsed is one of several conditions which forces the
+            wind rate to be 0.
+            Others which cause this effect are not being attached to spine
+            and being doll type Builder or Key*/
+            if (windRate != 0.0) {
+                minsLeft = llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate));
+    
+                if (doWarnings && (minsLeft == 30 || minsLeft == 15 || minsLeft == 10 || minsLeft ==  5 || minsLeft ==  2) && !warned) {
+                    // FIXME: This can be seen as a spammy message - especially if there are too many warnings
+                    // FIXME: What do we think about this being gated by the quiet key option?  Should we just leave it without as
+                    // it has it's own option, though quiet version still warns the doll so perhaps still of use to some?
+                    if (!quiet) llSay(0, dollName + " has " + (string)minsLeft + " minutes left before they run down!");
+                    else llOwnerSay("You have " + (string)minsLeft + " minutes left before winding down!");
+                    warned = 1; // have warned now: dont repeat same warning
+                }
+                else warned = 0;
+    
+                // Dolly is DONE! Go down... and yell for help.
+                if (!collapsed && timeLeftOnKey <= 0.0) {
+                    // This message is intentionally excluded from the quiet key setting as it is not good for
+                    // dolls to simply go down silently.
+                    llSay(0, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on their key.)");
+    
+                    lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0.0));
+                    lmInternalCommand("collapse", "0", NULL_KEY);
+                    
+                    // Skip call to setWindRate() this function is heavily overused we only make practical use of the
+                    // value once per tick.  Updating more frequently is at best a waste at worst it's even a bug.
+                    // setWindRate();
+                }
             }
-            else warned = 0;
-
-            // Dolly is DONE! Go down... and yell for help.
-            if (!collapsed && timeLeftOnKey <= 0.0) {
-                // This message is intentionally excluded from the quiet key setting as it is not good for
-                // dolls to simply go down silently.
-                llSay(0, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on their key.)");
-
-                lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0.0));
-                lmInternalCommand("collapse", "0", NULL_KEY);
+            
+            // False collapse? Collapsed = 1 while timeLeftOnKey is positive is an invalid condition
+            if (collapsed == 1 && timeLeftOnKey > 0.0) {
+                uncollapse(0);
+            }
+            else if (collapsed == 2) { // Dolly's key is held or jammed count down the automatic restart time
                 
-                // Skip call to setWindRate() this function is heavily overused we only make practical use of the
-                // value once per tick.  Updating more frequently is at best a waste at worst it's even a bug.
-                // setWindRate();
             }
-        }
-        
-        // False collapse? Collapsed = 1 while timeLeftOnKey is positive is an invalid condition
-        if (collapsed == 1 && timeLeftOnKey > 0.0) {
-            uncollapse(0);
-        }
-        else if (collapsed == 2) { // Dolly's key is held or jammed count down the automatic restart time
             
-        }
-        
-        // Check wearlock timer
-        if (wearLockExpire != 0.0) {
-            wearLockExpire -= timerInterval;
-            if (wearLockExpire < llGetTime()) {
-                lmInternalCommand("wearLock", (string)(wearLock = 0), NULL_KEY);
-                wearLockExpire = 0.0;
-                lmSendConfig("wearLockExpire", (string)(wearLockExpire));
+            // Check wearlock timer
+            if (wearLockExpire != 0.0) {
+                wearLockExpire -= timerInterval;
+                if (wearLockExpire < llGetTime()) {
+                    lmInternalCommand("wearLock", (string)(wearLock = 0), NULL_KEY);
+                    wearLockExpire = 0.0;
+                    lmSendConfig("wearLockExpire", (string)(wearLockExpire));
+                }
             }
-        }
-        
-        // Check winder recharge
-        if (winderRechargeTime != 0.0) {
-            winderRechargeTime -= timerInterval;
-            if (winderRechargeTime < 0.0) {
-                winderRechargeTime = 0.0;
-                lmSendConfig("winderRechargeTime", (string)(winderRechargeTime));
+            
+            // Check winder recharge
+            if (winderRechargeTime != 0.0) {
+                winderRechargeTime -= timerInterval;
+                if (winderRechargeTime < 0.0) {
+                    winderRechargeTime = 0.0;
+                    lmSendConfig("winderRechargeTime", (string)(winderRechargeTime));
+                }
             }
         }
     }
@@ -459,7 +453,8 @@ default {
             if (initState == 105) lmInitState(initState++);
             clearAnim = 1;
             
-            llSetTimerEvent(12.0);
+            llSetTimerEvent(STD_RATE);
+            if (lowScriptMode) llSetTimerEvent(LOW_RATE);
             timerStarted = 1;
 
             if (!isAttached) llSetTimerEvent(60.0);
@@ -509,7 +504,7 @@ default {
             else if (name == "windamount")                 windamount = (float)value;
             else if (name == "wearLockExpire")         wearLockExpire = (float)value;
             else if (name == "baseWindRate")             baseWindRate = (float)value;
-            else if (name == "MistressID")                 MistressID = (key)value;
+            else if (name == "poserID")                       poserID = (key)value;
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "mistressName")             mistressName = value;
             else if (name == "dollType")                     dollType = value;
@@ -547,7 +542,8 @@ default {
             else if (name == "lowScriptMode") {
                 lowScriptMode = (integer)value;
                 if (timerStarted) {
-                    llSetTimerEvent(12.0);
+                    llSetTimerEvent(STD_RATE);
+                    if (lowScriptMode) llSetTimerEvent(LOW_RATE);
                 }
             }
             #endif
@@ -560,8 +556,6 @@ default {
             
             if (cmd == "setAFK") {
                 afk = llList2Integer(split, 0);
-                
-                ifPermissions();
                 
                 integer autoSet = llList2Integer(split, 1);
                 
@@ -624,210 +618,224 @@ default {
 
         // Text commands
         if (channel == chatChannel) {
-
-            // Normal user commands
-            if (choice == "detach") {
-                if (detachable) {
-                    lmInternalCommand("detach", "", NULL_KEY);
+            
+            if (llGetInventoryType(choice) == 20 || llGetSubString(choice, 0, 0) == "." | llGetSubString(choice, 0, 0) == "!") {
+                if (llGetInventoryType(choice) != 20) choice = llGetSubString(choice, 1, -1);
+                if (keyAnimation == "" || (keyAnimation != ANIMATION_COLLAPSED && poserID == dollID)) {
+                    lmInternalCommand("setPose", choice, dollID);
                 }
-                else {
-                    llOwnerSay("Key can't be detached...");
-                }
+                else llOwnerSay("You try to regain control over your body in an effort to set your own pose but even that is beyond doll's control.");
+                return;
             }
-            else if (choice == "help") {
-                lmSendToAgent("%TEXT_HELP%", dollID);
-            }
-            else if (llGetSubString(choice,0,8) == "channel") {
-                string c = llStringTrim(llGetSubString(choice,9,llStringLength(choice) - 1),STRING_TRIM);
-                if ((string) ((integer) c) == c) {
-                    integer ch = (integer) c;
-                    if (ch != 0 && ch != DEBUG_CHANNEL) {
-                        chatChannel = ch;
-                        llListenRemove(chatHandle);
-                        chatHandle = llListen(ch, "", llGetOwner(), "");
+            
+            integer space = llSubStringIndex(choice, " ");
+            if (space == -1) {
+                // Normal user commands
+                if (choice == "detach") {
+                    if (detachable) {
+                        lmInternalCommand("detach", "", NULL_KEY);
+                    }
+                    else {
+                        llOwnerSay("Key can't be detached...");
                     }
                 }
-            }
-            // Demo: short time span
-            else if (choice == "demo") {
-                lmSendConfig("demoMode", (string)(demoMode = !demoMode));
-                if (demoMode) {
-                    effectiveLimit = DEMO_LIMIT;
-                    if (timeLeftOnKey > effectiveLimit) timeLeftOnKey = effectiveLimit;
-                    llOwnerSay("Key set to run in demo mode: time limit set to " + (string)llRound(DEMO_LIMIT / (SEC_TO_MIN * setWindRate())) + " minutes.");
+                else if (choice == "help") {
+                    lmSendToAgent("%TEXT_HELP%", dollID);
                 }
-                // Note that the LIMIT is restored.... but the time left on key is unchanged
-                else {
-                    effectiveLimit = keyLimit;
-                    llOwnerSay("Key set to run normally: time limit set to " + (string)llRound(effectiveLimit / (SEC_TO_MIN * setWindRate())) + " minutes.");
+                // Demo: short time span
+                else if (choice == "demo") {
+                    lmSendConfig("demoMode", (string)(demoMode = !demoMode));
+                    if (demoMode) {
+                        effectiveLimit = DEMO_LIMIT;
+                        if (timeLeftOnKey > effectiveLimit) timeLeftOnKey = effectiveLimit;
+                        llOwnerSay("Key set to run in demo mode: time limit set to " + (string)llRound(DEMO_LIMIT / (SEC_TO_MIN * setWindRate())) + " minutes.");
+                    }
+                    // Note that the LIMIT is restored.... but the time left on key is unchanged
+                    else {
+                        effectiveLimit = keyLimit;
+                        llOwnerSay("Key set to run normally: time limit set to " + (string)llRound(effectiveLimit / (SEC_TO_MIN * setWindRate())) + " minutes.");
+                    }
                 }
-            }
-            else if (choice == "poses") {
-                integer  n = llGetInventoryNumber(20);
-
-                // Menu max limit of 11... report error
-                if (n > 11) {
-                    llOwnerSay("Too many poses! Found " + (string)n + " poses (max is 11)");
+                else if (choice == "poses") {
+                    integer  n = llGetInventoryNumber(20);
+    
+                    // Menu max limit of 11... report error
+                    if (n > 11) {
+                        llOwnerSay("Too many poses! Found " + (string)n + " poses (max is 11)");
+                    }
+    
+                    while(n) {
+                        string thisPose = llGetInventoryName(20, --n);
+    
+                        if (!(thisPose == ANIMATION_COLLAPSED || llGetSubString(thisPose,1,1) == ".")) {
+                            if (keyAnimation == thisPose) {
+                                llOwnerSay("\t*\t" + thisPose);
+                            }
+                            else {
+                                llOwnerSay("\t\t" + thisPose);
+                            }
+                        }
+                    }
                 }
-
-                while(n) {
-                    string thisPose = llGetInventoryName(20, --n);
-
-                    if (!(thisPose == ANIMATION_COLLAPSED || llGetSubString(thisPose,1,1) == ".")) {
-                        if (keyAnimation == thisPose) {
-                            llOwnerSay("\t*\t" + thisPose);
+                else if (choice == "wind") {
+                    // Give this a time limit: can only be done once
+                    // in - say - 6 hours... at least maxwindtime *2 or *3.
+    
+                    if (winderRechargeTime == 0.0) {
+    
+                        if (collapsed == 1) {
+                            llMessageLinked(LINK_THIS, 15, dollName + " has activated the emergency winder.", scriptkey);
+    
+                            windKey();
+                            winderRechargeTime = EMERGENCY_LIMIT_TIME;
+    
+                            llOwnerSay("Emergency self-winder has been triggered by Doll.");
+                            llOwnerSay("Emergency circuitry requires recharging and will be available again in " + (string)llRound(EMERGENCY_LIMIT_TIME / 3600.0) + " hours.");
+                        }
+                        else if (collapsed == 2) {
+                            llOwnerSay("The emergency winder motor whirrs, splutters and then falls silent unable to budge your jammed mechanism.");
                         }
                         else {
-                            llOwnerSay("\t\t" + thisPose);
+                            llOwnerSay("No emergency exists - emergency self-winder deactivated.");
+                        }
+                    } 
+                    else {
+                       llOwnerSay("Emergency self-winder is not yet recharged there is still " + formatFloat(winderRechargeTime / 3600.0, 2) + " hours before it will be ready again.");
+                    }
+                }
+                else if (choice == "xstats") {
+                    llOwnerSay("AFK time factor: " + formatFloat(RATE_AFK, 1) + "x");
+                    llOwnerSay("Wind amount: " + (string)llRound(windamount / (SEC_TO_MIN * setWindRate())) + " minutes.");
+    
+                    {
+                        string s;
+    
+                        s = "Doll can be teleported ";
+                        if (autoTP) {
+                            llOwnerSay(s + "without restriction.");
+                        }
+                        else {
+                            llOwnerSay(s + "with confirmation.");
+                        }
+    
+                        s = "Key is ";
+                        if (detachable) {
+                            llOwnerSay(s + "detachable.");
+                        }
+                        else {
+                            llOwnerSay(s + "not detachable.");
+                        }
+    
+                        s = " be dressed by others.";
+                        if (canDress) {
+                            llOwnerSay("Doll can" + s);
+                        }
+                        else {
+                            llOwnerSay("Doll cannot" + s);
+                        }
+    
+                        s = "Doll can";
+                        if (canFly) {
+                            llOwnerSay(s + " fly.");
+                        }
+                        else {
+                            llOwnerSay(s + "not fly.");
+                        }
+    
+                        s = "RLV is ";
+                        if (RLVok) {
+                            llOwnerSay(s + "active.");
+                        }
+                        else {
+                            llOwnerSay(s + "not active.");
+                        }
+                    }
+    
+                    if (windRate == 0.0) {
+                        llOwnerSay("Key is not winding down.");
+                    }
+    
+                }
+                else if (choice == "stat") {
+                    float t1 = timeLeftOnKey / (SEC_TO_MIN * setWindRate());
+                    float t2 = effectiveLimit / (SEC_TO_MIN * setWindRate());
+                    float p = t1 * 100.0 / t2;
+    
+                    string s = "Time: " + (string)llRound(t1) + "/" +
+                                (string)llRound(t2) + " min (" + formatFloat(p, 2) + "% capacity)";
+                    if (afk) {
+                        s += " (current wind rate " + formatFloat(setWindRate(), 1) + "x)";
+                    }
+                    llOwnerSay(s);
+                }
+                else if (choice == "stats") {
+                    setWindRate();
+                    llOwnerSay("Time remaining: " + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * setWindRate())) + " minutes of " +
+                                (string)llRound(effectiveLimit / (SEC_TO_MIN * setWindRate())) + " minutes.");
+                    if (windRate < 1.0) {
+                        llOwnerSay("Key is unwinding at a slowed rate of " + formatFloat(windRate, 1) + "x.");
+                    } else if (windRate > 1.0) {
+                        llOwnerSay("Key is unwinding at an accelerated rate of " + formatFloat(windRate, 1) + "x.");
+                    }
+    
+                    /*if (MistressID) {
+                        llOwnerSay("Controller: " + mistressName);
+                    }
+                    else {
+                        llOwnerSay("Controller: none");
+                    }*/
+    
+                    if (keyAnimation != ANIMATION_COLLAPSED && keyAnimation != "") {
+                    //    llOwnerSay(dollID, "Current pose: " + currentAnimation);
+                    //    llOwnerSay(dollID, "Pose time remaining: " + (string)(poseTime / SEC_TO_MIN) + " minutes.");
+                        llOwnerSay("Doll is posed.");
+                    }
+    
+                    lmMemReport(2.0);
+                }
+            }
+            else if (choice == "release") {
+                if (poserID != dollID) llOwnerSay("Dolly tries to take control of her body from the pose but she is no longer in control of her form.");
+                else lmInternalCommand("doUnpose", "", dollID);
+            }
+            else {
+                string param = llStringTrim(llGetSubString(choice, space + 1, -1), STRING_TRIM);
+                choice = llStringTrim(llGetSubString(choice, 0, space - 1), STRING_TRIM);
+                
+                if (choice == "channel") {
+                    string c = param;
+                    if ((string) ((integer) c) == c) {
+                        integer ch = (integer) c;
+                        if (ch != 0 && ch != DEBUG_CHANNEL) {
+                            chatChannel = ch;
+                            llListenRemove(chatHandle);
+                            chatHandle = llListen(ch, "", llGetOwner(), "");
                         }
                     }
                 }
-            }
-            else if (choice == "wind") {
-                // Give this a time limit: can only be done once
-                // in - say - 6 hours... at least maxwindtime *2 or *3.
-
-                if (winderRechargeTime == 0.0) {
-
-                    if (collapsed == 1) {
-                        llMessageLinked(LINK_THIS, 15, dollName + " has activated the emergency winder.", scriptkey);
-
-                        windKey();
-                        winderRechargeTime = EMERGENCY_LIMIT_TIME;
-
-                        llOwnerSay("Emergency self-winder has been triggered by Doll.");
-                        llOwnerSay("Emergency circuitry requires recharging and will be available again in " + (string)llRound(EMERGENCY_LIMIT_TIME / 3600.0) + " hours.");
-                    }
-                    else if (collapsed == 2) {
-                        llOwnerSay("The emergency winder motor whirrs, splutters and then falls silent unable to budge your jammed mechanism.");
-                    }
-                    else {
-                        llOwnerSay("No emergency exists - emergency self-winder deactivated.");
-                    }
-                } 
-                else {
-                   llOwnerSay("Emergency self-winder is not yet recharged there is still " + formatFloat(winderRechargeTime / 3600.0, 2) + " hours before it will be ready again.");
+                else if (choice == "controller") {
+                    lmInternalCommand("getMistressKey", cannoizeName(param), NULL_KEY);
                 }
-            }
-            else if (choice == "xstats") {
-                llOwnerSay("AFK time factor: " + formatFloat(RATE_AFK, 1) + "x");
-                llOwnerSay("Wind amount: " + (string)llRound(windamount / (SEC_TO_MIN * setWindRate())) + " minutes.");
-
-                {
-                    string s;
-
-                    s = "Doll can be teleported ";
-                    if (autoTP) {
-                        llOwnerSay(s + "without restriction.");
-                    }
-                    else {
-                        llOwnerSay(s + "with confirmation.");
-                    }
-
-                    s = "Key is ";
-                    if (detachable) {
-                        llOwnerSay(s + "detachable.");
-                    }
-                    else {
-                        llOwnerSay(s + "not detachable.");
-                    }
-
-                    s = " be dressed by others.";
-                    if (canDress) {
-                        llOwnerSay("Doll can" + s);
-                    }
-                    else {
-                        llOwnerSay("Doll cannot" + s);
-                    }
-
-                    s = "Doll can";
-                    if (canFly) {
-                        llOwnerSay(s + " fly.");
-                    }
-                    else {
-                        llOwnerSay(s + "not fly.");
-                    }
-
-                    s = "RLV is ";
-                    if (RLVok) {
-                        llOwnerSay(s + "active.");
-                    }
-                    else {
-                        llOwnerSay(s + "not active.");
-                    }
+                else if (choice == "blacklist") {
+                    lmInternalCommand("getBlacklistKey", cannoizeName(param), NULL_KEY);
                 }
-
-                if (windRate == 0.0) {
-                    llOwnerSay("Key is not winding down.");
+                else if (choice == "unblacklist") {
+                    lmInternalCommand("getBlacklistKey", cannoizeName(param), NULL_KEY);
                 }
-
-            }
-            else if (choice == "stat") {
-                float t1 = timeLeftOnKey / (SEC_TO_MIN * setWindRate());
-                float t2 = effectiveLimit / (SEC_TO_MIN * setWindRate());
-                float p = t1 * 100.0 / t2;
-
-                string s = "Time: " + (string)llRound(t1) + "/" +
-                            (string)llRound(t2) + " min (" + formatFloat(p, 2) + "% capacity)";
-                if (afk) {
-                    s += " (current wind rate " + formatFloat(setWindRate(), 1) + "x)";
+                #ifdef DEVELOPER_MODE
+                else if (choice == "timereporting") {
+                    lmSendConfig("timeReporting", (string)(timeReporting = (integer)param));
                 }
-                llOwnerSay(s);
-            }
-            else if (choice == "stats") {
-                setWindRate();
-                llOwnerSay("Time remaining: " + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * setWindRate())) + " minutes of " +
-                            (string)llRound(effectiveLimit / (SEC_TO_MIN * setWindRate())) + " minutes.");
-                if (windRate < 1.0) {
-                    llOwnerSay("Key is unwinding at a slowed rate of " + formatFloat(windRate, 1) + "x.");
-                } else if (windRate > 1.0) {
-                    llOwnerSay("Key is unwinding at an accelerated rate of " + formatFloat(windRate, 1) + "x.");
-                }
-
-                /*if (MistressID) {
-                    llOwnerSay("Controller: " + mistressName);
-                }
-                else {
-                    llOwnerSay("Controller: none");
-                }*/
-
-                if (keyAnimation != ANIMATION_COLLAPSED && keyAnimation != "") {
-                //    llOwnerSay(dollID, "Current pose: " + currentAnimation);
-                //    llOwnerSay(dollID, "Pose time remaining: " + (string)(poseTime / SEC_TO_MIN) + " minutes.");
-                    llOwnerSay("Doll is posed.");
-                }
-
-                lmMemReport(2.0);
-            }
-            else if (llGetSubString(choice, 0, 9) == "controller") {
-                string name = llGetSubString(choice, 11, -1);
-                lmInternalCommand("getMistressKey", cannoizeName(name), NULL_KEY);
-            }
-            else if (llGetSubString(choice, 0, 8) == "blacklist") {
-                string name = llGetSubString(choice, 10, -1);
-                lmInternalCommand("getBlacklistKey", cannoizeName(name), NULL_KEY);
-            }
-            else if (llGetSubString(choice, 0, 10) == "unblacklist") {
-                string name = llGetSubString(choice, 12, -1);
-                lmInternalCommand("getBlacklistKey", cannoizeName(name), NULL_KEY);
-            }
-            #ifdef DEVELOPER_MODE
-            else if (choice == "timereporting") {
-                lmSendConfig("timeReporting", (string)(timeReporting = !timeReporting));
-            }
-            #endif
-            else if (llGetInventoryType(choice) == 20 || llGetSubString(choice, 0, 0) == "." | llGetSubString(choice, 0, 0) == "!") {
-                if (llGetInventoryType(choice) != 20) choice = llGetSubString(choice, 1, -1);
-                lmInternalCommand("setPose", choice, dollID);
-            }
-            else {
-                llOwnerSay("Unrecognised command '" + llList2String(llParseString2List(choice, [ " " ], []), 0) +"' recieved on channel " + (string)chatChannel);
+                #endif
+                else llOwnerSay("Unrecognised command '" + choice + "' recieved on channel " + (string)chatChannel);
             }
         }
     }
 
+    #ifndef DEVELOPER_MODE
     run_time_permissions(integer perm) {
         if (!llGetAttached()) llOwnerSay("@acceptpermission=rem");
         ifPermissions();
     }
+    #endif
 }

@@ -91,77 +91,96 @@ processRLVResult()
 }
 
 ifPermissions() {
-    key grantorID = llGetPermissionsKey();
-    integer permMask = llGetPermissions();
-    
-    if (grantorID != NULL_KEY && grantorID != dollID) {
-        llResetOtherScript("Start");
-        llSleep(10);
-    }
-    
-    if (!((permMask & PERMISSION_MASK) == PERMISSION_MASK))
-        llRequestPermissions(dollID, PERMISSION_MASK);
-    
-    if (grantorID == dollID) {
-        if (permMask & PERMISSION_TRIGGER_ANIMATION && isAttached) {
-            if (keyAnimation != "") {
-                llWhisper(LOCKMEISTER_CHANNEL, (string)dollID + "bootoff");
-                
-                list animList; integer i; integer animCount; key animKey = llGetInventoryKey(keyAnimation);
-                while ((animList = llGetAnimationList(dollID)) != [ animKey ]) {
-                    animCount = llGetListLength(animList);
-                    for (i = 0; i < animCount; i++) {
-                        if (llList2Key(animList, i) != animKey) llStopAnimation(llList2Key(animList, i));
-                    }
-                    llStartAnimation(keyAnimation);
-                }
-            } else if (keyAnimation == "" && clearAnim) {
-                list animList = llGetAnimationList(dollID); 
-                integer i; integer animCount = llGetInventoryNumber(20);
-                for (i = 0; i < animCount; i++) {
-                    key animKey = llGetInventoryKey(llGetInventoryName(20, i));
-                    if (llListFindList(animList, [ llGetInventoryKey(llGetInventoryName(20, i)) ]) != -1)
-                        llStopAnimation(animKey);
-                }
-                clearAnim = 0;
-                llWhisper(LOCKMEISTER_CHANNEL, (string)dollID + "booton");
-            }
+    if (isAttached) {
+        key grantorID = llGetPermissionsKey();
+        integer permMask = llGetPermissions();
+        
+        if (grantorID != NULL_KEY && grantorID != dollID) {
+            llResetOtherScript("Start");
+            llSleep(10.0);
         }
         
-        if (permMask & PERMISSION_TAKE_CONTROLS && isAttached) {
-            if (keyAnimation != "") {
-                if (lockPos == ZERO_VECTOR) lockPos = llGetPos();
-                if (llVecDist(llGetPos(), lockPos) > 1.0) {
-                    llTargetRemove(targetHandle);
-                    targetHandle = llTarget(lockPos, 1.0);
-                    llMoveToTarget(lockPos, 0.7);
+        if (!((permMask & PERMISSION_MASK) == PERMISSION_MASK))
+            llRequestPermissions(dollID, PERMISSION_MASK);
+        
+        if (grantorID == dollID) {
+            if (permMask & PERMISSION_TRIGGER_ANIMATION) {
+                if (keyAnimation != "") {
+                    llWhisper(LOCKMEISTER_CHANNEL, (string)dollID + "bootoff");
+                    
+                    list animList; integer i; integer animCount; key animKey = llGetInventoryKey(keyAnimation);
+                    while ((animList = llGetAnimationList(dollID)) != [ animKey ]) {
+                        animCount = llGetListLength(animList);
+                        for (i = 0; i < animCount; i++) {
+                            if (llList2Key(animList, i) != animKey) llStopAnimation(llList2Key(animList, i));
+                        }
+                        llStartAnimation(keyAnimation);
+                    }
+                } else if (keyAnimation == "" && clearAnim) {
+                    list animList = llGetAnimationList(dollID); 
+                    integer i; integer animCount = llGetInventoryNumber(20);
+                    for (i = 0; i < animCount; i++) {
+                        key animKey = llGetInventoryKey(llGetInventoryName(20, i));
+                        if (llListFindList(animList, [ llGetInventoryKey(llGetInventoryName(20, i)) ]) != -1)
+                            llStopAnimation(animKey);
+                    }
+                    clearAnim = 0;
+                    llWhisper(LOCKMEISTER_CHANNEL, (string)dollID + "booton");
                 }
-                llTakeControls(CONTROL_ALL, 1, 0);
             }
-            else {
-                lockPos = ZERO_VECTOR;
-                llTargetRemove(targetHandle);
-                llStopMoveToTarget();
-                if (carrierID != NULL_KEY) {
-                    vector carrierPos = llList2Vector(llGetObjectDetails(carrierID, [ OBJECT_POS ]), 0);
-                    targetHandle = llTarget(carrierPos, CARRY_RANGE);
+            
+            if (permMask & PERMISSION_OVERRIDE_ANIMATIONS) {
+                if (keyAnimation != "") {
+                    llSetAnimationOverride("Standing", keyAnimation);
                 }
-                if (!afk) llTakeControls(CONTROL_ALL, 0, 1);
-                else llTakeControls(CONTROL_MOVE, 1, 1);
+                else llResetAnimationOverride("ALL");
+            }
+            
+            if (permMask & PERMISSION_TAKE_CONTROLS) {
+                llTakeControls(CONTROL_MOVE, 1, 1);
+            }
+            
+            if (permMask & PERMISSION_TAKE_CONTROLS) {
+                if (keyAnimation != "") {
+                    if (lockPos == ZERO_VECTOR) lockPos = llGetPos();
+                    if (llVecDist(llGetPos(), lockPos) > 1.0) {
+                        llTargetRemove(targetHandle);
+                        targetHandle = llTarget(lockPos, 1.0);
+                        llMoveToTarget(lockPos, 0.7);
+                    }
+                    llTakeControls(CONTROL_ALL, 1, 0);
+                }
+                else {
+                    lockPos = ZERO_VECTOR;
+                    llTargetRemove(targetHandle);
+                    llStopMoveToTarget();
+                    if (carrierID != NULL_KEY) {
+                        vector carrierPos = llList2Vector(llGetObjectDetails(carrierID, [ OBJECT_POS ]), 0);
+                        targetHandle = llTarget(carrierPos, CARRY_RANGE);
+                    }
+                    if (!afk) llTakeControls(CONTROL_ALL, 0, 1);
+                    else llTakeControls(CONTROL_MOVE, 1, 1);
+                }
             }
         }
     }
     
-    if (poseExpire == 0.0 && timeToJamRepair == 0.0) {
-        llSetTimerEvent(0.0);
-        timerOn = 0;
+    if (!collapsed && poseExpire == 0.0 && timeToJamRepair == 0.0) {
+        if (RLVck == 0) {
+            llSetTimerEvent(0.0);
+            if (timerOn) debugSay(5, "Timer suspended, awaiting activity.");
+            timerOn = 0;
+        }
     }
     else {
-        llSetTimerEvent(1.0);
-        if (lowScriptMode) llSetTimerEvent(4.0);
-        if (!timerOn) {
-            llResetTime();
-            timerOn = 1;
+        if (RLVck == 0) {
+            llSetTimerEvent(5.0);
+            if (lowScriptMode) llSetTimerEvent(10.0);
+            if (!timerOn) {
+                debugSay(5, "Timer activated.");
+                llResetTime();
+                timerOn = 1;
+            }
         }
     }
 }
@@ -192,7 +211,7 @@ initializeRLV(integer refresh) {
     // unlocked and detachable: this is because it can be detached 
     // via the menu. To make the key truly "undetachable", we get
     // rid of the menu item to unlock it
-    lmRunRLVas("Base", "detach=n,editobj:" + (string)llGetKey() + "=add");  //locks key
+    lmRunRLVas("Base", "detach=n");  //locks key
     locked = 1; // Note the locked variable also remains false for developer mode keys
                 // This way controllers are still informed of unauthorized detaching so developer dolls are still accountable
                 // With this is the implicit assumption that controllers of developer dolls will be understanding and accepting of
@@ -308,12 +327,14 @@ default {
                 rlvAPIversion = llStringTrim(msg, STRING_TRIM);
                 #ifndef DEVELOPER_MODE
                 processRLVResult();
-                #endif
+                #else
                 if (myPath == "") llOwnerSay("@getpathnew=" + (string)channel);
+                else processRLVResult();
+                #endif
             }
             else {
                 myPath = msg;
-                processRLVResult();
+                if (RLVok) processRLVResult();
             }
         }
         //if (!RLVok && !RLVstarted) llOwnerSay("@clear,versionnew=" + (string)channel);
@@ -388,6 +409,10 @@ default {
                 else if (name == "poseExpire")               poseExpire = (float)value;
                 else if (name == "quiet")                         quiet = (integer)value;
                 else if (name == "timeLeftOnKey")         timeLeftOnKey = (float)value;
+                else if (name == "keyAnimation") {
+                    keyAnimation = value;
+                    ifPermissions();
+                }
                 else if (name == "dollType") {
                     if (dollType == value) return;
                     else {
