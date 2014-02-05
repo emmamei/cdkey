@@ -693,8 +693,13 @@ default
                 lmSendConfig("signOn", (string)(signOn = 0));
             else if (choice == "Turn On Sign")
                 lmSendConfig("signOn", (string)(signOn = 1));
+            else if (choice == "No Quiet Key")
+                lmSendConfig("quiet", (string)(quiet = 0));
+            else if (choice == "Quiet Key")
+                lmSendConfig("quiet", (string)(quiet = 1));
             else if (choice == "No AFK")
                 lmSendConfig("canAFK", (string)(canAFK = 0));
+            // One-Way option
             else if (isController && choice == "Can AFK")
                 lmSendConfig("canAFK", (string)(canAFK = 1));
             else if (choice == "Can Carry") {
@@ -795,6 +800,9 @@ default
                     if (signOn) pluslist += "Turn Off Sign";
                     else pluslist += "Turn On Sign";
                 }
+                
+                if (quiet) pluslist += "No Quiet Key";
+                else pluslist += "Quiet Key";
                 
                 #ifdef ADULT_MODE
                 if (pleasureDoll) pluslist += "No Pleasure";
