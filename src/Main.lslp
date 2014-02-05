@@ -44,6 +44,7 @@ string rlvAPIversion;
 key MistressID = NULL_KEY;
 key carrierID = NULL_KEY;
 key dresserID = NULL_KEY;
+key winderID = NULL_KEY;
 key dollID = NULL_KEY;
 
 integer dialogChannel;
@@ -65,6 +66,7 @@ integer canDress = 1;
 integer canFly = 1;
 integer canSit = 1;
 integer canStand = 1;
+integer canRepeat = 1;
 //integer canWear;
 //integer canUnwear;
 integer clearAnim;
@@ -178,18 +180,23 @@ float windKey() {
         wound = windLimit;
     }
     
-    lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
-    if (collapsed == 1) uncollapse(1);
-    
     return wound;
 }
 
 doWind(string name, key id) {
+    if (!canRepeat && (id == winderID) && !((id == NULL_KEY) || isDoll || isController)) {
+        lmSendToAgent("Dolly needs to be wound by someone else before you can wind her again.", id);
+        return;
+    }
+    
     float wound = windKey();
     integer winding = llFloor(wound / SEC_TO_MIN);
 
     if (winding > 0) {
         lmSendToAgent("You have given " + dollName + " " + (string)winding + " more minutes of life.", id);
+        
+        lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
+        if (collapsed == 1) uncollapse(1);
         
         if (timeLeftOnKey == effectiveLimit) {
             if (!quiet) llSay(0, dollName + " has been fully wound by " + name + ".");
@@ -202,6 +209,8 @@ doWind(string name, key id) {
         llSleep(1.0); // Make sure that the uncollapse RLV runs before sending the message containing winder name.
         // Is this too spammy?
         llOwnerSay("Have you remembered to thank " + name + " for winding you?");
+        
+        winderID = id;
     }
 }
 
@@ -482,6 +491,7 @@ default {
             else if (name == "canFly")                         canFly = (integer)value;
             else if (name == "canSit")                         canSit = (integer)value;
             else if (name == "canStand")                     canStand = (integer)value;
+            else if (name == "canRepeat")                   canRepeat = (integer)value;
             else if (name == "collapsed") {
                 collapsed = (integer)value;
                 setWindRate();

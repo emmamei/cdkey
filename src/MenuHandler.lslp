@@ -30,6 +30,7 @@ integer canDress = 1;
 integer canFly = 1;
 integer canSit = 1;
 integer canStand = 1;
+integer canRepeat = 1;
 //integer canWear;
 //integer canUnwear;
 integer carryMoved;
@@ -374,6 +375,7 @@ default
             else if (name == "canFly")                         canFly = (integer)value;
             else if (name == "canSit")                         canSit = (integer)value;
             else if (name == "canStand")                     canStand = (integer)value;
+            else if (name == "canRepeat")                   canRepeat = (integer)value;
             else if (name == "configured")                 configured = (integer)value;
             else if (name == "detachable")                 detachable = (integer)value;
             else if (name == "demoMode")                     demoMode = (integer)value;
@@ -702,6 +704,11 @@ default
             // One-Way option
             else if (isController && choice == "Can AFK")
                 lmSendConfig("canAFK", (string)(canAFK = 1));
+            else if (choice == "No Repeat Wind")
+                lmSendConfig("canRepeat", (string)(canRepeat = 0));
+            // One-Way option
+            else if (isController && choice == "Can Repeat Wind")
+                lmSendConfig("canRepeat", (string)(canRepeat = 1));
             else if (choice == "Can Carry") {
                 llOwnerSay("Other people can now carry you.");
                 lmSendConfig("canCarry", (string)(canCarry = 1));
@@ -821,6 +828,10 @@ default
                 // One-way option
                 if (canAFK) pluslist += "No AFK";
                 else if (isController) pluslist += "Can AFK";
+                
+                // One-way option
+                if (canRepeat) pluslist += "No Repeat Wind";
+                else if (isController) pluslist += "Can Repeat Wind";
                 
                 if (isDoll && !offlineMode) pluslist += "Offline Mode";
                 else if (isDoll) pluslist += "Online Mode";
