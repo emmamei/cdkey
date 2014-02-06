@@ -114,9 +114,9 @@ string formatDuration(float time, integer inDays) {
     else h = (t / 3600);
 
     if (h != 0 && h <= 9) ret += "0" + (string)h + ":";
-    else if (h > 9) ret += (string)h;
+    else if (h > 9) ret += (string)h + ":";
     if (m <= 9) ret += "0" + (string)m + ":";
-    else ret += (string)m;
+    else ret += (string)m + ":";
     if (s <= 9) ret += "0" + (string)s;
     else ret += (string)s;
 
