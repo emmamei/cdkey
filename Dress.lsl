@@ -161,7 +161,7 @@ integer isHiddenItem (string f) {
     string prefix = llGetSubString(f,0,0);
 
     // Items that start with "~" are hidden
-    return (prefix == "~" || prefix == ">");
+    return (prefix == "~");
 }
 
 integer isTransformingItem (string f) {
@@ -222,12 +222,16 @@ listInventoryOn (string channel) {
     llSay(DEBUG_CHANNEL,">> clothingFolder = " + (string)clothingFolder);
     llSay(DEBUG_CHANNEL,">> outfitsFolder = " + (string)outfitsFolder);
                 
-    if (clothingFolder == "") {
-        llMessageLinked(LINK_SET, 315, scriptName + "|getinv=" + channel, NULL_KEY);
-    }
-    else {
-        llSay(DEBUG_CHANNEL,"cmd = getinv:" + clothingFolder + "=" + channel);
-        llMessageLinked(LINK_SET, 315, scriptName + "|getinv:" + clothingFolder + "=" + channel, NULL_KEY);
+    if (outfitsFolder == "") {
+        llSay(DEBUG_CHANNEL,"outfitsFolder is NIL!");
+    } else {
+        if (clothingFolder == "") {
+            llMessageLinked(LINK_SET, 315, scriptName + "|getinv=" + channel, NULL_KEY);
+        }
+        else {
+            llSay(DEBUG_CHANNEL,"cmd = getinv:" + clothingFolder + "=" + channel);
+            llMessageLinked(LINK_SET, 315, scriptName + "|getinv:" + clothingFolder + "=" + channel, NULL_KEY);
+        }
     }
 }
 
@@ -404,20 +408,22 @@ default {
 
                 // If there are more than one of these folders in #RLV,
                 // then the last one read will be used...
-                if (itemname == bigsubfolder) {
-                    outfitsFolder = bigsubfolder;
-                }
-                else if (itemname == "outfits") {
-                    outfitsFolder = "outfits";
-                }
-                else if (itemname == "Outfits") {
-                    outfitsFolder = "Outfits";
+                if (itemname == bigsubfolder ||
+                    itemname == "outfits"    ||
+                    itemname == "Outfits"    ||
+                    itemname == "> Outfits" ) {
+
+                    outfitsFolder = itemname;
                 }
             }
 
             // if prefix changes, change clothingFolder to match
             if (outfitsFolder != oldbigprefix) {  //outfits-don't-match-type bug only occurs when big prefix is changed
                 clothingFolder = outfitsFolder;
+            }
+
+            if (outfitsFolder == "") {
+                llSay(DEBUG_CHANNEL,"Found no outfits folder!");
             }
 
             llSay(DEBUG_CHANNEL,">oldbigprefix = " + oldbigprefix);
@@ -571,6 +577,9 @@ default {
                 llDialog(dresserID, msgx, ["Prev", "Next", "Page " + (string)(outfitPage+1)] + outfitsPage(outfitsList), cd2667);
             } else if (choice == "Page " + (string)(outfitPage+1)) {
                 ; // Do nothing
+            } else if ((llGetSubString(choice,1,1)) == ">") {
+                clothingFolder = clothingFolder + "/" + choice;
+                listInventoryOn("2666");
             } else {
                 candresstemp = FALSE;
                 newoutfitname = choice;
