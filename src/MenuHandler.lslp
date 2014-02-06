@@ -20,6 +20,7 @@ float timeLeftOnKey;
 float windDefault = 1800.0;
 float windRate = 1.0;
 float baseWindRate = 1.0;
+float collapseTime;
 
 integer afk;
 integer autoAFK = 1;
@@ -165,7 +166,9 @@ doMainMenu(key id) {
         menu += "Wind";
         #endif
         if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK) {
-            menu += "TP Home";
+            // Only present the TP home option for the doll if they have been collapsed
+            // for at least 900 seconds (15 minutes) - Suggested by Christina
+            if (collapseTime + 900.0 < llGetTime()) menu += "TP Home";
         }
     }
     else {    //not  being carried, not collapsed - normal in other words
@@ -439,6 +442,7 @@ default
             else if (cmd == "setAFK") afk = llList2Integer(split, 0);
             else if (cmd == "collapse") {
                 keyAnimation = ANIMATION_COLLAPSED;
+                collapseTime = llGetTime();
                 collapsed = 1;
             }
             else if (cmd == "uncollapse") {
