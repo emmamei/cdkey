@@ -31,6 +31,7 @@ integer canFly = 1;
 integer canSit = 1;
 integer canStand = 1;
 integer canRepeat = 1;
+integer poseSilence;
 //integer canWear;
 //integer canUnwear;
 integer carryMoved;
@@ -376,6 +377,7 @@ default
             else if (name == "canSit")                         canSit = (integer)value;
             else if (name == "canStand")                     canStand = (integer)value;
             else if (name == "canRepeat")                   canRepeat = (integer)value;
+            else if (name == "poseSilence")               poseSilence = (integer)value;
             else if (name == "configured")                 configured = (integer)value;
             else if (name == "detachable")                 detachable = (integer)value;
             else if (name == "demoMode")                     demoMode = (integer)value;
@@ -668,6 +670,10 @@ default
                 lmSendConfig("helpless", (string)(helpless = 1));
             else if (isController && choice == "Self TP")
                 lmSendConfig("helpless", (string)(helpless = 0));
+            else if (choice == "Silent Posed")
+                lmSendConfig("poseSilence", (string)(poseSilence = 1));
+            else if (isController && choice == "No Silent Posed")
+                lmSendConfig("poseSilence", (string)(poseSilence = 0));
             else if (isController & choice == "Can Dress Self") {
                 llOwnerSay("You are now able to change your own outfits again.");
                 lmSendConfig("canWear", (string)(canWear = 1));
@@ -788,6 +794,10 @@ default
                     // One-way option
                     if (canFly) pluslist += "No Flying";
                     else if (isController) pluslist += "Can Fly";
+                    
+                    // One-way option
+                    if (!poseSilence) pluslist += "Silent Posed";
+                    else if (isController) pluslist += "No Silent Posed";
                 }
                 else {
                     msg += "\n\nDolly does not have an RLV capable viewer of has RLV turned off in her viewer settings.  There are no usable options available.";

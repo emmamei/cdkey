@@ -38,6 +38,7 @@ integer initState = 104;
 integer listenHandle;
 integer locked;
 integer lowScriptMode;
+integer poseSilence;
 integer RLVck = -1;
 integer RLVok;
 integer RLVstarted;
@@ -255,9 +256,6 @@ initializeRLV(integer refresh) {
                 RLVpower += "sit=n,unsit=n,showhovertextall=n,redirchat:999=add,rediremote:999=add,";
                 RLVpower += "tplure=n";
                 lmRunRLVas("UserCollapsed", userCollapseRLVcmd);
-                // Remove redundant state entiries while collapsed
-                lmRunRLVas("Carry", "clear");
-                lmRunRLVas("Pose", "clear");
             }
             else RLVpower = "clear,";
             RLVpower += "fly=n,tplm=n,tploc=n,temprun=n,alwaysrun=n,sendchat=n,";
@@ -268,15 +266,20 @@ initializeRLV(integer refresh) {
         lmRunRLVas("Power", RLVpower);
         
         // Don't replicate state in known core, collapsed blocks all of Carry & Pose too so list these only when necessary
-        if (!collapsed) {            
-            if (carrierID != NULL_KEY)
-                lmRunRLVas("Carry", "tplm=n,tploc=n,accepttp=rem,tplure=n,showinv=n");
-            else lmRunRLVas("Carry", "clear");
-            
-            if ((keyAnimation != "") && (poserID != dollID)) 
-                lmRunRLVas("Pose", "fartouch=n,fly=n,showinv=n,sit=n,sittp=n,standtp=n,touchattachother=n,tplm=n,tploc=n,unsit=n");
-            else lmRunRLVas("Pose", "clear");
+        if (!collapsed && carrierID != NULL_KEY)
+            lmRunRLVas("Carry", "tplm=n,tploc=n,accepttp=rem,tplure=n,showinv=n");
+        else lmRunRLVas("Carry", "clear");
+        
+        if ((keyAnimation != "") && (poserID != dollID)) {
+            string pose = "fartouch=n,fly=n,showinv=n,sit=n,sittp=n,standtp=n,touchattachother=n,tplm=n,tploc=n,unsit=n";
+            debugSay(5, "Posed=1, Silenced=" + (string)poseSilence);
+            if (poseSilence) {
+                integer channel = llRound(llFrand((float)0x7fffffff));
+                pose += ",sendchat=n,sendchannel=n,redirchat:" + (string)channel + "=add,rediremote:" + (string)channel + "=add,startim=n,permissive=n";
+            }
+            lmRunRLVas("Pose", pose);
         }
+        else lmRunRLVas("Pose", "clear");
     #ifdef DEVELOPER_MODE
     }
     #endif
@@ -382,6 +385,7 @@ default {
         }
         else if (code == 110) {
             initState = 105;
+            ifPermissions();
         }
         else if (code == 135) {
             float delay = llList2Float(split, 1);
@@ -393,7 +397,7 @@ default {
             split = llList2List(split, 2, -1);
             string value = llList2String(split, 0);
             
-            if (llListFindList([ "afk", "autoTP", "canFly", "canSit", "canStand", "canWear", "collapsed", "helpless" ], [ name ]) != -1) {
+            if (llListFindList([ "afk", "autoTP", "canFly", "canSit", "canStand", "canWear", "collapsed", "helpless", "poseSilence" ], [ name ]) != -1) {
                      if (name == "autoTP")                       autoTP = (integer)value;
                 else if (name == "afk")                             afk = (integer)value;
                 else if (name == "collapsed")                 collapsed = (integer)value;
@@ -402,6 +406,7 @@ default {
                 else if (name == "canStand")                   canStand = (integer)value;
                 else if (name == "canWear")                     canWear = (integer)value;
                 else if (name == "helpless")                   helpless = (integer)value;
+                else if (name == "poseSilence")             poseSilence = (integer)value;
                 
                 if (RLVstarted) initializeRLV(1);
             } else {            
