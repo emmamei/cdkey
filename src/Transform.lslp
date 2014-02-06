@@ -159,6 +159,58 @@ reloadTypeNames() {
     }
 }
 
+runTimedTriggers() {
+    if (minMinutes > 0) {
+        minMinutes--;
+        }
+
+    if (showPhrases) {
+        integer i = (integer) llFrand(llGetListLength(currentphrases));
+
+        // if no phrases to be used, exit
+        if (i == 0) {
+            return;
+        }
+
+        string phrase  = llList2String(currentphrases, i);
+
+        // Starting with a '*' marks a fragment; with none,
+        // the phrase is used as is
+
+        if (llGetSubString(phrase, 0, 0) == "*") {
+
+            phrase = llGetSubString(phrase, 1, -1);
+            float r = llFrand(3);
+
+            if (r < 1.0) {
+                phrase = "*** feel your need to " + phrase;
+            } else if (r < 2.0) {
+                phrase = "*** feel your desire to " + phrase;
+            } else {
+                if (currentState  == "Domme") {
+                    phrase = "*** You like to " + phrase;
+                } else {
+                    phrase = "*** feel how people like you to " + phrase;
+                }
+            }
+        } else {
+            phrase = "*** " + phrase;
+        }
+
+        // Add reminder of Doll type
+        // FIXME: Do we want constant type reminders?
+
+        //if (currentState == "Regular") {
+        //  phrase += " ***";
+        //} else {        
+        //    phrase += " (since you are a " + stateName + " Doll) ***";
+        //}
+
+        // Phrase has been chosen and put together; now say it
+        llOwnerSay(phrase);
+    }
+}
+
 //========================================
 // STATES
 //========================================
@@ -185,61 +237,6 @@ default {
             (change & CHANGED_ALLOWED_DROP)) {
 
             reloadTypeNames();
-        }
-    }
-
-    //----------------------------------------
-    // TIMER
-    //----------------------------------------
-    timer() {   //called everytimeinterval
-        if (minMinutes > 0) {
-            minMinutes--;
-            }
-
-        if (showPhrases) {
-            integer i = (integer) llFrand(llGetListLength(currentphrases));
-
-            // if no phrases to be used, exit
-            if (i == 0) {
-                return;
-            }
-
-            string phrase  = llList2String(currentphrases, i);
-
-            // Starting with a '*' marks a fragment; with none,
-            // the phrase is used as is
-
-            if (llGetSubString(phrase, 0, 0) == "*") {
-
-                phrase = llGetSubString(phrase, 1, -1);
-                float r = llFrand(3);
-
-                if (r < 1.0) {
-                    phrase = "*** feel your need to " + phrase;
-                } else if (r < 2.0) {
-                    phrase = "*** feel your desire to " + phrase;
-                } else {
-                    if (currentState  == "Domme") {
-                        phrase = "*** You like to " + phrase;
-                    } else {
-                        phrase = "*** feel how people like you to " + phrase;
-                    }
-                }
-            } else {
-                phrase = "*** " + phrase;
-            }
-
-            // Add reminder of Doll type
-            // FIXME: Do we want constant type reminders?
-
-            //if (currentState == "Regular") {
-            //  phrase += " ***";
-            //} else {        
-            //    phrase += " (since you are a " + stateName + " Doll) ***";
-            //}
-
-            // Phrase has been chosen and put together; now say it
-            llOwnerSay(phrase);
         }
     }
 
@@ -303,6 +300,7 @@ default {
                 else if (name == "showPhrases") showPhrases = (integer)value;
                 else if (name == "currentState") currentState = value;
                 else if (name == "isTransformingKey") isTransformingKey = (integer)value;
+                else if (script == "Main" && name == "timeLeftOnKey") runTimedTriggers();
             }
         }
         

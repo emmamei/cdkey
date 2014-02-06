@@ -62,10 +62,8 @@ queForSave(string name, string value) {
     if (index != -1 && index % 2 == 0) 
         dbPostParams = llListReplaceList(dbPostParams, [ name, llEscapeURL(value) ], index, index + 1);
     else dbPostParams += [ name, llEscapeURL(value) ];
-    if (llListFindList(SKIP_EXPEDITE, [ name ]) == -1) {
-        llSetTimerEvent(HTTPthrottle);
-        expeditePost = 1;
-    }
+    if (llListFindList(SKIP_EXPEDITE, [ name ]) == -1) expeditePost = 1;
+    llSetTimerEvent(5.0);
 }
 
 /*handleAvList(string strList, integer type, integer compat) {
@@ -148,7 +146,8 @@ checkAvatarList() {
 }
 
 doHTTPpost() {
-    if (lastPost == 0.0 || llGetTime() - lastPost > HTTPthrottle) {
+    if ((expeditePost && lastPost + HTTPthrottle < llGetTime()) ||
+        (!expeditePost && lastPost + HTTPinterval < llGetTime())) {
         if (llGetListLength(dbPostParams) == 0) return;
         string time = (string)llGetUnixTime();
         string dbPostBody;
@@ -161,9 +160,7 @@ doHTTPpost() {
                 updateList += llList2String(dbPostParams, i);
             }
         }
-        
-        llSetTimerEvent(HTTPinterval);
-        //llOwnerSay(llUnescapeURL(dbPostBody));
+
         while ((requestSendDB = llHTTPRequest(protocol + "api.silkytech.com/httpdb/store?q=" + llSHA1String(dbPostBody + (string)llGetOwner() + time + SALT) +
             "&t=" + time, HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE, "application/x-www-form-urlencoded" ], dbPostBody)) == NULL_KEY) {
                 llSleep(1.0);
@@ -171,8 +168,9 @@ doHTTPpost() {
     }
     else {
         float ThrottleTime = lastPost - llGetTime() + HTTPthrottle;
-        debugSay(5, "Throttling HTTP requests for " + formatFloat(ThrottleTime, 2) + "s to comply with service specified throttle " + formatFloat(HTTPthrottle, 2) + "s");
+        if (!expeditePost) ThrottleTime += HTTPinterval - HTTPthrottle;
         llSetTimerEvent(ThrottleTime);
+        expeditePost = 0;        
     }
 }
 
@@ -181,7 +179,6 @@ default
     state_entry() {
         llSetMemoryLimit(65536);
         lmScriptReset();
-        llSetTimerEvent(60.0);
         myMod = llFloor(llFrand(5.999999));
         serverNames = llListRandomize(serverNames, 1);
     }
@@ -413,6 +410,17 @@ default
             string name = llList2String(split, 1);
             string value = llList2String(split, 2);
             
+            if (script == "Main" && name == "timeLeftOnKey") {
+                if (!gotURL && nextRetry < llGetUnixTime()) 
+                while ((requestName = llHTTPRequest(protocol + "api.silkytech.com/objdns/lookup?q=" + llEscapeURL(llList2String(serverNames, requestIndex)), 
+                        HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) llSleep(1.0);
+                if (gotURL && (lastUpdateCheck < (llGetUnixTime() - updateCheck))) {
+                    lastUpdateCheck = llGetUnixTime();
+                    queForSave("lastUpdateCheck", (string)lastUpdateCheck);
+                    while ((requestUpdate = llHTTPRequest(serverURL, HTTP_OPTIONS + [ "POST" ], "checkversion " + (string)PACKAGE_VERNUM)) == NULL_KEY) llSleep(1.0);
+                }
+            }
+            
             if (name == "lastUpdateCheck") lastUpdateCheck = (integer)value;
             if (name == "nextRetry") nextRetry = (integer)value;
             
@@ -486,16 +494,7 @@ default
     }*/
     
     timer() {
-        if (!gotURL && nextRetry < llGetUnixTime()) 
-            while ((requestName = llHTTPRequest(protocol + "api.silkytech.com/objdns/lookup?q=" + llEscapeURL(llList2String(serverNames, requestIndex)), 
-                HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) llSleep(1.0);
-        if (gotURL && (lastUpdateCheck < (llGetUnixTime() - updateCheck))) {
-            lastUpdateCheck = llGetUnixTime();
-            queForSave("lastUpdateCheck", (string)lastUpdateCheck);
-            while ((requestUpdate = llHTTPRequest(serverURL, HTTP_OPTIONS + [ "POST" ], "checkversion " + (string)PACKAGE_VERNUM)) == NULL_KEY) llSleep(1.0);
-        }
-        if ((lastPost + HTTPthrottle) < llGetTime()) doHTTPpost();
-        else if ((lastAvatarCheck + 60.0) < llGetTime()) checkAvatarList();
-        else llSetTimerEvent(HTTPthrottle);
+        doHTTPpost();
+        llSetTimerEvent(0.0);
     }
 }
