@@ -326,7 +326,27 @@ default {
         
         timeLeftOnKey -= timerInterval * windRate;
         if (timeLeftOnKey < 0) timeLeftOnKey = 0.0;
-        debugSay(9, (string)timerInterval + " * " + (string)windRate + " = " + (string)timeLeftOnKey);
+        
+        // Check wearlock timer
+        if (wearLockExpire != 0.0) {
+            wearLockExpire -= timerInterval;
+            if (wearLockExpire < 0.0) {
+                wearLockExpire = 0.0;
+                lmSendConfig("wearLockExpire", (string)(wearLockExpire));
+                lmInternalCommand("wearLock", (string)(wearLock = 0), NULL_KEY);
+            }
+        }
+        
+        // Check winder recharge
+        if (winderRechargeTime != 0.0) {
+            winderRechargeTime -= timerInterval;
+            if (winderRechargeTime < 0.0) {
+                winderRechargeTime = 0.0;
+                lmSendConfig("winderRechargeTime", (string)(winderRechargeTime));
+            }
+        }
+        
+        debugSay(9, (string)timerInterval + ": " + (string)timeLeftOnKey + ", " + (string)wearLockExpire + ", " + (string)winderRechargeTime);
         
         #ifndef DEVELOPER_MODE
         ifPermissions();
@@ -343,10 +363,6 @@ default {
             #ifdef DEVELOPER_MODE
             if (timeReporting) llOwnerSay("Script Time: " + formatFloat(llList2Float(llGetObjectDetails(llGetKey(), [ OBJECT_SCRIPT_TIME ]), 0) * 1000000, 2) + "µs");
             #endif
-            
-            lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
-            if (wearLockExpire != 0.0) lmSendConfig("wearLockExpire", (string)(wearLockExpire));
-            if (winderRechargeTime != 0.0) lmSendConfig("winderRechargeTime", (string)(winderRechargeTime));
             
             scaleMem();
             
@@ -394,24 +410,9 @@ default {
                 
             }
             
-            // Check wearlock timer
-            if (wearLockExpire != 0.0) {
-                wearLockExpire -= timerInterval;
-                if (wearLockExpire < llGetTime()) {
-                    lmInternalCommand("wearLock", (string)(wearLock = 0), NULL_KEY);
-                    wearLockExpire = 0.0;
-                    lmSendConfig("wearLockExpire", (string)(wearLockExpire));
-                }
-            }
-            
-            // Check winder recharge
-            if (winderRechargeTime != 0.0) {
-                winderRechargeTime -= timerInterval;
-                if (winderRechargeTime < 0.0) {
-                    winderRechargeTime = 0.0;
-                    lmSendConfig("winderRechargeTime", (string)(winderRechargeTime));
-                }
-            }
+            lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
+            if (wearLockExpire != 0.0) lmSendConfig("wearLockExpire", (string)(wearLockExpire));
+            if (winderRechargeTime != 0.0) lmSendConfig("winderRechargeTime", (string)(winderRechargeTime));
         }
     }
     
