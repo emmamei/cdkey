@@ -233,10 +233,16 @@ initializeRLV(integer refresh) {
             lmRunRLVas("User:Base", userBaseRLVcmd);
         
         if (autoTP) baseRLV += "accepttp=n,";
+        else baseRLV += "accepttp=y,";
         if (helpless) baseRLV += "tplm=n,tploc=n,";
+        else baseRLV += "clear=tpl,";
         if (!canFly) baseRLV += "fly=n,";
+        else baseRLV += "fly=y,";
         if (!canStand) baseRLV += "unsit=n,";
-        if (!canSit) baseRLV += "sit=n,";
+        else baseRLV += "unsit=y,";
+        if (!canSit) baseRLV += "sit=n";
+        else baseRLV += "sit=y";
+        
         lmRunRLVas("Base", baseRLV);
         
         if (afk || !canWear || collapsed || wearLock) lmRunRLVas("Dress", "unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
