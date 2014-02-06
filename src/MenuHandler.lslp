@@ -579,7 +579,7 @@ default
                 llSetTimerEvent(60.0);
                 
                 pluslist = [ "Abilities Menu", "Features Menu" ];
-                if (isDoll) pluslist += "Access Menu";
+                if (isDoll) pluslist += [ "Access Menu", "Type Options" ];
                 
                 if (isController) {
                     msg = "See " + WEB_DOMAIN + "controller.htm. Choose what you want to happen. (" + OPTION_DATE + " version)";

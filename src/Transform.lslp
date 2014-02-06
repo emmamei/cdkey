@@ -311,7 +311,7 @@ default {
         }
         
         if (code == 500) {
-            if (choice == "Transform Options") {
+            if (choice == "Type Options") {
                 list choices;
 
                 if (mustAgreeToType == TRUE) {
@@ -356,9 +356,9 @@ default {
 
                     llOwnerSay(name + " is looking at your doll types.");
 
-                    if (id == dollID) {
+                    /*if (id == dollID) {
                         choices += "Transform Options";
-                    }
+                    }*/
 
                     llDialog(id, msg, choices, dialogChannel);
                 }
