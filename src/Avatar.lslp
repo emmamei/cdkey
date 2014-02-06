@@ -219,7 +219,7 @@ initializeRLV(integer refresh) {
                 // in the section bellow the #else preprocessor directive.
     #else
     if (myPath != "") {
-        baseRLV += "clear,attachallthis_except:" + myPath + "=add,detachallthis_except:" + myPath + "=add,";
+        baseRLV += "attachallthis_except:" + myPath + "=add,detachallthis_except:" + myPath + "=add,";
         llListenControl(listenHandle, 0);
     }
     if (!RLVstarted) {
@@ -591,15 +591,18 @@ default {
                 string lm = llList2String(split, 0);
                 llRegionSayTo(id, 0, "Teleporting dolly " + dollName + " to  landmark " + lm + ".");
                 rlvTPrequest = llRequestInventoryData(lm);
+                return;
             }
             else if (cmd == "detach") {
                 if (RLVok) llOwnerSay("@clear,detachme=force");
                 else llDetachFromAvatar();
+                return;
             }
             else if (cmd == "wearLock") {
                 wearLock = llList2Integer(split, 0);
                 lmSendConfig("wearLock", (string)wearLock);
             }
+            else return;
             
             ifPermissions();
             initializeRLV(1);
