@@ -28,7 +28,7 @@
 #define isCarrier (id == carrierID) && !isDoll
 #define isBuiltin (llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1)
 #define isMistress (llListFindList(USER_CONTROLLERS, [ (string)id ]) != -1)
-#define isController (llListFindList(BUILTIN_CONTROLLERS + llList2ListStrided(MistressList, 0, -1, 2), [ (string)id ]) != -1)
+#define isController getControllerStatus(id)
 
 // Dress module prefix test defines
 #define isGroupItem(f) (llGetSubString(f,0,0) == "#")
@@ -134,12 +134,18 @@
 // Keys of important people in life of the Key:
 #define AGENT_CHRISTINA_HALPIN "42c7aaec-38bc-4b0c-94dd-ae562eb67e6d"
 #define AGENT_GREIGHIGHLAND_RESIDENT "64d26535-f390-4dc4-a371-a712b946daf8"
+#define AGENT_ANDROMEDA_LAMPLIGHT "636bf2bd-45f5-46e0-ad9a-b00f54224e01"
 #define AGENT_MAYSTONE_RESIDENT "c5e11d0a-694f-46cc-864b-e42340890934"
 #define AGENT_SILKY_MESMERISER "2fff40f0-ea4a-4b52-abb8-d4bf6b1c98c9"
 
-#define BUILTIN_CONTROLLERS [ AGENT_SILKY_MESMERISER, AGENT_MAYSTONE_RESIDENT, AGENT_CHRISTINA_HALPIN, AGENT_GREIGHIGHLAND_RESIDENT ]
+#define BUILTIN_CONTROLLERS [ AGENT_SILKY_MESMERISER, AGENT_MAYSTONE_RESIDENT, AGENT_CHRISTINA_HALPIN, AGENT_ANDROMEDA_LAMPLIGHT ]
 #define USER_CONTROLLERS MistressList
 #define ALL_CONTROLLERS USER_CONTROLLERS + BUILTIN_CONTROLLERS
+
+list BuiltinControllers = BUILTIN_CONTROLLERS;
+integer getControllerStatus(key id) {
+    return (llListFindList(BuiltinControllers + llList2ListStrided(MistressList, 0, -1, 2), [ (string)id ]) != -1);
+}
 
 #define NORMAL_TIMER_RATE 0.5 * mainTimerEnable
 #ifdef LOW_SCRIPT_MODE
