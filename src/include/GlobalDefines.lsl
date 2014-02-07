@@ -39,6 +39,7 @@
 #define isParentFolder(f) (llGetSubString(f,0,0) == ">")
 #define isChrootFolder(f) (llGetSubString(f,0,1) == "!>")
 
+#define MAIN "~Main Menu~"
 // Collapse animation - and documentation
 #define ANIMATION_COLLAPSED "collapse"
 // Carry distance for the new carry code

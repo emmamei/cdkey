@@ -384,7 +384,6 @@ default {
             if (cmd == "randomDress") {
                 if (candresstemp == FALSE)
                     llRegionSayTo(dresserID, 0, "Dolly cannot be dressed right now; she is already dressing");
-                //candresstemp = FALSE;
                 else {
                     avatarFolder = outfitsFolder;
                     if (typeFolder != "") {
@@ -393,8 +392,6 @@ default {
                         lmSendConfig("clothingFolder", (clothingFolder = typeFolder));
                         listInventoryOn("2665");
                     }
-                    
-                    candresstemp = FALSE;
                 }
             }
         }
@@ -703,7 +700,7 @@ default {
                 llOwnerSay("WARNING: Unable to locate your outfits folder dress feature will not work.  Please see the manual for more information.");
                 if (dresserID != NULL_KEY) {
                     msgx = "Dolly does not appear to have any outfits set up in her closet";
-                    llDialog(dresserID, msgx, ["OK"], dialogChannel);
+                    llDialog(dresserID, msgx, ["OK", MAIN ], dialogChannel);
                     return;
                 }
             }
@@ -854,9 +851,10 @@ default {
             integer newOutfitCount = llGetListLength(outfitsList);
 
             list newoutfits2 = outfitsPage(outfitsList);
-            if (newOutfitCount > 12) {
-                newoutfits2 = ["Prev", "Next", "Page " + (string)(outfitPage+1)] + outfitsPage(outfitsList);
+            if (newOutfitCount > 11) {
+                newoutfits2 = ["Prev", "Next", MAIN ] + outfitsPage(outfitsList);
             }
+            else newoutfits2 = dialogSort(outfitsList + MAIN);
 
             msgx = "You may choose any outfit.\n\n";
 

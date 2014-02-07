@@ -289,29 +289,21 @@ doWindMenu(key id) {
     timeleft += "\n";
     string msg = "How many minutes would you like to wind?";
     
-    list buttons; integer i;
-    for (i = 0; i < llGetListLength(windTimes); i++) {
-        buttons += "Wind " + llList2String(windTimes, i);
+    
+    list buttons;
+    if (demoMode) {
+        buttons = [ "Wind 2", "Wind 5", MAIN ]; // If we are in demo mode make our buttons make sense
+    }
+    else {
+        buttons = dialogSort(llListSort(windTimes, 1, 1) + [ MAIN ]); integer i;
+        for (i = 0; i < llGetListLength(buttons); i++) {
+            if (llList2String(buttons, i) != MAIN) {
+                buttons = llListReplaceList(buttons, [ "Wind " + llList2String(buttons, i) ], i, i);
+            }
+        }
     }
     
-    if (demoMode) buttons = [ "Wind 1", "Wind 2", "Wind 5" ]; // If we are in demo mode make our buttons make sense
-    
     llDialog(id, timeleft + msg, buttons, dialogChannel);
-}
-
-updateExceptions() {
-    // Exempt builtin or user specified controllers from TP restictions
-    list allow = [ AGENT_CHRISTINA_HALPIN, AGENT_GREIGHIGHLAND_RESIDENT, AGENT_MAYSTONE_RESIDENT, AGENT_SILKY_MESMERISER ] +
-        llList2ListStrided(MistressList, 0, -1, 2);
-    // Also exempt the carrier if any provided they are not already exempted as a controller
-    if ((carrierID != NULL_KEY) && (llListFindList(allow, [ (string)carrierID ]) == -1)) allow += carrierID;
-    
-    // Directly dump the list using the static parts of the RLV command as a seperatior no looping
-    string exceptionRLV = "tplure:" + llDumpList2String(allow, "=add,tplure:") + "=add,";
-    exceptionRLV += "accepttp:" + llDumpList2String(allow, "=add,accepttp:") + "=add";
-
-    // Apply exemptions to base RLV
-    lmRunRLVas("Base", exceptionRLV);
 }
 
 default
@@ -412,7 +404,6 @@ default
                 list newList = llListSort(llList2List(split, 2, -1), 2, 1);
                 if (MistressList != newList) {
                     MistressList = newList;
-                    updateExceptions();
                 }
             }
             else if (name == "blacklist") {
@@ -429,15 +420,11 @@ default
                 // Doll has been picked up...
                 carrierID = id;
                 carrierName = llList2String(split, 0);
-                
-                updateExceptions();
             }
             else if (cmd == "uncarry") {
                 // Doll has been placed down...
                 carrierID = NULL_KEY;
                 carrierName = "";
-                
-                updateExceptions();
             }
             else if (cmd == "setAFK") afk = llList2Integer(split, 0);
             else if (cmd == "collapse") {
@@ -464,6 +451,22 @@ default
         else if (code == 350) {
             RLVok = llList2Integer(split, 0);
         }
+        
+        string type = llList2String(llParseString2List(data, [ "|" ], []), 1);
+        if (type == "MistressList" || type == "carry" || type == "uncarry") {
+            // Exempt builtin or user specified controllers from TP restictions
+            list allow = [ AGENT_CHRISTINA_HALPIN, AGENT_GREIGHIGHLAND_RESIDENT, AGENT_MAYSTONE_RESIDENT, AGENT_SILKY_MESMERISER ] +
+                llList2ListStrided(MistressList, 0, -1, 2);
+            // Also exempt the carrier if any provided they are not already exempted as a controller
+            if ((carrierID != NULL_KEY) && (llListFindList(allow, [ (string)carrierID ]) == -1)) allow += carrierID;
+            
+            // Directly dump the list using the static parts of the RLV command as a seperatior no looping
+            string exceptionRLV = "tplure:" + llDumpList2String(allow, "=add,tplure:") + "=add,";
+            exceptionRLV += "accepttp:" + llDumpList2String(allow, "=add,accepttp:") + "=add";
+        
+            // Apply exemptions to base RLV
+            lmRunRLVas("Base", exceptionRLV);
+        }
     }
     
     on_rez(integer start) {
@@ -488,11 +491,11 @@ default
         
         llSetTimerEvent(60.0);
         blacklistHandle = llListen(dialogChannel + 1, "", dollID, "");
-        llDialog(dollID, "Select the avatar to be added to the blacklist.", dialogButtons, dialogChannel + 1);
+        llDialog(dollID, "Select the avatar to be added to the blacklist.", dialogSort(dialogButtons + MAIN), dialogChannel + 1);
     }
     
     no_sensor() {
-        llDialog(dollID, "No avatars detected within chat range", [ "OK" ], 9999);
+        llDialog(dollID, "No avatars detected within chat range", [ "OK" ] + MAIN, 9999);
     }
     
     touch_start(integer num) {
@@ -524,6 +527,11 @@ default
             integer isFeature; // from the features or abilities menu was clicked that 
                                // way we can restore it making setting several choices
                                // much more user friendly.
+                               
+            if (choice == MAIN) {
+                doMainMenu(id);
+                return;
+            }
             
             if (!hasCarrier && !isDoll && choice == "Carry") {
                 // Doll has been picked up...
@@ -542,14 +550,14 @@ default
                 llListenControl(dialogHandle, 1);
                 llSetTimerEvent(60.0);
                 
-                llDialog(id, msg, menu, dialogChannel);
+                llDialog(id, msg, dialogSort(menu + MAIN), dialogChannel);
             }
             else if (choice == "Help Notecard") {
                 llGiveInventory(id,NOTECARD_HELP);
             }
             else if (choice == "Join Group") {
                 llOwnerSay("Here is your link to the community dolls group profile secondlife:///app/group/0f0c0dd5-a611-2529-d5c7-1284fb719003/about");
-                llDialog(id, "To join the community dolls group open your chat history (CTRL+H) and click the group link there.  Just click the Join Group button when the group profile opens.", [ "OK" ], 9999);
+                llDialog(id, "To join the community dolls group open your chat history (CTRL+H) and click the group link there.  Just click the Join Group button when the group profile opens.", [ "OK" ] + MAIN, 9999);
             }
             else if (choice == "Visit CD Room") {
                 if (isDoll) llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|TP|" + LANDMARK_CDROOM, id);
@@ -573,7 +581,7 @@ default
             #ifdef ADULT_MODE
             else if ((dollType == "Slut" || pleasureDoll) && choice == "Strip") {
                 llDialog(id, "Take off:",
-                    ["Top", "Bra", "Bottom", "Panties", "Shoes"],
+                    dialogSort(["Top", "Bra", "Bottom", "Panties", "Shoes"] + MAIN),
                     dialogChannel);
             }
             #endif
@@ -592,7 +600,7 @@ default
                     pluslist += "Drop Control";
                 }
                 
-                llDialog(id, msg, pluslist, dialogChannel);
+                llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
             }
             else if (choice == "Detach")
                 lmInternalCommand("detach", "", id);
@@ -634,7 +642,7 @@ default
                 if (llGetListLength(blacklist) > 0) pluslist += [ "✘ Blacklist", "List Blacklist" ];
                 else pluslist += [ "(No Blacklist)", "(No Blacklist)" ];
                 
-                llDialog(id, msg, pluslist, dialogChannel);
+                llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
             }
             else if (choice == "✚ Blacklist") {
                 llSensor("", "", AGENT, 20.0, TWO_PI);
@@ -647,7 +655,7 @@ default
                 }
                 dialogNames = blacklistNames;
                 blacklistHandle = llListen(dialogChannel + 1, "", dollID, "");
-                llDialog(id, msg, dialogButtons, dialogChannel + 1);
+                llDialog(id, msg, dialogSort(dialogButtons + MAIN), dialogChannel + 1);
                 llSetTimerEvent(60.0);
             }
             else if (choice == "List Blacklist") {
@@ -808,7 +816,7 @@ default
                     pluslist = [ "OK" ];
                 }
                 
-                llDialog(id, msg, pluslist, dialogChannel);
+                llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
             }
             else if (isFeature || choice == "Features Menu") {
                 string msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
@@ -850,7 +858,7 @@ default
                 if (isDoll && !offlineMode) pluslist += "Offline Mode";
                 else if (isDoll) pluslist += "Online Mode";
                 
-                llDialog(id, msg, pluslist, dialogChannel);
+                llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
             }
             
             if (isController && choice == "Drop Control") {
@@ -883,7 +891,7 @@ default
                 if (llListFindList(["Top", "Bra", "Bottom", "Panties", "Shoes", "Strip"], [ choice ]) != -1)
                     // Do strip menu
                     llDialog(id, "Take off:",
-                        ["Top", "Bra", "Bottom", "Panties", "Shoes"],
+                        dialogSort(["Top", "Bra", "Bottom", "Panties", "Shoes"] + MAIN),
                         dialogChannel);
             }
         #endif

@@ -270,7 +270,7 @@ initializeRLV(integer refresh) {
             lmRunRLVas("Carry", "tplm=n,tploc=n,accepttp=rem,tplure=n,showinv=n");
         else lmRunRLVas("Carry", "clear");
         
-        if ((keyAnimation != "") && (poserID != dollID)) {
+        if ((keyAnimation != "") && (keyAnimation != ANIMATION_COLLAPSED) && (poserID != dollID)) {
             string pose = "fartouch=n,fly=n,showinv=n,sit=n,sittp=n,standtp=n,touchattachother=n,tplm=n,tploc=n,unsit=n";
             debugSay(5, "Posed=1, Silenced=" + (string)poseSilence);
             if (poseSilence) {
@@ -642,18 +642,19 @@ default {
                 }
                 poseCount = llGetListLength(poseList);
                 integer pages = 1;
-                if (poseCount > 12) pages = llCeil((float)poseCount / 9.0);
+                if (poseCount > 11) pages = llCeil((float)poseCount / 9.0);
                 llOwnerSay("Anims: " + (string)llGetInventoryNumber(20) + " | Avail Poses: " + (string)poseCount + " | Pages: " + (string)pages +
                     "\nAvailable: " + llList2CSV(poseList) +
                     "\nThis Page (" + (string)page + "): " + llList2CSV(llList2List(poseList, (page - 1) * 9, page * 9 - 1)));
-                if (poseCount > 12) {
+                if (poseCount > 11) {
                     poseList = llList2List(poseList, (page - 1) * 9, page * 9 - 1);
                     integer prevPage = page - 1;
                     integer nextPage = page + 1;
                     if (prevPage == 0) prevPage = 1;
                     if (nextPage > pages) nextPage = pages;
-                    poseList = [ "Poses " + (string)prevPage, "Main Menu", "Poses " + (string)nextPage ] + poseList;
+                    poseList = [ "Poses " + (string)prevPage, "Poses " + (string)nextPage, MAIN ] + poseList;
                 }
+                else poseList = dialogSort(poseList + [ MAIN ]);
                 
                 llDialog(id, "Select the pose to put the doll into", poseList, dialogChannel);
             }

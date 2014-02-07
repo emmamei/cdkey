@@ -15,6 +15,15 @@ string wwGetSLUrl() {
     return ("secondlife://" + llEscapeURL(region) +"/" + posx + "/" + posy + "/" + posz);
 }
 
+list dialogSort(list srcButtons) {
+    list outButtons;
+    while (llGetListLength(srcButtons) != 0) {
+        outButtons += llList2List(srcButtons, -3, -1);
+        srcButtons = llDeleteSubList(srcButtons, -3, -1);
+    }
+    return outButtons;
+}
+
 integer isKeyFormat(string input) {
     if (llStringLength(input) != 36) return 0;
     integer i; list dashes = [ 8, 13, 18, 23 ];
