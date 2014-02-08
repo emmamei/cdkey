@@ -252,9 +252,8 @@ initializeRLV(integer refresh) {
         // Handle low and no power modes (afk && collapsed)
         string RLVpower;
         if (afk != 0 || collapsed != 0) {
-            if (collapsed) {
-                RLVpower += "sit=n,unsit=n,showhovertextall=n,redirchat:999=add,rediremote:999=add,";
-                RLVpower += "tplure=n";
+            if (collapsed != 0) {
+                RLVpower = "sit=n,unsit=n,showhovertextall=n,redirchat:999=add,rediremote:999=add,tplure=n,";
                 lmRunRLVas("UserCollapsed", userCollapseRLVcmd);
             }
             else RLVpower = "clear,";

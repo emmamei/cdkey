@@ -19,6 +19,7 @@ float setWindRate() {
     if (windRate != newWindRate * windDown) {
         windRate = newWindRate * windDown;
         
+        lmSendConfig("baseWindRate", (string)baseWindRate);
         lmSendConfig("windRate", (string)windRate);
     }
     
@@ -28,7 +29,7 @@ float setWindRate() {
     // the dolly begins using their time faster.
     llTargetOmega(llVecNorm(<0.0, 0.0, 1.0>), windRate * (TWO_PI / 10.0), 1);
 
-    //debugSay(9, "Vector: " + (string)(llVecNorm(<0.0, 0.0, 1.0>)) + "\nRate: " + formatFloat(windRate * (TWO_PI / 10.0), 2));
+    debugSay(9, "Vector: " + (string)(llVecNorm(<0.0, 0.0, 1.0>)) + "\nRate: " + formatFloat(windRate * (TWO_PI / 10.0), 2));
 
     return newWindRate;
 }

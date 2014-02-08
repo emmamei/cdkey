@@ -243,7 +243,6 @@ doneConfiguration(integer read) {
 initializationCompleted() {
     if (newAttach && !quiet && isAttached)
         llSay(0, llGetDisplayName(llGetOwner()) + " is now a dolly - anyone may play with their Key.");
-    newAttach = 0;
     
     llMessageLinked(LINK_THIS, 110, "Start", NULL_KEY);
 
@@ -303,16 +302,13 @@ do_Restart() {
     integer loop; string me = llGetScriptName();
     reset = 0;
     
-    #ifdef SIM_FRIENDLY
-    wakeMenu();
-    #endif
-    
     llOwnerSay("Resetting scripts");
         
     for (loop = 0; loop < llGetInventoryNumber(INVENTORY_SCRIPT); loop++) {
         string script = llGetInventoryName(INVENTORY_SCRIPT, loop);
         knownScripts += script;
         if (script != me) {
+            llSetScriptState(script, 1);
             llResetOtherScript(script);
         }
     }
@@ -396,6 +392,7 @@ default {
             else if (name == "pleasureDoll")              pleasureDoll = (integer)value;
             else if (name == "quiet")                            quiet = (integer)value;
             else if (name == "lowScriptMode")            lowScriptMode = (integer)value;
+            else if (name == "dialogChannel")            dialogChannel = (integer)value;
             else if (name == "userBaseRLVcmd")          userBaseRLVcmd = value;
             else if (name == "userCollapseRLVcmd")  userCollapseRLVcmd = value;
             else if (name == "windTimes")                    windTimes = llList2List(split, 2, -1);
@@ -468,12 +465,14 @@ default {
             llSleep(2.0);
             memReport(0.0);
             
-            string msg = dollName + " has logged in with";
-            if (!RLVok) msg += "out";
-            msg += " RLV at " + wwGetSLUrl();
-            llMessageLinked(LINK_THIS, 15, msg, NULL_KEY);
+            if (!newAttach && isAttached) {
+                string msg = dollName + " has logged in with";
+                if (!RLVok) msg += "out";
+                msg += " RLV at " + wwGetSLUrl();
+                llMessageLinked(LINK_THIS, 15, msg, NULL_KEY);
+            }
             
-            llSetTimerEvent(0.0);
+            newAttach = 0;
         }
         else if (code == 500) {
             string selection = llList2String(split, 0);
@@ -498,7 +497,7 @@ default {
         dollID = llGetOwner();
         dollName = llGetDisplayName(dollID);
         
-        llTargetOmega(<0,0,0>,0,0);
+        //llTargetOmega(<0,0,0>,0,0);
         llSetObjectName(PACKAGE_STRING);
         
         if (lastAttachPoint = llGetAttached()) lastAttachAvatar = llGetOwner();
@@ -522,6 +521,7 @@ default {
     }
     
     on_rez(integer start) {
+        dollID = llGetOwner();
         databaseOnline = 0;
         if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
         rlvWait = 1;
@@ -533,7 +533,7 @@ default {
         wakeMenu();
         #endif
         
-        llTargetOmega(<0,0,0>,0,0);
+        //llTargetOmega(<0,0,0>,0,0);
         
         llResetTime();
         string me = llGetScriptName();
@@ -623,34 +623,36 @@ default {
                 key ncKey = llGetInventoryKey(NOTECARD_PREFERENCES);
                 if (ncPrefsLoadedUUID != NULL_KEY && ncKey != NULL_KEY && ncKey != ncPrefsLoadedUUID) {
                     wakeMenu();
-                    integer channel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -8, -1));
                     
                     nextLagCheck = llGetTime() + SEC_TO_MIN;
                     llDialog(llGetOwner(), "Detected a change in your Preferences notecard, would you like to load the new settings?\n\n" +
-                      "WARNING: All current data will be lost!", [ "Reload Config", "Keep Settings" ], channel);
+                      "WARNING: All current data will be lost!", [ "Reload Config", "Keep Settings" ], dialogChannel);
                     lmInternalCommand("dialogListen", "", scriptkey);
                 }
             }
         }
         if (change & CHANGED_OWNER) {
-            llOwnerSay("Deleting old preferences notecard on owner change.");
-            llOwnerSay("Look at PreferencesExample to see how to make yours.");
-            while (llGetInventoryType(NOTECARD_PREFERENCES) != INVENTORY_NONE) llRemoveInventory(NOTECARD_PREFERENCES);
+            if (llGetInventoryType(NOTECARD_PREFERENCES) != INVENTORY_NONE) {
+                llOwnerSay("Deleting old preferences notecard on owner change.");
+                llOwnerSay("Look at PreferencesExample to see how to make yours.");
+                llRemoveInventory(NOTECARD_PREFERENCES);
+            }
             llResetScript();
         }
     }
     
     timer() {
-        llSetTimerEvent(0.0);
+        float t = llGetTime();
+        if (t >= 90.0) llSetTimerEvent(0.0);
+        else llSetTimerEvent(10.0 - (t - (float)(llFloor(t / 10.0) * 10.0)));
         
         if (startup == 0) {
             llOwnerSay("Starting initialization");
             lowScriptMode = 0;
             startup = 1;
             if (initState == 103) lmInitState(++initState);
-            llSetTimerEvent(90.0 - llGetTime());
         }
-        else if (startup != 3 && RLVok != -1 && llGetTime() >= 90.0) {
+        else if (t >= 90.0 && (startup != 3 || RLVok == -1 || dialogChannel == 0 || notReady() != [])) {
             lowScriptMode = 0;
             sendMsg(dollID, "Startup failure detected one or more scripts may have crashed, resetting");
 
