@@ -16,7 +16,7 @@
 // VARIABLES
 //========================================
                   
-string bigsubfolder = "Dressup"; //name of subfolder in RLV to always use if available. But also checks for outfits.
+string bigsubfolder = "dressup"; //name of subfolder in RLV to always use if available. But also checks for outfits.
 
 // FIXME: This should be in a notecard so it can be changed without mangling the scripts.
 string outfits_url = "http://communitydolls.com/outfits.htm";
@@ -54,11 +54,12 @@ string oldoutfitname;
 list outfitsList;
 string msgx; // could be "msg" but that is used elsewhere?
 
-string avatarFolder; // Stores the chrooted directory path for the current self
 string clothingFolder; // This contains clothing to be worn
 string outfitsFolder;  // This contains folders of clothing to be worn
 string activeFolder; // This is the lookup folder to search 
 string typeFolder; // This is the folder we want for our doll type
+string normalselfFolder; // This is the ~normalself we are using
+string nudeFolder; // This is the ~nude we are using
 
 integer listen_id_2555;
 integer listen_id_2665;
@@ -86,7 +87,7 @@ integer outfitPageSize = 9;
 // FUNCTIONS
 //========================================
 list outfitsPage(list outfitList) {
-    integer newOutfitCount = llGetListLength(outfitList);
+    integer newOutfitCount = llGetListLength(outfitList) - 1;
 
     // GLOBAL: outfitPage
 
@@ -118,10 +119,20 @@ list outfitsPage(list outfitList) {
     if (endIndex > newOutfitCount) {
         endIndex = newOutfitCount;
     }
+    
+    list pageOutfits = llList2List(outfitsList, currentIndex, endIndex);
+    integer n; string chat; list output;
+    for (n = currentIndex; n <= endIndex; n++) {
+        string itemname = (string)(n + 1) + ". " + llList2String(outfitsList, n);
+        chat += "\n" + itemname;
+        output += [ llGetSubString(itemname, 0, 23) ];
+    }
+    
+    llRegionSayTo(dresserID, 0, chat);
 
     // Use sort function to reverse order: this makes the sort
     // read top to bottom in dialog
-    return (llListSort(llList2List(outfitsList, currentIndex, endIndex),3,FALSE));
+    return llListSort(output, 3, 0);
     //return (llList2List(outfitsList, currentIndex, endIndex));
 }
 
@@ -173,10 +184,16 @@ integer isPlusItem(string f) {
 }*/
 
 setActiveFolder() {
-    if (outfitsFolder == "" && clothingFolder == "") activeFolder = "";
-    else if (outfitsFolder != "" && clothingFolder != "") activeFolder = outfitsFolder + "/" + clothingFolder;
-    else if (outfitsFolder != "") activeFolder = outfitsFolder;
-    else activeFolder = clothingFolder;
+    string oldActive = activeFolder;
+    if (outfitsFolder == "") {
+        outfitsFolder = "> Outfits";
+        lmSendConfig("outfitsFolder", outfitsFolder);
+    }
+    
+    if (clothingFolder != "") activeFolder = outfitsFolder + "/" + clothingFolder;
+    else activeFolder = outfitsFolder;
+    
+    if (activeFolder != oldActive) lmSendConfig("activeFolder", activeFolder);
 }
 
 /* These would be overkill now we are using just
@@ -234,35 +251,33 @@ rlvRequest(string rlv, integer channel) {
 }
 
 listInventoryOn(string channel) {
-    integer level = 5;
-    if (startup != 0) level = 7;
-    if (channel != "2555" && outfitsFolder == "") return;
-    debugSay(level, ">> clothingFolder = " + clothingFolder);
-    debugSay(level, ">> outfitsFolder = " + outfitsFolder);
-    debugSay(level, ">> typeFolder = " + typeFolder);
-    setActiveFolder();
-    debugSay(level, ">> activeFolder = " + activeFolder);
+    integer level = 5 + ((startup != 0) * 2);
+    doDebug(channel);
     
-    rlvRequest("getinv:" + activeFolder + "=", (integer)channel);
+    if (channel == "2555") {
+        outfitsFolder == "";
+        rlvRequest("getinv=", (integer)channel);
+    }
+    else if (outfitsFolder != "") {
+        setActiveFolder();
+        rlvRequest("getinv:" + activeFolder + "=", (integer)channel);
+    }
 }
 
 changeComplete(integer success) {
-    if (success) {
-        // And remove the temp locks we used
-        // RLV.lsl knows which are ours and that is all this clears
-        lmRunRLV("clear");
-        
-        llOwnerSay("Change to new outfit " + newoutfitname + " complete.");
-        change = 0;
+    // And remove the temp locks we used
+    // RLV.lsl knows which are ours and that is all this clears
+    lmRunRLV("clear");
+    
+    if (success) llOwnerSay("Change to new outfit " + newoutfitname + " complete.");
 
-        if (dresserID != NULL_KEY && dresserID != dollID) wearLock = 1;
-        
-        lmInternalCommand("wearLock", (string)wearLock, scriptkey);
-        if (!afk || canWear || collapsed || wearLock) lmRunRLV("unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
-    }
-    else {
+    if (dresserID != NULL_KEY && dresserID != dollID) wearLock = 1;
+    
+    lmInternalCommand("wearLock", (string)wearLock, scriptkey);
+    if (!afk || canWear || collapsed || wearLock) lmRunRLV("unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
+    /*else {
         llOwnerSay("Something seems to be preventing all outfit items being added or removed correctly, dressing cancelled");
-    }
+    }*/
     candresstimeout = 0;
     change = 0;
     
@@ -276,17 +291,34 @@ setup()  {
     dollID = llGetOwner();
     candresstemp = TRUE;
 
-//from dollkey36
+    //from dollkey36
 
     dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -8, -1));
     rlvBaseChannel = dialogChannel ^ 0x80000000; // Xor with the sign bit forcing the positive channel needed by RLV spec.
-
-    outfitsFolder = "";
-    clothingFolder = "";
-    activeFolder = "";
-    avatarFolder = "";
     
     llSetTimerEvent(10.0);  //clock is accessed every ten seconds;
+}
+
+doDebug(string src) {
+    integer level = 5;
+    if (startup != 0) level = 7;
+    debugSay(level, ">  on " + src);
+    debugSay(level, ">> outfitsFolder = " + outfitsFolder);
+    debugSay(level, ">> clothingFolder = " + clothingFolder);
+    debugSay(level, ">> typeFolder = " + typeFolder);
+    setActiveFolder();
+    debugSay(level, ">> activeFolder = " + activeFolder);
+    debugSay(level, ">> normalselfFolder = " + normalselfFolder);
+    debugSay(level, ">> nudeFolder = " + nudeFolder);
+}
+
+string folderStatus() {
+    string out = "Outfits Folder: " + outfitsFolder + "\n";
+    out += "Current Folder: " + activeFolder + "\n";
+    out += "Type Folder: " + typeFolder + "\n";
+    out += "Use ~normalself: " + normalselfFolder + "\n";
+    out += "Use ~nude: " + nudeFolder;
+    return out;
 }
 
 //========================================
@@ -343,19 +375,12 @@ default {
             
             if (script == "Transform" && name == "clothingFolder") {
                 string oldclothingprefix = activeFolder;
-                lmSendConfig("typeFolder", (typeFolder = value));
-                lmSendConfig("clothingFolder", (clothingFolder = typeFolder));
-                setActiveFolder();
+                if (typeFolder != value) {
+                    lmSendConfig("typeFolder", (typeFolder = value));
+                    lmSendConfig("clothingFolder", (clothingFolder = typeFolder));
+                    setActiveFolder();
                 
-                if (activeFolder != oldclothingprefix) {
-                    integer level = 5;
-                    if (startup != 0) level = 7;
-                    debugSay(level, ">  on link #2");
-                    debugSay(level, ">> oldActiveFolder = " + oldclothingprefix);
-                    debugSay(level, ">> outfitsFolder = " + outfitsFolder);
-                    debugSay(level, ">> clothingFolder = " + clothingFolder);
-                    debugSay(level, ">> activeFolder = " + activeFolder);
-                    debugSay(level, ">> typeFolder = " + typeFolder);
+                    doDebug("link #2");
                 }
             }
             else if (name == "clothingFolder") clothingFolder = value;
@@ -366,7 +391,8 @@ default {
             else if (name == "oldoutfitname") oldoutfitname = value;
             else if (name == "oldoutfit") oldoutfit = value;
             else if (name == "outfitsFolder") outfitsFolder = value;
-            else if (name == "avatarFolder") avatarFolder = value;
+            else if (name == "normalselfFolder") normalselfFolder = value;
+            else if (name == "nudeFolder") nudeFolder = value;
             else if (name == "typeFolder") typeFolder = value;
             else if (name == "afk") afk = (integer)value;
             else if (name == "canWear") canWear = (integer)value;
@@ -385,10 +411,8 @@ default {
                 if (candresstemp == FALSE)
                     llRegionSayTo(dresserID, 0, "Dolly cannot be dressed right now; she is already dressing");
                 else {
-                    avatarFolder = outfitsFolder;
                     if (typeFolder != "") {
                         clothingFolder = typeFolder;
-                        lmSendConfig("avatarFolder", avatarFolder);
                         lmSendConfig("clothingFolder", (clothingFolder = typeFolder));
                         listInventoryOn("2665");
                     }
@@ -397,7 +421,6 @@ default {
         }
         else if (code == 350) {
             RLVok = llList2Integer(split, 0);
-            clothingFolder = "";
             listInventoryOn("2555");
         }
         // Choice #500: (From Main Menu) Dress Dolly
@@ -408,11 +431,7 @@ default {
                 dresserID = id;
                 
                 if (outfitsFolder != "") {
-                    avatarFolder = outfitsFolder;
-                    if (typeFolder) clothingFolder = typeFolder;
-                    else clothingFolder = "";
-                    lmSendConfig("avatarFolder", avatarFolder);
-                    lmSendConfig("clothingFolder", clothingFolder);
+                    lmSendConfig("clothingFolder", (clothingFolder = typeFolder));
                     listInventoryOn("2666");
                 }
                 else {
@@ -428,26 +447,25 @@ default {
                     msgx = "See " + outfits_url + " for more information on outfits.\n\n";
                 }
     
-                msgx += "Outfits Folder: " + outfitsFolder + "\n";
-                msgx += "Current Folder: " + activeFolder + "\n";
-                msgx += "Avatar Folder: " + avatarFolder + "\n";
-                msgx += "Type Folder: " + typeFolder + "\n";
+                msgx += folderStatus();
+                
+                integer select = (integer)llGetSubString(choice, 0, llSubStringIndex(choice, ".") - 1);
+                if (select != 0) choice = llList2String(outfitsList, select - 1);
                 
                 if (choice == "OK") {
                     ; // No outfits: only OK is available
                 } else if (choice == "Next Outfits") {
                     debugSay(5, ">>> Dress Menu: " + choice);
                     outfitPage++;
-                    llDialog(dresserID, msgx, ["Prev Outfits", "Next Outfits", "Outfits " + (string)(outfitPage+1)] + outfitsPage(outfitsList), dialogChannel);
+                    llDialog(dresserID, msgx, ["Prev Outfits", "Next Outfits", MAIN ] + outfitsPage(outfitsList), dialogChannel);
                 } else if (choice == "Prev Outfits") {
                     debugSay(5, ">>> Dress Menu: " + choice);
                     outfitPage--;
-                    llDialog(dresserID, msgx, ["Prev Outfits", "Next Outfits", "Outfits " + (string)(outfitPage+1)] + outfitsPage(outfitsList), dialogChannel);
+                    llDialog(dresserID, msgx, ["Prev Outfits", "Next Outfits", MAIN ] + outfitsPage(outfitsList), dialogChannel);
                 } else if (choice == "Outfits " + (string)(outfitPage+1)) {
                     debugSay(5, ">>> Dress Menu: " + choice);
                     ; // Do nothing
                 } else if (llListFindList(outfitsList, [ choice ]) != -1) {
-                    debugSay(5, ">>> Dress Menu: " + choice);
                     
                     if (isParentFolder(choice)) {
                         if (clothingFolder == "") clothingFolder = choice;
@@ -455,156 +473,146 @@ default {
                         lmSendConfig("clothingFolder", clothingFolder);
                         setActiveFolder();
                         listInventoryOn("2666"); // recursion
+                        return;
                     }
-                    else if (llGetSubString(choice, 0, 1) == "!>") {
-                        if (clothingFolder == "") clothingFolder = choice;
-                        else clothingFolder += "/" + choice;
-                        lmSendConfig("clothingFolder", clothingFolder);
-                        setActiveFolder();
-                        listInventoryOn("2666"); // recursion
-                        avatarFolder = activeFolder;
-                        lmSendConfig("avatarFolder", avatarFolder);
-                    }
-                    else {
-                        if (newoutfit != oldoutfit) {
-                            #ifdef DEVELOPER_MODE
-                            // If we are in developer mode we are in danger of being ripped
-                            // off here.  We therefore will use a temporary @detach=n restriction.
-                            lmRunRLV("detach=n");
-                            #endif
-                            candresstemp = FALSE;
+                    else if (choice != oldoutfitname) {
+                        #ifdef DEVELOPER_MODE
+                        // If we are in developer mode we are in danger of being ripped
+                        // off here.  We therefore will use a temporary @detach=n restriction.
+                        lmRunRLV("detach=n");
+                        #endif
+                        candresstemp = FALSE;
+                    
+                        dressingFailures = 0;
+                        dresspassed = 0;
+                        change = 1;
                         
-                            dressingFailures = 0;
-                            dresspassed = 0;
-                            change = 1;
-                            
-                            lmSendConfig("oldoutfitname", (oldoutfitname = newoutfitname));
-                            lmSendConfig("oldoutfitpath", (oldoutfitpath = newoutfitpath));
-                            lmSendConfig("oldoutfit", (oldoutfit = newoutfit));
-                            
-                            if (clothingFolder == "") {
-                                newoutfit = choice;
-                            }
-                            else {
-                                newoutfit = activeFolder + "/" + choice;
-                            }
+                        lmSendConfig("oldoutfitname", (oldoutfitname = newoutfitname));
+                        lmSendConfig("oldoutfitpath", (oldoutfitpath = newoutfitpath));
+                        lmSendConfig("oldoutfit", (oldoutfit = newoutfit));
                         
-                            lmSendConfig("newoutfitname", (newoutfitname = choice));
-                            lmSendConfig("newoutfitpath", (newoutfitpath = newoutfit));
-                            lmSendConfig("newoutfit", newoutfit);
-        
-                            newoutfitwordend = llStringLength(newoutfit)  - 1;
-                            debugSay(5, ">>>newoutfit = " + newoutfit);
-            
-                            //llOwnerSay("newoutfit is: " + newoutfit);
-                            //llOwnerSay("newoutfitname is: " + newoutfitname);
-                            //llOwnerSay("choice is: " + choice);
-                            //llOwnerSay("clothingFolder is: " + clothingFolder);
-            
-                            // Four steps to dressing avi:
-                            //
-                            // 1) Replace every item that can be replaced (using the
-                            //    command @attachalloverorreplace)
-                            // 2) Add every item that didnt get put on the first time
-                            //    (using the @attachallover command)
-                            // 3) Remove the remaining portions of the old outfit
-                            // 4) Add items that are required for all outfits
-                            //    (using the @attach command)
-            
-                            llOwnerSay("New outfit chosen: " + newoutfit);
-            
-                            // Get the path of whatever outfit is being worn, and save
-                            // it for later to be able to remove an outfit - not just
-                            // one we know about
-                            //
-                            // Go through a litany of clothing, in order to find the path
-                            // to the clothing worn. If there is no clothing on these points
-                            // for this outift, then this does not work.
-                            //
-                            // This also assumes that a complete outfit is being used,
-                            // and that all parts are contained in a single folder.
-                            // This also assumes that the new outfit does not also
-                            // exist in this folder - such as one outfit using certain
-                            // items and another outfit using other items - such as
-                            // one outfit using a miniskirt and one a long dress.
-                            //
-                            // This is unnessary we can do the same job with locking and @detachallthis
-                            /*if (RLVok) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|getpathnew:pants=2670," +
-                                                                         "getpathnew:shirt=2670," +
-                                                                         "getpathnew:jacket=2670," +
-                                                                         "getpathnew:skirt=2670," + 
-                                                                         "getpathnew:underpants=2670," +                                                                                                                          "getpathnew:undershirt=2670", NULL_KEY);*/
-                                
-                                if (RLVok) lmRunRLV("clear,touchall=n,showinv=n");
-                                llSleep(1.0);
-            
-                            // Original outfit was a complete avi reset....
-                            // Restore our usual look from the ~normalself
-                            // folder...
-                            
-                            //if (isPlusItem(oldoutfitname) &&
-                            //    !isPlusItem(newoutfitname)) {  // only works well assuming in regular
-            
-                                if (RLVok) lmRunRLV("attachall:" + avatarFolder + "/" + "~normalself=force,detachallthis:" + avatarFolder + "/" + "~normalself=n");
-                                llSleep(1.0);
-                            //}
-                            
-                            //if (!isPlusItem(newoutfit)) {
-                                // Attach items that should be present when we are nude...
-                                // This could include things like (actual) tattoos, piercings,
-                                // enhanced feet or lipstick or mascara, rings, etc.
-                                //
-                                // This is necessary because many items may be considered part
-                                // of the "nude" outfit, but will still be removed during an
-                                // automated removal process.  There is nothing to determine
-                                // which are desired and which are not.
-                                //
-                                // Perhaps these things should be individually locked.
-                                //
-                                // This could also be expanded to create a Nude dress selection -
-                                // such as for use when going to nude beaches and such.
-                                //
-                                // Do this right off the bat and also lock it.  This makes more
-                                // sense especially with multi layer wearables this makes sure
-                                // that the underlayers go in first.
-                                if (RLVok) lmRunRLV("attachall:" + avatarFolder + "/" + "~nude=force");
-                                llSleep(1.0);
-                            //}
-            
-                            // Add items that cant replace what is already there
-                            if (RLVok) lmRunRLV("attachall:" + newoutfit + "=force,detachallthis:" + newoutfit + "=n," +
-                                     "detachallthis:" + avatarFolder + "/" + "~nude=n");
-                            llSleep(1.0);
-            
-                            // Remove rest of old outfit (using path from attachments)
-                            if (oldoutfitpath != "") {
-                                if (RLVok) lmRunRLV("detachall:" + oldoutfitpath + "=force");
-                                llSleep(1.0);
-                                oldoutfitpath = "";
-                            }
-                            
-                            if (RLVok) lmRunRLV("detachall:" + outfitsFolder + "=force");
-                            llSleep(1.0);
-                            
-                            lmRunRLV("detachallthis:pants=force,detachallthis:shirt=force,detachallthis:jacket=force,detachallthis:skirt=force," + 
-                                     "detachallthis:underpants=force,detachallthis:undershirt=force");
-                            llSleep(1.0);
-                            
-                            if (RLVok) lmRunRLV("attachall:" + newoutfit + "=force");
-                            
-                            llSleep(2.0);
-                            
-                            // And now send an attempt to clean up any remaining stray pieces
-                            string parts = "gloves|jacket|pants|shirt|shoes|skirt|socks|underpants|undershirt|alpha|pelvis|left foot|right foot|r lower leg|l lower leg|r forearm|l forearm|r upper arm|l upper arm|r upper leg|l upper leg";
-                            if (RLVok) lmRunRLV("detachthis:" + llDumpList2String(llParseString2List(parts, [ "|" ], []), "=force,detachthis:") + "=force");
-                            
-                            xfolder = avatarFolder + "/" + "~normalself";
-                            rlvRequest("getinvworn:" + xfolder + "=", 2668);
-                            
-                            yfolder = oldoutfitpath;
-                            if (yfolder != "") rlvRequest("getinvworn:" + yfolder + "=", 2669);
+                        if (clothingFolder == "") {
+                            newoutfitname = choice;
+                            newoutfit = choice;
+                            newoutfitpath = outfitsFolder + "/" + newoutfit;
                         }
+                        else {
+                            newoutfitname = choice;
+                            newoutfit = clothingFolder + "/" + newoutfitname;
+                            newoutfitpath = outfitsFolder + "/" + newoutfit;
+                        }
+                    
+                        lmSendConfig("newoutfitname", (newoutfitname));
+                        lmSendConfig("newoutfitpath", (newoutfitpath));
+                        lmSendConfig("newoutfit", (newoutfit));
                     }
+    
+                    newoutfitwordend = llStringLength(newoutfit)  - 1;
+                    debugSay(5, ">>>newoutfit = " + newoutfit);
+    
+                    //llOwnerSay("newoutfit is: " + newoutfit);
+                    //llOwnerSay("newoutfitname is: " + newoutfitname);
+                    //llOwnerSay("choice is: " + choice);
+                    //llOwnerSay("clothingFolder is: " + clothingFolder);
+    
+                    // Four steps to dressing avi:
+                    //
+                    // 1) Replace every item that can be replaced (using the
+                    //    command @attachalloverorreplace)
+                    // 2) Add every item that didnt get put on the first time
+                    //    (using the @attachallover command)
+                    // 3) Remove the remaining portions of the old outfit
+                    // 4) Add items that are required for all outfits
+                    //    (using the @attach command)
+    
+                    llOwnerSay("New outfit chosen: " + newoutfitname);
+    
+                    // Get the path of whatever outfit is being worn, and save
+                    // it for later to be able to remove an outfit - not just
+                    // one we know about
+                    //
+                    // Go through a litany of clothing, in order to find the path
+                    // to the clothing worn. If there is no clothing on these points
+                    // for this outift, then this does not work.
+                    //
+                    // This also assumes that a complete outfit is being used,
+                    // and that all parts are contained in a single folder.
+                    // This also assumes that the new outfit does not also
+                    // exist in this folder - such as one outfit using certain
+                    // items and another outfit using other items - such as
+                    // one outfit using a miniskirt and one a long dress.
+                    //
+                    // This is unnessary we can do the same job with locking and @detachallthis
+                    /*if (RLVok) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|getpathnew:pants=2670," +
+                                                                 "getpathnew:shirt=2670," +
+                                                                 "getpathnew:jacket=2670," +
+                                                                 "getpathnew:skirt=2670," + 
+                                                                 "getpathnew:underpants=2670," +                                                                                                                          "getpathnew:undershirt=2670", NULL_KEY);*/
+                        
+                        if (RLVok) lmRunRLV("clear,touchall=n,showinv=n");
+                        llSleep(1.0);
+    
+                    // Original outfit was a complete avi reset....
+                    // Restore our usual look from the ~normalself
+                    // folder...
+                    
+                    //if (isPlusItem(oldoutfitname) &&
+                    //    !isPlusItem(newoutfitname)) {  // only works well assuming in regular
+    
+                        if (RLVok) lmRunRLV("attachall:" + normalselfFolder + "=force,detachallthis:" + normalselfFolder + "=n");
+                        llSleep(1.0);
+                    //}
+                    
+                    //if (!isPlusItem(newoutfit)) {
+                        // Attach items that should be present when we are nude...
+                        // This could include things like (actual) tattoos, piercings,
+                        // enhanced feet or lipstick or mascara, rings, etc.
+                        //
+                        // This is necessary because many items may be considered part
+                        // of the "nude" outfit, but will still be removed during an
+                        // automated removal process.  There is nothing to determine
+                        // which are desired and which are not.
+                        //
+                        // Perhaps these things should be individually locked.
+                        //
+                        // This could also be expanded to create a Nude dress selection -
+                        // such as for use when going to nude beaches and such.
+                        //
+                        // Do this right off the bat and also lock it.  This makes more
+                        // sense especially with multi layer wearables this makes sure
+                        // that the underlayers go in first.
+                        if (RLVok) lmRunRLV("attachall:" + nudeFolder + "=force");
+                        llSleep(1.0);
+                    //}
+    
+                    // Add items that cant replace what is already there
+                    if (RLVok) lmRunRLV("attachall:" + newoutfitpath + "=force,detachallthis:" + newoutfitpath + "=n," +
+                             "detachallthis:" + nudeFolder + "=n");
+                    llSleep(1.0);
+    
+                    // Remove rest of old outfit (using path from attachments)
+                    if (oldoutfitpath != "") {
+                        if (RLVok) lmRunRLV("detachall:" + oldoutfitpath + "=force");
+                        llSleep(1.0);
+                        oldoutfitpath = "";
+                    }
+                    
+                    if (RLVok) lmRunRLV("detachall:" + outfitsFolder + "=force");
+                    llSleep(1.0);
+                    
+                    if (RLVok) lmRunRLV("attachall:" + newoutfitpath + "=force");
+                    
+                    llSleep(2.0);
+                    
+                    // And now send an attempt to clean up any remaining stray pieces
+                    string parts = "gloves|jacket|pants|shirt|shoes|skirt|socks|underpants|undershirt|alpha|pelvis|left foot|right foot|r lower leg|l lower leg|r forearm|l forearm|r upper arm|l upper arm|r upper leg|l upper leg";
+                    if (RLVok) lmRunRLV("detachallthis:" + llDumpList2String(llParseString2List(parts, [ "|" ], []), "=force,detachallthis:") + "=force");
+                    
+                    xfolder = normalselfFolder;
+                    rlvRequest("getinvworn:" + xfolder + "=", 2668);
+                    
+                    yfolder = oldoutfitpath;
+                    if (yfolder != "") rlvRequest("getinvworn:" + yfolder + "=", 2669);
                 }
             }
         }
@@ -643,6 +651,8 @@ default {
         // 2670:
         // 9000+
 
+        llSetMemoryLimit(65536);
+
         //----------------------------------------
         // Channel: 2555
         //
@@ -659,7 +669,8 @@ default {
             integer n;
             string itemname;
 
-            debugSay(5, ">RLV message type 2555");
+            debugSay(5, "> RLV message type 2555");
+            debugSay(5, ">> " + choice);
             // Looks for a folder that may contain outfits - folders such
             // as Dressup/, or outfits/, or Outfits/ ...
             for (n = 0; n < iStop; n++) {
@@ -667,33 +678,21 @@ default {
 
                 // If there are more than one of these folders in #RLV,
                 // then the last one read will be used...
-                if (itemname == bigsubfolder) {
+                if (llToLower(itemname) == bigsubfolder) {
                     outfitsFolder = bigsubfolder;
                 }
-                else if (itemname == "outfits") {
-                    outfitsFolder = "outfits";
+                else if (llGetSubString(llToLower(itemname), -7, -1) == "outfits" && llStringLength(itemname) <= 9) {
+                    outfitsFolder = itemname;
                 }
-                else if (itemname == "Outfits") {
-                    outfitsFolder = "Outfits";
-                }
-                else if (itemname == "> Outfits") {
-                    outfitsFolder = "> Outfits";
-                }
+                
+                if (llToLower(itemname) == "~normalself") lmSendConfig("normalselfFolder", (normalselfFolder = "~normalself"));
+                if (llToLower(itemname) == "~nude") lmSendConfig("nudeFolder", (nudeFolder = "~nude"));
             }
-            avatarFolder = outfitsFolder;
+            clothingFolder = typeFolder;
             
             if (outfitsFolder != oldbigprefix && outfitsFolder != "") {
                 lmSendConfig("outfitsFolder", outfitsFolder);
-                lmSendConfig("avatarFolder", avatarFolder);
-            }
-
-            if (startup == 0) {
-                // if prefix changes, change clothingFolder to match
-                if (outfitsFolder != oldbigprefix) {  //outfits-don't-match-type bug only occurs when big prefix is changed
-                    if (typeFolder) clothingFolder = typeFolder;
-                    else clothingFolder = "";
-                    lmSendConfig("clothingFolder", clothingFolder);
-                }
+                lmSendConfig("clothingFolder", clothingFolder);
             }
             
             if (outfitsFolder == "") {
@@ -709,14 +708,7 @@ default {
                 startup = 0;
             }
             
-            integer level = 5;
-            if (startup != 0) level = 7;
-            debugSay(level, ">> oldActiveFolder = " + oldbigprefix);
-            debugSay(level, ">> outfitsFolder = " + outfitsFolder);
-            debugSay(level, ">> clothingFolder = " + clothingFolder);
-            debugSay(level, ">> typeFolder = " + typeFolder);
-            setActiveFolder();
-            debugSay(level, ">> activeFolder = " + activeFolder);
+            doDebug("channel 2555");
         }
 
         //----------------------------------------
@@ -728,6 +720,9 @@ default {
             llListenRemove(listen_id_2665);
             list Outfits = llParseString2List(choice, [","], []); //what are brackets at end?
             integer iStop = llGetListLength(Outfits);
+            
+            debugSay(5, "> RLV message type 2665");
+            debugSay(5, ">> " + choice);
 
             integer n;
 
@@ -742,13 +737,12 @@ default {
                 // Didnt find any outfits in the standard folder, try the
                 // "extended" folder containing (we hope) outfits....
 
-                /*if (outfitsFolder != "") {
+                if (outfitsFolder != "" && clothingFolder != "") {
                     list pathParts = llParseString2List(clothingFolder, [ "/" ], []);
                     clothingFolder = llDumpList2String(llList2List(pathParts, 0, -2), "/");
                     lmSendConfig("clothingFolder", clothingFolder);
-                    setActiveFolder();
                     return;
-                }*/
+                }
                 //else {
                 //    clothingFolder = "";
                 //    llOwnerSay("Trying the main #RLV folder.");
@@ -779,8 +773,10 @@ default {
                         outfitsList += itemname;
                     }
                     
-                    if (!total) return;
+                    if (llToLower(itemname) == "~normalself") lmSendConfig("normalselfFolder", (normalselfFolder = activeFolder + "/" + itemname));
+                    if (llToLower(itemname) == "~nude") lmSendConfig("nudeFolder", (nudeFolder = activeFolder + "/" + itemname));
                 }
+                if (!total) return;
 
                 // Pick outfit at random
                 integer i = (integer) llFrand(total);
@@ -808,6 +804,9 @@ default {
             integer iStop = llGetListLength(Outfits);
             string itemname;
             string prefix;
+            
+            debugSay(5, "> RLV message type 2666");
+            debugSay(5, ">> " + choice);
 
             // Collect names of possible new outfits, removing folders (items)
             // longer than 23 characters, those that start with "~" (hidden) or
@@ -816,8 +815,11 @@ default {
             outfitsList = [];
             for (n = 0; n < iStop; n++) {
                 itemname = llList2String(Outfits, n);
+                
+                if (llToLower(itemname) == "~normalself") lmSendConfig("normalselfFolder", (normalselfFolder = activeFolder + "/" + itemname));
+                if (llToLower(itemname) == "~nude") lmSendConfig("nudeFolder", (nudeFolder = activeFolder + "/" + itemname));
 
-                if (llStringLength(itemname) < 24 &&
+                if (//llStringLength(itemname) < 24 &&
                     !isHiddenItem(itemname) &&
                     !isGroupItem(itemname) &&
                     !isTransformingItem(itemname) &&
@@ -837,7 +839,6 @@ default {
                 return;
             }
             else if (!llGetListLength(outfitsList)) {
-                outfitsFolder = "";
                 listInventoryOn("2555");
                 return;
             }
@@ -850,22 +851,18 @@ default {
             outfitPage = 0;
             integer newOutfitCount = llGetListLength(outfitsList);
 
-            list newoutfits2 = outfitsPage(outfitsList);
-            if (newOutfitCount > 11) {
-                newoutfits2 = ["Prev", "Next", MAIN ] + outfitsPage(outfitsList);
-            }
-            else newoutfits2 = dialogSort(outfitsList + MAIN);
+            list newoutfits2 = [ MAIN ] + outfitsPage(outfitsList);
+            if (llGetListLength(outfitsList) < 10) newoutfits2 = [ "-", "-" ] + newoutfits2;
+            else newoutfits2 = [ "Prev Outfits", "Next Outfits" ] + newoutfits2;
 
-            msgx = "You may choose any outfit.\n\n";
+            msgx = "You may choose any outfit.\n";
 
             if (dresserID == dollID) {
-                msgx = "See " + outfits_url + " for more information on outfits.\n\n";
+                msgx = "See " + outfits_url + " for more information on outfits.\n";
             }
+            msgx += "Numbers match outfit names in chat, using chat history (CTRL+H) may help.\n\n";
 
-            msgx += "Outfits Folder: " + outfitsFolder + "\n";
-            msgx += "Current Folder: " + activeFolder + "\n";
-            msgx += "Avatar Folder: " + avatarFolder + "\n";
-            msgx += "Type Folder: " + typeFolder + "\n";
+            msgx += folderStatus();
             
             // Provide a dialog to user to choose new outfit
             llDialog(dresserID, msgx, newoutfits2, dialogChannel);
@@ -896,8 +893,8 @@ default {
                 ++dressingFailures <= MAX_DRESS_FAILURES) {
                 llSleep(4.0);
                 if (RLVok) {
-                    if (afk || !canWear || collapsed || wearLock) lmRunRLV("attachallthis:=y,attachall:" + xfolder + "=force,attachallthis:=n");
-                    else lmRunRLV("attachall:" + xfolder + "=force");
+                    if (afk || !canWear || collapsed || wearLock) lmRunRLV("attachallthis:=y,detachallthis:" + outfitsFolder + "=n,attachall:" + xfolder + "=force,attachallthis:=n");
+                    else lmRunRLV("detachallthis:" + outfitsFolder + "=n,attachall:" + xfolder + "=force");
                     rlvRequest("getinvworn:" + xfolder + "=", 2668);
                     candresstimeout++;
                 }
@@ -907,12 +904,11 @@ default {
             }
             else {
                 dresspassed++;
-                if (xfolder == avatarFolder + "/" + "~normalself") xfolder = avatarFolder + "/" + "~nude";
-                else if (xfolder == avatarFolder + "/" + "~nude" && newoutfitpath != "") xfolder = newoutfitpath;
+                if (xfolder == normalselfFolder && newoutfitpath != "") xfolder = newoutfitpath;
                 else xfolder = "";
                 
                 if (xfolder != "") rlvRequest("getinvworn:" + xfolder + "=", 2668);
-                else if (dresspassed == 4) changeComplete(1);
+                else if (dresspassed >= 3) changeComplete(1);
             }
             debugSay(5, "candresstimeout = " + (string)candresstimeout + ", dresspassed = " + (string)dresspassed);
         }
@@ -931,8 +927,8 @@ default {
                 ++dressingFailures <= MAX_DRESS_FAILURES) {
                 llSleep(4.0);
                 if (RLVok) {
-                    if (afk || !canWear || collapsed || wearLock) lmRunRLV("detachallthis:=y,detachall:" + yfolder + "=force,detachallthis:=n");
-                    else lmRunRLV("detachall:" + yfolder + "=force");
+                    if (afk || !canWear || collapsed || wearLock) lmRunRLV("detachallthis:=y,attachallthis:" + outfitsFolder + "=n,detachall:" + yfolder + "=force,detachallthis:=n");
+                    else lmRunRLV("attachallthis:" + outfitsFolder + "=n,detachall:" + yfolder + "=force");
                     rlvRequest("getinvworn:" + yfolder + "=", 2669);
                     candresstimeout++;
                 }
@@ -942,7 +938,7 @@ default {
             }
             else {
                 dresspassed++;
-                if (dresspassed == 4) changeComplete(1);
+                if (dresspassed >= 3) changeComplete(1);
             }
             debugSay(5, "candresstimeout = " + (string)candresstimeout + ", dresspassed = " + (string)dresspassed);
         }
@@ -962,6 +958,8 @@ default {
                 debugSay(5, "<< oldoutfitpath = " + oldoutfitpath);
             }
         }*/
+        llSleep(1.0);
+        scaleMem();
     }
 }
 
