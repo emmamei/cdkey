@@ -22,13 +22,35 @@
 #define isDollAway ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0)
 #define isWindingDown (!collapsed && isAttached && dollType != "Builder" && dollType != "Key")
 #define mainTimerEnable (configured && isAttached && RLVchecked)
-#define MistressNameList "secondlife:///app/agent/" + llDumpList2String(MistressList, "/displayname, secondlife:///app/agent/") + "/displayname"
 
 #define isDoll (id == dollID)
 #define isCarrier (id == carrierID) && !isDoll
 #define isBuiltin (llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1)
 #define isMistress (llListFindList(USER_CONTROLLERS, [ (string)id ]) != -1)
 #define isController getControllerStatus(id)
+
+#define CHECK "✔"
+#define CROSS "✘"
+string getButton(string text, key id, integer enabled, integer oneWay) {
+   if (enabled) return CHECK + " " + text;
+   else if (!oneWay || getControllerStatus(id)) return CROSS + " " + text;
+   return "";
+}
+
+integer rating2Integer(string simRating) {
+         if (simRating == "ADULT")      return 3;
+    else if (simRating == "MODERATE")   return 2;
+    else if (simRating == "GENERAL")    return 1;
+    else                                return 0;
+}
+
+integer outfitRating(string outfit) {
+    string rating = llGetSubString(outfit, 0, 2);
+         if (rating == "{A}")     return 3;
+    else if (rating == "{M}")     return 2;
+    else if (rating == "{G}")     return 1;
+    else                          return 0;
+}
 
 // Dress module prefix test defines
 #define isGroupItem(f) (llGetSubString(f,0,0) == "#")

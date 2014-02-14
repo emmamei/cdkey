@@ -40,8 +40,6 @@ doRLV(string script, string commandString) {
             rlvSources += script;
         }
         
-        llSetMemoryLimit(65536);
-        
         for (commandLoop = 0; commandLoop < llGetListLength(commandList); commandLoop++) {
             string fullCmd; list parts; string param; string cmd;
             
@@ -179,8 +177,6 @@ doRLV(string script, string commandString) {
             debugSay(9, llList2String(rlvStatus, i) + "\t" + llList2String(rlvStatus, i + 1));
         }
     }
-    
-    scaleMem();
 }
 
 /*string getAttachName() {
@@ -196,7 +192,7 @@ default {
         dollID = llGetOwner();
         scriptName = llGetScriptName();
         lmScriptReset();
-        scaleMem();
+        llSetMemoryLimit(65536);
     }
     
     //----------------------------------------
@@ -205,8 +201,6 @@ default {
 
     link_message(integer sender, integer code, string data, key id) {
         list split = llParseStringKeepNulls(data, [ "|" ], []);
-        
-        scaleMem();
         
         // valid numbers:
         //    101: Initial configuration from Preferences

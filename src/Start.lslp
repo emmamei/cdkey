@@ -88,34 +88,34 @@ processConfiguration(string name, list values) {
         lmSendConfig("timeLeftOnKey", (string)((float)value * SEC_TO_MIN));
     }
     else if (name == "wind time") {
-        if (llListSort(windTimes, 1, 1) != llListSort(values, 1, 1)) lmSendConfig("windTimes", llDumpList2String(values, "|"));
+        lmSendConfig("windTimes", llDumpList2String(values, "|"));
     }
     else if (name == "max time") {
-        if (keyLimit != ((float)value * SEC_TO_MIN)) lmSendConfig("keyLimit", (string)((float)value * SEC_TO_MIN));
+        lmSendConfig("keyLimit", (string)((float)value * SEC_TO_MIN));
     }
     else if (name == "barefeet path") {
-        if (barefeet != value) lmSendConfig("barefeet", value);
+        lmSendConfig("barefeet", value);
     }
     else if (name == "doll type") {
-        if (dollType != value) lmSendConfig("dollType", value);
+        lmSendConfig("dollType", value);
     }
     else if (name == "doll gender") {
-        if (dollGender != "Male" && value == "male") {
-            if (value == "male") lmSendConfig("dollGender", (dollGender = "Male"));
+        if (value == "male") {
+            lmSendConfig("dollGender", (dollGender = "Male"));
             lmSendConfig("pronounHerDoll", (pronounHerDoll = "His"));
             lmSendConfig("pronounSheDoll", (pronounSheDoll = "He"));
-        } else if (dollGender != "Female" && dollGender != "Sissy") {
-            if (dollGender != "Sissy" && value == "sissy") lmSendConfig("dollGender", (dollGender = "Sissy"));
-            else if (dollGender != "Female") lmSendConfig("dollGender", (dollGender = "Female"));
-            lmSendConfig("pronounHerDoll", (pronounHerDoll = "Her"));
-            lmSendConfig("pronounSheDoll", (pronounSheDoll = "She"));
+            return;
         }
+        if (value == "sissy") lmSendConfig("dollGender", (dollGender = "Sissy"));
+        else lmSendConfig("dollGender", (dollGender = "Female"));
+        lmSendConfig("pronounHerDoll", (pronounHerDoll = "Her"));
+        lmSendConfig("pronounSheDoll", (pronounSheDoll = "She"));
     }
     else if (name == "user startup rlv") {
-        if (userBaseRLVcmd != value) lmSendConfig("userBaseRLVcmd", value);
+        lmSendConfig("userBaseRLVcmd", value);
     }
     else if (name == "user collapse rlv") {
-        if (userCollapseRLVcmd != value) lmSendConfig("userCollapseRLVcmd", value);
+        lmSendConfig("userCollapseRLVcmd", value);
     }
     else if (name == "helpless dolly") {
         lmSendConfig("helpless", value);
@@ -203,7 +203,6 @@ string findString(string msg) {
 }
 
 initConfiguration() {
-    reset = 1;
     // Check to see if the file exists and is a notecard
     if (llGetInventoryType(NOTECARD_PREFERENCES) == INVENTORY_NOTECARD) {
         if (databaseOnline && (offlineMode || (ncPrefsLoadedUUID == NULL_KEY) || (ncPrefsLoadedUUID != llGetInventoryKey(NOTECARD_PREFERENCES)))) {
@@ -233,7 +232,11 @@ doneConfiguration(integer read) {
         sendMsg(dollID, "Preferences read in " + formatFloat(llGetTime() - ncStart, 2) + "s");
         #endif
     }
-    reset = 1;
+    if (reset) {
+        llSleep(7.5);
+        llResetScript();
+    }
+    reset = 0;
     readyScripts = [];
     llMessageLinked(LINK_THIS, 102, llGetScriptName(), NULL_KEY);
     startup = 2;
@@ -309,6 +312,7 @@ do_Restart() {
         knownScripts += script;
         if (script != me) {
             llSetScriptState(script, 1);
+            llSleep(0.1);
             llResetOtherScript(script);
         }
     }
@@ -397,14 +401,8 @@ default {
             else if (name == "userCollapseRLVcmd")  userCollapseRLVcmd = value;
             else if (name == "windTimes")                    windTimes = llList2List(split, 2, -1);
             else if (name == "dollType")                      dollType = value;
-            else if (name == "MistressList") {
-                list newList = llListSort(llList2List(split, 2, -1), 2, 1);
-                if (MistressList != newList) MistressList = newList;
-            }
-            else if (name == "blacklist") {
-                list newList = llListSort(llList2List(split, 2, -1), 2, 1);
-                if (blacklist != newList) blacklist = newList;
-            }
+            else if (name == "MistressList")              MistressList = llListSort(llList2List(split, 2, -1), 2, 1);
+            else if (name == "blacklist")                    blacklist = llListSort(llList2List(split, 2, -1), 2, 1);
 /*                 if (name == "afk")                           afk = (integer)value;
             else if (name == "autoTP")                       autoTP = (integer)value;
             else if (name == "canAFK")                       canAFK = (integer)value;
@@ -434,6 +432,7 @@ default {
             if (cmd == "addRemBlacklist") {
                 string uuid = llList2String(split, 0);
                 string name = llList2String(split, 1);
+                
                 integer index = llListFindList(blacklist, [ uuid ]);
                 
                 if (index == -1) {
@@ -442,15 +441,20 @@ default {
                 }
                 else {
                     llOwnerSay("Removing " + name + " from blacklist");
-                    lmSendConfig("blacklist", llDumpList2String((blacklist = llDeleteSubList(blacklist, index, index + 1)), "|"));
+                    lmSendConfig("blacklist", llDumpList2String((blacklist = llDeleteSubList(blacklist, index, ++index)), "|"));
                 }
             }
-            else if (cmd == "addMistress") {
+            else if ((cmd == "addMistress") || (cmd == "remMistress")) {
                 string uuid = llList2String(split, 0);
                 string name = llList2String(split, 1);
                 
-                if (llListFindList(MistressList, [ uuid ]) == -1) {
+                integer index = llListFindList(MistressList, [ uuid ]);
+                
+                if  ((cmd == "addMistress") && (index == -1)) {
                     lmSendConfig("MistressList", llDumpList2String((MistressList = llListSort(MistressList + [ uuid, name ], 2, 1)), "|"));
+                }
+                else if ((cmd == "remMistress") && (llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1)) {
+                    lmSendConfig("MistressList", llDumpList2String((MistressList = llDeleteSubList(MistressList, index, ++index)), "|"));
                 }
             }
             #ifdef SIM_FRIENDLY
@@ -487,9 +491,9 @@ default {
             }
             nextLagCheck = llGetTime() + SEC_TO_MIN;
         }
-        else if (code == 999 && reset == 1) {
+        /*else if (code == 999 && reset == 1) {
             llResetScript();
-        }
+        }*/
     }
     
     state_entry() {
@@ -603,33 +607,29 @@ default {
                 ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ++ncLine);
             }
         }
-        else {
-            integer index = llListFindList(blacklist, [ query_id ]);
-            if (index != -1) {
-                lmSendConfig("blacklist", llDumpList2String((blacklist = llListReplaceList(blacklist, [ data ], index, index)), "|"));
-            }
-            else {
-                index = llListFindList(MistressList, [ query_id ]);
-                if (index != -1) {
-                    lmSendConfig("MistressList", llDumpList2String((MistressList = llListReplaceList(MistressList, [ data ], index, index)), "|"));
-                }
-            }
-        }
     }
     
     changed(integer change) {
         if (change & CHANGED_INVENTORY) {
-            if (llGetInventoryType(NOTECARD_PREFERENCES) != INVENTORY_NOTECARD) {
+            llOwnerSay("Inventory Modified Restarting");
+            llSleep(10.0);
+            if (llGetInventoryType(NOTECARD_PREFERENCES) == INVENTORY_NOTECARD) {
                 key ncKey = llGetInventoryKey(NOTECARD_PREFERENCES);
                 if (ncPrefsLoadedUUID != NULL_KEY && ncKey != NULL_KEY && ncKey != ncPrefsLoadedUUID) {
-                    wakeMenu();
+                    databaseOnline = 0;
+                    reset = 1;
                     
-                    nextLagCheck = llGetTime() + SEC_TO_MIN;
-                    llDialog(llGetOwner(), "Detected a change in your Preferences notecard, would you like to load the new settings?\n\n" +
-                      "WARNING: All current data will be lost!", [ "Reload Config", "Keep Settings" ], dialogChannel);
-                    lmInternalCommand("dialogListen", "", scriptkey);
+                    sendMsg(dollID, "Loading preferences notecard");
+                    ncStart = llGetTime();
+                    
+                    // Start reading from first line (which is 0)
+                    ncLine = 0;
+                    ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ncLine);
+                    
+                    return;
                 }
             }
+            llResetScript();
         }
         if (change & CHANGED_OWNER) {
             if (llGetInventoryType(NOTECARD_PREFERENCES) != INVENTORY_NONE) {
@@ -652,7 +652,7 @@ default {
             startup = 1;
             if (initState == 103) lmInitState(++initState);
         }
-        else if (t >= 90.0 && (startup != 3 || RLVok == -1 || dialogChannel == 0 || notReady() != [])) {
+        else if (t >= 90.0 && (startup != 3 || dialogChannel == 0 || notReady() != [])) {
             lowScriptMode = 0;
             sendMsg(dollID, "Startup failure detected one or more scripts may have crashed, resetting");
 

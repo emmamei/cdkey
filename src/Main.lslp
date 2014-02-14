@@ -46,6 +46,7 @@ key carrierID = NULL_KEY;
 key dresserID = NULL_KEY;
 key winderID = NULL_KEY;
 key dollID = NULL_KEY;
+key keyHandler = NULL_KEY;
 
 integer dialogChannel;
 integer chatChannel = 75;
@@ -56,6 +57,8 @@ integer lowScriptMode;
 #endif
 integer busyIsAway;
 integer ticks;
+integer broadcastOn = -1873418555;
+integer broadcastHandle;
 
 integer afk;
 integer autoAFK = 1;
@@ -110,6 +113,7 @@ float defaultwind     = windamount;
 float timeLeftOnKey   = windamount;
 float windRate        = 1.0;
 float baseWindRate    = 1.0;
+float keyHandlerTime;
 list windTimes        = [ 30 ];
 
 vector lockPos;
@@ -130,13 +134,13 @@ key simRatingQuery;
 //========================================
 linkDebug(integer sender, integer code, string data, key id) {
     integer level = 5;
-         if (llListFindList([ 102, 305, 399 ], [ code ]) != -1)                 level = 2;
-    /*else if (llListFindList([ 105, 110, 320, 350 ], [ code ]) != -1)            level = 4;
+         if (llListFindList([ 102, 150, 305, 399 ], [ code ]) != -1)            level = 2;
+    else if (llListFindList([ 104, 105, 110, 350 ], [ code ]) != -1)            level = 4;
+    else if (llListFindList([ 150, 320 ], [ code ]) != -1)                      level = 5;
     else if (llListFindList([ 9999 ], [ code ]) != -1)                          level = 6;
     else if (llListFindList([ 104, 300, 315, 500 ], [ code ]) != -1)            level = 7;
     else if (llListFindList([ 9999 ], [ code ]) != -1)                          level = 8;
-    else if (llListFindList([ 999 ], [ code ]) != -1)                           level = 9;*/
-    else level = 1;
+    else if (llListFindList([ 135, 999 ], [ code ]) != -1)                      level = 9;
     
     string msg = "LM-DEBUG (" + (string)level + "): " + (string)code + ", " + data;
     if (id != NULL_KEY) msg += " - " + (string)id;
@@ -251,8 +255,14 @@ default {
     state_entry() {
         dollID = llGetOwner();
         if (llGetAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
+        broadcastHandle = llListen(broadcastOn, "", "", "");
         
         lmScriptReset();
+    }
+    
+    on_rez(integer start) {
+        keyHandler = NULL_KEY;
+        keyHandlerTime = (float)llGetUnixTime();
     }
 
     //----------------------------------------
@@ -282,6 +292,8 @@ default {
     changed(integer change) {
         if (change & CHANGED_REGION) {
             simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
+            keyHandler = NULL_KEY;
+            keyHandlerTime = (float)llGetUnixTime();
         }
         if (change & CHANGED_TELEPORT) {
             if (lockPos != ZERO_VECTOR) {
@@ -304,7 +316,7 @@ default {
         //    3. Is Doll away?
         //    4. Wind down
         //    5. How far away is carrier? ("follow")
-        float displayWindRate;
+        float displayWindRate = setWindRate();
         float timerInterval;
         if (isAttached) timerInterval = llGetAndResetTime();
         
@@ -322,7 +334,6 @@ default {
             displayWindRate = setWindRate();
             lmInternalCommand("setAFK", (string)afk + "|1|" + formatFloat(windRate, 1) + "|" + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate)), NULL_KEY);
         }
-        else displayWindRate = setWindRate();
         
         timeLeftOnKey -= timerInterval * windRate;
         if (timeLeftOnKey < 0) timeLeftOnKey = 0.0;
@@ -411,6 +422,10 @@ default {
             }
             
             lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
+            if ((llGetUnixTime() - keyHandlerTime) < 65) {
+                lmSendConfig("keyHandler", (string)keyHandler);
+                lmSendConfig("keyHandlerTime", (string)((float)(llGetUnixTime() - keyHandlerTime)));
+            }
             if (wearLockExpire != 0.0) lmSendConfig("wearLockExpire", (string)(wearLockExpire));
             if (winderRechargeTime != 0.0) lmSendConfig("winderRechargeTime", (string)(winderRechargeTime));
         }
@@ -470,7 +485,9 @@ default {
             if (!isAttached) llSetTimerEvent(60.0);
         }
         
-        else if (code == 110) initState = 105;
+        else if (code == 110) {
+            initState = 105;
+        }
         
         else if (code == 135) {
             float delay = llList2Float(split, 1);
@@ -521,6 +538,12 @@ default {
             else if (name == "dollType")                     dollType = value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
+            else if (name == "keyHandler") {
+                keyHandler = (key)value;
+            }
+            else if (name == "keyHandlerTime") {
+                keyHandlerTime = (float)llGetUnixTime() - (float)value;
+            }
             else if (name == "lockPos") {
                 if (value == llGetRegionName()) lockPos = llList2Vector(split, 3);
                 else lockPos = llGetPos();
@@ -596,6 +619,8 @@ default {
             else if (!collapsed && timeLeftOnKey <= 0) lmInternalCommand("collapse", "0", NULL_KEY);
             
             if (!canDress) llOwnerSay("Other people cannot outfit you.");
+            
+            simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
         }
         else if (code == 500) {
             string choice = llList2String(split, 0);
@@ -839,6 +864,23 @@ default {
                 }
                 #endif
                 else llOwnerSay("Unrecognised command '" + choice + "' recieved on channel " + (string)chatChannel);
+            }
+        }
+        else if (channel == broadcastOn) {
+            if (llGetSubString(choice, 0, 4) == "keys ") {
+                string subcommand = llGetSubString(choice, 5, -1);
+                debugSay(5, "Broadcast recv: From: " + name + " (" + (string)id + ") Owner: " + llGetDisplayName(llGetOwnerKey(id)) + " (" + (string)llGetOwnerKey(id) +  ") " + choice);
+                if (subcommand == "claimed") {
+                    if (keyHandler == llGetKey()) {
+                        llRegionSay(broadcastOn, "keys released");
+                        debugSay(5, "Broadcast sent: keys released");
+                    }
+                    keyHandler = id;
+                }
+                else if ((subcommand == "released") && (keyHandler == id)) {
+                    lmSendConfig("keyHandler", (string)(keyHandler = NULL_KEY));
+                    keyHandlerTime = (float)llGetUnixTime();
+                }
             }
         }
     }

@@ -85,10 +85,12 @@ processRLVResult()
     if (RLVok) llOwnerSay("Logged with Community Doll Key and " + rlvAPIversion + " active...");
     else if (isAttached && !RLVok) llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
     
-    // Mark RLV check completed
-    RLVck = 0;
-    
-    if (configured) initializeRLV(0);
+    if (RLVck == 0) {
+        if (configured) initializeRLV(0);
+    } else {
+        // Mark RLV check completed
+        RLVck = 0;
+    }
 }
 
 ifPermissions() {
@@ -270,7 +272,7 @@ initializeRLV(integer refresh) {
         else lmRunRLVas("Carry", "clear");
         
         if ((keyAnimation != "") && (keyAnimation != ANIMATION_COLLAPSED) && (poserID != dollID)) {
-            string pose = "fartouch=n,fly=n,showinv=n,sit=n,sittp=n,standtp=n,touchattachother=n,tplm=n,tploc=n,unsit=n";
+            string pose = "fartouch=n,fly=n,showinv=n,sit=n,sittp=n,standtp=n,touchattachother=n,tplm=n,tploc=n,unsit=n,clear=redir";
             debugSay(5, "Posed=1, Silenced=" + (string)poseSilence);
             if (poseSilence) {
                 integer channel = llRound(llFrand((float)0x7fffffff));
@@ -296,7 +298,6 @@ default {
         listenerStart();
         checkRLV();
         llRequestPermissions(dollID, PERMISSION_MASK);
-        lmScriptReset();
         dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -8, -1));
     }
     
@@ -336,13 +337,19 @@ default {
                 #ifndef DEVELOPER_MODE
                 processRLVResult();
                 #else
-                if (myPath == "") llOwnerSay("@getpathnew=" + (string)channel);
-                else processRLVResult();
+                if (RLVok && myPath != "") {
+                    RLVck = 0;
+                    processRLVResult();
+                }
+                else llOwnerSay("@getpathnew=" + (string)channel);
                 #endif
             }
             else {
                 myPath = msg;
-                if (RLVok) processRLVResult();
+                if (RLVok && myPath != "") {
+                    RLVck = 0;
+                    processRLVResult();
+                }
             }
         }
         //if (!RLVok && !RLVstarted) llOwnerSay("@clear,versionnew=" + (string)channel);
@@ -574,9 +581,6 @@ default {
             }
             #endif
             else if (cmd == "uncarry") {
-                carrierID = NULL_KEY;
-                carrierName = "";
-                
                 if (keyAnimation == "") {
                     llTargetRemove(targetHandle);
                     llStopMoveToTarget();
@@ -585,10 +589,15 @@ default {
                 // Clear carry restrictions
                 lmRunRLVas("Carry", "clear");
                 
-                string mid = " being carried by " + llList2String(split, 0) + " and ";
-                string end = " been set down";
-                if (!quiet) llSay(0, dollName + " was" + mid + "has" + end);
-                else llOwnerSay("You were" + mid + "have" + end);
+                if (carrierID) {
+                    string mid = " being carried by " + llList2String(split, 0) + " and ";
+                    string end = " been set down";
+                    if (!quiet) llSay(0, dollName + " was" + mid + "has" + end);
+                    else llOwnerSay("You were" + mid + "have" + end);
+                }
+                
+                carrierID = NULL_KEY;
+                carrierName = "";
             }
             else if (cmd == "uncollapse") {
                 debugSay(5, "Restoring from collapse");
@@ -707,8 +716,8 @@ default {
         }
         else {
             if (RLVck != 0 && RLVck <= 6) {
-                if (isAttached && !RLVok && RLVck != 6) llOwnerSay("@clear,versionnew=" + (string)channel);
-                else if (isAttached && RLVck != 6) llOwnerSay("@getpathnew=" + (string)channel);
+                if (isAttached && RLVck != 6 && !RLVok == 1) llOwnerSay("@clear,versionnew=" + (string)channel);
+                else if (isAttached && RLVck != 6 && myPath == "") llOwnerSay("@getpathnew=" + (string)channel);
                 llSetTimerEvent(5.0 * RLVck++);
             } else if (RLVck != 0) {
                 processRLVResult();

@@ -10,6 +10,8 @@ integer cd6200;
 integer listen_cd6011;
 integer wait;
 
+integer initState = 104;
+
 integer getOwnerSubStr(key id) {
     return (-1 * (integer) ("0x" + llGetSubString((string) id,-5,-1)));
 }
@@ -27,12 +29,6 @@ setup() {
 }
 
 default {
-    state_entry() { 
-        lmScriptReset();
-        
-        scriptkey = llGenerateKey();
-    }
-
     timer() {
         // countdown...
         wait -= 1;
@@ -48,9 +44,14 @@ default {
         scaleMem();
         
         if (code == 104 || code == 105) {
-            if (llList2String(split, 0) != "Start") return;
-            setup();
-            lmInitState(code);
+            string script = llList2String(split, 0);
+            if (script != "Start") return;
+            if (code == 104 && initState == 104) lmInitState(initState++);
+            else if (code == 105 && initState == 105) lmInitState(initState++);
+        }
+        else if (code == 110) {
+            initState = 105;
+            llSetScriptState(llGetScriptName(), 0);
         }
         else if (code == 135) {
             float delay = llList2Float(split, 1);

@@ -3,6 +3,7 @@
 //#define slow_start() llSleep(0.1);
 #define slow_start()
 
+key keyHandler = NULL_KEY;
 key requestName;
 key requestUpdate;
 key requestMistressKey;
@@ -14,13 +15,15 @@ list unresolvedMistressNames;
 list unresolvedBlacklistNames;
 list MistressList;
 list blacklist;
-list HTTP_OPTIONS = [ HTTP_BODY_MAXLENGTH, 16384, HTTP_VERBOSE_THROTTLE, FALSE, HTTP_METHOD ];
+list HTTP_OPTIONS = [ HTTP_BODY_MAXLENGTH, 16384, HTTP_VERBOSE_THROTTLE, FALSE, HTTP_METHOD ]; 
+float keyHandlerTime;
 float lastAvatarCheck;
 float lastKeyPost;
 float lastPost;
 float HTTPdbStart;
 float HTTPthrottle = 20.0;
 float HTTPinterval = 60.0;
+integer broadcastOn = -1873418555;
 integer namepostcount;
 integer expeditePost;
 integer MistressWaiting = -1;
@@ -32,7 +35,8 @@ integer requestIndex;
 integer nextRetry;
 integer gotURL;
 integer firstRun = 1;
-integer initState;
+integer initCode;
+integer initState = 104;
 integer ticks;
 integer offlineMode;
 integer invMarker;
@@ -62,7 +66,7 @@ queForSave(string name, string value) {
     if (index != -1 && index % 2 == 0) 
         dbPostParams = llListReplaceList(dbPostParams, [ name, llEscapeURL(value) ], index, index + 1);
     else dbPostParams += [ name, llEscapeURL(value) ];
-    if (llListFindList(SKIP_EXPEDITE, [ name ]) == -1) expeditePost = 1;
+    //if (llListFindList(SKIP_EXPEDITE, [ name ]) == -1) expeditePost = 1;
     llSetTimerEvent(5.0);
 }
 
@@ -112,7 +116,7 @@ checkAvatarList() {
                 integer postlen;
                 string adding = "names[" + (string)namepostcount + "]" + "=" + name + "&" +
                                 "uuids[" + (string)namepostcount + "]" + "=" + llEscapeURL(uuid);
-                if ((postlen = (llStringLength(namepost + adding) + 1) < 4096) && postAge < HTTPlimit) {
+                if ((postlen = ((llStringLength(namepost + adding) + 1) < 4096)) && (postAge < HTTPlimit)) {
                     if (namepost != "") namepost += "&";
                     namepost += adding;
                     namepostcount++;
@@ -126,6 +130,7 @@ checkAvatarList() {
                     }
                     lastKeyPost = llGetTime();
                     lastPost = lastKeyPost;
+                    postAge = llGetTime() - lastKeyPost;
                     namepost = "names[0]" + "=" + name + "&" +
                                "uuids[0]" + "=" + llEscapeURL(uuid);
                     namepostcount = 1;
@@ -146,8 +151,7 @@ checkAvatarList() {
 }
 
 doHTTPpost() {
-    if ((expeditePost && lastPost + HTTPthrottle < llGetTime()) ||
-        (!expeditePost && lastPost + HTTPinterval < llGetTime())) {
+    if ((lastPost + HTTPthrottle) < llGetTime()) {
         if (llGetListLength(dbPostParams) == 0) return;
         string time = (string)llGetUnixTime();
         string dbPostBody;
@@ -178,7 +182,6 @@ default
 {
     state_entry() {
         llSetMemoryLimit(65536);
-        lmScriptReset();
         myMod = llFloor(llFrand(5.999999));
         serverNames = llListRandomize(serverNames, 1);
     }
@@ -186,6 +189,13 @@ default
     on_rez(integer start) {
         serverNames = llListRandomize(serverNames, 1);
         myMod = llFloor(llFrand(5.999999));
+    }
+    
+    attach(key id) {
+        if (keyHandler == llGetKey() && id == NULL_KEY) {
+            llRegionSay(broadcastOn, "keys released");
+            debugSay(5, "Broadcast sent: keys released");
+        }
     }
     
     changed(integer change) {
@@ -199,9 +209,8 @@ default
                 invMarker = 0;
             }
         }
-        if (change & CHANGED_REGION) {
+        if (change & (CHANGED_REGION | CHANGED_TELEPORT)) {
             oldAvatars = [];
-            checkAvatarList();
         }
     }
     
@@ -288,7 +297,7 @@ default
                     string line = llList2String(lines, i);
                     list split = llParseStringKeepNulls(line, [ "=" ], []);
                     string Key = llList2String(split, 0);
-                    string Value = llList2String(split, 1);
+                    string Value = llDumpList2String(llList2List(split, 1, -1), "=");
                     
                     slow_start()
                     
@@ -317,7 +326,6 @@ default
                 msg += "event time " + eventTime + ", processing time " + formatFloat(((llGetTime() - HTTPdbProcessStart) * 1000), 2);
                 msg += "ms, total time for DB transaction " + formatFloat((llGetTime() - HTTPdbStart) * 1000, 2) + "ms";
                 debugSay(5, msg);
-                lmInitState(initState);
             }
             else {
                 error += "failed: Continuing in offline mode.";
@@ -325,7 +333,8 @@ default
                 databaseOnline = 0;
                 llOwnerSay(error);
             }
-            llMessageLinked(LINK_THIS, 102, llGetScriptName(), NULL_KEY);
+            llMessageLinked(LINK_THIS, 102, llGetScriptName() + "|" + "HTTP" + (string)status, NULL_KEY);
+            if (initCode == initState) lmInitState(initState++);
             return;
         }
         else if (request == requestMistressKey || request == requestBlacklistKey) {
@@ -383,10 +392,10 @@ default
         
         if (code == 104 || code == 105) {
             if (llList2String(split, 0) != "Start") return;
-            initState = code;
-            if (!offlineMode && (code == 104 || (code == 105 && !firstRun))) {
+            initCode = code;
+            if (!offlineMode && (initCode == 104 || (initCode == 105 && !firstRun))) {
                 string time = (string)llGetUnixTime();
-                if (code == 104) firstRun = 1;
+                if (initCode == 104) firstRun = 1;
                 HTTPdbStart = llGetTime();
                 debugSay(6, "Requesting data from HTTPdb");
                 string hashStr = (string)llGetOwner() + time + SALT;
@@ -397,11 +406,14 @@ default
                 }
             }
             else {
-                lmInitState(code);
+                if (initCode == initState) lmInitState(initState++);
                 firstRun = 0;
             }
         }
-        if (code == 135) {
+        else if (code == 110) {
+            initState = 105;
+        }
+        else if (code == 135) {
             float delay = llList2Float(split, 1);
             memReport(delay);
         }
@@ -419,10 +431,25 @@ default
                     queForSave("lastUpdateCheck", (string)lastUpdateCheck);
                     while ((requestUpdate = llHTTPRequest(serverURL, HTTP_OPTIONS + [ "POST" ], "checkversion " + (string)PACKAGE_VERNUM)) == NULL_KEY) llSleep(1.0);
                 }
+                if ((keyHandler == NULL_KEY) || (keyHandlerTime < (llGetTime() - 60))) {
+                    keyHandler = llGetKey();
+                }
+                if (keyHandler == llGetKey()) {
+                    llRegionSay(broadcastOn, "keys claimed");
+                    debugSay(5, "Broadcast Sent: keys claimed");
+                    keyHandlerTime = llGetTime();
+                    checkAvatarList();
+                }
             }
             
             if (name == "lastUpdateCheck") lastUpdateCheck = (integer)value;
             if (name == "nextRetry") nextRetry = (integer)value;
+            if (name == "keyHandler") {
+                keyHandler = (key)value;
+            }
+            if (name == "keyHandlerTime") {
+                keyHandlerTime = llGetTime() - (float)value;
+            }
             
             if (script == llGetScriptName()) return;
             
