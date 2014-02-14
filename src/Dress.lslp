@@ -35,12 +35,16 @@ string newoutfitname;
 string newoutfitpath;
 string oldoutfitpath;
 
+string newoutfitfolder;
+string oldoutfitfolder;
+
 // New simple listener setup we only
 // listen to rlvChannel directly the
 // other we use MenuHandlers link 500's
 integer dialogChannel;
 integer rlvBaseChannel;
 integer change;
+integer pushRandom;
 
 integer wearLock;
 
@@ -295,8 +299,6 @@ setup()  {
 
     dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -8, -1));
     rlvBaseChannel = dialogChannel ^ 0x80000000; // Xor with the sign bit forcing the positive channel needed by RLV spec.
-    
-    llSetTimerEvent(10.0);  //clock is accessed every ten seconds;
 }
 
 doDebug(string src) {
@@ -368,6 +370,19 @@ default {
             float delay = llList2Float(split, 1);
             memReport(delay);
         }
+        else if (code == 150) {
+            simRating = llList2String(split, 0);
+            integer outfitRating = outfitRating(newoutfitname);
+            integer regionRating = rating2Integer(simRating);
+            debugSay(3, "Region rating " + llToLower(simRating) + " outfit " + newoutfitname + " outfitRating: " + (string)outfitRating + " regionRating: " + (string)regionRating);
+            if (RLVok) {
+                if (outfitRating > regionRating) {
+                    pushRandom = 1;
+                    clothingFolder = newoutfitpath;
+                    listInventoryOn("2665");
+                }
+            }
+        }
         else if (code == 300) {
             string script = llList2String(split, 0);
             string name = llList2String(split, 1);
@@ -385,8 +400,10 @@ default {
             }
             else if (name == "clothingFolder") clothingFolder = value;
             else if (name == "newoutfitname") newoutfitname = value;
+            else if (name == "newoutfitfolder") newoutfitfolder = value;
             else if (name == "newoutfitpath") newoutfitpath = value;
             else if (name == "newoutfit") newoutfit = value;
+            else if (name == "oldoutfitfolder") oldoutfitfolder = value;
             else if (name == "oldoutfitpath") oldoutfitpath = value;
             else if (name == "oldoutfitname") oldoutfitname = value;
             else if (name == "oldoutfit") oldoutfit = value;
@@ -475,7 +492,7 @@ default {
                         listInventoryOn("2666"); // recursion
                         return;
                     }
-                    else if (choice != oldoutfitname) {
+                    else if ((outfitsFolder != "") && (choice != newoutfitname)) {
                         #ifdef DEVELOPER_MODE
                         // If we are in developer mode we are in danger of being ripped
                         // off here.  We therefore will use a temporary @detach=n restriction.
@@ -488,21 +505,25 @@ default {
                         change = 1;
                         
                         lmSendConfig("oldoutfitname", (oldoutfitname = newoutfitname));
+                        lmSendConfig("oldoutfitfolder", (oldoutfitfolder = newoutfitfolder));
                         lmSendConfig("oldoutfitpath", (oldoutfitpath = newoutfitpath));
                         lmSendConfig("oldoutfit", (oldoutfit = newoutfit));
                         
                         if (clothingFolder == "") {
                             newoutfitname = choice;
-                            newoutfit = choice;
-                            newoutfitpath = outfitsFolder + "/" + newoutfit;
+                            newoutfitfolder = outfitsFolder;
+                            newoutfitpath = "";
+                            newoutfit = newoutfitfolder + "/" + newoutfitname;
                         }
                         else {
                             newoutfitname = choice;
-                            newoutfit = clothingFolder + "/" + newoutfitname;
-                            newoutfitpath = outfitsFolder + "/" + newoutfit;
+                            newoutfitfolder = outfitsFolder;
+                            newoutfitpath = clothingFolder;
+                            newoutfit = newoutfitfolder + "/" + newoutfitpath + "/" + newoutfitname;
                         }
                     
                         lmSendConfig("newoutfitname", (newoutfitname));
+                        lmSendConfig("newoutfitfolder", (newoutfitfolder));
                         lmSendConfig("newoutfitpath", (newoutfitpath));
                         lmSendConfig("newoutfit", (newoutfit));
                     }
@@ -586,7 +607,7 @@ default {
                     //}
     
                     // Add items that cant replace what is already there
-                    if (RLVok) lmRunRLV("attachall:" + newoutfitpath + "=force,detachallthis:" + newoutfitpath + "=n," +
+                    if (RLVok) lmRunRLV("attachalloverorreplace:" + newoutfit + "=force,detachallthis:" + newoutfit + "=n," +
                              "detachallthis:" + nudeFolder + "=n");
                     llSleep(1.0);
     
@@ -600,13 +621,15 @@ default {
                     if (RLVok) lmRunRLV("detachall:" + outfitsFolder + "=force");
                     llSleep(1.0);
                     
-                    if (RLVok) lmRunRLV("attachall:" + newoutfitpath + "=force");
+                    if (RLVok) lmRunRLV("attachalloverorreplace:" + newoutfit + "=force");
                     
                     llSleep(2.0);
                     
                     // And now send an attempt to clean up any remaining stray pieces
                     string parts = "gloves|jacket|pants|shirt|shoes|skirt|socks|underpants|undershirt|alpha|pelvis|left foot|right foot|r lower leg|l lower leg|r forearm|l forearm|r upper arm|l upper arm|r upper leg|l upper leg";
                     if (RLVok) lmRunRLV("detachallthis:" + llDumpList2String(llParseString2List(parts, [ "|" ], []), "=force,detachallthis:") + "=force");
+                    
+                    lmRunRLV("clear");
                     
                     xfolder = normalselfFolder;
                     rlvRequest("getinvworn:" + xfolder + "=", 2668);
@@ -768,7 +791,7 @@ default {
                     //
                     // Note this skips *Regular too
 
-                    if (!isHiddenItem(itemname) && !isTransformingItem(itemname) && !isGroupItem(itemname)) {
+                    if (!isHiddenItem(itemname) && !isTransformingItem(itemname) && !isGroupItem(itemname) && !(outfitRating(itemname) > rating2Integer(simRating))) {
                         total += 1;
                         outfitsList += itemname;
                     }
@@ -776,17 +799,36 @@ default {
                     if (llToLower(itemname) == "~normalself") lmSendConfig("normalselfFolder", (normalselfFolder = activeFolder + "/" + itemname));
                     if (llToLower(itemname) == "~nude") lmSendConfig("nudeFolder", (nudeFolder = activeFolder + "/" + itemname));
                 }
-                if (!total) return;
+                if (!total) {
+                    if (pushRandom && clothingFolder != "") {
+                        list pathParts = llParseString2List(clothingFolder, [ "/" ], []);
+                        clothingFolder = llDumpList2String(llDeleteSubList(pathParts, -1, -1), "/");
+                        lmSendConfig("clothingFolder", clothingFolder);
+                        setActiveFolder();
+                        llOwnerSay("Trying the " + activeFolder + " folder.");
+                        listInventoryOn("2665"); // recursion
+                    }
+                    else pushRandom = 0;
+                    return;
+                }
 
                 // Pick outfit at random
                 integer i = (integer) llFrand(total);
                 string nextoutfitname = llList2String(outfitsList, i);
-                debugSay(5, ">nextoutfitname = " + nextoutfitname);
-                // the dialog not only OKs things - but fires off the dressing process
-                //llDialog(dollID, "You are being dressed in this outfit.",[nextoutfitname], dialogChannel);
-                //llSay(cd2667, nextoutfitname);
-                lmMenuReply(nextoutfitname, llGetObjectName(), llGetKey());
-                llOwnerSay("You are being dressed in this outfit: " + nextoutfitname);
+                if (llGetSubString(nextoutfitname, 0, 0) != ">") {
+                    debugSay(5, ">nextoutfitname = " + nextoutfitname);
+                    // the dialog not only OKs things - but fires off the dressing process
+                    //llDialog(dollID, "You are being dressed in this outfit.",[nextoutfitname], dialogChannel);
+                    //llSay(cd2667, nextoutfitname);
+                    lmMenuReply(nextoutfitname, llGetObjectName(), llGetKey());
+                    llOwnerSay("You are being dressed in this outfit: " + nextoutfitname);
+                }
+                else {
+                    clothingFolder += "/" + nextoutfitname;
+                    listInventoryOn("2665"); // recursion
+                }
+                
+                pushRandom = 0;
             }
         }
 
@@ -823,6 +865,7 @@ default {
                     !isHiddenItem(itemname) &&
                     !isGroupItem(itemname) &&
                     !isTransformingItem(itemname) &&
+                    !(outfitRating(itemname) > rating2Integer(simRating)) &&
                     itemname != newoutfitname) {
 
                     outfitsList += itemname;
@@ -904,7 +947,7 @@ default {
             }
             else {
                 dresspassed++;
-                if (xfolder == normalselfFolder && newoutfitpath != "") xfolder = newoutfitpath;
+                if (xfolder == normalselfFolder && newoutfitpath != "") xfolder = newoutfit;
                 else xfolder = "";
                 
                 if (xfolder != "") rlvRequest("getinvworn:" + xfolder + "=", 2668);
