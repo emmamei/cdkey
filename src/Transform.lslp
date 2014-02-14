@@ -343,14 +343,14 @@ default {
                         choices += "Transform Options";
                     }*/
 
-                    llDialog(id, msg, choices, dialogChannel);
+                    llDialog(id, msg, dialogSort(llListSort(choices, 1, 1) + MAIN), dialogChannel);
                 }
             }
             else if ((llListFindList(types, [ choice ]) != -1) || (choice == "Transform")) {
                 if (choice == "Transform") choice = transform;
                 else if (mustAgreeToType) {
                     transform = choice;
-                    list choices = ["Transform", "Dont Transform"];
+                    list choices = ["Transform", "Dont Transform", MAIN ];
 
                     string msg = "Do you wish to transform to a " + choice + " Doll?";
 
