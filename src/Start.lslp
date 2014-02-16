@@ -22,6 +22,7 @@ key dollID = NULL_KEY;
 key MistressID = NULL_KEY;
 
 string dollName;
+string dollyName;
 
 key ncPrefsKey;
 key ncPrefsLoadedUUID = NULL_KEY;
@@ -56,6 +57,7 @@ string userCollapseRLVcmd;
 string dollGender = "Female";
 string pronounHerDoll = "Her";
 string pronounSheDoll = "She";
+string nameOverride;
 integer startup;
 integer initState = 103;
 integer introLine;
@@ -255,6 +257,14 @@ initializationCompleted() {
     lmMemReport(0.0);
     
     llSleep(0.5);
+    
+    if (dollyName == "") {
+        string name = dollName;
+        integer space = llSubStringIndex(name, " ");
+        if (space != -1) name = llGetSubString(name, 0, space -1);
+        lmSendConfig("dollyName", (dollyName = "Dolly " + name));
+    }
+    if (isAttached) llSetObjectName(dollyName + "'s Key");
 
     string msg = "Initialization completed";
     #ifdef DEVELOPER_MODE
@@ -287,7 +297,6 @@ wakeMenu() {
     llSetScriptState("MenuHandler", 1);
     llSetScriptState("Transform", 1);
     llSetScriptState("Dress", 1);
-    llSetScriptState("Taker", 1);
 }
 
 sleepMenu() {
@@ -297,7 +306,6 @@ sleepMenu() {
     llSetScriptState("MenuHandler", 0);
     llSetScriptState("Transform", 0);
     llSetScriptState("Dress", 0);
-    llSetScriptState("Taker", 0);
 }
 #endif
 
@@ -315,13 +323,6 @@ do_Restart() {
             llSleep(0.1);
             llResetOtherScript(script);
         }
-    }
-    
-    if (isAttached) {
-        string name = dollName;
-        integer space = llSubStringIndex(name, " ");
-        if (space != -1) name = llGetSubString(name, 0, space -1);
-        llSetObjectName("Dolly " + name + "'s Key");
     }
     
     reset = 0;
@@ -397,12 +398,22 @@ default {
             else if (name == "quiet")                            quiet = (integer)value;
             else if (name == "lowScriptMode")            lowScriptMode = (integer)value;
             else if (name == "dialogChannel")            dialogChannel = (integer)value;
+            else if (name == "nameOverride")              nameOverride = value;
             else if (name == "userBaseRLVcmd")          userBaseRLVcmd = value;
             else if (name == "userCollapseRLVcmd")  userCollapseRLVcmd = value;
             else if (name == "windTimes")                    windTimes = llList2List(split, 2, -1);
             else if (name == "dollType")                      dollType = value;
             else if (name == "MistressList")              MistressList = llListSort(llList2List(split, 2, -1), 2, 1);
             else if (name == "blacklist")                    blacklist = llListSort(llList2List(split, 2, -1), 2, 1);
+            else if (name == "dollyName") {
+                if (dollyName == "") {
+                    string name = dollName;
+                    integer space = llSubStringIndex(name, " ");
+                    if (space != -1) name = llGetSubString(name, 0, space -1);
+                    lmSendConfig("dollyName", (dollyName = "Dolly " + name));
+                }
+                if (isAttached) llSetObjectName(dollyName + "'s Key");
+            }
 /*                 if (name == "afk")                           afk = (integer)value;
             else if (name == "autoTP")                       autoTP = (integer)value;
             else if (name == "canAFK")                       canAFK = (integer)value;
@@ -437,10 +448,12 @@ default {
                 
                 if (index == -1) {
                     llOwnerSay("Adding " + name + " to blacklist");
+                    if ((llGetListLength(blacklist) % 2) == 1) blacklist = llDeleteSubList(blacklist, 0, 0);
                     lmSendConfig("blacklist", llDumpList2String((blacklist = llListSort(blacklist + [ uuid, name ], 2, 1)), "|"));
                 }
                 else {
                     llOwnerSay("Removing " + name + " from blacklist");
+                    if ((llGetListLength(blacklist) % 2) == 1) blacklist = llDeleteSubList(blacklist, 0, 0);
                     lmSendConfig("blacklist", llDumpList2String((blacklist = llDeleteSubList(blacklist, index, ++index)), "|"));
                 }
             }
@@ -451,9 +464,11 @@ default {
                 integer index = llListFindList(MistressList, [ uuid ]);
                 
                 if  ((cmd == "addMistress") && (index == -1)) {
+                    if ((llGetListLength(MistressList) % 2) == 1) MistressList = llDeleteSubList(MistressList, 0, 0);
                     lmSendConfig("MistressList", llDumpList2String((MistressList = llListSort(MistressList + [ uuid, name ], 2, 1)), "|"));
                 }
                 else if ((cmd == "remMistress") && (llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1)) {
+                    if ((llGetListLength(MistressList) % 2) == 1) MistressList = llDeleteSubList(MistressList, 0, 0);
                     lmSendConfig("MistressList", llDumpList2String((MistressList = llDeleteSubList(MistressList, index, ++index)), "|"));
                 }
             }
@@ -565,11 +580,6 @@ default {
             }
         } else {
             llMessageLinked(LINK_SET, 106, "attached|" + (string)llGetAttached(), id);
-            
-            string name = dollName;
-            integer space = llSubStringIndex(name, " ");
-            if (space != -1) name = llGetSubString(name, 0, space -1);
-            llSetObjectName("Dolly " + name + "'s Key");
             
             if (llGetPermissionsKey() == llGetOwner() && (llGetPermissions() & PERMISSION_TAKE_CONTROLS) != 0) llTakeControls(CONTROL_MOVE, 1, 1);
             else llRequestPermissions(dollID, PERMISSION_MASK);

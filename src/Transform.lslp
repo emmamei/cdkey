@@ -315,7 +315,7 @@ default {
                 choices += getButton("Verify Type", id, mustAgreeToType, 0);
                 choices += getButton("Show Phrases", id, showPhrases, 0);
 
-                llDialog(dollID, "Options", choices, dialogChannel);
+                llDialog(dollID, "Options", dialogSort(choices + MAIN), dialogChannel);
             }
             else if (optName == "Verify Type") {
                 lmSendConfig("mustAgreeToType", (string)(mustAgreeToType = (curState == CROSS)));

@@ -24,33 +24,18 @@
 #define mainTimerEnable (configured && isAttached && RLVchecked)
 
 #define isDoll (id == dollID)
-#define isCarrier (id == carrierID) && !isDoll
-#define isBuiltin (llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1)
-#define isMistress (llListFindList(USER_CONTROLLERS, [ (string)id ]) != -1)
+#define isCarrier (id == carrierID)
+#define isBuiltinController (llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1)
+#define isUserController (llListFindList(USER_CONTROLLERS, [ (string)id ]) != -1)
 #define isController getControllerStatus(id)
 
 #define CHECK "✔"
 #define CROSS "✘"
-string getButton(string text, key id, integer enabled, integer oneWay) {
-   if (enabled) return CHECK + " " + text;
-   else if (!oneWay || getControllerStatus(id)) return CROSS + " " + text;
-   return "";
-}
 
-integer rating2Integer(string simRating) {
-         if (simRating == "ADULT")      return 3;
-    else if (simRating == "MODERATE")   return 2;
-    else if (simRating == "GENERAL")    return 1;
-    else                                return 0;
-}
-
-integer outfitRating(string outfit) {
-    string rating = llGetSubString(outfit, 0, 2);
-         if (rating == "{A}")     return 3;
-    else if (rating == "{M}")     return 2;
-    else if (rating == "{G}")     return 1;
-    else                          return 0;
-}
+#define USER_ACCESS (isDoll << 3) | (isCarrier << 2) | (isController << 1)
+#define ACCESS_CONTROLLER 0x4
+#define ACCESS_CARRIER 0x2
+#define ACCESS_DOLL 0x1
 
 // Dress module prefix test defines
 #define isGroupItem(f) (llGetSubString(f,0,0) == "#")
@@ -61,6 +46,7 @@ integer outfitRating(string outfit) {
 #define isParentFolder(f) (llGetSubString(f,0,0) == ">")
 #define isChrootFolder(f) (llGetSubString(f,0,1) == "!>")
 
+#define VSTR  + "\nScript Date: " + PACKAGE_VERSION
 #define MAIN "~Main Menu~"
 // Collapse animation - and documentation
 #define ANIMATION_COLLAPSED "collapse"
@@ -106,6 +92,9 @@ integer outfitRating(string outfit) {
 #define POSE_LIMIT 300.0
 #define CARRY_TIMEOUT 60.0
 #define JAM_DEFAULT_TIME 90.0
+
+#define COLOR_NAMES [ "Purple", "Pink", "Red", "Green", "Blue", "Cyan", "Yellow", "Orange", "White", "Black", "CUSTOM" ]
+#define COLOR_VALUE [ <0.3, 0.1, 0.6>, <0.8, 0.5, 0.5>, <0.8, 0.1, 0.1>, <0.1, 0.8, 0.1>, <0.1, 0.1, 0.8>, <0.1, 0.8, 0.8>, <0.8, 0.8, 0.1>, <0.8, 0.4, 0.1>, <0.9, 0.9, 0.9>, <0.1, 0.1, 0.1>, <0,0,0> ]
 
 // Max Controllers - Set a limit on the number of user defined controllers so the list
 // cannot grow to arbitrary lengths and consume all memory.
@@ -167,7 +156,7 @@ integer outfitRating(string outfit) {
 
 list BuiltinControllers = BUILTIN_CONTROLLERS;
 integer getControllerStatus(key id) {
-    return (llListFindList(BuiltinControllers + llList2ListStrided(MistressList, 0, -1, 2), [ (string)id ]) != -1);
+    return isBuiltinController || (isUserController && !isDoll) || ((numControllers == 0) && isDoll);
 }
 
 #define NORMAL_TIMER_RATE 0.5 * mainTimerEnable

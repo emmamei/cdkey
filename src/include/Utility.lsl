@@ -63,13 +63,11 @@ memReport(float delay) {
 #define memReport(dummy)
 #endif // DEVELOPER_MODE
 
-debugSay(integer level, string msg) {
-    if (DEBUG_LEVEL >= level) {
-        msg = "DEBUG(" + (string)level + "): " + llGetScriptName() + ": " + msg;
-        if (DEBUG_TARGET == 1) llOwnerSay(msg);
-        else llSay(DEBUG_CHANNEL, msg);
-    }
-}
+#ifndef DEBUG_MASTER
+#define debugSay(level,msg) llMessageLinked(LINK_THIS, 700, msg, (key)((string)level))
+#else
+#define debugSay(level,msg) debugMaster(level,"DEBUG",msg)
+#endif
 /*
  * ----------------------------------------
  * NUMERIC FUNCTIONS

@@ -3,6 +3,7 @@
 // vim:sw=4 et nowrap:
 //
 // DATE: 22 March 2013
+#define DEBUG_MASTER 1
 #include "include/GlobalDefines.lsl"
 
 // Note that some doll types are special....
@@ -92,6 +93,8 @@ integer warned;
 integer wearLock;
 integer initState = 104;
 
+integer debugLevel = DEBUG_LEVEL;
+
 #ifdef DEVELOPER_MODE
 integer timeReporting;
 #endif
@@ -133,10 +136,11 @@ key simRatingQuery;
 // FUNCTIONS
 //========================================
 linkDebug(integer sender, integer code, string data, key id) {
+    if (code == 700) return;
+    
     integer level = 5;
          if (llListFindList([ 102, 150, 305, 399 ], [ code ]) != -1)            level = 2;
     else if (llListFindList([ 104, 105, 110, 350 ], [ code ]) != -1)            level = 4;
-    else if (llListFindList([ 150, 320 ], [ code ]) != -1)                      level = 5;
     else if (llListFindList([ 9999 ], [ code ]) != -1)                          level = 6;
     else if (llListFindList([ 104, 300, 315, 500 ], [ code ]) != -1)            level = 7;
     else if (llListFindList([ 9999 ], [ code ]) != -1)                          level = 8;
@@ -145,7 +149,15 @@ linkDebug(integer sender, integer code, string data, key id) {
     string msg = "LM-DEBUG (" + (string)level + "): " + (string)code + ", " + data;
     if (id != NULL_KEY) msg += " - " + (string)id;
     
-    if (DEBUG_LEVEL >= level) llOwnerSay(msg);
+    debugMaster(level, "LINK-DEBUG", msg);
+}
+
+debugMaster(integer level, string prefix, string msg) {
+    if (debugLevel >= level) {
+        msg = prefix + "(" + (string)level + "): " + llGetScriptName() + ": " + msg;
+        if (DEBUG_TARGET == 1) llOwnerSay(msg);
+        else llSay(DEBUG_CHANNEL, msg);
+    }
 }
 
 string cannoizeName(string name) {
@@ -256,8 +268,6 @@ default {
         dollID = llGetOwner();
         if (llGetAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
         broadcastHandle = llListen(broadcastOn, "", "", "");
-        
-        lmScriptReset();
     }
     
     on_rez(integer start) {
@@ -357,8 +367,6 @@ default {
             }
         }
         
-        debugSay(9, (string)timerInterval + ": " + (string)timeLeftOnKey + ", " + (string)wearLockExpire + ", " + (string)winderRechargeTime);
-        
         #ifndef DEVELOPER_MODE
         ifPermissions();
         #endif
@@ -454,7 +462,7 @@ default {
             dollID = llGetOwner();
             dollName = llGetDisplayName(dollID);
                     
-            chatHandle = llListen(chatChannel, "", dollID, "");
+            chatHandle = llListen(chatChannel, "", "", "");
             dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -8, -1));
             
             #ifdef ADULT_MODE
@@ -599,7 +607,7 @@ default {
                     else autoAFK = 0;
                 }
                 
-                debugSay(5, "setAFK, afk=" + (string)afk + ", autoSet=" + (string)autoSet + ", autoAFK=" + (string)autoAFK);
+                debugMaster(5,"DEBUG", "setAFK, afk=" + (string)afk + ", autoSet=" + (string)autoSet + ", autoAFK=" + (string)autoAFK);
                 
                 lmSendConfig("afk", (string)afk);
                 lmSendConfig("autoAFK", (string)autoAFK);
@@ -628,7 +636,7 @@ default {
 
             if (choice == "Wind") {
                 if (llGetListLength(windTimes) == 1 || (timeLeftOnKey + llList2Float(windTimes, 0) * SEC_TO_MIN) > keyLimit || timeLeftOnKey + 60.0 > effectiveLimit) {
-                    debugSay(5, "Doing default wind");
+                    debugMaster(5, "DEBUG", "Doing default wind");
                     windamount = defaultwind;
                     doWind(name, id);
                 }
@@ -640,6 +648,9 @@ default {
                     doWind(name, id);
                 }
             }
+        }
+        else if (code == 700) {
+            debugMaster((integer)((string)id), "DEBUG", data);
         }
     }
 
@@ -845,7 +856,7 @@ default {
                         if (ch != 0 && ch != DEBUG_CHANNEL) {
                             chatChannel = ch;
                             llListenRemove(chatHandle);
-                            chatHandle = llListen(ch, "", llGetOwner(), "");
+                            chatHandle = llListen(ch, "", "", "");
                         }
                     }
                 }
@@ -862,6 +873,10 @@ default {
                 else if (choice == "timereporting") {
                     lmSendConfig("timeReporting", (string)(timeReporting = (integer)param));
                 }
+                else if (choice == "debug") {
+                    debugLevel = (integer)param;
+                    llOwnerSay("DEBUG_LEVEL = " + (string)debugLevel);
+                }
                 #endif
                 else llOwnerSay("Unrecognised command '" + choice + "' recieved on channel " + (string)chatChannel);
             }
@@ -869,11 +884,11 @@ default {
         else if (channel == broadcastOn) {
             if (llGetSubString(choice, 0, 4) == "keys ") {
                 string subcommand = llGetSubString(choice, 5, -1);
-                debugSay(5, "Broadcast recv: From: " + name + " (" + (string)id + ") Owner: " + llGetDisplayName(llGetOwnerKey(id)) + " (" + (string)llGetOwnerKey(id) +  ") " + choice);
+                debugMaster(5, "BROADCAST-DEBUG", "Broadcast recv: From: " + name + " (" + (string)id + ") Owner: " + llGetDisplayName(llGetOwnerKey(id)) + " (" + (string)llGetOwnerKey(id) +  ") " + choice);
                 if (subcommand == "claimed") {
                     if (keyHandler == llGetKey()) {
                         llRegionSay(broadcastOn, "keys released");
-                        debugSay(5, "Broadcast sent: keys released");
+                        debugMaster(5, "BROADCAST-DEBUG", "Broadcast sent: keys released");
                     }
                     keyHandler = id;
                 }

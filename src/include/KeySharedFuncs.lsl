@@ -29,9 +29,31 @@ float setWindRate() {
     // the dolly begins using their time faster.
     llTargetOmega(llVecNorm(<0.0, 0.0, 1.0>), windRate * (TWO_PI / 10.0), 1);
 
-    debugSay(9, "Vector: " + (string)(llVecNorm(<0.0, 0.0, 1.0>)) + "\nRate: " + formatFloat(windRate * (TWO_PI / 10.0), 2));
-
     return newWindRate;
+}
+
+#define CHECK "✔"
+#define CROSS "✘"
+
+string getButton(string text, key id, integer enabled, integer oneWay) {
+   if (enabled) return CHECK + " " + text;
+   else if (!oneWay || getControllerStatus(id)) return CROSS + " " + text;
+   return "";
+}
+
+integer rating2Integer(string simRating) {
+         if (simRating == "ADULT")      return 3;
+    else if (simRating == "MODERATE")   return 2;
+    else if (simRating == "GENERAL")    return 1;
+    else                                return 0;
+}
+
+integer outfitRating(string outfit) {
+    string rating = llGetSubString(outfit, 0, 2);
+         if (rating == "{A}")     return 3;
+    else if (rating == "{M}")     return 2;
+    else if (rating == "{G}")     return 1;
+    else                          return 0;
 }
 
 #endif // KEY_SHARED_FUNC_LSL

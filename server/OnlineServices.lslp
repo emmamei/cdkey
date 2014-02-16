@@ -15,6 +15,7 @@ list unresolvedMistressNames;
 list unresolvedBlacklistNames;
 list MistressList;
 list blacklist;
+list checkNames;
 list HTTP_OPTIONS = [ HTTP_BODY_MAXLENGTH, 16384, HTTP_VERBOSE_THROTTLE, FALSE, HTTP_METHOD ]; 
 float keyHandlerTime;
 float lastAvatarCheck;
@@ -215,14 +216,14 @@ default
     }
     
     touch_start(integer num) {
-        integer index = llListFindList(unresolvedBlacklistNames, [ llDetectedName(0) ]);
+        integer index = llListFindList(unresolvedBlacklistNames, [ llToLower(llDetectedName(0)) ]);
         if (index != -1) {
             llOwnerSay("Identified Blacklist user " + llDetectedName(0) + " on key touch");
             unresolvedBlacklistNames = llDeleteSubList(unresolvedBlacklistNames, index, index);
             lmInternalCommand("addRemBlacklist", (string)llDetectedKey(0) + "|" + llDetectedName(0), NULL_KEY);
         }
         else {
-            index = llListFindList(unresolvedMistressNames, [ llDetectedName(0) ]);
+            index = llListFindList(unresolvedMistressNames, [ llToLower(llDetectedName(0)) ]);
             if (index != -1) {
                 llOwnerSay("Identified Controller " + llDetectedName(0) + " on key touch");
                 unresolvedMistressNames = llDeleteSubList(unresolvedMistressNames, index, index);
@@ -338,19 +339,23 @@ default
             return;
         }
         else if (request == requestMistressKey || request == requestBlacklistKey) {
-            integer index = llSubStringIndex(body, "=");
-            string name = llGetSubString(body, 0, index - 1);
-            string uuid = llGetSubString(body, index + 1, -1);
+            list split = llParseStringKeepNulls(body, [ "=" ], []);
+            string name = llList2String(split, 0);
+            string uuid = llList2String(split, 1);
+            integer index;
             if (uuid == "NOT FOUND") {
                 llOwnerSay("Failed to find " + name + " in the name2key database, please check the name is correct and in legacy name format.  If the name is correct it is probably safe to ignore this message and the database will be updated when " + name + " touches your key next.");
             }
+            else if (name == "") {
+                checkNames += [ llRequestAgentData(uuid, DATA_NAME), uuid ];
+            }
             else if (request == requestMistressKey) {
-                index = llListFindList(unresolvedMistressNames, [ name ]);
+                index = llListFindList(unresolvedMistressNames, [ llToLower(name) ]);
                 unresolvedMistressNames = llDeleteSubList(unresolvedMistressNames, index, index);
                 lmInternalCommand("addMistress", uuid + "|" + name, NULL_KEY);
             }
             else if (request == requestBlacklistKey) {
-                index = llListFindList(unresolvedBlacklistNames, [ name ]);
+                index = llListFindList(unresolvedBlacklistNames, [ llToLower(name) ]);
                 unresolvedBlacklistNames = llDeleteSubList(unresolvedBlacklistNames, index, index);
                 lmInternalCommand("addRemBlacklist", uuid + "|" + name, NULL_KEY);
             }
@@ -470,6 +475,7 @@ default
             if (cmd == "getMistressKey") {
                 string name = llList2String(split, 0);
                 debugSay(5, "Looking up name " + name);
+                unresolvedMistressNames += llToLower(name);
                 while((requestMistressKey = llHTTPRequest("http://api.silkytech.com/name2key/lookup?q=" + llEscapeURL(name), HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
                     llSleep(1.0);
                 }
@@ -477,6 +483,7 @@ default
             else if (cmd == "getBlacklistKey") {
                 string name = llList2String(split, 0);
                 debugSay(5, "Looking up name " + name);
+                unresolvedBlacklistNames += llToLower(name);
                 while((requestBlacklistKey = llHTTPRequest("http://api.silkytech.com/name2key/lookup?q=" + llEscapeURL(name), HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
                     llSleep(1.0);
                 }
@@ -493,32 +500,31 @@ default
         }
     }
     
-/*    dataserver(key id, string data) {
-        integer index = llListFindList(MistressList, [ id ]);
+    dataserver(key request, string data) {
+        integer index = llListFindList(checkNames, [ request ]);
         if (index != -1) {
-            MistressList = llListReplaceList(MistressList, [ data ], index, index);
-            MistressWaiting--;
-            debugSay(5, "MistressList: " + llList2CSV(MistressList) + " (" + (string)MistressWaiting + " waiting)");
-            if (!MistressWaiting) {
-                while (llGetListLength(MistressList) >= 2) {
-                    lmInternalCommand("addMistress", llList2String(MistressList, 0) + "|" + llList2String(MistressList, 1), NULL_KEY);
-                    MistressList = llDeleteSubList(MistressList, 0, 1);
-                }
+            string uuid = llList2Key(checkNames, index + 1);
+            string name = data;
+            
+            checkNames = llDeleteSubList(checkNames, index, index + 1);
+            index = llListFindList(unresolvedMistressNames, [ llToLower(data) ]);
+            if (index != -1) {
+                unresolvedMistressNames = llDeleteSubList(unresolvedMistressNames, index, index);
+                lmInternalCommand("addMistress", uuid + "|" + name, NULL_KEY);
+            }
+            else {
+                index = llListFindList(unresolvedBlacklistNames, [ llToLower(data) ]);
+                unresolvedBlacklistNames = llDeleteSubList(unresolvedBlacklistNames, index, index);
+                lmInternalCommand("addRemBlacklist", uuid + "|" + name, NULL_KEY);
+            }
+            string namepost = "names[0]" + "=" + name + "&" +
+                              "uuids[0]" + "=" + llEscapeURL(uuid);
+            while ((requestAddKey = (llHTTPRequest("http://api.silkytech.com/name2key/add", HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE,
+                "application/x-www-form-urlencoded" ], namepost))) == NULL_KEY) {
+                    llSleep(1.0);
             }
         }
-        index = llListFindList(blacklist, [ id ]);
-        if (index != -1) {
-            blacklist = llListReplaceList(blacklist, [ data ], index, index);
-            blacklistWaiting--;
-            debugSay(5, "blacklist: " + llList2CSV(blacklist) + " (" + (string)blacklistWaiting + " waiting)");
-            if (!blacklistWaiting) {
-                while (llGetListLength(blacklist) >= 2) {
-                    lmInternalCommand("addBlacklist", llList2String(blacklist, 0) + "|" + llList2String(blacklist, 1), NULL_KEY);
-                    blacklist = llDeleteSubList(blacklist, 0, 1);
-                }
-            }
-        }
-    }*/
+    }
     
     timer() {
         doHTTPpost();
