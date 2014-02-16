@@ -630,7 +630,21 @@ default {
             string choice = llList2String(split, 0);
             string name = llList2String(split, 1);
             
-            if (llGetSubString(choice, 0, 4) == "Poses" && (keyAnimation == ""  || (!isDoll || poserID == dollID))) {
+            if ((choice == "Carry") && !isDoll) {
+                // Doll has been picked up...
+                carrierID = id;
+                carrierName = name;
+                lmInternalCommand("carry", carrierName, carrierID);
+                lmInternalCommand("mainMenu", "", id);
+            }
+            else if ((choice == "Uncarry") && isCarrier) {
+                // Doll has been placed down...
+                llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|uncarry|" + carrierName, carrierID);
+                carrierID = NULL_KEY;
+                carrierName = "";
+                lmInternalCommand("mainMenu", "", id);
+            }
+            else if (llGetSubString(choice, 0, 4) == "Poses" && (keyAnimation == ""  || (!isDoll || poserID == dollID))) {
                 integer page = 1; integer len = llStringLength(choice);
                 if (len > 5) page = (integer)llGetSubString(choice, 6 - len, -1);
                 integer poseCount = llGetInventoryNumber(20);

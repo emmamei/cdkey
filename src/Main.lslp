@@ -118,6 +118,7 @@ float windRate        = 1.0;
 float baseWindRate    = 1.0;
 float keyHandlerTime;
 list windTimes        = [ 30 ];
+list blacklist;
 
 vector lockPos;
 string keyAnimation;
@@ -546,6 +547,7 @@ default {
             else if (name == "dollType")                     dollType = value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
+            else if (name == "blacklist")                   blacklist = llListSort(split, 2, 1);
             else if (name == "keyHandler") {
                 keyHandler = (key)value;
             }
@@ -573,12 +575,17 @@ default {
                 else effectiveLimit = keyLimit;
             }
             else if (name == "windTimes") {
-                split = llList2List(split, 2, -1);
+                integer timesCount = llGetListLength(split);
                 integer i;
                 for (i = 0; i < llGetListLength(split); i++) split = llListReplaceList(split, [ llList2Integer(split, i) ], i ,i);
                 split = llListSort(split, 1, 1);
-                windTimes = split;
-                defaultwind = llListStatistics(LIST_STAT_MEDIAN, windTimes) * SEC_TO_MIN;
+                defaultwind = llListStatistics(LIST_STAT_MEDIAN, split) * SEC_TO_MIN;
+                windTimes = [];
+                do {
+                    windTimes = llList2List(split, 0, 2) + windTimes;
+                    split = llDeleteSubList(split, 0, 2);
+                    //debugSay(5, "windTimes " + llList2CSV(windTimes) + "\nsplit " + llList2CSV(split));
+                } while (llGetListLength(split) > 0);
             }
             #ifdef SIM_FRIENDLY
             else if (name == "lowScriptMode") {
@@ -616,6 +623,55 @@ default {
             else if (cmd == "wearLock") {
                 if (llList2Integer(split, 0)) lmSendConfig("wearLockExpire", (string)(wearLockExpire = WEAR_LOCK_TIME));
                 else lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0.0));
+            }
+            
+            // Deny access to the menus when the command was recieved from blacklisted avatar
+            if (llListFindList(blacklist, [ (string)id ]) != -1) {
+                lmSendToAgent("You are not permitted to access this key.", id);
+                return;
+            }
+            else if (cmd == "windMenu") {    
+                if (llGetListLength(windTimes) == 1) {
+                    lmInternalCommand("mainMenu", "", id);;
+                    return;
+                }
+                
+                // Compute "time remaining" message for mainMenu/windMenu
+                string timeleft;
+                
+                float displayWindRate = setWindRate();
+                integer minsLeft = llRound(timeLeftOnKey / (60.0 * displayWindRate));
+                
+                if (minsLeft > 0) {
+                    timeleft = "Dolly has " + (string)minsLeft + " minutes remaining.\n";
+            
+                    timeleft += "Key is ";
+                    if (windRate == 0.0) timeleft += "not ";
+                    timeleft += "winding down";
+                    
+                    if (windRate == 0.0) timeleft += ".";
+                    else timeleft += " at " + formatFloat(displayWindRate, 1) + "x rate.";
+            
+                    timeleft += ". ";
+                }
+                else timeleft = "Dolly has no time left.";
+                timeleft += "\n";
+                
+                string msg = "How many minutes would you like to wind?";
+                
+                list buttons = llListSort(windTimes, 1, 1);
+                if (demoMode) {
+                    buttons = [ "Wind 2", "Wind 5" ]; // If we are in demo mode make our buttons make sense
+                }
+                else {
+                    integer i;
+                    for (i = 0; i < llGetListLength(buttons); i++) {
+                        if (llList2String(buttons, i) != MAIN)
+                            buttons = llListReplaceList(buttons, [ "Wind " + llList2String(buttons, i) ], i, i);
+                    }
+                }
+                
+                llDialog(id, timeleft + msg, dialogSort(buttons + MAIN), dialogChannel);
             }
         }
 

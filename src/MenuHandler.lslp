@@ -7,7 +7,6 @@
 
 // Current Controller - or Mistress
 //key MistressID = NULL_KEY;
-key carrierID = NULL_KEY;
 key poserID = NULL_KEY;
 key dollID = NULL_KEY;
 
@@ -159,18 +158,6 @@ default
                 visible = (integer)value;
                 llSetLinkAlpha(LINK_SET, (float)visible, ALL_SIDES);
             }
-            else if (name == "windTimes") {
-                integer timesCount = llGetListLength(split);
-                integer i;
-                for (i = 0; i < llGetListLength(split); i++) split = llListReplaceList(split, [ llList2Integer(split, i) ], i ,i);
-                split = llListSort(split, 1, 1);
-                windTimes = [];
-                do {
-                    windTimes = llList2List(split, 0, 2) + windTimes;
-                    split = llDeleteSubList(split, 0, 2);
-                    //debugSay(5, "windTimes " + llList2CSV(windTimes) + "\nsplit " + llList2CSV(split));
-                } while (llGetListLength(split) > 0);
-            }
             else if (name == "dollType") {
                 dollType = llGetSubString(llToUpper(value), 0, 0) + llGetSubString(llToLower(value), 1, -1);
             }
@@ -229,7 +216,9 @@ default
                 params = [ PRIM_POINT_LIGHT, TRUE, baseColour, 0.350, 3.50, 2.00 ] + params;
                 llSetLinkPrimitiveParamsFast(4, params + [ PRIM_LINK_TARGET, 5 ] + params);
             }
-            else if ((cmd == "mainMenu") || (cmd == "windMenu")) {
+            else if (cmd == "mainMenu") {
+                string msg; list menu; string manpage;
+                
                 // Compute "time remaining" message for mainMenu/windMenu
                 string timeleft;
                 
@@ -251,161 +240,134 @@ default
                 else timeleft = "Dolly has no time left.";
                 timeleft += "\n";
                 
-                if (cmd == "mainMenu") {
-                    string msg; list menu; string manpage;
-                    
-                    // Handle our "special" states first which significantly alter the menu
-                    
-                    // When the doll is carried they have exclusive control
-                    if (hasCarrier) {
-                        // Doll being carried clicked on key
-                        if isDoll {
-                            msg = "You are being carried by " + carrierName + ".";
-                            menu = ["OK"];
-                        }
-                        
-                        else if (isCarrier) {
-                            msg = "Place Down frees " + dollName + " when you are done with " + pronounHerDoll;
-                            
-                            menu += CHECK + " Carried";
-                        }
+                // Handle our "special" states first which significantly alter the menu
                 
-                        // Someone else clicked on key
-                        else {
-                            msg = dollName + " is currently being carried by " + carrierName + ". They have full control over this doll.\n";
-                            menu = ["OK"];
-                        }
-                    }
-                    // When the doll is collapsed they lose their access to most key functions with a few exceptions
-                    else if (collapsed) {
-                        if (isDoll) {
-                            msg = "You need winding.";
-                            
-                            if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK) {
-                                // Only present the TP home option for the doll if they have been collapsed
-                                // for at least 900 seconds (15 minutes) - Suggested by Christina
-                                if (collapseTime + 900.0 < llGetTime()) menu = ["TP Home"];
-                            }
-                            
-                            #ifndef TESTER_MODE
-                            // Otherwise no more options here
-                            if (menu == []) menu = ["OK"]
-                            #endif
-                        }
+                // When the doll is carried they have exclusive control
+                if (hasCarrier) {
+                    // Doll being carried clicked on key
+                    if isDoll {
+                        msg = "You are being carried by " + carrierName + ".";
+                        menu = ["OK"];
                     }
                     
-                    if (!collapsed && (!hasCarrier || isCarrier)) {   
-                        //not  being carried (or for carrier), not collapsed - normal in other words
-                        // Toucher could be...
-                        //   1. Doll
-                        //   2. Carrier
-                        //   3. Controller
-                        //   4. Someone else
+                    else if (isCarrier) {
+                        msg = "Place Down frees " + dollName + " when you are done with " + pronounHerDoll;
                         
-                        // Options only available to dolly
-                        if (isDoll) {
-                            menu += "Options";
-                            if (detachable) menu += "Detach";
-                            #ifdef TESTER_MODE
-                            menu += "Wind";
-                            #endif
-                
-                            if (canAFK) menu += getButton("AFK", id, afk, 0);
-                
-                            menu += getButton("Visible", id, visible, 0);
-                        }
-                        // Options only available if controller
-                        else if (isController) {
-                            menu += [ "Options", "Detach" ];
-                            
-                            if (canCarry) {
-                                msg =  msg +
-                                       "Carry option picks up " + dollName + " and temporarily" +
-                                       " makes the Dolly exclusively yours.\n";
-                
-                                menu += CROSS + " Carried";
-                            }
-                        }
-                        else {
-                            manpage = "communitydoll.htm";
+                        menu += "Uncarry";
+                    }
+            
+                    // Someone else clicked on key
+                    else {
+                        msg = dollName + " is currently being carried by " + carrierName + ". They have full control over this doll.\n";
+                        menu = ["OK"];
+                    }
+                }
+                // When the doll is collapsed they lose their access to most key functions with a few exceptions
+                else if (collapsed) {
+                    if (isDoll) {
+                        msg = "You need winding.";
                         
-                            // Toucher is not Doll.... could be anyone
-                            msg =  dollName + " is a doll and likes to be treated like " +
-                                   "a doll. So feel free to use these options.\n";
+                        if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK) {
+                            // Only present the TP home option for the doll if they have been collapsed
+                            // for at least 900 seconds (15 minutes) - Suggested by Christina
+                            if (collapseTime + 900.0 < llGetTime()) menu = ["TP Home"];
                         }
                         
+                        #ifndef TESTER_MODE
+                        // Otherwise no more options here
+                        if (menu == []) menu = ["OK"]
+                        #endif
+                    }
+                }
+                
+                if (!collapsed && (!hasCarrier || isCarrier)) {   
+                    //not  being carried (or for carrier), not collapsed - normal in other words
+                    // Toucher could be...
+                    //   1. Doll
+                    //   2. Carrier
+                    //   3. Controller
+                    //   4. Someone else
+                    
+                    // Options only available to dolly
+                    if (isDoll) {
+                        menu += "Options";
+                        if (detachable) menu += "Detach";
                         #ifdef TESTER_MODE
                         menu += "Wind";
-                        #else
-                        if (!isDoll) menu += "Wind";
                         #endif
-                     
-                        // Can the doll be dressed? Add menu button
-                        if (RLVok && ((!isDoll && canDress) || (isDoll && canWear && !wearLock))) {
-                            menu += "Dress";
-                        }
-                    
-                        // Can the doll be transformed? Add menu button
-                        if (isTransformingKey) {
-                            menu += "Type of Doll";
-                        }
-                
-                        if (keyAnimation != "" && keyAnimation != ANIMATION_COLLAPSED) {
-                            //msg += "Doll is currently in the " + currentAnimation + " pose. ";
-                            msg += "Doll is currently posed.\n";
-                        }
-                
-                        if (keyAnimation != "" && keyAnimation != ANIMATION_COLLAPSED && (!isDoll || poserID == dollID)) menu += "Unpose";
-                
-                        if (keyAnimation == "" || (!isDoll || poserID == dollID)) menu += "Poses";
-                    
-                        #ifdef ADULT_MODE
-                            // Is doll strippable?
-                            if (RLVok && (pleasureDoll || dollType == "Slut")) {
-                                #ifdef TESTER_MODE
-                                if (isController || isCarrier || isDoll) {
-                                #else
-                                if (isController || isCarrier) {
-                                #endif
-                                    if (simRating == "MATURE" || simRating == "ADULT") menu += "Strip";
-                                }
-                            }
-                        #endif
+            
+                        if (canAFK) menu += getButton("AFK", id, afk, 0);
+            
+                        menu += getButton("Visible", id, visible, 0);
                     }
-                    
-                    menu += "Help/Support";
-                    
-                    llListenControl(dialogHandle, 1);
-                    llSetTimerEvent(60.0);
-                    
-                    if (!RLVok) msg += "No RLV detected some features unavailable.\n";
-                    
-                    msg += "See " + WEB_DOMAIN + manpage + " for more information." ;
-                    llDialog(id, timeleft + msg, dialogSort(llListSort(menu, 1, 1)) , dialogChannel);
-                }
-                else if (cmd == "windMenu") {    
-                    if (llGetListLength(windTimes) == 1) {
-                        lmInternalCommand("mainMenu", "", id);;
-                        return;
-                    }
-                    
-                    string msg = "How many minutes would you like to wind?";
-                    
-                    
-                    list buttons = llListSort(windTimes, 1, 1);
-                    if (demoMode) {
-                        buttons = [ "Wind 2", "Wind 5" ]; // If we are in demo mode make our buttons make sense
+                    // Options only available if controller
+                    else if (isController || (numControllers == 0)) {
+                        menu += [ "Options", "Detach" ];
+                        
+                        if (canCarry) {
+                            msg =  msg +
+                                   "Carry option picks up " + dollName + " and temporarily" +
+                                   " makes the Dolly exclusively yours.\n";
+            
+                            if (!hasCarrier) menu += "Carry";
+                        }
                     }
                     else {
-                        integer i;
-                        for (i = 0; i < llGetListLength(buttons); i++) {
-                            if (llList2String(buttons, i) != MAIN)
-                                buttons = llListReplaceList(buttons, [ "Wind " + llList2String(buttons, i) ], i, i);
-                        }
+                        manpage = "communitydoll.htm";
+                    
+                        // Toucher is not Doll.... could be anyone
+                        msg =  dollName + " is a doll and likes to be treated like " +
+                               "a doll. So feel free to use these options.\n";
                     }
                     
-                    llDialog(id, timeleft + msg, dialogSort(buttons + MAIN), dialogChannel);
+                    #ifdef TESTER_MODE
+                    menu += "Wind";
+                    #else
+                    if (!isDoll) menu += "Wind";
+                    #endif
+                 
+                    // Can the doll be dressed? Add menu button
+                    if (RLVok && ((!isDoll && canDress) || (isDoll && canWear && !wearLock))) {
+                        menu += "Dress";
+                    }
+                
+                    // Can the doll be transformed? Add menu button
+                    if (isTransformingKey) {
+                        menu += "Type of Doll";
+                    }
+            
+                    if (keyAnimation != "" && keyAnimation != ANIMATION_COLLAPSED) {
+                        //msg += "Doll is currently in the " + currentAnimation + " pose. ";
+                        msg += "Doll is currently posed.\n";
+                    }
+            
+                    if (keyAnimation != "" && keyAnimation != ANIMATION_COLLAPSED && (!isDoll || poserID == dollID)) menu += "Unpose";
+            
+                    if (keyAnimation == "" || (!isDoll || poserID == dollID)) menu += "Poses";
+                
+                    #ifdef ADULT_MODE
+                        // Is doll strippable?
+                        if (RLVok && (pleasureDoll || dollType == "Slut")) {
+                            #ifdef TESTER_MODE
+                            if (isController || isCarrier || isDoll) {
+                            #else
+                            if (isController || isCarrier) {
+                            #endif
+                                if (simRating == "MATURE" || simRating == "ADULT") menu += "Strip";
+                            }
+                        }
+                    #endif
                 }
+                
+                menu += "Help/Support";
+                
+                llListenControl(dialogHandle, 1);
+                llSetTimerEvent(60.0);
+                
+                if (!RLVok) msg += "No RLV detected some features unavailable.\n";
+                
+                msg += "See " + WEB_DOMAIN + manpage + " for more information." ;
+                llDialog(id, timeleft + msg, dialogSort(llListSort(menu, 1, 1)) , dialogChannel);
             }
         }
         else if (code == 350) {
@@ -506,22 +468,7 @@ default
                 return;
             }
             
-            if (optName == "Carried" && !isDoll) {
-                if (curState == CROSS) {
-                    // Doll has been picked up...
-                    carrierID = id;
-                    carrierName = name;
-                    lmInternalCommand("carry", carrierName, carrierID);
-                    lmInternalCommand("mainMenu", "", id);;
-                }
-                else {
-                    // Doll has been placed down...
-                    llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|uncarry|" + carrierName, carrierID);
-                    carrierID = NULL_KEY;
-                    carrierName = "";
-                }
-            }
-            else if (choice == "Help/Support") {
+            if (choice == "Help/Support") {
                 string msg = "Here you can find various options to get help with your " +
                             "key and to connect with the community.";
                 list pluslist = [ "Join Group", "Visit Dollhouse" ];
