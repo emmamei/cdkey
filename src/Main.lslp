@@ -576,7 +576,7 @@ default {
             }
             else if (name == "windTimes") {
                 integer timesCount = llGetListLength(split);
-                integer i;
+                integer i; split = llList2List(split, 2, -1);
                 for (i = 0; i < llGetListLength(split); i++) split = llListReplaceList(split, [ llList2Integer(split, i) ], i ,i);
                 split = llListSort(split, 1, 1);
                 defaultwind = llListStatistics(LIST_STAT_MEDIAN, split) * SEC_TO_MIN;
