@@ -24,30 +24,7 @@ list dialogSort(list srcButtons) {
     return outButtons;
 }
 
-integer isKeyFormat(string input) {
-    if (llStringLength(input) != 36) return 0;
-    integer i; list dashes = [ 8, 13, 18, 23 ];
-    //string part = llGetSubString(input, 0, 7);
-    //if ((integer)("0x" + part) == 0 && part != "00000000") return 0;
-    if (llGetSubString(input, 8, 8) != "-") return 0;
-    //part = llGetSubString(input, 9, 12);
-    //if ((integer)("0x" + part) == 0 && part != "0000") return 0;
-    if (llGetSubString(input, 13, 13) != "-") return 0;
-    //part = llGetSubString(input, 14, 17);
-    //if ((integer)("0x" + part) == 0 && part != "0000") return 0;
-    if (llGetSubString(input, 18, 18) != "-") return 0;
-    //part = llGetSubString(input, 19, 22);
-    //if ((integer)("0x" + part) == 0 && part != "0000") return 0;
-    if (llGetSubString(input, 23, 23) != "-") return 0;
-    //part = llGetSubString(input, 24, 31);
-    //if ((integer)("0x" + part) == 0 && part != "00000000") return 0;
-    //part = llGetSubString(input, 31, 35);
-    //if ((integer)("0x" + part) == 0 && part != "0000") return 0;
-    
-    return 1;
-}
 
-#ifdef DEVELOPER_MODE
 memReport(float delay) {
     if (delay != 0.0) llSleep(delay);
     float memory_limit = (float)llGetMemoryLimit();
@@ -59,14 +36,40 @@ memReport(float delay) {
     }
     llOwnerSay(SCRIPT_NAME + ": Memory " + formatFloat(used_memory/1024.0, 2) + "/" + (string)llRound((memory_limit)/1024.0) + "kB, " + formatFloat(free_memory/1024.0, 2) + " kB free");
 }
-#else
-#define memReport(dummy)
-#endif // DEVELOPER_MODE
 
-#ifndef DEBUG_MASTER
+#ifdef DEVELOPER_MODE
 #define debugSay(level,msg) llMessageLinked(LINK_THIS, 700, msg, (key)((string)level))
 #else
-#define debugSay(level,msg) debugMaster(level,"DEBUG",msg)
+#define debugSay(level,msg)
+#define debugMaster(level,prefix,msg)
+#define linkDebug(sender,code,data,id)
+#endif
+
+#ifdef DEVELOPER_MODE
+linkDebug(integer sender, integer code, string data, key id) {
+    if (code == 700) return;
+    
+    integer level = 5;
+         if (llListFindList([ 102, 150, 305, 399 ], [ code ]) != -1)            level = 2;
+    else if (llListFindList([ 104, 105, 110, 350 ], [ code ]) != -1)            level = 4;
+    else if (llListFindList([ 9999 ], [ code ]) != -1)                          level = 6;
+    else if (llListFindList([ 104, 300, 315, 500 ], [ code ]) != -1)            level = 7;
+    else if (llListFindList([ 9999 ], [ code ]) != -1)                          level = 8;
+    else if (llListFindList([ 135, 999 ], [ code ]) != -1)                      level = 9;
+    
+    string msg = "LM-DEBUG (" + (string)level + "): " + (string)code + ", " + data;
+    if (id != NULL_KEY) msg += " - " + (string)id;
+    
+    debugMaster(level, "LINK-DEBUG", msg);
+}
+
+debugMaster(integer level, string prefix, string msg) {
+    if (debugLevel >= level) {
+        msg = prefix + "(" + (string)level + " (" + (string)debugLevel + ")): " + llGetScriptName() + ": " + msg;
+        if (DEBUG_TARGET == 1) llOwnerSay(msg);
+        else llSay(DEBUG_CHANNEL, msg);
+    }
+}
 #endif
 /*
  * ----------------------------------------
@@ -248,9 +251,10 @@ scaleMem() {
 
       if (newlimit != limit) {
          llSetMemoryLimit(newlimit);
+         #ifdef DEVELOPER_MODE
          debugSay(7, "Memory limit changed from " + formatFloat((float)limit / 1024.0, 2) + "kB to " + formatFloat((float)newlimit / 1024.0, 2) + "kB (" + formatFloat((float)(newlimit - limit) / 1024.0, 2) + "kB) " + formatFloat((float)llGetFreeMemory() / 1024.0, 2) + "kB free");
+         #endif
       }
-      //debugSay(5, SCRIPT_NAME + ":  free=" + (string)free + " used=" + (string)used + " short=" + (string)short + " limit=" + (string)limit + " newlimit=" + (string)newlimit);
    }
 }
 #endif // UTILITY_LSL

@@ -263,21 +263,19 @@ default
                     }
                 }
                 // When the doll is collapsed they lose their access to most key functions with a few exceptions
-                else if (collapsed) {
-                    if (isDoll) {
-                        msg = "You need winding.";
-                        
-                        if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK) {
-                            // Only present the TP home option for the doll if they have been collapsed
-                            // for at least 900 seconds (15 minutes) - Suggested by Christina
-                            if (collapseTime + 900.0 < llGetTime()) menu = ["TP Home"];
-                        }
-                        
-                        #ifndef TESTER_MODE
-                        // Otherwise no more options here
-                        if (menu == []) menu = ["OK"]
-                        #endif
+                else if (collapsed && isDoll) {
+                    msg = "You need winding.";
+                    
+                    if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK) {
+                        // Only present the TP home option for the doll if they have been collapsed
+                        // for at least 900 seconds (15 minutes) - Suggested by Christina
+                        if (collapseTime + 900.0 < llGetTime()) menu = ["TP Home"];
                     }
+                    
+                    #ifndef TESTER_MODE
+                    // Otherwise no more options here
+                    if (menu == []) menu = ["OK"]
+                    #endif
                 }
                 
                 if (!collapsed && (!hasCarrier || isCarrier)) {   
@@ -320,11 +318,7 @@ default
                                "a doll. So feel free to use these options.\n";
                     }
                     
-                    #ifdef TESTER_MODE
-                    menu += "Wind";
-                    #else
                     if (!isDoll) menu += "Wind";
-                    #endif
                  
                     // Can the doll be dressed? Add menu button
                     if (RLVok && ((!isDoll && canDress) || (isDoll && canWear && !wearLock))) {
@@ -335,15 +329,15 @@ default
                     if (isTransformingKey) {
                         menu += "Type of Doll";
                     }
-            
+
                     if (keyAnimation != "" && keyAnimation != ANIMATION_COLLAPSED) {
-                        //msg += "Doll is currently in the " + currentAnimation + " pose. ";
                         msg += "Doll is currently posed.\n";
+                        
+                        if (!isDoll || (poserID == dollID)) {
+                            menu += ["Pose","Unpose"];
+                        }
                     }
-            
-                    if (keyAnimation != "" && keyAnimation != ANIMATION_COLLAPSED && (!isDoll || poserID == dollID)) menu += "Unpose";
-            
-                    if (keyAnimation == "" || (!isDoll || poserID == dollID)) menu += "Poses";
+                    else menu += "Pose";
                 
                     #ifdef ADULT_MODE
                         // Is doll strippable?

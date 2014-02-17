@@ -7,9 +7,9 @@ key carrierID               = NULL_KEY;
 key dresserID               = NULL_KEY;
 key dollID                  = NULL_KEY;
 key poserID                 = NULL_KEY;
-key scriptkey               = NULL_KEY;
 
 list MistressList           = [];
+list blacklist;
 
 string carrierName;
 string dresserName;
@@ -17,10 +17,7 @@ string poserName;
 string dollName;
 string dollType             = "Regular";
 string keyAnimation;
-//string mistressName         = "";
-#ifdef ADULT_MODE  
 string simRating;
-#endif
 
 float dilationMedian        = 1.0;
 float keyLimit              = 10800.0;
@@ -51,17 +48,10 @@ integer quiet;
 integer RLVok;
 integer signOn;
 integer takeoverAllowed;
-integer timeReporting       = 2;
 integer visible             = 1;
 
 integer dialogChannel;
 integer dialogHandle;
-
-string dollShortName;
-string keyDefaultName;
-string keyOwnerSayName;
-string keyShortName;
-
 #endif // COMMON_GLOBALS
 
 

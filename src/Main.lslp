@@ -13,8 +13,8 @@
 //    - Key: doesnt wind down - Doll can be worn by other Dolly as Key
 //    - Builder: doesnt wind down
 
-//========================================
-// VARIABLES
+//======================================== 
+// VARIABLES 
 //========================================
 
 // Transforming Keys:
@@ -95,10 +95,6 @@ integer initState = 104;
 
 integer debugLevel = DEBUG_LEVEL;
 
-#ifdef DEVELOPER_MODE
-integer timeReporting;
-#endif
-
 // If the key is a Transforming Key - one that can transform from one
 // type of Doll to another - this tracks the current type of doll.
 string dollType = "Regular";
@@ -128,39 +124,11 @@ string pronounHerDoll = "Her";
 string pronounSheDoll = "She";
 key mistressQuery;
 
-#ifdef ADULT_MODE
-string simRating;
 key simRatingQuery;
-#endif
 
 //========================================
 // FUNCTIONS
 //========================================
-linkDebug(integer sender, integer code, string data, key id) {
-    if (code == 700) return;
-    
-    integer level = 5;
-         if (llListFindList([ 102, 150, 305, 399 ], [ code ]) != -1)            level = 2;
-    else if (llListFindList([ 104, 105, 110, 350 ], [ code ]) != -1)            level = 4;
-    else if (llListFindList([ 9999 ], [ code ]) != -1)                          level = 6;
-    else if (llListFindList([ 104, 300, 315, 500 ], [ code ]) != -1)            level = 7;
-    else if (llListFindList([ 9999 ], [ code ]) != -1)                          level = 8;
-    else if (llListFindList([ 135, 999 ], [ code ]) != -1)                      level = 9;
-    
-    string msg = "LM-DEBUG (" + (string)level + "): " + (string)code + ", " + data;
-    if (id != NULL_KEY) msg += " - " + (string)id;
-    
-    debugMaster(level, "LINK-DEBUG", msg);
-}
-
-debugMaster(integer level, string prefix, string msg) {
-    if (debugLevel >= level) {
-        msg = prefix + "(" + (string)level + "): " + llGetScriptName() + ": " + msg;
-        if (DEBUG_TARGET == 1) llOwnerSay(msg);
-        else llSay(DEBUG_CHANNEL, msg);
-    }
-}
-
 string cannoizeName(string name) {
     // Many new SL users fail to undersand the meaning of "Legacy Name" the name format of the DB
     // and many older SL residents confuse usernames and legasy names.  This function checks for
@@ -523,6 +491,7 @@ default {
                 collapsed = (integer)value;
                 setWindRate();
             }
+            else if (name == "debugLevel")                 debugLevel = (integer)value;
             else if (name == "configured")                 configured = (integer)value;
             else if (name == "detachable")                 detachable = (integer)value;
             else if (name == "helpless")                     helpless = (integer)value;
@@ -690,19 +659,47 @@ default {
             string choice = llList2String(split, 0);
             string name = llList2String(split, 1);
 
-            if (choice == "Wind") {
-                if (llGetListLength(windTimes) == 1 || (timeLeftOnKey + llList2Float(windTimes, 0) * SEC_TO_MIN) > keyLimit || timeLeftOnKey + 60.0 > effectiveLimit) {
+            if (timeLeftOnKey + 60.0 > effectiveLimit) {
+                llDialog(id, "Dolly is already fully wound.", [MAIN], dialogChannel);
+                return;
+            }
+            if (llGetSubString(choice, 0, 3) == "Wind") {
+                if (choice == "Wind Emg") {
+                    // Give this a time limit: can only be done once
+                    // in - say - 6 hours... at least maxwindtime *2 or *3.
+    
+                    if (winderRechargeTime == 0.0) {
+    
+                        if (collapsed == 1) {
+                            llMessageLinked(LINK_THIS, 15, dollName + " has activated the emergency winder.", scriptkey);
+    
+                            windKey();
+                            winderRechargeTime = EMERGENCY_LIMIT_TIME;
+    
+                            llOwnerSay("Emergency self-winder has been triggered by Doll.");
+                            llOwnerSay("Emergency circuitry requires recharging and will be available again in " + (string)llRound(EMERGENCY_LIMIT_TIME / 3600.0) + " hours.");
+                        }
+                        else if (collapsed == 2) {
+                            llOwnerSay("The emergency winder motor whirrs, splutters and then falls silent unable to budge your jammed mechanism.");
+                        }
+                        else {
+                            llOwnerSay("No emergency exists - emergency self-winder deactivated.");
+                        }
+                    } 
+                    else {
+                       llOwnerSay("Emergency self-winder is not yet recharged there is still " + formatFloat(winderRechargeTime / 3600.0, 2) + " hours before it will be ready again.");
+                    }
+                }
+                else if (llStringLength(choice) > 5) {
+                    windamount = (float)llGetSubString(choice, 5, -1) * SEC_TO_MIN;
+                    doWind(name, id);
+                }
+                else if ((llGetListLength(windTimes) == 1) || ((timeLeftOnKey + llList2Float(windTimes, 0) * SEC_TO_MIN) > keyLimit)) {
                     debugMaster(5, "DEBUG", "Doing default wind");
                     windamount = defaultwind;
                     doWind(name, id);
                 }
                 else lmInternalCommand("windMenu", "", id);
-            }
-            else if (llGetSubString(choice, 0, 3) == "Wind") {
-                if (llStringLength(choice) > 5) {
-                    windamount = (float)llGetSubString(choice, 5, -1) * SEC_TO_MIN;
-                    doWind(name, id);
-                }
             }
         }
         else if (code == 700) {
@@ -781,30 +778,7 @@ default {
                     }
                 }
                 else if (choice == "wind") {
-                    // Give this a time limit: can only be done once
-                    // in - say - 6 hours... at least maxwindtime *2 or *3.
-    
-                    if (winderRechargeTime == 0.0) {
-    
-                        if (collapsed == 1) {
-                            llMessageLinked(LINK_THIS, 15, dollName + " has activated the emergency winder.", scriptkey);
-    
-                            windKey();
-                            winderRechargeTime = EMERGENCY_LIMIT_TIME;
-    
-                            llOwnerSay("Emergency self-winder has been triggered by Doll.");
-                            llOwnerSay("Emergency circuitry requires recharging and will be available again in " + (string)llRound(EMERGENCY_LIMIT_TIME / 3600.0) + " hours.");
-                        }
-                        else if (collapsed == 2) {
-                            llOwnerSay("The emergency winder motor whirrs, splutters and then falls silent unable to budge your jammed mechanism.");
-                        }
-                        else {
-                            llOwnerSay("No emergency exists - emergency self-winder deactivated.");
-                        }
-                    } 
-                    else {
-                       llOwnerSay("Emergency self-winder is not yet recharged there is still " + formatFloat(winderRechargeTime / 3600.0, 2) + " hours before it will be ready again.");
-                    }
+                    lmMenuReply("Wind Emg", dollName, dollID);
                 }
                 else if (choice == "xstats") {
                     llOwnerSay("AFK time factor: " + formatFloat(RATE_AFK, 1) + "x");
@@ -925,14 +899,23 @@ default {
                 else if (choice == "unblacklist") {
                     lmInternalCommand("getBlacklistKey", cannoizeName(param), NULL_KEY);
                 }
+                #undef DEVELOPER_MODE
+                #undef TESTER_MODE
                 #ifdef DEVELOPER_MODE
                 else if (choice == "timereporting") {
                     lmSendConfig("timeReporting", (string)(timeReporting = (integer)param));
                 }
                 else if (choice == "debug") {
-                    debugLevel = (integer)param;
+                    lmSendConfig("debugLevel", (string)(debugLevel = (integer)param));
                     llOwnerSay("DEBUG_LEVEL = " + (string)debugLevel);
                 }
+                #else
+                    #ifdef TESTER_MODE
+                        else if (choice == "debug") {
+                            lmSendConfig("debugLevel", (string)(debugLevel = (integer)param));
+                            llOwnerSay("DEBUG_LEVEL = " + (string)debugLevel);
+                        }
+                    #endif
                 #endif
                 else llOwnerSay("Unrecognised command '" + choice + "' recieved on channel " + (string)chatChannel);
             }
@@ -943,6 +926,7 @@ default {
                 debugMaster(5, "BROADCAST-DEBUG", "Broadcast recv: From: " + name + " (" + (string)id + ") Owner: " + llGetDisplayName(llGetOwnerKey(id)) + " (" + (string)llGetOwnerKey(id) +  ") " + choice);
                 if (subcommand == "claimed") {
                     if (keyHandler == llGetKey()) {
+                        keyHandlerTime = llGetUnixTime();
                         llRegionSay(broadcastOn, "keys released");
                         debugMaster(5, "BROADCAST-DEBUG", "Broadcast sent: keys released");
                     }
@@ -952,7 +936,7 @@ default {
                     lmSendConfig("keyHandler", (string)(keyHandler = NULL_KEY));
                     keyHandlerTime = (float)llGetUnixTime();
                 }
-            }
+            } 
         }
     }
 

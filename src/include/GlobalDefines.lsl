@@ -118,18 +118,18 @@
 
 // Link messages
 #define lmSendToAgent(msg, id) llMessageLinked(LINK_THIS, 11, msg, id)
-#define lmPrefsComplete(count) llMessageLinked(LINK_THIS, 102, SCRIPT_NAME + "|" + (string)(count), scriptkey)
-#define lmMemReport(delay) llMessageLinked(LINK_THIS, 135, SCRIPT_NAME + "|" + (string)delay, scriptkey)
+#define lmPrefsComplete(count) llMessageLinked(LINK_THIS, 102, SCRIPT_NAME + "|" + (string)(count), NULL_KEY)
+#define lmMemReport(delay) llMessageLinked(LINK_THIS, 135, SCRIPT_NAME + "|" + (string)delay, NULL_KEY)
 #define lmInternalCommand(command, parameter, id) llMessageLinked(LINK_THIS, 305, SCRIPT_NAME + "|" + command + "|" + parameter, id)
-#define lmRLVreport(active, apistring, apiversion) llMessageLinked(LINK_THIS, 350, SCRIPT_NAME + "|" + (string)active + "|" + apistring + "|" + (string)apiversion, scriptkey)
-#define lmRunRLV(command) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|" + command, scriptkey)
-#define lmRunRLVas(vmodule, command) llMessageLinked(LINK_THIS, 315, vmodule + "|" + command, scriptkey)
-#define lmConfirmRLV(forscript, command) llMessageLinked(LINK_THIS, 320, SCRIPT_NAME + "|" + forscript + "|" + command, scriptkey)
-#define lmScriptReset() llMessageLinked(LINK_THIS, 999, SCRIPT_NAME, scriptkey)
-#define lmOwnerCheckFail() llMessageLinked(LINK_THIS, 999, SCRIPT_NAME + "|" + (string)CHANGED_OWNER, scriptkey)
-#define lmSendConfig(name, value) llMessageLinked(LINK_THIS, 300, SCRIPT_NAME + "|" + name + "|" + value, scriptkey)
-#define lmUpdateStatistic(name, value) llMessageLinked(LINK_THIS, 399, SCRIPT_NAME + "|" + name + "|" + value, scriptkey)
-#define lmInitState(code) llMessageLinked(LINK_THIS, code, SCRIPT_NAME, scriptkey)
+#define lmRLVreport(active, apistring, apiversion) llMessageLinked(LINK_THIS, 350, SCRIPT_NAME + "|" + (string)active + "|" + apistring + "|" + (string)apiversion, NULL_KEY)
+#define lmRunRLV(command) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|" + command, NULL_KEY)
+#define lmRunRLVas(vmodule, command) llMessageLinked(LINK_THIS, 315, vmodule + "|" + command, NULL_KEY)
+#define lmConfirmRLV(forscript, command) llMessageLinked(LINK_THIS, 320, SCRIPT_NAME + "|" + forscript + "|" + command, NULL_KEY)
+#define lmScriptReset() llMessageLinked(LINK_THIS, 999, SCRIPT_NAME, NULL_KEY)
+#define lmOwnerCheckFail() llMessageLinked(LINK_THIS, 999, SCRIPT_NAME + "|" + (string)CHANGED_OWNER, NULL_KEY)
+#define lmSendConfig(name, value) llMessageLinked(LINK_THIS, 300, SCRIPT_NAME + "|" + name + "|" + value, NULL_KEY)
+#define lmUpdateStatistic(name, value) llMessageLinked(LINK_THIS, 399, SCRIPT_NAME + "|" + name + "|" + value, NULL_KEY)
+#define lmInitState(code) llMessageLinked(LINK_THIS, code, SCRIPT_NAME, NULL_KEY)
 #define lmMenuReply(choice, name, id) llMessageLinked(LINK_THIS, 500, choice + "|" + name, id)
 
 // Defines for various virtual functions to save typing and memory by inlining
@@ -140,8 +140,8 @@
 #define getWindRate() llList2Float(llGetPrimitiveParams([ PRIM_OMEGA ]), 1) / (TWO_PI / 15.0)
 #define timerNextFrame() llSetTimerEvent(0.01 * mainTimerEnable)
 
-#define uncarry() lmInternalCommand("uncarry", "", scriptkey)
-#define uncollapse(timeSent) lmInternalCommand("uncollapse", (string)timeSent, scriptkey)
+#define uncarry() lmInternalCommand("uncarry", "", NULL_KEY)
+#define uncollapse(timeSent) lmInternalCommand("uncollapse", (string)timeSent, NULL_KEY)
 
 // Keys of important people in life of the Key:
 #define AGENT_CHRISTINA_HALPIN "42c7aaec-38bc-4b0c-94dd-ae562eb67e6d"
