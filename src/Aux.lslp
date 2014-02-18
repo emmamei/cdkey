@@ -94,9 +94,11 @@ default
             
                  if (name == "MistressList")              MistressList = split;
             else if (name == "isVisible")                 doVisibility((integer)value);
-            
+            else if (name == "dollyName") {
+                string dollyName = value;
+                llSetObjectName(dollyName + "'s Key");
+            }
             if (script != "MenuHandler") return;
-            
             if (name == "canWear") {
                 if (value == "1") llOwnerSay("You are now able to change your own outfits again.");
                 else llOwnerSay("You are just a dolly and can no longer dress or undress by yourself.");

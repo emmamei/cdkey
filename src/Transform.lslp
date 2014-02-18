@@ -54,39 +54,6 @@ integer quiet;
 //========================================
 // FUNCTIONS
 //========================================
-
-setup()  {
-    dollID =   llGetOwner();
-    dollname = llGetDisplayName(dollID);
-    stateName = "Regular";
-
-    //integer ncd = ( -1 * (integer)("0x"+llGetSubString((string)llGetKey(),-5,-1)) ) -1;
-    //if (channel_dialog != ncd) {
-        
-    dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -8, -1));
-
-    //llListenRemove(listen_id_8666);
-    //llListenRemove(listen_id_8665);
-    //llListenRemove(listen_id_8667);
-    //llListenRemove(listen_id_ask);
-
-    //channel_dialog = ncd;
-    //cd8666 = channel_dialog - 8666;
-    //cd8665 = cd8666 - 1;
-    //cd8667 = cd8666 + 1;
-
-    //listen_id_8665 = llListen( cd8665, "", "", "");
-    //listen_id_8666 = llListen( cd8666, "", "", "");
-    //listen_id_8667 = llListen( cd8667, "", "", "");
-
-    //channelHUD = ( -1 * (integer)("0x"+llGetSubString((string)llGetOwner(),-5,-1)) )  - 1114;
-    //channelAsk = channelHUD - 1;
-    //listen_id_ask = llListen( cd8665, "", "", "");
-    //}
-
-    //sendStateName();
-}
-
 setDollType(string choice, integer force) {
     if (stateName != currentState) {
         if (force) {
@@ -218,6 +185,11 @@ runTimedTriggers() {
 // STATES
 //========================================
 default {
+    state_entry() {
+        dollID =   llGetOwner();
+        dollname = llGetDisplayName(dollID);
+        stateName = "Regular";
+    }
     //----------------------------------------
     // ON REZ!startup
     //----------------------------------------
@@ -259,7 +231,6 @@ default {
         
         else if (code == 104) {
             if (llList2String(split, 0) != "Start") return;
-            setup();
             reloadTypeNames();
             startup = 1;
             llSetTimerEvent(60.0);   // every minute
@@ -292,12 +263,13 @@ default {
                     stateName = value;
                     if (!startup && stateName != currentState) setDollType(stateName, 1);
                 }
-                else if (name == "quiet") quiet = (integer)value;
-                else if (name == "mustAgreeToType") mustAgreeToType = (integer)value;
-                else if (name == "showPhrases") showPhrases = (integer)value;
-                else if (name == "currentState") currentState = value;
-                else if (name == "isTransformingKey") isTransformingKey = (integer)value;
-                else if (script == "Main" && name == "timeLeftOnKey") runTimedTriggers();
+                else if (name == "quiet")                                          quiet = (integer)value;
+                else if (name == "mustAgreeToType")                      mustAgreeToType = (integer)value;
+                else if (name == "showPhrases")                              showPhrases = (integer)value;
+                else if (name == "dialogChannel")                          dialogChannel = (integer)value;
+                else if (name == "currentState")                            currentState = value;
+                
+                if (script == "Main" && name == "timeLeftOnKey") runTimedTriggers();
             }
         }
         

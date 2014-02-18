@@ -38,7 +38,7 @@ memReport(float delay) {
 }
 
 #ifdef DEVELOPER_MODE
-#define debugSay(level,msg) llMessageLinked(LINK_THIS, 700, msg, (key)((string)level))
+#define debugSay(level,msg) llMessageLinked(LINK_THIS, 700, SCRIPT_NAME + "|" + msg, (key)((string)level))
 #else
 #define debugSay(level,msg)
 #define debugMaster(level,prefix,msg)

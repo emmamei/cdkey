@@ -53,6 +53,7 @@ integer dbConfig;
 integer initState = 104;
 integer textboxType;
 integer debugLevel = DEBUG_LEVEL;
+integer startup = 1;
 
 integer blacklistChannel;
 integer textboxChannel;
@@ -84,6 +85,18 @@ default
     state_entry() {
         dollID = llGetOwner();
         dollName = llGetDisplayName(dollID);
+        
+        dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -8, -1));
+        lmSendConfig("dialogChannel", (string)dialogChannel);
+        
+        blacklistChannel = dialogChannel - 666;
+        controlChannel = dialogChannel - 888;
+        textboxChannel = dialogChannel - 1111;
+        
+        if (!dialogHandle && dialogChannel) {
+            dialogHandle = llListen(dialogChannel, "", "", "");
+            llListenControl(dialogHandle, 0);
+        }
     }
     
     link_message(integer sender, integer code, string data, key id) {
@@ -92,25 +105,18 @@ default
         if (code == 102) {
             if (data == "OnlineServices") dbConfig = 1;
             else if (data == "Start") configured = 1;
+            
+            lmInternalCommand("updateExceptions", "", NULL_KEY);
+            lmSendConfig("dialogChannel", (string)dialogChannel);
         }
         else if (code == 104 || code == 105) {
             if (llList2String(split, 0) != "Start") return;
             
-            if (code == 104) {
-                dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -8, -1));
-                blacklistChannel = dialogChannel - 666;
-                controlChannel = dialogChannel - 888;
-                if (!dialogHandle && dialogChannel) {
-                    dialogHandle = llListen(dialogChannel, "", "", "");
-                    llListenControl(dialogHandle, 0);
-                }
-                lmSendConfig("dialogChannel", (string)dialogChannel);
-            }
             if (initState == code) lmInitState(initState++);
         }
         else if (code == 110) {
             initState = 105;
-            lmInternalCommand("updateExceptions", "", NULL_KEY);
+            startup = 0;
         }
         else if (code == 135) {
             float delay = llList2Float(split, 1);
@@ -156,6 +162,24 @@ default
             else if (name == "poserID")                       poserID = (key)value;
             else if (name == "collapseTime")             collapseTime = (llGetTime() - (float)value);
             else if (name == "winderRechargeTime") winderRechargeTime = (float)value;
+            else if (name == "dialogChannel") {
+                if (script != SCRIPT_NAME) {
+                    if (dialogChannel != (integer)value) {
+                        if (dialogHandle) {
+                            llListenRemove(dialogHandle);
+                            dialogHandle = llListen(dialogChannel, "", "", "");
+                            llListenControl(dialogHandle, 0);
+                        }
+                        if (blacklistHandle) llListenRemove(blacklistHandle);
+                        if (controlHandle) llListenRemove(controlHandle);
+                        if (textboxHandle) llListenRemove(textboxHandle);
+                    }
+                    dialogChannel = (integer)value;
+                    blacklistChannel = dialogChannel - 666;
+                    controlChannel = dialogChannel - 888;
+                    textboxChannel = dialogChannel - 1111;
+                }
+            }
             else if (name == "timeLeftOnKey") {
                 timeLeftOnKey = (float)value;
                 if (collapsed) {
@@ -437,7 +461,11 @@ default
     
     touch_start(integer num) {
         integer i;
-        for (i = 0; i < num; i++) lmInternalCommand("mainMenu", "", llDetectedKey(i));
+        for (i = 0; i < num; i++) {
+            key id = llDetectedKey(i);
+            if (startup) lmSendToAgent("Dolly's key is still establishing connections with " + llToLower(pronounHerDoll) + " systems please try again in a few minutes.", id);
+            else lmInternalCommand("mainMenu", llGetDisplayName(id), id);
+        }
     }
     
     //----------------------------------------
@@ -453,21 +481,22 @@ default
             return;
         }
         
-        string displayName = llGetDisplayName(id);
-        if (displayName != "") name = displayName;
-        
         list split = llParseStringKeepNulls(choice, [ " " ], []);
-        string optName = llDumpList2String(llList2List(split, 1, -1), " ");
-        string curState = llList2String(split, 0);
-
-        debugSay(3, "Button clicked: " + choice + ", optName=\"" + optName + "\", curState=\"" + curState + "\"");
-        lmMenuReply(choice, name, id);
+        
+        string displayName = llGetDisplayName(id);
+        if ((displayName != "") && (displayName != "???")) name = displayName;
         
         if (channel == dialogChannel) {
             integer isAbility; // Temporary variables used to determine if an option
             integer isFeature; // from the features or abilities menu was clicked that 
                                // way we can restore it making setting several choices
                                // much more user friendly.
+                               
+            string optName = llDumpList2String(llList2List(split, 1, -1), " ");
+            string curState = llList2String(split, 0);
+    
+            debugSay(3, "Button clicked: " + choice + ", optName=\"" + optName + "\", curState=\"" + curState + "\"");
+            lmMenuReply(choice, name, id);
                                
             if (choice == MAIN) {
                 lmInternalCommand("mainMenu", "", id);;
@@ -524,7 +553,11 @@ default
                 llDialog(id, "Here you can set various key appearance options.", [ "Dolly Name", "Gem Colour" ], dialogChannel);
             }
             else if (choice == "Dolly Name") {
-                llDialog(id, "Not implemented yet", [MAIN], dialogChannel);
+                textboxType = 2;
+                if (textboxHandle) llListenRemove(textboxHandle);
+                textboxHandle = llListen(textboxChannel, "", id, "");
+                llTextBox(id, "Here you can input a custom colour value\n\nSupported Formats:\nLSL Vector <0.900, 0.500, 0.000>\n" +
+                              "Web Format Hex #A4B355\nRGB Value 240, 120, 10", textboxChannel);
             }
             else if ((choice == "Gem Colour") || (llListFindList(COLOR_NAMES, [ choice ]) != -1)) {
                 if ((choice != "CUSTOM") && (choice != "Gem Colour")) {
@@ -535,7 +568,8 @@ default
                 } 
                 else if (choice == "CUSTOM") {
                     textboxType = 1;
-                    textboxHandle = llListen(textboxChannel, "", "", "");
+                    if (textboxHandle) llListenRemove(textboxHandle);
+                    textboxHandle = llListen(textboxChannel, "", id, "");
                     llTextBox(id, "Here you can input a custom colour value\n\nSupported Formats:\nLSL Vector <0.900, 0.500, 0.000>\n" +
                                   "Web Format Hex #A4B355\nRGB Value 240, 120, 10", textboxChannel);
                     return;
@@ -640,7 +674,7 @@ default
             // Entering abilities menu section
             isAbility = 1;
             if (optName == "Self TP") lmSendConfig("helpless", (string)(helpless = (curState == CHECK)));
-            else if (optName == "Self Dress") lmSendConfig("canWear", (string)(canWear = (curState == CHECK)));
+            else if (optName == "Self Dress") lmSendConfig("canWear", (string)(canWear = (curState == CROSS)));
             else if (optName == "Detachable") lmSendConfig("detachable", (string)(detachable = (curState == CROSS)));
             else if (optName == "Flying") lmSendConfig("canFly", (string)(canFly = (curState == CROSS)));
             else if (optName == "Sitting") lmSendConfig("canSit", (string)(canSit = (curState == CROSS)));
@@ -790,12 +824,20 @@ default
         }
         
         if (channel == textboxChannel) {
+            llListenRemove(textboxHandle);
+            textboxHandle = 0;
+            
+            debugSay(3, "Textbox input (" + (string)textboxType + ") from " + name + ": " + choice);
+            
             if (textboxType == 1) {
                 string first = llGetSubString(choice, 0, 0);
                 if (first == "<") choice = (string)((vector)choice);
                 else if (first == "#") choice = (string)((vector)("<0x" + llGetSubString(choice, 1, 2) + ",0x" + llGetSubString(choice, 3, 4) + ",0x" + llGetSubString(choice, 5, 6) + ">"));
                 else choice = (string)((vector)("<" + choice + ">"));
                 lmInternalCommand("setGemColour", choice, id);
+            }
+            else if (textboxType == 2) {
+                lmSendConfig("dollyName", (dollyName = choice));
             }
         }
         

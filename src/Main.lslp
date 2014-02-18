@@ -237,7 +237,6 @@ default {
     state_entry() {
         dollID = llGetOwner();
         if (llGetAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
-        broadcastHandle = llListen(broadcastOn, "", "", "");
     }
     
     on_rez(integer start) {
@@ -303,7 +302,7 @@ default {
         // Increment a counter
         ticks++;
         
-        //debugSay(5, "afk=" + (string)afk + " velocity=" + (string)llGetVel() + " speed=" + formatFloat(llVecMag(llGetVel()), 2) + "m/s (llVecMag(llGetVel()))");
+        //debugMaster(5, "afk=" + (string)afk + " velocity=" + (string)llGetVel() + " speed=" + formatFloat(llVecMag(llGetVel()), 2) + "m/s (llVecMag(llGetVel()))");
 
         if (canAFK) {
             integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0);
@@ -433,16 +432,15 @@ default {
             if (llList2String(split, 0) != "Start") return;
             dollID = llGetOwner();
             dollName = llGetDisplayName(dollID);
-                    
-            chatHandle = llListen(chatChannel, "", "", "");
-            dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -8, -1));
+            
+            broadcastHandle = llListen(broadcastOn, "", "", "");
+            chatHandle = llListen(chatChannel, "", dollID, "");
             
             #ifdef ADULT_MODE
             simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
             #endif
             
             clearAnim = 1;
-            //if (isConfigured) initFinal();
             if (initState == 104) lmInitState(initState++);
         }
         
@@ -505,10 +503,7 @@ default {
             else if (name == "quiet")                           quiet = (integer)value;
             else if (name == "RLVok")                           RLVok = (integer)value;
             else if (name == "signOn")                         signOn = (integer)value;
-            else if (name == "takeoverAllowed")       takeoverAllowed = (integer)value;
-            #ifdef DEVELOPER_MODE
-            else if (name == "timeReporting")           timeReporting = (integer)value;
-            #endif
+            else if (name == "dialogChannel")           dialogChannel = (integer)value;
             else if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
             else if (name == "windamount")                 windamount = (float)value;
             else if (name == "wearLockExpire")         wearLockExpire = (float)value;
@@ -556,9 +551,12 @@ default {
                 do {
                     windTimes = llList2List(split, 0, 2) + windTimes;
                     split = llDeleteSubList(split, 0, 2);
-                    //debugSay(5, "windTimes " + llList2CSV(windTimes) + "\nsplit " + llList2CSV(split));
+                    //debugMaster(5, "windTimes " + llList2CSV(windTimes) + "\nsplit " + llList2CSV(split));
                 } while (llGetListLength(split) > 0);
             }
+            #ifdef DEVELOPER_MODE
+            else if (name == "timeReporting")           timeReporting = (integer)value;
+            #endif
             #ifdef SIM_FRIENDLY
             else if (name == "lowScriptMode") {
                 lowScriptMode = (integer)value;

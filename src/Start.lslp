@@ -314,9 +314,14 @@ default {
         scaleMem();
 
         if (code == 104) {
+            string script = llList2String(split, 0);
             if (llListFindList(readyScripts, [ llList2String(split,0) ]) == -1) {
-                readyScripts += llList2String(split,0);
-                //debugSay(5, "State 104\nReady: " + llList2CSV(readyScripts) + "\nNot Ready: " + llList2CSV(notReady()));
+                if ((script == "MenuHandler") && (dialogChannel == 0)) {
+                    debugSay(1, "Phase 104 ended without dialogChannel setup rebooting!");
+                    llResetScript();
+                }
+                readyScripts += script;
+                
                 if (notReady() == []) {
                     initConfiguration();
                 }

@@ -26,6 +26,7 @@ string prefix;
 integer candresstemp;
 integer candresstimeout;
 integer dresspassed;
+integer initState = 104;
 
 key dollID = NULL_KEY;
 key dresserID = NULL_KEY;
@@ -291,16 +292,6 @@ changeComplete(integer success) {
     dresserID = NULL_KEY;
 }
 
-setup()  {
-    dollID = llGetOwner();
-    candresstemp = TRUE;
-
-    //from dollkey36
-
-    dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -8, -1));
-    rlvBaseChannel = dialogChannel ^ 0x80000000; // Xor with the sign bit forcing the positive channel needed by RLV spec.
-}
-
 doDebug(string src) {
     integer level = 5;
     if (startup != 0) level = 7;
@@ -328,7 +319,7 @@ string folderStatus() {
 //========================================
 default {
     state_entry() {
-        lmScriptReset();
+        dollID == llGetOwner();
     }
     
     on_rez(integer start) {
@@ -358,13 +349,16 @@ default {
         if (code == 104) {
             if (llList2String(split, 0) != "Start") return;
             startup = 1;
-            setup();
-            lmInitState(104);
+            
+            if (initState == 104) lmInitState(initState++);
         }
         else if (code == 105) {
             if (llList2String(split, 0) != "Start") return;
             startup = 2;
-            lmInitState(105);
+            if (initState == 105) lmInitState(initState++);
+        }
+        else if (code == 110) {
+            initState = 105;
         }
         else if (code == 135) {
             float delay = llList2Float(split, 1);
@@ -397,6 +391,10 @@ default {
                 
                     doDebug("link #2");
                 }
+            }
+            else if (name == "dialogChannel") {
+                dialogChannel = (integer)value;
+                rlvBaseChannel = dialogChannel ^ 0x80000000; // Xor with the sign bit forcing the positive channel needed by RLV spec.
             }
             else if (name == "clothingFolder") clothingFolder = value;
             else if (name == "newoutfitname") newoutfitname = value;

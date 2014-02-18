@@ -114,9 +114,9 @@ ifPermissions() {
                 debugSay(7, (string)keyAnimationID + " " + (string)curAnim + " " + (string)refreshRate);
                 if (!clearAnim && (curAnim == keyAnimationID)) {
                     refreshRate *= 2.0;
-                    if (refreshRate > 60.0) refreshRate = 60.0;
+                    if (refreshRate > 16.0) refreshRate = 16.0;
                 }
-                else if (clearAnim || (keyAnimationID != NULL_KEY)) {
+                else if (clearAnim || (keyAnimation != "")) {
                     refreshRate /= 2.0;
                     if (refreshRate < 0.022) refreshRate = 0.022;
                     if (keyAnimation != "") {
@@ -636,6 +636,8 @@ default {
             }
             else return;
             
+            if (keyAnimation == "") keyAnimationID = NULL_KEY;
+            else keyAnimationID = llGetInventoryKey(keyAnimation);
             ifPermissions();
             initializeRLV(1);
         }
@@ -709,9 +711,6 @@ default {
                 poserID = id;
             }
         }
-        
-        if (keyAnimation == "") keyAnimationID = NULL_KEY;
-        else keyAnimationID = llGetInventoryKey(keyAnimation);
     }
     
     timer() {
