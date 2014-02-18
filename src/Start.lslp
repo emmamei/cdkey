@@ -3,6 +3,7 @@
 // DATE: 18 December 2012
 //
 #include "include/GlobalDefines.lsl"
+#define sendMsg(id,msg) lmSendToAgent(msg, id);
 
 //#define HYPNO_START   // Enable hypno messages on startup
 //
@@ -12,10 +13,10 @@
 // Key is first used.
 //
 // As of 30 October 2013, this script is unused.
-
+ 
 float delayTime = 15.0; // in seconds
 float nextIntro;
-float initTimer;
+float initTimer;  
 float nextLagCheck;
 
 key dollID = NULL_KEY;
@@ -180,30 +181,6 @@ processConfiguration(string name, list values) {
     }
 }
 
-sendMsg(key target, string msg) {
-    if (llGetSubString(msg, 0, 0) == "%" && llGetSubString(msg, -1, -1) == "%") {
-        msg = findString(msg);
-    }
-    
-    if (target == dollID) llOwnerSay(msg);
-    else if (llGetAgentSize(target)) llRegionSayTo(target, 0, msg);
-    else llInstantMessage(target, msg);
-}
-
-string findString(string msg) {
-    if (msg == "%TEXT_HELP%") return "Commands:\n\n
-    detach ......... detach key if possible\n
-    stat ........... concise current status\n
-    stats .......... selected statistics and settings\n
-    xstats ......... extended statistics and settings\n
-    poses .......... list all poses\n
-    help ........... this list of commands\n
-    wind ........... trigger emergency autowind\n
-    demo ........... toggle demo mode\n
-    channel ........ change channel\n\n";
-    else return "";
-}
-
 initConfiguration() {
     // Check to see if the file exists and is a notecard
     if (llGetInventoryType(NOTECARD_PREFERENCES) == INVENTORY_NOTECARD) {
@@ -253,8 +230,8 @@ initializationCompleted() {
 
     initTimer = llGetTime() * 1000;
 
-    memReport(2.0);
     lmMemReport(0.0);
+    memReport(0.0);
     
     llSleep(0.5);
     
@@ -336,18 +313,7 @@ default {
         
         scaleMem();
 
-        if (code == 11) {
-            debugSay(7, "Send message to: " + (string)id + "\n" + data);
-            sendMsg(id, llList2String(split,0));
-        }
-        else if (code == 15) {
-            integer i;
-            for (i = 0; i < llGetListLength(llList2ListStrided(MistressList, 0, -1, 2)); i++) {
-                debugSay(7, "MistressMsg To: " + llList2String(llList2ListStrided(MistressList, 0, -1, 2), i) + "\n" + data);
-                sendMsg(llList2Key(llList2ListStrided(MistressList, 0, -1, 2), i), data);
-            }
-        }
-        else if (code == 104) {
+        if (code == 104) {
             if (llListFindList(readyScripts, [ llList2String(split,0) ]) == -1) {
                 readyScripts += llList2String(split,0);
                 //debugSay(5, "State 104\nReady: " + llList2CSV(readyScripts) + "\nNot Ready: " + llList2CSV(notReady()));

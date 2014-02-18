@@ -5,10 +5,10 @@
 #include "include/GlobalDefines.lsl"
 
 //========================================
-// VARIABLES
+// VARIABLES 
 //========================================
 string dollname;
-string stateName;
+string stateName; 
 list types;
 integer lineno;
 string transform;
@@ -16,7 +16,7 @@ string transform;
 //integer cd8666;
 //integer cd8667;
 //integer cd8665;
-
+ 
 integer dialogChannel;
 
 //integer listen_id_8666;

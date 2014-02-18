@@ -13,10 +13,10 @@ key dollID = NULL_KEY;
 list windTimes = [ 30 ];
 
 float timeLeftOnKey;
-float windDefault = 1800.0;
+float windDefault = 1800.0; 
 float windRate = 1.0;
 float baseWindRate = 1.0;
-float collapseTime;
+float collapseTime; 
 
 integer afk;
 integer autoAFK = 1;
@@ -52,6 +52,7 @@ integer wearLock;
 integer dbConfig;
 integer initState = 104;
 integer textboxType;
+integer debugLevel = DEBUG_LEVEL;
 
 integer blacklistChannel;
 integer textboxChannel;
@@ -68,11 +69,10 @@ string pronounSheDoll = "She";
 
 string carrierName;
 string mistressName;
-#ifdef ADULT_MODE
-string simRating;
-#endif
 string keyAnimation;
 string dollyName;
+
+float winderRechargeTime;
 
 list blacklist;
 list dialogKeys;
@@ -125,8 +125,7 @@ default
             string value = llList2String(split, 2);
             split = llList2List(split, 2, -1);
             
-                 if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
-            else if (name == "baseWindRate")             baseWindRate = (float)value;
+                 if (name == "baseWindRate")             baseWindRate = (float)value;
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
@@ -144,6 +143,7 @@ default
             else if (name == "canRepeat")                   canRepeat = (integer)value;
             else if (name == "poseSilence")               poseSilence = (integer)value;
             else if (name == "configured")                 configured = (integer)value;
+            else if (name == "debugLevel")                 debugLevel = (integer)value;
             else if (name == "detachable")                 detachable = (integer)value;
             else if (name == "demoMode")                     demoMode = (integer)value;
             else if (name == "helpless")                     helpless = (integer)value;
@@ -154,6 +154,14 @@ default
             else if (name == "signOn")                         signOn = (integer)value;
             else if (name == "takeoverAllowed")       takeoverAllowed = (integer)value;
             else if (name == "poserID")                       poserID = (key)value;
+            else if (name == "collapseTime")             collapseTime = (llGetTime() - (float)value);
+            else if (name == "winderRechargeTime") winderRechargeTime = (float)value;
+            else if (name == "timeLeftOnKey") {
+                timeLeftOnKey = (float)value;
+                if (collapsed) {
+                    lmSendConfig("collapseTime", (string)(collapseTime - llGetTime()));
+                }
+            }
             else if (name == "isVisible") {
                 visible = (integer)value;
                 llSetLinkAlpha(LINK_SET, (float)visible, ALL_SIDES);
@@ -266,16 +274,18 @@ default
                 else if (collapsed && isDoll) {
                     msg = "You need winding.";
                     
-                    if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK) {
-                        // Only present the TP home option for the doll if they have been collapsed
-                        // for at least 900 seconds (15 minutes) - Suggested by Christina
-                        if (collapseTime + 900.0 < llGetTime()) menu = ["TP Home"];
+                    // Only present the TP home option for the doll if they have been collapsed
+                    // for at least 900 seconds (15 minutes) - Suggested by Christina
+                    if ((collapseTime + 900.0) < llGetTime()) {
+                        if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK) {
+                            menu = ["TP Home"];
+                        }
+                        // If the doll is still down after 1800 seconds (30 minutes) and their emergency winder
+                        // is recharged add a button for it
+                        if (((collapseTime + 1800.0) < llGetTime()) && (winderRechargeTime == 0.0)) {
+                            menu += ["Wind Emg"];
+                        }
                     }
-                    
-                    #ifndef TESTER_MODE
-                    // Otherwise no more options here
-                    if (menu == []) menu = ["OK"]
-                    #endif
                 }
                 
                 if (!collapsed && (!hasCarrier || isCarrier)) {   
@@ -290,18 +300,12 @@ default
                     if (isDoll) {
                         menu += "Options";
                         if (detachable) menu += "Detach";
-                        #ifdef TESTER_MODE
-                        menu += "Wind";
-                        #endif
             
                         if (canAFK) menu += getButton("AFK", id, afk, 0);
             
                         menu += getButton("Visible", id, visible, 0);
                     }
-                    // Options only available if controller
-                    else if (isController || (numControllers == 0)) {
-                        menu += [ "Options", "Detach" ];
-                        
+                    else if (isController) {
                         if (canCarry) {
                             msg =  msg +
                                    "Carry option picks up " + dollName + " and temporarily" +
@@ -317,8 +321,6 @@ default
                         msg =  dollName + " is a doll and likes to be treated like " +
                                "a doll. So feel free to use these options.\n";
                     }
-                    
-                    if (!isDoll) menu += "Wind";
                  
                     // Can the doll be dressed? Add menu button
                     if (RLVok && ((!isDoll && canDress) || (isDoll && canWear && !wearLock))) {
@@ -330,20 +332,20 @@ default
                         menu += "Type of Doll";
                     }
 
-                    if (keyAnimation != "" && keyAnimation != ANIMATION_COLLAPSED) {
+                    if (keyAnimation != "") {
                         msg += "Doll is currently posed.\n";
                         
                         if (!isDoll || (poserID == dollID)) {
-                            menu += ["Pose","Unpose"];
+                            menu += ["Poses","Unpose"];
                         }
                     }
-                    else menu += "Pose";
+                    else menu += "Poses";
                 
                     #ifdef ADULT_MODE
                         // Is doll strippable?
                         if (RLVok && (pleasureDoll || dollType == "Slut")) {
                             #ifdef TESTER_MODE
-                            if (isController || isCarrier || isDoll) {
+                            if (isController || isCarrier || ((debugLevel != 0) && isDoll)) {
                             #else
                             if (isController || isCarrier) {
                             #endif
@@ -353,7 +355,17 @@ default
                     #endif
                 }
                 
+                #ifdef TESTER_MODE
+                if ((debugLevel != 0) && isDoll) menu += "Wind";
+                #endif
+                if (!isDoll) menu += "Wind";
                 menu += "Help/Support";
+                
+                // Options only available if controller
+                if (isController) {
+                    if (!isDoll) menu += [ "Options" ];
+                    if (!isDoll || !detachable) menu += [ "Detach" ];
+                }
                 
                 llListenControl(dialogHandle, 1);
                 llSetTimerEvent(60.0);
@@ -476,10 +488,6 @@ default
             else if (choice == "Help Notecard") {
                 llGiveInventory(id,NOTECARD_HELP);
             }
-            else if (choice == "Join Group") {
-                llOwnerSay("Here is your link to the community dolls group profile secondlife:///app/group/0f0c0dd5-a611-2529-d5c7-1284fb719003/about");
-                llDialog(id, "To join the community dolls group open your chat history (CTRL+H) and click the group link there.  Just click the Join Group button when the group profile opens.", [MAIN], dialogChannel);
-            }
             else if (choice == "Visit Dollhouse") {
                 if (isDoll) llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|TP|" + LANDMARK_CDROOM, id);
                 else llGiveInventory(id, LANDMARK_CDROOM);
@@ -554,18 +562,6 @@ default
                 float displayWindRate = setWindRate();
                 integer minsLeft = llRound(timeLeftOnKey / (60.0 * displayWindRate));
                 lmInternalCommand("setAFK", (string)afk + "|0|" + formatFloat(windRate, 1) + "|" + (string)minsLeft, id);
-            }
-            else if (choice == "Access Menu") {
-                string msg =    "Key Access Menu. (" + OPTION_DATE + " version)\n" +
-                                "These are powerful options allowing you to give someone total control of your key or block someone from touch or even winding your key\n" +
-                                "Good dollies should read their key help before \n" +
-                                "Blacklist - Fully block this avatar from using any key option even winding\n" +
-                                "Controller - Take care choosing your controllers, they have great control over their doll can only be removed by their choice";
-                list pluslist = [ "⊕ Blacklist", "⊖ Blacklist", "List Blacklist", "⊕ Controller", "List Controllers" ];
-                
-                if (llListFindList(BuiltinControllers, [ (string)id ]) != -1) pluslist +=  "⊖ Controller";
-                
-                llDialog(id, msg, dialogSort(llListSort(pluslist, 1, 1) + MAIN), dialogChannel);
             }
             if ((optName == "Blacklist") || (optName == "Controller")) {
                 integer activeChannel; integer i;
@@ -656,12 +652,20 @@ default
             isFeature = 1; // Maybe it'a a features menu item
             if (optName == "Type Text") lmSendConfig("signOn", (string)(signOn = (curState == CROSS)));
             else if (optName == "Quiet Key") lmSendConfig("quiet", (string)(quiet = (curState == CROSS)));
-            else if (optName == "Allow AFK") lmSendConfig("canAFK", (string)(canAFK = (curState == CROSS)));
             else if (optName == "Repeat Wind") lmSendConfig("canRepeat", (string)(canRepeat = (curState == CROSS)));
             else if (optName == "Carryable") lmSendConfig("canCarry", (string)(canCarry = (curState == CROSS)));
             else if (optName == "Outfitable") lmSendConfig("canDress", (string)(canDress = (curState == CROSS)));
             else if (optName == "Warnings") lmSendConfig("doWarnings", (string)(doWarnings = (curState == CROSS)));
             else if (optName == "Offline") lmSendConfig("offlineMode", (string)(offlineMode = (curState == CROSS)));
+            else if (optName == "Allow AFK") {
+                lmSendConfig("canAFK", (string)(canAFK = (curState == CROSS)));
+                if (!canAFK && afk) {
+                    afk = 0;
+                    float displayWindRate = setWindRate();
+                    integer minsLeft = llRound(timeLeftOnKey / (60.0 * displayWindRate));
+                    lmInternalCommand("setAFK", (string)afk + "|0|" + formatFloat(windRate, 1) + "|" + (string)minsLeft, id);
+                }
+            }
             #ifdef ADULT_MODE
             else if (optName == "Pleasure Doll") lmSendConfig("pleasureDoll", (string)(pleasureDoll = (curState == CROSS)));
             #endif

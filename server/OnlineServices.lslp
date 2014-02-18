@@ -1,7 +1,7 @@
 #include "include/GlobalDefines.lsl"
 #include "include/Secure.lsl"
 //#define slow_start() llSleep(0.1);
-#define slow_start()
+#define slow_start() 
 
 key keyHandler = NULL_KEY;
 key requestName;
@@ -282,7 +282,6 @@ default
             }
         }
         else if (request == requestLoadDB) {
-            debugSay(9, "HTTP " + (string)status + ": " + body);
             string error = "HTTPdb - Database access ";
             
             if (status == 200) {
@@ -365,7 +364,7 @@ default
                 dbPostParams = [];
                 list split = llParseStringKeepNulls(body, [ "|" ], []);
                 lastPostTimestamp = llList2Integer(split, 1);
-                debugSay(6, "HTTPdb update success " + llList2String(split, 2) + " updated records: " + llList2CSV(updateList));
+                debugSay(5, "HTTPdb update success " + llList2String(split, 2) + " updated records: " + llList2CSV(updateList));
                 if (!databaseOnline) {
                     llOwnerSay("HTTPdb - Database service has recovered.");
                     curInterval = stdInterval;
@@ -389,7 +388,8 @@ default
             
             debugSay(5, "Posted " + (string)(old + new) + " keys: " + (string)new + " new, " + (string)old + " old");
         }
-        debugSay(5, "HTTP " + (string)status + ": " + body);
+        if (status == 200) debugSay(7, "HTTP " + (string)status + ": " + body);
+        else debugSay(1, "HTTP " + (string)status + ": " + body);
     }
     
     link_message(integer sender, integer code, string data, key id) {

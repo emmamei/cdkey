@@ -9,11 +9,11 @@
 //            Adds channel dialog or id to screen listen
 //   Nov. 17  moves listen to cd2667 so it gets turned off
 //   Nov. 25  puts in dress menu
-//   Aug 1    redoes closing
+//   Aug 1    redoes closing 
 #include "include/GlobalDefines.lsl"
 
 //========================================
-// VARIABLES
+// VARIABLES 
 //========================================
                   
 string bigsubfolder = "dressup"; //name of subfolder in RLV to always use if available. But also checks for outfits.
@@ -277,7 +277,7 @@ changeComplete(integer success) {
 
     if (dresserID != NULL_KEY && dresserID != dollID) wearLock = 1;
     
-    lmInternalCommand("wearLock", (string)wearLock, scriptkey);
+    lmInternalCommand("wearLock", (string)wearLock, NULL_KEY);
     if (!afk || canWear || collapsed || wearLock) lmRunRLV("unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
     /*else {
         llOwnerSay("Something seems to be preventing all outfit items being added or removed correctly, dressing cancelled");

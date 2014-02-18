@@ -13,11 +13,11 @@
 // thus we keep this script lightweight with plenty of heap room
 // for it's runtime data needs.
 
-key rlvTPrequest;
-
+key rlvTPrequest; 
+ 
 list rlvSources;
 list rlvStatus;
-
+ 
 string scriptName;
 
 integer RLVstarted;

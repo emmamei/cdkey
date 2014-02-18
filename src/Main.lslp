@@ -92,6 +92,7 @@ integer timerStarted;
 integer warned;
 integer wearLock;
 integer initState = 104;
+integer timeReporting = 1;
 
 integer debugLevel = DEBUG_LEVEL;
 
@@ -304,14 +305,16 @@ default {
         
         //debugSay(5, "afk=" + (string)afk + " velocity=" + (string)llGetVel() + " speed=" + formatFloat(llVecMag(llGetVel()), 2) + "m/s (llVecMag(llGetVel()))");
 
-        integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0);
-        // When Dolly is "away" - enter AFK
-        // Also set away when 
-        if (autoAFK && (afk != dollAway)) {
-            afk = dollAway;
-            lmSendConfig("afk", (string)afk);
-            displayWindRate = setWindRate();
-            lmInternalCommand("setAFK", (string)afk + "|1|" + formatFloat(windRate, 1) + "|" + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate)), NULL_KEY);
+        if (canAFK) {
+            integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0);
+            // When Dolly is "away" - enter AFK
+            // Also set away when 
+            if (autoAFK && (afk != dollAway)) {
+                afk = dollAway;
+                lmSendConfig("afk", (string)afk);
+                displayWindRate = setWindRate();
+                lmInternalCommand("setAFK", (string)afk + "|1|" + formatFloat(windRate, 1) + "|" + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate)), NULL_KEY);
+            }
         }
         
         timeLeftOnKey -= timerInterval * windRate;
@@ -671,7 +674,7 @@ default {
                     if (winderRechargeTime == 0.0) {
     
                         if (collapsed == 1) {
-                            llMessageLinked(LINK_THIS, 15, dollName + " has activated the emergency winder.", scriptkey);
+                            llMessageLinked(LINK_THIS, 15, dollName + " has activated the emergency winder.", NULL_KEY);
     
                             windKey();
                             winderRechargeTime = EMERGENCY_LIMIT_TIME;
@@ -899,8 +902,6 @@ default {
                 else if (choice == "unblacklist") {
                     lmInternalCommand("getBlacklistKey", cannoizeName(param), NULL_KEY);
                 }
-                #undef DEVELOPER_MODE
-                #undef TESTER_MODE
                 #ifdef DEVELOPER_MODE
                 else if (choice == "timereporting") {
                     lmSendConfig("timeReporting", (string)(timeReporting = (integer)param));

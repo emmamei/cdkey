@@ -3,6 +3,7 @@
 key carrierID = NULL_KEY;
 
 key rlvTPrequest;
+key keyAnimationID;
 
 list rlvSources;
 list rlvStatus;
@@ -10,9 +11,10 @@ list rlvStatus;
 float baseWindRate;
 float carryExpire;
 float poseExpire;
-float timeToJamRepair;
+float timeToJamRepair; 
+float refreshRate = 1.0;
 
-vector carrierPos;
+vector carrierPos; 
 vector lockPos;
 
 string barefeet;
@@ -108,27 +110,38 @@ ifPermissions() {
         
         if (grantorID == dollID) {
             if (permMask & PERMISSION_TRIGGER_ANIMATION) {
-                if (keyAnimation != "") {
-                    llWhisper(LOCKMEISTER_CHANNEL, (string)dollID + "bootoff");
-                    
-                    list animList; integer i; integer animCount; key animKey = llGetInventoryKey(keyAnimation);
-                    while ((animList = llGetAnimationList(dollID)) != [ animKey ]) {
-                        animCount = llGetListLength(animList);
-                        for (i = 0; i < animCount; i++) {
-                            if (llList2Key(animList, i) != animKey) llStopAnimation(llList2Key(animList, i));
+                key curAnim = llList2Key(llGetAnimationList(dollID), 0);
+                debugSay(7, (string)keyAnimationID + " " + (string)curAnim + " " + (string)refreshRate);
+                if (!clearAnim && (curAnim == keyAnimationID)) {
+                    refreshRate *= 2.0;
+                    if (refreshRate > 60.0) refreshRate = 60.0;
+                }
+                else if (clearAnim || (keyAnimationID != NULL_KEY)) {
+                    refreshRate /= 2.0;
+                    if (refreshRate < 0.022) refreshRate = 0.022;
+                    if (keyAnimation != "") {
+                        llWhisper(LOCKMEISTER_CHANNEL, (string)dollID + "bootoff");
+                        
+                        list animList; integer i; integer animCount; key animKey = llGetInventoryKey(keyAnimation);
+                        while ((animList = llGetAnimationList(dollID)) != [ animKey ]) {
+                            animCount = llGetListLength(animList);
+                            for (i = 0; i < animCount; i++) {
+                                if (llList2Key(animList, i) != animKey) llStopAnimation(llList2Key(animList, i));
+                            }
+                            llStartAnimation(keyAnimation);
                         }
-                        llStartAnimation(keyAnimation);
+                    } else if (keyAnimation == "" && clearAnim) {
+                        list animList = llGetAnimationList(dollID); 
+                        integer i; integer animCount = llGetInventoryNumber(20);
+                        for (i = 0; i < animCount; i++) {
+                            key animKey = llGetInventoryKey(llGetInventoryName(20, i));
+                            if (llListFindList(animList, [ llGetInventoryKey(llGetInventoryName(20, i)) ]) != -1)
+                                llStopAnimation(animKey);
+                        }
+                        clearAnim = 0;
+                        llWhisper(LOCKMEISTER_CHANNEL, (string)dollID + "booton");
                     }
-                } else if (keyAnimation == "" && clearAnim) {
-                    list animList = llGetAnimationList(dollID); 
-                    integer i; integer animCount = llGetInventoryNumber(20);
-                    for (i = 0; i < animCount; i++) {
-                        key animKey = llGetInventoryKey(llGetInventoryName(20, i));
-                        if (llListFindList(animList, [ llGetInventoryKey(llGetInventoryName(20, i)) ]) != -1)
-                            llStopAnimation(animKey);
-                    }
-                    clearAnim = 0;
-                    llWhisper(LOCKMEISTER_CHANNEL, (string)dollID + "booton");
+                    llSetTimerEvent(refreshRate);
                 }
             }
             
@@ -168,7 +181,7 @@ ifPermissions() {
         }
     }
     
-    if (!collapsed && poseExpire == 0.0 && timeToJamRepair == 0.0) {
+    if (!collapsed && (keyAnimation == "") && (timeToJamRepair == 0.0)) {
         if (RLVck == 0) {
             llSetTimerEvent(0.0);
             if (timerOn) debugSay(5, "Timer suspended, awaiting activity.");
@@ -177,8 +190,8 @@ ifPermissions() {
     }
     else {
         if (RLVck == 0) {
-            llSetTimerEvent(5.0);
-            if (lowScriptMode) llSetTimerEvent(10.0);
+            llSetTimerEvent(refreshRate);
+            if (lowScriptMode) llSetTimerEvent(refreshRate * 2);
             if (!timerOn) {
                 debugSay(5, "Timer activated.");
                 llResetTime();
@@ -385,7 +398,7 @@ default {
                 // automatically this prevents neusance messages when defaultwear is
                 // permitted.
                 // Q: Should that be changed? Not sure the message serves much purpose with *verified* RLV and known lock.
-                llMessageLinked(LINK_THIS, 15, dollName + " has detached " + llToLower(pronounHerDoll) + " key while undetachable.", scriptkey);
+                llMessageLinked(LINK_THIS, 15, dollName + " has detached " + llToLower(pronounHerDoll) + " key while undetachable.", NULL_KEY);
             }
             else if (id != NULL_KEY && badAttach) llResetOtherScript("Start");
         }
@@ -521,7 +534,7 @@ default {
                     clearAnim = 1;
                 }
             }
-            if (cmd == "setAFK") {
+            else if (cmd == "setAFK") {
                 afk = llList2Integer(split, 0);
                 integer auto = llList2Integer(split, 1);
                 string rate = llList2String(split, 2);
@@ -646,12 +659,14 @@ default {
             }
             else if (llGetSubString(choice, 0, 4) == "Poses" && (keyAnimation == ""  || (!isDoll || poserID == dollID))) {
                 integer page = 1; integer len = llStringLength(choice);
-                if (len > 5) page = (integer)llGetSubString(choice, 6 - len, -1);
+                if (len > 5) {
+                    page = (integer)llGetSubString(choice, 6 - len, -1);
+                }
+                else {
+                    llOwnerSay("secondlife:///app/agent/" + (string)id + "/about is looking at your poses menu.");
+                }
                 integer poseCount = llGetInventoryNumber(20);
                 list poseList; integer i;
-                
-                llOwnerSay("secondlife:///app/agent/" + (string)id + "/about is looking at your poses menu.");
-                llListenControl(dialogHandle, 1);
                 
                 for (i = 0; i < poseCount; i++) {
                     string poseName = llGetInventoryName(20, i);
@@ -665,7 +680,7 @@ default {
                 poseCount = llGetListLength(poseList);
                 integer pages = 1;
                 if (poseCount > 11) pages = llCeil((float)poseCount / 9.0);
-                llOwnerSay("Anims: " + (string)llGetInventoryNumber(20) + " | Avail Poses: " + (string)poseCount + " | Pages: " + (string)pages +
+                debugSay(7, "Anims: " + (string)llGetInventoryNumber(20) + " | Avail Poses: " + (string)poseCount + " | Pages: " + (string)pages +
                     "\nAvailable: " + llList2CSV(poseList) +
                     "\nThis Page (" + (string)page + "): " + llList2CSV(llList2List(poseList, (page - 1) * 9, page * 9 - 1)));
                 if (poseCount > 11) {
@@ -694,6 +709,9 @@ default {
                 poserID = id;
             }
         }
+        
+        if (keyAnimation == "") keyAnimationID = NULL_KEY;
+        else keyAnimationID = llGetInventoryKey(keyAnimation);
     }
     
     timer() {

@@ -35,10 +35,10 @@ float setWindRate() {
 #define CHECK "✔"
 #define CROSS "✘"
 
-string getButton(string text, key id, integer enabled, integer oneWay) {
-   if (enabled) return CHECK + " " + text;
-   else if (!oneWay || getControllerStatus(id)) return CROSS + " " + text;
-   return "";
+list getButton(string text, key id, integer enabled, integer oneWay) {
+   if (enabled) return [CHECK + " " + text];
+   else if (!oneWay || getControllerStatus(id)) return [CROSS + " " + text];
+   return [];
 }
 
 integer rating2Integer(string simRating) {
