@@ -123,7 +123,8 @@ default
             memReport(delay);
         }
         else if (code == 150) {
-            simRating = llList2String(split, 0);
+            string script = llList2String(split, 0);
+            simRating = llList2String(split, 1);
         }
         else if (code == 300) {
             string script = llList2String(split, 0);
@@ -162,24 +163,6 @@ default
             else if (name == "poserID")                       poserID = (key)value;
             else if (name == "collapseTime")             collapseTime = (llGetTime() - (float)value);
             else if (name == "winderRechargeTime") winderRechargeTime = (float)value;
-            else if (name == "dialogChannel") {
-                if (script != SCRIPT_NAME) {
-                    if (dialogChannel != (integer)value) {
-                        if (dialogHandle) {
-                            llListenRemove(dialogHandle);
-                            dialogHandle = llListen(dialogChannel, "", "", "");
-                            llListenControl(dialogHandle, 0);
-                        }
-                        if (blacklistHandle) llListenRemove(blacklistHandle);
-                        if (controlHandle) llListenRemove(controlHandle);
-                        if (textboxHandle) llListenRemove(textboxHandle);
-                    }
-                    dialogChannel = (integer)value;
-                    blacklistChannel = dialogChannel - 666;
-                    controlChannel = dialogChannel - 888;
-                    textboxChannel = dialogChannel - 1111;
-                }
-            }
             else if (name == "timeLeftOnKey") {
                 timeLeftOnKey = (float)value;
                 if (collapsed) {
@@ -401,7 +384,8 @@ default
             }
         }
         else if (code == 350) {
-            RLVok = llList2Integer(split, 0);
+            string script = llList2String(split, 0);
+            RLVok = llList2Integer(split, 1);
         }
         
         string type = llList2String(llParseString2List(data, [ "|" ], []), 1);
@@ -495,7 +479,7 @@ default
             string optName = llDumpList2String(llList2List(split, 1, -1), " ");
             string curState = llList2String(split, 0);
     
-            debugSay(3, "Button clicked: " + choice + ", optName=\"" + optName + "\", curState=\"" + curState + "\"");
+            debugSay(3, "DEBUG-MENU", "Button clicked: " + choice + ", optName=\"" + optName + "\", curState=\"" + curState + "\"");
             lmMenuReply(choice, name, id);
                                
             if (choice == MAIN) {
@@ -520,9 +504,6 @@ default
             else if (choice == "Visit Dollhouse") {
                 if (isDoll) llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|TP|" + LANDMARK_CDROOM, id);
                 else llGiveInventory(id, LANDMARK_CDROOM);
-            }
-            else if (choice == "Type of Doll") {
-                llMessageLinked(LINK_THIS, 17, name, id);
             }
             else if (choice == "Dress") {
                 if (!isDoll) llOwnerSay("secondlife:///app/agent/" + (string)id + "/about is looking at your dress menu");
@@ -550,7 +531,28 @@ default
                 llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel); 
             }
             else if (choice == "Key Settings" && (isController || isDoll)) {
-                llDialog(id, "Here you can set various key appearance options.", [ "Dolly Name", "Gem Colour" ], dialogChannel);
+                list pluslist = [ "Dolly Name", "Gem Colour" ];
+                if (isController) pluslist += [ "Max Time", "Wind Times" ];
+                llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(pluslist + MAIN, 1, 1)), dialogChannel);
+            }
+            else if (llGetSubString(choice, 0, 3) == "Max ") {
+                if (optName == "Time") {
+                    llDialog(id, "You can set the maximum wind time here.  Dolly cannot be wound beyond this amount of time.\nDolly currently has " + (string)llRound(timeLeftOnKey / SEC_TO_MIN) +
+                                 " left, if you choose a lower time than this they will lose time immidiately.", dialogSort([ 
+                          "Max 60m", "Max 120m", "Max 180m",
+                         "Max 240m", "Max 300m", "Max 360m",
+                         "Max 420m", "Max 480m", "Max 540m", 
+                         "Max 600m", "Max 720m", MAIN 
+                    ]), dialogChannel);
+                }
+                else lmSendConfig("keyLimit", (string)((float)llGetSubString(optName, 0, -2) * SEC_TO_MIN));
+            }
+            else if (choice == "Wind Times") {
+                textboxType = 3;
+                if (textboxHandle) llListenRemove(textboxHandle);
+                textboxHandle = llListen(textboxChannel, "", id, "");
+                llTextBox(id, "You can set the wind options that appear in the dolls menu here times should be in whole minutes, space ( ), comma (,) or pipe (|) may be used " +
+                              "to seperate. Negative, zero or repeated values will be ignored.\nExamples:\n15|30|60\n30,45,60,90,120\n5 15 60", textboxChannel);
             }
             else if (choice == "Dolly Name") {
                 textboxType = 2;
@@ -827,18 +829,7 @@ default
             llListenRemove(textboxHandle);
             textboxHandle = 0;
             
-            debugSay(3, "Textbox input (" + (string)textboxType + ") from " + name + ": " + choice);
-            
-            if (textboxType == 1) {
-                string first = llGetSubString(choice, 0, 0);
-                if (first == "<") choice = (string)((vector)choice);
-                else if (first == "#") choice = (string)((vector)("<0x" + llGetSubString(choice, 1, 2) + ",0x" + llGetSubString(choice, 3, 4) + ",0x" + llGetSubString(choice, 5, 6) + ">"));
-                else choice = (string)((vector)("<" + choice + ">"));
-                lmInternalCommand("setGemColour", choice, id);
-            }
-            else if (textboxType == 2) {
-                lmSendConfig("dollyName", (dollyName = choice));
-            }
+            lmTextboxReply(textboxType, name, choice, id);
         }
         
         // Ideally the listener should be closing here and only reopened when we spawn another menu

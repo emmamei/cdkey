@@ -249,7 +249,7 @@ rlvRequest(string rlv, integer channel) {
     if (channel == 2668) listen_id_2668 = llListen(rlvBaseChannel - 2668, "", llGetOwner(), "");
     if (channel == 2669) listen_id_2669 = llListen(rlvBaseChannel - 2669, "", llGetOwner(), "");
     if (RLVok) {
-        debugSay(5, "cmd = " + rlv + (string)(rlvBaseChannel - channel));
+        debugSay(5, "DEBUG", "cmd = " + rlv + (string)(rlvBaseChannel - channel));
         lmRunRLV(rlv + (string)(rlvBaseChannel - channel));
     }
     llSetTimerEvent(10.0);
@@ -295,14 +295,14 @@ changeComplete(integer success) {
 doDebug(string src) {
     integer level = 5;
     if (startup != 0) level = 7;
-    debugSay(level, ">  on " + src);
-    debugSay(level, ">> outfitsFolder = " + outfitsFolder);
-    debugSay(level, ">> clothingFolder = " + clothingFolder);
-    debugSay(level, ">> typeFolder = " + typeFolder);
+    debugSay(level, "DEBUG", ">  on " + src);
+    debugSay(level, "DEBUG", ">> outfitsFolder = " + outfitsFolder);
+    debugSay(level, "DEBUG", ">> clothingFolder = " + clothingFolder);
+    debugSay(level, "DEBUG", ">> typeFolder = " + typeFolder);
     setActiveFolder();
-    debugSay(level, ">> activeFolder = " + activeFolder);
-    debugSay(level, ">> normalselfFolder = " + normalselfFolder);
-    debugSay(level, ">> nudeFolder = " + nudeFolder);
+    debugSay(level, "DEBUG", ">> activeFolder = " + activeFolder);
+    debugSay(level, "DEBUG", ">> normalselfFolder = " + normalselfFolder);
+    debugSay(level, "DEBUG", ">> nudeFolder = " + nudeFolder);
 }
 
 string folderStatus() {
@@ -365,10 +365,11 @@ default {
             memReport(delay);
         }
         else if (code == 150) {
-            simRating = llList2String(split, 0);
+            string script = llList2String(split, 0);
+            simRating = llList2String(split, 1);
             integer outfitRating = outfitRating(newoutfitname);
             integer regionRating = rating2Integer(simRating);
-            debugSay(3, "Region rating " + llToLower(simRating) + " outfit " + newoutfitname + " outfitRating: " + (string)outfitRating + " regionRating: " + (string)regionRating);
+            debugSay(3, "DEBUG", "Region rating " + llToLower(simRating) + " outfit " + newoutfitname + " outfitRating: " + (string)outfitRating + " regionRating: " + (string)regionRating);
             if (RLVok) {
                 if (outfitRating > regionRating) {
                     pushRandom = 1;
@@ -392,7 +393,7 @@ default {
                     doDebug("link #2");
                 }
             }
-            else if (name == "dialogChannel") {
+            else if ((script == "MenuHandler") && (name == "dialogChannel")) {
                 dialogChannel = (integer)value;
                 rlvBaseChannel = dialogChannel ^ 0x80000000; // Xor with the sign bit forcing the positive channel needed by RLV spec.
             }
@@ -435,12 +436,15 @@ default {
             }
         }
         else if (code == 350) {
-            RLVok = llList2Integer(split, 0);
+            string script = llList2String(split, 0);
+            RLVok = llList2Integer(split, 1);
             listInventoryOn("2555");
         }
         // Choice #500: (From Main Menu) Dress Dolly
         else if (code == 500)  {
-            string choice = llList2String(split, 0);
+            string script = llList2String(split, 0);
+            string choice = llList2String(split, 1);
+            string name = llList2String(split, 2);
             
             if (choice == "Dress" && candresstemp) {
                 dresserID = id;
@@ -470,15 +474,15 @@ default {
                 if (choice == "OK") {
                     ; // No outfits: only OK is available
                 } else if (choice == "Next Outfits") {
-                    debugSay(5, ">>> Dress Menu: " + choice);
+                    debugSay(5, "DEBUG", ">>> Dress Menu: " + choice);
                     outfitPage++;
                     llDialog(dresserID, msgx, ["Prev Outfits", "Next Outfits", MAIN ] + outfitsPage(outfitsList), dialogChannel);
                 } else if (choice == "Prev Outfits") {
-                    debugSay(5, ">>> Dress Menu: " + choice);
+                    debugSay(5, "DEBUG", ">>> Dress Menu: " + choice);
                     outfitPage--;
                     llDialog(dresserID, msgx, ["Prev Outfits", "Next Outfits", MAIN ] + outfitsPage(outfitsList), dialogChannel);
                 } else if (choice == "Outfits " + (string)(outfitPage+1)) {
-                    debugSay(5, ">>> Dress Menu: " + choice);
+                    debugSay(5, "DEBUG", ">>> Dress Menu: " + choice);
                     ; // Do nothing
                 } else if (llListFindList(outfitsList, [ choice ]) != -1) {
                     
@@ -527,7 +531,7 @@ default {
                     }
     
                     newoutfitwordend = llStringLength(newoutfit)  - 1;
-                    debugSay(5, ">>>newoutfit = " + newoutfit);
+                    debugSay(5, "DEBUG", ">>>newoutfit = " + newoutfit);
     
                     //llOwnerSay("newoutfit is: " + newoutfit);
                     //llOwnerSay("newoutfitname is: " + newoutfitname);
@@ -659,7 +663,7 @@ default {
     listen(integer channel, string name, key id, string choice) {
         // We have our answer so now we can turn the listener off until our next request
         
-        //debugSay(5, "Channel: " + (string)channel + "\n" + choice);
+        //debugSay(5, "DEBUG", "Channel: " + (string)channel + "\n" + choice);
 
         // channels:
         //
@@ -690,8 +694,8 @@ default {
             integer n;
             string itemname;
 
-            debugSay(5, "> RLV message type 2555");
-            debugSay(5, ">> " + choice);
+            debugSay(5, "DEBUG", "> RLV message type 2555");
+            debugSay(5, "DEBUG", ">> " + choice);
             // Looks for a folder that may contain outfits - folders such
             // as Dressup/, or outfits/, or Outfits/ ...
             for (n = 0; n < iStop; n++) {
@@ -742,8 +746,8 @@ default {
             list Outfits = llParseString2List(choice, [","], []); //what are brackets at end?
             integer iStop = llGetListLength(Outfits);
             
-            debugSay(5, "> RLV message type 2665");
-            debugSay(5, ">> " + choice);
+            debugSay(5, "DEBUG", "> RLV message type 2665");
+            debugSay(5, "DEBUG", ">> " + choice);
 
             integer n;
 
@@ -754,7 +758,7 @@ default {
 
                 // No files found; leave the prefix alone and don't change
                 llOwnerSay("There are no outfits in your " + activeFolder + " folder.");
-                //debugSay(5, "There are no outfits in your " + activeFolder + " folder.");
+                //debugSay(5, "DEBUG", "There are no outfits in your " + activeFolder + " folder.");
                 // Didnt find any outfits in the standard folder, try the
                 // "extended" folder containing (we hope) outfits....
 
@@ -782,8 +786,8 @@ default {
                     itemname = llList2String(Outfits, n);
                     prefix = llGetSubString(itemname,0,0);
 
-                    debugSay(5, ">itemname = " + itemname);
-                    debugSay(5, ">prefix = " + prefix);
+                    debugSay(5, "DEBUG", ">itemname = " + itemname);
+                    debugSay(5, "DEBUG", ">prefix = " + prefix);
                     // skip hidden files/directories and skip
                     // Doll Type (Transformation) folders...
                     //
@@ -814,7 +818,7 @@ default {
                 integer i = (integer) llFrand(total);
                 string nextoutfitname = llList2String(outfitsList, i);
                 if (llGetSubString(nextoutfitname, 0, 0) != ">") {
-                    debugSay(5, ">nextoutfitname = " + nextoutfitname);
+                    debugSay(5, "DEBUG", ">nextoutfitname = " + nextoutfitname);
                     // the dialog not only OKs things - but fires off the dressing process
                     //llDialog(dollID, "You are being dressed in this outfit.",[nextoutfitname], dialogChannel);
                     //llSay(cd2667, nextoutfitname);
@@ -845,8 +849,8 @@ default {
             string itemname;
             string prefix;
             
-            debugSay(5, "> RLV message type 2666");
-            debugSay(5, ">> " + choice);
+            debugSay(5, "DEBUG", "> RLV message type 2666");
+            debugSay(5, "DEBUG", ">> " + choice);
 
             // Collect names of possible new outfits, removing folders (items)
             // longer than 23 characters, those that start with "~" (hidden) or
@@ -927,8 +931,8 @@ default {
         //
         else if (channel == (rlvBaseChannel - 2668)) {
             llListenRemove(listen_id_2668);
-            debugSay(5, ">> @getinvworn:" + xfolder);
-            debugSay(5, ">>> " + choice);
+            debugSay(5, "DEBUG", ">> @getinvworn:" + xfolder);
+            debugSay(5, "DEBUG", ">>> " + choice);
             if (((llGetSubString(choice,1,1) != "0" && llGetSubString(choice,1,1) != "3") ||
                 (llGetSubString(choice,2,2) != "0" && llGetSubString(choice,2,2) != "3")) &&
                 ++dressingFailures <= MAX_DRESS_FAILURES) {
@@ -951,7 +955,7 @@ default {
                 if (xfolder != "") rlvRequest("getinvworn:" + xfolder + "=", 2668);
                 else if (dresspassed >= 3) changeComplete(1);
             }
-            debugSay(5, "candresstimeout = " + (string)candresstimeout + ", dresspassed = " + (string)dresspassed);
+            debugSay(5, "DEBUG", "candresstimeout = " + (string)candresstimeout + ", dresspassed = " + (string)dresspassed);
         }
 
         //----------------------------------------
@@ -961,8 +965,8 @@ default {
         //
         else if (channel == (rlvBaseChannel - 2669)) {
             llListenRemove(listen_id_2669);
-            debugSay(5, ">> @getinvworn:" + yfolder);
-            debugSay(5, ">>> " + choice);
+            debugSay(5, "DEBUG", ">> @getinvworn:" + yfolder);
+            debugSay(5, "DEBUG", ">>> " + choice);
             if (((llGetSubString(choice,1,1) != "0" && llGetSubString(choice,1,1) != "1") ||
                 (llGetSubString(choice,2,2) != "0" && llGetSubString(choice,2,2) != "1")) &&
                 ++dressingFailures <= MAX_DRESS_FAILURES) {
@@ -981,7 +985,7 @@ default {
                 dresspassed++;
                 if (dresspassed >= 3) changeComplete(1);
             }
-            debugSay(5, "candresstimeout = " + (string)candresstimeout + ", dresspassed = " + (string)dresspassed);
+            debugSay(5, "DEBUG", "candresstimeout = " + (string)candresstimeout + ", dresspassed = " + (string)dresspassed);
         }
 
         //----------------------------------------
@@ -992,11 +996,11 @@ default {
         // Using the @detachallthis command instead avoids a
         // need for this at all
         /*else if (channel == cd2670) {
-            debugSay(5, "<< choice = " + choice);
+            debugSay(5, "DEBUG", "<< choice = " + choice);
             // When do we override the old outfit path - and with what?
             if (oldoutfitpath == "") {
                 oldoutfitpath = choice;
-                debugSay(5, "<< oldoutfitpath = " + oldoutfitpath);
+                debugSay(5, "DEBUG", "<< oldoutfitpath = " + oldoutfitpath);
             }
         }*/
         llSleep(1.0);

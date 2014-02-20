@@ -17,6 +17,7 @@ list MistressList;
 list blacklist;
 list checkNames;
 list HTTP_OPTIONS = [ HTTP_BODY_MAXLENGTH, 16384, HTTP_VERBOSE_THROTTLE, FALSE, HTTP_METHOD ]; 
+list NO_STORE = [ "keyHandler", "keyHandlerTime" ];
 float keyHandlerTime;
 float lastAvatarCheck;
 float lastKeyPost;
@@ -43,7 +44,9 @@ integer offlineMode;
 integer invMarker;
 integer myMod;
 integer lastPostTimestamp;
-integer databaseOnline;
+integer lastGetTimestamp;
+integer databaseOnline = 1;
+integer databaseReload;
 integer updateCheck = 10800;
 integer useHTTPS = 1;
 
@@ -61,6 +64,7 @@ list serverNames = [
 list oldAvatars;
 
 queForSave(string name, string value) {
+    if (llListFindList(NO_STORE, [ name ]) != -1) return;
     if (name == "MistressList") name = "MistressListNew";
     if (name == "blacklist") name = "blacklistNew";
     integer index = llListFindList(dbPostParams, [ name ]);
@@ -70,37 +74,6 @@ queForSave(string name, string value) {
     //if (llListFindList(SKIP_EXPEDITE, [ name ]) == -1) expeditePost = 1;
     llSetTimerEvent(5.0);
 }
-
-/*handleAvList(string strList, integer type, integer compat) {
-    list newList = llParseString2List(strList, [ "|" ], []);
-    if (!compat) {
-        if (type == 1) lmSendConfig("MistressList", llDumpList2String((MistressList = newList), "|"));
-        else if (type == 2) lmSendConfig("blacklist", llDumpList2String((blacklist = newList), "|"));
-    }
-    else {
-        integer i;
-        if (type == 1) {
-            integer n = llGetListLength(MistressList = newList);
-            MistressWaiting = 0;
-            for (i = 0; i < n; i += 2) {
-                MistressWaiting++;
-                MistressList = llListReplaceList(MistressList, [ llList2String(MistressList, i), 
-                               llRequestAgentData(llList2Key(MistressList, i), DATA_NAME) ], i, i);
-                debugSay(5, "MistressList: " + llList2CSV(MistressList) + " (" + (string)MistressWaiting + " waiting)");
-            }
-        }
-        else {
-            integer n = llGetListLength(blacklist = newList);
-            blacklistWaiting = 0;
-            for (i = 0; i < n; i += 2) {
-                blacklistWaiting++;
-                blacklist = llListReplaceList(blacklist, [ llList2String(blacklist, i), 
-                            llRequestAgentData(llList2Key(blacklist, i), DATA_NAME) ], i, i);
-                debugSay(5, "blacklist: " + llList2CSV(blacklist) + " (" + (string)blacklistWaiting + " waiting)");
-            }
-        }
-    }
-}*/
 
 checkAvatarList() {
     list newAvatars = llListSort(llGetAgentList(AGENT_LIST_REGION, []), 1, 1);
@@ -123,7 +96,7 @@ checkAvatarList() {
                     namepostcount++;
                 }
                 else {
-                    debugSay(5, "name2key: posting " + (string)namepostcount + " keys (" + (string)llStringLength(namepost) + " bytes) interval: " +
+                    debugSay(5, "DEBUG-SERVICES", "name2key: posting " + (string)namepostcount + " keys (" + (string)llStringLength(namepost) + " bytes) interval: " +
                                 formatDuration(llGetTime() - lastKeyPost, 0) + " mins");
                     while ((requestAddKey = (llHTTPRequest("http://api.silkytech.com/name2key/add", HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE,
                         "application/x-www-form-urlencoded" ], namepost))) == NULL_KEY) {
@@ -145,13 +118,17 @@ checkAvatarList() {
             n--;
         }
     }
-    if (namepost != "" && n != 0) debugSay(5, "Queued post " + (string)namepostcount + " keys (" + (string)llStringLength(namepost) + " bytes) oldest: " +
+    if (namepost != "" && n != 0) debugSay(5, "DEBUG-SERVICES", "Queued post " + (string)namepostcount + " keys (" + (string)llStringLength(namepost) + " bytes) oldest: " +
                                 formatDuration(llGetTime() - lastKeyPost, 0) + " mins");
     lastAvatarCheck = llGetTime();
     oldAvatars = curAvatars;
 }
 
 doHTTPpost() {
+    if (offlineMode) {
+        dbPostParams = [];
+        return;
+    }
     if ((lastPost + HTTPthrottle) < llGetTime()) {
         if (llGetListLength(dbPostParams) == 0) return;
         string time = (string)llGetUnixTime();
@@ -195,7 +172,8 @@ default
     attach(key id) {
         if (keyHandler == llGetKey() && id == NULL_KEY) {
             llRegionSay(broadcastOn, "keys released");
-            debugSay(5, "Broadcast sent: keys released");
+            debugSay(5, "BROADCAST-DEBUG", "Broadcast sent: keys released");
+            lmSendConfig("keyHandler", (string)(keyHandler = NULL_KEY));
         }
     }
     
@@ -243,7 +221,7 @@ default
             if (llGetSubString(body, 0, 21) == "checkversion versionok") {
                 if (llStringLength(body) > 22) updateCheck = (integer)llGetSubString(body, 23, -1);
                 lastUpdateCheck = llGetUnixTime();
-                debugSay(5, "Next check in " + (string)updateCheck + " seconds");
+                debugSay(5, "DEBUG-SERVICES", "Next check in " + (string)updateCheck + " seconds");
                 llOwnerSay("Version check completed you have the latest version.");
             }
             else if (body == "checkversion updatesent") {
@@ -307,6 +285,7 @@ default
                     else if (Key == "HTTPinterval") HTTPinterval = (float)Value;
                     else if (Key == "HTTPthrottle") HTTPthrottle = (float)Value;
                     else if (Key == "updateCheck") updateCheck = (integer)Value;
+                    else if (Key == "lastGetTimestamp") lastGetTimestamp = (integer)Value;
                     //else if (Key == "MistressListNew") handleAvList(Value, 1, 0);
                     //else if (Key == "MistressList") handleAvList(Value, 1, 1);
                     //else if (Key == "blacklistNew") handleAvList(Value, 2, 0);
@@ -319,19 +298,23 @@ default
                     else protocol = "http://";
                 }
                 
-                debugSay(5, "Service post interval setting " + formatFloat(HTTPinterval, 2) + "s throttle setting " + formatFloat(HTTPthrottle, 2) + "s");
+                debugSay(5, "DEBUG-SERVICES", "Service post interval setting " + formatFloat(HTTPinterval, 2) + "s throttle setting " + formatFloat(HTTPthrottle, 2) + "s");
                 
                 string msg = "HTTPdb - Processed " + (string)llGetListLength(lines) + " records ";
                 if (lastPostTimestamp) msg += "with updates since our last post " + (string)((llGetUnixTime() - lastPostTimestamp) / 60) + " minutes ago ";
                 msg += "event time " + eventTime + ", processing time " + formatFloat(((llGetTime() - HTTPdbProcessStart) * 1000), 2);
                 msg += "ms, total time for DB transaction " + formatFloat((llGetTime() - HTTPdbStart) * 1000, 2) + "ms";
-                debugSay(5, msg);
+                debugSay(5, "DEBUG-SERVICES", msg);
+                
+                databaseReload = 0;
             }
             else {
-                error += "failed: Continuing in offline mode.";
-                offlineMode = 1;
-                databaseOnline = 0;
-                llOwnerSay(error);
+                databaseReload = llGetUnixTime() + llRound(llFrand(90));
+                if (databaseOnline) {
+                    error += "failed: Continuing init in offline mode and will contintiue trying.";
+                    lmSendConfig("databaseOnline", (string)(databaseOnline = 0));
+                    llOwnerSay(error);
+                }
             }
             llMessageLinked(LINK_THIS, 102, llGetScriptName() + "|" + "HTTP" + (string)status, NULL_KEY);
             if (initCode == initState) lmInitState(initState++);
@@ -364,7 +347,7 @@ default
                 dbPostParams = [];
                 list split = llParseStringKeepNulls(body, [ "|" ], []);
                 lastPostTimestamp = llList2Integer(split, 1);
-                debugSay(5, "HTTPdb update success " + llList2String(split, 2) + " updated records: " + llList2CSV(updateList));
+                debugSay(5, "DEBUG-SERVICES", "HTTPdb update success " + llList2String(split, 2) + " updated records: " + llList2CSV(updateList));
                 if (!databaseOnline) {
                     llOwnerSay("HTTPdb - Database service has recovered.");
                     curInterval = stdInterval;
@@ -386,10 +369,10 @@ default
             integer new = llList2Integer(split, 1);
             integer old = llList2Integer(split, 2);
             
-            debugSay(5, "Posted " + (string)(old + new) + " keys: " + (string)new + " new, " + (string)old + " old");
+            debugSay(5, "DEBUG-SERVICES", "Posted " + (string)(old + new) + " keys: " + (string)new + " new, " + (string)old + " old");
         }
-        if (status == 200) debugSay(7, "HTTP " + (string)status + ": " + body);
-        else debugSay(1, "HTTP " + (string)status + ": " + body);
+        if (status == 200) debugSay(7, "DEBUG-SERVICES-RAW", "HTTP " + (string)status + ": " + body);
+        else debugSay(1, "DEBUG-SERVICES-RAW", "HTTP " + (string)status + ": " + body);
     }
     
     link_message(integer sender, integer code, string data, key id) {
@@ -398,22 +381,17 @@ default
         if (code == 104 || code == 105) {
             if (llList2String(split, 0) != "Start") return;
             initCode = code;
-            if (!offlineMode && (initCode == 104 || (initCode == 105 && !firstRun))) {
+            if (!offlineMode && !((code == 105) && (lastGetTimestamp == 0))) {
                 string time = (string)llGetUnixTime();
-                if (initCode == 104) firstRun = 1;
                 HTTPdbStart = llGetTime();
-                debugSay(6, "Requesting data from HTTPdb");
+                debugSay(6, "DEBUG-SERVICES", "Requesting data from HTTPdb");
                 string hashStr = (string)llGetOwner() + time + SALT;
-                string requestURI = "https://api.silkytech.com/httpdb/retrieve?q=" + llSHA1String(hashStr) + "&t=" + time;
-                if (lastPostTimestamp != 0) requestURI += "&s=" + (string)lastPostTimestamp;
+                string requestURI = "https://api.silkytech.com/httpdb/retrieve?q=" + llSHA1String(hashStr) + "&t=" + time + "&s=" + (string)lastGetTimestamp;
                 while((requestLoadDB = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
                     llSleep(1.0);
                 }
             }
-            else {
-                if (initCode == initState) lmInitState(initState++);
-                firstRun = 0;
-            }
+            if ((initState == 105) && (code == 105)) lmInitState(initState++);
         }
         else if (code == 110) {
             initState = 105;
@@ -428,6 +406,17 @@ default
             string value = llList2String(split, 2);
             
             if (script == "Main" && name == "timeLeftOnKey") {
+                if (databaseReload && (databaseReload < llGetUnixTime())) {
+                    databaseReload = llGetUnixTime() + 120;
+                    string time = (string)llGetUnixTime();
+                    HTTPdbStart = llGetTime();
+                    debugSay(6, "DEBUG-SERVICES", "Requesting data from HTTPdb");
+                    string hashStr = (string)llGetOwner() + time + SALT;
+                    string requestURI = "https://api.silkytech.com/httpdb/retrieve?q=" + llSHA1String(hashStr) + "&t=" + time + "&s=" + (string)lastGetTimestamp;
+                    while((requestLoadDB = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
+                        llSleep(1.0);
+                    }
+                }
                 if (!gotURL && nextRetry < llGetUnixTime()) 
                 while ((requestName = llHTTPRequest(protocol + "api.silkytech.com/objdns/lookup?q=" + llEscapeURL(llList2String(serverNames, requestIndex)), 
                         HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) llSleep(1.0);
@@ -441,7 +430,8 @@ default
                 }
                 if (keyHandler == llGetKey()) {
                     llRegionSay(broadcastOn, "keys claimed");
-                    debugSay(5, "Broadcast Sent: keys claimed");
+                    debugSay(5, "BROADCAST-DEBUG", "Broadcast Sent: keys claimed");
+                    lmSendConfig("keyHandler", (string)(keyHandler = llGetKey()));
                     keyHandlerTime = llGetTime();
                     checkAvatarList();
                 }
@@ -451,9 +441,10 @@ default
             if (name == "nextRetry") nextRetry = (integer)value;
             if (name == "keyHandler") {
                 keyHandler = (key)value;
+                keyHandlerTime = llGetTime();
             }
             if (name == "keyHandlerTime") {
-                keyHandlerTime = llGetTime() - (float)value;
+                keyHandlerTime = llGetTime() - (float)(llGetUnixTime() - (integer)value);
             }
             
             if (script == llGetScriptName()) return;
@@ -474,7 +465,7 @@ default
             
             if (cmd == "getMistressKey") {
                 string name = llList2String(split, 0);
-                debugSay(5, "Looking up name " + name);
+                debugSay(5, "DEBUG-SERVICES", "Looking up name " + name);
                 unresolvedMistressNames += llToLower(name);
                 while((requestMistressKey = llHTTPRequest("http://api.silkytech.com/name2key/lookup?q=" + llEscapeURL(name), HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
                     llSleep(1.0);
@@ -482,7 +473,7 @@ default
             }
             else if (cmd == "getBlacklistKey") {
                 string name = llList2String(split, 0);
-                debugSay(5, "Looking up name " + name);
+                debugSay(5, "DEBUG-SERVICES", "Looking up name " + name);
                 unresolvedBlacklistNames += llToLower(name);
                 while((requestBlacklistKey = llHTTPRequest("http://api.silkytech.com/name2key/lookup?q=" + llEscapeURL(name), HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
                     llSleep(1.0);

@@ -214,8 +214,9 @@ default {
     //----------------------------------------
     link_message(integer source, integer code, string data, key id) {
         list split = llParseString2List(data, [ "|" ], []);
-        string choice = llList2String(split, 0);
-        string name = llList2String(split, 1);
+        string script = llList2String(split, 0);
+        string choice = llList2String(split, 1);
+        string name = llList2String(split, 2);
         
         scaleMem();
         
@@ -230,7 +231,7 @@ default {
         }
         
         else if (code == 104) {
-            if (llList2String(split, 0) != "Start") return;
+            if (script != "Start") return;
             reloadTypeNames();
             startup = 1;
             llSetTimerEvent(60.0);   // every minute
@@ -238,7 +239,7 @@ default {
         }
         
         else if (code == 105) {
-            if (llList2String(split, 0) != "Start") return;
+            if (script != "Start") return;
             if (initState == 105) lmInitState(initState++);
         }
         
@@ -249,13 +250,12 @@ default {
         }
         
         else if (code == 135) {
-            float delay = llList2Float(split, 1);
+            float delay = (float)choice;
             memReport(delay);
         }
         
         else if (code == 300) {
-            string script = llList2String(split, 0);
-            string name = llList2String(split, 1);
+            string name = choice;
             string value = llList2String(split, 2);
             
             if (script != SCRIPT_NAME) {
@@ -266,8 +266,10 @@ default {
                 else if (name == "quiet")                                          quiet = (integer)value;
                 else if (name == "mustAgreeToType")                      mustAgreeToType = (integer)value;
                 else if (name == "showPhrases")                              showPhrases = (integer)value;
-                else if (name == "dialogChannel")                          dialogChannel = (integer)value;
                 else if (name == "currentState")                            currentState = value;
+                else if ((script == "MenuHandler") && (name == "dialogChannel")) {
+                    dialogChannel = (integer)value;
+                }
                 
                 if (script == "Main" && name == "timeLeftOnKey") runTimedTriggers();
             }
@@ -278,6 +280,7 @@ default {
         }
         
         if (code == 500) {
+            string name = llList2String(split, 2);
             string optName = llGetSubString(choice, 2, -1);
             string curState = llGetSubString(choice, 0, 0);
             
@@ -334,10 +337,10 @@ default {
                 }
                 
                 //avoid = FALSE;
-                debugSay(5, "transform = " + (string)transform);
-                debugSay(5, "choice = " + (string)choice);
-                debugSay(5, "stateName = " + (string)(stateName = choice));
-                debugSay(5, "currentState = " + (string)currentState);
+                debugSay(5, "DEBUG", "transform = " + (string)transform);
+                debugSay(5, "DEBUG", "choice = " + (string)choice);
+                debugSay(5, "DEBUG", "stateName = " + (string)(stateName = choice));
+                debugSay(5, "DEBUG", "currentState = " + (string)currentState);
 
                 if (stateName != currentState) setDollType(choice, 0);
             }

@@ -60,7 +60,7 @@ string pronounHerDoll = "Her";
 string pronounSheDoll = "She";
 string nameOverride;
 integer startup;
-integer initState = 103;
+integer initState = 104;
 integer introLine;
 integer introLines;
 integer reset;
@@ -160,11 +160,9 @@ processConfiguration(string name, list values) {
             lmSendConfig("MistressList", llDumpList2String((MistressList = llListSort(MistressList + [ value, llRequestAgentData((key)value, DATA_NAME) ], 2, 1)), "|"));
     }
     else if (name == "blacklist name") {
-        debugSay(5, "getBlacklistName: " + value);
         lmInternalCommand("getBlacklistName", value, NULL_KEY);
     }
     else if (name == "controller name") {
-        debugSay(5, "getMistressName: " + value);
         lmInternalCommand("getMistressName", value, NULL_KEY);
     }
     //--------------------------------------------------------------------------
@@ -193,12 +191,12 @@ initConfiguration() {
             ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ncLine);
         }
         else {
-            debugSay(5, "Skipping preferences notecard as it is unchanged");
+            debugSay(7, "DEBUG", "Skipping preferences notecard as it is unchanged");
             doneConfiguration(0);
         }
     } else {
         // File missing - report for debugging only
-        debugSay(5, "No configuration found (" + NOTECARD_PREFERENCES + ")");
+        debugSay(1, "DEBUG", "No configuration found (" + NOTECARD_PREFERENCES + ")");
         doneConfiguration(0);
     }
 }
@@ -217,23 +215,20 @@ doneConfiguration(integer read) {
     }
     reset = 0;
     readyScripts = [];
+    llSleep(0.5);
+    lmInitState(initState);
     llMessageLinked(LINK_THIS, 102, llGetScriptName(), NULL_KEY);
     startup = 2;
-    if (initState == 104) lmInitState(++initState);
 }
 
 initializationCompleted() {
     if (newAttach && !quiet && isAttached)
         llSay(0, llGetDisplayName(llGetOwner()) + " is now a dolly - anyone may play with their Key.");
-    
-    llMessageLinked(LINK_THIS, 110, "Start", NULL_KEY);
 
     initTimer = llGetTime() * 1000;
 
     lmMemReport(0.0);
     memReport(0.0);
-    
-    llSleep(0.5);
     
     if (dollyName == "") {
         string name = dollName;
@@ -248,13 +243,14 @@ initializationCompleted() {
     msg += " in " + formatFloat(initTimer, 2) + "ms";
     #endif
     msg += " key ready";
+    
     sendMsg(dollID, msg);
     
-    startup = 3;
+    startup = 0;
     
+    lmInitState(102);
+    lmInitState(110);
     llSetTimerEvent(1.0);
-    
-    initState = 104;
 }
 
 list notReady() {
@@ -297,7 +293,6 @@ do_Restart() {
         knownScripts += script;
         if (script != me) {
             llSetScriptState(script, 1);
-            llSleep(0.1);
             llResetOtherScript(script);
         }
     }
@@ -315,26 +310,34 @@ default {
 
         if (code == 104) {
             string script = llList2String(split, 0);
-            if (llListFindList(readyScripts, [ llList2String(split,0) ]) == -1) {
+            if (llListFindList(readyScripts, [ script ]) == -1) {
                 if ((script == "MenuHandler") && (dialogChannel == 0)) {
-                    debugSay(1, "Phase 104 ended without dialogChannel setup rebooting!");
+                    debugSay(1, "DEBUG", "Phase 104 ended without dialogChannel setup rebooting!");
                     llResetScript();
                 }
                 readyScripts += script;
                 
+                debugSay(7, "DEBUG-PHASE104", "Reporter '" + script + "'\nStill waiting: " + llList2CSV(notReady()));
+                
                 if (notReady() == []) {
+                    initState++;
                     initConfiguration();
                 }
             }
-            else debugSay(1, "WARNING: Script " + llList2String(split,0) + " is sending excessive signal 104");
+            else debugSay(1, "DEBUG", "WARNING: Script " + script + " is sending excessive signal 104");
         }
         else if (code == 105) {
-            if (llListFindList(readyScripts, [ llList2String(split,0) ]) == -1) {
-                readyScripts += llList2String(split,0);
-                //debugSay(5, "State 105\nReady: " + llList2CSV(readyScripts) + "\nNot Ready: " + llList2CSV(notReady()));
-                if (notReady() == []) initializationCompleted();
+            string script = llList2String(split, 0);
+            if (llListFindList(readyScripts, [ script ]) == -1) {
+                readyScripts += script;
+                
+                debugSay(7, "DEBUG-PHASE105", "Reporter '" + script + "'\nStill waiting: " + llList2CSV(notReady()));
+                
+                if (notReady() == []) {
+                    initializationCompleted();
+                }
             }
-            else debugSay(1, "WARNING: Script " + llList2String(split,0) + " is sending excessive signal 105");
+            else debugSay(1, "DEBUG", "WARNING: Script " + script + " is sending excessive signal 105");
         }
         else if (code == 135) {
             if (llList2String(split, 0) == llGetScriptName()) return;
@@ -452,20 +455,19 @@ default {
             RLVok = llList2Integer(split, 0);
             rlvWait = 0;
             
-            llSleep(2.0);
-            memReport(0.0);
-            
             if (!newAttach && isAttached) {
                 string msg = dollName + " has logged in with";
                 if (!RLVok) msg += "out";
                 msg += " RLV at " + wwGetSLUrl();
-                llMessageLinked(LINK_THIS, 15, msg, NULL_KEY);
+                lmSendToController(msg);
             }
             
             newAttach = 0;
         }
         else if (code == 500) {
-            string selection = llList2String(split, 0);
+            string script = llList2String(split, 0);
+            string selection = llList2String(split, 1);
+            string name = llList2String(split, 2);
             
             if (selection == "Reset Scripts" && id == dollID) {
                 if (RLVok)
@@ -516,8 +518,6 @@ default {
         if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
         rlvWait = 1;
         RLVok = -1;
-        if (startup != 0) llResetScript();
-        readyScripts = [];
         startup = 2;
         #ifdef SIM_FRIENDLY
         wakeMenu();
@@ -529,40 +529,41 @@ default {
         string me = llGetScriptName();
         integer loop; string script;
         
-        sendMsg(dollID, "Starting initialization");
+        sendMsg(dollID, "Reattached, Initializing");
         knownScripts = [];
-        readyScripts = [];
         
         for (loop = 0; loop < llGetInventoryNumber(INVENTORY_SCRIPT); loop++) {
             script = llGetInventoryName(INVENTORY_SCRIPT, loop);
             if (script != me) knownScripts += script;
         }
         
-        if (initState == 104) lmInitState(++initState);
+        readyScripts = [];
+        llSleep(0.5);
+        lmInitState(initState = 105);
     }
     
     attach(key id) {
         if (id == NULL_KEY) {
-            llMessageLinked(LINK_SET, 106, "detached|" + (string)lastAttachPoint, lastAttachAvatar);
+            llMessageLinked(LINK_SET, 106,  SCRIPT_NAME + "|" + "detached" + "|" + (string)lastAttachPoint, lastAttachAvatar);
             if (lastAttachPoint == ATTACH_BACK) {
                 llOwnerSay("The key is wrenched from your back, and you double over at the " +
                            "unexpected pain as the tendrils are ripped out. You feel an emptiness, " +
                            "as if some beautiful presence has been removed.");
             }
         } else {
-            llMessageLinked(LINK_SET, 106, "attached|" + (string)llGetAttached(), id);
+            llMessageLinked(LINK_SET, 106, SCRIPT_NAME + "|" + "attached" + "|" + (string)llGetAttached(), id);
             
             if (llGetPermissionsKey() == llGetOwner() && (llGetPermissions() & PERMISSION_TAKE_CONTROLS) != 0) llTakeControls(CONTROL_MOVE, 1, 1);
             else llRequestPermissions(dollID, PERMISSION_MASK);
             
-            if (!isAttached) {
+            /*if (!isAttached) {
                 llOwnerSay("Your key stubbornly refuses to attach itself, and you " +
                            "belatedly realize that it must be attached to your spine.");
                 llOwnerSay("@clear,detachme=force");
                 
                 llSleep(2.0);
                 llDetachFromAvatar();
-            }
+            }*/
             if (lastAttachAvatar == NULL_KEY) newAttach = 1;
         }
         
@@ -625,20 +626,21 @@ default {
     timer() {
         float t = llGetTime();
         if (t >= 90.0) llSetTimerEvent(0.0);
-        else llSetTimerEvent(10.0 - (t - (float)(llFloor(t / 10.0) * 10.0)));
+        else llSetTimerEvent(91.0 - t);
         
-        if (startup == 0) {
+        if (initState == 104) {
             llOwnerSay("Starting initialization");
             lowScriptMode = 0;
             startup = 1;
-            if (initState == 103) lmInitState(++initState);
+            readyScripts = [];
+            lmInitState(initState);
         }
-        else if (t >= 90.0 && (startup != 3 || dialogChannel == 0 || notReady() != [])) {
+        else if (t >= 90.0 && ((startup != 0) || (dialogChannel == 0) || (notReady() != []))) {
             lowScriptMode = 0;
             sendMsg(dollID, "Startup failure detected one or more scripts may have crashed, resetting");
 
             #ifdef DEVELOPER_MODE
-            sendMsg(dollID, "The following scripts did not report: " + llList2CSV(notReady()));
+            sendMsg(dollID, "The following scripts did not report in state " + (string)initState + ": " + llList2CSV(notReady()));
             #endif
             
             llResetScript();

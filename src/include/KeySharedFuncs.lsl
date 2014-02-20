@@ -43,7 +43,7 @@ list getButton(string text, key id, integer enabled, integer oneWay) {
 
 integer rating2Integer(string simRating) {
          if (simRating == "ADULT")      return 3;
-    else if (simRating == "MODERATE")   return 2;
+    else if (simRating == "MATURE")     return 2;
     else if (simRating == "GENERAL")    return 1;
     else                                return 0;
 }

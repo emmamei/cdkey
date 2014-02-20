@@ -1,23 +1,29 @@
+#define DEBUG_HANDLER 1
 #include "include/GlobalDefines.lsl"
 
 key ncRequest;
+float rezTime;
+float memTime;
 string ncName = "Glow Settings";
 integer initState = 104;
 integer ncLine;
 integer visible;
 integer memCollecting;
+integer debugLevel = DEBUG_LEVEL;
 list MistressList;
 list glowSettings;
 list memData;
 
 sendMsg(key target, string msg) {
-    if (llGetSubString(msg, 0, 0) == "%" && llGetSubString(msg, -1, -1) == "%") {
-        msg = findString(msg);
+    if (target) {
+        if (llGetSubString(msg, 0, 0) == "%" && llGetSubString(msg, -1, -1) == "%") {
+            msg = findString(msg);
+        }
+        
+        if (target == dollID) llOwnerSay(msg);
+        else if (llGetAgentSize(target)) llRegionSayTo(target, 0, msg);
+        else llInstantMessage(target, msg);
     }
-    
-    if (target == dollID) llOwnerSay(msg);
-    else if (llGetAgentSize(target)) llRegionSayTo(target, 0, msg);
-    else llInstantMessage(target, msg);
 }
 
 string findString(string msg) {
@@ -47,54 +53,67 @@ doVisibility(integer setVisible) {
     }
 }
 
-default
-{
-    link_message(integer sender, integer code, string data, key id) {
+default {
+    on_rez(integer start) {
+        rezTime = llGetTime();
+    }
+    
+    link_message(integer source, integer code, string data, key id) {
         list split = llParseStringKeepNulls(data, ["|"], []);
         string script = llList2String(split, 0);
         
+        if (code != 700) linkDebug(script, code, data, id);
+        
         if (code == 11) {
-            debugSay(7, "Send message to: " + (string)id + "\n" + data);
-            sendMsg(id, llList2String(split,0));
+            string msg = llList2String(split, 1);
+            debugSay(7, "DEBUG", "Send message to: " + (string)id + "\n" + msg);
+            sendMsg(id, msg);
         }
         else if (code == 15) {
+            string msg = llList2String(split, 1);
             integer i;
             for (i = 0; i < llGetListLength(llList2ListStrided(MistressList, 0, -1, 2)); i++) {
-                debugSay(7, "MistressMsg To: " + llList2String(llList2ListStrided(MistressList, 0, -1, 2), i) + "\n" + data);
-                sendMsg(llList2Key(llList2ListStrided(MistressList, 0, -1, 2), i), data);
+                string targetName = llList2String(MistressList, i * 2 + 1);
+                key targetKey = llList2Key(MistressList, i * 2);
+                debugSay(7, "DEBUG", "MistressMsg To: " + targetName + " (" + (string)targetKey + ")\n" + msg);
+                sendMsg(targetKey, msg);
             }
         }
-        if (code == 102) {
-            if (llGetInventoryType(ncName) == INVENTORY_NOTECARD) {
-                ncLine = 0;
-                glowSettings = [];
-                ncRequest = llGetNotecardLine(ncName, ncLine++);
-                llSetTimerEvent(0.25);
-            }
-        }
-        if ((code == 104) || (code == 105)) {
+        else if ((code == 104) || (code == 105)) {
+            string script = llList2String(split, 0);
+            if (script != "Start") return;
+
+            if (code == 104) ncRequest = llGetNotecardLine(ncName, ncLine++);            
+            
             if (initState == code) lmInitState(initState++);
         }
         else if (code == 110) {
             initState = 105;
         }
         else if (code == 135) {
-            memData = [];
             memCollecting = 1;
-            llSetTimerEvent(3.0);
+            memData = [];
+            memTime = llGetTime() + 2.5;
+            
+            llSetTimerEvent(0.25);
         }
         else if (code == 136) {
             memData += split;
         }
         else if (code == 300) {
-            string script = llList2String(split, 0);
             string name = llList2String(split, 1);
             string value = llList2String(split, 2);
             split = llList2List(split, 2, -1);
             
                  if (name == "MistressList")              MistressList = split;
             else if (name == "isVisible")                 doVisibility((integer)value);
-            else if (name == "dollyName") {
+            else if (name == "debugLevel")                debugLevel = (integer)value;
+            else if (name == "keyAnimation")              keyAnimation = value;
+            else if (name == "poserID")                   poserID = (key)value;
+            else if ((script == "MenuHandler") && (name == "dialogChannel")) {
+                dialogChannel = (integer)value;
+            }
+            else if (isAttached && (name == "dollyName")) {
                 string dollyName = value;
                 llSetObjectName(dollyName + "'s Key");
             }
@@ -139,9 +158,32 @@ default
             #endif
             
         }
+        else if (code == 305) {
+            string script = llList2String(split, 0);
+            string cmd = llList2String(split, 1);
+            split = llList2List(split, 2, -1);
+            
+            if (cmd == "setAFK") {
+                afk = llList2Integer(split, 0);
+                integer auto = llList2Integer(split, 1);
+                string rate = llList2String(split, 2);
+                string mins = llList2String(split, 3);
+                
+                if (afk) {
+                    if (auto)
+                        llOwnerSay("Automatically entering AFK mode. Wind down rate has slowed to " + rate + "x however and movements and abilities are restricted.");
+                    else
+                        llOwnerSay("You are now away from keyboard (AFK). Wind down rate has slowed to " + rate + "x however and movements and abilities are restricted.");
+                } else {
+                    llOwnerSay("You are now no longer away from keyboard (AFK). Movements are unrestricted and winding down proceeds at normal rate.");
+                }
+                llOwnerSay("You have " + mins + " minutes of life remaning.");
+            }
+        }
         else if (code == 500) {
-            string choice = llList2String(split, 0);
-            string avatar = llList2String(split, 1);
+            string script = llList2String(split, 0);
+            string choice = llList2String(split, 1);
+            string avatar = llList2String(split, 2);
             
             if (choice == "Join Group") {
                 llOwnerSay("Here is your link to the community dolls group profile secondlife:///app/group/0f0c0dd5-a611-2529-d5c7-1284fb719003/about");
@@ -159,6 +201,75 @@ default
                 
                 llDialog(id, msg, dialogSort(llListSort(pluslist, 1, 1) + MAIN), dialogChannel);
             }
+            else if (llGetSubString(choice, 0, 4) == "Poses" && (keyAnimation == ""  || (!isDoll || poserID == dollID))) {
+                poserID = id;
+                integer page = 1; integer len = llStringLength(choice);
+                if (len > 5) {
+                    page = (integer)llGetSubString(choice, 6 - len, -1);
+                }
+                else {
+                    llOwnerSay("secondlife:///app/agent/" + (string)id + "/about is looking at your poses menu.");
+                }
+                integer poseCount = llGetInventoryNumber(20);
+                list poseList; integer i;
+                
+                for (i = 0; i < poseCount; i++) {
+                    string poseName = llGetInventoryName(20, i);
+                    if (poseName != ANIMATION_COLLAPSED &&
+                        ((isDoll || isController) || llGetSubString(poseName, 0, 0) != "!") &&
+                        (isDoll || llGetSubString(poseName, 0, 0) != ".")) {
+                        if (poseName != keyAnimation) poseList += poseName;
+                        else poseList += [ "* " + poseName ];
+                    }
+                }
+                poseCount = llGetListLength(poseList);
+                integer pages = 1;
+                if (poseCount > 11) pages = llCeil((float)poseCount / 9.0);
+                debugSay(7, "DEBUG", "Anims: " + (string)llGetInventoryNumber(20) + " | Avail Poses: " + (string)poseCount + " | Pages: " + (string)pages +
+                    "\nAvailable: " + llList2CSV(poseList) +
+                    "\nThis Page (" + (string)page + "): " + llList2CSV(llList2List(poseList, (page - 1) * 9, page * 9 - 1)));
+                if (poseCount > 11) {
+                    poseList = llList2List(poseList, (page - 1) * 9, page * 9 - 1);
+                    integer prevPage = page - 1;
+                    integer nextPage = page + 1;
+                    if (prevPage == 0) prevPage = 1;
+                    if (nextPage > pages) nextPage = pages;
+                    poseList = [ "Poses " + (string)prevPage, "Poses " + (string)nextPage, MAIN ] + poseList;
+                }
+                else poseList = dialogSort(poseList + [ MAIN ]);
+                
+                llDialog(id, "Select the pose to put the doll into", poseList, dialogChannel);
+            }
+        }
+        else if (code == 501) {
+            string script = llList2String(split, 0);
+            integer textboxType = llList2Integer(split, 1);
+            string name = llList2String(split, 2);
+            string choice = llDumpList2String(llList2List(split, 3, -1), "|");
+            
+            debugSay(3, "DEBUG-MENU", "Textbox input (" + (string)textboxType + ") from " + name + ": " + choice);
+            
+            if (textboxType == 1) {
+                string first = llGetSubString(choice, 0, 0);
+                if (first == "<") choice = (string)((vector)choice);
+                else if (first == "#") choice = (string)((vector)("<0x" + llGetSubString(choice, 1, 2) + ",0x" + llGetSubString(choice, 3, 4) + ",0x" + llGetSubString(choice, 5, 6) + ">"));
+                else choice = (string)((vector)("<" + choice + ">"));
+                lmInternalCommand("setGemColour", choice, id);
+            }
+            else if (textboxType == 2) {
+                lmSendConfig("dollyName", choice);
+            }
+            else if (textboxType == 3) {
+                lmSendConfig("windTimes", llDumpList2String(llParseString2List(choice, [ " ", ",", "|" ], []), "|"));
+            }
+        }
+        else if (code == 700) {
+            string sender = llList2String(split, 0);
+            integer level = llList2Integer(split, 1);
+            string prefix = llList2String(split, 2);
+            string msg = llList2String(split, 3);
+            
+            debugHandler(sender, level, prefix, msg);
         }
     }
     
@@ -168,41 +279,49 @@ default
                 doVisibility(-1);
                 ncRequest = NULL_KEY;
             }
-            else glowSettings += llJson2List(data);
+            else {
+                glowSettings += llJson2List(data);
+                llSetTimerEvent(0.25);
+            }
         }
     }
     
     timer() {
         llSetTimerEvent(0.0);
-        if (ncRequest != NULL_KEY) {
-            ncRequest = llGetNotecardLine(ncName, ncLine++);
-            llSetTimerEvent(0.25);
-        }
-        if (memCollecting) {
-            float memory_limit = (float)llGetMemoryLimit();
-            float free_memory = (float)llGetFreeMemory();
-            float used_memory = (float)llGetUsedMemory();
-            if (((used_memory + free_memory) > (memory_limit * 1.05)) && (memory_limit <= 16384)) { // LSL2 compiled script
-               memory_limit = 16384;
-               used_memory = 16384 - free_memory;
-            }
-            memData = llListSort(memData + [ SCRIPT_NAME, (string)used_memory, (string)memory_limit, (string)free_memory ], 4, 1);
-            
-            integer i; string scriptName;
-            string output = "Script Memory Status:";
-            for (i = 0; i < llGetListLength(memData); i += 4) {
-                scriptName =     llList2String(memData, i);
-                used_memory =    llList2Float(memData, i + 1);
-                memory_limit =   llList2Float(memData, i + 2);
-                free_memory =    llList2Float(memData, i + 3);
+        if (memCollecting || (ncRequest != NULL_KEY)) {
+            if (memCollecting && (memTime < llGetTime())) {
+                float memory_limit = (float)llGetMemoryLimit();
+                float free_memory = (float)llGetFreeMemory();
+                float used_memory = (float)llGetUsedMemory();
+                if (((used_memory + free_memory) > (memory_limit * 1.05)) && (memory_limit <= 16384)) { // LSL2 compiled script
+                   memory_limit = 16384;
+                   used_memory = 16384 - free_memory;
+                }
+                memData = llListSort(memData + [ SCRIPT_NAME, (string)used_memory, (string)memory_limit, (string)free_memory ], 4, 1);
                 
-                output += "\n" + scriptName + ":\t" + formatFloat(used_memory / 1024.0, 2) + "/" + (string)llRound(memory_limit / 1024.0) + "kB (" +
-                          formatFloat(free_memory / 1024.0, 2) + "kB free)";
+                integer i; string scriptName;
+                string output = "Script Memory Status:";
+                for (i = 0; i < llGetListLength(memData); i += 4) {
+                    scriptName =     llList2String(memData, i);
+                    used_memory =    llList2Float(memData, i + 1);
+                    memory_limit =   llList2Float(memData, i + 2);
+                    free_memory =    llList2Float(memData, i + 3);
+                    
+                    output += "\n" + scriptName + ":\t" + formatFloat(used_memory / 1024.0, 2) + "/" + (string)llRound(memory_limit / 1024.0) + "kB (" +
+                              formatFloat(free_memory / 1024.0, 2) + "kB free)";
+                }
+                
+                llOwnerSay(output);
+    
+                memCollecting = 0;
+            }
+            if (llGetInventoryType(ncName) == INVENTORY_NOTECARD) {
+                ncLine = 0;
+                glowSettings = [];
+                ncRequest = llGetNotecardLine(ncName, ncLine++);
             }
             
-            llOwnerSay(output);
-
-            memCollecting = 0;
+            llSetTimerEvent(0.25);
         }
     }
 }

@@ -12,13 +12,7 @@
 
 #define hasCarrier (carrierID != NULL_KEY)    
 #define numControllers (llGetListLength(USER_CONTROLLERS) / 2)
-#ifndef DEVELOPER_MODE
-#define isAttached (llGetAttached() == ATTACH_BACK)
-#define isAllowedRLV (llGetAttached() == ATTACH_BACK)
-#else
-#define isAttached ((llGetAttached() == ATTACH_BACK) || (llGetAttached() == ATTACH_HUD_CENTER_1) || (llGetAttached() == ATTACH_HUD_CENTER_2))
-#define isAllowedRLV ((llGetAttached() == ATTACH_BACK) || (llGetAttached() == ATTACH_HUD_CENTER_2))
-#endif
+#define isAttached llGetAttached()
 #define isDollAway ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0)
 #define isWindingDown (!collapsed && isAttached && dollType != "Builder" && dollType != "Key")
 #define mainTimerEnable (configured && isAttached && RLVchecked)
@@ -55,7 +49,9 @@
 // llTakeControls() mask all available controls
 #define CONTROL_ALL 0x5000033f
 // llTakeControls() mask for the basic movement keys (4 arrow keys)
-#define CONTROL_MOVE 0x15
+#define CONTROL_MOVE 0xf
+// llTakeControls() mask for AFK mode slow movement
+#define CONTROL_SLOW 0x3
 // Dolls home landmark name
 #define LANDMARK_HOME "Home"
 // Name of the Community Dolls Room landmark
@@ -117,20 +113,24 @@
 #define WIND_NORMAL 1
 
 // Link messages
-#define lmSendToAgent(msg, id) llMessageLinked(LINK_THIS, 11, msg, id)
+#define lmSendToAgent(msg, id) llMessageLinked(LINK_THIS, 11, SCRIPT_NAME + "|" + msg, id)
+#define lmSendToController(msg) llMessageLinked(LINK_THIS, 15, SCRIPT_NAME + "|" + msg, NULL_KEY)
 #define lmPrefsComplete(count) llMessageLinked(LINK_THIS, 102, SCRIPT_NAME + "|" + (string)(count), NULL_KEY)
 #define lmMemReport(delay) llMessageLinked(LINK_THIS, 135, SCRIPT_NAME + "|" + (string)delay, NULL_KEY)
+#define lmMemReply(used,limit,free) llMessageLinked(LINK_THIS, 136, SCRIPT_NAME + "|" + (string)used + "|" + (string)limit + "|" + (string)free, NULL_KEY)
+#define lmRating(simrating) llMessageLinked(LINK_THIS, 150, SCRIPT_NAME + "|" + simrating, NULL_KEY)
 #define lmInternalCommand(command, parameter, id) llMessageLinked(LINK_THIS, 305, SCRIPT_NAME + "|" + command + "|" + parameter, id)
 #define lmRLVreport(active, apistring, apiversion) llMessageLinked(LINK_THIS, 350, SCRIPT_NAME + "|" + (string)active + "|" + apistring + "|" + (string)apiversion, NULL_KEY)
 #define lmRunRLV(command) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|" + command, NULL_KEY)
-#define lmRunRLVas(vmodule, command) llMessageLinked(LINK_THIS, 315, vmodule + "|" + command, NULL_KEY)
+#define lmRunRLVas(vmodule, command) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|" + vmodule + "|" + command, NULL_KEY)
 #define lmConfirmRLV(forscript, command) llMessageLinked(LINK_THIS, 320, SCRIPT_NAME + "|" + forscript + "|" + command, NULL_KEY)
 #define lmScriptReset() llMessageLinked(LINK_THIS, 999, SCRIPT_NAME, NULL_KEY)
 #define lmOwnerCheckFail() llMessageLinked(LINK_THIS, 999, SCRIPT_NAME + "|" + (string)CHANGED_OWNER, NULL_KEY)
 #define lmSendConfig(name, value) llMessageLinked(LINK_THIS, 300, SCRIPT_NAME + "|" + name + "|" + value, NULL_KEY)
 #define lmUpdateStatistic(name, value) llMessageLinked(LINK_THIS, 399, SCRIPT_NAME + "|" + name + "|" + value, NULL_KEY)
 #define lmInitState(code) llMessageLinked(LINK_THIS, code, SCRIPT_NAME, NULL_KEY)
-#define lmMenuReply(choice, name, id) llMessageLinked(LINK_THIS, 500, choice + "|" + name, id)
+#define lmMenuReply(choice,name,id) llMessageLinked(LINK_THIS, 500, SCRIPT_NAME + "|" + choice + "|" + name, id)
+#define lmTextboxReply(type,name,choice,id) llMessageLinked(LINK_THIS, 501, SCRIPT_NAME + "|" + (string)type + "|" + name + "|" + choice, id)
 
 // Defines for various virtual functions to save typing and memory by inlining
 #define isInteger(input) ((string)((integer)input) == input)

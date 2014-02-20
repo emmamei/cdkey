@@ -171,10 +171,10 @@ doRLV(string script, string commandString) {
         }
         
         //llOwnerSay("RLV Sources " + llList2CSV(rlvSources));
-        debugSay(9, "Active RLV: " + llDumpList2String(llList2ListStrided(rlvStatus, 0, -1, 2), "/"));
+        debugSay(9, "DEBUG-RLV", "Active RLV: " + llDumpList2String(llList2ListStrided(rlvStatus, 0, -1, 2), "/"));
         integer i;
         for (i = 0; i < llGetListLength(rlvStatus); i += 2) {
-            debugSay(9, llList2String(rlvStatus, i) + "\t" + llList2String(rlvStatus, i + 1));
+            debugSay(9, "DEBUG-RLV", llList2String(rlvStatus, i) + "\t" + llList2String(rlvStatus, i + 1));
         }
     }
 }
@@ -241,8 +241,8 @@ default {
         if (code == 104 || code == 105) {
             string script = llList2String(split, 0);
             if (script != "Start") return;
-            if (code == 104 && initState == 104) lmInitState(initState++);
-            else if (code == 105 && initState == 105) lmInitState(initState++);
+            
+            if (initState == code) lmInitState(initState++);
         }
         if (code == 110) {
             initState = 105;
@@ -253,13 +253,13 @@ default {
         }
         else if (code == 315) {
             string script = llList2String(split, 0);
-            string cmd = llList2String(split, 1);
-            split = llList2List(split, 2, -1);
+            string name = llList2String(split, 1);
+            string cmd = llList2String(split, 2);
             
-            doRLV(script, cmd);
+            doRLV(name, cmd);
         }
         else if (code == 350) {
-            RLVok = llList2Integer(split, 0);
+            RLVok = llList2Integer(split, 1);
             RLVstarted = 1;
         }
     }

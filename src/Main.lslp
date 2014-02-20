@@ -3,7 +3,6 @@
 // vim:sw=4 et nowrap:
 //
 // DATE: 22 March 2013
-#define DEBUG_MASTER 1
 #include "include/GlobalDefines.lsl"
 
 // Note that some doll types are special....
@@ -48,6 +47,8 @@ key dresserID = NULL_KEY;
 key winderID = NULL_KEY;
 key dollID = NULL_KEY;
 key keyHandler = NULL_KEY;
+
+list windTimesInput;
 
 integer dialogChannel;
 integer chatChannel = 75;
@@ -109,11 +110,9 @@ float timeToJamRepair;
 float windamount      = 1800.0; // 30 * SEC_TO_MIN;    // 30 minutes
 float keyLimit        = 10800.0;
 float effectiveLimit  = keyLimit;
-float defaultwind     = windamount;
 float timeLeftOnKey   = windamount;
 float windRate        = 1.0;
 float baseWindRate    = 1.0;
-float keyHandlerTime;
 list windTimes        = [ 30 ];
 list blacklist;
 
@@ -238,11 +237,6 @@ default {
         dollID = llGetOwner();
         if (llGetAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
     }
-    
-    on_rez(integer start) {
-        keyHandler = NULL_KEY;
-        keyHandlerTime = (float)llGetUnixTime();
-    }
 
     //----------------------------------------
     // DATASERVER
@@ -255,7 +249,7 @@ default {
         #ifdef ADULT_MODE
         if (query_id == simRatingQuery) {
             simRating = data;
-            llMessageLinked(LINK_SET, 150, simRating, NULL_KEY);
+            lmRating(simRating);
             
             if ((simRating == "MATURE" && simRating == "ADULT") && (pleasureDoll || dollType == "Slut")) {
                 llOwnerSay("Entered " + llGetRegionName() + " rating is " + llToLower(simRating) + " stripping disabled.");
@@ -271,8 +265,7 @@ default {
     changed(integer change) {
         if (change & CHANGED_REGION) {
             simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
-            keyHandler = NULL_KEY;
-            keyHandlerTime = (float)llGetUnixTime();
+            lmSendConfig("keyHandler", (string)(keyHandler = NULL_KEY));
         }
         if (change & CHANGED_TELEPORT) {
             if (lockPos != ZERO_VECTOR) {
@@ -302,7 +295,7 @@ default {
         // Increment a counter
         ticks++;
         
-        //debugMaster(5, "afk=" + (string)afk + " velocity=" + (string)llGetVel() + " speed=" + formatFloat(llVecMag(llGetVel()), 2) + "m/s (llVecMag(llGetVel()))");
+        //debugSay(5, "afk=" + (string)afk + " velocity=" + (string)llGetVel() + " speed=" + formatFloat(llVecMag(llGetVel()), 2) + "m/s (llVecMag(llGetVel()))");
 
         if (canAFK) {
             integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0);
@@ -401,10 +394,6 @@ default {
             }
             
             lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
-            if ((llGetUnixTime() - keyHandlerTime) < 65) {
-                lmSendConfig("keyHandler", (string)keyHandler);
-                lmSendConfig("keyHandlerTime", (string)((float)(llGetUnixTime() - keyHandlerTime)));
-            }
             if (wearLockExpire != 0.0) lmSendConfig("wearLockExpire", (string)(wearLockExpire));
             if (winderRechargeTime != 0.0) lmSendConfig("winderRechargeTime", (string)(winderRechargeTime));
         }
@@ -415,8 +404,8 @@ default {
     //----------------------------------------
     // For Transforming Key operations
     link_message(integer source, integer code, string data, key id) {
-        linkDebug(source, code, data, id);
         list split = llParseString2List(data, [ "|" ], []);
+        string script = llList2String(split, 0);
         
         if (code == 102) {
             if (llList2String(split, 0) == "OnlineServices") {
@@ -429,31 +418,27 @@ default {
         }
         
         else if (code == 104) {
-            if (llList2String(split, 0) != "Start") return;
+            if (script != "Start") return;
             dollID = llGetOwner();
             dollName = llGetDisplayName(dollID);
             
             broadcastHandle = llListen(broadcastOn, "", "", "");
             chatHandle = llListen(chatChannel, "", dollID, "");
             
-            #ifdef ADULT_MODE
-            simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
-            #endif
-            
             clearAnim = 1;
             if (initState == 104) lmInitState(initState++);
-        }
-        
-        else if (code == 105) {
-            if (llList2String(split, 0) != "Start") return;
-            llSetTimerEvent(0.0);
-            timerStarted = 0;
+            
             #ifdef ADULT_MODE
             simRating = "";
             simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
             #endif
+        }
+        
+        else if (code == 105) {
+            if (script != "Start") return;
+            llSetTimerEvent(0.0);
+            timerStarted = 0;
             
-            if (initState == 105) lmInitState(initState++);
             clearAnim = 1;
             
             llSetTimerEvent(STD_RATE);
@@ -461,6 +446,8 @@ default {
             timerStarted = 1;
 
             if (!isAttached) llSetTimerEvent(60.0);
+            
+            if (initState == 105) lmInitState(initState++);
         }
         
         else if (code == 110) {
@@ -503,7 +490,6 @@ default {
             else if (name == "quiet")                           quiet = (integer)value;
             else if (name == "RLVok")                           RLVok = (integer)value;
             else if (name == "signOn")                         signOn = (integer)value;
-            else if (name == "dialogChannel")           dialogChannel = (integer)value;
             else if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
             else if (name == "windamount")                 windamount = (float)value;
             else if (name == "wearLockExpire")         wearLockExpire = (float)value;
@@ -515,11 +501,11 @@ default {
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
             else if (name == "blacklist")                   blacklist = llListSort(split, 2, 1);
+            else if ((script == "MenuHandler") && (name == "dialogChannel")) {
+                dialogChannel = (integer)value;
+            }
             else if (name == "keyHandler") {
                 keyHandler = (key)value;
-            }
-            else if (name == "keyHandlerTime") {
-                keyHandlerTime = (float)llGetUnixTime() - (float)value;
             }
             else if (name == "lockPos") {
                 if (value == llGetRegionName()) lockPos = llList2Vector(split, 3);
@@ -529,30 +515,31 @@ default {
                 demoMode = (integer)value;
                 if (demoMode) {
                     effectiveLimit = DEMO_LIMIT;
-                    defaultwind = 120.0;
                 }
                 else {
                     effectiveLimit = keyLimit;
-                    defaultwind = llListStatistics(LIST_STAT_MEDIAN, windTimes) * SEC_TO_MIN;
                 }
+                lmSendConfig("windTimes", llDumpList2String(windTimesInput, "|"));
             }
             else if (name == "keyLimit") {
                 keyLimit = (float)value;
                 if (demoMode) effectiveLimit = DEMO_LIMIT;
                 else effectiveLimit = keyLimit;
+                
+                if (timeLeftOnKey > effectiveLimit) lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = effectiveLimit));
+                lmSendConfig("windTimes", llDumpList2String(windTimesInput, "|"));
             }
             else if (name == "windTimes") {
-                integer timesCount = llGetListLength(split);
                 integer i; split = llList2List(split, 2, -1);
-                for (i = 0; i < llGetListLength(split); i++) split = llListReplaceList(split, [ llList2Integer(split, i) ], i ,i);
-                split = llListSort(split, 1, 1);
-                defaultwind = llListStatistics(LIST_STAT_MEDIAN, split) * SEC_TO_MIN;
-                windTimes = [];
-                do {
-                    windTimes = llList2List(split, 0, 2) + windTimes;
-                    split = llDeleteSubList(split, 0, 2);
-                    //debugMaster(5, "windTimes " + llList2CSV(windTimes) + "\nsplit " + llList2CSV(split));
-                } while (llGetListLength(split) > 0);
+                integer timesCount = llGetListLength(split);
+                
+                windTimesInput = split;
+                
+                for (i = 0; i < timesCount; i++) {
+                    integer value = (integer)llStringTrim(llList2String(split, i), STRING_TRIM);
+                    if ((value > 0) && (llListFindList(windTimes, [ value ]) == -1) && (((float)value * 60.0) <= keyLimit)) windTimes += value;
+                }
+                windTimes = llListSort(windTimes, 1, 1);
             }
             #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")           timeReporting = (integer)value;
@@ -584,7 +571,7 @@ default {
                     else autoAFK = 0;
                 }
                 
-                debugMaster(5,"DEBUG", "setAFK, afk=" + (string)afk + ", autoSet=" + (string)autoSet + ", autoAFK=" + (string)autoAFK);
+                debugSay(5,"DEBUG", "setAFK, afk=" + (string)afk + ", autoSet=" + (string)autoSet + ", autoAFK=" + (string)autoAFK);
                 
                 lmSendConfig("afk", (string)afk);
                 lmSendConfig("autoAFK", (string)autoAFK);
@@ -631,7 +618,7 @@ default {
                 
                 list buttons = llListSort(windTimes, 1, 1);
                 if (demoMode) {
-                    buttons = [ "Wind 2", "Wind 5" ]; // If we are in demo mode make our buttons make sense
+                    buttons = [ "Wind 1", "Wind 2" ]; // If we are in demo mode make our buttons make sense
                 }
                 else {
                     integer i;
@@ -646,8 +633,9 @@ default {
         }
 
         else if (code == 350) {
-            RLVok = llList2Integer(split, 0);
-            rlvAPIversion = llList2String(split, 1);
+            string script = llList2String(split, 0);
+            RLVok = llList2Integer(split, 1);
+            rlvAPIversion = llList2String(split, 2);
             // When rlv confirmed....vefify collapse state... no escape!
             if (collapsed == 1 && timeLeftOnKey > 0) uncollapse(0);
             else if (!collapsed && timeLeftOnKey <= 0) lmInternalCommand("collapse", "0", NULL_KEY);
@@ -656,24 +644,30 @@ default {
             
             simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
         }
+        
         else if (code == 500) {
-            string choice = llList2String(split, 0);
-            string name = llList2String(split, 1);
+            string script = llList2String(split, 0);
+            string choice = llList2String(split, 1);
+            string name = llList2String(split, 2);
 
-            if (timeLeftOnKey + 60.0 > effectiveLimit) {
-                llDialog(id, "Dolly is already fully wound.", [MAIN], dialogChannel);
-                return;
-            }
             if (llGetSubString(choice, 0, 3) == "Wind") {
-                if (choice == "Wind Emg") {
+                if (timeLeftOnKey + 60.0 > effectiveLimit) {
+                    llDialog(id, "Dolly is already fully wound.", [MAIN], dialogChannel);
+                    return;
+                }
+                else if (choice == "Wind Times") return;
+                else if (choice == "Wind Emg") {
                     // Give this a time limit: can only be done once
                     // in - say - 6 hours... at least maxwindtime *2 or *3.
     
                     if (winderRechargeTime == 0.0) {
     
                         if (collapsed == 1) {
-                            llMessageLinked(LINK_THIS, 15, dollName + " has activated the emergency winder.", NULL_KEY);
-    
+                            lmSendToController(dollName + " has activated the emergency winder.");
+                            
+                            windamount = llListStatistics(LIST_STAT_MEDIAN, windTimes) * SEC_TO_MIN;
+                            //if (demoMode) windamount = 180.0;
+                            debugSay(3, "DEBUG", "Doing emergency wind, using median wind time of " + (string)llRound(windamount / SEC_TO_MIN) + " mins.");
                             windKey();
                             winderRechargeTime = EMERGENCY_LIMIT_TIME;
     
@@ -695,16 +689,14 @@ default {
                     windamount = (float)llGetSubString(choice, 5, -1) * SEC_TO_MIN;
                     doWind(name, id);
                 }
-                else if ((llGetListLength(windTimes) == 1) || ((timeLeftOnKey + llList2Float(windTimes, 0) * SEC_TO_MIN) > keyLimit)) {
-                    debugMaster(5, "DEBUG", "Doing default wind");
-                    windamount = defaultwind;
+                else if ((llGetListLength(windTimes) == 1) || ((timeLeftOnKey + (llListStatistics(LIST_STAT_MIN, windTimes) * SEC_TO_MIN)) > keyLimit)) {
+                    debugSay(3, "DEBUG", "Doing minimum wind and skipping menu.");
+                    windamount = llListStatistics(LIST_STAT_MIN, windTimes) * SEC_TO_MIN;
+                    if (demoMode) windamount = SEC_TO_MIN;
                     doWind(name, id);
                 }
                 else lmInternalCommand("windMenu", "", id);
             }
-        }
-        else if (code == 700) {
-            debugMaster((integer)((string)id), "DEBUG", data);
         }
     }
 
@@ -922,18 +914,16 @@ default {
         else if (channel == broadcastOn) {
             if (llGetSubString(choice, 0, 4) == "keys ") {
                 string subcommand = llGetSubString(choice, 5, -1);
-                debugMaster(5, "BROADCAST-DEBUG", "Broadcast recv: From: " + name + " (" + (string)id + ") Owner: " + llGetDisplayName(llGetOwnerKey(id)) + " (" + (string)llGetOwnerKey(id) +  ") " + choice);
+                debugSay(5, "BROADCAST-DEBUG", "Broadcast recv: From: " + name + " (" + (string)id + ") Owner: " + llGetDisplayName(llGetOwnerKey(id)) + " (" + (string)llGetOwnerKey(id) +  ") " + choice);
                 if (subcommand == "claimed") {
                     if (keyHandler == llGetKey()) {
-                        keyHandlerTime = llGetUnixTime();
                         llRegionSay(broadcastOn, "keys released");
-                        debugMaster(5, "BROADCAST-DEBUG", "Broadcast sent: keys released");
+                        debugSay(5, "BROADCAST-DEBUG", "Broadcast sent: keys released");
                     }
-                    keyHandler = id;
+                    lmSendConfig("keyHandler", (string)(keyHandler = id));
                 }
                 else if ((subcommand == "released") && (keyHandler == id)) {
                     lmSendConfig("keyHandler", (string)(keyHandler = NULL_KEY));
-                    keyHandlerTime = (float)llGetUnixTime();
                 }
             } 
         }
