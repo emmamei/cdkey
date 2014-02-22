@@ -43,7 +43,7 @@ memReport(float delay) {
         #define debugHandler(script,level,prefix,msg) debugMainHandler(script, level, prefix, msg)
         #define linkDebug(sender,code,data,id) linkDebugHandler(sender, code, data, id)
     #else
-        #define debugSay(level,prefix,msg) if (level > debugLevel) llMessageLinked(LINK_THIS, 700, SCRIPT_NAME + "|" + (string)level + "|" + prefix + "|" + msg, NULL_KEY)
+        #define debugSay(level,prefix,msg) if (debugLevel > level) llMessageLinked(LINK_THIS, 700, SCRIPT_NAME + "|" + (string)level + "|" + prefix + "|" + msg, NULL_KEY)
     #endif
 #else
 #define debugSay(level,prefix,msg)
@@ -53,7 +53,7 @@ memReport(float delay) {
 
 #ifdef DEVELOPER_MODE
 linkDebugHandler(string sender, integer code, string data, key id) {
-    //if (!configured && (code == 300) && (initState == 104)) return;
+    if (!configured && (code == 300) && (initState == 104)) return;
 
     list split = llParseStringKeepNulls(data, ["|"], []);
     string script = llList2String(split, 0);
@@ -61,12 +61,11 @@ linkDebugHandler(string sender, integer code, string data, key id) {
     data = llDumpList2String(llDeleteSubList(split, 0, 0), "|");
 
     integer level = 5;
-         if (llListFindList([ 102, 150, 305, 350, 399 ], [ code ]) != -1)       level = 2;
-    else if (llListFindList([ 104, 105, 315 ], [ code ]) != -1)                 level = 4;
-    else if (llListFindList([ 110, 500 ], [ code ]) != -1)                      level = 6;
+         if (llListFindList([ 102, 150, 305, 350, 399, 999 ], [ code ]) != -1)  level = 2;
+    else if (llListFindList([ 110 ], [ code ]) != -1)                           level = 4;
+    else if (llListFindList([ 104, 105, 135, 136, 500 ], [ code ]) != -1)       level = 6;
     else if (llListFindList([ 300 ], [ code ]) != -1)                           level = 7;
-    else if (llListFindList([ 320 ], [ code ]) != -1)                           level = 8;
-    else if (llListFindList([ 135, 136, 999 ], [ code ]) != -1)                 level = 9;
+    else if (llListFindList([ 315, 320 ], [ code ]) != -1)                      level = 8;
     
     string msg = (string)code;
     if (data != "") msg += ", " + data;

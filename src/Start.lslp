@@ -226,9 +226,6 @@ initializationCompleted() {
         llSay(0, llGetDisplayName(llGetOwner()) + " is now a dolly - anyone may play with their Key.");
 
     initTimer = llGetTime() * 1000;
-
-    lmMemReport(0.0);
-    memReport(0.0);
     
     if (dollyName == "") {
         string name = dollName;
@@ -320,7 +317,6 @@ default {
                     initConfiguration();
                 }
             }
-            else debugSay(1, "DEBUG-PHASE104", "WARNING: Script " + script + " is sending excessive signal 104");
         }
         else if (code == 105) {
             string script = llList2String(split, 0);
@@ -333,7 +329,6 @@ default {
                     initializationCompleted();
                 }
             }
-            else debugSay(1, "DEBUG-PHASE105", "WARNING: Script " + script + " is sending excessive signal 105");
         }
         else if (code == 135) {
             if (llList2String(split, 0) == llGetScriptName()) return;
@@ -470,10 +465,10 @@ default {
             if (selection == "Reset Scripts") {
                 if (isController) llResetScript();
                 else if (id == dollID) {
-                    if (RLVok)
+                    if (RLVok == 1)
                         llOwnerSay("Unable to reset scripts while running with RLV enabled, please relog without RLV disabled or " +
                                     "you can use login a Linden Lab viewer to perform a script reset.");
-                    else if (RLVok == -1 && (llGetTime() < 180.0))
+                    else if (RLVok == -1 && (llGetTime() < 300.0))
                         llOwnerSay("Key is currently still checking your RLV status please wait until the check completes and then try again.");
                     else llResetScript();
                 }
@@ -518,7 +513,6 @@ default {
         dollID = llGetOwner();
         databaseOnline = 0;
         if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
-        rlvWait = 1;
         RLVok = -1;
         startup = 2;
         #ifdef SIM_FRIENDLY
@@ -597,8 +591,10 @@ default {
     
     changed(integer change) {
         if (change & CHANGED_INVENTORY) {
-            llOwnerSay("Inventory Modified Restarting");
-            llSleep(10.0);
+            llOwnerSay("Inventory modified restarting in 30 seconds.");
+            
+            llSleep(30.0);
+            
             if (llGetInventoryType(NOTECARD_PREFERENCES) == INVENTORY_NOTECARD) {
                 key ncKey = llGetInventoryKey(NOTECARD_PREFERENCES);
                 if (ncPrefsLoadedUUID != NULL_KEY && ncKey != NULL_KEY && ncKey != ncPrefsLoadedUUID) {
@@ -615,6 +611,7 @@ default {
                     return;
                 }
             }
+            
             llResetScript();
         }
         if (change & CHANGED_OWNER) {
@@ -623,14 +620,17 @@ default {
                 llOwnerSay("Look at PreferencesExample to see how to make yours.");
                 llRemoveInventory(NOTECARD_PREFERENCES);
             }
+            
+            llSleep(5.0);
+            
             llResetScript();
         }
     }
     
     timer() {
         float t = llGetTime();
-        if (t >= 90.0) llSetTimerEvent(0.0);
-        else llSetTimerEvent(91.0 - t);
+        if (t >= 300.0) llSetTimerEvent(0.0);
+        else llSetTimerEvent(10.0);
         
         if (initState == 104) {
             llOwnerSay("Starting initialization");
@@ -639,7 +639,7 @@ default {
             readyScripts = [];
             lmInitState(initState);
         }
-        else if (t >= 90.0 && ((startup != 0) || (dialogChannel == 0) || (notReady() != []))) {
+        else if (t >= 300.0 && ((startup != 0) || (RLVok == -1) || (dialogChannel == 0) || (notReady() != []))) {
             lowScriptMode = 0;
             sendMsg(dollID, "Startup failure detected one or more scripts may have crashed, resetting");
 
@@ -648,6 +648,28 @@ default {
             #endif
             
             llResetScript();
+        }
+        else {
+            integer i; integer n = llGetInventoryNumber(10);
+            for (i = 0; i < n; i++) {
+                string script = llGetInventoryName(10, i);
+                
+                if (!llGetScriptState(script)) {
+                    if (llListFindList([ "Aux", "Avatar", "Dress", "Main", "MenuHandler", "OnlineServices", "StatusRLV", "Transform" ], [ script ]) != -1) {
+                        // Core key script appears to have suffered a fatal error try restarting
+                        float delay = 30.0;
+                        #ifdef DEVELOPER_MODE
+                        delay *= 10.0; // Increase delay by a factor of 10 for auto restarts in DEVELOPER_MODE this prevents
+                                       // rapid looping from occuring in the event of a developer accidently saving a script that
+                                       // fails to compile.
+                        #endif
+                        
+                        llResetScript();
+                    }
+                }
+            }
+            
+            llSetTimerEvent(90.0);
         }
     }
     

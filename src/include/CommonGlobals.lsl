@@ -50,6 +50,9 @@ integer RLVok;
 integer signOn;
 integer takeoverAllowed;
 integer visible             = 1;
+
+integer initState	    = 104;
+integer initCode;
 integer debugLevel          = DEBUG_LEVEL;
 
 integer dialogChannel;

@@ -93,14 +93,23 @@ default {
             if (initState == code) lmInitState(initState++);
         }
         else if (code == 110) {
+            if (script != "Start") return;
+            
             initState = 105;
+            
+            if (llGetInventoryType(ncName) == INVENTORY_NOTECARD) {
+                ncLine = 0;
+                glowSettings = [];
+                ncRequest = llGetNotecardLine(ncName, ncLine++);
+            }
         }
         else if (code == 135) {
+            if (script == SCRIPT_NAME) return;
+            
             memCollecting = 1;
             memData = [];
-            memTime = llGetTime() + 2.5;
             
-            llSetTimerEvent(0.25);
+            llSetTimerEvent(5.0);
         }
         else if (code == 136) {
             memData += split;
@@ -292,12 +301,12 @@ default {
             if ((carrierID != NULL_KEY) && (llListFindList(allow, [ (string)carrierID ]) == -1)) allow += carrierID;
             
             // Directly dump the list using the static parts of the RLV command as a seperatior no looping
-            lmRunRLVas("Base", "tplure:" + llDumpList2String(allow, "=add,tplure:") + "=add");
-            lmRunRLVas("Base", "accepttp:" + llDumpList2String(allow, "=add,accepttp:") + "=add");
-            lmRunRLVas("Base", "sendim:" + llDumpList2String(allow, "=add,sendim:") + "=add");
-            lmRunRLVas("Base", "recvim:" + llDumpList2String(allow, "=add,recvim:") + "=add");
-            lmRunRLVas("Base", "recvchat:" + llDumpList2String(allow, "=add,recvchat:") + "=add");
-            lmRunRLVas("Base", "recvemote:" + llDumpList2String(allow, "=add,recvemote:") + "=add");
+            lmRunRLVas("Base", "tplure:" + llDumpList2String(allow, "=add,tplure:") + "=add," +
+                               "accepttp:" + llDumpList2String(allow, "=add,accepttp:") + "=add");
+            lmRunRLVas("Base", "sendim:" + llDumpList2String(allow, "=add,sendim:") + "=add," +
+                               "recvim:" + llDumpList2String(allow, "=add,recvim:") + "=add");
+            lmRunRLVas("Base", "recvchat:" + llDumpList2String(allow, "=add,recvchat:") + "=add," +
+                               "recvemote:" + llDumpList2String(allow, "=add,recvemote:") + "=add");
         
             // Apply exemptions to base RLV
         }
@@ -308,9 +317,18 @@ default {
             if (data == EOF) {
                 doVisibility(-1);
                 ncRequest = NULL_KEY;
+                
+                memCollecting = 1;
+                memData = [];
+                
+                lmMemReport(0.0);
+                
+                llSetTimerEvent(5.0);
             }
             else {
+                debugSay(5, "DEBUG-NOTECARDS", ncName + " (" + (string)ncLine + "): " + data);
                 glowSettings += llJson2List(data);
+                
                 llSetTimerEvent(0.25);
             }
         }
@@ -318,7 +336,13 @@ default {
     
     timer() {
         llSetTimerEvent(0.0);
-        if (memCollecting || (ncRequest != NULL_KEY)) {
+        
+        debugSay(7, "DEBUG-NOTECARD", "Get next line in " + (string)ncName + " (" + (string)ncLine + ") ID: " + (string)ncRequest);
+        
+        if (ncRequest != NULL_KEY) {
+            ncRequest = llGetNotecardLine(ncName, ncLine++);
+        }
+        else if (memCollecting) {
             if (memCollecting && (memTime < llGetTime())) {
                 float memory_limit = (float)llGetMemoryLimit();
                 float free_memory = (float)llGetFreeMemory();
@@ -345,13 +369,6 @@ default {
     
                 memCollecting = 0;
             }
-            if (llGetInventoryType(ncName) == INVENTORY_NOTECARD) {
-                ncLine = 0;
-                glowSettings = [];
-                ncRequest = llGetNotecardLine(ncName, ncLine++);
-            }
-            
-            llSetTimerEvent(0.25);
         }
     }
 }

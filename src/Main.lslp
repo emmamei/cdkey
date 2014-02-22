@@ -101,6 +101,7 @@ string dollType = "Regular";
 float winderRechargeTime;
 float wearLockExpire;
 float lastRandomTime;
+float displayWindRate;
 float menuSleep;
 float lastTickTime;
 float timeToJamRepair;
@@ -264,6 +265,11 @@ default {
             simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
             lmSendConfig("keyHandler", (string)(keyHandler = NULL_KEY));
         }
+        if (change & CHANGED_OWNER) {
+            dollID = llGetOwner();
+            dollName = llGetDisplayName(dollID);
+            llResetOtherScript("Start");
+        }
     }
 
     //----------------------------------------
@@ -276,7 +282,7 @@ default {
         //    3. Is Doll away?
         //    4. Wind down
         //    5. How far away is carrier? ("follow")
-        float displayWindRate = setWindRate();
+        displayWindRate = setWindRate();
         float timerInterval;
         if (isAttached) timerInterval = llGetAndResetTime();
         
@@ -477,6 +483,7 @@ default {
             else if (name == "windamount")                 windamount = (float)value;
             else if (name == "wearLockExpire")         wearLockExpire = (float)value;
             else if (name == "baseWindRate")             baseWindRate = (float)value;
+            else if (name == "displayWindRate")       displayWindRate = (float)value;
             else if (name == "poserID")                       poserID = (key)value;
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "mistressName")             mistressName = value;
@@ -576,7 +583,7 @@ default {
                 // Compute "time remaining" message for mainMenu/windMenu
                 string timeleft;
                 
-                float displayWindRate = setWindRate();
+                displayWindRate = setWindRate();
                 integer minsLeft = llRound(timeLeftOnKey / (60.0 * displayWindRate));
                 
                 if (minsLeft > 0) {
