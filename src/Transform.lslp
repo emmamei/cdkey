@@ -54,18 +54,15 @@ integer quiet;
 //========================================
 // FUNCTIONS
 //========================================
-setDollType(string choice, integer force) {
+setDollType(string choice, integer automated) {
+    if (choice == "Transform") stateName = transform;
+    else stateName = choice;
+    
+    stateName = llGetSubString(llToUpper(stateName), 0, 0) + llGetSubString(llToLower(stateName), 1, -1);
+    
     if (stateName != currentState) {
-        if (force) {
-            transform = llGetSubString(llToUpper(choice), 0, 0) + llGetSubString(llToLower(choice), 1, -1);
-            choice = "Yes";
-            minMinutes = 0;
-        } else {
-            minMinutes = 5;
-        }
-        
-        if (choice == "Yes") stateName = transform;
-        else stateName = choice;
+        if (automated) minMinutes = 0;
+        else minMinutes = 5;
     
         // I am unsure what this function is doing it seems like
         // a possible hangover but maybe I am missing something.
@@ -83,7 +80,7 @@ setDollType(string choice, integer force) {
         lmSendConfig("currentState", stateName);
         llSleep(0.5);
         
-        lmSendConfig("clothingFolder", clothingprefix);
+        lmSendConfig("typeFolder", clothingprefix);
         llSleep(0.5);
     
         lmInternalCommand("randomDress", "", NULL_KEY);
@@ -259,19 +256,16 @@ default {
             string value = llList2String(split, 2);
             
             if (script != SCRIPT_NAME) {
-                if (name == "dollType") {
-                    stateName = value;
-                    if (!startup && stateName != currentState) setDollType(stateName, 1);
-                }
-                else if (name == "quiet")                                          quiet = (integer)value;
+                     if (name == "quiet")                                          quiet = (integer)value;
                 else if (name == "mustAgreeToType")                      mustAgreeToType = (integer)value;
                 else if (name == "showPhrases")                              showPhrases = (integer)value;
                 else if (name == "currentState")                            currentState = value;
-                else if ((script == "MenuHandler") && (name == "dialogChannel")) {
-                    dialogChannel = (integer)value;
-                }
+                else if (name == "dialogChannel")                          dialogChannel = (integer)value;
+                else if (name == "debugLevel")                                debugLevel = (integer)value;
                 
-                if (script == "Main" && name == "timeLeftOnKey") runTimedTriggers();
+                else if (name == "dollType") setDollType((stateName = value), 1);
+                
+                else if (script == "Main" && name == "timeLeftOnKey") runTimedTriggers();
             }
         }
         
@@ -338,11 +332,10 @@ default {
                 
                 //avoid = FALSE;
                 debugSay(5, "DEBUG", "transform = " + (string)transform);
-                debugSay(5, "DEBUG", "choice = " + (string)choice);
-                debugSay(5, "DEBUG", "stateName = " + (string)(stateName = choice));
+                debugSay(5, "DEBUG", "stateName = " + (string)choice);
                 debugSay(5, "DEBUG", "currentState = " + (string)currentState);
 
-                if (stateName != currentState) setDollType(choice, 0);
+                setDollType(choice, 0);
             }
         }
     }

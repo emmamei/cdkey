@@ -43,7 +43,7 @@ memReport(float delay) {
         #define debugHandler(script,level,prefix,msg) debugMainHandler(script, level, prefix, msg)
         #define linkDebug(sender,code,data,id) linkDebugHandler(sender, code, data, id)
     #else
-        #define debugSay(level,prefix,msg) llMessageLinked(LINK_THIS, 700, SCRIPT_NAME + "|" + (string)level + "|" + prefix + "|" + msg, NULL_KEY)
+        #define debugSay(level,prefix,msg) if (level > debugLevel) llMessageLinked(LINK_THIS, 700, SCRIPT_NAME + "|" + (string)level + "|" + prefix + "|" + msg, NULL_KEY)
     #endif
 #else
 #define debugSay(level,prefix,msg)
@@ -53,17 +53,19 @@ memReport(float delay) {
 
 #ifdef DEVELOPER_MODE
 linkDebugHandler(string sender, integer code, string data, key id) {
+    //if (!configured && (code == 300) && (initState == 104)) return;
+
     list split = llParseStringKeepNulls(data, ["|"], []);
     string script = llList2String(split, 0);
     if (llGetInventoryType(script) != INVENTORY_SCRIPT) llShout(DEBUG_CHANNEL, "Error invalid script name in link " + (string)code + " with data = " + data);
     data = llDumpList2String(llDeleteSubList(split, 0, 0), "|");
 
     integer level = 5;
-         if (llListFindList([ 102, 150, 305, 399 ], [ code ]) != -1)            level = 2;
-    else if (llListFindList([ 104, 105, 110, 350 ], [ code ]) != -1)            level = 4;
-    else if (llListFindList([ 9999 ], [ code ]) != -1)                          level = 6;
-    else if (llListFindList([ 104, 300, 315, 500 ], [ code ]) != -1)            level = 7;
-    else if (llListFindList([ 9999 ], [ code ]) != -1)                          level = 8;
+         if (llListFindList([ 102, 150, 305, 350, 399 ], [ code ]) != -1)       level = 2;
+    else if (llListFindList([ 104, 105, 315 ], [ code ]) != -1)                 level = 4;
+    else if (llListFindList([ 110, 500 ], [ code ]) != -1)                      level = 6;
+    else if (llListFindList([ 300 ], [ code ]) != -1)                           level = 7;
+    else if (llListFindList([ 320 ], [ code ]) != -1)                           level = 8;
     else if (llListFindList([ 135, 136, 999 ], [ code ]) != -1)                 level = 9;
     
     string msg = (string)code;

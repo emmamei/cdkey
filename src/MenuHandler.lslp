@@ -68,6 +68,8 @@ string dollType = "Regular";
 string pronounHerDoll = "Her";
 string pronounSheDoll = "She";
 
+vector gemColour;
+
 string carrierName;
 string mistressName;
 string keyAnimation;
@@ -85,29 +87,35 @@ default
     state_entry() {
         dollID = llGetOwner();
         dollName = llGetDisplayName(dollID);
-        
-        dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -8, -1));
-        lmSendConfig("dialogChannel", (string)dialogChannel);
-        
-        blacklistChannel = dialogChannel - 666;
-        controlChannel = dialogChannel - 888;
-        textboxChannel = dialogChannel - 1111;
-        
-        if (!dialogHandle && dialogChannel) {
-            dialogHandle = llListen(dialogChannel, "", "", "");
-            llListenControl(dialogHandle, 0);
-        }
     }
     
     link_message(integer sender, integer code, string data, key id) {
         list split = llParseString2List(data, [ "|" ], []);
         
+        string script = llList2String(split, 0);
+        
         if (code == 102) {
-            if (data == "OnlineServices") dbConfig = 1;
+            if (script == "OnlineServices") {
+                dbConfig = 1;
+                
+                if (uniqueID == NULL_KEY) {
+                    lmSendConfig("uniqueID", (string)(uniqueID = llGenerateKey()));
+                }
+                
+                integer channel = 0x80000000 | (integer)("0x" + llGetSubString((string)uniqueID, -7, -1));
+                if (dialogChannel != channel) lmSendConfig("dialogChannel", (string)(dialogChannel = channel));
+                
+                blacklistChannel = dialogChannel - 666;
+                controlChannel = dialogChannel - 888;
+                textboxChannel = dialogChannel - 1111;
+                
+                llListenRemove(dialogHandle);
+                dialogHandle = llListen(dialogChannel, "", "", "");
+                llListenControl(dialogHandle, 0);
+            }
             else if (data == "Start") configured = 1;
             
             lmInternalCommand("updateExceptions", "", NULL_KEY);
-            lmSendConfig("dialogChannel", (string)dialogChannel);
         }
         else if (code == 104 || code == 105) {
             if (llList2String(split, 0) != "Start") return;
@@ -116,6 +124,7 @@ default
         }
         else if (code == 110) {
             initState = 105;
+            
             startup = 0;
         }
         else if (code == 135) {
@@ -137,6 +146,7 @@ default
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
             else if (name == "dollyName")                   dollyName = value;
+            else if (name == "uniqueID")                     uniqueID = (key)value;
             else if (name == "afk")                               afk = (integer)value;
             else if (name == "autoTP")                         autoTP = (integer)value;
             else if (name == "canAFK")                         canAFK = (integer)value;
@@ -160,9 +170,17 @@ default
             else if (name == "quiet")                           quiet = (integer)value;
             else if (name == "signOn")                         signOn = (integer)value;
             else if (name == "takeoverAllowed")       takeoverAllowed = (integer)value;
+            else if (name == "debugLevel")                 debugLevel = (integer)value;
             else if (name == "poserID")                       poserID = (key)value;
             else if (name == "collapseTime")             collapseTime = (llGetTime() - (float)value);
             else if (name == "winderRechargeTime") winderRechargeTime = (float)value;
+            else if (name == "gemColour") {
+                if (gemColour != (vector)value) lmInternalCommand("setGemColour", value, NULL_KEY);
+            }
+            else if (name == "dialogChannel") {
+                if (script != "OnlineServices") return;
+                dialogChannel = (integer)value;
+            }
             else if (name == "timeLeftOnKey") {
                 timeLeftOnKey = (float)value;
                 if (collapsed) {
@@ -176,8 +194,13 @@ default
             else if (name == "dollType") {
                 dollType = llGetSubString(llToUpper(value), 0, 0) + llGetSubString(llToLower(value), 1, -1);
             }
-            else if (name == "MistressList") MistressList = llListSort(split, 2, 1);
-            else if (name == "blacklist") blacklist = llListSort(split, 2, 1);
+            else if (name == "MistressList") {
+                MistressList = llDeleteSubList(split, 0, 1);
+                if (configured) lmInternalCommand("updateExceptions", "", NULL_KEY);
+            }
+            else if (name == "blacklist") {
+                blacklist = llDeleteSubList(split, 0, 1);
+            }
         }        
         else if (code == 305) {
             string script = llList2String(split, 0);
@@ -215,9 +238,13 @@ default
                 return;
             }
             else if (cmd == "setGemColour") {
-                integer i; list params; vector baseColour = (vector)llList2String(split, 0);
+                string value = llList2String(split, 0);
+                integer i; list params;
+                
+                if (gemColour != (vector)value) lmSendConfig("gemColour", (string)(gemColour = (vector)value));
+                
                 for (i = 0; i < llGetLinkNumberOfSides(4); i++) {
-                    vector shade = <llFabs((llFrand(0.2) - 0.1) + baseColour.x), llFabs((llFrand(0.2) - 0.1) + baseColour.y), llFabs((llFrand(0.2) - 0.1) + baseColour.z)>;
+                    vector shade = <llFabs((llFrand(0.2) - 0.1) + gemColour.x), llFabs((llFrand(0.2) - 0.1) + gemColour.y), llFabs((llFrand(0.2) - 0.1) + gemColour.z)>;
                     float mag = llVecMag(shade);
                     
                     if (llVecMag(shade) > 1.0) {
@@ -228,7 +255,7 @@ default
                     params += [ PRIM_COLOR, i, shade, 1.0 ];
                 }
                 
-                params = [ PRIM_POINT_LIGHT, TRUE, baseColour, 0.350, 3.50, 2.00 ] + params;
+                params = [ PRIM_POINT_LIGHT, TRUE, gemColour, 0.350, 3.50, 2.00 ] + params;
                 llSetLinkPrimitiveParamsFast(4, params + [ PRIM_LINK_TARGET, 5 ] + params);
             }
             else if (cmd == "mainMenu") {
@@ -387,21 +414,6 @@ default
             string script = llList2String(split, 0);
             RLVok = llList2Integer(split, 1);
         }
-        
-        string type = llList2String(llParseString2List(data, [ "|" ], []), 1);
-        if (type == "MistressList" || type == "carry" || type == "uncarry" || type == "updateExceptions") {
-            // Exempt builtin or user specified controllers from TP restictions
-            list allow = BuiltinControllers + llList2ListStrided(MistressList, 0, -1, 2);
-            // Also exempt the carrier if any provided they are not already exempted as a controller
-            if ((carrierID != NULL_KEY) && (llListFindList(allow, [ (string)carrierID ]) == -1)) allow += carrierID;
-            
-            // Directly dump the list using the static parts of the RLV command as a seperatior no looping
-            string exceptionRLV = "tplure:" + llDumpList2String(allow, "=add,tplure:") + "=add,";
-            exceptionRLV += "accepttp:" + llDumpList2String(allow, "=add,accepttp:") + "=add";
-        
-            // Apply exemptions to base RLV
-            lmRunRLVas("Base", exceptionRLV);
-        }
     }
     
     on_rez(integer start) {
@@ -470,20 +482,22 @@ default
         string displayName = llGetDisplayName(id);
         if ((displayName != "") && (displayName != "???")) name = displayName;
         
+        string optName = llDumpList2String(llList2List(split, 1, -1), " ");
+        string curState = llList2String(split, 0);
+        
+        if (channel != textboxChannel) {
+            debugSay(3, "DEBUG-MENU", "Button clicked: " + choice + ", optName=\"" + optName + "\", curState=\"" + curState + "\"");
+            lmMenuReply(choice, name, id);
+        }
+        
         if (channel == dialogChannel) {
             integer isAbility; // Temporary variables used to determine if an option
             integer isFeature; // from the features or abilities menu was clicked that 
                                // way we can restore it making setting several choices
                                // much more user friendly.
                                
-            string optName = llDumpList2String(llList2List(split, 1, -1), " ");
-            string curState = llList2String(split, 0);
-    
-            debugSay(3, "DEBUG-MENU", "Button clicked: " + choice + ", optName=\"" + optName + "\", curState=\"" + curState + "\"");
-            lmMenuReply(choice, name, id);
-                               
             if (choice == MAIN) {
-                lmInternalCommand("mainMenu", "", id);;
+                lmInternalCommand("mainMenu", "", id);
                 return;
             }
             
@@ -492,7 +506,6 @@ default
                             "key and to connect with the community.";
                 list pluslist = [ "Join Group", "Visit Dollhouse" ];
                 if (llGetInventoryType(NOTECARD_HELP) == INVENTORY_NOTECARD) pluslist += [ "Help Notecard" ];
-                if (isController) pluslist += "Reset Scripts";
                 if (isDoll) pluslist += "Check Update";
                 if (isController || isDoll) pluslist += "Reset Scripts";
                 
@@ -508,11 +521,6 @@ default
             else if (choice == "Dress") {
                 if (!isDoll) llOwnerSay("secondlife:///app/agent/" + (string)id + "/about is looking at your dress menu");
             }
-            #ifdef ADULT_MODE
-            else if ((dollType == "Slut" || pleasureDoll) && choice == "Strip") {
-                llDialog(id, "Take off:", ["Top", "Bra", "Bottom", "Panties", "Shoes", MAIN], dialogChannel);
-            }
-            #endif
             else if (choice == "Options") {
                 string msg; list pluslist;
                 if (isDoll) {
@@ -558,8 +566,7 @@ default
                 textboxType = 2;
                 if (textboxHandle) llListenRemove(textboxHandle);
                 textboxHandle = llListen(textboxChannel, "", id, "");
-                llTextBox(id, "Here you can input a custom colour value\n\nSupported Formats:\nLSL Vector <0.900, 0.500, 0.000>\n" +
-                              "Web Format Hex #A4B355\nRGB Value 240, 120, 10", textboxChannel);
+                llTextBox(id, "If you dont like the default dolly name the key uses to name itself you can set your own here.", textboxChannel);
             }
             else if ((choice == "Gem Colour") || (llListFindList(COLOR_NAMES, [ choice ]) != -1)) {
                 if ((choice != "CUSTOM") && (choice != "Gem Colour")) {
@@ -659,14 +666,28 @@ default
                     llSetTimerEvent(60.0);
                 }
                 else if (curState == "List") {
-                    integer i; string output;
+                    integer i; string output; list tempList;
                     
-                    if (activeChannel == controlChannel) output += "Allowed Controllers:";
-                    else output += "Blacklisted Avatars:";
+                    if (optName == "Controllers") {
+                        output += "Allowed Controllers:";
+                        
+                        tempList = llList2ListStrided(MistressList, 1, -1, 2);
+                        
+                        debugSay(5, "DEBUG-MENU", llDumpList2String(MistressList, "\n"));
+                        debugSay(5, "DEBUG-MENU", llDumpList2String(tempList, "\n"));
+                    }
+                    else {
+                        output += "Blacklisted Avatars:";
+                        
+                        tempList = llList2ListStrided(blacklist, 1, -1, 2);
+                        
+                        debugSay(5, "DEBUG-MENU", llDumpList2String(blacklist, "\n"));
+                        debugSay(5, "DEBUG-MENU", llDumpList2String(tempList, "\n"));
+                    }
                     
                     do {
-                        output += "\n" + (string)(i + 1) + ". " + llList2String(dialogNames, i++);
-                    } while (i < llGetListLength(dialogKeys));
+                        output += "\n" + (string)(i + 1) + ". " + llList2String(tempList, i++);
+                    } while (i < llGetListLength(tempList));
                     llOwnerSay(output);
                 }
             }
@@ -779,7 +800,7 @@ default
                 if (llListFindList(["Top", "Bra", "Bottom", "Panties", "Shoes", "Strip"], [ choice ]) != -1)
                     // Do strip menu
                     llDialog(id, "Take off:",
-                        dialogSort(["Top", "Bra", "Bottom", "Panties", "Shoes"] + MAIN),
+                        dialogSort(["Top", "Bra", "Bottom", "Panties", "Shoes", MAIN]),
                         dialogChannel);
             }
         #endif

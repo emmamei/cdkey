@@ -41,7 +41,7 @@ integer listenHandle;
 integer locked;
 integer lowScriptMode;
 integer poseSilence;
-integer RLVck = -1;
+integer RLVck;
 integer RLVok;
 integer RLVstarted;
 integer startup = 1;
@@ -158,7 +158,6 @@ ifPermissions() {
                         clearAnim = 0;
                         llWhisper(LOCKMEISTER_CHANNEL, (string)dollID + "booton");
                     }
-                    llSetTimerEvent(refreshRate);
                 }
             }
             
@@ -204,10 +203,11 @@ ifPermissions() {
     }
     else {
         if (RLVck == 0) {
-            llSetTimerEvent(refreshRate);
-            if (lowScriptMode) llSetTimerEvent(refreshRate * 2);
+            float interval = refreshRate;
+            if (interval) interval *= 2;
+            llSetTimerEvent(interval);
             if (!timerOn) {
-                debugSay(5, "DEBUG", "Timer activated.");
+                debugSay(1, "DEBUG", "Timer activated, interval " + formatFloat(interval, 3) + " seconds");
                 llResetTime();
                 timerOn = 1;
             }
@@ -216,10 +216,13 @@ ifPermissions() {
 }
 
 initializeRLV(integer refresh) {
-    if ((!refresh && RLVstarted) || !RLVok || !isAttached) return;
+    if (!refresh && RLVstarted) return;
     #ifdef DEVELOPER_MODE
-    if (myPath == "") { // Dont enable RLV on devs if @getpath is returning no usable result to avoid lockouts.
-        if (RLVok) llSay(DEBUG_CHANNEL, "WARNING: Sanity check failure developer key not found in #RLV see README.dev for more information.");
+    if (
+        (rlvAPIversion != "") &&
+        (myPath == "") 
+    ) { // Dont enable RLV on devs if @getpath is returning no usable result to avoid lockouts.
+        llSay(DEBUG_CHANNEL, "WARNING: Sanity check failure developer key not found in #RLV see README.dev for more information.");
         return;
     }
     #endif
@@ -241,7 +244,7 @@ initializeRLV(integer refresh) {
     // unlocked and detachable: this is because it can be detached 
     // via the menu. To make the key truly "undetachable", we get
     // rid of the menu item to unlock it
-    lmRunRLVas("Base", "detach=n");  //locks key
+    if (llGetOwner() != llGetCreator()) lmRunRLVas("Base", "detach=n");  //locks key
     locked = 1; // Note the locked variable also remains false for developer mode keys
                 // This way controllers are still informed of unauthorized detaching so developer dolls are still accountable
                 // With this is the implicit assumption that controllers of developer dolls will be understanding and accepting of
@@ -325,13 +328,14 @@ default {
         
         checkRLV();
         llRequestPermissions(dollID, PERMISSION_MASK);
-        dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGetLinkKey(2), -8, -1));
-        llOwnerSay((string)llGetInventoryKey("collapse"));
     }
     
     on_rez(integer start) {
         locked = 0;
         startup = 0;
+        
+        rlvAPIversion = "";
+        
         if (lockPos != ZERO_VECTOR) {
             llStopMoveToTarget();
             llTargetRemove(targetHandle);
@@ -363,14 +367,23 @@ default {
                 myPath = llStringTrim(msg, STRING_TRIM);
             }
             #ifdef DEVELOPER_MODE
-            RLVok = ((rlvAPIversion != "") && (myPath != ""));
+            RLVok = (
+                configured &&
+                (rlvAPIversion != "") && 
+                (myPath != "")
+            );
+            if (
+                (rlvAPIversion != "") && 
+                (myPath != "")
+            ) RLVck = 0;
             #else
-            RLVok = (rlvAPIversion != "");
+            RLVok = (
+                configured &&
+                (rlvAPIversion != "")
+            );
+            if (rlvAPIversion != "") RLVck = 0;
             #endif
-            if (RLVok && !RLVstarted) {
-                RLVck = 0;
-                processRLVResult();
-            }
+            if (RLVok && !RLVstarted) processRLVResult();
         }
         //if (!RLVok && !RLVstarted) llOwnerSay("@clear,versionnew=" + (string)channel);
         //else if (RLVok && myPath == "") llOwnerSay("@getpathnew=" + (string)channel);
@@ -410,7 +423,25 @@ default {
         if (code == 102) {
             string script = llList2String(split, 0);
             configured = 1;
-            if (RLVok && !RLVstarted) initializeRLV(0);
+            
+            #ifdef DEVELOPER_MODE
+            RLVok = (
+                configured &&
+                (rlvAPIversion != "") && 
+                (myPath != "")
+            );
+            if (
+                (rlvAPIversion != "") && 
+                (myPath != "")
+            ) RLVck = 0;
+            #else
+            RLVok = (
+                configured &&
+                (rlvAPIversion != "")
+            );
+            if (rlvAPIversion != "") RLVck = 0;
+            #endif
+            if (RLVok && !RLVstarted) processRLVResult();
         }
         else if (code == 104) {
             string script = llList2String(split, 0);
@@ -424,6 +455,7 @@ default {
         }
         else if (code == 110) {
             initState = 105;
+            
             ifPermissions();
         }
         else if (code == 135) {
@@ -459,7 +491,7 @@ default {
                 }
                 
                 if (RLVstarted) initializeRLV(1);
-                ifPermissions();
+                if (configured) ifPermissions();
             } else {            
                      if (name == "detachable")               detachable = (integer)value;
                 else if (name == "barefeet")                   barefeet = value;
@@ -471,6 +503,7 @@ default {
                 else if (name == "poseExpire")               poseExpire = (float)value;
                 else if (name == "quiet")                         quiet = (integer)value;
                 else if (name == "timeLeftOnKey")         timeLeftOnKey = (float)value;
+                else if (name == "dialogChannel")         dialogChannel = (integer)value;
                 else if (name == "keyAnimationID") {
                     keyAnimationID = (key)value;
                     ifPermissions();
@@ -540,7 +573,6 @@ default {
                                               // When timeLeftOnKey has run down to 0.0 a type 1 collapse is functionally synomous with type 0.
                     if (timeLeftOnKey > 0.0) timeLeftOnKey = 0.0; // Forced unwind if there was time left before
                     collapsed = 1; // Always end collapsed
-                    llOwnerSay("Your key has been forcably unwound leaving you collapsed completely out of time.");
                 }
                 else if (collapseType == 2) { // Type 2 collapse also forces an immidiate collapse no matter if the doll has time left however there is no unwind this is
                                          // Effectively like jamming or holding of dolly's key preventing it turning even though the spring has time
@@ -694,6 +726,25 @@ default {
     }
     
     timer() {
+        #ifdef DEVELOPER_MODE
+        RLVok = (
+            configured &&
+            (rlvAPIversion != "") && 
+            (myPath != "")
+        );
+        if (
+            (rlvAPIversion != "") && 
+            (myPath != "")
+        ) RLVck = 0;
+        #else
+        RLVok = (
+            configured &&
+            (rlvAPIversion != "")
+        );
+        if (rlvAPIversion != "") RLVck = 0;
+        #endif
+        if (RLVok && !RLVstarted) processRLVResult();
+        
         if (RLVck == 0) {
             float timerInterval = llGetAndResetTime();
             

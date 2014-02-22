@@ -2,15 +2,19 @@
 #include "include/GlobalDefines.lsl"
 
 key ncRequest;
+key carrierID = NULL_KEY;
 float rezTime;
 float memTime;
+string carrierName;
 string ncName = "Glow Settings";
+integer configured;
 integer initState = 104;
 integer ncLine;
 integer visible;
 integer memCollecting;
 integer debugLevel = DEBUG_LEVEL;
 list MistressList;
+list BuiltinControllers = BUILTIN_CONTROLLERS;
 list glowSettings;
 list memData;
 
@@ -56,6 +60,7 @@ doVisibility(integer setVisible) {
 default {
     on_rez(integer start) {
         rezTime = llGetTime();
+        configured = 0;
     }
     
     link_message(integer source, integer code, string data, key id) {
@@ -83,7 +88,7 @@ default {
             string script = llList2String(split, 0);
             if (script != "Start") return;
 
-            if (code == 104) ncRequest = llGetNotecardLine(ncName, ncLine++);            
+            if (code == 105) ncRequest = llGetNotecardLine(ncName, ncLine++);          
             
             if (initState == code) lmInitState(initState++);
         }
@@ -105,14 +110,12 @@ default {
             string value = llList2String(split, 2);
             split = llList2List(split, 2, -1);
             
-                 if (name == "MistressList")              MistressList = split;
+                 if (name == "MistressList")               MistressList = split;
             else if (name == "isVisible")                 doVisibility((integer)value);
-            else if (name == "debugLevel")                debugLevel = (integer)value;
-            else if (name == "keyAnimation")              keyAnimation = value;
-            else if (name == "poserID")                   poserID = (key)value;
-            else if ((script == "MenuHandler") && (name == "dialogChannel")) {
-                dialogChannel = (integer)value;
-            }
+            else if (name == "debugLevel")                   debugLevel = (integer)value;
+            else if (name == "keyAnimation")               keyAnimation = value;
+            else if (name == "poserID")                         poserID = (key)value;
+            else if (name == "dialogChannel")             dialogChannel = (integer)value;
             else if (isAttached && (name == "dollyName")) {
                 string dollyName = value;
                 llSetObjectName(dollyName + "'s Key");
@@ -179,6 +182,14 @@ default {
                 }
                 llOwnerSay("You have " + mins + " minutes of life remaning.");
             }
+            else if (cmd == "carry") {
+                carrierID = id;
+                carrierName = llList2String(split, 0);
+            }
+            else if (cmd == "uncarry") {
+                carrierID = NULL_KEY;
+                carrierName = "";
+            }
         }
         else if (code == 500) {
             string script = llList2String(split, 0);
@@ -190,6 +201,7 @@ default {
                 llDialog(id, "To join the community dolls group open your chat history (CTRL+H) and click the group link there.  Just click the Join Group button when the group profile opens.", [MAIN], 9999);
             }
             else if (choice == "Access Menu") {
+                debugSay(5, "DEBUG-AUX", "Dialog channel: " + (string)dialogChannel);
                 string msg = "Key Access Menu. (" + OPTION_DATE + " version)\n" +
                              "These are powerful options allowing you to give someone total control of your key or block someone from touch or even winding your key\n" +
                              "Good dollies should read their key help before \n" +
@@ -260,16 +272,34 @@ default {
                 lmSendConfig("dollyName", choice);
             }
             else if (textboxType == 3) {
-                lmSendConfig("windTimes", llDumpList2String(llParseString2List(choice, [ " ", ",", "|" ], []), "|"));
+                lmInternalCommand("setWindTimes", llDumpList2String(llParseString2List(choice, [ " ", ",", "|" ], []), "|"), id);
             }
         }
         else if (code == 700) {
             string sender = llList2String(split, 0);
             integer level = llList2Integer(split, 1);
             string prefix = llList2String(split, 2);
-            string msg = llList2String(split, 3);
+            string msg = llDumpList2String(llList2List(split, 3, -1), "|");
             
             debugHandler(sender, level, prefix, msg);
+        }
+        
+        string type = llList2String(llParseString2List(data, [ "|" ], []), 1);
+        if (type == "MistressList" || type == "carry" || type == "uncarry" || type == "updateExceptions") {
+            // Exempt builtin or user specified controllers from TP restictions
+            list allow = BuiltinControllers + llList2ListStrided(MistressList, 0, -1, 2);
+            // Also exempt the carrier if any provided they are not already exempted as a controller
+            if ((carrierID != NULL_KEY) && (llListFindList(allow, [ (string)carrierID ]) == -1)) allow += carrierID;
+            
+            // Directly dump the list using the static parts of the RLV command as a seperatior no looping
+            lmRunRLVas("Base", "tplure:" + llDumpList2String(allow, "=add,tplure:") + "=add");
+            lmRunRLVas("Base", "accepttp:" + llDumpList2String(allow, "=add,accepttp:") + "=add");
+            lmRunRLVas("Base", "sendim:" + llDumpList2String(allow, "=add,sendim:") + "=add");
+            lmRunRLVas("Base", "recvim:" + llDumpList2String(allow, "=add,recvim:") + "=add");
+            lmRunRLVas("Base", "recvchat:" + llDumpList2String(allow, "=add,recvchat:") + "=add");
+            lmRunRLVas("Base", "recvemote:" + llDumpList2String(allow, "=add,recvemote:") + "=add");
+        
+            // Apply exemptions to base RLV
         }
     }
     

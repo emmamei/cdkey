@@ -7,6 +7,7 @@ key carrierID               = NULL_KEY;
 key dresserID               = NULL_KEY;
 key dollID                  = NULL_KEY;
 key poserID                 = NULL_KEY;
+key uniqueID		    = NULL_KEY;
 
 list MistressList           = [];
 list blacklist;
@@ -49,6 +50,7 @@ integer RLVok;
 integer signOn;
 integer takeoverAllowed;
 integer visible             = 1;
+integer debugLevel          = DEBUG_LEVEL;
 
 integer dialogChannel;
 integer dialogHandle;

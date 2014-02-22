@@ -311,10 +311,6 @@ default {
         if (code == 104) {
             string script = llList2String(split, 0);
             if (llListFindList(readyScripts, [ script ]) == -1) {
-                if ((script == "MenuHandler") && (dialogChannel == 0)) {
-                    debugSay(1, "DEBUG", "Phase 104 ended without dialogChannel setup rebooting!");
-                    llResetScript();
-                }
                 readyScripts += script;
                 
                 debugSay(7, "DEBUG-PHASE104", "Reporter '" + script + "'\nStill waiting: " + llList2CSV(notReady()));
@@ -324,7 +320,7 @@ default {
                     initConfiguration();
                 }
             }
-            else debugSay(1, "DEBUG", "WARNING: Script " + script + " is sending excessive signal 104");
+            else debugSay(1, "DEBUG-PHASE104", "WARNING: Script " + script + " is sending excessive signal 104");
         }
         else if (code == 105) {
             string script = llList2String(split, 0);
@@ -337,7 +333,7 @@ default {
                     initializationCompleted();
                 }
             }
-            else debugSay(1, "DEBUG", "WARNING: Script " + script + " is sending excessive signal 105");
+            else debugSay(1, "DEBUG-PHASE105", "WARNING: Script " + script + " is sending excessive signal 105");
         }
         else if (code == 135) {
             if (llList2String(split, 0) == llGetScriptName()) return;
@@ -372,6 +368,7 @@ default {
             else if (name == "quiet")                            quiet = (integer)value;
             else if (name == "lowScriptMode")            lowScriptMode = (integer)value;
             else if (name == "dialogChannel")            dialogChannel = (integer)value;
+            else if (name == "debugLevel")                  debugLevel = (integer)value;
             else if (name == "nameOverride")              nameOverride = value;
             else if (name == "userBaseRLVcmd")          userBaseRLVcmd = value;
             else if (name == "userCollapseRLVcmd")  userCollapseRLVcmd = value;
@@ -452,7 +449,8 @@ default {
         }
         
         else if (code == 350) {
-            RLVok = llList2Integer(split, 0);
+            string script = llList2String(split, 0);
+            RLVok = llList2Integer(split, 1);
             rlvWait = 0;
             
             if (!newAttach && isAttached) {
@@ -469,14 +467,18 @@ default {
             string selection = llList2String(split, 1);
             string name = llList2String(split, 2);
             
-            if (selection == "Reset Scripts" && id == dollID) {
-                if (RLVok)
-                    llOwnerSay("Unable to reset scripts while running with RLV enabled, please relog without RLV disabled or " +
-                                "you can use login a Linden Lab viewer to perform a script reset.");
-                else if (RLVok == -1 && (llGetTime() < 180.0))
-                    llOwnerSay("Key is currently still checking your RLV status please wait until the check completes and then try again.");
-                else llResetScript();
+            if (selection == "Reset Scripts") {
+                if (isController) llResetScript();
+                else if (id == dollID) {
+                    if (RLVok)
+                        llOwnerSay("Unable to reset scripts while running with RLV enabled, please relog without RLV disabled or " +
+                                    "you can use login a Linden Lab viewer to perform a script reset.");
+                    else if (RLVok == -1 && (llGetTime() < 180.0))
+                        llOwnerSay("Key is currently still checking your RLV status please wait until the check completes and then try again.");
+                    else llResetScript();
+                }
             }
+            
             nextLagCheck = llGetTime() + SEC_TO_MIN;
         }
         /*else if (code == 999 && reset == 1) {
@@ -545,11 +547,11 @@ default {
     attach(key id) {
         if (id == NULL_KEY) {
             llMessageLinked(LINK_SET, 106,  SCRIPT_NAME + "|" + "detached" + "|" + (string)lastAttachPoint, lastAttachAvatar);
-            if (lastAttachPoint == ATTACH_BACK) {
+            //if (lastAttachPoint == ATTACH_BACK) {
                 llOwnerSay("The key is wrenched from your back, and you double over at the " +
                            "unexpected pain as the tendrils are ripped out. You feel an emptiness, " +
                            "as if some beautiful presence has been removed.");
-            }
+            //}          
         } else {
             llMessageLinked(LINK_SET, 106, SCRIPT_NAME + "|" + "attached" + "|" + (string)llGetAttached(), id);
             
@@ -584,6 +586,8 @@ default {
                     name = llStringTrim(llToLower(name), STRING_TRIM);
                     value = llStringTrim(value, STRING_TRIM);
                     list split = llParseStringKeepNulls(value, [ "|" ], []);
+                    if (name == "windTimes") split = llParseString2List(value, ["|",","," "], []); // Accept pipe (|), space ( ) or comma (,) as seperators
+                    
                     processConfiguration(name, split);
                 }
                 ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ++ncLine);

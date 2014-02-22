@@ -1,7 +1,6 @@
+#define DEBUG_LEVEL 9
 #include "include/GlobalDefines.lsl"
 #include "include/Secure.lsl"
-//#define slow_start() llSleep(0.1);
-#define slow_start() 
 
 key keyHandler = NULL_KEY;
 key requestName;
@@ -71,6 +70,7 @@ queForSave(string name, string value) {
     if (index != -1 && index % 2 == 0) 
         dbPostParams = llListReplaceList(dbPostParams, [ name, llEscapeURL(value) ], index, index + 1);
     else dbPostParams += [ name, llEscapeURL(value) ];
+    debugSay(5, "DEBUG-SERVICES", "Queued for save: " + name + "=" + value);
     //if (llListFindList(SKIP_EXPEDITE, [ name ]) == -1) expeditePost = 1;
     llSetTimerEvent(5.0);
 }
@@ -216,7 +216,7 @@ default
         }
     }
     
-    http_response(key request, integer status, list meta, string body) {
+    http_response(key request, integer status, list meta, string body) {        
         if (request == requestUpdate) {
             if (llGetSubString(body, 0, 21) == "checkversion versionok") {
                 if (llStringLength(body) > 22) updateCheck = (integer)llGetSubString(body, 23, -1);
@@ -268,16 +268,20 @@ default
                 float HTTPdbProcessStart;
                 string eventTime = formatFloat(((HTTPdbProcessStart = llGetTime()) - HTTPdbStart) * 1000, 2);
                 
-                list lines = llParseString2List(body, [ "\n" ], []);
-                integer i;
+                integer lines;
                 
-                for (i = 0; i < llGetListLength(lines); i++) {
-                    string line = llList2String(lines, i);
+                do {
+                    integer nextNewLine = llSubStringIndex(body, "\n");
+                    if (nextNewLine == -1) nextNewLine = llStringLength(body);
+                    
+                    string line = llGetSubString(body, 0, nextNewLine - 1);
+                    body = llDeleteSubString(body, 0, nextNewLine);
+                    
+                    lines++;
+                    
                     list split = llParseStringKeepNulls(line, [ "=" ], []);
                     string Key = llList2String(split, 0);
-                    string Value = llDumpList2String(llList2List(split, 1, -1), "=");
-                    
-                    slow_start()
+                    string Value = llList2String(split, 1);
                     
                     if (Value == "") Value = "";
                     
@@ -292,15 +296,16 @@ default
                     //else if (Key == "blacklist") handleAvList(Value, 2, 1);
                     else if (Key == "MistressListNew") lmSendConfig("MistressList", Value);
                     else if (Key == "blacklistNew") lmSendConfig("blacklist", Value);
+                    else if (Key == "windTimes") lmInternalCommand("setWindTimes", Value, NULL_KEY);
                     else lmSendConfig(Key, Value);
                     
                     if (useHTTPS) protocol = "https://";
                     else protocol = "http://";
-                }
+                } while (llStringLength(body));
                 
                 debugSay(5, "DEBUG-SERVICES", "Service post interval setting " + formatFloat(HTTPinterval, 2) + "s throttle setting " + formatFloat(HTTPthrottle, 2) + "s");
                 
-                string msg = "HTTPdb - Processed " + (string)llGetListLength(lines) + " records ";
+                string msg = "HTTPdb - Processed " + (string)lines + " records ";
                 if (lastPostTimestamp) msg += "with updates since our last post " + (string)((llGetUnixTime() - lastPostTimestamp) / 60) + " minutes ago ";
                 msg += "event time " + eventTime + ", processing time " + formatFloat(((llGetTime() - HTTPdbProcessStart) * 1000), 2);
                 msg += "ms, total time for DB transaction " + formatFloat((llGetTime() - HTTPdbStart) * 1000, 2) + "ms";
@@ -317,8 +322,7 @@ default
                 }
             }
             llMessageLinked(LINK_THIS, 102, llGetScriptName() + "|" + "HTTP" + (string)status, NULL_KEY);
-            if (initCode == initState) lmInitState(initState++);
-            return;
+            if (initState == 104) lmInitState(initState++);
         }
         else if (request == requestMistressKey || request == requestBlacklistKey) {
             list split = llParseStringKeepNulls(body, [ "=" ], []);
@@ -371,8 +375,27 @@ default
             
             debugSay(5, "DEBUG-SERVICES", "Posted " + (string)(old + new) + " keys: " + (string)new + " new, " + (string)old + " old");
         }
-        if (status == 200) debugSay(7, "DEBUG-SERVICES-RAW", "HTTP " + (string)status + ": " + body);
-        else debugSay(1, "DEBUG-SERVICES-RAW", "HTTP " + (string)status + ": " + body);
+        
+        if (request != requestLoadDB) {
+            integer debug;
+            if (status == 200) debug = 7;
+            else debug = 1;
+            debugSay(debug, "DEBUG-SERVICES-RAW", "HTTP " + (string)status);
+            
+            string lastPart;
+            do {
+                string bodyCut = llGetSubString(body, 0, 755);
+                integer vIdxFnd =
+                    llStringLength(bodyCut) -
+                    llStringLength("\n") -
+                    llStringLength(llList2String(llParseStringKeepNulls(bodyCut, ["\n"], []), -1));
+                integer endIndex = (vIdxFnd | (vIdxFnd >> 31));
+                bodyCut = llGetSubString(body, 0, endIndex);
+                body = llDeleteSubString(body, 0, endIndex);
+                
+                debugSay(debug, "DEBUG-SERVICES-RAW", bodyCut);
+            } while (llStringLength(body));
+        }
     }
     
     link_message(integer sender, integer code, string data, key id) {
@@ -380,18 +403,24 @@ default
         
         if (code == 104 || code == 105) {
             if (llList2String(split, 0) != "Start") return;
-            initCode = code;
-            if (!offlineMode && !((code == 105) && (lastGetTimestamp == 0))) {
-                string time = (string)llGetUnixTime();
-                HTTPdbStart = llGetTime();
-                debugSay(6, "DEBUG-SERVICES", "Requesting data from HTTPdb");
-                string hashStr = (string)llGetOwner() + time + SALT;
-                string requestURI = "https://api.silkytech.com/httpdb/retrieve?q=" + llSHA1String(hashStr) + "&t=" + time + "&s=" + (string)lastGetTimestamp;
+
+            string time = (string)llGetUnixTime();
+            HTTPdbStart = llGetTime();
+            debugSay(6, "DEBUG-SERVICES", "Requesting data from HTTPdb");
+            string hashStr = (string)llGetOwner() + time + SALT;
+            string requestURI = "https://api.silkytech.com/httpdb/retrieve?q=" + llSHA1String(hashStr) + "&t=" + time + "&s=" + (string)lastGetTimestamp;
+            if  (!offlineMode && (
+                    (code == 104) || (
+                        (code == 105) && 
+                        ((llGetUnixTime() - 600) > lastGetTimestamp)
+                    )
+                )
+            ) {
                 while((requestLoadDB = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
                     llSleep(1.0);
                 }
             }
-            if ((initState == 105) && (code == 105)) lmInitState(initState++);
+            if ((code == 105) && (initState == 105)) lmInitState(initState++);
         }
         else if (code == 110) {
             initState = 105;
@@ -437,23 +466,24 @@ default
                 }
             }
             
-            if (name == "lastUpdateCheck") lastUpdateCheck = (integer)value;
-            if (name == "nextRetry") nextRetry = (integer)value;
-            if (name == "keyHandler") {
+            if (name == "debugLevel") debugLevel = (integer)value;
+            else if (name == "lastUpdateCheck") lastUpdateCheck = (integer)value;
+            else if (name == "nextRetry") nextRetry = (integer)value;
+            else if (name == "keyHandler") {
                 keyHandler = (key)value;
                 keyHandlerTime = llGetTime();
             }
-            if (name == "keyHandlerTime") {
+            else if (name == "keyHandlerTime") {
                 keyHandlerTime = llGetTime() - (float)(llGetUnixTime() - (integer)value);
             }
             
-            if (script == llGetScriptName()) return;
+            else if (script == llGetScriptName()) return;
             
-            if (name == "offlineMode") {
+            else if (name == "offlineMode") {
                 offlineMode = (integer)value;
                 dbPostParams = [];
             }
-            else if (!offlineMode) {
+            if (!offlineMode) {
                 value = llDumpList2String(llList2List(split, 2, -1), "|");
                 queForSave(name, value);
             }

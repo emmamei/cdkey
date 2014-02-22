@@ -41,9 +41,6 @@ float lastEmergencyTime;
 string rlvAPIversion;
 
 // Current Controller - or Mistress
-key MistressID = NULL_KEY;
-key carrierID = NULL_KEY;
-key dresserID = NULL_KEY;
 key winderID = NULL_KEY;
 key dollID = NULL_KEY;
 key keyHandler = NULL_KEY;
@@ -116,7 +113,6 @@ float baseWindRate    = 1.0;
 list windTimes        = [ 30 ];
 list blacklist;
 
-vector lockPos;
 string keyAnimation;
 string dollName;
 string mistressName;
@@ -246,37 +242,29 @@ default {
             mistressName = data;
             llOwnerSay("Your Mistress is " + mistressName);
         }
-        #ifdef ADULT_MODE
+        
         if (query_id == simRatingQuery) {
             simRating = data;
             lmRating(simRating);
             
-            if ((simRating == "MATURE" && simRating == "ADULT") && (pleasureDoll || dollType == "Slut")) {
+            #ifdef ADULT_MODE
+            if ((rating2Integer(simRating) < 2) && (pleasureDoll || dollType == "Slut")) {
                 llOwnerSay("Entered " + llGetRegionName() + " rating is " + llToLower(simRating) + " stripping disabled.");
             }
+            else llOwnerSay("Entered " + llGetRegionName() + " rating is " + llToLower(simRating) + " stripping enabled.");
+            #endif
         }
-        #endif
     }
 
     //----------------------------------------
     // CHANGED
     //----------------------------------------
-    #ifdef ADULT_MODE
     changed(integer change) {
         if (change & CHANGED_REGION) {
             simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
             lmSendConfig("keyHandler", (string)(keyHandler = NULL_KEY));
         }
-        if (change & CHANGED_TELEPORT) {
-            if (lockPos != ZERO_VECTOR) {
-                llStopMoveToTarget();
-                llTargetRemove(targetHandle);
-                lockPos = llGetPos();
-                targetHandle = llTarget(lockPos, 1);
-            }
-        }
     }
-    #endif
 
     //----------------------------------------
     // TIMER
@@ -349,6 +337,11 @@ default {
             
             scaleMem();
             
+            // False collapse? Collapsed = 1 while timeLeftOnKey is positive is an invalid condition
+            if (collapsed == 1 && timeLeftOnKey > 0.0) {
+                uncollapse(0);
+            }
+            
           /*--------------------------------
             WINDING DOWN.....
             --------------------------------
@@ -377,20 +370,12 @@ default {
                     llSay(0, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on their key.)");
     
                     lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0.0));
-                    lmInternalCommand("collapse", "0", NULL_KEY);
+                    lmInternalCommand("collapse", "1", NULL_KEY);
                     
                     // Skip call to setWindRate() this function is heavily overused we only make practical use of the
                     // value once per tick.  Updating more frequently is at best a waste at worst it's even a bug.
                     // setWindRate();
                 }
-            }
-            
-            // False collapse? Collapsed = 1 while timeLeftOnKey is positive is an invalid condition
-            if (collapsed == 1 && timeLeftOnKey > 0.0) {
-                uncollapse(0);
-            }
-            else if (collapsed == 2) { // Dolly's key is held or jammed count down the automatic restart time
-                
             }
             
             lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
@@ -426,12 +411,7 @@ default {
             chatHandle = llListen(chatChannel, "", dollID, "");
             
             clearAnim = 1;
-            if (initState == 104) lmInitState(initState++);
-            
-            #ifdef ADULT_MODE
-            simRating = "";
-            simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
-            #endif
+            if (initState == code) lmInitState(initState++);
         }
         
         else if (code == 105) {
@@ -447,11 +427,14 @@ default {
 
             if (!isAttached) llSetTimerEvent(60.0);
             
-            if (initState == 105) lmInitState(initState++);
+            if (initState == code) lmInitState(initState++);
         }
         
         else if (code == 110) {
             initState = 105;
+            
+            simRating = "";
+            simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
         }
         
         else if (code == 135) {
@@ -501,15 +484,10 @@ default {
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
             else if (name == "blacklist")                   blacklist = llListSort(split, 2, 1);
-            else if ((script == "MenuHandler") && (name == "dialogChannel")) {
-                dialogChannel = (integer)value;
-            }
+            else if (name == "dialogChannel")           dialogChannel = (integer)value;
+            else if (name == "debugLevel")                 debugLevel = (integer)value;
             else if (name == "keyHandler") {
                 keyHandler = (key)value;
-            }
-            else if (name == "lockPos") {
-                if (value == llGetRegionName()) lockPos = llList2Vector(split, 3);
-                else lockPos = llGetPos();
             }
             else if (name == "demoMode") {
                 demoMode = (integer)value;
@@ -519,7 +497,7 @@ default {
                 else {
                     effectiveLimit = keyLimit;
                 }
-                lmSendConfig("windTimes", llDumpList2String(windTimesInput, "|"));
+                if (configured) lmInternalCommand("setWindTimes", llDumpList2String(windTimesInput, "|"), NULL_KEY);
             }
             else if (name == "keyLimit") {
                 keyLimit = (float)value;
@@ -527,19 +505,7 @@ default {
                 else effectiveLimit = keyLimit;
                 
                 if (timeLeftOnKey > effectiveLimit) lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = effectiveLimit));
-                lmSendConfig("windTimes", llDumpList2String(windTimesInput, "|"));
-            }
-            else if (name == "windTimes") {
-                integer i; split = llList2List(split, 2, -1);
-                integer timesCount = llGetListLength(split);
-                
-                windTimesInput = split;
-                
-                for (i = 0; i < timesCount; i++) {
-                    integer value = (integer)llStringTrim(llList2String(split, i), STRING_TRIM);
-                    if ((value > 0) && (llListFindList(windTimes, [ value ]) == -1) && (((float)value * 60.0) <= keyLimit)) windTimes += value;
-                }
-                windTimes = llListSort(windTimes, 1, 1);
+                if (configured) lmInternalCommand("setWindTimes", llDumpList2String(windTimesInput, "|"), NULL_KEY);
             }
             #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")           timeReporting = (integer)value;
@@ -575,6 +541,20 @@ default {
                 
                 lmSendConfig("afk", (string)afk);
                 lmSendConfig("autoAFK", (string)autoAFK);
+            }
+            
+            else if (cmd == "setWindTimes") {
+                integer i; integer timesCount = llGetListLength(split);
+                
+                windTimesInput = split;
+                
+                for (i = 0; i < timesCount; i++) {
+                    integer value = (integer)llStringTrim(llList2String(split, i), STRING_TRIM);
+                    if ((value > 0) && (llListFindList(windTimes, [ value ]) == -1) && (((float)value * 60.0) <= keyLimit)) windTimes += value;
+                }
+                windTimes = llListSort(windTimes, 1, 1);
+                
+                if (script != "OnlineServices") lmSendConfig("windTimes", llDumpList2String(windTimes, "|"));
             }
 
             else if (cmd == "wearLock") {
