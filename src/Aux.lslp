@@ -14,7 +14,7 @@ integer initState = 104;
 integer ncLine;
 integer visible;
 integer memCollecting;
-integer debugLevel = DEBUG_LEVEL;
+integer quiet;
 integer wearLock;
 list MistressList;
 list BuiltinControllers = BUILTIN_CONTROLLERS;
@@ -67,7 +67,7 @@ default {
     }
     
     link_message(integer source, integer code, string data, key id) {
-        list split = llParseStringKeepNulls(data, ["|"], []);
+        list split = llParseString2List(data, ["|"], []);
         string script = llList2String(split, 0);
         
         if (code != 700) linkDebug(script, code, data, id);
@@ -120,7 +120,7 @@ default {
         else if (code == 300) {
             string name = llList2String(split, 1);
             string value = llList2String(split, 2);
-            split = llList2List(split, 2, -1);
+            split = llDeleteSubList(split, 0, 1);
             
                  if (name == "MistressList")               MistressList = split;
             else if (name == "isVisible")                 doVisibility((integer)value);
@@ -129,6 +129,7 @@ default {
             else if (name == "poserID")                         poserID = (key)value;
             else if (name == "dialogChannel")             dialogChannel = (integer)value;
             else if (name == "wearLock")                       wearLock = (integer)value;
+            else if (name == "quiet")                             quiet = (integer)value;
             else if (name == "pronounHerDoll")           pronounHerDoll = value;
             else if (name == "pronounSheDoll")           pronounSheDoll = value;
             else if (isAttached && (name == "dollyName")) {
@@ -211,6 +212,8 @@ default {
                 else llOwnerSay("You have stripped off your own " + llToLower(part) + ".");
             }
             else if (cmd == "uncarry") {
+                if (quiet) lmSendToAgent("You were carrying " + dollName + " and have now placed them down.", carrierID);
+                else llSay(0, "Dolly " + dollName + " has been placed down by " + carrierName);
                 carrierID = NULL_KEY;
                 carrierName = "";
             }

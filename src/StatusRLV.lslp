@@ -111,12 +111,6 @@ default {
                 integer charLimit = 896;    // Secondlife supports chat messages up to 1024 chars
                                             // here we avoid sending over 896 at a time for safety
                                             // links will be longer due the the prefix.
-                integer scriptIndex = cdListElementP(rlvSources, script);
-
-                if (scriptIndex == -1) {
-                    scriptIndex = llGetListLength(rlvSources);
-                    rlvSources += script;
-                }
 
                 do {
                     string fullCmd; list parts; string param; string cmd;
@@ -257,7 +251,6 @@ default {
                 if ((confCommands != "") && (confCommands != ",")) lmConfirmRLV(script, llGetSubString(confCommands, 0, -2));
                 
 #ifdef DEVELOPER_MODE
-                //llOwnerSay("RLV Sources " + llList2CSV(rlvSources));
                 debugSay(9, "DEBUG-RLV", "Active RLV: " + llDumpList2String(llList2ListStrided(rlvStatus, 0, -1, 2), "/"));
                 integer i;
                 for (i = 0; i < llGetListLength(rlvStatus); i += 2) {

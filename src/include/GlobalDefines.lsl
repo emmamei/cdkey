@@ -11,7 +11,7 @@
 #include "config.h"
 
 #define hasCarrier (carrierID != NULL_KEY)    
-#define numControllers (llGetListLength(USER_CONTROLLERS) / 2)
+#define numControllers llFloor(llGetListLength(USER_CONTROLLERS) / 2)
 #define isAttached llGetAttached()
 #define isDollAway ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0)
 #define isWindingDown (!collapsed && isAttached && dollType != "Builder" && dollType != "Key")

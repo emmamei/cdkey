@@ -86,6 +86,25 @@ list dialogKeys;
 list dialogNames;
 list dialogButtons;
 
+doDialogChannel() {
+    // If no uniqueID has been generated for dolly generate a new one now
+    if (uniqueID == NULL_KEY) lmSendConfig("uniqueID", (string)(uniqueID = llGenerateKey()));
+    
+    integer generateChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)uniqueID, -7, -1));
+    if (dialogChannel != generateChannel) debugSay(2, "DEBUG-MENU", "Your unique key is " + 
+                                          (string)uniqueID + " primary dialogChannel is " + (string)dialogChannel);
+                                          
+    lmSendConfig("dialogChannel", (string)(dialogChannel = generateChannel));
+    
+    blacklistChannel = dialogChannel - 666;
+    controlChannel = dialogChannel - 888;
+    textboxChannel = dialogChannel - 1111;
+    
+    llListenRemove(dialogHandle);
+    dialogHandle = llListen(dialogChannel, "", "", "");
+    llListenControl(dialogHandle, 0);
+}
+
 default
 {
     state_entry() {
@@ -102,18 +121,7 @@ default
             if (script == "OnlineServices") {
                 dbConfig = 1;
                 
-                if (uniqueID == NULL_KEY) lmSendConfig("uniqueID", (string)(uniqueID = llGenerateKey()));
-                
-                integer generateChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)uniqueID, -7, -1));
-                lmSendConfig("dialogChannel", (string)(dialogChannel = generateChannel));
-                
-                blacklistChannel = dialogChannel - 666;
-                controlChannel = dialogChannel - 888;
-                textboxChannel = dialogChannel - 1111;
-                
-                llListenRemove(dialogHandle);
-                dialogHandle = llListen(dialogChannel, "", "", "");
-                llListenControl(dialogHandle, 0);
+                doDialogChannel();
             }
             else if (data == "Start") configured = 1;
         }
@@ -141,7 +149,7 @@ default
             string script = llList2String(split, 0);
             string name = llList2String(split, 1);
             string value = llList2String(split, 2);
-            split = llList2List(split, 2, -1);
+            split = llDeleteSubList(split, 0, 1);
             
                  if (name == "baseWindRate")             baseWindRate = (float)value;
             else if (name == "displayWindRate")       displayWindRate = (float)value;
@@ -149,7 +157,6 @@ default
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
             else if (name == "dollyName")                   dollyName = value;
-            else if (name == "uniqueID")                     uniqueID = (key)value;
             else if (name == "afk")                               afk = (integer)value;
             else if (name == "autoTP")                         autoTP = (integer)value;
             else if (name == "canAFK")                         canAFK = (integer)value;
@@ -180,9 +187,14 @@ default
             else if (name == "gemColour") {
                 if (gemColour != (vector)value) lmInternalCommand("setGemColour", value, NULL_KEY);
             }
+            else if (name == "uniqueID") {
+                uniqueID = (key)value;
+                doDialogChannel();
+            }
             else if (name == "dialogChannel") {
                 if (script != "OnlineServices") return;
                 dialogChannel = (integer)value;
+                doDialogChannel();
             }
             else if (name == "timeLeftOnKey") {
                 timeLeftOnKey = (float)value;
@@ -197,12 +209,17 @@ default
             else if (name == "dollType") {
                 dollType = llGetSubString(llToUpper(value), 0, 0) + llGetSubString(llToLower(value), 1, -1);
             }
-            else if (name == "MistressList") {
-                MistressList = llDeleteSubList(split, 0, 1);
-                if (!startup) lmInternalCommand("updateExceptions", "", NULL_KEY);
-            }
-            else if (name == "blacklist") {
-                blacklist = llDeleteSubList(split, 0, 1);
+            else if ((name == "MistressList") || (name == "blacklist")) {
+                integer i;
+                for (i = 0; i < llGetListLength(split); i++) {
+                    if (llList2String(split, i) == "") split = llDeleteSubList(split, i, i--);
+                }
+                
+                if (name == "MistressList") {
+                    MistressList = split;
+                    if (!startup) lmInternalCommand("updateExceptions", "", NULL_KEY);
+                }
+                else blacklist = split;
             }
         }        
         else if (code == 305) {
@@ -341,15 +358,6 @@ default
             
                         menu += getButton("Visible", id, visible, 0);
                     }
-                    else if (isController) {
-                        if (canCarry) {
-                            msg =  msg +
-                                   "Carry option picks up " + dollName + " and temporarily" +
-                                   " makes the Dolly exclusively yours.\n";
-            
-                            if (!hasCarrier) menu += "Carry";
-                        }
-                    }
                     else {
                         manpage = "communitydoll.htm";
                     
@@ -376,6 +384,15 @@ default
                         }
                     }
                     else menu += "Poses";
+                    
+                    if (!collapsed && ((numControllers == 0) || (isController && !isDoll))) {
+                        if (canCarry) {
+                            msg += "Carry option picks up " + dollName + " and temporarily" +
+                                   " makes the Dolly exclusively yours.\n";
+            
+                            if (!hasCarrier) menu += "Carry";
+                        }
+                    }
                 
                     #ifdef ADULT_MODE
                         // Is doll strippable?
