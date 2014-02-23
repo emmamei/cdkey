@@ -20,7 +20,7 @@ float setWindRate() {
         windRate = newWindRate * windDown;
         
         lmSendConfig("baseWindRate", (string)baseWindRate);
-	lmSendConfig("displayWindRate", (string)displayWindRate);
+	lmSendConfig("displayWindRate", (string)newWindRate);
         lmSendConfig("windRate", (string)windRate);
     }
     

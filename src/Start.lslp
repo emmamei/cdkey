@@ -590,6 +590,17 @@ default {
     }
     
     changed(integer change) {
+        if (change & CHANGED_OWNER) {
+            if (llGetInventoryType(NOTECARD_PREFERENCES) != INVENTORY_NONE) {
+                llOwnerSay("Deleting old preferences notecard on owner change.");
+                llOwnerSay("Look at PreferencesExample to see how to make yours.");
+                llRemoveInventory(NOTECARD_PREFERENCES);
+            }
+            
+            llSleep(5.0);
+            
+            llResetScript();
+        }
         if (change & CHANGED_INVENTORY) {
             llOwnerSay("Inventory modified restarting in 30 seconds.");
             
@@ -611,17 +622,6 @@ default {
                     return;
                 }
             }
-            
-            llResetScript();
-        }
-        if (change & CHANGED_OWNER) {
-            if (llGetInventoryType(NOTECARD_PREFERENCES) != INVENTORY_NONE) {
-                llOwnerSay("Deleting old preferences notecard on owner change.");
-                llOwnerSay("Look at PreferencesExample to see how to make yours.");
-                llRemoveInventory(NOTECARD_PREFERENCES);
-            }
-            
-            llSleep(5.0);
             
             llResetScript();
         }
@@ -659,11 +659,12 @@ default {
                         // Core key script appears to have suffered a fatal error try restarting
                         float delay = 30.0;
                         #ifdef DEVELOPER_MODE
-                        delay *= 10.0; // Increase delay by a factor of 10 for auto restarts in DEVELOPER_MODE this prevents
-                                       // rapid looping from occuring in the event of a developer accidently saving a script that
-                                       // fails to compile.
+                        delay = delay * 10.0; // Increase delay by a factor of 10 for auto restarts in DEVELOPER_MODE this prevents
+                                              // rapid looping from occuring in the event of a developer accidently saving a script that
+                                              // fails to compile.
                         #endif
                         
+                        llSetScriptState(script, TRUE);
                         llResetScript();
                     }
                 }

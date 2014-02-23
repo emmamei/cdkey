@@ -24,7 +24,7 @@ float dilationMedian        = 1.0;
 float keyLimit              = 10800.0;
 float timeLeftOnKey         = 1800.0;
 float windamount            = 1800.0;
-float windRate              = RATE_STANDARD;
+float baseWindRate          = RATE_STANDARD;
 
 integer afk;
 integer autoTP;

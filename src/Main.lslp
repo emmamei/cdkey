@@ -101,7 +101,6 @@ string dollType = "Regular";
 float winderRechargeTime;
 float wearLockExpire;
 float lastRandomTime;
-float displayWindRate;
 float menuSleep;
 float lastTickTime;
 float timeToJamRepair;
@@ -110,7 +109,8 @@ float keyLimit        = 10800.0;
 float effectiveLimit  = keyLimit;
 float timeLeftOnKey   = windamount;
 float windRate        = 1.0;
-float baseWindRate    = 1.0;
+float baseWindRate    = windRate;
+float displayWindRate = windRate;
 list windTimes        = [ 30 ];
 list blacklist;
 
@@ -266,9 +266,7 @@ default {
             lmSendConfig("keyHandler", (string)(keyHandler = NULL_KEY));
         }
         if (change & CHANGED_OWNER) {
-            dollID = llGetOwner();
-            dollName = llGetDisplayName(dollID);
-            llResetOtherScript("Start");
+            llSleep(60);
         }
     }
 

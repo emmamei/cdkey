@@ -270,14 +270,14 @@ default
                     integer nextNewLine = llSubStringIndex(body, "\n");
                     if (nextNewLine == -1) nextNewLine = llStringLength(body);
                     
-                    string line = llGetSubString(body, 0, nextNewLine - 1);
-                    body = llDeleteSubString(body, 0, nextNewLine );
+                    string line = llDeleteSubString(body, nextNewLine, -1);
+                    body = llDeleteSubString(body, 0, nextNewLine);
                     
                     lines++;
                     
-                    list split = llParseStringKeepNulls(line, [ "=" ], []);
-                    string Key = llList2String(split, 0);
-                    string Value = llList2String(split, 1);
+                    integer splitIndex = llSubStringIndex(line, "=");
+                    string Key = llDeleteSubString(line, splitIndex, -1);
+                    string Value = llDeleteSubString(line, 0, splitIndex);
                     
                     if (Value == "") Value = "";
                     

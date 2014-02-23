@@ -86,7 +86,7 @@ checkRLV()
         // all other code works as normal.
         llListenControl(listenHandle, 1);
         #endif
-        llSetTimerEvent(5.0);
+        llSetTimerEvent(10.0);
         RLVck = 1;
         RLVok = 0;
         RLVstarted = 0;
@@ -204,7 +204,7 @@ ifPermissions() {
     else {
         if (RLVck == 0) {
             float interval = refreshRate;
-            if (interval) interval *= 2;
+            if (lowScriptMode) interval *= 2;
             llSetTimerEvent(interval);
             if (!timerOn) {
                 debugSay(1, "DEBUG", "Timer activated, interval " + formatFloat(interval, 3) + " seconds");
@@ -354,9 +354,7 @@ default {
             }
         }
         if (change & CHANGED_OWNER) {
-            dollID = llGetOwner();
-            dollName = llGetDisplayName(dollID);
-            llResetOtherScript("Start");
+            llSleep(60);
         }
     }
     
@@ -644,12 +642,6 @@ default {
                 if (wearLock) rlv = "unsharedwear=y,unsharedunwear=y,attachallthis:=n,detachallthis:=n," + rlv;
                 if (extra != "") rlv += extra;
                 lmRunRLVas("Dress", rlv);
-                if (id != dollID) {
-                    lmInternalCommand("wearLock", (string)(wearLock = 1), NULL_KEY);
-                    if (!quiet) llSay(0, "The dolly " + dollName + " has " + llToLower(pronounHerDoll) + " " + llToLower(part) + " stripped off " + llToLower(pronounHerDoll) + " and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes.  (Timer will start over for dolly if " + llToLower(pronounSheDoll) + " is stripped again)");
-                    else llOwnerSay("You have had your " + llToLower(part) + " stripped off you and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes, your time will restart if you are stripped again.");
-                }
-                else llOwnerSay("You have stripped off your own " + llToLower(part) + ".");
                 initializeRLV(0);
             }
             #endif
@@ -796,9 +788,11 @@ default {
             #endif
             
             if (!RLVok && (RLVck != 0) && (RLVck <= 6)) {
-                if (isAttached && RLVck != 6 && !RLVok == 1) llOwnerSay("@clear,versionnew=" + (string)channel + ",getpathnew=" + (string)channel);
-                llSetTimerEvent(5.0 * RLVck++);
-            } else if (RLVck != 0) {
+                if (isAttached && RLVck != 6 && !RLVok == 1) {
+                    llOwnerSay("@clear,versionnew=" + (string)channel + ",getpathnew=" + (string)channel);
+                    llSetTimerEvent(10.0 * ++RLVck);
+                }
+            } else if (RLVck == 6) {
                 processRLVResult();
             } else if (RLVok && !RLVstarted) {
                 initializeRLV(0);

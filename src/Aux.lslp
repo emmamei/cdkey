@@ -7,12 +7,15 @@ float rezTime;
 float memTime;
 string carrierName;
 string ncName = "Glow Settings";
+string pronounHerDoll = "Her";
+string pronounSheDoll = "She";
 integer configured;
 integer initState = 104;
 integer ncLine;
 integer visible;
 integer memCollecting;
 integer debugLevel = DEBUG_LEVEL;
+integer wearLock;
 list MistressList;
 list BuiltinControllers = BUILTIN_CONTROLLERS;
 list glowSettings;
@@ -125,6 +128,9 @@ default {
             else if (name == "keyAnimation")               keyAnimation = value;
             else if (name == "poserID")                         poserID = (key)value;
             else if (name == "dialogChannel")             dialogChannel = (integer)value;
+            else if (name == "wearLock")                       wearLock = (integer)value;
+            else if (name == "pronounHerDoll")           pronounHerDoll = value;
+            else if (name == "pronounSheDoll")           pronounSheDoll = value;
             else if (isAttached && (name == "dollyName")) {
                 string dollyName = value;
                 llSetObjectName(dollyName + "'s Key");
@@ -194,6 +200,15 @@ default {
             else if (cmd == "carry") {
                 carrierID = id;
                 carrierName = llList2String(split, 0);
+            }
+            else if (cmd == "strip") {
+                string part = llList2String(split, 0);
+                if (id != dollID) {
+                    lmInternalCommand("wearLock", (string)(wearLock = 1), NULL_KEY);
+                    if (!quiet) llSay(0, "The dolly " + dollName + " has " + llToLower(pronounHerDoll) + " " + llToLower(part) + " stripped off " + llToLower(pronounHerDoll) + " and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes.  (Timer will start over for dolly if " + llToLower(pronounSheDoll) + " is stripped again)");
+                    else llOwnerSay("You have had your " + llToLower(part) + " stripped off you and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes, your time will restart if you are stripped again.");
+                }
+                else llOwnerSay("You have stripped off your own " + llToLower(part) + ".");
             }
             else if (cmd == "uncarry") {
                 carrierID = NULL_KEY;
