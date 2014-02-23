@@ -1,4 +1,3 @@
-#define DEBUG_LEVEL 9
 #include "include/GlobalDefines.lsl"
 #include "include/Secure.lsl"
 
@@ -35,9 +34,6 @@ integer lastUpdateCheck;
 integer requestIndex;
 integer nextRetry;
 integer gotURL;
-integer firstRun = 1;
-integer initCode;
-integer initState = 104;
 integer ticks;
 integer offlineMode;
 integer invMarker;
@@ -268,14 +264,14 @@ default
                 float HTTPdbProcessStart;
                 string eventTime = formatFloat(((HTTPdbProcessStart = llGetTime()) - HTTPdbStart) * 1000, 2);
                 
-                integer lines;
+                integer lines; integer responseLength = (integer)llGetHTTPHeader(request, "Content-Length");
                 
                 do {
                     integer nextNewLine = llSubStringIndex(body, "\n");
                     if (nextNewLine == -1) nextNewLine = llStringLength(body);
                     
                     string line = llGetSubString(body, 0, nextNewLine - 1);
-                    body = llDeleteSubString(body, 0, nextNewLine);
+                    body = llDeleteSubString(body, 0, nextNewLine );
                     
                     lines++;
                     
@@ -305,11 +301,11 @@ default
                 
                 debugSay(5, "DEBUG-SERVICES", "Service post interval setting " + formatFloat(HTTPinterval, 2) + "s throttle setting " + formatFloat(HTTPthrottle, 2) + "s");
                 
-                string msg = "HTTPdb - Processed " + (string)lines + " records ";
+                string msg = "HTTPdb - Recieved " + (string)responseLength + " bytes, processed " + (string)lines + " records ";
                 if (lastPostTimestamp) msg += "with updates since our last post " + (string)((llGetUnixTime() - lastPostTimestamp) / 60) + " minutes ago ";
                 msg += "event time " + eventTime + ", processing time " + formatFloat(((llGetTime() - HTTPdbProcessStart) * 1000), 2);
                 msg += "ms, total time for DB transaction " + formatFloat((llGetTime() - HTTPdbStart) * 1000, 2) + "ms";
-                debugSay(5, "DEBUG-SERVICES", msg);
+                debugSay(2, "DEBUG-SERVICES", msg);
                 
                 databaseReload = 0;
             }
@@ -322,7 +318,8 @@ default
                 }
             }
             llMessageLinked(LINK_THIS, 102, llGetScriptName() + "|" + "HTTP" + (string)status, NULL_KEY);
-            if (initState == 104) lmInitState(initState++);
+            
+            if (initState == initCode) lmInitState(initState++);
         }
         else if (request == requestMistressKey || request == requestBlacklistKey) {
             list split = llParseStringKeepNulls(body, [ "=" ], []);
@@ -409,18 +406,13 @@ default
             debugSay(6, "DEBUG-SERVICES", "Requesting data from HTTPdb");
             string hashStr = (string)llGetOwner() + time + SALT;
             string requestURI = "https://api.silkytech.com/httpdb/retrieve?q=" + llSHA1String(hashStr) + "&t=" + time + "&s=" + (string)lastGetTimestamp;
-            if  (!offlineMode && (
-                    (code == 104) || (
-                        (code == 105) && 
-                        ((llGetUnixTime() - 600) > lastGetTimestamp)
-                    )
-                )
-            ) {
+            if  (!offlineMode) {
                 while((requestLoadDB = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
                     llSleep(1.0);
                 }
             }
-            if ((code == 105) && (initState == 105)) lmInitState(initState++);
+            
+            initCode = code;
         }
         else if (code == 110) {
             initState = 105;

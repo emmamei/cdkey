@@ -275,7 +275,7 @@ initializeRLV(integer refresh) {
     
     lmRunRLVas("Base", baseRLV);
     
-    if (afk || !canWear || collapsed || wearLock) lmRunRLVas("Dress", "unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
+    if (!canWear || collapsed || wearLock || afk) lmRunRLVas("Dress", "unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
     else lmRunRLVas("Dress", "clear");
 
     // Handle low and no power modes (afk && collapsed)
@@ -352,6 +352,11 @@ default {
                 lockPos = llGetPos();
                 targetHandle = llTarget(lockPos, 1);
             }
+        }
+        if (change & CHANGED_OWNER) {
+            dollID = llGetOwner();
+            dollName = llGetDisplayName(dollID);
+            llResetOtherScript("Start");
         }
     }
     
@@ -612,33 +617,40 @@ default {
                 lmSendConfig("poserID", (string)(poserID = id));
             }
             #ifdef ADULT_MODE
-            else if (llGetSubString(cmd, 0, 4) == "strip") {
-                string stripped;
-                if (cmd == "stripTop") {
-                    stripped = "top";
-                    lmRunRLVas("Dress", "detach:stomach=force,detach:left shoulder=force,detach:right shoulder=force,detach:left hand=force,detach:right hand=force,detach:r upper arm=force,detach:r forearm=force,detach:l upper arm=force,detach:l forearm=force,detach:chest=force,detach:left pec=force,detach:right pec=force,remoutfit:gloves=force,remoutfit:jacket=force,remoutfit:shirt=force");
+            else if (cmd == "strip") {
+                string part = llList2String(split, 2); string attachments; string extra; string layers;
+                if (part == "Top") {
+                    attachments = "chin,chest,l forearm,left hand,left pec,left shoulder,l upper arm,r forearm,right hand,right pec,right shoulder,r upper arm,r forearm,right pec,stomach";
+                    layers      = "gloves,jacket,shirt";
                 }
-                else if (cmd == "stripBra") {
-                    stripped = "bra";
-                    lmRunRLVas("Dress", "remoutfit=y,remattach=y,remoutfit:undershirt=force");
+                else if (part == "Bra") {
+                    layers      = "undershirt";
                 }
-                else if (cmd == "stripBottom") {
-                    stripped = "bottoms";
-                    lmRunRLVas("Dress", "detach:chin=force,detach:r upper leg=force,detach:r lower leg=force,detach:l upper leg=force,detach:l lower leg=force,detach:pelvis=force,detach:right hip=force,detach:left hip=force,remoutfit:pants=force,remoutfit:skirt=force");
+                else if (part == "Bottom") {
+                    attachments = "left hip,left lower leg,l upper leg,pelvis,right hip,right lower leg,r upper leg";
+                    layers      = "pants,skirt";
                 }
-                else if (cmd == "stripPanties") {
-                    stripped = "panties";
-                    lmRunRLVas("Dress", "remoutfit:underpants=force");
+                else if (part == "Panties") {
+                    layers      = "underpants";
                 }
-                else if (cmd == "stripShoes") {
-                    stripped = "shoes";
-                    string attachFeet;
-                    if (barefeet != "") attachFeet = "attachallover:" + barefeet + "=force,";
-                    lmRunRLVas("Dress", "detach:l lower leg=force,detach:r lower leg=force,detach:right foot=force,detach:left foot=force,remoutfit:shoes=force,remoutfit:socks=force," + attachFeet);
+                else if (part == "Shoes") {
+                    if (barefeet != "") extra = "attachallover:" + barefeet + "=force,";
+                    
+                    attachments = "left foot,l lower leg,right foot,r lower leg";
+                    layers      = "shoes,socks";
                 }
-                lmInternalCommand("wearLock", (string)(wearLock = 1), NULL_KEY);
-                if (!quiet) llSay(0, "The dolly " + dollName + " has " + llToLower(pronounHerDoll) + " " + stripped + " stripped off " + llToLower(pronounHerDoll) + " and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes.  (Timer will start over for dolly if " + llToLower(pronounSheDoll) + " is stripped again)");
-                else llOwnerSay("You have had your " + stripped + " stripped off you and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes, your time will restart if you are stripped again.");
+                string rlv = "detach:" + llDumpList2String(llCSV2List(attachments), "=force,detach:") + "=force";
+                rlv += "remoutfit:" + llDumpList2String(llCSV2List(layers), "=force,remoutfit:") + "=force";
+                if (wearLock) rlv = "unsharedwear=y,unsharedunwear=y,attachallthis:=n,detachallthis:=n," + rlv;
+                if (extra != "") rlv += extra;
+                lmRunRLVas("Dress", rlv);
+                if (id != dollID) {
+                    lmInternalCommand("wearLock", (string)(wearLock = 1), NULL_KEY);
+                    if (!quiet) llSay(0, "The dolly " + dollName + " has " + llToLower(pronounHerDoll) + " " + llToLower(part) + " stripped off " + llToLower(pronounHerDoll) + " and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes.  (Timer will start over for dolly if " + llToLower(pronounSheDoll) + " is stripped again)");
+                    else llOwnerSay("You have had your " + llToLower(part) + " stripped off you and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes, your time will restart if you are stripped again.");
+                }
+                else llOwnerSay("You have stripped off your own " + llToLower(part) + ".");
+                initializeRLV(0);
             }
             #endif
             else if (cmd == "uncarry") {
@@ -674,7 +686,7 @@ default {
                 return;
             }
             else if (cmd == "detach") {
-                if (RLVok) llOwnerSay("@clear,detachme=force");
+                if (RLVok || RLVstarted) llOwnerSay("@clear,detachme=force");
                 else llDetachFromAvatar();
                 return;
             }

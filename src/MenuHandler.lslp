@@ -9,6 +9,7 @@
 //key MistressID = NULL_KEY;
 key poserID = NULL_KEY;
 key dollID = NULL_KEY;
+key menuID = NULL_KEY;
 
 list windTimes = [ 30 ];
 
@@ -17,6 +18,7 @@ float windDefault = 1800.0;
 float windRate = 1.0;
 float baseWindRate = 1.0;
 float collapseTime; 
+float displayWindRate = 1.0;
 
 integer afk;
 integer autoAFK = 1;
@@ -74,6 +76,8 @@ string carrierName;
 string mistressName;
 string keyAnimation;
 string dollyName;
+string nextMenu;
+string menuName;
 
 float winderRechargeTime;
 
@@ -98,12 +102,10 @@ default
             if (script == "OnlineServices") {
                 dbConfig = 1;
                 
-                if (uniqueID == NULL_KEY) {
-                    lmSendConfig("uniqueID", (string)(uniqueID = llGenerateKey()));
-                }
+                if (uniqueID == NULL_KEY) lmSendConfig("uniqueID", (string)(uniqueID = llGenerateKey()));
                 
-                integer channel = 0x80000000 | (integer)("0x" + llGetSubString((string)uniqueID, -7, -1));
-                if (dialogChannel != channel) lmSendConfig("dialogChannel", (string)(dialogChannel = channel));
+                integer generateChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)uniqueID, -7, -1));
+                lmSendConfig("dialogChannel", (string)(dialogChannel = generateChannel));
                 
                 blacklistChannel = dialogChannel - 666;
                 controlChannel = dialogChannel - 888;
@@ -114,8 +116,6 @@ default
                 llListenControl(dialogHandle, 0);
             }
             else if (data == "Start") configured = 1;
-            
-            lmInternalCommand("updateExceptions", "", NULL_KEY);
         }
         else if (code == 104 || code == 105) {
             if (llList2String(split, 0) != "Start") return;
@@ -124,6 +124,8 @@ default
         }
         else if (code == 110) {
             initState = 105;
+            
+            lmInternalCommand("updateExceptions", "", NULL_KEY);
             
             startup = 0;
         }
@@ -142,6 +144,7 @@ default
             split = llList2List(split, 2, -1);
             
                  if (name == "baseWindRate")             baseWindRate = (float)value;
+            else if (name == "displayWindRate")       displayWindRate = (float)value;
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
@@ -196,7 +199,7 @@ default
             }
             else if (name == "MistressList") {
                 MistressList = llDeleteSubList(split, 0, 1);
-                if (configured) lmInternalCommand("updateExceptions", "", NULL_KEY);
+                if (!startup) lmInternalCommand("updateExceptions", "", NULL_KEY);
             }
             else if (name == "blacklist") {
                 blacklist = llDeleteSubList(split, 0, 1);
@@ -264,7 +267,6 @@ default
                 // Compute "time remaining" message for mainMenu/windMenu
                 string timeleft;
                 
-                float displayWindRate = setWindRate();
                 integer minsLeft = llRound(timeLeftOnKey / (60.0 * displayWindRate));
                 
                 if (minsLeft > 0) {
@@ -421,21 +423,31 @@ default
     }
     
     timer() {
-        if(blacklistHandle) {
-            llListenRemove(blacklistHandle);
-            blacklistHandle = 0;
+        if (nextMenu != "") {
+            lmInternalCommand(nextMenu, menuName, menuID);
+            llSetTimerEvent(30.0);
         }
-        if (controlHandle) {
-            llListenRemove(controlHandle);
-            controlHandle = 0;
+        else {
+            if(blacklistHandle) {
+                llListenRemove(blacklistHandle);
+                blacklistHandle = 0;
+            }
+            if (controlHandle) {
+                llListenRemove(controlHandle);
+                controlHandle = 0;
+            }
+            if (textboxHandle) {
+                llListenRemove(textboxHandle);
+                textboxHandle = 0;
+            }
+            llListenControl(dialogHandle, 0);
+            dialogKeys = []; dialogButtons = []; dialogNames = [];
+            llSetTimerEvent(0.0);
         }
-        if (textboxHandle) {
-            llListenRemove(textboxHandle);
-            textboxHandle = 0;
-        }
-        llListenControl(dialogHandle, 0);
-        dialogKeys = []; dialogButtons = []; dialogNames = [];
-        llSetTimerEvent(0.0);
+        
+        nextMenu = "";
+        menuName = "";
+        menuID = NULL_KEY;
     }
     
     sensor(integer num) {
@@ -488,6 +500,9 @@ default
         if (channel != textboxChannel) {
             debugSay(3, "DEBUG-MENU", "Button clicked: " + choice + ", optName=\"" + optName + "\", curState=\"" + curState + "\"");
             lmMenuReply(choice, name, id);
+            
+            menuID = id;
+            menuName = name;
         }
         
         if (channel == dialogChannel) {
@@ -602,9 +617,11 @@ default
             }
             else if (optName == "AFK") {
                 afk = (curState == CROSS);
-                float displayWindRate = setWindRate();
                 integer minsLeft = llRound(timeLeftOnKey / (60.0 * displayWindRate));
                 lmInternalCommand("setAFK", (string)afk + "|0|" + formatFloat(windRate, 1) + "|" + (string)minsLeft, id);
+                
+                string nextMenu = "mainMenu";
+                llSetTimerEvent(1.0);
             }
             if ((optName == "Blacklist") || (optName == "Controller")) {
                 integer activeChannel; integer i;
@@ -718,7 +735,7 @@ default
                 lmSendConfig("canAFK", (string)(canAFK = (curState == CROSS)));
                 if (!canAFK && afk) {
                     afk = 0;
-                    float displayWindRate = setWindRate();
+                    displayWindRate = setWindRate();
                     integer minsLeft = llRound(timeLeftOnKey / (60.0 * displayWindRate));
                     lmInternalCommand("setAFK", (string)afk + "|0|" + formatFloat(windRate, 1) + "|" + (string)minsLeft, id);
                 }
@@ -778,32 +795,14 @@ default
                 }
             }
             
-        #ifdef ADULT_MODE
-            // Strip items... only for Pleasure Doll and Slut Doll Types...
-            if (isCarrier || isDoll || ((numControllers != 0) && isController)) {
-                if (choice == "Top") {
-                    llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|stripTop", id);
-                }
-                else if (choice == "Bra") {
-                    llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|stripBra", id);
-                }
-                else if (choice == "Bottom") {
-                    llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|stripBottom", id);
-                }
-                else if (choice == "Panties") {
-                    llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|stripPanties", id);
-                }
-                else if (choice == "Shoes") {
-                    llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|stripShoes", id);
-                }
-        
-                if (llListFindList(["Top", "Bra", "Bottom", "Panties", "Shoes", "Strip"], [ choice ]) != -1)
-                    // Do strip menu
-                    llDialog(id, "Take off:",
-                        dialogSort(["Top", "Bra", "Bottom", "Panties", "Shoes", MAIN]),
-                        dialogChannel);
-            }
-        #endif
+            #ifdef ADULT_MODE
+                // Strip items... only for Pleasure Doll and Slut Doll Types...
+                list buttons = llListSort(["Top", "Bra", "Bottom", "Panties", "Shoes", "*ALL*"], 1, 1);
+                if (choice == "Strip")
+                    llDialog(id, "Take off:", dialogSort(buttons + MAIN), dialogChannel); // Do strip menu
+                else if (llListFindList(buttons, [ choice ]) != -1)
+                    lmStrip(choice);
+            #endif
         }
         
         if ((channel == blacklistChannel) || (channel == controlChannel)) {

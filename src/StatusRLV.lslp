@@ -34,7 +34,6 @@ default {
     state_entry() {
         dollID = llGetOwner();
         scriptName = llGetScriptName();
-        lmScriptReset();
         llSetMemoryLimit(65536);
     }
 
@@ -254,12 +253,9 @@ default {
                     }
                 } while (llStringLength(commandString));
 
-                if (sendCommands != "") llOwnerSay(llGetSubString("@" + sendCommands, 0, -2));
-                if (confCommands != "") {
-                    lmConfirmRLV(script, llGetSubString(confCommands, 0, -2));
-                    //debugSay(llGetSubString(confCommands, 0, -2));
-                }
-
+                if ((sendCommands != "") && (sendCommands != ",")) llOwnerSay(llGetSubString("@" + sendCommands, 0, -2));
+                if ((confCommands != "") && (confCommands != ",")) lmConfirmRLV(script, llGetSubString(confCommands, 0, -2));
+                
 #ifdef DEVELOPER_MODE
                 //llOwnerSay("RLV Sources " + llList2CSV(rlvSources));
                 debugSay(9, "DEBUG-RLV", "Active RLV: " + llDumpList2String(llList2ListStrided(rlvStatus, 0, -1, 2), "/"));

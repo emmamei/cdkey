@@ -278,21 +278,8 @@ changeComplete(integer success) {
     
     if (change) llOwnerSay("Change to new outfit " + newoutfitname + " complete.");
     
-    integer newWearLock = ((dresserID != NULL_KEY) && (dresserID != dollID));
-    
-    if (
-        newWearLock ||
-        (newWearLock != wearLock) 
-    ) lmInternalCommand("wearLock", (string)(wearLock = newWearLock), NULL_KEY);
-    
-    if (RLVok &&
-        (
-            !canWear ||
-            collapsed ||
-            wearLock ||
-            afk
-        )
-    ) lmRunRLV("unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
+    lmInternalCommand("wearLock", (string)(wearLock = (wearLock || 
+                                                      ((dresserID != NULL_KEY) && (dresserID != dollID)))), NULL_KEY);
     
     /*else {
         llOwnerSay("Something seems to be preventing all outfit items being added or removed correctly, dressing cancelled");
@@ -966,8 +953,7 @@ default {
                 ++dressingFailures <= MAX_DRESS_FAILURES) {
                 llSleep(4.0);
                 if (RLVok) {
-                    if (!canWear || afk || collapsed || wearLock) lmRunRLV("attachallthis:=y,detachallthis:" + outfitsFolder + "=n,attachall:" + xfolder + "=force,clear," +
-                                                                           "unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
+                    if (!canWear || afk || collapsed || wearLock) lmRunRLV("attachallthis:=y,detachallthis:" + outfitsFolder + "=n,attachall:" + xfolder + "=force,attachallthis:=n");
                     else lmRunRLV("detachallthis:" + outfitsFolder + "=n,attachall:" + xfolder + "=force");
                     rlvRequest("getinvworn:" + xfolder + "=", 2668);
                     candresstimeout++;
@@ -1001,8 +987,7 @@ default {
                 ++dressingFailures <= MAX_DRESS_FAILURES) {
                 llSleep(4.0);
                 if (RLVok) {
-                    if (!canWear || afk || collapsed || wearLock) lmRunRLV("detachallthis:=y,attachallthis:" + outfitsFolder + "=n,detachall:" + yfolder + "=force,clear," +
-                                                                           "unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
+                    if (!canWear || afk || collapsed || wearLock) lmRunRLV("detachallthis:=y,attachallthis:" + outfitsFolder + "=n,detachall:" + yfolder + "=force,detachallthis:=n");
                     else lmRunRLV("attachallthis:" + outfitsFolder + "=n,detachall:" + yfolder + "=force");
                     rlvRequest("getinvworn:" + yfolder + "=", 2669);
                     candresstimeout++;
