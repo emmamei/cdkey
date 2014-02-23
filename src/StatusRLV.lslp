@@ -13,11 +13,16 @@
 // thus we keep this script lightweight with plenty of heap room
 // for it's runtime data needs.
 
-key rlvTPrequest; 
- 
+#define cdListElement(a,b) llList2String(a, b)
+#define cdSplitArgs(a) llParseStringKeepNulls((a), [ "|" ], [])
+#define cdListElementP(a,b) llListFindList(a, [ b ]);
+#define cdSplitString(a) llParseString2List(a, [ "," ], []);
+
+key rlvTPrequest;
+
 list rlvSources;
 list rlvStatus;
- 
+
 string scriptName;
 
 integer RLVstarted;
@@ -31,14 +36,14 @@ default {
         scriptName = llGetScriptName();
         llSetMemoryLimit(65536);
     }
-    
+
     //----------------------------------------
     // LINK_MESSAGE
     //----------------------------------------
 
     link_message(integer sender, integer code, string data, key id) {
-        list split = llParseStringKeepNulls(data, [ "|" ], []);
-        
+        list split = cdSplitArgs(data);
+
         // valid numbers:
         //    101: Initial configuration from Preferences
         //    102: End of Preferences notification message
@@ -74,11 +79,11 @@ default {
         //    * stripPanties
         //    * stripShoes
         //    * carried
-        
+
         if (code == 104 || code == 105) {
-            string script = llList2String(split, 0);
+            string script = cdListElement(split, 0);
             if (script != "Start") return;
-            
+
             if (initState == code) lmInitState(initState++);
         }
         if (code == 110) {
@@ -89,58 +94,63 @@ default {
             memReport(delay);
         }
         else if (code == 300) {
-            string name = llList2String(split, 1);
-            string value = llList2String(split, 2);
-            
+            string name = cdListElement(split, 1);
+            string value = cdListElement(split, 2);
+
             if (name == "debugLevel")                    debugLevel = (integer)value;
         }
         else if (code == 315) {
-            string realScript = llList2String(split, 0);
-            string script = llList2String(split, 1);
-            string commandString = llList2String(split, 2);
-            
+            string realScript = cdListElement(split, 0);
+            string script = cdListElement(split, 1);
+            string commandString = cdListElement(split, 2);
+
             if (script == "") script = realScript;
-            
+
             if (isAttached && RLVok) {
                 integer commandLoop; string sendCommands = ""; string confCommands = "";
                 integer charLimit = 896;    // Secondlife supports chat messages up to 1024 chars
                                             // here we avoid sending over 896 at a time for safety
                                             // links will be longer due the the prefix.
-                integer scriptIndex = llListFindList(rlvSources, [ script ]);
-                
+                integer scriptIndex = cdListElementP(rlvSources, script);
+
                 if (scriptIndex == -1) {
                     scriptIndex = llGetListLength(rlvSources);
                     rlvSources += script;
                 }
-                
+
                 do {
                     string fullCmd; list parts; string param; string cmd;
-                    
+
+                    // Pull out the next RLV command into commandString
+
                     integer nextComma = llSubStringIndex(commandString, ",");
                     if (nextComma == -1) nextComma = llStringLength(commandString);
-                    
+
                     fullCmd = llStringTrim(llGetSubString(commandString, 0, nextComma - 1), STRING_TRIM);
                     commandString = llDeleteSubString(commandString, 0, nextComma);
-                    
+
                     parts = llParseString2List(fullCmd, [ "=" ], []);
-                    param = llList2String(parts, 1);
-                    cmd = llList2String(parts, 0);
-                    
+                    param = cdListElement(parts, 1);
+                    cmd = cdListElement(parts, 0);
+
+                    // Send an RLV command if the string would be too long
                     if (llStringLength(sendCommands + fullCmd + ",?") > charLimit) {
                         llOwnerSay(llGetSubString("@" + sendCommands, 0, -2));
                         sendCommands = "";
                     }
                     //sendCommands += fullCmd + ",";
+
+                    // confirm RLV commands
                     if (llStringLength(confCommands + fullCmd + ",?") > charLimit) {
                         lmConfirmRLV(script, llGetSubString(confCommands, 0, -2));
                         //debugSay(llGetSubString(confCommands, 0, -2));
                         confCommands = "";
                     }
                     //confCommands += fullCmd + ",";
-                    
+
                     if (cmd != "clear") {
                         if (param == "n" || param == "add") {
-                            integer cmdIndex = llListFindList(rlvStatus, [ cmd ]);
+                            integer cmdIndex = cdListElementP(rlvStatus, cmd);
                             if (cmdIndex == -1 ) { // New restriction add to list and send to viewer
                                 rlvStatus += [ cmd, script ];
                                 sendCommands += fullCmd + ",";
@@ -151,9 +161,9 @@ default {
                             }
                             else if (llGetSubString(cmd, -8, -1) == "_except") sendCommands += fullCmd + ",";
                             else { // Duplicate restriction, note but do not send again
-                                string scripts = llList2String(rlvStatus, cmdIndex + 1);
-                                list scriptList = llParseString2List(scripts, [ "," ], []);
-                                integer myIndex = llListFindList(scriptList, [ script ]);
+                                string scripts = cdListElement(rlvStatus, cmdIndex + 1);
+                                list scriptList = cdSplitString(scripts);
+                                integer myIndex = cdListElementP(scriptList, script);
                                 if (myIndex == -1) {
                                     // ^ symbol confirms our restriction has been added but was already set by another script
                                     //   both scripts must release this restriction before it will be removed.
@@ -165,11 +175,11 @@ default {
                             }
                         }
                         else if (param == "y" || param == "rem") {
-                            integer cmdIndex = llListFindList(rlvStatus, [ cmd ]);
+                            integer cmdIndex = cdListElementP(rlvStatus, cmd);
                             if (cmdIndex != -1) { // Restriction does exist from one or more scripts
-                                string scripts = llList2String(rlvStatus, cmdIndex + 1);
-                                list scriptList = llParseString2List(scripts, [ "," ], []);
-                                integer myIndex = llListFindList(scriptList, [ script ]);
+                                string scripts = cdListElement(rlvStatus, cmdIndex + 1);
+                                list scriptList = cdSplitString(scripts);
+                                integer myIndex = cdListElementP(scriptList, script);
                                 if (myIndex != -1) { // This script is one of the restriction issuers clear it
                                     scriptList = llDeleteSubList(scriptList, myIndex, myIndex);
                                     if (scriptList == []) { // All released delete old record and send to viewer
@@ -195,15 +205,16 @@ default {
                             confCommands += fullCmd + ",";
                         }
                     }
-                    else if (cmd == "clear") {
+                    else {
+                        // command is "clear" ...
                         integer i; integer matches; integer reduced; integer cleared; integer held;
                         for (i = 0; i < llGetListLength(rlvStatus); i = i + 2) {
-                            string thisCmd = llList2String(rlvStatus, i);
+                            string thisCmd = cdListElement(rlvStatus, i);
                             if (llSubStringIndex(thisCmd, param) != -1) { // Restriction matches clear param
                                 matches++;
-                                string scripts = llList2String(rlvStatus, i + 1);
-                                list scriptList = llParseString2List(scripts, [ "," ], []);
-                                integer myIndex = llListFindList(scriptList, [ script ]);
+                                string scripts = cdListElement(rlvStatus, i + 1);
+                                list scriptList = cdSplitString(scripts);
+                                integer myIndex = cdListElementP(scriptList, script);
                                 if (myIndex != -1) { // This script is one of the restriction issuers clear it
                                     scriptList = llDeleteSubList(scriptList, myIndex, myIndex);
                                     reduced++;
@@ -245,12 +256,14 @@ default {
                 if ((sendCommands != "") && (sendCommands != ",")) llOwnerSay(llGetSubString("@" + sendCommands, 0, -2));
                 if ((confCommands != "") && (confCommands != ",")) lmConfirmRLV(script, llGetSubString(confCommands, 0, -2));
                 
+#ifdef DEVELOPER_MODE
                 //llOwnerSay("RLV Sources " + llList2CSV(rlvSources));
                 debugSay(9, "DEBUG-RLV", "Active RLV: " + llDumpList2String(llList2ListStrided(rlvStatus, 0, -1, 2), "/"));
                 integer i;
                 for (i = 0; i < llGetListLength(rlvStatus); i += 2) {
-                    debugSay(9, "DEBUG-RLV", llList2String(rlvStatus, i) + "\t" + llList2String(rlvStatus, i + 1));
+                    debugSay(9, "DEBUG-RLV", cdListElement(rlvStatus, i) + "\t" + cdListElement(rlvStatus, i + 1));
                 }
+#endif
             }
         }
         else if (code == 350) {
