@@ -90,7 +90,7 @@
 #define JAM_DEFAULT_TIME 90.0
 
 #define COLOR_NAMES [ "Purple", "Pink", "Red", "Green", "Blue", "Cyan", "Yellow", "Orange", "White", "Black", "CUSTOM" ]
-#define COLOR_VALUE [ <0.3, 0.1, 0.6>, <0.9, 0.1, 0.8>, <0.8, 0.1, 0.1>, <0.1, 0.8, 0.1>, <0.1, 0.1, 0.8>, <0.1, 0.8, 0.8>, <0.8, 0.8, 0.1>, <0.8, 0.4, 0.1>, <0.9, 0.9, 0.9>, <0.1, 0.1, 0.1>, <0,0,0> ]
+#define COLOR_VALUE [ <0.35, 0.15, 0.75>, <0.85, 0.15, 0.85>, <0.85, 0.15, 0.15>, <0.15, 0.85, 0.15>, <0.15, 0.15, 0.85>, <0.15, 0.85, 0.85>, <0.85, 0.85, 0.15>, <0.85, 0.45, 0.15>, <0.85, 0.85, 0.85>, <0.15, 0.15, 0.15>, <0,0,0> ]
 
 // Max Controllers - Set a limit on the number of user defined controllers so the list
 // cannot grow to arbitrary lengths and consume all memory.
@@ -124,7 +124,7 @@
 #define lmSendConfig(name, value) llMessageLinked(LINK_THIS, 300, SCRIPT_NAME + "|" + name + "|" + value, NULL_KEY)
 #define lmUpdateStatistic(name, value) llMessageLinked(LINK_THIS, 399, SCRIPT_NAME + "|" + name + "|" + value, NULL_KEY)
 #define lmInternalCommand(command, parameter, id) llMessageLinked(LINK_THIS, 305, SCRIPT_NAME + "|" + command + "|" + parameter, id)
-#define lmStrip(part) llMessageLinked(LINK_THIS, 305, "strip" + "|" + part, id)
+#define lmStrip(part) llMessageLinked(LINK_THIS, 305, SCRIPT_NAME + "|" + "strip" + "|" + part, id)
 #define lmRunRLV(command) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|" + "|" + command, NULL_KEY)
 #define lmRunRLVas(vmodule, command) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|" + vmodule + "|" + command, NULL_KEY)
 #define lmConfirmRLV(forscript, command) llMessageLinked(LINK_THIS, 320, SCRIPT_NAME + "|" + forscript + "|" + command, NULL_KEY)

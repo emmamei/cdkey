@@ -591,7 +591,7 @@ default {
                     //if (isPlusItem(oldoutfitname) &&
                     //    !isPlusItem(newoutfitname)) {  // only works well assuming in regular
     
-                        if (RLVok) lmRunRLV("attachall:" + normalselfFolder + "=force,detachallthis:" + normalselfFolder + "=n");
+                        if (RLVok) lmRunRLV("attachallover:" + normalselfFolder + "=force,detachallthis:" + normalselfFolder + "=n");
                         llSleep(1.0);
                     //}
                     
@@ -613,12 +613,12 @@ default {
                         // Do this right off the bat and also lock it.  This makes more
                         // sense especially with multi layer wearables this makes sure
                         // that the underlayers go in first.
-                        if (RLVok) lmRunRLV("attachall:" + nudeFolder + "=force");
+                        if (RLVok) lmRunRLV("attachallover:" + nudeFolder + "=force");
                         llSleep(1.0);
                     //}
     
                     // Add items that cant replace what is already there
-                    if (RLVok) lmRunRLV("attachall:" + newoutfit + "=force,detachallthis:" + newoutfit + "=n," +
+                    if (RLVok) lmRunRLV("attachallover:" + newoutfit + "=force,detachallthis:" + newoutfit + "=n," +
                              "detachallthis:" + nudeFolder + "=n");
                     llSleep(1.0);
     
@@ -632,7 +632,7 @@ default {
                     if (RLVok) lmRunRLV("detachall:" + outfitsFolder + "=force");
                     llSleep(1.0);
                     
-                    if (RLVok) lmRunRLV("attachall:" + newoutfit + "=force");
+                    if (RLVok) lmRunRLV("attachallover:" + newoutfit + "=force");
                     
                     llSleep(2.0);
                     
@@ -953,8 +953,8 @@ default {
                 ++dressingFailures <= MAX_DRESS_FAILURES) {
                 llSleep(4.0);
                 if (RLVok) {
-                    if (!canWear || afk || collapsed || wearLock) lmRunRLV("attachallthis:=y,detachallthis:" + outfitsFolder + "=n,attachall:" + xfolder + "=force,attachallthis:=n");
-                    else lmRunRLV("detachallthis:" + outfitsFolder + "=n,attachall:" + xfolder + "=force");
+                    if (!canWear || afk || collapsed || wearLock) lmRunRLV("attachallthis:=y,detachallthis:" + outfitsFolder + "=n,attachallover:" + xfolder + "=force,attachallthis:=n");
+                    else lmRunRLV("detachallthis:" + outfitsFolder + "=n,attachallover:" + xfolder + "=force");
                     rlvRequest("getinvworn:" + xfolder + "=", 2668);
                     candresstimeout++;
                 }

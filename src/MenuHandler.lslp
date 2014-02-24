@@ -135,6 +135,8 @@ default
             
             lmInternalCommand("updateExceptions", "", NULL_KEY);
             
+            doDialogChannel();
+            
             startup = 0;
         }
         else if (code == 135) {
@@ -189,12 +191,10 @@ default
             }
             else if (name == "uniqueID") {
                 uniqueID = (key)value;
-                doDialogChannel();
             }
             else if (name == "dialogChannel") {
                 if (script != "OnlineServices") return;
                 dialogChannel = (integer)value;
-                doDialogChannel();
             }
             else if (name == "timeLeftOnKey") {
                 timeLeftOnKey = (float)value;
@@ -209,18 +209,11 @@ default
             else if (name == "dollType") {
                 dollType = llGetSubString(llToUpper(value), 0, 0) + llGetSubString(llToLower(value), 1, -1);
             }
-            else if ((name == "MistressList") || (name == "blacklist")) {
-                integer i;
-                for (i = 0; i < llGetListLength(split); i++) {
-                    if (llList2String(split, i) == "") split = llDeleteSubList(split, i, i--);
-                }
-                
-                if (name == "MistressList") {
-                    MistressList = split;
-                    if (!startup) lmInternalCommand("updateExceptions", "", NULL_KEY);
-                }
-                else blacklist = split;
+            else if (name == "MistressList") {
+                MistressList = split;
+                if (!startup) lmInternalCommand("updateExceptions", "", NULL_KEY);
             }
+            else if (name == "blacklist") blacklist = split;
         }        
         else if (code == 305) {
             string script = llList2String(split, 0);

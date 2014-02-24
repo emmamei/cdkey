@@ -1,5 +1,6 @@
 #define DEBUG_HANDLER 1
 #include "include/GlobalDefines.lsl"
+#include "include/Json.lsl"
 
 key ncRequest;
 key carrierID = NULL_KEY;
@@ -311,22 +312,21 @@ default {
             debugHandler(sender, level, prefix, msg);
         }
         
-        string type = llList2String(llParseString2List(data, [ "|" ], []), 1);
-        if (type == "MistressList" || type == "carry" || type == "uncarry" || type == "updateExceptions") {
-            // Exempt builtin or user specified controllers from TP restictions
-            list allow = BuiltinControllers + llList2ListStrided(MistressList, 0, -1, 2);
-            // Also exempt the carrier if any provided they are not already exempted as a controller
-            if ((carrierID != NULL_KEY) && (llListFindList(allow, [ (string)carrierID ]) == -1)) allow += carrierID;
-            
-            // Directly dump the list using the static parts of the RLV command as a seperatior no looping
-            lmRunRLVas("Base", "tplure:" + llDumpList2String(allow, "=add,tplure:") + "=add," +
-                               "accepttp:" + llDumpList2String(allow, "=add,accepttp:") + "=add");
-            lmRunRLVas("Base", "sendim:" + llDumpList2String(allow, "=add,sendim:") + "=add," +
-                               "recvim:" + llDumpList2String(allow, "=add,recvim:") + "=add");
-            lmRunRLVas("Base", "recvchat:" + llDumpList2String(allow, "=add,recvchat:") + "=add," +
-                               "recvemote:" + llDumpList2String(allow, "=add,recvemote:") + "=add");
-        
-            // Apply exemptions to base RLV
+        if ((code == 300) || (code == 305)) {
+            string type = llList2String(llParseString2List(data, [ "|" ], []), 1);
+            if (type == "MistressList" || type == "carry" || type == "uncarry" || type == "updateExceptions") {
+                // Exempt builtin or user specified controllers from TP restictions
+                list allow = BuiltinControllers + llList2ListStrided(MistressList, 0, -1, 2);
+                // Also exempt the carrier if any provided they are not already exempted as a controller
+                if ((carrierID != NULL_KEY) && (llListFindList(allow, [ (string)carrierID ]) == -1)) allow += carrierID;
+                
+                integer i;
+                for (i = 0; i < llGetListLength(allow); i++) {
+                    string types = "[\"tplure\",\"accepttp\",\"sendim\",\"recvim\",\"recvchat\",\"recvemote\"]";
+                    integer j;
+                    for (j = 0; j < 6; j++) lmRunRLVas("Core", cdGetValue(types,[j]) + ":" + (string)llList2Key(allow, i) + "=add");
+                }
+            }
         }
     }
     
