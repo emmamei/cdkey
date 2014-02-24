@@ -26,11 +26,6 @@
 #define CHECK "✔"
 #define CROSS "✘"
 
-#define USER_ACCESS (isDoll << 3) | (isCarrier << 2) | (isController << 1)
-#define ACCESS_CONTROLLER 0x4
-#define ACCESS_CARRIER 0x2
-#define ACCESS_DOLL 0x1
-
 // Dress module prefix test defines
 #define isGroupItem(f) (llGetSubString(f,0,0) == "#")
 #define isHiddenItem(f) (llGetSubString(f,0,0) == "~")
@@ -116,8 +111,8 @@
 #define lmSendToAgent(msg, id) llMessageLinked(LINK_THIS, 11, SCRIPT_NAME + "|" + msg, id)
 #define lmSendToController(msg) llMessageLinked(LINK_THIS, 15, SCRIPT_NAME + "|" + msg, NULL_KEY)
 #define lmPrefsComplete(count) llMessageLinked(LINK_THIS, 102, SCRIPT_NAME + "|" + (string)(count), NULL_KEY)
-#define lmInitState(code) if (SCRIPT_NAME != "Start") llSleep(0.25);\
-            llMessageLinked(LINK_THIS, code, SCRIPT_NAME, NULL_KEY)
+#define lmInitState(code) if (SCRIPT_NAME != "Start") llSleep(1.00);\
+llMessageLinked(LINK_THIS, code, SCRIPT_NAME, NULL_KEY)
 #define lmMemReport(delay) llMessageLinked(LINK_THIS, 135, SCRIPT_NAME + "|" + (string)delay, NULL_KEY)
 #define lmMemReply(used,limit,free,available) llMessageLinked(LINK_THIS, 136, SCRIPT_NAME + "|" + (string)used + "|" + (string)limit + "|" + (string)free + "|" + (string)available, NULL_KEY)
 #define lmRating(simrating) llMessageLinked(LINK_THIS, 150, SCRIPT_NAME + "|" + simrating, NULL_KEY)

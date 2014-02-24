@@ -118,7 +118,7 @@ default
         string script = llList2String(split, 0);
         
         if (code == 102) {
-            if (script == "OnlineServices") {
+            if (script == "ServiceReceiver") {
                 dbConfig = 1;
                 
                 doDialogChannel();
@@ -192,7 +192,7 @@ default
                 doDialogChannel();
             }
             else if (name == "dialogChannel") {
-                if (script != "OnlineServices") return;
+                if (script != "ServiceReceiver") return;
                 dialogChannel = (integer)value;
                 doDialogChannel();
             }

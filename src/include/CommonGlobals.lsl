@@ -53,7 +53,13 @@ integer visible             = 1;
 
 integer initState	    = 104;
 integer initCode;
+#ifdef DEVELOPER_MODE
 integer debugLevel          = DEBUG_LEVEL;
+#else
+#ifdef TESTER_MODE
+integer debugLevel          = DEBUG_LEVEL;
+#endif //TESTER_MODE
+#endif //DEVELOPER_MODE
 
 integer dialogChannel;
 integer dialogHandle;

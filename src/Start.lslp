@@ -305,28 +305,21 @@ default {
         
         scaleMem();
 
-        if (code == 104) {
+        if (code >= initState) {
             string script = llList2String(split, 0);
             if (llListFindList(readyScripts, [ script ]) == -1) {
                 readyScripts += script;
                 
-                debugSay(7, "DEBUG-PHASE104", "Reporter '" + script + "'\nStill waiting: " + llList2CSV(notReady()));
+                debugSay(2, "DEBUG-STARTUP", "Reporter '" + script + "'\nStill waiting: " + llList2CSV(notReady()));
                 
                 if (notReady() == []) {
-                    initState++;
-                    initConfiguration();
-                }
-            }
-        }
-        else if (code == 105) {
-            string script = llList2String(split, 0);
-            if (llListFindList(readyScripts, [ script ]) == -1) {
-                readyScripts += script;
-                
-                debugSay(7, "DEBUG-PHASE105", "Reporter '" + script + "'\nStill waiting: " + llList2CSV(notReady()));
-                
-                if (notReady() == []) {
-                    initializationCompleted();
+                    if (initState == 104) {
+                        initState++;
+                        initConfiguration();
+                    }
+                    else {
+                        initializationCompleted();
+                    }
                 }
             }
         }
@@ -637,7 +630,7 @@ default {
             lowScriptMode = 0;
             startup = 1;
             readyScripts = [];
-            lmInitState(initState);
+            lmInitState(initState++);
         }
         else if (t >= 300.0 && ((startup != 0) || (RLVok == -1) || (dialogChannel == 0) || (notReady() != []))) {
             lowScriptMode = 0;

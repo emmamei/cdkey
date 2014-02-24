@@ -547,20 +547,6 @@ default {
                 lmSendConfig("afk", (string)afk);
                 lmSendConfig("autoAFK", (string)autoAFK);
             }
-            
-            else if (cmd == "setWindTimes") {
-                integer i; integer timesCount = llGetListLength(split);
-                
-                windTimesInput = split;
-                
-                for (i = 0; i < timesCount; i++) {
-                    integer value = (integer)llStringTrim(llList2String(split, i), STRING_TRIM);
-                    if ((value > 0) && (llListFindList(windTimes, [ value ]) == -1) && (((float)value * 60.0) <= keyLimit)) windTimes += value;
-                }
-                windTimes = llListSort(windTimes, 1, 1);
-                
-                if (script != "OnlineServices") lmSendConfig("windTimes", llDumpList2String(windTimes, "|"));
-            }
 
             else if (cmd == "wearLock") {
                 if (llList2Integer(split, 0)) lmSendConfig("wearLockExpire", (string)(wearLockExpire = WEAR_LOCK_TIME));
@@ -681,6 +667,23 @@ default {
                     doWind(name, id);
                 }
                 else lmInternalCommand("windMenu", "", id);
+            }
+            else if (code == 501) {
+                integer textboxType = llList2Integer(split, 1);
+                split = llDeleteSubList(split, 0, 1);
+                
+                integer i; integer timesCount = llGetListLength(split);
+                
+                windTimesInput = split;
+                windTimes = [];
+                
+                for (i = 0; i < timesCount; i++) {
+                    integer value = (integer)llStringTrim(llList2String(split, i), STRING_TRIM);
+                    if ((value > 0) && (llListFindList(windTimes, [ value ]) == -1) && (((float)value * 60.0) <= keyLimit)) windTimes += value;
+                }
+                windTimes = llListSort(windTimes, 1, 1);
+                
+                if (script != "ServiceReceiver") lmSendConfig("windTimes", llDumpList2String(windTimes, "|"));
             }
         }
     }

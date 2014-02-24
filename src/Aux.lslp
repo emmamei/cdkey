@@ -61,7 +61,12 @@ doVisibility(integer setVisible) {
 }
 
 default {
+    state_entry() {
+        lmSendConfig("debugLevel", (string)debugLevel);
+    }
+    
     on_rez(integer start) {
+        lmSendConfig("debugLevel", (string)debugLevel);
         rezTime = llGetTime();
         configured = 0;
     }
@@ -88,12 +93,16 @@ default {
             }
         }
         else if ((code == 104) || (code == 105)) {
-            string script = llList2String(split, 0);
             if (script != "Start") return;
 
             if (code == 105) ncRequest = llGetNotecardLine(ncName, ncLine++);          
             
-            if (initState == code) lmInitState(initState++);
+            if (initState >= code) {
+                if (initState == 104) {
+                    lmInitState(initState++);
+                }
+                else lmInitState(initState);
+            }
         }
         else if (code == 110) {
             if (script != "Start") return;
@@ -298,9 +307,7 @@ default {
             else if (textboxType == 2) {
                 lmSendConfig("dollyName", choice);
             }
-            else if (textboxType == 3) {
-                lmInternalCommand("setWindTimes", llDumpList2String(llParseString2List(choice, [ " ", ",", "|" ], []), "|"), id);
-            }
+            // textboxType 3 is wind times moved directly to Main.lsl which handles setting those up anyway.
         }
         else if (code == 700) {
             string sender = llList2String(split, 0);
@@ -375,7 +382,7 @@ default {
                 
                 integer i; string scriptName;
                 string output = "Script Memory Status:";
-                for (i = 0; i < llGetListLength(memData); i += 4) {
+                for (i = 0; i < llGetListLength(memData); i += 5) {
                     scriptName =        llList2String(memData, i);
                     used_memory =       llList2Float(memData, i + 1);
                     memory_limit =      llList2Float(memData, i + 2);

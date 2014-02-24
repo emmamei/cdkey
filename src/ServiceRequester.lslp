@@ -1,156 +1,7 @@
 #include "include/GlobalDefines.lsl"
-#include "include/Secure.lsl"
+#include "include/ServiceIncludes.lsl"
 
-key keyHandler = NULL_KEY;
-key requestName;
-key requestUpdate;
-key requestMistressKey;
-key requestBlacklistKey;
-key requestSendDB;
-key requestLoadDB;
-key requestAddKey;
-list unresolvedMistressNames;
-list unresolvedBlacklistNames;
-list MistressList;
-list blacklist;
-list checkNames;
-list HTTP_OPTIONS = [ HTTP_BODY_MAXLENGTH, 16384, HTTP_VERBOSE_THROTTLE, FALSE, HTTP_METHOD ]; 
-list NO_STORE = [ "keyHandler", "keyHandlerTime" ];
-float keyHandlerTime;
-float lastAvatarCheck;
-float lastKeyPost;
-float lastPost;
-float HTTPdbStart;
-float HTTPthrottle = 20.0;
-float HTTPinterval = 60.0;
-integer broadcastOn = -1873418555;
-integer namepostcount;
-integer expeditePost;
-integer MistressWaiting = -1;
-integer blacklistWaiting = -1;
-integer stdInterval = 6;
-integer curInterval = stdInterval;
-integer lastUpdateCheck;
-integer requestIndex;
-integer nextRetry;
-integer gotURL;
-integer ticks;
-integer offlineMode;
-integer invMarker;
-integer myMod;
-integer lastPostTimestamp;
-integer lastGetTimestamp;
-integer databaseOnline = 1;
-integer databaseReload;
-integer updateCheck = 10800;
-integer useHTTPS = 1;
-
-string serverURL;
-string protocol = "https://";
-string namepost;
-list dbPostParams;
-list updateList;
-
-list serverNames = [
-    "cdkeyserver.secondlife.silkytech.com",
-    "cdkeyserver2.secondlife.silkytech.com"
-];
-
-list oldAvatars;
-
-queForSave(string name, string value) {
-    if (llListFindList(NO_STORE, [ name ]) != -1) return;
-    if (name == "MistressList") name = "MistressListNew";
-    if (name == "blacklist") name = "blacklistNew";
-    integer index = llListFindList(dbPostParams, [ name ]);
-    if (index != -1 && index % 2 == 0) 
-        dbPostParams = llListReplaceList(dbPostParams, [ name, llEscapeURL(value) ], index, index + 1);
-    else dbPostParams += [ name, llEscapeURL(value) ];
-    debugSay(5, "DEBUG-SERVICES", "Queued for save: " + name + "=" + value);
-    //if (llListFindList(SKIP_EXPEDITE, [ name ]) == -1) expeditePost = 1;
-    llSetTimerEvent(5.0);
-}
-
-checkAvatarList() {
-    list newAvatars = llListSort(llGetAgentList(AGENT_LIST_REGION, []), 1, 1);
-    list curAvatars = newAvatars;
-    integer i; integer n = llGetListLength(newAvatars);
-    integer posted; float postAge = llGetTime() - lastKeyPost;
-    float HTTPlimit = HTTPinterval * 15.0;
-    while (i < n) {
-        key uuid;
-        if (llListFindList(oldAvatars, [ (uuid = llList2Key(newAvatars, i)) ]) == -1) {
-            string name = llEscapeURL(llKey2Name(uuid));
-            //if ((name != "") && (uuid != NULL_KEY)) name2keyQueue += [ name, uuid ];
-            if ((name != "") && (uuid != NULL_KEY) && (llSubStringIndex(namepost, "=" + name + "&") == -1)) {
-                integer postlen;
-                string adding = "names[" + (string)namepostcount + "]" + "=" + name + "&" +
-                                "uuids[" + (string)namepostcount + "]" + "=" + llEscapeURL(uuid);
-                if ((postlen = ((llStringLength(namepost + adding) + 1) < 4096)) && (postAge < HTTPlimit)) {
-                    if (namepost != "") namepost += "&";
-                    namepost += adding;
-                    namepostcount++;
-                }
-                else {
-                    debugSay(5, "DEBUG-SERVICES", "name2key: posting " + (string)namepostcount + " keys (" + (string)llStringLength(namepost) + " bytes) interval: " +
-                                formatDuration(llGetTime() - lastKeyPost, 0) + " mins");
-                    while ((requestAddKey = (llHTTPRequest("http://api.silkytech.com/name2key/add", HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE,
-                        "application/x-www-form-urlencoded" ], namepost))) == NULL_KEY) {
-                            llSleep(1.0);
-                    }
-                    lastKeyPost = llGetTime();
-                    lastPost = lastKeyPost;
-                    postAge = llGetTime() - lastKeyPost;
-                    namepost = "names[0]" + "=" + name + "&" +
-                               "uuids[0]" + "=" + llEscapeURL(uuid);
-                    namepostcount = 1;
-                    posted = 1;
-                }
-            }
-            i++;
-        }
-        else {
-            newAvatars = llDeleteSubList(newAvatars, i, i);
-            n--;
-        }
-    }
-    if (namepost != "" && n != 0) debugSay(5, "DEBUG-SERVICES", "Queued post " + (string)namepostcount + " keys (" + (string)llStringLength(namepost) + " bytes) oldest: " +
-                                formatDuration(llGetTime() - lastKeyPost, 0) + " mins");
-    lastAvatarCheck = llGetTime();
-    oldAvatars = curAvatars;
-}
-
-doHTTPpost() {
-    if (offlineMode) {
-        dbPostParams = [];
-        return;
-    }
-    if ((lastPost + HTTPthrottle) < llGetTime()) {
-        if (llGetListLength(dbPostParams) == 0) return;
-        string time = (string)llGetUnixTime();
-        string dbPostBody;
-        updateList = [ ];
-        if (llGetListLength(dbPostParams) != 0) {
-            dbPostParams = llListSort(dbPostParams, 2, 1);
-            integer index; integer i;
-            for (i = 0; i < llGetListLength(dbPostParams); i = i + 2) {
-                dbPostBody += "&" + llList2String(dbPostParams, i) + "=" + llList2String(dbPostParams, i + 1);
-                updateList += llList2String(dbPostParams, i);
-            }
-        }
-
-        while ((requestSendDB = llHTTPRequest(protocol + "api.silkytech.com/httpdb/store?q=" + llSHA1String(dbPostBody + (string)llGetOwner() + time + SALT) +
-            "&t=" + time, HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE, "application/x-www-form-urlencoded" ], dbPostBody)) == NULL_KEY) {
-                llSleep(1.0);
-        }
-    }
-    else {
-        float ThrottleTime = lastPost - llGetTime() + HTTPthrottle;
-        if (!expeditePost) ThrottleTime += HTTPinterval - HTTPthrottle;
-        llSetTimerEvent(ThrottleTime);
-        expeditePost = 0;        
-    }
-}
+key requestID;
 
 default
 {
@@ -205,14 +56,15 @@ default
             }
         }
         if (index != -1) {
-            while((requestAddKey = (llHTTPRequest("http://api.silkytech.com/name2key/add", HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE, 
+            while((requestID = (llHTTPRequest("http://api.silkytech.com/name2key/add", HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE, 
                 "application/x-www-form-urlencoded" ], "name=" + llEscapeURL(llDetectedName(0)) + "&uuid=" + llEscapeURL((string)llDetectedKey(0))))) == NULL_KEY) {
                     llSleep(1.0);
             }
+            lmSendRequestID("AddKey", requestID);
         }
     }
     
-    http_response(key request, integer status, list meta, string body) {        
+/*    http_response(key request, integer status, list meta, string body) {        
         if (request == requestUpdate) {
             if (llGetSubString(body, 0, 21) == "checkversion versionok") {
                 if (llStringLength(body) > 22) updateCheck = (integer)llGetSubString(body, 23, -1);
@@ -393,7 +245,7 @@ default
                 debugSay(debug, "DEBUG-SERVICES-RAW", bodyCut);
             } while (llStringLength(body));
         }
-    }
+    }*/
     
     link_message(integer sender, integer code, string data, key id) {
         list split = llParseStringKeepNulls(data, [ "|" ], []);
@@ -407,9 +259,10 @@ default
             string hashStr = (string)llGetOwner() + time + SALT;
             string requestURI = "https://api.silkytech.com/httpdb/retrieve?q=" + llSHA1String(hashStr) + "&t=" + time + "&s=" + (string)lastGetTimestamp;
             if  (!offlineMode) {
-                while((requestLoadDB = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
+                while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
                     llSleep(1.0);
                 }
+                lmSendRequestID("LoadDB", requestID);
             }
             
             initCode = code;
@@ -434,9 +287,10 @@ default
                     debugSay(6, "DEBUG-SERVICES", "Requesting data from HTTPdb");
                     string hashStr = (string)llGetOwner() + time + SALT;
                     string requestURI = "https://api.silkytech.com/httpdb/retrieve?q=" + llSHA1String(hashStr) + "&t=" + time + "&s=" + (string)lastGetTimestamp;
-                    while((requestLoadDB = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
+                    while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
                         llSleep(1.0);
                     }
+                    lmSendRequestID("LoadDB", requestID);
                 }
                 if (!gotURL && nextRetry < llGetUnixTime()) 
                 while ((requestName = llHTTPRequest(protocol + "api.silkytech.com/objdns/lookup?q=" + llEscapeURL(llList2String(serverNames, requestIndex)), 
@@ -444,7 +298,9 @@ default
                 if (gotURL && (lastUpdateCheck < (llGetUnixTime() - updateCheck))) {
                     lastUpdateCheck = llGetUnixTime();
                     queForSave("lastUpdateCheck", (string)lastUpdateCheck);
-                    while ((requestUpdate = llHTTPRequest(serverURL, HTTP_OPTIONS + [ "POST" ], "checkversion " + (string)PACKAGE_VERNUM)) == NULL_KEY) llSleep(1.0);
+                    while ((requestID = llHTTPRequest(serverURL, HTTP_OPTIONS + [ "POST" ], "checkversion " + (string)PACKAGE_VERNUM)) == NULL_KEY) llSleep(1.0);
+                    lmSendRequestID("Update", requestID);
+                    
                 }
                 if ((keyHandler == NULL_KEY) || (keyHandlerTime < (llGetTime() - 60))) {
                     keyHandler = llGetKey();
@@ -469,7 +325,7 @@ default
                 keyHandlerTime = llGetTime() - (float)(llGetUnixTime() - (integer)value);
             }
             
-            else if (script == llGetScriptName()) return;
+            if ((script == "ServiceReceiver") || (script == SCRIPT_NAME)) return;
             
             else if (name == "offlineMode") {
                 offlineMode = (integer)value;
@@ -489,17 +345,19 @@ default
                 string name = llList2String(split, 0);
                 debugSay(5, "DEBUG-SERVICES", "Looking up name " + name);
                 unresolvedMistressNames += llToLower(name);
-                while((requestMistressKey = llHTTPRequest("http://api.silkytech.com/name2key/lookup?q=" + llEscapeURL(name), HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
+                while((requestID = llHTTPRequest("http://api.silkytech.com/name2key/lookup?q=" + llEscapeURL(name), HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
                     llSleep(1.0);
                 }
+                lmSendRequestID("MistressKey", requestID);
             }
             else if (cmd == "getBlacklistKey") {
                 string name = llList2String(split, 0);
                 debugSay(5, "DEBUG-SERVICES", "Looking up name " + name);
                 unresolvedBlacklistNames += llToLower(name);
-                while((requestBlacklistKey = llHTTPRequest("http://api.silkytech.com/name2key/lookup?q=" + llEscapeURL(name), HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
+                while((requestID = llHTTPRequest("http://api.silkytech.com/name2key/lookup?q=" + llEscapeURL(name), HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
                     llSleep(1.0);
                 }
+                lmSendRequestID("BlacklistKey", requestID);
             }
         }
         else if (code == 500) {
@@ -532,10 +390,11 @@ default
             }
             string namepost = "names[0]" + "=" + name + "&" +
                               "uuids[0]" + "=" + llEscapeURL(uuid);
-            while ((requestAddKey = (llHTTPRequest("http://api.silkytech.com/name2key/add", HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE,
+            while ((requestID = (llHTTPRequest("http://api.silkytech.com/name2key/add", HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE,
                 "application/x-www-form-urlencoded" ], namepost))) == NULL_KEY) {
                     llSleep(1.0);
             }
+            lmSendRequestID("AddKey", requestID);
         }
     }
     
