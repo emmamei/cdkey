@@ -5,6 +5,9 @@
 #include "include/GlobalDefines.lsl"
 #define sendMsg(id,msg) lmSendToAgent(msg, id);
 
+#define YES 1
+#define NO 0
+
 //#define HYPNO_START   // Enable hypno messages on startup
 //
 // This is the initial hypnotic suggestion and RolePlay
@@ -41,16 +44,18 @@ list MistressList;
 list blacklist;
 list recentDilation;
 list windTimes;
-integer quiet;
-integer newAttach = 1;
-integer autoTP;
-integer canFly = 1;
-integer canSit = 1;
-integer canStand = 1;
-integer canDress = 1;
-integer detachable = 1;
-integer busyIsAway;
-integer offlineMode;
+
+integer quiet = NO;
+integer newAttach = YES;
+integer autoTP = NO;
+integer canFly = YES;
+integer canSit = YES;
+integer canStand = YES;
+integer canDress = YES;
+integer detachable = YES;
+integer busyIsAway = NO;
+integer offlineMode = NO;
+
 string barefeet;
 string dollType;
 string userBaseRLVcmd;
@@ -69,6 +74,7 @@ integer RLVok = -1;
 integer databaseOnline;
 
 float keyLimit;
+
 #ifdef SIM_FRIENDLY
 integer afk;
 integer lowScriptMode;
@@ -84,8 +90,8 @@ processConfiguration(string name, list values) {
 
     string value = llList2String(values,0);
     
-    if (value == "yes" || value == "on") value = "1";
-    else if (value == "no" || value == "off") value = "0";
+         if (value == "yes" || value == "on")  value = "1";
+    else if (value == "no"  || value == "off") value = "0";
     
     if (name == "initial time") {
         lmSendConfig("timeLeftOnKey", (string)((float)value * SEC_TO_MIN));
@@ -210,9 +216,9 @@ doneConfiguration(integer read) {
     if (startup == 1 && read) {
         ncPrefsLoadedUUID = llGetInventoryKey(NOTECARD_PREFERENCES);
         lmSendConfig("ncPrefsLoadedUUID", (string)ncPrefsLoadedUUID);
-        #ifdef DEVELOPER_MODE
+#ifdef DEVELOPER_MODE
         sendMsg(dollID, "Preferences read in " + formatFloat(llGetTime() - ncStart, 2) + "s");
-        #endif
+#endif
     }
     if (reset) {
         llSleep(7.5);
@@ -241,9 +247,9 @@ initializationCompleted() {
     if (isAttached) llSetObjectName(dollyName + "'s Key");
 
     string msg = "Initialization completed";
-    #ifdef DEVELOPER_MODE
+#ifdef DEVELOPER_MODE
     msg += " in " + formatFloat(initTimer, 2) + "ms";
-    #endif
+#endif
     msg += " key ready";
     
     sendMsg(dollID, msg);
@@ -443,9 +449,9 @@ default {
                     lmSendConfig("MistressList", llDumpList2String((MistressList = llDeleteSubList(MistressList, index, ++index)), "|"));
                 }
             }
-            #ifdef SIM_FRIENDLY
+#ifdef SIM_FRIENDLY
             else if (cmd == "setAFK") afk = llList2Integer(split, 2);
-            #endif
+#endif
         }
         
         else if (code == 350) {
@@ -508,10 +514,10 @@ default {
     touch_start(integer num) {
         if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
         integer i;
-        #ifdef SIM_FRIENDLY
+#ifdef SIM_FRIENDLY
         if (!llGetScriptState("MenuHandler")) wakeMenu();
         nextLagCheck = llGetTime() + SEC_TO_MIN;
-        #endif
+#endif
     }
     
     on_rez(integer start) {
@@ -520,9 +526,9 @@ default {
         if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
         RLVok = -1;
         startup = 2;
-        #ifdef SIM_FRIENDLY
+#ifdef SIM_FRIENDLY
         wakeMenu();
-        #endif
+#endif
         
         //llTargetOmega(<0,0,0>,0,0);
         
@@ -648,9 +654,9 @@ default {
             lowScriptMode = 0;
             sendMsg(dollID, "Startup failure detected one or more scripts may have crashed, resetting");
 
-            #ifdef DEVELOPER_MODE
+#ifdef DEVELOPER_MODE
             sendMsg(dollID, "The following scripts did not report in state " + (string)initState + ": " + llList2CSV(notReady()));
-            #endif
+#endif
             
             llResetScript();
         }
@@ -663,11 +669,11 @@ default {
                     if (llListFindList([ "Aux", "Avatar", "Dress", "Main", "MenuHandler", "OnlineServices", "StatusRLV", "Transform" ], [ script ]) != -1) {
                         // Core key script appears to have suffered a fatal error try restarting
                         float delay = 30.0;
-                        #ifdef DEVELOPER_MODE
+#ifdef DEVELOPER_MODE
                         delay = delay * 6.0; // Increase delay by a factor of 10 for auto restarts in DEVELOPER_MODE this prevents
                                               // rapid looping from occuring in the event of a developer accidently saving a script that
                                               // fails to compile.
-                        #endif
+#endif
                         
                         llSleep(delay);
                         
