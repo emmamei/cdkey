@@ -1,0 +1,36 @@
+# Suppress public chat messages (0 = no, 1 = yes)
+quiet key = 0
+# How much time does the key start with? (in minutes)
+initial time = 30
+# How many minutes does a wind provide? (in minutes)
+wind time = 30
+# What is the maximum time available on the key? (in minutes)
+max time = 180
+# Does busy mode also set AFK?
+busy is away = 1
+# Is dolly a Helpless Doll? (no TP except for invites from friends)
+helpless dolly = 0
+# Is dolly a Pleasure Doll? (doll can be stripped)
+pleasure doll = 0
+# Can doll be sent a TP by anyone in SL?
+auto tp = 0
+# Is the key detachable?
+detachable = 1
+# Can the dolly be dressed by the public?
+outfitable = 1
+# Is the dolly permitted to fly?
+can fly = 0
+# Is the dolly permitted to sit?
+can sit = 1
+# Is the dolly permitted to stand?
+can stand = 1
+# What type of doll is the dolly?
+doll type = Regular
+# Attach this folder when shoes stripped
+#barefeet path = 
+# Custom RLV commands on startup (separated by commas)
+#user startup rlv = 
+# Custom RLV commands on collapse (separated by commas)
+#user collapse rlv = touchall=n,fartouch=n
+# Doll's Controller (or Mistress) UUID
+#controller = 
