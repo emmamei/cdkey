@@ -108,11 +108,16 @@ processConfiguration(string name, list values) {
             lmSendConfig("pronounHerDoll", (pronounHerDoll = "His"));
             lmSendConfig("pronounSheDoll", (pronounSheDoll = "He"));
             return;
+        } else {
+            if (value == "sissy") {
+                lmSendConfig("dollGender", (dollGender = "Sissy"));
+            } else {
+                lmSendConfig("dollGender", (dollGender = "Female"));
+            }
+
+            lmSendConfig("pronounHerDoll", (pronounHerDoll = "Her"));
+            lmSendConfig("pronounSheDoll", (pronounSheDoll = "She"));
         }
-        if (value == "sissy") lmSendConfig("dollGender", (dollGender = "Sissy"));
-        else lmSendConfig("dollGender", (dollGender = "Female"));
-        lmSendConfig("pronounHerDoll", (pronounHerDoll = "Her"));
-        lmSendConfig("pronounSheDoll", (pronounSheDoll = "She"));
     }
     else if (name == "user startup rlv") {
         lmSendConfig("userBaseRLVcmd", value);
