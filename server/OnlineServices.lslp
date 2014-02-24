@@ -1,5 +1,13 @@
+// OnlineServices.lsl
+//
+// vim: sw=4 et filetype=lsl
+
 #include "include/GlobalDefines.lsl"
 #include "include/Secure.lsl"
+
+#define YES 1
+#define NO 0
+#define NOT_FOUND -1
 
 key keyHandler = NULL_KEY;
 key requestName;
@@ -9,6 +17,7 @@ key requestBlacklistKey;
 key requestSendDB;
 key requestLoadDB;
 key requestAddKey;
+
 list unresolvedMistressNames;
 list unresolvedBlacklistNames;
 list MistressList;
@@ -16,6 +25,7 @@ list blacklist;
 list checkNames;
 list HTTP_OPTIONS = [ HTTP_BODY_MAXLENGTH, 16384, HTTP_VERBOSE_THROTTLE, FALSE, HTTP_METHOD ]; 
 list NO_STORE = [ "keyHandler", "keyHandlerTime" ];
+
 float keyHandlerTime;
 float lastAvatarCheck;
 float lastKeyPost;
@@ -23,6 +33,7 @@ float lastPost;
 float HTTPdbStart;
 float HTTPthrottle = 20.0;
 float HTTPinterval = 60.0;
+
 integer broadcastOn = -1873418555;
 integer namepostcount;
 integer expeditePost;
@@ -40,10 +51,10 @@ integer invMarker;
 integer myMod;
 integer lastPostTimestamp;
 integer lastGetTimestamp;
-integer databaseOnline = 1;
+integer databaseOnline = YES;
 integer databaseReload;
 integer updateCheck = 10800;
-integer useHTTPS = 1;
+integer useHTTPS = YES;
 
 string serverURL;
 string protocol = "https://";
@@ -59,15 +70,21 @@ list serverNames = [
 list oldAvatars;
 
 queForSave(string name, string value) {
-    if (llListFindList(NO_STORE, [ name ]) != -1) return;
+
+    if (llListFindList(NO_STORE, [ name ]) != NOT_FOUND) return;
+
     if (name == "MistressList") name = "MistressListNew";
     if (name == "blacklist") name = "blacklistNew";
+
     integer index = llListFindList(dbPostParams, [ name ]);
-    if (index != -1 && index % 2 == 0) 
+
+    if (index != NOT_FOUND && index % 2 == 0) 
         dbPostParams = llListReplaceList(dbPostParams, [ name, llEscapeURL(value) ], index, index + 1);
     else dbPostParams += [ name, llEscapeURL(value) ];
+
     debugSay(5, "DEBUG-SERVICES", "Queued for save: " + name + "=" + value);
-    //if (llListFindList(SKIP_EXPEDITE, [ name ]) == -1) expeditePost = 1;
+
+    //if (llListFindList(SKIP_EXPEDITE, [ name ]) == NOT_FOUND) expeditePost = 1;
     llSetTimerEvent(5.0);
 }
 
@@ -79,7 +96,7 @@ checkAvatarList() {
     float HTTPlimit = HTTPinterval * 15.0;
     while (i < n) {
         key uuid;
-        if (llListFindList(oldAvatars, [ (uuid = llList2Key(newAvatars, i)) ]) == -1) {
+        if (llListFindList(oldAvatars, [ (uuid = llList2Key(newAvatars, i)) ]) == NOT_FOUND) {
             string name = llEscapeURL(llKey2Name(uuid));
             //if ((name != "") && (uuid != NULL_KEY)) name2keyQueue += [ name, uuid ];
             if ((name != "") && (uuid != NULL_KEY) && (llSubStringIndex(namepost, "=" + name + "&") == -1)) {
@@ -191,20 +208,20 @@ default
     
     touch_start(integer num) {
         integer index = llListFindList(unresolvedBlacklistNames, [ llToLower(llDetectedName(0)) ]);
-        if (index != -1) {
+        if (index != NOT_FOUND) {
             llOwnerSay("Identified Blacklist user " + llDetectedName(0) + " on key touch");
             unresolvedBlacklistNames = llDeleteSubList(unresolvedBlacklistNames, index, index);
             lmInternalCommand("addRemBlacklist", (string)llDetectedKey(0) + "|" + llDetectedName(0), NULL_KEY);
         }
         else {
             index = llListFindList(unresolvedMistressNames, [ llToLower(llDetectedName(0)) ]);
-            if (index != -1) {
+            if (index != NOT_FOUND) {
                 llOwnerSay("Identified Controller " + llDetectedName(0) + " on key touch");
                 unresolvedMistressNames = llDeleteSubList(unresolvedMistressNames, index, index);
                 lmInternalCommand("addMistress", (string)llDetectedKey(0) + "|" + llDetectedName(0), NULL_KEY);
             }
         }
-        if (index != -1) {
+        if (index != NOT_FOUND) {
             while((requestAddKey = (llHTTPRequest("http://api.silkytech.com/name2key/add", HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE, 
                 "application/x-www-form-urlencoded" ], "name=" + llEscapeURL(llDetectedName(0)) + "&uuid=" + llEscapeURL((string)llDetectedKey(0))))) == NULL_KEY) {
                     llSleep(1.0);
@@ -515,13 +532,13 @@ default
     
     dataserver(key request, string data) {
         integer index = llListFindList(checkNames, [ request ]);
-        if (index != -1) {
+        if (index != NOT_FOUND) {
             string uuid = llList2Key(checkNames, index + 1);
             string name = data;
             
             checkNames = llDeleteSubList(checkNames, index, index + 1);
             index = llListFindList(unresolvedMistressNames, [ llToLower(data) ]);
-            if (index != -1) {
+            if (index != NOT_FOUND) {
                 unresolvedMistressNames = llDeleteSubList(unresolvedMistressNames, index, index);
                 lmInternalCommand("addMistress", uuid + "|" + name, NULL_KEY);
             }
