@@ -365,22 +365,25 @@ default {
                 float memory_limit = (float)llGetMemoryLimit();
                 float free_memory = (float)llGetFreeMemory();
                 float used_memory = (float)llGetUsedMemory();
+                float available_memory = free_memory + (65536 - memory_limit);
                 if (((used_memory + free_memory) > (memory_limit * 1.05)) && (memory_limit <= 16384)) { // LSL2 compiled script
                    memory_limit = 16384;
                    used_memory = 16384 - free_memory;
+                   available_memory = free_memory;
                 }
-                memData = llListSort(memData + [ SCRIPT_NAME, (string)used_memory, (string)memory_limit, (string)free_memory ], 4, 1);
+                memData = llListSort(memData + [ SCRIPT_NAME, (string)used_memory, (string)memory_limit, (string)free_memory, (string)available_memory ], 5, 1);
                 
                 integer i; string scriptName;
                 string output = "Script Memory Status:";
                 for (i = 0; i < llGetListLength(memData); i += 4) {
-                    scriptName =     llList2String(memData, i);
-                    used_memory =    llList2Float(memData, i + 1);
-                    memory_limit =   llList2Float(memData, i + 2);
-                    free_memory =    llList2Float(memData, i + 3);
+                    scriptName =        llList2String(memData, i);
+                    used_memory =       llList2Float(memData, i + 1);
+                    memory_limit =      llList2Float(memData, i + 2);
+                    free_memory =       llList2Float(memData, i + 3);
+                    available_memory =  llList2Float(memData, i + 4);
                     
                     output += "\n" + scriptName + ":\t" + formatFloat(used_memory / 1024.0, 2) + "/" + (string)llRound(memory_limit / 1024.0) + "kB (" +
-                              formatFloat(free_memory / 1024.0, 2) + "kB free)";
+                              formatFloat(free_memory / 1024.0, 2) + "kB free, " + formatFloat(available_memory / 1024.0, 2) + "kB available)";
                 }
                 
                 llOwnerSay(output);

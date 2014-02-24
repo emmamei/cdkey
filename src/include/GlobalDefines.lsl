@@ -119,7 +119,7 @@
 #define lmInitState(code) if (SCRIPT_NAME != "Start") llSleep(0.25);\
             llMessageLinked(LINK_THIS, code, SCRIPT_NAME, NULL_KEY)
 #define lmMemReport(delay) llMessageLinked(LINK_THIS, 135, SCRIPT_NAME + "|" + (string)delay, NULL_KEY)
-#define lmMemReply(used,limit,free) llMessageLinked(LINK_THIS, 136, SCRIPT_NAME + "|" + (string)used + "|" + (string)limit + "|" + (string)free, NULL_KEY)
+#define lmMemReply(used,limit,free,available) llMessageLinked(LINK_THIS, 136, SCRIPT_NAME + "|" + (string)used + "|" + (string)limit + "|" + (string)free + "|" + (string)available, NULL_KEY)
 #define lmRating(simrating) llMessageLinked(LINK_THIS, 150, SCRIPT_NAME + "|" + simrating, NULL_KEY)
 #define lmSendConfig(name, value) llMessageLinked(LINK_THIS, 300, SCRIPT_NAME + "|" + name + "|" + value, NULL_KEY)
 #define lmUpdateStatistic(name, value) llMessageLinked(LINK_THIS, 399, SCRIPT_NAME + "|" + name + "|" + value, NULL_KEY)

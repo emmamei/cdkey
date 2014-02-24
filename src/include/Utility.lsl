@@ -30,11 +30,13 @@ memReport(float delay) {
     float memory_limit = (float)llGetMemoryLimit();
     float free_memory = (float)llGetFreeMemory();
     float used_memory = (float)llGetUsedMemory();
+    float max_memory = free_memory + (65536 - memory_limit);
     if (((used_memory + free_memory) > (memory_limit * 1.05)) && (memory_limit <= 16384)) { // LSL2 compiled script
        memory_limit = 16384;
        used_memory = 16384 - free_memory;
+       max_memory = free_memory;
     }
-    lmMemReply(used_memory, memory_limit, free_memory);
+    lmMemReply(used_memory, memory_limit, free_memory, max_memory);
 }
 
 #ifdef DEVELOPER_MODE
