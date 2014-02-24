@@ -111,7 +111,7 @@
 #define lmSendToAgent(msg, id) llMessageLinked(LINK_THIS, 11, SCRIPT_NAME + "|" + msg, id)
 #define lmSendToController(msg) llMessageLinked(LINK_THIS, 15, SCRIPT_NAME + "|" + msg, NULL_KEY)
 #define lmPrefsComplete(count) llMessageLinked(LINK_THIS, 102, SCRIPT_NAME + "|" + (string)(count), NULL_KEY)
-#define lmInitState(code) if (SCRIPT_NAME != "Start") llSleep(1.00);\
+#define lmInitState(code) if (SCRIPT_NAME != "Start") llSleep(0.25);\
 llMessageLinked(LINK_THIS, code, SCRIPT_NAME, NULL_KEY)
 #define lmMemReport(delay) llMessageLinked(LINK_THIS, 135, SCRIPT_NAME + "|" + (string)delay, NULL_KEY)
 #define lmMemReply(used,limit,free,available) llMessageLinked(LINK_THIS, 136, SCRIPT_NAME + "|" + (string)used + "|" + (string)limit + "|" + (string)free + "|" + (string)available, NULL_KEY)

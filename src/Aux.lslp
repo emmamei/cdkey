@@ -94,8 +94,6 @@ default {
         }
         else if ((code == 104) || (code == 105)) {
             if (script != "Start") return;
-
-            if (code == 105) ncRequest = llGetNotecardLine(ncName, ncLine++);          
             
             if (initState >= code) {
                 if (initState == 104) {
@@ -125,6 +123,8 @@ default {
         }
         else if (code == 136) {
             memData += split;
+            
+            llSetTimerEvent(5.0);
         }
         else if (code == 300) {
             string name = llList2String(split, 1);
@@ -346,7 +346,8 @@ default {
                 memCollecting = 1;
                 memData = [];
                 
-                lmMemReport(0.0);
+                lmMemReport(1.0);
+                llSleep(0.75);
                 
                 llSetTimerEvent(5.0);
             }
