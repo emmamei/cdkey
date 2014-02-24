@@ -25,10 +25,10 @@
 // Key is first used.
 //
 // As of 30 October 2013, this script is unused.
- 
+
 float delayTime = 15.0; // in seconds
 float nextIntro;
-float initTimer;  
+float initTimer;
 float nextLagCheck;
 
 key dollID = NULL_KEY;
@@ -98,10 +98,10 @@ processConfiguration(string name, list values) {
     // Assign values to program variables
 
     string value = llList2String(values,0);
-    
+
          if (value == "yes" || value == "on")  value = "1";
     else if (value == "no"  || value == "off") value = "0";
-    
+
     if (name == "initial time") {
         lmSendConfig("timeLeftOnKey", (string)((float)value * SEC_TO_MIN));
     }
@@ -187,7 +187,7 @@ initConfiguration() {
         if (databaseOnline && (offlineMode || (ncPrefsLoadedUUID == NULL_KEY) || (ncPrefsLoadedUUID != llGetInventoryKey(NOTECARD_PREFERENCES)))) {
             sendMsg(dollID, "Loading preferences notecard");
             ncStart = llGetTime();
-            
+
             // Start reading from first line (which is 0)
             ncLine = 0;
             ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ncLine);
@@ -228,7 +228,7 @@ initializationCompleted() {
         llSay(0, llGetDisplayName(llGetOwner()) + " is now a dolly - anyone may play with their Key.");
 
     initTimer = llGetTime() * 1000;
-    
+
     if (dollyName == "") {
         string name = dollName;
         integer space = llSubStringIndex(name, " ");
@@ -242,11 +242,11 @@ initializationCompleted() {
     msg += " in " + formatFloat(initTimer, 2) + "ms";
 #endif
     msg += " key ready";
-    
+
     sendMsg(dollID, msg);
-    
+
     startup = 0;
-    
+
     lmInitState(102);
     lmInitState(110);
     llSetTimerEvent(1.0);
@@ -284,9 +284,9 @@ sleepMenu() {
 do_Restart() {
     integer loop; string me = cdMyScriptName();
     reset = 0;
-    
+
     llOwnerSay("Resetting scripts");
-        
+
     for (loop = 0; loop < llGetInventoryNumber(INVENTORY_SCRIPT); loop++) {
         string script = llGetInventoryName(INVENTORY_SCRIPT, loop);
         knownScripts += script;
@@ -295,25 +295,25 @@ do_Restart() {
             llResetOtherScript(script);
         }
     }
-    
+
     reset = 0;
-    
+
     llSetTimerEvent(0.1);
 }
 
 default {
     link_message(integer source, integer code, string data, key id) {
         list split = llParseStringKeepNulls(data, [ "|" ], []);
-        
+
         scaleMem();
 
         if (code == 104) {
             string script = llList2String(split, 0);
             if (llListFindList(readyScripts, [ script ]) == -1) {
                 readyScripts += script;
-                
+
                 debugSay(7, "DEBUG-PHASE104", "Reporter '" + script + "'\nStill waiting: " + llList2CSV(notReady()));
-                
+
                 if (notReady() == []) {
                     initState++;
                     initConfiguration();
@@ -324,9 +324,9 @@ default {
             string script = llList2String(split, 0);
             if (llListFindList(readyScripts, [ script ]) == -1) {
                 readyScripts += script;
-                
+
                 debugSay(7, "DEBUG-PHASE105", "Reporter '" + script + "'\nStill waiting: " + llList2CSV(notReady()));
-                
+
                 if (notReady() == []) {
                     initializationCompleted();
                 }
@@ -341,9 +341,9 @@ default {
             string script = llList2String(split, 0);
             string name = llList2String(split, 1);
             string value = llList2String(split, 2);
-            
+
             //debugSay(5, "From " + script + ": " + name + "=" + value);
-            
+
                  if (name == "timeLeftOnKey")            timeLeftOnKey = (float)value;
             else if (name == "ncPrefsLoadedUUID")    ncPrefsLoadedUUID = (key)value;
             else if (name == "offlineMode")                offlineMode = (integer)value;
@@ -401,19 +401,19 @@ default {
 //          else if (name == "signOn")                       signOn = (integer)value;
 //          else if (name == "takeoverAllowed")     takeoverAllowed = (integer)value;
         }
-        
+
         else if (code == 305) {
             string script = llList2String(split, 0);
             string cmd = llList2String(split, 1);
 
             split = llList2List(split, 2, -1);
-            
+
             if (cmd == "addRemBlacklist") {
                 string uuid = llList2String(split, 0);
                 string name = llList2String(split, 1);
-                
+
                 integer index = llListFindList(blacklist, [ uuid ]);
-                
+
                 if (index == -1) {
                     llOwnerSay("Adding " + name + " to blacklist");
                     if ((llGetListLength(blacklist) % 2) == 1) blacklist = llDeleteSubList(blacklist, 0, 0);
@@ -428,9 +428,9 @@ default {
             else if ((cmd == "addMistress") || (cmd == "remMistress")) {
                 string uuid = llList2String(split, 0);
                 string name = llList2String(split, 1);
-                
+
                 integer index = llListFindList(MistressList, [ uuid ]);
-                
+
                 if  ((cmd == "addMistress") && (index == -1)) {
                     if ((llGetListLength(MistressList) % 2) == 1) MistressList = llDeleteSubList(MistressList, 0, 0);
                     lmSendConfig("MistressList", llDumpList2String((MistressList = llListSort(MistressList + [ uuid, name ], 2, 1)), "|"));
@@ -444,26 +444,26 @@ default {
             else if (cmd == "setAFK") afk = llList2Integer(split, 2);
 #endif
         }
-        
+
         else if (code == 350) {
             string script = llList2String(split, 0);
             RLVok = llList2Integer(split, 1);
             rlvWait = 0;
-            
+
             if (!newAttach && isAttached) {
                 string msg = dollName + " has logged in with";
                 if (!RLVok) msg += "out";
                 msg += " RLV at " + wwGetSLUrl();
                 lmSendToController(msg);
             }
-            
+
             newAttach = 0;
         }
         else if (code == 500) {
             string script = llList2String(split, 0);
             string selection = llList2String(split, 1);
             string name = llList2String(split, 2);
-            
+
             if (selection == "Reset Scripts") {
                 if (isController) llResetScript();
                 else if (id == dollID) {
@@ -475,30 +475,30 @@ default {
                     else llResetScript();
                 }
             }
-            
+
             nextLagCheck = llGetTime() + SEC_TO_MIN;
         }
 //      else if (code == 999 && reset == 1) {
 //          llResetScript();
 //      }
     }
-    
+
     state_entry() {
         rlvWait = 1;
         dollID = llGetOwner();
         dollName = llGetDisplayName(dollID);
-        
+
         //llTargetOmega(<0,0,0>,0,0);
         llSetObjectName(PACKAGE_STRING);
-        
+
         if (lastAttachPoint = llGetAttached()) lastAttachAvatar = llGetOwner();
         else lastAttachAvatar = NULL_KEY;
-        
+
         reset = 2;
         if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
         else do_Restart();
     }
-    
+
     //----------------------------------------
     // TOUCHED
     //----------------------------------------
@@ -510,7 +510,7 @@ default {
         nextLagCheck = llGetTime() + SEC_TO_MIN;
 #endif
     }
-    
+
     on_rez(integer start) {
         dollID = llGetOwner();
         databaseOnline = 0;
@@ -520,26 +520,26 @@ default {
 #ifdef SIM_FRIENDLY
         wakeMenu();
 #endif
-        
+
         //llTargetOmega(<0,0,0>,0,0);
-        
+
         llResetTime();
         string me = cdMyScriptName();
         integer loop; string script;
-        
+
         sendMsg(dollID, "Reattached, Initializing");
         knownScripts = [];
-        
+
         for (loop = 0; loop < llGetInventoryNumber(INVENTORY_SCRIPT); loop++) {
             script = llGetInventoryName(INVENTORY_SCRIPT, loop);
             if (script != me) knownScripts += script;
         }
-        
+
         readyScripts = [];
         llSleep(0.5);
         lmInitState(initState = 105);
     }
-    
+
     attach(key id) {
         if (id == NULL_KEY) {
             llMessageLinked(LINK_SET, 106,  SCRIPT_NAME + "|" + "detached" + "|" + (string)lastAttachPoint, lastAttachAvatar);
@@ -547,28 +547,28 @@ default {
                 llOwnerSay("The key is wrenched from your back, and you double over at the " +
                            "unexpected pain as the tendrils are ripped out. You feel an emptiness, " +
                            "as if some beautiful presence has been removed.");
-            //}          
+            //}
         } else {
             llMessageLinked(LINK_SET, 106, SCRIPT_NAME + "|" + "attached" + "|" + (string)llGetAttached(), id);
-            
+
             if (llGetPermissionsKey() == llGetOwner() && (llGetPermissions() & PERMISSION_TAKE_CONTROLS) != 0) llTakeControls(CONTROL_MOVE, 1, 1);
             else llRequestPermissions(dollID, PERMISSION_MASK);
-            
+
             /*if (!isAttached) {
                 llOwnerSay("Your key stubbornly refuses to attach itself, and you " +
                            "belatedly realize that it must be attached to your spine.");
                 llOwnerSay("@clear,detachme=force");
-                
+
                 llSleep(2.0);
                 llDetachFromAvatar();
             }*/
             if (lastAttachAvatar == NULL_KEY) newAttach = 1;
         }
-        
+
         lastAttachPoint = llGetAttached();
         lastAttachAvatar = id;
     }
-    
+
     dataserver(key query_id, string data) {
         if (query_id == ncPrefsKey) {
             if (data == EOF) {
@@ -583,14 +583,14 @@ default {
                     value = llStringTrim(value, STRING_TRIM);
                     list split = llParseStringKeepNulls(value, [ "|" ], []);
                     if (name == "windTimes") split = llParseString2List(value, ["|",","," "], []); // Accept pipe (|), space ( ) or comma (,) as seperators
-                    
+
                     processConfiguration(name, split);
                 }
                 ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ++ncLine);
             }
         }
     }
-    
+
     changed(integer change) {
         if (change & CHANGED_OWNER) {
             if (llGetInventoryType(NOTECARD_PREFERENCES) != INVENTORY_NONE) {
@@ -598,42 +598,42 @@ default {
                 llOwnerSay("Look at PreferencesExample to see how to make yours.");
                 llRemoveInventory(NOTECARD_PREFERENCES);
             }
-            
+
             llSleep(5.0);
-            
+
             llResetScript();
         }
         if (change & CHANGED_INVENTORY) {
             llOwnerSay("Inventory modified restarting in 30 seconds.");
-            
+
             llSleep(30.0);
-            
+
             if (llGetInventoryType(NOTECARD_PREFERENCES) == INVENTORY_NOTECARD) {
                 key ncKey = llGetInventoryKey(NOTECARD_PREFERENCES);
                 if (ncPrefsLoadedUUID != NULL_KEY && ncKey != NULL_KEY && ncKey != ncPrefsLoadedUUID) {
                     databaseOnline = 0;
                     reset = 1;
-                    
+
                     sendMsg(dollID, "Loading preferences notecard");
                     ncStart = llGetTime();
-                    
+
                     // Start reading from first line (which is 0)
                     ncLine = 0;
                     ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ncLine);
-                    
+
                     return;
                 }
             }
-            
+
             llResetScript();
         }
     }
-    
+
     timer() {
         float t = llGetTime();
         if (t >= 300.0) llSetTimerEvent(0.0);
         else llSetTimerEvent(10.0);
-        
+
         if (initState == 104) {
             llOwnerSay("Starting initialization");
             lowScriptMode = 0;
@@ -648,14 +648,14 @@ default {
 #ifdef DEVELOPER_MODE
             sendMsg(dollID, "The following scripts did not report in state " + (string)initState + ": " + llList2CSV(notReady()));
 #endif
-            
+
             llResetScript();
         }
         else {
             integer i; integer n = llGetInventoryNumber(10);
             for (i = 0; i < n; i++) {
                 string script = llGetInventoryName(10, i);
-                
+
                 if (!llGetScriptState(script)) {
                     if (llListFindList([ "Aux", "Avatar", "Dress", "Main", "MenuHandler", "OnlineServices", "StatusRLV", "Transform" ], [ script ]) != -1) {
                         // Core key script appears to have suffered a fatal error try restarting
@@ -665,19 +665,19 @@ default {
                                               // rapid looping from occuring in the event of a developer accidently saving a script that
                                               // fails to compile.
 #endif
-                        
+
                         llSleep(delay);
-                        
+
                         cdRunScript(script);
                         llResetScript();
                     }
                 }
             }
-            
+
             llSetTimerEvent(90.0);
         }
     }
-    
+
     run_time_permissions(integer perm) {
         if (perm & PERMISSION_TAKE_CONTROLS) {
             llTakeControls(CONTROL_MOVE, 1, 1);
