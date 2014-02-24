@@ -2,6 +2,8 @@
 //
 // DATE: 24 February 2014
 //
+// vim: sw=4 et filetype=lsl
+//
 #include "include/GlobalDefines.lsl"
 #define sendMsg(id,msg) lmSendToAgent(msg, id);
 
