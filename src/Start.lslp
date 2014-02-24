@@ -1,12 +1,19 @@
 // Start.lsl
 //
-// DATE: 18 December 2012
+// DATE: 24 February 2014
 //
 #include "include/GlobalDefines.lsl"
 #define sendMsg(id,msg) lmSendToAgent(msg, id);
 
+#define RUNNING 1
+#define NOT_RUNNING 0
 #define YES 1
 #define NO 0
+#define NOT_FOUND -1
+#define UNSET -1
+#define cdMyScriptName() llGetScriptName()
+#define cdRunScript(a) llSetScriptState(a, RUNNING);
+#define cdStopScript(a) llSetScriptState(a, NOT_RUNNING);
 
 //#define HYPNO_START   // Enable hypno messages on startup
 //
@@ -31,7 +38,7 @@ string dollyName;
 key ncPrefsKey;
 key ncPrefsLoadedUUID = NULL_KEY;
 key ncIntroKey;
-float timeLeftOnKey = -1;
+float timeLeftOnKey = UNSET;
 integer ncLine;
 
 float ncStart;
@@ -70,7 +77,7 @@ integer introLine;
 integer introLines;
 integer reset;
 integer rlvWait;
-integer RLVok = -1;
+integer RLVok = UNSET;
 integer databaseOnline;
 
 float keyLimit;
@@ -110,7 +117,7 @@ processConfiguration(string name, list values) {
     }
     else if (name == "doll gender") {
         if (value == "male") {
-            lmSendConfig("dollGender", (dollGender = "Male"));
+            lmSendConfig("dollGender",     (dollGender     = "Male"));
             lmSendConfig("pronounHerDoll", (pronounHerDoll = "His"));
             lmSendConfig("pronounSheDoll", (pronounSheDoll = "He"));
             return;
@@ -125,36 +132,18 @@ processConfiguration(string name, list values) {
             lmSendConfig("pronounSheDoll", (pronounSheDoll = "She"));
         }
     }
-    else if (name == "user startup rlv") {
-        lmSendConfig("userBaseRLVcmd", value);
-    }
-    else if (name == "user collapse rlv") {
-        lmSendConfig("userCollapseRLVcmd", value);
-    }
-    else if (name == "helpless dolly") {
-        lmSendConfig("helpless", value);
-    }
-    else if (name == "auto tp") {
-        lmSendConfig("autoTP", value);
-    }
-    else if (name == "pleasure doll") {
-        lmSendConfig("pleasureDoll", value);
-    }
-    else if (name == "detachable") {
-        lmSendConfig("detachable", value);
-    }
-    else if (name == "outfitable") {
-        lmSendConfig("canDress", value);
-    }
-    else if (name == "can fly") {
-        lmSendConfig("canFly", value);
-    }
-    else if (name == "can sit") {
-        lmSendConfig("canSit", value);
-    }
-    else if (name == "can stand") {
-        lmSendConfig("canStand", value);
-    }
+
+    else if (name == "user startup rlv")  { lmSendConfig("userBaseRLVcmd",     value); }
+    else if (name == "user collapse rlv") { lmSendConfig("userCollapseRLVcmd", value); }
+    else if (name == "helpless dolly")    { lmSendConfig("helpless",           value); }
+    else if (name == "auto tp")           { lmSendConfig("autoTP",             value); }
+    else if (name == "pleasure doll")     { lmSendConfig("pleasureDoll",       value); }
+    else if (name == "detachable")        { lmSendConfig("detachable",         value); }
+    else if (name == "outfitable")        { lmSendConfig("canDress",           value); }
+    else if (name == "can fly")           { lmSendConfig("canFly",             value); }
+    else if (name == "can sit")           { lmSendConfig("canSit",             value); }
+    else if (name == "can stand")         { lmSendConfig("canStand",           value); }
+
     else if (name == "busy is away") {
         if (busyIsAway != (integer)value) lmSendConfig("busyIsAway", value);
     }
@@ -163,11 +152,11 @@ processConfiguration(string name, list values) {
         if (quiet != (integer)value) lmSendConfig("quiet", value);
     }
     else if (name == "blacklist") {
-        if (llListFindList(blacklist, [ value ]) == -1)
+        if (llListFindList(blacklist, [ value ]) == NOT_FOUND)
             lmSendConfig("blacklist", llDumpList2String((blacklist = llListSort(blacklist + [ value, llRequestAgentData((key)value, DATA_NAME) ], 2, 1)), "|"));
     }
     else if (name == "controller") {
-        if (llListFindList(MistressList, [ value ]) == -1)
+        if (llListFindList(MistressList, [ value ]) == NOT_FOUND)
             lmSendConfig("MistressList", llDumpList2String((MistressList = llListSort(MistressList + [ value, llRequestAgentData((key)value, DATA_NAME) ], 2, 1)), "|"));
     }
     else if (name == "blacklist name") {
@@ -228,7 +217,7 @@ doneConfiguration(integer read) {
     readyScripts = [];
     llSleep(0.5);
     lmInitState(initState);
-    llMessageLinked(LINK_THIS, 102, llGetScriptName(), NULL_KEY);
+    llMessageLinked(LINK_THIS, 102, cdMyScriptName(), NULL_KEY);
     startup = 2;
 }
 
@@ -272,26 +261,26 @@ list notReady() {
 
 #ifdef SIM_FRIENDLY
 wakeMenu() {
-    #ifdef DEVELOPER_MODE
+#ifdef DEVELOPER_MODE
     llOwnerSay("Waking menu scripts");
-    #endif
-    llSetScriptState("MenuHandler", 1);
-    llSetScriptState("Transform", 1);
-    llSetScriptState("Dress", 1);
+#endif
+    cdRunScript("MenuHandler");
+    cdRunScript("Transform");
+    cdRunScript("Dress");
 }
 
 sleepMenu() {
-    #ifdef DEVELOPER_MODE
+#ifdef DEVELOPER_MODE
     llOwnerSay("Sleeping menu scripts");
-    #endif
-    llSetScriptState("MenuHandler", 0);
-    llSetScriptState("Transform", 0);
-    llSetScriptState("Dress", 0);
+#endif
+    cdStopScript("MenuHandler");
+    cdStopScript("Transform");
+    cdStopScript("Dress");
 }
 #endif
 
 do_Restart() {
-    integer loop; string me = llGetScriptName();
+    integer loop; string me = cdMyScriptName();
     reset = 0;
     
     llOwnerSay("Resetting scripts");
@@ -300,7 +289,7 @@ do_Restart() {
         string script = llGetInventoryName(INVENTORY_SCRIPT, loop);
         knownScripts += script;
         if (script != me) {
-            llSetScriptState(script, 1);
+            cdRunScript(script);
             llResetOtherScript(script);
         }
     }
@@ -342,7 +331,7 @@ default {
             }
         }
         else if (code == 135) {
-            if (llList2String(split, 0) == llGetScriptName()) return;
+            if (llList2String(split, 0) == cdMyScriptName()) return;
             float delay = llList2Float(split, 1);
             memReport(delay);
         }
@@ -353,9 +342,7 @@ default {
             
             //debugSay(5, "From " + script + ": " + name + "=" + value);
             
-            if (name == "timeLeftOnKey") {
-                timeLeftOnKey = (float)value;
-            }
+                 if (name == "timeLeftOnKey")            timeLeftOnKey = (float)value;
             else if (name == "ncPrefsLoadedUUID")    ncPrefsLoadedUUID = (key)value;
             else if (name == "offlineMode")                offlineMode = (integer)value;
             else if (name == "databaseOnline")          databaseOnline = (integer)value;
@@ -382,6 +369,7 @@ default {
             else if (name == "dollType")                      dollType = value;
             else if (name == "MistressList")              MistressList = llListSort(llList2List(split, 2, -1), 2, 1);
             else if (name == "blacklist")                    blacklist = llListSort(llList2List(split, 2, -1), 2, 1);
+
             else if (name == "dollyName") {
                 if (dollyName == "") {
                     string name = dollName;
@@ -391,30 +379,31 @@ default {
                 }
                 if (isAttached) llSetObjectName(dollyName + "'s Key");
             }
-/*                 if (name == "afk")                           afk = (integer)value;
-            else if (name == "autoTP")                       autoTP = (integer)value;
-            else if (name == "canAFK")                       canAFK = (integer)value;
-            else if (name == "canCarry")                   canCarry = (integer)value;
-            else if (name == "canDress")                   canDress = (integer)value;
-            else if (name == "canFly")                       canFly = (integer)value;
-            else if (name == "canSit")                       canSit = (integer)value;
-            else if (name == "canStand")                   canStand = (integer)value;
-            else if (name == "isCollapsed")               collapsed = (integer)value;
-            else if (name == "isConfigured")             configured = (integer)value;
-            else if (name == "detachable")               detachable = (integer)value;
-            else if (name == "helpless")                   helpless = (integer)value;
-            else if (name == "pleasureDoll")           pleasureDoll = (integer)value;
-            else if (name == "isTransformingKey")   transformingKey = (integer)value;
-            else if (name == "visible")                     visible = (integer)value;
-            else if (name == "quiet")                         quiet = (integer)value;
-            else if (name == "RLVok")                         RLVok = (integer)value;
-            else if (name == "signOn")                       signOn = (integer)value;
-            else if (name == "takeoverAllowed")     takeoverAllowed = (integer)value;*/
+//                 if (name == "afk")                           afk = (integer)value;
+//          else if (name == "autoTP")                       autoTP = (integer)value;
+//          else if (name == "canAFK")                       canAFK = (integer)value;
+//          else if (name == "canCarry")                   canCarry = (integer)value;
+//          else if (name == "canDress")                   canDress = (integer)value;
+//          else if (name == "canFly")                       canFly = (integer)value;
+//          else if (name == "canSit")                       canSit = (integer)value;
+//          else if (name == "canStand")                   canStand = (integer)value;
+//          else if (name == "isCollapsed")               collapsed = (integer)value;
+//          else if (name == "isConfigured")             configured = (integer)value;
+//          else if (name == "detachable")               detachable = (integer)value;
+//          else if (name == "helpless")                   helpless = (integer)value;
+//          else if (name == "pleasureDoll")           pleasureDoll = (integer)value;
+//          else if (name == "isTransformingKey")   transformingKey = (integer)value;
+//          else if (name == "visible")                     visible = (integer)value;
+//          else if (name == "quiet")                         quiet = (integer)value;
+//          else if (name == "RLVok")                         RLVok = (integer)value;
+//          else if (name == "signOn")                       signOn = (integer)value;
+//          else if (name == "takeoverAllowed")     takeoverAllowed = (integer)value;
         }
         
         else if (code == 305) {
             string script = llList2String(split, 0);
             string cmd = llList2String(split, 1);
+
             split = llList2List(split, 2, -1);
             
             if (cmd == "addRemBlacklist") {
@@ -476,10 +465,10 @@ default {
             if (selection == "Reset Scripts") {
                 if (isController) llResetScript();
                 else if (id == dollID) {
-                    if (RLVok == 1)
+                    if (RLVok == YES)
                         llOwnerSay("Unable to reset scripts while running with RLV enabled, please relog without RLV disabled or " +
                                     "you can use login a Linden Lab viewer to perform a script reset.");
-                    else if (RLVok == -1 && (llGetTime() < 300.0))
+                    else if (RLVok == UNSET && (llGetTime() < 300.0))
                         llOwnerSay("Key is currently still checking your RLV status please wait until the check completes and then try again.");
                     else llResetScript();
                 }
@@ -487,9 +476,9 @@ default {
             
             nextLagCheck = llGetTime() + SEC_TO_MIN;
         }
-        /*else if (code == 999 && reset == 1) {
-            llResetScript();
-        }*/
+//      else if (code == 999 && reset == 1) {
+//          llResetScript();
+//      }
     }
     
     state_entry() {
@@ -524,7 +513,7 @@ default {
         dollID = llGetOwner();
         databaseOnline = 0;
         if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
-        RLVok = -1;
+        RLVok = UNSET;
         startup = 2;
 #ifdef SIM_FRIENDLY
         wakeMenu();
@@ -533,7 +522,7 @@ default {
         //llTargetOmega(<0,0,0>,0,0);
         
         llResetTime();
-        string me = llGetScriptName();
+        string me = cdMyScriptName();
         integer loop; string script;
         
         sendMsg(dollID, "Reattached, Initializing");
@@ -650,7 +639,7 @@ default {
             readyScripts = [];
             lmInitState(initState);
         }
-        else if (t >= 300.0 && ((startup != 0) || (RLVok == -1) || (dialogChannel == 0) || (notReady() != []))) {
+        else if (t >= 300.0 && ((startup != 0) || (RLVok == UNSET) || (dialogChannel == 0) || (notReady() != []))) {
             lowScriptMode = 0;
             sendMsg(dollID, "Startup failure detected one or more scripts may have crashed, resetting");
 
@@ -677,7 +666,7 @@ default {
                         
                         llSleep(delay);
                         
-                        llSetScriptState(script, TRUE);
+                        cdRunScript(script);
                         llResetScript();
                     }
                 }
