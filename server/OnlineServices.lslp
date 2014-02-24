@@ -91,35 +91,42 @@ queForSave(string name, string value) {
 checkAvatarList() {
     list newAvatars = llListSort(llGetAgentList(AGENT_LIST_REGION, []), 1, 1);
     list curAvatars = newAvatars;
+
     integer i; integer n = llGetListLength(newAvatars);
     integer posted; float postAge = llGetTime() - lastKeyPost;
     float HTTPlimit = HTTPinterval * 15.0;
+
     while (i < n) {
         key uuid;
+
         if (llListFindList(oldAvatars, [ (uuid = llList2Key(newAvatars, i)) ]) == NOT_FOUND) {
             string name = llEscapeURL(llKey2Name(uuid));
+
             //if ((name != "") && (uuid != NULL_KEY)) name2keyQueue += [ name, uuid ];
+
             if ((name != "") && (uuid != NULL_KEY) && (llSubStringIndex(namepost, "=" + name + "&") == -1)) {
                 integer postlen;
                 string adding = "names[" + (string)namepostcount + "]" + "=" + name + "&" +
                                 "uuids[" + (string)namepostcount + "]" + "=" + llEscapeURL(uuid);
+
                 if ((postlen = ((llStringLength(namepost + adding) + 1) < 4096)) && (postAge < HTTPlimit)) {
                     if (namepost != "") namepost += "&";
                     namepost += adding;
                     namepostcount++;
-                }
-                else {
+                } else {
                     debugSay(5, "DEBUG-SERVICES", "name2key: posting " + (string)namepostcount + " keys (" + (string)llStringLength(namepost) + " bytes) interval: " +
                                 formatDuration(llGetTime() - lastKeyPost, 0) + " mins");
+
                     while ((requestAddKey = (llHTTPRequest("http://api.silkytech.com/name2key/add", HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE,
                         "application/x-www-form-urlencoded" ], namepost))) == NULL_KEY) {
                             llSleep(1.0);
                     }
+
                     lastKeyPost = llGetTime();
                     lastPost = lastKeyPost;
                     postAge = llGetTime() - lastKeyPost;
-                    namepost = "names[0]" + "=" + name + "&" +
-                               "uuids[0]" + "=" + llEscapeURL(uuid);
+                    namepost = "names[0]=" + name +
+                               "&uuids[0]=" + llEscapeURL(uuid);
                     namepostcount = 1;
                     posted = 1;
                 }
@@ -131,8 +138,12 @@ checkAvatarList() {
             n--;
         }
     }
-    if (namepost != "" && n != 0) debugSay(5, "DEBUG-SERVICES", "Queued post " + (string)namepostcount + " keys (" + (string)llStringLength(namepost) + " bytes) oldest: " +
-                                formatDuration(llGetTime() - lastKeyPost, 0) + " mins");
+#if DEVELOPER_MODE
+    if (namepost != "" && n != 0)
+        debugSay(5, "DEBUG-SERVICES", "Queued post " + (string)namepostcount +
+            " keys (" + (string)llStringLength(namepost) + " bytes) oldest: " +
+            formatDuration(llGetTime() - lastKeyPost, 0) + " mins");
+#endif
     lastAvatarCheck = llGetTime();
     oldAvatars = curAvatars;
 }
@@ -142,14 +153,20 @@ doHTTPpost() {
         dbPostParams = [];
         return;
     }
+
     if ((lastPost + HTTPthrottle) < llGetTime()) {
         if (llGetListLength(dbPostParams) == 0) return;
+
         string time = (string)llGetUnixTime();
         string dbPostBody;
+
         updateList = [ ];
+
         if (llGetListLength(dbPostParams) != 0) {
             dbPostParams = llListSort(dbPostParams, 2, 1);
+
             integer index; integer i;
+
             for (i = 0; i < llGetListLength(dbPostParams); i = i + 2) {
                 dbPostBody += "&" + llList2String(dbPostParams, i) + "=" + llList2String(dbPostParams, i + 1);
                 updateList += llList2String(dbPostParams, i);
@@ -160,10 +177,11 @@ doHTTPpost() {
             "&t=" + time, HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE, "application/x-www-form-urlencoded" ], dbPostBody)) == NULL_KEY) {
                 llSleep(1.0);
         }
-    }
-    else {
+    } else {
         float ThrottleTime = lastPost - llGetTime() + HTTPthrottle;
+
         if (!expeditePost) ThrottleTime += HTTPinterval - HTTPthrottle;
+
         llSetTimerEvent(ThrottleTime);
         expeditePost = 0;        
     }
