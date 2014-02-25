@@ -18,6 +18,7 @@ string transform;
 //integer cd8665;
  
 integer dialogChannel;
+integer rlvChannel;
 
 //integer listen_id_8666;
 //integer listen_id_8667;
@@ -267,7 +268,8 @@ default {
                 else if (name == "mustAgreeToType")                      mustAgreeToType = (integer)value;
                 else if (name == "showPhrases")                              showPhrases = (integer)value;
                 else if (name == "currentState")                            currentState = value;
-                else if (name == "dialogChannel")                          dialogChannel = (integer)value;
+                else if (name == "dialogChannel") {                        dialogChannel = (integer)value;
+                                                                              rlvChannel = (integer)value ^ 0x80000000; }
                 else if (name == "debugLevel")                                debugLevel = (integer)value;
                 
                 else if (name == "dollType") setDollType((stateName = value), 1);

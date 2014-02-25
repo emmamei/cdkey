@@ -10,6 +10,10 @@
 #include "include/ServiceIncludes.lsl"
 
 default {
+    on_rez(integer start) {
+        rezzed = 1;
+    }
+    
     link_message(integer sender, integer code, string data, key id) {
         list split = llParseString2List(data, [ "|" ], []);
         string script = llList2String(split, 0);
@@ -17,7 +21,7 @@ default {
         if (code == 104 || code == 105) {
             if (llList2String(split, 0) != "Start") return;
             
-            initCode = code;
+            if (!rezzed && (code == 105)) lmInitState(initState++);
         }
         else if (code == 110) {
             initState = 105;
@@ -40,15 +44,19 @@ default {
             }
         }
         else if (code == 850) {
-            string requestType = llList2String(split, 1);
+            string messageType = llList2String(split, 1);
             
-                 if (requestType == "BlacklistKey")     requestBlacklistKey = id;
-            else if (requestType == "AddKey")           requestAddKey = id;
-            else if (requestType == "MistressKey")      requestMistressKey = id;
-            else if (requestType == "SendDB")           requestSendDB = id;
-            else if (requestType == "LoadDB")           requestLoadDB = id;
-            else if (requestType == "Update")           requestUpdate = id;
-            else if (requestType == "Name")             requestName = id;
+            if (messageType == "requestID") {
+                string requestType = llList2String(split, 2);
+                
+                     if (requestType == "BlacklistKey")     requestBlacklistKey = id;
+                else if (requestType == "AddKey")           requestAddKey = id;
+                else if (requestType == "MistressKey")      requestMistressKey = id;
+                else if (requestType == "SendDB")           requestSendDB = id;
+                else if (requestType == "LoadDB")           requestLoadDB = id;
+                else if (requestType == "Update")           requestUpdate = id;
+                else if (requestType == "Name")             requestName = id;
+            }
         }
     }
     
@@ -127,7 +135,10 @@ default {
                     else if (Key == "HTTPinterval") HTTPinterval = (float)Value;
                     else if (Key == "HTTPthrottle") HTTPthrottle = (float)Value;
                     else if (Key == "updateCheck") updateCheck = (integer)Value;
-                    else if (Key == "lastGetTimestamp") lastGetTimestamp = (integer)Value;
+                    else if (Key == "lastGetTimestamp") {
+                        lastGetTimestamp = (integer)Value;
+                        lmServiceMessage("dbFetchOK", (string)(Value), NULL_KEY);
+                    }
                     //else if (Key == "MistressListNew") handleAvList(Value, 1, 0);
                     //else if (Key == "MistressList") handleAvList(Value, 1, 1);
                     //else if (Key == "blacklistNew") handleAvList(Value, 2, 0);
@@ -192,6 +203,7 @@ default {
                 dbPostParams = [];
                 list split = llParseStringKeepNulls(body, [ "|" ], []);
                 lastPostTimestamp = llList2Integer(split, 1);
+                lmServiceMessage("dbPostOK", (string)(lastPostTimestamp), NULL_KEY);
                 debugSay(5, "DEBUG-SERVICES", "HTTPdb update success " + llList2String(split, 2) + " updated records: " + llList2CSV(updateList));
                 if (!databaseOnline) {
                     llOwnerSay("HTTPdb - Database service has recovered.");

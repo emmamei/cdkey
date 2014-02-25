@@ -40,6 +40,7 @@ integer curInterval = stdInterval;
 integer lastUpdateCheck;
 integer requestIndex;
 integer nextRetry;
+integer rezzed;
 integer gotURL;
 integer ticks;
 integer offlineMode;
@@ -50,6 +51,7 @@ integer lastGetTimestamp;
 integer databaseOnline = YES;
 integer databaseReload;
 integer updateCheck = 10800;
+integer useHTTPS = YES;
 
 string serverURL;
 string protocol = "https://";

@@ -220,8 +220,8 @@ doneConfiguration(integer read) {
     reset = 0;
     readyScripts = [];
     llSleep(0.5);
-    //lmInitState(initState);
     llMessageLinked(LINK_THIS, 102, cdMyScriptName(), NULL_KEY);
+    lmInitState(++initState);
     startup = 2;
 }
 
@@ -250,6 +250,7 @@ initializationCompleted() {
     startup = 0;
 
     lmInitState(102);
+    lmInitState(105);
     lmInitState(110);
     llSetTimerEvent(1.0);
 }
@@ -314,20 +315,20 @@ default {
             if (llListFindList(readyScripts, [ script ]) == -1) {
                 readyScripts += script;
                 
-                debugSay(7, "DEBUG-STARTUP", "Reporter '" + script + "'\nStill waiting: " + llList2CSV(notReady()));
+                debugSay(2, "DEBUG-STARTUP", "Reporter '" + script + "'\nStill waiting: " + llList2CSV(notReady()));
                 
-                if (notReady() == []) {
-                    if (initState == 104) {
-                        initConfiguration();
-                        readyScripts = [];
-                        lmInitState(104);
-                    }
-                    else {
-                        initializationCompleted();
-                        lmInitState(105);
-                    }
-                    initState++;
-                }
+                if (!llGetListLength(notReady())) {
+                  if (initState == 104) {
+                      initState++;
+                      initConfiguration();
+                      readyScripts = [];
+                      lmInitState(105);
+                  }
+                  else {
+                      initializationCompleted();
+                      lmInitState(105);
+                  }
+              }
             }
         }
         else if (code == 135) {
@@ -637,8 +638,9 @@ default {
             startup = 1;
             lmInitState(initState);
         }
-        else if (startup) {
-            if (t >= 300.0 && ((RLVok == UNSET) || (dialogChannel == 0) || (notReady() != []))) {
+        else if (startup != 0) {
+            debugSay(2, "DEBUG-STARTUP", "((" + (string)(RLVok == UNSET) + ") || (" + (string)(startup && llGetListLength(notReady())) + ") || (" + (string)(dialogChannel == 0) + "))");
+            if (t >= 300.0 && ((RLVok == UNSET) || (startup && llGetListLength(notReady())) || (dialogChannel == 0))) {
                 lowScriptMode = 0;
                 sendMsg(dollID, "Startup failure detected one or more scripts may have crashed, resetting");
     
@@ -672,7 +674,6 @@ default {
                 }
             }
         }
-        else llSetTimerEvent(0.0);
     }
 
     run_time_permissions(integer perm) {
