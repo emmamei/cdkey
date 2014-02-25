@@ -1,8 +1,11 @@
+//========================================
 // Taker.lsl
+//========================================
 //
-// DATE: 18 December 2012
+// vim:sw=4 et nowrap filetype=lsl
 //
-// 8/19 sits in key, helps change key.  Taker 4 doesn't have allowing inventory drop for getpin
+// DATE: 25 February 2014
+
 #include "include/GlobalDefines.lsl"
 
 integer cd6011;
