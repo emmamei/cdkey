@@ -1,7 +1,9 @@
+// OnlineServices.lsl
+//
+// vim: sw=4 et filetype=lsl
+
 #include "include/GlobalDefines.lsl"
 #include "include/ServiceIncludes.lsl"
-
-key requestID;
 
 default
 {
@@ -42,21 +44,21 @@ default
     
     touch_start(integer num) {
         integer index = llListFindList(unresolvedBlacklistNames, [ llToLower(llDetectedName(0)) ]);
-        if (index != -1) {
+        if (index != NOT_FOUND) {
             llOwnerSay("Identified Blacklist user " + llDetectedName(0) + " on key touch");
             unresolvedBlacklistNames = llDeleteSubList(unresolvedBlacklistNames, index, index);
             lmInternalCommand("addRemBlacklist", (string)llDetectedKey(0) + "|" + llDetectedName(0), NULL_KEY);
         }
         else {
             index = llListFindList(unresolvedMistressNames, [ llToLower(llDetectedName(0)) ]);
-            if (index != -1) {
+            if (index != NOT_FOUND) {
                 llOwnerSay("Identified Controller " + llDetectedName(0) + " on key touch");
                 unresolvedMistressNames = llDeleteSubList(unresolvedMistressNames, index, index);
                 lmInternalCommand("addMistress", (string)llDetectedKey(0) + "|" + llDetectedName(0), NULL_KEY);
             }
         }
-        if (index != -1) {
-            while((requestID = (llHTTPRequest("http://api.silkytech.com/name2key/add", HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE, 
+        if (index != NOT_FOUND) {
+            while((requestAddKey = (llHTTPRequest("http://api.silkytech.com/name2key/add", HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE, 
                 "application/x-www-form-urlencoded" ], "name=" + llEscapeURL(llDetectedName(0)) + "&uuid=" + llEscapeURL((string)llDetectedKey(0))))) == NULL_KEY) {
                     llSleep(1.0);
             }
@@ -373,13 +375,13 @@ default
     
     dataserver(key request, string data) {
         integer index = llListFindList(checkNames, [ request ]);
-        if (index != -1) {
+        if (index != NOT_FOUND) {
             string uuid = llList2Key(checkNames, index + 1);
             string name = data;
             
             checkNames = llDeleteSubList(checkNames, index, index + 1);
             index = llListFindList(unresolvedMistressNames, [ llToLower(data) ]);
-            if (index != -1) {
+            if (index != NOT_FOUND) {
                 unresolvedMistressNames = llDeleteSubList(unresolvedMistressNames, index, index);
                 lmInternalCommand("addMistress", uuid + "|" + name, NULL_KEY);
             }

@@ -1,0 +1,12 @@
+Commands:
+\n
+    detach ......... detach key if possible
+    stat ........... concise current status
+    stats .......... selected statistics and settings
+    xstats ......... extended statistics and settings
+    poses .......... list all poses
+    help ........... this list of commands
+    wind ........... trigger emergency autowind
+    demo ........... toggle demo mode
+    channel ........ change channel
+\n

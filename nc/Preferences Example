@@ -1,0 +1,71 @@
+# Preferences File
+#
+# Items that support a yes/no response can use "yes" "on" or "1" for
+# a positive answer, and "no" "off" or "0" for a negative answer
+
+# Suppress public chat messages
+quiet key = no
+
+# How much time does the key start with? (in minutes)
+initial time = 30
+
+# How many minutes does a wind provide? (in minutes)
+wind time = 30
+
+# What is the maximum time available on the key? (in minutes)
+max time = 180
+
+# Does busy mode also set AFK?
+busy is away = no
+
+# Is dolly a Helpless Doll? (no TP except for invites from friends)
+helpless dolly = no
+
+# Is dolly a Pleasure Doll? (doll can be stripped)
+pleasure doll = no
+
+# Can doll be sent a TP by anyone in SL?
+auto tp = no
+
+# Is the key detachable?
+detachable = yes
+
+# Can the dolly be dressed by the public?
+outfitable = yes
+
+# Is the dolly permitted to fly?
+can fly = yes
+
+# Is the dolly permitted to sit?
+can sit = yes
+
+# Is the dolly permitted to stand?
+can stand = yes
+
+# What type of doll is the dolly?
+doll type = Regular
+
+# What gender is dolly? ("male", "female", or "sissy")
+doll gender = female
+
+# Attach this folder when shoes stripped
+#barefeet path = 
+
+# Custom RLV commands on startup (separated by commas)
+#user startup rlv = 
+
+# Custom RLV commands on collapse (separated by commas)
+#user collapse rlv = touchall=n,fartouch=n
+
+# Doll's Controller (or Mistress): value is user key value
+# Add multiple lines for multiple controllers
+#controller = 
+
+#controller name =
+
+# Blacklist: value is user key value
+# Add multiple lines for multiple blacklist entries
+#blacklist =
+
+#blacklist name =
+
