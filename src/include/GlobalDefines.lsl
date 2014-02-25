@@ -15,9 +15,9 @@
 #define cdListElement(a,b) llList2String(a, b)
 #define cdListFloatElement(a,b) llList2Float(a, b)
 #define cdListIntegerElement(a,b) llList2Integer(a, b)
-#define cdListElementP(a,b) llListFindList(a, [ b ]);
+#define cdListElementP(a,b) llListFindList(a, [ b ])
 #define cdSplitArgs(a) llParseStringKeepNulls((a), [ "|" ], [])
-#define cdSplitString(a) llParseString2List(a, [ "," ], []);
+#define cdSplitString(a) llParseString2List(a, [ "," ], [])
 
 #define hasCarrier (carrierID != NULL_KEY)
 #define numControllers llFloor(llGetListLength(USER_CONTROLLERS) / 2)
