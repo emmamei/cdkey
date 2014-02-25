@@ -63,7 +63,8 @@ linkDebugHandler(string sender, integer code, string data, key id) {
     data = llDumpList2String(llDeleteSubList(split, 0, 0), "|");
 
     integer level = 5;
-         if (llListFindList([ 102, 150, 305, 350, 399, 999 ], [ code ]) != -1)  level = 2;
+         if (llListFindList([ 350, 399, 999 ], [ code ]) != -1)                 level = 2;
+    else if (llListFindList([ 102, 150, 305, 850 ], [ code ]) != -1)		level = 3;
     else if (llListFindList([ 110 ], [ code ]) != -1)                           level = 4;
     else if (llListFindList([ 104, 105, 135, 136, 500 ], [ code ]) != -1)       level = 6;
     else if (llListFindList([ 300 ], [ code ]) != -1)                           level = 7;

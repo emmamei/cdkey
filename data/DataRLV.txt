@@ -1,0 +1,6 @@
+[0,"Top",{"attachments":["chin","chest","l forearm","left hand","left pec","left shoulder","l upper arm","r forearm","right hand","right pec","right shoulder","r upper arm","r forearm","right pec","stomach"],"layers":["gloves","jacket","shirt"],"wearLock":"unsharedwear=y,unsharedunwear=y,attachallthis:=n,detachallthis:=n"}]
+[0,"Bra",{"layers":["undershirt"],"wearLock":"unsharedwear=y,unsharedunwear=y,attachallthis:=n,detachallthis:=n"}]
+[0,"Bottom",{"attachments":["left hip","left lower leg","l upper leg","pelvis","right hip","right lower leg","r upper leg"],"layers":["pants","skirt"],"wearLock":"unsharedwear=y,unsharedunwear=y,attachallthis:=n,detachallthis:=n"}]
+[0,"Panties",{"layers":["underpants"],"wearLock":"unsharedwear=y,unsharedunwear=y,attachallthis:=n,detachallthis:=n"}]
+[0,"Shoes",{"attachments":["left foot","left lower leg","right foot","right lower leg"],"layers":["shoes","socks"],"wearLock":"unsharedwear=y,unsharedunwear=y,attachallthis:=n,detachallthis:=n"}]
+[1,[["accepttp"],["fly"],["showhovertextall","shownames"],["sit"],["unsit"],["sendchat","sendchannel","redirchat:$C","rediremote:$C"],["tplm","tploc"],["alwaysrun","temprun","tplure","showinv","sittp","shownames","standtp","fartouch"],["attachallthis:","detachallthis:","unsharedwear","unsharedunwear"]]]

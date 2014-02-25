@@ -215,10 +215,10 @@ doneConfiguration(integer read) {
     }
     reset = 0;
     readyScripts = [];
-    llSleep(0.5);
-    lmInitState(initState);
     llMessageLinked(LINK_THIS, 102, llGetScriptName(), NULL_KEY);
+    llSleep(0.5);
     startup = 2;
+    lmInitState(initState++);
 }
 
 initializationCompleted() {
@@ -305,7 +305,7 @@ default {
         
         scaleMem();
 
-        if (code >= initState) {
+        if ((code == 104) || (code == 105)) {
             string script = llList2String(split, 0);
             if (llListFindList(readyScripts, [ script ]) == -1) {
                 readyScripts += script;
@@ -314,11 +314,13 @@ default {
                 
                 if (notReady() == []) {
                     if (initState == 104) {
-                        initState++;
                         initConfiguration();
+                        readyScripts = [];
+                        lmInitState(104);
                     }
                     else {
                         initializationCompleted();
+                        lmInitState(105);
                     }
                 }
             }
@@ -627,46 +629,45 @@ default {
         
         if (initState == 104) {
             llOwnerSay("Starting initialization");
-            lowScriptMode = 0;
             startup = 1;
-            readyScripts = [];
             lmInitState(initState++);
         }
-        else if (t >= 300.0 && ((startup != 0) || (RLVok == -1) || (dialogChannel == 0) || (notReady() != []))) {
-            lowScriptMode = 0;
-            sendMsg(dollID, "Startup failure detected one or more scripts may have crashed, resetting");
-
-            #ifdef DEVELOPER_MODE
-            sendMsg(dollID, "The following scripts did not report in state " + (string)initState + ": " + llList2CSV(notReady()));
-            #endif
-            
-            llResetScript();
-        }
-        else {
-            integer i; integer n = llGetInventoryNumber(10);
-            for (i = 0; i < n; i++) {
-                string script = llGetInventoryName(10, i);
+        else if (startup) {
+            if (t >= 300.0 && ((RLVok == -1) || (dialogChannel == 0) || (notReady() != []))) {
+                lowScriptMode = 0;
+                sendMsg(dollID, "Startup failure detected one or more scripts may have crashed, resetting");
+    
+                #ifdef DEVELOPER_MODE
+                sendMsg(dollID, "The following scripts did not report in state " + (string)initState + ": " + llList2CSV(notReady()));
+                #endif
                 
-                if (!llGetScriptState(script)) {
-                    if (llListFindList([ "Aux", "Avatar", "Dress", "Main", "MenuHandler", "OnlineServices", "StatusRLV", "Transform" ], [ script ]) != -1) {
-                        // Core key script appears to have suffered a fatal error try restarting
-                        float delay = 30.0;
-                        #ifdef DEVELOPER_MODE
-                        delay = delay * 6.0; // Increase delay by a factor of 10 for auto restarts in DEVELOPER_MODE this prevents
-                                              // rapid looping from occuring in the event of a developer accidently saving a script that
-                                              // fails to compile.
-                        #endif
-                        
-                        llSleep(delay);
-                        
-                        llSetScriptState(script, TRUE);
-                        llResetScript();
+                llResetScript();
+            }
+            else {
+                integer i; integer n = llGetInventoryNumber(10);
+                for (i = 0; i < n; i++) {
+                    string script = llGetInventoryName(10, i);
+                    
+                    if (!llGetScriptState(script)) {
+                        if (llListFindList([ "Aux", "Avatar", "Dress", "Main", "MenuHandler", "OnlineServices", "StatusRLV", "Transform" ], [ script ]) != -1) {
+                            // Core key script appears to have suffered a fatal error try restarting
+                            float delay = 30.0;
+                            #ifdef DEVELOPER_MODE
+                            delay = delay * 6.0; // Increase delay by a factor of 10 for auto restarts in DEVELOPER_MODE this prevents
+                                                  // rapid looping from occuring in the event of a developer accidently saving a script that
+                                                  // fails to compile.
+                            #endif
+                            
+                            llSleep(delay);
+                            
+                            llSetScriptState(script, TRUE);
+                            llResetScript();
+                        }
                     }
                 }
             }
-            
-            llSetTimerEvent(90.0);
         }
+        else llSetTimerEvent(0.0);
     }
     
     run_time_permissions(integer perm) {

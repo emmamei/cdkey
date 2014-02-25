@@ -205,6 +205,13 @@ default {
             reloadTypeNames();
         }
     }
+    
+    //----------------------------------------
+    // TIMER
+    //----------------------------------------
+    timer() {
+        kQuery = llGetNotecardLine("*" + currentState,lineno);
+    }
 
     //----------------------------------------
     // LINK MESSAGE
@@ -366,9 +373,9 @@ default {
                 }
 
                 lineno++;
-                kQuery = llGetNotecardLine("*" + currentState,lineno);
-
+                llSetTimerEvent(0.5);
             }
+            else llSetTimerEvent(0.0);
         }
     }
 }

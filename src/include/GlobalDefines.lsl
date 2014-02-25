@@ -64,9 +64,9 @@
 // Wind down rate factor in standard mode
 #define RATE_STANDARD 1.0
 // Time dilation at which we go to reduced activity
-#define DILATION_HIGH 0.90
+#define DILATION_HIGH 0.95
 // Time dilation at which we return to normal mode
-#define DILATION_LOW 0.95
+#define DILATION_LOW 0.98
 // LockMeister/FS AO channel
 #define LOCKMEISTER_CHANNEL -8888
 // Seconds per minute
@@ -100,7 +100,7 @@
 #define FALSE 0
 #define INVENTORY_SCRIPT 10
 #define INVENTORY_ANIMATION 20
-#define PUBLIC_CHANNEL 1
+#define PUBLIC_CHANNEL 0
 #define TRUE 1
 #define TWO_PI 6.283185307179586476925286766559
 
@@ -110,14 +110,13 @@
 // Link messages
 #define lmSendToAgent(msg, id) llMessageLinked(LINK_THIS, 11, SCRIPT_NAME + "|" + msg, id)
 #define lmSendToController(msg) llMessageLinked(LINK_THIS, 15, SCRIPT_NAME + "|" + msg, NULL_KEY)
-#define lmPrefsComplete(count) llMessageLinked(LINK_THIS, 102, SCRIPT_NAME + "|" + (string)(count), NULL_KEY)
-#define lmInitState(code) if (SCRIPT_NAME != "Start") llSleep(0.25);\
-llMessageLinked(LINK_THIS, code, SCRIPT_NAME, NULL_KEY)
+#define lmConfigComplete(count) llMessageLinked(LINK_THIS, 102, SCRIPT_NAME + "|" + (string)(count), NULL_KEY)
+#define lmInitState(code) llMessageLinked(LINK_THIS, code, SCRIPT_NAME, NULL_KEY)
 #define lmMemReport(delay) llMessageLinked(LINK_THIS, 135, SCRIPT_NAME + "|" + (string)delay, NULL_KEY)
 #define lmMemReply(used,limit,free,available) llMessageLinked(LINK_THIS, 136, SCRIPT_NAME + "|" + (string)used + "|" + (string)limit + "|" + (string)free + "|" + (string)available, NULL_KEY)
 #define lmRating(simrating) llMessageLinked(LINK_THIS, 150, SCRIPT_NAME + "|" + simrating, NULL_KEY)
 #define lmSendConfig(name, value) llMessageLinked(LINK_THIS, 300, SCRIPT_NAME + "|" + name + "|" + value, NULL_KEY)
-#define lmUpdateStatistic(name, value) llMessageLinked(LINK_THIS, 399, SCRIPT_NAME + "|" + name + "|" + value, NULL_KEY)
+//#define lmUpdateStatistic(name, value) llMessageLinked(LINK_THIS, 399, SCRIPT_NAME + "|" + name + "|" + value, NULL_KEY)
 #define lmInternalCommand(command, parameter, id) llMessageLinked(LINK_THIS, 305, SCRIPT_NAME + "|" + command + "|" + parameter, id)
 #define lmStrip(part) llMessageLinked(LINK_THIS, 305, "strip" + "|" + part, id)
 #define lmRunRLV(command) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|" + "|" + command, NULL_KEY)
@@ -128,9 +127,6 @@ llMessageLinked(LINK_THIS, code, SCRIPT_NAME, NULL_KEY)
 #define lmMenuReply(choice,name,id) llMessageLinked(LINK_THIS, 500, SCRIPT_NAME + "|" + choice + "|" + name, id)
 #define lmTextboxReply(type,name,choice,id) llMessageLinked(LINK_THIS, 501, SCRIPT_NAME + "|" + (string)type + "|" + name + "|" + choice, id)
 #define lmBroadcastReceived(name,msg,id) llMessageLinked(LINK_THIS, 800, SCRIPT_NAME + "|" + name + "|" + llGetOwnerKey(id) + "|" + msg, id)
-#define lmScriptReset() llMessageLinked(LINK_THIS, 999, SCRIPT_NAME, NULL_KEY)
-#define lmOwnerCheckFail() llMessageLinked(LINK_THIS, 999, SCRIPT_NAME + "|" + (string)CHANGED_OWNER, NULL_KEY)
-
 // Defines for various virtual functions to save typing and memory by inlining
 #define isInteger(input) ((string)((integer)input) == input)
 #define getLinkDesc(linknum) llList2String(llGetLinkPrimitiveParams(linknum, [ PRIM_DESC ]), 0)

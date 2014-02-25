@@ -34,9 +34,9 @@ default {
         else if (code == 850) {
             string requestType = llList2String(split, 1);
             
-                 if (requestType == "AddBlacklist")     requestBlacklistKey = id;
+                 if (requestType == "BlacklistKey")     requestBlacklistKey = id;
             else if (requestType == "AddKey")           requestAddKey = id;
-            else if (requestType == "AddMistress")      requestMistressKey = id;
+            else if (requestType == "MistressKey")      requestMistressKey = id;
             else if (requestType == "SendDB")           requestSendDB = id;
             else if (requestType == "LoadDB")           requestLoadDB = id;
             else if (requestType == "Update")           requestUpdate = id;
@@ -90,6 +90,8 @@ default {
         else if (request == requestLoadDB) {
             string error = "HTTPdb - Database access ";
             
+            integer configCount;
+            
             if (status == 200) {
                 lmSendConfig("databaseOnline", (string)(databaseOnline = 1));
                 
@@ -102,13 +104,13 @@ default {
                     integer nextNewLine = llSubStringIndex(body, "\n");
                     if (nextNewLine == -1) nextNewLine = llStringLength(body);
                     
-                    string line = llDeleteSubString(body, nextNewLine, -1);
+                    string line = llDeleteSubString(body, nextNewLine, llStringLength(body));
                     body = llDeleteSubString(body, 0, nextNewLine);
                     
                     lines++;
                     
                     integer splitIndex = llSubStringIndex(line, "=");
-                    string Key = llDeleteSubString(line, splitIndex, -1);
+                    string Key = llDeleteSubString(line, splitIndex, llStringLength(line));
                     string Value = llDeleteSubString(line, 0, splitIndex);
                     
                     if (Value == "") Value = "";
@@ -122,10 +124,11 @@ default {
                     //else if (Key == "MistressList") handleAvList(Value, 1, 1);
                     //else if (Key == "blacklistNew") handleAvList(Value, 2, 0);
                     //else if (Key == "blacklist") handleAvList(Value, 2, 1);
-                    else if (Key == "MistressListNew") lmSendConfig("MistressList", Value);
-                    else if (Key == "blacklistNew") lmSendConfig("blacklist", Value);
                     else if (Key == "windTimes") lmInternalCommand("setWindTimes", Value, NULL_KEY);
-                    else lmSendConfig(Key, Value);
+                    else {
+                        lmSendConfig(Key, Value);
+                        configCount++;
+                    }
                     
                     if (useHTTPS) protocol = "https://";
                     else protocol = "http://";
@@ -149,9 +152,10 @@ default {
                     llOwnerSay(error);
                 }
             }
-            llMessageLinked(LINK_THIS, 102, llGetScriptName() + "|" + "HTTP" + (string)status, NULL_KEY);
             
-            if (initState >= initCode) lmInitState(initState++);
+            lmConfigComplete(configCount);
+            
+            lmInitState(initState++);
         }
         else if (request == requestMistressKey || request == requestBlacklistKey) {
             list split = llParseStringKeepNulls(body, [ "=" ], []);

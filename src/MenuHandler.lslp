@@ -10,6 +10,7 @@
 key poserID = NULL_KEY;
 key dollID = NULL_KEY;
 key menuID = NULL_KEY;
+key uniqueID = NULL_KEY;
 
 list windTimes = [ 30 ];
 
@@ -22,15 +23,15 @@ float displayWindRate = 1.0;
 
 integer afk;
 integer autoAFK = 1;
-integer autoTP;
-integer canAFK = 1;
+//integer autoTP;
+//integer canAFK = 1;
 integer canCarry = 1;
 integer canDress = 1;
-integer canFly = 1;
-integer canSit = 1;
-integer canStand = 1;
+//integer canFly = 1;
+//integer canSit = 1;
+//integer canStand = 1;
 integer canRepeat = 1;
-integer poseSilence;
+//integer poseSilence;
 //integer canWear;
 //integer canUnwear;
 integer carryMoved;
@@ -38,23 +39,23 @@ integer clearAnim;
 integer collapsed;
 integer configured;
 integer demoMode;
-integer detachable = 1;
-integer doWarnings;
-integer helpless;
-integer pleasureDoll;
+//integer detachable = 1;
+//integer doWarnings;
+//integer helpless;
+//integer pleasureDoll;
 integer isTransformingKey;
 integer visible = 1;
-integer quiet;
+//integer quiet;
 integer RLVok;
-integer signOn;
-integer takeoverAllowed;
-integer warned;
-integer offlineMode;
+//integer signOn;
+//integer takeoverAllowed;
+//integer warned;
+//integer offlineMode;
 integer wearLock;
 integer dbConfig;
 integer initState = 104;
 integer textboxType;
-integer debugLevel = DEBUG_LEVEL;
+//integer debugLevel = DEBUG_LEVEL;
 integer startup = 1;
 
 integer blacklistChannel;
@@ -91,10 +92,9 @@ doDialogChannel() {
     if (uniqueID == NULL_KEY) lmSendConfig("uniqueID", (string)(uniqueID = llGenerateKey()));
     
     integer generateChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)uniqueID, -7, -1));
-    if (dialogChannel != generateChannel) debugSay(2, "DEBUG-MENU", "Your unique key is " + 
-                                          (string)uniqueID + " primary dialogChannel is " + (string)dialogChannel);
-                                          
-    lmSendConfig("dialogChannel", (string)(dialogChannel = generateChannel));
+    if (dialogChannel != generateChannel) lmSendConfig("dialogChannel", (string)(dialogChannel = generateChannel));
+    
+    debugSay(2, "DEBUG-MENU", "Your unique key is " + (string)uniqueID + " primary dialogChannel is " + (string)dialogChannel);
     
     blacklistChannel = dialogChannel - 666;
     controlChannel = dialogChannel - 888;
@@ -120,7 +120,6 @@ default
         if (code == 102) {
             if (script == "ServiceReceiver") {
                 dbConfig = 1;
-                
                 doDialogChannel();
             }
             else if (data == "Start") configured = 1;
@@ -158,29 +157,28 @@ default
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
             else if (name == "dollyName")                   dollyName = value;
             else if (name == "afk")                               afk = (integer)value;
-            else if (name == "autoTP")                         autoTP = (integer)value;
+            //else if (name == "autoTP")                         autoTP = (integer)value;
             else if (name == "canAFK")                         canAFK = (integer)value;
             else if (name == "canCarry")                     canCarry = (integer)value;
             else if (name == "canDress")                     canDress = (integer)value;
+            else if (name == "canPose")                       canPose = (integer)value;
             else if (name == "canWear")                       canWear = (integer)value;
             else if (name == "wearLock")                     wearLock = (integer)value;
-            else if (name == "canFly")                         canFly = (integer)value;
-            else if (name == "canSit")                         canSit = (integer)value;
-            else if (name == "canStand")                     canStand = (integer)value;
-            else if (name == "canRepeat")                   canRepeat = (integer)value;
-            else if (name == "poseSilence")               poseSilence = (integer)value;
+            //else if (name == "canFly")                         canFly = (integer)value;
+            //else if (name == "canSit")                         canSit = (integer)value;
+            //else if (name == "canStand")                     canStand = (integer)value;
+            //else if (name == "canRepeat")                   canRepeat = (integer)value;
+            //else if (name == "poseSilence")               poseSilence = (integer)value;
             else if (name == "configured")                 configured = (integer)value;
             else if (name == "debugLevel")                 debugLevel = (integer)value;
             else if (name == "detachable")                 detachable = (integer)value;
             else if (name == "demoMode")                     demoMode = (integer)value;
-            else if (name == "helpless")                     helpless = (integer)value;
-            else if (name == "pleasureDoll")             pleasureDoll = (integer)value;
+            //else if (name == "helpless")                     helpless = (integer)value;
+            //else if (name == "pleasureDoll")             pleasureDoll = (integer)value;
             else if (name == "isTransformingKey")   isTransformingKey = (integer)value;
-            else if (name == "wearLock")                     wearLock = (integer)value;
             else if (name == "quiet")                           quiet = (integer)value;
-            else if (name == "signOn")                         signOn = (integer)value;
-            else if (name == "takeoverAllowed")       takeoverAllowed = (integer)value;
-            else if (name == "debugLevel")                 debugLevel = (integer)value;
+            //else if (name == "signOn")                         signOn = (integer)value;
+            else if (name == "dialogChannel")           dialogChannel = (integer)value;
             else if (name == "poserID")                       poserID = (key)value;
             else if (name == "collapseTime")             collapseTime = (llGetTime() - (float)value);
             else if (name == "winderRechargeTime") winderRechargeTime = (float)value;
@@ -188,13 +186,8 @@ default
                 if (gemColour != (vector)value) lmInternalCommand("setGemColour", value, NULL_KEY);
             }
             else if (name == "uniqueID") {
-                uniqueID = (key)value;
-                doDialogChannel();
-            }
-            else if (name == "dialogChannel") {
                 if (script != "ServiceReceiver") return;
-                dialogChannel = (integer)value;
-                doDialogChannel();
+                uniqueID = (key)value;
             }
             else if (name == "timeLeftOnKey") {
                 timeLeftOnKey = (float)value;
@@ -558,15 +551,15 @@ default
                 if (isDoll) {
                     msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation.";
                     pluslist += [ "Type Options", "Access Menu" ];
-                    if (isController) pluslist += "Abilities Menu";
+                    if (isController) pluslist += "Abilities...";
                 }
                 else if (isController) {
                     msg = "See " + WEB_DOMAIN + "controller.htm. Choose what you want to happen.";
-                    pluslist += [ "Abilities Menu", "Drop Control" ];
+                    pluslist += [ "Abilities...", "Drop Control" ];
                 }
                 else return;
                 
-                pluslist += [ "Features Menu", "Key Settings" ];
+                pluslist += [ "Features...", "Key Settings" ];
                 
                 llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel); 
             }
@@ -730,24 +723,25 @@ default
             
             // Entering abilities menu section
             isAbility = 1;
-            if (optName == "Self TP") lmSendConfig("helpless", (string)(helpless = (curState == CHECK)));
+            if (optName == "Self TP") lmSendConfig("helpless", (string)(curState == CHECK));
             else if (optName == "Self Dress") lmSendConfig("canWear", (string)(canWear = (curState == CROSS)));
             else if (optName == "Detachable") lmSendConfig("detachable", (string)(detachable = (curState == CROSS)));
-            else if (optName == "Flying") lmSendConfig("canFly", (string)(canFly = (curState == CROSS)));
-            else if (optName == "Sitting") lmSendConfig("canSit", (string)(canSit = (curState == CROSS)));
-            else if (optName == "Standing") lmSendConfig("canStand", (string)(canStand = (curState == CROSS)));
-            else if (optName == "Force TP") lmSendConfig("autoTP", (string)(autoTP = (curState == CROSS)));
-            else if (optName == "Poses Silence") lmSendConfig("poseSilence", (string)(poseSilence = (curState == CROSS)));
+            else if (optName == "Flying") lmSendConfig("canFly", (string)(curState == CROSS));
+            else if (optName == "Sitting") lmSendConfig("canSit", (string)(curState == CROSS));
+            else if (optName == "Standing") lmSendConfig("canStand", (string)(curState == CROSS));
+            else if (optName == "Force TP") lmSendConfig("autoTP", (string)(curState == CROSS));
+            else if (optName == "Poses Silence") lmSendConfig("poseSilence", (string)(curState == CROSS));
             else isAbility = 0; // Not an options menu item after all
                 
             isFeature = 1; // Maybe it'a a features menu item
-            if (optName == "Type Text") lmSendConfig("signOn", (string)(signOn = (curState == CROSS)));
+            if (optName == "Type Text") lmSendConfig("signOn", (string)(curState == CROSS));
             else if (optName == "Quiet Key") lmSendConfig("quiet", (string)(quiet = (curState == CROSS)));
-            else if (optName == "Repeat Wind") lmSendConfig("canRepeat", (string)(canRepeat = (curState == CROSS)));
+            else if (optName == "Rpt Wind") lmSendConfig("canRepeat", (string)(curState == CROSS));
             else if (optName == "Carryable") lmSendConfig("canCarry", (string)(canCarry = (curState == CROSS)));
             else if (optName == "Outfitable") lmSendConfig("canDress", (string)(canDress = (curState == CROSS)));
-            else if (optName == "Warnings") lmSendConfig("doWarnings", (string)(doWarnings = (curState == CROSS)));
-            else if (optName == "Offline") lmSendConfig("offlineMode", (string)(offlineMode = (curState == CROSS)));
+            else if (optName == "Poseable") lmSendConfig("canPose", (string)(canPose = (curState == CROSS)));
+            else if (optName == "Warnings") lmSendConfig("doWarnings", (string)(curState == CROSS));
+            else if (optName == "Offline") lmSendConfig("offlineMode", (string)(curState == CROSS));
             else if (optName == "Allow AFK") {
                 lmSendConfig("canAFK", (string)(canAFK = (curState == CROSS)));
                 if (!canAFK && afk) {
@@ -758,50 +752,15 @@ default
                 }
             }
             #ifdef ADULT_MODE
-            else if (optName == "Pleasure Doll") lmSendConfig("pleasureDoll", (string)(pleasureDoll = (curState == CROSS)));
+            else if (optName == "Pleasure Doll") lmSendConfig("pleasureDoll", (string)(curState == CROSS));
             #endif
             else isFeature = 0;
                 
-            if (isAbility || choice == "Abilities Menu") {
-                string msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
-                list pluslist;
-                
-                if (RLVok) {
-                    // One-way options
-                    pluslist += getButton("Detachable", id, detachable, 1);
-                    pluslist += getButton("Flying", id, canFly, 1);
-                    pluslist += getButton("Sitting", id, canSit, 1);
-                    pluslist += getButton("Standing", id, canStand, 1);
-                    pluslist += getButton("Self Dress", id, canWear, 1);
-                    pluslist += getButton("Self TP", id, !helpless, 1);
-                    pluslist += getButton("Force TP", id, autoTP, 1);
-                    pluslist += getButton("Poses Silence", id, poseSilence, 1);
-                }
-                else {
-                    msg += "\n\nDolly does not have an RLV capable viewer of has RLV turned off in her viewer settings.  There are no usable options available.";
-                    pluslist = [ "OK" ];
-                }
-                
-                llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
+            if (isAbility) {
+                lmMenuReply("Abilities...", name, id);
             }
-            else if (isFeature || choice == "Features Menu") {
-                string msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
-                list pluslist;
-                
-                if (isTransformingKey) pluslist += getButton("Type Text", id, signOn, 0);
-                pluslist += getButton("Quiet Key", id, quiet, 0);
-                #ifdef ADULT_MODE
-                pluslist += getButton("Pleasure Doll", id, pleasureDoll, 0);
-                #endif
-                pluslist += getButton("Warnings", id, doWarnings, 0);
-                pluslist += getButton("Outfitable", id, canDress, 0);
-                pluslist += getButton("Carryable", id, canCarry, 0);
-                pluslist += getButton("Offline", id, offlineMode, 0);
-                // One-way options
-                pluslist += getButton("Allow AFK", id, canAFK, 1);
-                pluslist += getButton("Repeat Wind", id, canRepeat, 1);
-                
-                llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
+            else if (isFeature) {
+                lmMenuReply("Features...", name, id);
             }
             
             if (isController && choice == "Drop Control") {

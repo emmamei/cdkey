@@ -1,12 +1,13 @@
 #define DEBUG_HANDLER 1
 #include "include/GlobalDefines.lsl"
 
+#define APPEARANCE_NC "DataAppearance"
+
 key ncRequest;
 key carrierID = NULL_KEY;
 float rezTime;
 float memTime;
 string carrierName;
-string ncName = "Glow Settings";
 string pronounHerDoll = "Her";
 string pronounSheDoll = "She";
 integer configured;
@@ -16,6 +17,7 @@ integer visible;
 integer memCollecting;
 integer quiet;
 integer wearLock;
+integer rezzed;
 list MistressList;
 list BuiltinControllers = BUILTIN_CONTROLLERS;
 list glowSettings;
@@ -48,11 +50,11 @@ string findString(string msg) {
 }
 
 doVisibility(integer setVisible) {
-    if (llGetInventoryType(ncName) == INVENTORY_NOTECARD) {
+    if (llGetInventoryType(APPEARANCE_NC) == INVENTORY_NOTECARD) {
         if (setVisible != -1) visible = setVisible;
         
         if (visible == 0) {
-            llSetLinkPrimitiveParamsFast(LINK_SET, [ PRIM_GLOW, 0, 0.0, PRIM_GLOW, 1, 0.0, PRIM_GLOW, 2, 0.0, PRIM_GLOW, 3, 0.0, PRIM_GLOW, 4, 0.0, PRIM_GLOW, 5, 0.0, PRIM_GLOW, 6, 0.0 ]);
+            llSetLinkPrimitiveParamsFast(LINK_SET, [ PRIM_GLOW, 0, 0.0, PRIM_GLOW, 1, 0.0, PRIM_GLOW, 2, 0.0, PRIM_GLOW, 3, 0.0, PRIM_GLOW, 4, 0.0, PRIM_GLOW, 5, 0.0, PRIM_GLOW, 6, 0.0, PRIM_GLOW, 7, 0.0 ]);
         }
         else {
             llSetLinkPrimitiveParamsFast(1, glowSettings);
@@ -62,13 +64,14 @@ doVisibility(integer setVisible) {
 
 default {
     state_entry() {
-        lmSendConfig("debugLevel", (string)debugLevel);
+        //lmSendConfig("debugLevel", (string)debugLevel);
     }
     
     on_rez(integer start) {
-        lmSendConfig("debugLevel", (string)debugLevel);
+        //lmSendConfig("debugLevel", (string)debugLevel);
         rezTime = llGetTime();
         configured = 0;
+        rezzed = 1;
     }
     
     link_message(integer source, integer code, string data, key id) {
@@ -93,25 +96,19 @@ default {
             }
         }
         else if ((code == 104) || (code == 105)) {
-            if (script != "Start") return;
+            debugSay(2, "DEBUG-STARTUP", "InitState = " + (string)code + " from '" + script + "' my state: " + (string)initState);
             
-            if (initState >= code) {
-                if (initState == 104) {
-                    lmInitState(initState++);
-                }
-                else lmInitState(initState);
-            }
+            if (initState == code) lmInitState(initState++);
         }
         else if (code == 110) {
             if (script != "Start") return;
             
             initState = 105;
             
-            if (llGetInventoryType(ncName) == INVENTORY_NOTECARD) {
-                ncLine = 0;
-                glowSettings = [];
-                ncRequest = llGetNotecardLine(ncName, ncLine++);
-            }
+            memCollecting = 1;
+            memData = [];
+            
+            llSetTimerEvent(5.0);
         }
         else if (code == 135) {
             if (script == SCRIPT_NAME) return;
@@ -126,21 +123,39 @@ default {
             
             llSetTimerEvent(5.0);
         }
+        else if (code == 150) {
+            simRating = llList2String(split, 1);
+        }
         else if (code == 300) {
             string name = llList2String(split, 1);
             string value = llList2String(split, 2);
             split = llDeleteSubList(split, 0, 1);
             
-                 if (name == "MistressList")               MistressList = split;
-            else if (name == "isVisible")                 doVisibility((integer)value);
-            else if (name == "debugLevel")                   debugLevel = (integer)value;
-            else if (name == "keyAnimation")               keyAnimation = value;
-            else if (name == "poserID")                         poserID = (key)value;
-            else if (name == "dialogChannel")             dialogChannel = (integer)value;
-            else if (name == "wearLock")                       wearLock = (integer)value;
-            else if (name == "quiet")                             quiet = (integer)value;
-            else if (name == "pronounHerDoll")           pronounHerDoll = value;
-            else if (name == "pronounSheDoll")           pronounSheDoll = value;
+                 if (name == "MistressList")             MistressList = split;
+            else if (name == "isVisible")                  doVisibility((integer)value);
+            else if (name == "debugLevel")                 debugLevel = (integer)value;
+            else if (name == "keyAnimation")             keyAnimation = value;
+            else if (name == "poserID")                       poserID = (key)value;
+            else if (name == "dialogChannel")           dialogChannel = (integer)value;
+            else if (name == "quiet")                           quiet = (integer)value;
+            else if (name == "autoTP")                         autoTP = (integer)value;
+            else if (name == "canAFK")                         canAFK = (integer)value;
+            else if (name == "canCarry")                     canCarry = (integer)value;
+            else if (name == "canDress")                     canDress = (integer)value;
+            else if (name == "canPose")                       canPose = (integer)value;
+            else if (name == "canWear")                       canWear = (integer)value;
+            else if (name == "canFly")                         canFly = (integer)value;
+            else if (name == "canSit")                         canSit = (integer)value;
+            else if (name == "canStand")                     canStand = (integer)value;
+            else if (name == "canRepeat")                   canRepeat = (integer)value;
+            else if (name == "doWarnings")                 doWarnings = (integer)value;
+            else if (name == "poseSilence")               poseSilence = (integer)value;
+            else if (name == "detachable")                 detachable = (integer)value;
+            else if (name == "helpless")                     helpless = (integer)value;
+            else if (name == "pleasureDoll")             pleasureDoll = (integer)value;
+            else if (name == "signOn")                         signOn = (integer)value;
+            else if (name == "pronounHerDoll")         pronounHerDoll = value;
+            else if (name == "pronounSheDoll")         pronounSheDoll = value;
             else if (isAttached && (name == "dollyName")) {
                 string dollyName = value;
                 llSetObjectName(dollyName + "'s Key");
@@ -155,8 +170,20 @@ default {
                 else llOwnerSay("You are just a dolly and cannot possibly fly.");
             }
             else if (name == "canRepeat") {
-                if (value == "1") llOwnerSay("You can now be wound several times by one person again,");
+                if (value == "1") llOwnerSay("You can now be wound several times by one person again.");
                 else llOwnerSay("You can no longer be wound twice in a row by the same person (except controllers).");
+            }
+            else if (name == "canPose") {
+                if (value == "1") llOwnerSay("You are a dolly and can freely be posed by anyone.");
+                else {
+                    llOwnerSay("You can no longer be posed by others.");
+                    
+                    if ((keyAnimation != "") && (keyAnimation != ANIMATION_COLLAPSED)) { // Doll is already posed
+                        if (poserID != dollID) { // Posed by another we should unpose so doll is not stuck
+                            lmInternalCommand("doUnpose", "", poserID);
+                        }
+                    }
+                }
             }
             else if (name == "canCarry") {
                 if (value == "1") llOwnerSay("Other people can now carry you.");
@@ -227,6 +254,9 @@ default {
                 carrierName = "";
             }
         }
+        else if (code == 350) {
+            RLVok = llList2Integer(split, 1);
+        }
         else if (code == 500) {
             string script = llList2String(split, 0);
             string choice = llList2String(split, 1);
@@ -288,6 +318,50 @@ default {
                 
                 llDialog(id, "Select the pose to put the doll into", poseList, dialogChannel);
             }
+            if (choice == "Abilities...") {
+                string msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
+                list pluslist;
+                
+                if (RLVok) {
+                    // One-way options
+                    pluslist += getButton("Detachable", id, detachable, 1);
+                    pluslist += getButton("Flying", id, canFly, 1);
+                    pluslist += getButton("Sitting", id, canSit, 1);
+                    pluslist += getButton("Standing", id, canStand, 1);
+                    pluslist += getButton("Self Dress", id, canWear, 1);
+                    pluslist += getButton("Self TP", id, !helpless, 1);
+                    pluslist += getButton("Force TP", id, autoTP, 1);
+                    if (canPose) { // Option to silence the doll while posed this this option is a no-op when canPose == 0
+                        pluslist += getButton("Poses Silence", id, poseSilence, 1);
+                    }
+                }
+                else {
+                    msg += "\n\nDolly does not have an RLV capable viewer of has RLV turned off in her viewer settings.  There are no usable options available.";
+                    pluslist = [ "OK" ];
+                }
+                
+                llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
+            }
+            else if (choice == "Features...") {
+                string msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
+                list pluslist;
+                
+                if (isTransformingKey) pluslist += getButton("Type Text", id, signOn, 0);
+                pluslist += getButton("Quiet Key", id, quiet, 0);
+                #ifdef ADULT_MODE
+                pluslist += getButton("Pleasure Doll", id, pleasureDoll, 0);
+                #endif
+                pluslist += getButton("Warnings", id, doWarnings, 0);
+                pluslist += getButton("Poseable", id, canPose, 0);
+                pluslist += getButton("Outfitable", id, canDress, 0);
+                pluslist += getButton("Carryable", id, canCarry, 0);
+                pluslist += getButton("Offline", id, offlineMode, 0);
+                // One-way options
+                pluslist += getButton("Allow AFK", id, canAFK, 1);
+                pluslist += getButton("Rpt Wind", id, canRepeat, 1);
+                
+                llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
+            }
         }
         else if (code == 501) {
             string script = llList2String(split, 0);
@@ -322,16 +396,17 @@ default {
         if (type == "MistressList" || type == "carry" || type == "uncarry" || type == "updateExceptions") {
             // Exempt builtin or user specified controllers from TP restictions
             list allow = BuiltinControllers + llList2ListStrided(MistressList, 0, -1, 2);
+            integer builtin = llGetListLength(BuiltinControllers);
             // Also exempt the carrier if any provided they are not already exempted as a controller
             if ((carrierID != NULL_KEY) && (llListFindList(allow, [ (string)carrierID ]) == -1)) allow += carrierID;
             
             // Directly dump the list using the static parts of the RLV command as a seperatior no looping
-            lmRunRLVas("Base", "tplure:" + llDumpList2String(allow, "=add,tplure:") + "=add," +
-                               "accepttp:" + llDumpList2String(allow, "=add,accepttp:") + "=add");
-            lmRunRLVas("Base", "sendim:" + llDumpList2String(allow, "=add,sendim:") + "=add," +
-                               "recvim:" + llDumpList2String(allow, "=add,recvim:") + "=add");
-            lmRunRLVas("Base", "recvchat:" + llDumpList2String(allow, "=add,recvchat:") + "=add," +
-                               "recvemote:" + llDumpList2String(allow, "=add,recvemote:") + "=add");
+            lmRunRLVas("Base", "tplure:" + llDumpList2String(allow, "=add,tplure:") + "=add");
+            lmRunRLVas("Base", "accepttp:" + llDumpList2String(allow, "=add,accepttp:") + "=add");
+            lmRunRLVas("Base", "sendim:" + llDumpList2String(allow, "=add,sendim:") + "=add");
+            lmRunRLVas("Base", "recvim:" + llDumpList2String(allow, "=add,recvim:") + "=add");
+            lmRunRLVas("Base", "recvchat:" + llDumpList2String(llList2List(allow, builtin - 1, -1), "=add,recvchat:") + "=add");
+            lmRunRLVas("Base", "recvemote:" + llDumpList2String(llList2List(allow, builtin - 1, -1), "=add,recvemote:") + "=add");
         
             // Apply exemptions to base RLV
         }
@@ -343,30 +418,20 @@ default {
                 doVisibility(-1);
                 ncRequest = NULL_KEY;
                 
-                memCollecting = 1;
-                memData = [];
-                
-                lmMemReport(1.0);
-                llSleep(0.75);
-                
-                llSetTimerEvent(5.0);
+                llSetTimerEvent(0.0);
             }
             else {
-                debugSay(5, "DEBUG-NOTECARDS", ncName + " (" + (string)ncLine + "): " + data);
+                debugSay(5, "DEBUG-NOTECARDS", APPEARANCE_NC + " (" + (string)ncLine + "): " + data);
                 glowSettings += llJson2List(data);
                 
-                llSetTimerEvent(0.25);
+                llSetTimerEvent(1.0);
             }
         }
     }
     
     timer() {
-        llSetTimerEvent(0.0);
-        
-        debugSay(7, "DEBUG-NOTECARD", "Get next line in " + (string)ncName + " (" + (string)ncLine + ") ID: " + (string)ncRequest);
-        
         if (ncRequest != NULL_KEY) {
-            ncRequest = llGetNotecardLine(ncName, ncLine++);
+            ncRequest = llGetNotecardLine(APPEARANCE_NC, ncLine++);
         }
         else if (memCollecting) {
             if (memCollecting && (memTime < llGetTime())) {
@@ -397,6 +462,10 @@ default {
                 llOwnerSay(output);
     
                 memCollecting = 0;
+                
+                if (!rezzed && (llGetInventoryType(APPEARANCE_NC) == INVENTORY_NOTECARD)) {
+                    ncRequest = llGetNotecardLine(APPEARANCE_NC, ncLine++);
+                }
             }
         }
     }

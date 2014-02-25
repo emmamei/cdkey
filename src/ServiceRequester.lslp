@@ -265,7 +265,7 @@ default
                 lmSendRequestID("LoadDB", requestID);
             }
             
-            initCode = code;
+            lmInitState(code);
         }
         else if (code == 110) {
             initState = 105;
