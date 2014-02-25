@@ -72,7 +72,7 @@ string userCollapseRLVcmd;
 string dollGender = "Female";
 string pronounHerDoll = "Her";
 string pronounSheDoll = "She";
-string nameOverride;
+//string nameOverride;
 integer startup;
 integer initState = 104;
 integer introLine;
@@ -364,7 +364,7 @@ default {
             else if (name == "lowScriptMode")            lowScriptMode = (integer)value;
             else if (name == "dialogChannel")            dialogChannel = (integer)value;
             else if (name == "debugLevel")                  debugLevel = (integer)value;
-            else if (name == "nameOverride")              nameOverride = value;
+//          else if (name == "nameOverride")              nameOverride = value;
             else if (name == "userBaseRLVcmd")          userBaseRLVcmd = value;
             else if (name == "userCollapseRLVcmd")  userCollapseRLVcmd = value;
             else if (name == "windTimes")                    windTimes = llList2List(split, 2, -1);
