@@ -15,13 +15,6 @@
 // thus we keep this script lightweight with plenty of heap room
 // for it's runtime data needs.
 
-#define cdListElement(a,b) llList2String(a, b)
-#define cdListFloatElement(a,b) llList2Float(a, b)
-#define cdListIntegerElement(a,b) llList2Integer(a, b)
-#define cdListElementP(a,b) llListFindList(a, [ b ]);
-#define cdSplitArgs(a) llParseStringKeepNulls((a), [ "|" ], [])
-#define cdSplitString(a) llParseString2List(a, [ "," ], []);
-#define NOT_FOUND -1
 #define RESTRICTION_NEW "+"
 #define RESTRICTION_ADDED "^"
 #define RESTRICTION_REMOVED "-"
