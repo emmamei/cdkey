@@ -2,10 +2,12 @@
 // StatusRLV.lsl
 //========================================
 //
-// vim:sw=4 et nowrap:
+// vim:sw=4 et nowrap filetype=lsl
 //
-// DATE: 8 December 2013
+// DATE: 25 February 2014
+
 #include "include/GlobalDefines.lsl"
+
 //#define DEBUG_BADRLV 1
 //
 // As of 23 January 2014 this script is now state tracking only
