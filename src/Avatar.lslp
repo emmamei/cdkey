@@ -244,7 +244,8 @@ initializeRLV(integer refresh) {
     // unlocked and detachable: this is because it can be detached 
     // via the menu. To make the key truly "undetachable", we get
     // rid of the menu item to unlock it
-    if (llGetOwner() != llGetCreator()) lmRunRLVas("Base", "detach=n");  //locks key
+    if (llGetCreator() != dollID) lmRunRLVas("Base", "detach=n,permssive=n");  //locks key
+    else llSay(DEBUG_CHANNEL, "Back protection mechanism activated not locking on creator");
     locked = 1; // Note the locked variable also remains false for developer mode keys
                 // This way controllers are still informed of unauthorized detaching so developer dolls are still accountable
                 // With this is the implicit assumption that controllers of developer dolls will be understanding and accepting of
@@ -265,7 +266,7 @@ initializeRLV(integer refresh) {
     if (autoTP) baseRLV += "accepttp=n,";
     else baseRLV += "accepttp=y,";
     if (helpless) baseRLV += "tplm=n,tploc=n,";
-    else baseRLV += "clear=tpl,";
+    else baseRLV += "tplm=y,tploc=y,";
     if (!canFly) baseRLV += "fly=n,";
     else baseRLV += "fly=y,";
     if (!canStand) baseRLV += "unsit=n,";

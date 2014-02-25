@@ -96,7 +96,7 @@ default {
             }
         }
         else if ((code == 104) || (code == 105)) {
-            debugSay(2, "DEBUG-STARTUP", "InitState = " + (string)code + " from '" + script + "' my state: " + (string)initState);
+            debugSay(7, "DEBUG-STARTUP", "InitState = " + (string)code + " from '" + script + "' my state: " + (string)initState);
             
             if (initState == code) lmInitState(initState++);
         }
@@ -105,9 +105,15 @@ default {
             
             initState = 105;
             
+            if (!rezzed && (llGetInventoryType(APPEARANCE_NC) == INVENTORY_NOTECARD)) {
+                ncRequest = llGetNotecardLine(APPEARANCE_NC, ncLine++);
+            }
+            
             memCollecting = 1;
             memData = [];
             
+            lmMemReport(0.0);
+        
             llSetTimerEvent(5.0);
         }
         else if (code == 135) {
@@ -418,13 +424,13 @@ default {
                 doVisibility(-1);
                 ncRequest = NULL_KEY;
                 
-                llSetTimerEvent(0.0);
+                if (!memCollecting) llSetTimerEvent(0.0);
             }
             else {
                 debugSay(5, "DEBUG-NOTECARDS", APPEARANCE_NC + " (" + (string)ncLine + "): " + data);
                 glowSettings += llJson2List(data);
                 
-                llSetTimerEvent(1.0);
+                if (!memCollecting) llSetTimerEvent(1.0);
             }
         }
     }
@@ -463,9 +469,8 @@ default {
     
                 memCollecting = 0;
                 
-                if (!rezzed && (llGetInventoryType(APPEARANCE_NC) == INVENTORY_NOTECARD)) {
-                    ncRequest = llGetNotecardLine(APPEARANCE_NC, ncLine++);
-                }
+                if (ncRequest == NULL_KEY) llSetTimerEvent(0.0);
+                else llSetTimerEvent(1.0);
             }
         }
     }
