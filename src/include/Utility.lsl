@@ -1,5 +1,6 @@
 #ifndef UTILITY_LSL
 #define UTILITY_LSL
+#include "config.h"
 /*
  * ========================================
  * UTILITY FUNCTIONS
@@ -40,13 +41,13 @@ memReport(float delay) {
 }
 
 #ifdef DEVELOPER_MODE
-    #ifdef DEBUG_HANDLER
-        #define debugSay(level,prefix,msg) debugMainHandler(SCRIPT_NAME, level, prefix, msg)
-        #define debugHandler(script,level,prefix,msg) debugMainHandler(script, level, prefix, msg)
-        #define linkDebug(sender,code,data,id) linkDebugHandler(sender, code, data, id)
-    #else
-        #define debugSay(level,prefix,msg) if (debugLevel >= level) llMessageLinked(LINK_THIS, 700, SCRIPT_NAME + "|" + (string)level + "|" + prefix + "|" + msg, NULL_KEY)
-    #endif
+#ifdef DEBUG_HANDLER
+#define debugSay(level,prefix,msg) debugMainHandler(SCRIPT_NAME, level, prefix, msg)
+#define debugHandler(script,level,prefix,msg) debugMainHandler(script, level, prefix, msg)
+#define linkDebug(sender,code,data,id) linkDebugHandler(sender, code, data, id)
+#else
+#define debugSay(level,prefix,msg) if (debugLevel >= level) llMessageLinked(LINK_THIS, 700, SCRIPT_NAME + "|" + (string)level + "|" + prefix + "|" + msg, NULL_KEY)
+#endif
 #else
 #define debugSay(level,prefix,msg)
 #define debugHandler(script,level,prefix,msg)
@@ -265,9 +266,7 @@ scaleMem() {
 
       if (newlimit != limit) {
          llSetMemoryLimit(newlimit);
-         #ifdef DEVELOPER_MODE
          debugSay(7, "DEBUG", "Memory limit changed from " + formatFloat((float)limit / 1024.0, 2) + "kB to " + formatFloat((float)newlimit / 1024.0, 2) + "kB (" + formatFloat((float)(newlimit - limit) / 1024.0, 2) + "kB) " + formatFloat((float)llGetFreeMemory() / 1024.0, 2) + "kB free");
-         #endif
       }
    }
 }

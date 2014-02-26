@@ -8,7 +8,7 @@
 
 #include "include/GlobalDefines.lsl"
 
-#define NO_FILTER ""
+#define STRING_END -1
 #define NO_ARG ""
 
 #define NORMAL_COLOR     <1.0,1.0,1.0>
@@ -18,6 +18,7 @@
 #define cdSetHoverText(t,c) llSetText(t, c, 1.0)
 #define cdClearHoverText()  llSetText("", NORMAL_COLOR, 1.0)
 
+#define NO_FILTER ""
 #define cdListenAll(a)  llListen(a, NO_FILTER, NO_FILTER, NO_FILTER)
 #define cdListenMine(a) llListen(a, NO_FILTER,    dollID, NO_FILTER);
 
@@ -108,7 +109,9 @@ integer wearLock;
 integer initState = 104;
 integer timeReporting = 1;
 
+#ifdef DEVELOPER_MODE
 integer debugLevel = DEBUG_LEVEL;
+#endif
 
 // If the key is a Transforming Key - one that can transform from one
 // type of Doll to another - this tracks the current type of doll.
@@ -338,7 +341,7 @@ default {
             }
 
             // Update sign if appropriate
-            string primText = cdListItem(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
+            string primText = cdListElement(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
 
             if (collapsed && primText != "Disabled Dolly!")            cdSetHoverText("Disabled Dolly!",        EMERGENCY_COLOR);
             else if (afk && primText != dollType + " Doll (AFK)")      cdSetHoverText(dollType + " Doll (AFK)", WARN_COLOR);
@@ -414,7 +417,7 @@ default {
         string script = cdListElement(split, 0);
 
         if (code == 102) {
-            if (cdListElement(split, 0) == "OnlineServices") {
+            if (cdListElement(split, 0) == "ServiceReceiver") {
                 if (timeLeftOnKey > effectiveLimit) timeLeftOnKey = effectiveLimit;
 
                 float displayRate = setWindRate();
@@ -511,7 +514,6 @@ default {
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
             else if (name == "blacklist")                   blacklist = split;
             else if (name == "dialogChannel")           dialogChannel = (integer)value;
-            else if (name == "debugLevel")                 debugLevel = (integer)value;
             else if (name == "keyHandler") {
                 keyHandler = (key)value;
             }

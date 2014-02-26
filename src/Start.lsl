@@ -314,9 +314,9 @@ default {
             string script = llList2String(split, 0);
             if (llListFindList(readyScripts, [ script ]) == -1) {
                 readyScripts += script;
-                
+
                 debugSay(2, "DEBUG-STARTUP", "Reporter '" + script + "'\nStill waiting: " + llList2CSV(notReady()));
-                
+
                 if (!llGetListLength(notReady())) {
                   if (initState == 104) {
                       initState++;
@@ -341,7 +341,7 @@ default {
             string name = llList2String(split, 1);
             string value = llList2String(split, 2);
 
-            //debugSay(5, "From " + script + ": " + name + "=" + value);
+            //debugXay(5, "From " + script + ": " + name + "=" + value);
 
                  if (name == "timeLeftOnKey")            timeLeftOnKey = (float)value;
             else if (name == "ncPrefsLoadedUUID")    ncPrefsLoadedUUID = (key)value;
@@ -645,30 +645,30 @@ default {
             if (t >= 300.0 && ((RLVok == UNSET) || (startup && llGetListLength(notReady())) || (dialogChannel == 0))) {
                 lowScriptMode = 0;
                 sendMsg(dollID, "Startup failure detected one or more scripts may have crashed, resetting");
-    
+
 #ifdef DEVELOPER_MODE
                 sendMsg(dollID, "The following scripts did not report in state " + (string)initState + ": " + llList2CSV(notReady()));
 #endif
-                
+
                 llResetScript();
             }
             else {
                 integer i; integer n = llGetInventoryNumber(10);
                 for (i = 0; i < n; i++) {
                     string script = llGetInventoryName(10, i);
-                    
+
                     if (!llGetScriptState(script)) {
-                        if (llListFindList([ "Aux", "Avatar", "Dress", "Main", "MenuHandler", "OnlineServices", "StatusRLV", "Transform" ], [ script ]) != -1) {
+                        if (llListFindList([ "Aux", "Avatar", "Dress", "Main", "MenuHandler", "ServiceRequester", "ServiceReceiver", "StatusRLV", "Transform" ], [ script ]) != -1) {
                             // Core key script appears to have suffered a fatal error try restarting
                             float delay = 30.0;
 #ifdef DEVELOPER_MODE
-                            delay = delay * 6.0; // Increase delay by a factor of 10 for auto restarts in DEVELOPER_MODE this prevents
-                                                  // rapid looping from occuring in the event of a developer accidently saving a script that
-                                                  // fails to compile.
+                            delay = delay * 6.0; // Increase delay for automatic restarts by a factor of 6;
+                                                 // this prevents rapidly looping in the event of a developer
+                                                 // accidently saving a script that fails to compile.
 #endif
-                            
+
                             llSleep(delay);
-                            
+
                             cdRunScript(script);
                             llResetScript();
                         }

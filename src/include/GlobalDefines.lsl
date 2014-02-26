@@ -5,10 +5,19 @@
 #ifndef GLOBAL_DEFINES
 #define GLOBAL_DEFINES
 
+#include "config.h"
+
+// Used by this file below for OPTION_DATE
+//#define PACKAGE_VERSION "26 February 2014"
+
+// used by ServiceRequestor.lsl for updates
+//#define PACKAGE_VERNUM "11.11"
+
+// used by Start.lsl to set key name
+//#define PACKAGE_STRING "Community Doll Key"
+
 // The date of this code in this key, we should really look into a proper version numbering system sometime
 #define OPTION_DATE PACKAGE_VERSION
-
-#include "config.h"
 
 // List definitions: makes things easier to comprehend
 // Note: ....P in names is a LISP convention: acts like a question mark

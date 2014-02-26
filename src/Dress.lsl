@@ -149,53 +149,6 @@ list outfitsPage(list outfitList) {
     //return (llList2List(outfitsList, currentIndex, endIndex));
 }
 
-/* Turns out this one is unused.
-integer isClothingItem(string folder) {
-    string prefix = llGetSubString(folder,0,0);
-
-    // Folders that start with "~" are hidden and
-    // those that start with "*" are actually outfit folders
-    return (prefix == "~" || prefix == "*");
-}*/
-
-/*integer isGroupItem(string f) {
-    string prefix = llGetSubString(f,0,0);
-
-    return (prefix == "#");
-}
-
-integer isHiddenItem(string f) {
-    string prefix = llGetSubString(f,0,0);
-
-    // Items that start with "~" or ">" are hidden
-    // Lets not hide > folders instead lets browse them.
-    //return (prefix == "~" || prefix == ">");
-    return (prefix == "~");
-}
-
-integer isParentFolder(string f) {
-    string prefix = llGetSubString(f,0,0);
-
-    // This is a parent folder if selected we do not wear it
-    // instead we recurse inside it.
-    return (prefix == ">");
-}
-
-integer isTransformingItem(string f) {
-    string prefix = llGetSubString(f,0,0);
-
-    // Items that start with "*" are Transforming folders
-    return (prefix == "*");
-}
-
-integer isPlusItem(string f) {
-    string prefix = llGetSubString(f,0,0);
-
-    // Items that start with "+" are self-contained outfits;
-    // make no assumptions when restoring to "normal" outfit
-    return (prefix == "+");
-}*/
-
 setActiveFolder() {
     string oldActive = activeFolder;
     if (outfitsFolder == "") {
@@ -208,46 +161,6 @@ setActiveFolder() {
 
     if (activeFolder != oldActive) lmSendConfig("activeFolder", activeFolder);
 }
-
-/* These would be overkill now we are using just
-   a single listener.
-
-removeListeners() {
-    llListenRemove(listen_id_2555);
-    llListenRemove(listen_id_outfitrequest3);
-    llListenRemove(listen_id_outfitrequest);
-    llListenRemove(listen_id_2668);
-    llListenRemove(listen_id_2669);
-    llListenRemove(listen_id_2670);
-//    llListenRemove(listen_id_9001);
-//    llListenRemove(listen_id_9002);
-//    llListenRemove(listen_id_9003);
-//    llListenRemove(listen_id_9005);
-//    llListenRemove(listen_id_9007);
-//    llListenRemove(listen_id_9011);
-//    llListenRemove(listen_id_9012);
-//    llListenRemove(listen_id_9013);
-//    llListenRemove(listen_id_9014);
-}
-
-addListeners(string dollID) {
-    listen_id_2555           = llListen(2555, "", dollID, "");
-    listen_id_outfitrequest3 = llListen(2665, "", dollID, "");
-    listen_id_outfitrequest  = llListen(2666, "", dollID, "");
-    listen_id_2668           = llListen(2668, "", dollID, "");
-    listen_id_2669           = llListen(2669, "", dollID, "");
-    listen_id_2670           = llListen(2670, "", dollID, "");
-
-//    listen_id_9001           = llListen(9001, "", dollID, "");
-//    listen_id_9002           = llListen(9002, "", dollID, "");
-//    listen_id_9003           = llListen(9003, "", dollID, "");
-//    listen_id_9005           = llListen(9005, "", dollID, "");
-//    listen_id_9007           = llListen(9007, "", dollID, "");
-//    listen_id_9011           = llListen(9011, "", dollID, "");
-//    listen_id_9012           = llListen(9012, "", dollID, "");
-//    listen_id_9013           = llListen(9013, "", dollID, "");
-//    listen_id_9014           = llListen(9014, "", dollID, "");
-}*/
 
 rlvRequest(string rlv, integer channel) {
     candresstimeout = 1;
@@ -518,11 +431,11 @@ default {
                         return;
                     }
                     else if ((outfitsFolder != "") && (choice != newoutfitname)) {
-                        #ifdef DEVELOPER_MODE
+#ifdef DEVELOPER_MODE
                         // If we are in developer mode we are in danger of being ripped
                         // off here.  We therefore will use a temporary @detach=n restriction.
                         lmRunRLV("detach=n");
-                        #endif
+#endif
                         candresstemp = FALSE;
 
                         dressingFailures = 0;
@@ -686,7 +599,7 @@ default {
     listen(integer channel, string name, key id, string choice) {
         // We have our answer so now we can turn the listener off until our next request
 
-        //debugSay(6, "DEBUG", "Channel: " + (string)channel + "\n" + choice);
+        //debugXay(6, "DEBUG", "Channel: " + (string)channel + "\n" + choice);
 
         // channels:
         //
@@ -719,6 +632,7 @@ default {
 
             debugSay(6, "DEBUG", "> RLV message type 2555");
             debugSay(6, "DEBUG", ">> " + choice);
+
             // Looks for a folder that may contain outfits - folders such
             // as Dressup/, or outfits/, or Outfits/ ...
             for (n = 0; n < iStop; n++) {
@@ -788,7 +702,7 @@ default {
 
                 // No files found; leave the prefix alone and don't change
                 llOwnerSay("There are no outfits in your " + activeFolder + " folder.");
-                //debugSay(6, "DEBUG", "There are no outfits in your " + activeFolder + " folder.");
+                //debugXay(6, "DEBUG", "There are no outfits in your " + activeFolder + " folder.");
                 // Didnt find any outfits in the standard folder, try the
                 // "extended" folder containing (we hope) outfits....
 
@@ -1015,24 +929,10 @@ default {
                 dresspassed++;
                 if (dresspassed >= 3) changeComplete(1);
             }
+
             debugSay(6, "DEBUG", "candresstimeout = " + (string)candresstimeout + ", dresspassed = " + (string)dresspassed);
         }
 
-        //----------------------------------------
-        // Channel: 2670
-        //
-        // Grab a path for an outfit, and save it for later
-        //
-        // Using the @detachallthis command instead avoids a
-        // need for this at all
-        /*else if (channel == cd2670) {
-            debugSay(6, "DEBUG", "<< choice = " + choice);
-            // When do we override the old outfit path - and with what?
-            if (oldoutfitpath == "") {
-                oldoutfitpath = choice;
-                debugSay(6, "DEBUG", "<< oldoutfitpath = " + oldoutfitpath);
-            }
-        }*/
         llSleep(1.0);
         scaleMem();
     }
