@@ -40,12 +40,12 @@ default {
             llAllowInventoryDrop(FALSE);
         }
     }
-    
+
     link_message(integer sender, integer code, string data, key id) {
         list split = llParseString2List(data, [ "|" ], []);
-        
+
         scaleMem();
-        
+
         if (code == 104 || code == 105) {
             string script = llList2String(split, 0);
             if (script != "Start") return;
@@ -66,7 +66,7 @@ default {
         if (channel == cd6011) {
             if (llGetSubString(choice,0,2) == "-~-") {
                 string todelete = llGetSubString(choice,3,-1);
-    
+
                 llOwnerSay(todelete + " is being removed.");
                 llRemoveInventory(todelete);
             }
@@ -84,7 +84,7 @@ default {
 
                 integer ncd = getOwnerSubStr(llGetOwner()) - 6013;
                 llSay(ncd + 7, choice);
-                
+
                 // Timer set...
                 wait = 15;
                 llSetTimerEvent(10.0);

@@ -929,7 +929,7 @@ default {
                 dresspassed++;
                 if (dresspassed >= 3) changeComplete(1);
             }
-            
+
             debugSay(6, "DEBUG", "candresstimeout = " + (string)candresstimeout + ", dresspassed = " + (string)dresspassed);
         }
 
