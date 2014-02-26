@@ -21,10 +21,10 @@ float baseWindRate;
 float carryExpire;
 float poseExpire;
 float afkSlowWalkSpeed = 5;
-float timeToJamRepair; 
+float timeToJamRepair;
 float refreshRate = 8.0;
 
-vector carrierPos; 
+vector carrierPos;
 vector lockPos;
 
 string barefeet;
@@ -64,20 +64,20 @@ integer newAttach = 1;
 //========================================
 key animStart(string animation) {
     if ((llGetPermissionsKey() != dollID) || ((llGetPermissions() & PERMISSION_TRIGGER_ANIMATION) == 0)) return NULL_KEY;
-    
+
     while (llGetListLength(llGetAnimationList(dollID))) llStopAnimation(llList2Key(llGetAnimationList(dollID), 0));
-    
+
     integer i; list oldList = llGetAnimationList(dollID);
     llStartAnimation(animation);
     list newList = llGetAnimationList(dollID);
-    
+
     while (llGetListLength(oldList)) {
         key animKey = llList2Key(oldList, 0); integer index;
         while ((index = llListFindList(newList, [ animKey ])) != -1) newList = llDeleteSubList(newList, index, index);
-        
+
         oldList = llDeleteSubList(oldList, 0, 0);
     }
-    
+
     if (llGetListLength(newList) == 1) return llList2Key(newList, 0);
     else return NULL_KEY;
 }
@@ -88,17 +88,17 @@ checkRLV()
 { // Run RLV viewer check
     locked = 0;
     if (isAttached) {
-        #ifndef DEBUG_BADRLV
+#ifndef DEBUG_BADRLV
         // Setting the above debug flag causes the listener to not be open for the check
         // In effect the same as the viewer having no RLV support as no reply will be heard
         // all other code works as normal.
         llListenControl(listenHandle, 1);
-        #endif
+#endif
         llSetTimerEvent(10.0);
         RLVck = 1;
         RLVok = 0;
         RLVstarted = 0;
-        
+
         rlvAPIversion = "";
         myPath = "";
         llOwnerSay("@clear,versionnew=" + (string)channel + ",getpathnew=" + (string)channel);
@@ -111,9 +111,9 @@ processRLVResult()
     if (RLVok && !newAttach) llOwnerSay("Logged with Community Doll Key and " + rlvAPIversion + " active...");
     else if (RLVok && newAttach) llOwnerSay("Reattached Community Doll Key with " + rlvAPIversion + " active...");
     else if (isAttached && !RLVok) llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
-    
+
     RLVck = 0;
-    
+
     if (configured) initializeRLV(0);
 }
 
@@ -121,15 +121,15 @@ ifPermissions() {
     if (isAttached) {
         key grantorID = llGetPermissionsKey();
         integer permMask = llGetPermissions();
-        
+
         if (grantorID != NULL_KEY && grantorID != dollID) {
             llResetOtherScript("Start");
             llSleep(10.0);
         }
-        
+
         if (!((permMask & PERMISSION_MASK) == PERMISSION_MASK))
             llRequestPermissions(dollID, PERMISSION_MASK);
-        
+
         if (grantorID == dollID) {
             if (permMask & PERMISSION_TRIGGER_ANIMATION) {
                 key curAnim = llList2Key(llGetAnimationList(dollID), 0);
@@ -146,7 +146,7 @@ ifPermissions() {
                     else refreshRate = 4.0;
                     if (keyAnimation != "") {
                         llWhisper(LOCKMEISTER_CHANNEL, (string)dollID + "bootoff");
-                        
+
                         list animList; integer i; integer animCount; key animKey = llGetInventoryKey(keyAnimation);
                         while ((animList = llGetAnimationList(dollID)) != [ animKey ]) {
                             animCount = llGetListLength(animList);
@@ -156,7 +156,7 @@ ifPermissions() {
                             llStartAnimation(keyAnimation);
                         }
                     } else if (keyAnimation == "" && clearAnim) {
-                        list animList = llGetAnimationList(dollID); 
+                        list animList = llGetAnimationList(dollID);
                         integer i; integer animCount = llGetInventoryNumber(20);
                         for (i = 0; i < animCount; i++) {
                             key animKey = llGetInventoryKey(llGetInventoryName(20, i));
@@ -168,17 +168,17 @@ ifPermissions() {
                     }
                 }
             }
-            
+
             if (permMask & PERMISSION_OVERRIDE_ANIMATIONS) {
                 if (keyAnimation != "") {
                     llSetAnimationOverride("Standing", keyAnimation);
                 }
                 else llResetAnimationOverride("ALL");
             }
-            
+
             if (permMask & PERMISSION_TAKE_CONTROLS) {
                 llTakeControls(CONTROL_MOVE, 0, 1);
-                
+
                 if (keyAnimation != "") {
                     if (lockPos == ZERO_VECTOR) lockPos = llGetPos();
                     if (llVecDist(llGetPos(), lockPos) > 1.0) {
@@ -201,7 +201,7 @@ ifPermissions() {
             }
         }
     }
-    
+
     if (!collapsed && (keyAnimation == "") && (timeToJamRepair == 0.0)) {
         if (RLVck == 0) {
             llSetTimerEvent(0.0);
@@ -225,31 +225,31 @@ ifPermissions() {
 
 initializeRLV(integer refresh) {
     if (!refresh && RLVstarted) return;
-    #ifdef DEVELOPER_MODE
+#ifdef DEVELOPER_MODE
     if (
         (rlvAPIversion != "") &&
-        (myPath == "") 
+        (myPath == "")
     ) { // Dont enable RLV on devs if @getpath is returning no usable result to avoid lockouts.
         llSay(DEBUG_CHANNEL, "WARNING: Sanity check failure developer key not found in #RLV see README.dev for more information.");
         return;
     }
-    #endif
+#endif
     string baseRLV;
     if (!RLVstarted) {
         llOwnerSay("Enabling RLV mode");
         rlvSources = [];
         rlvStatus = [];
     }
-    
+
     if (!RLVstarted) {
         lmRLVreport(RLVok, rlvAPIversion, 0);
     }
-    
+
     // if Doll is one of the developers... dont lock:
     // prevents inadvertent lock-in during development
-    #ifndef DEVELOPER_MODE
+#ifndef DEVELOPER_MODE
     // We lock the key on here - but in the menu system, it appears
-    // unlocked and detachable: this is because it can be detached 
+    // unlocked and detachable: this is because it can be detached
     // via the menu. To make the key truly "undetachable", we get
     // rid of the menu item to unlock it
     if (llGetCreator() != dollID) lmRunRLVas("Base", "detach=n,permssive=n");  //locks key
@@ -259,18 +259,18 @@ initializeRLV(integer refresh) {
                 // With this is the implicit assumption that controllers of developer dolls will be understanding and accepting of
                 // the occasional necessity of detaching during active development if this proves false we may need to fudge this
                 // in the section bellow the #else preprocessor directive.
-    #else
+#else
     if (!RLVstarted) {
-        if (!quiet) llSay(0, "Developer Key not locked.");
-        else llOwnerSay("Developer key not locked.");
+        if (!quiet) llSay(0, "Developer-owned key not locked.");
+        else llOwnerSay("Developer-owned key not locked.");
     }
     baseRLV += "attachallthis_except:" + myPath + "=add,detachallthis_except:" + myPath + "=add,";
-    #endif
+#endif
     llListenControl(listenHandle, 0);
 
     if (userBaseRLVcmd != "")
         lmRunRLVas("User:Base", userBaseRLVcmd);
-    
+
     if (autoTP) baseRLV += "accepttp=n,";
     else baseRLV += "accepttp=y,";
     if (helpless) baseRLV += "tplm=n,tploc=n,";
@@ -281,9 +281,9 @@ initializeRLV(integer refresh) {
     else baseRLV += "unsit=y,";
     if (!canSit) baseRLV += "sit=n";
     else baseRLV += "sit=y";
-    
+
     lmRunRLVas("Base", baseRLV);
-    
+
     if (!canWear || collapsed || wearLock || afk) lmRunRLVas("Dress", "unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
     else lmRunRLVas("Dress", "clear");
 
@@ -304,12 +304,12 @@ initializeRLV(integer refresh) {
         lmRunRLVas("Power:User", "clear");
     }
     lmRunRLVas("Power", RLVpower);
-    
+
     // Don't replicate state in known core, collapsed blocks all of Carry & Pose too so list these only when necessary
     if (!collapsed && carrierID != NULL_KEY)
         lmRunRLVas("Carry", "tplm=n,tploc=n,accepttp=rem,tplure=n,showinv=n");
     else lmRunRLVas("Carry", "clear");
-    
+
     if ((keyAnimation != "") && (keyAnimation != ANIMATION_COLLAPSED) && (poserID != dollID)) {
         string pose = "fartouch=n,fly=n,showinv=n,sit=n,sittp=n,standtp=n,touchattachother=n,tplm=n,tploc=n,unsit=n,clear=redir";
         if (poseSilence) {
@@ -319,7 +319,7 @@ initializeRLV(integer refresh) {
         lmRunRLVas("Pose", pose);
     }
     else lmRunRLVas("Pose", "clear");
-    
+
     RLVstarted = 1;
     RLVck = 0;
     startup = 0;
@@ -329,22 +329,22 @@ default {
     state_entry() {
         dollID = llGetOwner();
         dollName = llGetDisplayName(dollID);
-        
+
         // Get a unique number
         channel = (integer)("0x" + llGetSubString((string)llGenerateKey(),-7,-1)) + 3467;
         listenHandle = llListen(channel, "", "", "");
         llListenControl(listenHandle, 0);
-        
+
         checkRLV();
         llRequestPermissions(dollID, PERMISSION_MASK);
     }
-    
+
     on_rez(integer start) {
         locked = 0;
         startup = 0;
-        
+
         rlvAPIversion = "";
-        
+
         if (lockPos != ZERO_VECTOR) {
             llStopMoveToTarget();
             llTargetRemove(targetHandle);
@@ -352,7 +352,7 @@ default {
             targetHandle = llTarget(lockPos, 1);
         }
     }
-    
+
     changed(integer change) {
         if (change & CHANGED_TELEPORT) {
             if (lockPos != ZERO_VECTOR) {
@@ -366,7 +366,7 @@ default {
             llSleep(60);
         }
     }
-    
+
     listen(integer chan, string name, key id, string msg) {
         if (chan == channel) {
             if (llGetSubString(msg, 0, 13) == "RestrainedLove") {
@@ -378,29 +378,29 @@ default {
                 if (myPath == "") debugSay(4, "DEBUG-RLV", "RLV Key Path: " + msg);
                 myPath = llStringTrim(msg, STRING_TRIM);
             }
-            #ifdef DEVELOPER_MODE
+#ifdef DEVELOPER_MODE
             RLVok = (
                 configured &&
-                (rlvAPIversion != "") && 
+                (rlvAPIversion != "") &&
                 (myPath != "")
             );
             if (
-                (rlvAPIversion != "") && 
+                (rlvAPIversion != "") &&
                 (myPath != "")
             ) RLVck = 0;
-            #else
+#else
             RLVok = (
                 configured &&
                 (rlvAPIversion != "")
             );
             if (rlvAPIversion != "") RLVck = 0;
-            #endif
+#endif
             if (RLVok && !RLVstarted) processRLVResult();
         }
         //if (!RLVok && !RLVstarted) llOwnerSay("@clear,versionnew=" + (string)channel);
         //else if (RLVok && myPath == "") llOwnerSay("@getpathnew=" + (string)channel);
     }
-    
+
     attach(key id) {
         if (id == NULL_KEY && !detachable && !locked) {
             // Undetachable key with controller is detached while RLV lock
@@ -411,7 +411,7 @@ default {
             // Q: Should that be changed? Not sure the message serves much purpose with *verified* RLV and known lock.
             lmSendToController(dollName + " has detached " + llToLower(pronounHerDoll) + " key while undetachable.");
         }
-        
+
         locked = 0;
 
         if (lockPos != ZERO_VECTOR) {
@@ -420,39 +420,39 @@ default {
             lockPos = llGetPos();
             targetHandle = llTarget(lockPos, 1);
         }
-        
+
         if (id) checkRLV();
-        
+
         newAttach = (lastAttachedID != dollID);
         lastAttachedID = id;
     }
-    
+
     link_message(integer sender, integer code, string data, key id) {
         list split = llParseStringKeepNulls(data, [ "|" ], []);
-        
+
         scaleMem();
-        
+
         if (code == 102) {
             string script = llList2String(split, 0);
             configured = 1;
-            
-            #ifdef DEVELOPER_MODE
+
+#ifdef DEVELOPER_MODE
             RLVok = (
                 configured &&
-                (rlvAPIversion != "") && 
+                (rlvAPIversion != "") &&
                 (myPath != "")
             );
             if (
-                (rlvAPIversion != "") && 
+                (rlvAPIversion != "") &&
                 (myPath != "")
             ) RLVck = 0;
-            #else
+#else
             RLVok = (
                 configured &&
                 (rlvAPIversion != "")
             );
             if (rlvAPIversion != "") RLVck = 0;
-            #endif
+#endif
             if (RLVok && !RLVstarted) processRLVResult();
         }
         else if (code == 104) {
@@ -467,7 +467,7 @@ default {
         }
         else if (code == 110) {
             initState = 105;
-            
+
             ifPermissions();
         }
         else if (code == 135) {
@@ -479,7 +479,7 @@ default {
             string name = llList2String(split, 1);
             split = llList2List(split, 2, -1);
             string value = llList2String(split, 0);
-            
+
             if (llListFindList([ "afk", "autoTP", "canFly", "canSit", "canStand", "canWear", "collapsed", "helpless", "poseSilence", "keyAnimation" ], [ name ]) != -1) {
                      if (name == "autoTP")                       autoTP = (integer)value;
                 else if (name == "afk")                             afk = (integer)value;
@@ -495,16 +495,16 @@ default {
                 else if (name == "poseSilence")             poseSilence = (integer)value;
                 else if (name == "keyAnimation") {
                     keyAnimation = value;
-                    
+
                     if (!collapsed && (keyAnimation == ANIMATION_COLLAPSED)) lmSendConfig("keyAnimation", (keyAnimation = ""));
-                    
+
                     if (keyAnimation == "") lmSendConfig("keyAnimationID", (string)(keyAnimationID = NULL_KEY));
                     else lmSendConfig("keyAnimationID", (string)(keyAnimationID = animStart(keyAnimation)));
                 }
-                
+
                 if (RLVstarted) initializeRLV(1);
                 if (configured) ifPermissions();
-            } else {            
+            } else {
                      if (name == "detachable")               detachable = (integer)value;
                 else if (name == "barefeet")                   barefeet = value;
                 else if (name == "lowScriptMode")         lowScriptMode = (integer)value;
@@ -548,23 +548,23 @@ default {
             string script = llList2String(split, 0);
             string cmd = llList2String(split, 1);
             split = llList2List(split, 2, -1);
-            
+
             if (cmd == "carry") {
                 string name = llList2String(split, 0);
-                
+
                 carrierID = id;
                 carrierName = name;
-                
+
                 // Clear old targets to ensure there is only one
                 llTargetRemove(targetHandle);
                 llStopMoveToTarget();
-                
+
                 // Set updated target
                 carrierPos = llList2Vector(llGetObjectDetails(carrierID, [OBJECT_POS]), 0);
                 targetHandle = llTarget(carrierPos, CARRY_RANGE);
-                
+
                 if (carrierPos != ZERO_VECTOR && keyAnimation == "") llMoveToTarget(carrierPos, 0.7);
-                
+
                 if (!quiet) llSay(0, "The doll " + dollName + " has been picked up by " + carrierName);
                 else {
                     llOwnerSay("You have been picked up by " + carrierName);
@@ -610,12 +610,12 @@ default {
                     clearAnim = 1;
                 }
             }
-            else if (cmd == "setPose" && !collapsed) { 
+            else if (cmd == "setPose" && !collapsed) {
                 string pose = llList2String(split, 0);
-                          
+
                 // Force unsit before posing
                 lmRunRLVas("Pose", "unsit=force");
-                
+
                 // Set pose expire timeourt unless we are a display doll or are self posed
                 if ((dollType != "Display") && (poserID != dollID)) lmSendConfig("poseExpire", (string)(poseExpire = POSE_LIMIT));
                 // Also include region name with location so we know to reset if changed.
@@ -623,7 +623,7 @@ default {
                 lmSendConfig("keyAnimation", (keyAnimation = pose));
                 lmSendConfig("poserID", (string)(poserID = id));
             }
-            #ifdef ADULT_MODE
+#ifdef ADULT_MODE
             else if (cmd == "strip") {
                 string part = llList2String(split, 2); string attachments; string extra; string layers;
                 if (part == "Top") {
@@ -642,7 +642,7 @@ default {
                 }
                 else if (part == "Shoes") {
                     if (barefeet != "") extra = "attachallover:" + barefeet + "=force,";
-                    
+
                     attachments = "left foot,l lower leg,right foot,r lower leg";
                     layers      = "shoes,socks";
                 }
@@ -653,23 +653,23 @@ default {
                 lmRunRLVas("Dress", rlv);
                 initializeRLV(0);
             }
-            #endif
+#endif
             else if (cmd == "uncarry") {
                 if (keyAnimation == "") {
                     llTargetRemove(targetHandle);
                     llStopMoveToTarget();
                 }
-                
+
                 // Clear carry restrictions
                 lmRunRLVas("Carry", "clear");
-                
+
                 if (carrierID) {
                     string mid = " being carried by " + llList2String(split, 0) + " and ";
                     string end = " been set down";
                     if (!quiet) llSay(0, dollName + " was" + mid + "has" + end);
                     else llOwnerSay("You were" + mid + "have" + end);
                 }
-                
+
                 carrierID = NULL_KEY;
                 carrierName = "";
             }
@@ -696,10 +696,10 @@ default {
                 lmSendConfig("wearLock", (string)wearLock);
             }
             else return;
-            
+
             if (keyAnimation == "") lmSendConfig("keyAnimationID", (string)(keyAnimationID = NULL_KEY));
             else lmSendConfig("keyAnimationID", (string)(keyAnimationID = animStart(keyAnimation)));
-            
+
             ifPermissions();
             initializeRLV(1);
         }
@@ -707,7 +707,7 @@ default {
             string script = llList2String(split, 0);
             string choice = llList2String(split,1);
             string name = llList2String(split, 2);
-            
+
             if ((choice == "Carry") && !isDoll) {
                 // Doll has been picked up...
                 carrierID = id;
@@ -737,30 +737,30 @@ default {
             }
         }
     }
-    
+
     timer() {
-        #ifdef DEVELOPER_MODE
+#ifdef DEVELOPER_MODE
         RLVok = (
             configured &&
-            (rlvAPIversion != "") && 
+            (rlvAPIversion != "") &&
             (myPath != "")
         );
         if (
-            (rlvAPIversion != "") && 
+            (rlvAPIversion != "") &&
             (myPath != "")
         ) RLVck = 0;
-        #else
+#else
         RLVok = (
             configured &&
             (rlvAPIversion != "")
         );
         if (rlvAPIversion != "") RLVck = 0;
-        #endif
+#endif
         if (RLVok && !RLVstarted) processRLVResult();
-        
+
         if (RLVck == 0) {
             float timerInterval = llGetAndResetTime();
-            
+
             // Check if doll is posed and time is up
             if ((keyAnimation != "" && keyAnimation != ANIMATION_COLLAPSED)) { // Doll posed
                 if (poseExpire != 0.0) {
@@ -771,7 +771,7 @@ default {
                     }
                 }
             }
-            
+
             // Check if jam time passes
             if (timeToJamRepair != 0) {
                 timeToJamRepair -= timerInterval;
@@ -781,21 +781,21 @@ default {
                 }
                 lmSendConfig("timeToJamRepair", (string)timeToJamRepair);
             }
-            
+
             ifPermissions();
-            
+
             if (ticks++ % 30 == 0) {
                 if (poseExpire != 0.0) lmSendConfig("poseExpire", (string)poseExpire);
                 if (timeToJamRepair != 0.0) lmSendConfig("timeToJamRepair", (string)timeToJamRepair);
             }
         }
         else {
-            #ifdef DEVELOPER_MODE
+#ifdef DEVELOPER_MODE
             RLVok = ((rlvAPIversion != "") && (myPath != ""));
-            #else
+#else
             RLVok = (rlvAPIversion != "");
-            #endif
-            
+#endif
+
             if (!RLVok && (RLVck != 0) && (RLVck <= 6)) {
                 if (isAttached && RLVck != 6 && !RLVok == 1) {
                     llOwnerSay("@clear,versionnew=" + (string)channel + ",getpathnew=" + (string)channel);
@@ -808,7 +808,7 @@ default {
             }
         }
     }
-    
+
     //----------------------------------------
     // AT FOLLOW/MOVELOCK TARGET
     //----------------------------------------
@@ -816,7 +816,7 @@ default {
         // Clear old targets to ensure there is only one
         llTargetRemove(targetHandle);
         llStopMoveToTarget();
-        
+
         if (carrierID != NULL_KEY) {
             if (keyAnimation == "") {
                 // Get updated position and set target
@@ -828,7 +828,7 @@ default {
                 targetHandle = llTarget(lockPos, 0.5);
             }
         }
-        
+
         if (carryMoved) {
             vector pointTo = target - llGetPos();
             float  turnAngle = llAtan2(pointTo.x, pointTo.y);
@@ -836,7 +836,7 @@ default {
             carryMoved = 0;
         }
     }
-    
+
     //----------------------------------------
     // NOT AT FOLLOW/MOVELOCK TARGET
     //----------------------------------------
@@ -844,7 +844,7 @@ default {
         if (keyAnimation == "" && carrierID != NULL_KEY) {
             vector newCarrierPos = llList2Vector(llGetObjectDetails(carrierID,[OBJECT_POS]),0);
             llStopMoveToTarget();
-            
+
             if (carrierPos != newCarrierPos) {
                 llTargetRemove(targetHandle);
                 carrierPos = newCarrierPos;
@@ -861,7 +861,7 @@ default {
             llMoveToTarget(lockPos, 0.7);
         }
     }
-    
+
     //----------------------------------------
     // CONTROL
     //----------------------------------------
@@ -877,28 +877,28 @@ default {
         if (!(llGetAgentInfo(llGetOwner())&AGENT_WALKING)) {
             llApplyImpulse(<0, 0, 0>, TRUE);
         }
-        else { 
+        else {
             if (afk && (keyAnimation == "")  && (id == dollID)) {
                 if (level & ~edge & CONTROL_FWD) llApplyImpulse(<-1, 0, 0> * afkSlowWalkSpeed, TRUE);
                 if (level & ~edge & CONTROL_BACK) llApplyImpulse(<1, 0, 0> * afkSlowWalkSpeed, TRUE);
             }
         }
     }
-    
+
     dataserver(key request, string data) {
         if (request == rlvTPrequest) {
             vector global = llGetRegionCorner() + (vector)data;
-            
+
             string locx = (string)llFloor(global.x);
             string locy = (string)llFloor(global.y);
             string locz = (string)llFloor(global.z);
-            
+
             llOwnerSay("Dolly is now teleporting.");
-            
+
             lmRunRLVas("TP", "tpto:" + locx + "/" + locy + "/" + locz + "=force");
         }
     }
-    
+
     run_time_permissions(integer perm) {
         ifPermissions();
     }
