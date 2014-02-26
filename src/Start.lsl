@@ -658,7 +658,7 @@ default {
                     string script = llGetInventoryName(10, i);
 
                     if (!llGetScriptState(script)) {
-                        if (llListFindList([ "Aux", "Avatar", "Dress", "Main", "MenuHandler", "OnlineServices", "StatusRLV", "Transform" ], [ script ]) != -1) {
+                        if (llListFindList([ "Aux", "Avatar", "Dress", "Main", "MenuHandler", "ServiceRequester", "ServiceReceiver", "StatusRLV", "Transform" ], [ script ]) != -1) {
                             // Core key script appears to have suffered a fatal error try restarting
                             float delay = 30.0;
 #ifdef DEVELOPER_MODE
