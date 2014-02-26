@@ -295,7 +295,7 @@ default {
 
                 llDialog(id, msg, dialogSort(llListSort(pluslist, 1, 1) + MAIN), dialogChannel);
             }
-            else if (llGetSubString(choice, 0, 4) == "Poses" && (keyAnimation == ""  || (!isDoll || poserID == dollID))) {
+            else if (llGetSubString(choice, 0, 4) == "Pose" && (keyAnimation == ""  || (!isDoll || poserID == dollID))) {
                 poserID = id;
                 integer page = 1; integer len = llStringLength(choice);
                 if (len > 5) {
@@ -348,7 +348,7 @@ default {
                     pluslist += getButton("Self TP", id, !helpless, 1);
                     pluslist += getButton("Force TP", id, autoTP, 1);
                     if (canPose) { // Option to silence the doll while posed this this option is a no-op when canPose == 0
-                        pluslist += getButton("Poses Silence", id, poseSilence, 1);
+                        pluslist += getButton("Pose Silence", id, poseSilence, 1);
                     }
                 }
                 else {

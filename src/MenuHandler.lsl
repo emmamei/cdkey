@@ -58,7 +58,9 @@ integer wearLock;
 integer dbConfig;
 integer initState = 104;
 integer textboxType;
-//integer debugLevel = DEBUG_LEVEL;
+#ifdef DEVELOPER_MODE
+integer debugLevel = DEBUG_LEVEL;
+#endif
 integer startup = 1;
 
 integer blacklistChannel;
@@ -173,7 +175,9 @@ default
             //else if (name == "canRepeat")                   canRepeat = (integer)value;
             //else if (name == "poseSilence")               poseSilence = (integer)value;
             else if (name == "configured")                 configured = (integer)value;
+#ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                 debugLevel = (integer)value;
+#endif
             else if (name == "detachable")                 detachable = (integer)value;
             else if (name == "demoMode")                     demoMode = (integer)value;
             //else if (name == "helpless")                     helpless = (integer)value;
@@ -376,10 +380,10 @@ default
                         msg += "Doll is currently posed.\n";
 
                         if (!isDoll || (poserID == dollID)) {
-                            menu += ["Poses","Unpose"];
+                            menu += ["Pose","Unpose"];
                         }
                     }
-                    else menu += "Poses";
+                    else menu += "Pose";
 
                     if (!collapsed && ((numControllers == 0) || (isController && !isDoll))) {
                         if (canCarry) {
@@ -390,23 +394,23 @@ default
                         }
                     }
 
-                    #ifdef ADULT_MODE
+#ifdef ADULT_MODE
                         // Is doll strippable?
                         if (RLVok && (pleasureDoll || dollType == "Slut")) {
-                            #ifdef TESTER_MODE
+#ifdef DEVELOPER_MODE
                             if (isController || isCarrier || ((debugLevel != 0) && isDoll)) {
-                            #else
+#else
                             if (isController || isCarrier) {
-                            #endif
+#endif
                                 if (simRating == "MATURE" || simRating == "ADULT") menu += "Strip";
                             }
                         }
-                    #endif
+#endif
                 }
 
-                #ifdef TESTER_MODE
+#ifdef DEVELOPER_MODE
                 if ((debugLevel != 0) && isDoll) menu += "Wind";
-                #endif
+#endif
                 if (!isDoll) menu += "Wind";
                 menu += "Help/Support";
 
@@ -733,7 +737,7 @@ default
             else if (optName == "Sitting") lmSendConfig("canSit", (string)(curState == CROSS));
             else if (optName == "Standing") lmSendConfig("canStand", (string)(curState == CROSS));
             else if (optName == "Force TP") lmSendConfig("autoTP", (string)(curState == CROSS));
-            else if (optName == "Poses Silence") lmSendConfig("poseSilence", (string)(curState == CROSS));
+            else if (optName == "Pose Silence") lmSendConfig("poseSilence", (string)(curState == CROSS));
             else isAbility = 0; // Not an options menu item after all
 
             isFeature = 1; // Maybe it'a a features menu item
@@ -754,9 +758,9 @@ default
                     lmInternalCommand("setAFK", (string)afk + "|0|" + formatFloat(windRate, 1) + "|" + (string)minsLeft, id);
                 }
             }
-            #ifdef ADULT_MODE
+#ifdef ADULT_MODE
             else if (optName == "Pleasure Doll") lmSendConfig("pleasureDoll", (string)(curState == CROSS));
-            #endif
+#endif
             else isFeature = 0;
 
             if (isAbility) {
@@ -774,14 +778,14 @@ default
                 }
             }
 
-            #ifdef ADULT_MODE
+#ifdef ADULT_MODE
                 // Strip items... only for Pleasure Doll and Slut Doll Types...
                 list buttons = llListSort(["Top", "Bra", "Bottom", "Panties", "Shoes", "*ALL*"], 1, 1);
                 if (choice == "Strip")
                     llDialog(id, "Take off:", dialogSort(buttons + MAIN), dialogChannel); // Do strip menu
                 else if (llListFindList(buttons, [ choice ]) != -1)
                     lmStrip(choice);
-            #endif
+#endif
         }
 
         if ((channel == blacklistChannel) || (channel == controlChannel)) {
