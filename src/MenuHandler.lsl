@@ -1,8 +1,11 @@
+//========================================
 // MenuHandler.lsl
+//========================================
 //
-// vim:sw=4 et nowrap:
+// vim:sw=4 et nowrap filetype=lsl
 //
-// DATE: 10 December 2013
+// DATE: 25 February 2014
+
 #include "include/GlobalDefines.lsl"
 
 // Current Controller - or Mistress
