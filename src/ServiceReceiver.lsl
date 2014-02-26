@@ -13,14 +13,14 @@ default {
     on_rez(integer start) {
         rezzed = 1;
     }
-    
+
     link_message(integer sender, integer code, string data, key id) {
         list split = llParseString2List(data, [ "|" ], []);
         string script = llList2String(split, 0);
-        
+
         if (code == 104 || code == 105) {
             if (llList2String(split, 0) != "Start") return;
-            
+
             if (!rezzed && (code == 105)) lmInitState(initState++);
         }
         else if (code == 110) {
@@ -34,9 +34,11 @@ default {
             string script = llList2String(split, 0);
             string name = llList2String(split, 1);
             string value = llList2String(split, 2);
-            
+
+#ifdef DEVELOPER_MODE
             if (name == "debugLevel")                   debugLevel = (integer)value;
-            
+#endif
+
             else if (script == SCRIPT_NAME) return;
             else if (name == "offlineMode") {
                 offlineMode = (integer)value;
@@ -45,10 +47,10 @@ default {
         }
         else if (code == 850) {
             string messageType = llList2String(split, 1);
-            
+
             if (messageType == "requestID") {
                 string requestType = llList2String(split, 2);
-                
+
                      if (requestType == "BlacklistKey")     requestBlacklistKey = id;
                 else if (requestType == "AddKey")           requestAddKey = id;
                 else if (requestType == "MistressKey")      requestMistressKey = id;
@@ -59,13 +61,15 @@ default {
             }
         }
     }
-    
-    http_response(key request, integer status, list meta, string body) {        
+
+    http_response(key request, integer status, list meta, string body) {
         if (request == requestUpdate) {
             if (llGetSubString(body, 0, 21) == "checkversion versionok") {
                 if (llStringLength(body) > 22) updateCheck = (integer)llGetSubString(body, 23, -1);
                 lastUpdateCheck = llGetUnixTime();
+#ifdef DEVELOPER_MODE
                 debugSay(5, "DEBUG-SERVICES", "Next check in " + (string)updateCheck + " seconds");
+#endif
                 llOwnerSay("Version check completed you have the latest version.");
             }
             else if (body == "checkversion updatesent") {
@@ -105,32 +109,32 @@ default {
         }
         else if (request == requestLoadDB) {
             string error = "HTTPdb - Database access ";
-            
+
             integer configCount;
-            
+
             if (status == 200) {
                 lmSendConfig("databaseOnline", (string)(databaseOnline = 1));
-                
+
                 float HTTPdbProcessStart;
                 string eventTime = formatFloat(((HTTPdbProcessStart = llGetTime()) - HTTPdbStart) * 1000, 2);
-                
+
                 integer lines; integer responseLength = (integer)llGetHTTPHeader(request, "Content-Length");
-                
+
                 do {
                     integer nextNewLine = llSubStringIndex(body, "\n");
                     if (nextNewLine == -1) nextNewLine = llStringLength(body);
-                    
+
                     string line = llDeleteSubString(body, nextNewLine, llStringLength(body));
                     body = llDeleteSubString(body, 0, nextNewLine);
-                    
+
                     lines++;
-                    
+
                     integer splitIndex = llSubStringIndex(line, "=");
                     string Key = llDeleteSubString(line, splitIndex, llStringLength(line));
                     string Value = llDeleteSubString(line, 0, splitIndex);
-                    
+
                     if (Value == "") Value = "";
-                    
+
                     if (Key == "useHTTPS") useHTTPS = (integer)Value;
                     else if (Key == "HTTPinterval") HTTPinterval = (float)Value;
                     else if (Key == "HTTPthrottle") HTTPthrottle = (float)Value;
@@ -148,19 +152,21 @@ default {
                         lmSendConfig(Key, Value);
                         configCount++;
                     }
-                    
+
                     if (useHTTPS) protocol = "https://";
                     else protocol = "http://";
                 } while (llStringLength(body));
-                
+
+#ifdef DEVELOPER_MODE
                 debugSay(5, "DEBUG-SERVICES", "Service post interval setting " + formatFloat(HTTPinterval, 2) + "s throttle setting " + formatFloat(HTTPthrottle, 2) + "s");
-                
+
                 string msg = "HTTPdb - Recieved " + (string)responseLength + " bytes, processed " + (string)lines + " records ";
                 if (lastPostTimestamp) msg += "with updates since our last post " + (string)((llGetUnixTime() - lastPostTimestamp) / 60) + " minutes ago ";
                 msg += "event time " + eventTime + ", processing time " + formatFloat(((llGetTime() - HTTPdbProcessStart) * 1000), 2);
                 msg += "ms, total time for DB transaction " + formatFloat((llGetTime() - HTTPdbStart) * 1000, 2) + "ms";
                 debugSay(2, "DEBUG-SERVICES", msg);
-                
+#endif
+
                 databaseReload = 0;
             }
             else {
@@ -171,9 +177,9 @@ default {
                     llOwnerSay(error);
                 }
             }
-            
+
             lmConfigComplete(configCount);
-            
+
             lmInitState(initState++);
         }
         else if (request == requestMistressKey || request == requestBlacklistKey) {
@@ -204,7 +210,9 @@ default {
                 list split = llParseStringKeepNulls(body, [ "|" ], []);
                 lastPostTimestamp = llList2Integer(split, 1);
                 lmServiceMessage("dbPostOK", (string)(lastPostTimestamp), NULL_KEY);
+#ifdef DEVELOPER_MODE
                 debugSay(5, "DEBUG-SERVICES", "HTTPdb update success " + llList2String(split, 2) + " updated records: " + llList2CSV(updateList));
+#endif
                 if (!databaseOnline) {
                     llOwnerSay("HTTPdb - Database service has recovered.");
                     curInterval = stdInterval;
@@ -225,16 +233,21 @@ default {
             list split = llParseStringKeepNulls(body, [ "|" ], []);
             integer new = llList2Integer(split, 1);
             integer old = llList2Integer(split, 2);
-            
+
+#ifdef DEVELOPER_MODE
             debugSay(5, "DEBUG-SERVICES", "Posted " + (string)(old + new) + " keys: " + (string)new + " new, " + (string)old + " old");
+#endif
         }
-        
+
         if (request != requestLoadDB) {
+#ifdef DEVELOPER_MODE
             integer debug;
             if (status == 200) debug = 7;
             else debug = 1;
+
             debugSay(debug, "DEBUG-SERVICES-RAW", "HTTP " + (string)status);
-            
+#endif
+
             string lastPart;
             do {
                 string bodyCut = llGetSubString(body, 0, 755);
@@ -245,8 +258,10 @@ default {
                 integer endIndex = (vIdxFnd | (vIdxFnd >> 31));
                 bodyCut = llGetSubString(body, 0, endIndex);
                 body = llDeleteSubString(body, 0, endIndex);
-                
+
+#ifdef DEVELOPER_MODE
                 debugSay(debug, "DEBUG-SERVICES-RAW", bodyCut);
+#endif
             } while (llStringLength(body));
         }
     }
