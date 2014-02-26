@@ -2,10 +2,12 @@
 // StatusRLV.lsl
 //========================================
 //
-// vim:sw=4 et nowrap:
+// vim:sw=4 et nowrap filetype=lsl
 //
-// DATE: 8 December 2013
+// DATE: 25 February 2014
+
 #include "include/GlobalDefines.lsl"
+
 //#define DEBUG_BADRLV 1
 //
 // As of 23 January 2014 this script is now state tracking only
@@ -13,13 +15,6 @@
 // thus we keep this script lightweight with plenty of heap room
 // for it's runtime data needs.
 
-#define cdListElement(a,b) llList2String(a, b)
-#define cdListFloatElement(a,b) llList2Float(a, b)
-#define cdListIntegerElement(a,b) llList2Integer(a, b)
-#define cdListElementP(a,b) llListFindList(a, [ b ]);
-#define cdSplitArgs(a) llParseStringKeepNulls((a), [ "|" ], [])
-#define cdSplitString(a) llParseString2List(a, [ "," ], []);
-#define NOT_FOUND -1
 #define RESTRICTION_NEW "+"
 #define RESTRICTION_ADDED "^"
 #define RESTRICTION_REMOVED "-"

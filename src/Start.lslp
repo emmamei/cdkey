@@ -1,9 +1,11 @@
+//========================================
 // Start.lsl
+//========================================
 //
-// DATE: 24 February 2014
+// vim:sw=4 et nowrap filetype=lsl
 //
-// vim: sw=4 et filetype=lsl
-//
+// DATE: 25 February 2014
+
 #include "include/GlobalDefines.lsl"
 #define sendMsg(id,msg) lmSendToAgent(msg, id);
 

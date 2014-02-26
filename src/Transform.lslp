@@ -1,8 +1,22 @@
-// 29 March: Formatting and general cleanup
+//========================================
+// Transform.lsl
+//========================================
+//
+// vim:sw=4 et nowrap filetype=lsl
+//
+// DATE: 25 February 2014
 
+// 29 March: Formatting and general cleanup
 //Aug 14, totally changing
 //Nov. 12, adding compatibility with hypnosisHUD
+
 #include "include/GlobalDefines.lsl"
+
+#define STRING_END -1
+#define TYPE_FLAG "*"
+
+#define cdGetChar(s,a) llGetSubString(s, a, a)
+#define cdGetFirstChar(s) llGetSubString(s, 0, 0)
 
 //========================================
 // VARIABLES 
@@ -41,7 +55,7 @@ integer minMinutes = 0;
 integer configured;
 integer RLVok;
 
-integer startup = 1;
+integer startup = YES;
 
 //integer menulimit = 9;     // 1.5 minute
 
@@ -67,19 +81,13 @@ setDollType(string choice, integer automated) {
     if (choice == "Transform") stateName = transform;
     else stateName = choice;
     
-    stateName = llGetSubString(llToUpper(stateName), 0, 0) + llGetSubString(llToLower(stateName), 1, -1);
+    stateName = cdGetFirstChar(llToUpper(stateName)) + llGetSubString(llToLower(stateName), 1, STRING_END);
     
     // I am unsure what this function is doing it seems like
     // a possible hangover but maybe I am missing something.
     // Commenting for now until confirmed.
     //sendStateName();
 
-    clothingprefix = "*" + stateName;
-    currentphrases = [];
-    lineno = 0;
-    
-    if (llGetInventoryType("*" + stateName) == INVENTORY_NOTECARD) kQuery = llGetNotecardLine("*" + stateName,0);
-    
     if (stateName != currentState) {
         if (automated) minMinutes = 0;
         else minMinutes = 5;    
@@ -87,6 +95,13 @@ setDollType(string choice, integer automated) {
         llSetTimerEvent(3.0);
     
         currentState = stateName;
+
+        clothingprefix = TYPE_FLAG + stateName;
+        currentphrases = [];
+        lineno = 0;
+        
+        if (llGetInventoryType(TYPE_FLAG + stateName) == INVENTORY_NOTECARD) kQuery = llGetNotecardLine(TYPE_FLAG + stateName,0);
+    
         lmSendConfig("dollType", stateName);
         lmSendConfig("currentState", stateName);
         llSleep(0.5);
@@ -128,8 +143,8 @@ reloadTypeNames() {
 
     while(n) {
         typeName = llGetInventoryName(INVENTORY_NOTECARD, --n);
-        if (llGetSubString(typeName, 0, 0) == "*") {
-            types += llGetSubString(typeName, 1, -1);
+        if (cdGetFirstChar(typeName) == TYPE_FLAG) {
+            types += llGetSubString(typeName, 1, STRING_END);
         }
     }
 }
@@ -152,9 +167,9 @@ runTimedTriggers() {
         // Starting with a '*' marks a fragment; with none,
         // the phrase is used as is
 
-        if (llGetSubString(phrase, 0, 0) == "*") {
+        if (cdGetFirstChar(phrase) == "*") {
 
-            phrase = llGetSubString(phrase, 1, -1);
+            phrase = llGetSubString(phrase, 1, STRING_END);
             float r = llFrand(3);
 
             if (r < 1.0) {
@@ -254,7 +269,7 @@ default {
         
         
         if (readingNC) {
-            kQuery = llGetNotecardLine("*" + currentState,lineno);
+            kQuery = llGetNotecardLine(TYPE_FLAG + currentState,lineno);
         }
     }
 
@@ -353,8 +368,8 @@ default {
         
         if (code == 500) {
             string name = llList2String(split, 2);
-            string optName = llGetSubString(choice, 2, -1);
-            string curState = llGetSubString(choice, 0, 0);
+            string optName = llGetSubString(choice, 2, STRING_END);
+            string curState = cdGetFirstChar(choice);
             
             if (choice == "Type Options") {
                 list choices;
@@ -393,7 +408,7 @@ default {
                     llDialog(id, msg, dialogSort(llListSort(choices, 1, 1) + MAIN), dialogChannel);
                 }
             }
-            else if ((llListFindList(types, [ choice ]) != -1) || (choice == "Transform")) {
+            else if ((cdListElementP(types, choice) != NOT_FOUND) || (choice == "Transform")) {
                 if (choice == "Transform") choice = transform;
                 else if (mustAgreeToType) {
                     transform = choice;
@@ -474,5 +489,3 @@ default {
         }
     }
 }
-
-
