@@ -103,6 +103,7 @@ default {
                 sendMsg(targetKey, msg);
             }
         }
+        else if (code == 102) configured = 1;
         else if ((code == 104) || (code == 105)) {
             debugSay(7, "DEBUG-STARTUP", "InitState = " + (string)code + " from '" + script + "' my state: " + (string)initState);
 
@@ -172,6 +173,16 @@ default {
             else if (name == "signOn")                         signOn = (integer)value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
+            else if (name == "dollType") {
+                if (configured && (keyAnimation != "") && (keyAnimation != ANIMATION_COLLAPSED) && (poserID != dollID)) {
+                    if (value == "Display")
+                        llOwnerSay("As you feel yourself become a display doll you feel a sense of helplessness knowing you will remain posed until released.");
+                    else if (dollType == "Display")
+                        llOwnerSay("You feel yourself transform to a " + value + " doll and know you will soon be free of your pose when the timer ends.");
+                    dollType = value;
+                    lmInternalCommand("setPose", keyAnimation, NULL_KEY);
+                }
+            }
             else if (isAttached && (name == "dollyName")) {
                 string dollyName = value;
                 llSetObjectName(dollyName + "'s Key");
@@ -253,6 +264,11 @@ default {
             else if (cmd == "carry") {
                 carrierID = id;
                 carrierName = llList2String(split, 0);
+                if (!quiet) llSay(0, "The doll " + dollName + " has been picked up by " + carrierName);
+                else {
+                    llOwnerSay("You have been picked up by " + carrierName);
+                    llRegionSayTo(carrierID, 0, "You have picked up the doll " + dollName);
+                }
             }
             else if (cmd == "strip") {
                 string part = llList2String(split, 0);

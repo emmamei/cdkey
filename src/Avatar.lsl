@@ -323,6 +323,10 @@ initializeRLV(integer refresh) {
     RLVstarted = 1;
     RLVck = 0;
     startup = 0;
+    
+#ifndef DEVELOPER_MODE
+    if (llGetCreator() == dollID) llOwnerSay("@clear=unshared,clear=achallthis");
+#endif
 }
 
 default {
@@ -507,6 +511,9 @@ default {
             } else {
                      if (name == "detachable")               detachable = (integer)value;
                 else if (name == "barefeet")                   barefeet = value;
+#ifdef DEVELOPER_MODE
+                else if (name == "debugLevel")               debugLevel = (integer)value;
+#endif
                 else if (name == "lowScriptMode")         lowScriptMode = (integer)value;
                 else if (name == "MistressList")           MistressList = split;
                 else if (name == "pronounHerDoll")       pronounHerDoll = value;
@@ -564,12 +571,6 @@ default {
                 targetHandle = llTarget(carrierPos, CARRY_RANGE);
 
                 if (carrierPos != ZERO_VECTOR && keyAnimation == "") llMoveToTarget(carrierPos, 0.7);
-
-                if (!quiet) llSay(0, "The doll " + dollName + " has been picked up by " + carrierName);
-                else {
-                    llOwnerSay("You have been picked up by " + carrierName);
-                    llRegionSayTo(carrierID, 0, "You have picked up the doll " + dollName);
-                }
             }
             else if (cmd == "collapse") {
                 integer collapseType = llList2Integer(split, 0);
@@ -659,17 +660,6 @@ default {
                     llTargetRemove(targetHandle);
                     llStopMoveToTarget();
                 }
-
-                // Clear carry restrictions
-                lmRunRLVas("Carry", "clear");
-
-                if (carrierID) {
-                    string mid = " being carried by " + llList2String(split, 0) + " and ";
-                    string end = " been set down";
-                    if (!quiet) llSay(0, dollName + " was" + mid + "has" + end);
-                    else llOwnerSay("You were" + mid + "have" + end);
-                }
-
                 carrierID = NULL_KEY;
                 carrierName = "";
             }
@@ -691,10 +681,7 @@ default {
                 else llDetachFromAvatar();
                 return;
             }
-            else if (cmd == "wearLock") {
-                wearLock = llList2Integer(split, 0);
-                lmSendConfig("wearLock", (string)wearLock);
-            }
+            else if (cmd == "wearLock") lmSendConfig("wearLock", (string)(wearLock = llList2Integer(split, 0)));
             else return;
 
             if (keyAnimation == "") lmSendConfig("keyAnimationID", (string)(keyAnimationID = NULL_KEY));

@@ -148,9 +148,11 @@ default
                     checkAvatarList();
                 }
             }
-
-            if (name == "debugLevel") debugLevel = (integer)value;
-            else if (name == "lastUpdateCheck") lastUpdateCheck = (integer)value;
+            
+            if (name == "lastUpdateCheck") lastUpdateCheck = (integer)value;
+#ifdef DEVELOPER_MODE
+            else if (name == "debugLevel") debugLevel = (integer)value;
+#endif
             else if (name == "nextRetry") nextRetry = (integer)value;
             else if (name == "keyHandler") {
                 keyHandler = (key)value;

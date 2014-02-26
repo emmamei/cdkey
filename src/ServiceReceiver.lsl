@@ -37,9 +37,10 @@ default {
 
 #ifdef DEVELOPER_MODE
             if (name == "debugLevel")                   debugLevel = (integer)value;
-#endif
-
             else if (script == SCRIPT_NAME) return;
+#else
+            if (script == SCRIPT_NAME) return;
+#endif
             else if (name == "offlineMode") {
                 offlineMode = (integer)value;
                 dbPostParams = [];
@@ -61,8 +62,13 @@ default {
             }
         }
     }
-
+    
     http_response(key request, integer status, list meta, string body) {
+        integer locationIndex = llSubStringIndex(body,"\n");
+        integer queryIndex = llSubStringIndex(body,"?");
+        string location = llGetSubString(body, 10, queryIndex - 1);
+        body = llStringTrim(llDeleteSubString(body, 0, locationIndex), STRING_TRIM);
+
         if (request == requestUpdate) {
             if (llGetSubString(body, 0, 21) == "checkversion versionok") {
                 if (llStringLength(body) > 22) updateCheck = (integer)llGetSubString(body, 23, -1);
@@ -88,7 +94,7 @@ default {
                 queForSave("nextRetry", (string)nextRetry);
             }
         }
-        else if (request == requestName) {
+        else if (location == "https://api.silkytech.com/objdns/lookup") {
             if (status == 200) {
                 serverURL = body;
                 gotURL = 1;
@@ -105,7 +111,7 @@ default {
                 queForSave("nextRetry", (string)nextRetry);
             }
         }
-        else if (request == requestLoadDB) {
+        else if (location == "https://api.silkytech.com/httpdb/retrieve") {
             string error = "HTTPdb - Database access ";
 
             integer configCount;
@@ -115,17 +121,14 @@ default {
 
                 float HTTPdbProcessStart;
                 string eventTime = formatFloat(((HTTPdbProcessStart = llGetTime()) - HTTPdbStart) * 1000, 2);
-
-                integer lines; integer responseLength = (integer)llGetHTTPHeader(request, "Content-Length");
-
+                
+                
                 do {
                     integer nextNewLine = llSubStringIndex(body, "\n");
                     if (nextNewLine == -1) nextNewLine = llStringLength(body);
 
                     string line = llDeleteSubString(body, nextNewLine, llStringLength(body));
                     body = llDeleteSubString(body, 0, nextNewLine);
-
-                    lines++;
 
                     integer splitIndex = llSubStringIndex(line, "=");
                     string Key = llDeleteSubString(line, splitIndex, llStringLength(line));
@@ -139,7 +142,7 @@ default {
                     else if (Key == "updateCheck") updateCheck = (integer)Value;
                     else if (Key == "lastGetTimestamp") {
                         lastGetTimestamp = (integer)Value;
-                        lmServiceMessage("dbFetchOK", (string)(Value), NULL_KEY);
+                        lmServiceMessage("lastGetTimestamp", (string)(Value), NULL_KEY);
                     }
                     //else if (Key == "MistressListNew") handleAvList(Value, 1, 0);
                     //else if (Key == "MistressList") handleAvList(Value, 1, 1);
@@ -157,8 +160,8 @@ default {
 
 #ifdef DEVELOPER_MODE
                 debugSay(5, "DEBUG-SERVICES", "Service post interval setting " + formatFloat(HTTPinterval, 2) + "s throttle setting " + formatFloat(HTTPthrottle, 2) + "s");
-
-                string msg = "HTTPdb - Recieved " + (string)responseLength + " bytes, processed " + (string)lines + " records ";
+                
+                string msg = "HTTPdb - Processed " + (string)configCount + " records ";
                 if (lastPostTimestamp) msg += "with updates since our last post " + (string)((llGetUnixTime() - lastPostTimestamp) / 60) + " minutes ago ";
                 msg += "event time " + eventTime + ", processing time " + formatFloat(((llGetTime() - HTTPdbProcessStart) * 1000), 2);
                 msg += "ms, total time for DB transaction " + formatFloat((llGetTime() - HTTPdbStart) * 1000, 2) + "ms";
@@ -180,7 +183,7 @@ default {
 
             lmInitState(initState++);
         }
-        else if (request == requestMistressKey || request == requestBlacklistKey) {
+        else if (location == "https://api.silkytech.com/name2key/lookup") {
             list split = llParseStringKeepNulls(body, [ "=" ], []);
             string name = llList2String(split, 0);
             string uuid = llList2String(split, 1);
@@ -202,12 +205,12 @@ default {
                 lmInternalCommand("addRemBlacklist", uuid + "|" + name, NULL_KEY);
             }
         }
-        else if (request == requestSendDB) {
+        else if (location == "https://api.silkytech.com/httpdb/store") {
             if (status == 200) {
                 dbPostParams = [];
                 list split = llParseStringKeepNulls(body, [ "|" ], []);
                 lastPostTimestamp = llList2Integer(split, 1);
-                lmServiceMessage("dbPostOK", (string)(lastPostTimestamp), NULL_KEY);
+                lmServiceMessage("lastPostTimestamp", (string)(lastPostTimestamp), NULL_KEY);
                 debugSay(5, "DEBUG-SERVICES", "HTTPdb update success " + llList2String(split, 2) + " updated records: " + llList2CSV(updateList));
                 if (!databaseOnline) {
                     llOwnerSay("HTTPdb - Database service has recovered.");
@@ -225,15 +228,15 @@ default {
                 }
             }
         }
-        else if (request == requestAddKey) {
+        else if (location == "https://api.silkytech.com/name2key/add") {
             list split = llParseStringKeepNulls(body, [ "|" ], []);
             integer new = llList2Integer(split, 1);
             integer old = llList2Integer(split, 2);
 
             debugSay(5, "DEBUG-SERVICES", "Posted " + (string)(old + new) + " keys: " + (string)new + " new, " + (string)old + " old");
         }
-
-        if (request != requestLoadDB) {
+        
+        if (location != "https://api.silkytech.com/httpdb/retreive") {
 #ifdef DEVELOPER_MODE
             integer debug;
             if (status == 200) debug = 7;
