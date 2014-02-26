@@ -2,23 +2,37 @@
 // StatusRLV.lsl
 //========================================
 //
-// vim:sw=4 et nowrap filetype=lsl
+// vim:sw=4 et nowrap:
 //
-// DATE: 25 February 2014
-
+// DATE: 8 December 2013
 #include "include/GlobalDefines.lsl"
-
-//#define DEBUG_BADRLV 1
 //
 // As of 23 January 2014 this script is now state tracking only
 // core RLV command generators are now part of the Avatar script
 // thus we keep this script lightweight with plenty of heap room
 // for it's runtime data needs.
 
+/* =================================
+ * Bugfix: Preprocessor directives may not be redefined unless
+ * first #undef.  The following are already defined by the main
+ * GlobalDefines.lsl
+ * =================================
+ * #define cdListElement(a,b) llList2String(a, b)
+ * #define cdListFloatElement(a,b) llList2Float(a, b)
+ * #define cdListIntegerElement(a,b) llList2Integer(a, b)
+ * #define cdListElementP(a,b) llListFindList(a, [ b ]);
+ * #define cdSplitArgs(a) llParseStringKeepNulls((a), [ "|" ], [])
+ * #define cdSplitString(a) llParseString2List(a, [ "," ], []);
+ */
+#define NOT_FOUND -1
+
+#ifdef LINK_320
 #define RESTRICTION_NEW "+"
 #define RESTRICTION_ADDED "^"
 #define RESTRICTION_REMOVED "-"
 #define RESTRICTION_DROPPED "~"
+#endif
+
 #define CHATMSG_MAXLEN 896
 #define SCRIPT_MAXMEM 65536
 
@@ -70,9 +84,11 @@ default {
         else if (code == 135) {
             memReport(cdListFloatElement(split, 1));
         }
+#ifdef DEVELOPER_MODE
         else if (code == 300) {
             if (cdListElement(split, 1) == "debugLevel") debugLevel = (integer)cdListElement(split, 2);
         }
+#endif
         else if (code == 315) {
             string realScript = cdListElement(split, 0);
             string script = cdListElement(split, 1);

@@ -19,6 +19,7 @@ list unresolvedBlacklistNames;
 list MistressList;
 list blacklist;
 list checkNames;
+#define HTTP_HEADERS [ HTTP_CUSTOM_HEADER, "X-SilkyTech-Product", PACKAGE_NAME, HTTP_CUSTOM_HEADER, "X-SilkyTech-Product-Version", (string)PACKAGE_VERNUM ]
 list HTTP_OPTIONS = [ HTTP_BODY_MAXLENGTH, 16384, HTTP_VERBOSE_THROTTLE, FALSE, HTTP_METHOD ];
 list NO_STORE = [ "keyHandler", "keyHandlerTime" ];
 
@@ -117,10 +118,11 @@ checkAvatarList() {
                     debugSay(5, "DEBUG-SERVICES", "name2key: posting " + (string)namepostcount + " keys (" + (string)llStringLength(namepost) + " bytes) interval: " +
                                 formatDuration(llGetTime() - lastKeyPost, 0) + " mins");
 
-                    while ((requestAddKey = (llHTTPRequest("http://api.silkytech.com/name2key/add", HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE,
+                    while ((requestID = (llHTTPRequest("http://api.silkytech.com/name2key/add", HTTP_HEADERS + HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE,
                         "application/x-www-form-urlencoded" ], namepost))) == NULL_KEY) {
                             llSleep(1.0);
                     }
+                    lmServiceMessage("requestID", "AddKey", requestID);
 
                     lastKeyPost = llGetTime();
                     lastPost = lastKeyPost;
@@ -173,10 +175,11 @@ doHTTPpost() {
             }
         }
 
-        while ((requestSendDB = llHTTPRequest(protocol + "api.silkytech.com/httpdb/store?q=" + llSHA1String(dbPostBody + (string)llGetOwner() + time + SALT) +
-            "&t=" + time, HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE, "application/x-www-form-urlencoded" ], dbPostBody)) == NULL_KEY) {
+        while ((requestID = llHTTPRequest(protocol + "api.silkytech.com/httpdb/store?q=" + llSHA1String(dbPostBody + (string)llGetOwner() + time + SALT) +
+            "&t=" + time, HTTP_HEADERS + HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE, "application/x-www-form-urlencoded" ], dbPostBody)) == NULL_KEY) {
                 llSleep(1.0);
         }
+        lmServiceMessage("requestID", "SendDB", requestID);
     } else {
         float ThrottleTime = lastPost - llGetTime() + HTTPthrottle;
 

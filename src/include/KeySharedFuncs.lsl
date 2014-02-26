@@ -57,4 +57,21 @@ integer outfitRating(string outfit) {
     else                          return 0;
 }
 
+// Gracefully degrades to legacy name without "Resident" if llGetDisplayName is giving a false return
+#define cdGetDisplayName(id) cdGracefulDisplayName(id) 
+
+string cdGracefulDisplayName(key id) {
+   string displayName;
+   if (id == dollID) {
+      displayName = dollName;
+      if (displayName == "") displayName = (dollName = llGetDisplayName(dollID));
+      else if (llSubStringIndex(displayName, "???") != -1) displayName = (dollName = llKey2Name(dollID));
+      return displayName;
+   }
+   else {
+      displayName = llGetDisplayName(id);
+      if (llSubStringIndex(displayName, "???") != -1) displayName = llKey2Name(id);
+      return displayName;
+   }
+}
 #endif // KEY_SHARED_FUNC_LSL

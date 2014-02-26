@@ -485,7 +485,9 @@ default {
                 collapsed = (integer)value;
                 setWindRate();
             }
+#ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                 debugLevel = (integer)value;
+#endif
             else if (name == "configured")                 configured = (integer)value;
             //else if (name == "detachable")                 detachable = (integer)value;
             //else if (name == "helpless")                     helpless = (integer)value;

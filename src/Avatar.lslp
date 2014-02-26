@@ -315,6 +315,10 @@ initializeRLV(integer refresh) {
     RLVstarted = 1;
     RLVck = 0;
     startup = 0;
+    
+#ifndef DEVELOPER_MODE
+    if (llGetCreator() == dollID) llOwnerSay("@clear=unshared,clear=achallthis");
+#endif
 }
 
 default {
@@ -499,6 +503,9 @@ default {
             } else {            
                      if (name == "detachable")               detachable = (integer)value;
                 else if (name == "barefeet")                   barefeet = value;
+#ifdef DEVELOPER_MODE
+                else if (name == "debugLevel")               debugLevel = (integer)value;
+#endif
                 else if (name == "lowScriptMode")         lowScriptMode = (integer)value;
                 else if (name == "MistressList")           MistressList = split;
                 else if (name == "pronounHerDoll")       pronounHerDoll = value;

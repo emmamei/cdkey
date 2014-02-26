@@ -139,7 +139,9 @@ default {
             
                  if (name == "MistressList")             MistressList = split;
             else if (name == "isVisible")                  doVisibility((integer)value);
+#ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                 debugLevel = (integer)value;
+#endif
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "poserID")                       poserID = (key)value;
             else if (name == "dialogChannel")           dialogChannel = (integer)value;

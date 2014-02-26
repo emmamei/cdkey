@@ -427,7 +427,9 @@ default {
             else if (name == "canWear")                          canWear = (integer)value;
             else if (name == "collapsed")                      collapsed = (integer)value;
             else if (name == "wearLock")                        wearLock = (integer)value;
+#ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                    debugLevel = (integer)value;
+#endif
         }
         else if (code == 305) {
             string script = cdListElement(split, 0);

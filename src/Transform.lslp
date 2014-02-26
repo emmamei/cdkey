@@ -326,14 +326,16 @@ default {
                      if (name == "quiet")                                          quiet = (integer)value;
                 else if (name == "mustAgreeToType")                      mustAgreeToType = (integer)value;
                 else if (name == "showPhrases")                              showPhrases = (integer)value;
-                else if (name == "currentState")                            currentState = value;
+                else if (name == "stateName")                                  stateName = value;
                 else if (name == "dialogChannel") {
                                                                            dialogChannel = (integer)value;
                                                                               rlvChannel = dialogChannel ^ 0x80000000;
                 }
+#ifdef DEVELOPER_MODE
                 else if (name == "debugLevel") {
                                                                               debugLevel = (integer)value;
                 }
+#endif
                 
                 else if (name == "dollType") setDollType((stateName = value), 1);
                 
