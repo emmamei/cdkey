@@ -30,6 +30,7 @@ integer tryOutfits;
 integer retryOutfits;
 integer findTypeFolder;
 integer rlvHandle;
+integer useTypeFolder;
 string transform;
 string outfitsTest;
 string outfitsFolder;
@@ -88,6 +89,12 @@ setDollType(string choice, integer automated) {
     // Commenting for now until confirmed.
     //sendStateName();
 
+    clothingprefix = TYPE_FLAG + stateName;
+    currentphrases = [];
+    lineno = 0;
+    
+    if (llGetInventoryType(TYPE_FLAG + stateName) == INVENTORY_NOTECARD) kQuery = llGetNotecardLine(TYPE_FLAG + stateName,0);
+    
     if (stateName != currentState) {
         if (automated) minMinutes = 0;
         else minMinutes = 5;    
@@ -95,18 +102,9 @@ setDollType(string choice, integer automated) {
         llSetTimerEvent(3.0);
     
         currentState = stateName;
-
-        clothingprefix = TYPE_FLAG + stateName;
-        currentphrases = [];
-        lineno = 0;
-        
-        if (llGetInventoryType(TYPE_FLAG + stateName) == INVENTORY_NOTECARD) kQuery = llGetNotecardLine(TYPE_FLAG + stateName,0);
-    
         lmSendConfig("dollType", stateName);
         lmSendConfig("currentState", stateName);
         llSleep(0.5);
-    
-        lmInternalCommand("randomDress", "", NULL_KEY);
     
         if (!quiet) llSay(0, dollName + " has become a " + stateName + " Doll.");
         else llOwnerSay("You have become a " + stateName + " Doll.");
@@ -258,8 +256,12 @@ default {
                 outfitsTest = clothingprefix;
             }
             else {
+                if (typeFolder == "") lmSendConfig("useTypeFolder", (string)(useTypeFolder = 0));
                 tryOutfits = 0;
-                llSetTimerEvent(0.0);
+                if (!readingNC) {
+                    llSetTimerEvent(0.0);
+                    return;
+                }
             }
             
             llListenControl(rlvHandle, 1);
@@ -459,6 +461,8 @@ default {
         else if ((typeFolder == "") && (llGetSubString(choice, -llStringLength(clothingprefix), -1) == clothingprefix)) {
             typeFolder = choice;
             lmSendConfig("typeFolder", typeFolder);
+            lmSendConfig("outfitsFolder", "");
+            lmSendConfig("useTypeFolder", (string)1);
             tryOutfits = 0;
             llSetTimerEvent(0.0);
             if (llGetSubString(typeFolder, 0, llStringLength(outfitsFolder) - 1) != outfitsFolder) {
@@ -468,6 +472,11 @@ default {
             else {
                 llOwnerSay("Your type folder is " + typeFolder);
             }
+            
+            llSleep(0.5);
+            
+            lmInternalCommand("randomDress", "", NULL_KEY);
+            
             retryOutfits = 0;
         }
     }
@@ -488,6 +497,9 @@ default {
                 readingNC = 1;
                 llSetTimerEvent(3.0);
             }
+            else readingNC = 0;
         }
     }
 }
+
+
