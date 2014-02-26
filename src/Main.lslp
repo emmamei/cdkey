@@ -920,6 +920,13 @@ default {
                     lmSendConfig("debugLevel", (string)(debugLevel = (integer)param));
                     llOwnerSay("DEBUG_LEVEL = " + (string)debugLevel);
                 }
+                else if (choice == "inject") {
+                    list params = llParseString2List(param, ["#"], []);
+                    llOwnerSay("INJECT LINK:\nLink Code: " + (string)llList2Integer(params, 0) + "\n" +
+                               "Data: " + SCRIPT_NAME + "|" + llList2String(params, 1) + "\n" +
+                               "Key: " + (string)llList2Key(params, 2));
+                    llMessageLinked(LINK_THIS, llList2Integer(params, 0), SCRIPT_NAME + "|" + llList2String(params, 1), llList2Key(params, 2));
+                }
 #else
 #ifdef TESTER_MODE
                         else if (choice == "debug") {
