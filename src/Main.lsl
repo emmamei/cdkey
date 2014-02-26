@@ -9,7 +9,6 @@
 #include "include/GlobalDefines.lsl"
 
 #define STRING_END -1
-#define NO_FILTER ""
 #define NO_ARG ""
 
 #define NORMAL_COLOR     <1.0,1.0,1.0>
@@ -19,6 +18,7 @@
 #define cdSetHoverText(t,c) llSetText(t, c, 1.0)
 #define cdClearHoverText()  llSetText("", NORMAL_COLOR, 1.0)
 
+#define NO_FILTER ""
 #define cdListenAll(a)  llListen(a, NO_FILTER, NO_FILTER, NO_FILTER)
 #define cdListenMine(a) llListen(a, NO_FILTER,    dollID, NO_FILTER);
 
@@ -417,7 +417,7 @@ default {
         string script = cdListElement(split, 0);
 
         if (code == 102) {
-            if (cdListElement(split, 0) == "OnlineServices") {
+            if (cdListElement(split, 0) == "ServiceReceiver") {
                 if (timeLeftOnKey > effectiveLimit) timeLeftOnKey = effectiveLimit;
 
                 float displayRate = setWindRate();
