@@ -662,9 +662,9 @@ default {
                             // Core key script appears to have suffered a fatal error try restarting
                             float delay = 30.0;
 #ifdef DEVELOPER_MODE
-                            delay = delay * 6.0; // Increase delay by a factor of 10 for auto restarts in DEVELOPER_MODE this prevents
-                                                  // rapid looping from occuring in the event of a developer accidently saving a script that
-                                                  // fails to compile.
+                            delay = delay * 6.0; // Increase delay for automatic restarts by a factor of 6;
+                                                 // this prevents rapidly looping in the event of a developer
+                                                 // accidently saving a script that fails to compile.
 #endif
 
                             llSleep(delay);
