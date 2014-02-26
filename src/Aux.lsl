@@ -1,3 +1,11 @@
+//========================================
+// Aux.lsl
+//========================================
+//
+// vim:sw=4 et nowrap filetype=lsl
+//
+// DATE: 25 February 2014
+
 #define DEBUG_HANDLER 1
 #include "include/GlobalDefines.lsl"
 
@@ -64,11 +72,11 @@ doVisibility(integer setVisible) {
 
 default {
     state_entry() {
-        //lmSendConfig("debugLevel", (string)debugLevel);
+        //lmSendXonfig("debugLevel", (string)debugLevel);
     }
     
     on_rez(integer start) {
-        //lmSendConfig("debugLevel", (string)debugLevel);
+        //lmSendXonfig("debugLevel", (string)debugLevel);
         rezTime = llGetTime();
         configured = 0;
         rezzed = 1;
@@ -139,7 +147,9 @@ default {
             
                  if (name == "MistressList")             MistressList = split;
             else if (name == "isVisible")                  doVisibility((integer)value);
+#ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                 debugLevel = (integer)value;
+#endif
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "poserID")                       poserID = (key)value;
             else if (name == "dialogChannel")           dialogChannel = (integer)value;
