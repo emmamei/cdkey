@@ -67,9 +67,7 @@ default {
             if (llGetSubString(body, 0, 21) == "checkversion versionok") {
                 if (llStringLength(body) > 22) updateCheck = (integer)llGetSubString(body, 23, -1);
                 lastUpdateCheck = llGetUnixTime();
-#ifdef DEVELOPER_MODE
                 debugSay(5, "DEBUG-SERVICES", "Next check in " + (string)updateCheck + " seconds");
-#endif
                 llOwnerSay("Version check completed you have the latest version.");
             }
             else if (body == "checkversion updatesent") {
@@ -210,9 +208,7 @@ default {
                 list split = llParseStringKeepNulls(body, [ "|" ], []);
                 lastPostTimestamp = llList2Integer(split, 1);
                 lmServiceMessage("dbPostOK", (string)(lastPostTimestamp), NULL_KEY);
-#ifdef DEVELOPER_MODE
                 debugSay(5, "DEBUG-SERVICES", "HTTPdb update success " + llList2String(split, 2) + " updated records: " + llList2CSV(updateList));
-#endif
                 if (!databaseOnline) {
                     llOwnerSay("HTTPdb - Database service has recovered.");
                     curInterval = stdInterval;
@@ -234,9 +230,7 @@ default {
             integer new = llList2Integer(split, 1);
             integer old = llList2Integer(split, 2);
 
-#ifdef DEVELOPER_MODE
             debugSay(5, "DEBUG-SERVICES", "Posted " + (string)(old + new) + " keys: " + (string)new + " new, " + (string)old + " old");
-#endif
         }
 
         if (request != requestLoadDB) {
@@ -259,9 +253,7 @@ default {
                 bodyCut = llGetSubString(body, 0, endIndex);
                 body = llDeleteSubString(body, 0, endIndex);
 
-#ifdef DEVELOPER_MODE
                 debugSay(debug, "DEBUG-SERVICES-RAW", bodyCut);
-#endif
             } while (llStringLength(body));
         }
     }
