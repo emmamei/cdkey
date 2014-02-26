@@ -5,6 +5,8 @@
 #ifndef GLOBAL_DEFINES
 #define GLOBAL_DEFINES
 
+#include "config.h"
+
 // Used by this file below for OPTION_DATE
 //#define PACKAGE_VERSION "26 February 2014"
 
@@ -16,8 +18,6 @@
 
 // The date of this code in this key, we should really look into a proper version numbering system sometime
 #define OPTION_DATE PACKAGE_VERSION
-
-//#include "config.h"
 
 // List definitions: makes things easier to comprehend
 // Note: ....P in names is a LISP convention: acts like a question mark
