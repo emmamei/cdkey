@@ -1,3 +1,11 @@
+//========================================
+// Avatar.lsl
+//========================================
+//
+// vim:sw=4 et nowrap filetype=lsl
+//
+// DATE: 25 February 2014
+
 #include "include/GlobalDefines.lsl"
 
 key carrierID = NULL_KEY;
