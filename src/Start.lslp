@@ -362,7 +362,9 @@ default {
             else if (name == "quiet")                            quiet = (integer)value;
             else if (name == "lowScriptMode")            lowScriptMode = (integer)value;
             else if (name == "dialogChannel")            dialogChannel = (integer)value;
+#ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                  debugLevel = (integer)value;
+#endif
 //          else if (name == "nameOverride")              nameOverride = value;
             else if (name == "userBaseRLVcmd")          userBaseRLVcmd = value;
             else if (name == "userCollapseRLVcmd")  userCollapseRLVcmd = value;
