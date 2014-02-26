@@ -37,8 +37,6 @@ default {
 
 #ifdef DEVELOPER_MODE
             if (name == "debugLevel")                   debugLevel = (integer)value;
-#endif
-
             else if (script == SCRIPT_NAME) return;
 #else
             if (script == SCRIPT_NAME) return;
@@ -132,8 +130,6 @@ default {
                     string line = llDeleteSubString(body, nextNewLine, llStringLength(body));
                     body = llDeleteSubString(body, 0, nextNewLine);
 
-                    lines++;
-
                     integer splitIndex = llSubStringIndex(line, "=");
                     string Key = llDeleteSubString(line, splitIndex, llStringLength(line));
                     string Value = llDeleteSubString(line, 0, splitIndex);
@@ -165,7 +161,7 @@ default {
 #ifdef DEVELOPER_MODE
                 debugSay(5, "DEBUG-SERVICES", "Service post interval setting " + formatFloat(HTTPinterval, 2) + "s throttle setting " + formatFloat(HTTPthrottle, 2) + "s");
                 
-                string msg = "HTTPdb - Processed " + (string)lines + " records ";
+                string msg = "HTTPdb - Processed " + (string)configCount + " records ";
                 if (lastPostTimestamp) msg += "with updates since our last post " + (string)((llGetUnixTime() - lastPostTimestamp) / 60) + " minutes ago ";
                 msg += "event time " + eventTime + ", processing time " + formatFloat(((llGetTime() - HTTPdbProcessStart) * 1000), 2);
                 msg += "ms, total time for DB transaction " + formatFloat((llGetTime() - HTTPdbStart) * 1000, 2) + "ms";
@@ -241,8 +237,6 @@ default {
         }
         
         if (location != "https://api.silkytech.com/httpdb/retreive") {
-
-        if (request != requestLoadDB) {
 #ifdef DEVELOPER_MODE
             integer debug;
             if (status == 200) debug = 7;
