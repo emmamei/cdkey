@@ -7,11 +7,19 @@
 //========================================
 // VARIABLES 
 //========================================
-string dollname;
+string dollName;
 string stateName; 
 list types;
 integer lineno;
+integer readingNC;
+integer tryOutfits;
+integer retryOutfits;
+integer findTypeFolder;
+integer rlvHandle;
 string transform;
+string outfitsTest;
+string outfitsFolder;
+string typeFolder;
 
 //integer cd8666;
 //integer cd8667;
@@ -61,32 +69,31 @@ setDollType(string choice, integer automated) {
     
     stateName = llGetSubString(llToUpper(stateName), 0, 0) + llGetSubString(llToLower(stateName), 1, -1);
     
+    // I am unsure what this function is doing it seems like
+    // a possible hangover but maybe I am missing something.
+    // Commenting for now until confirmed.
+    //sendStateName();
+
+    clothingprefix = "*" + stateName;
+    currentphrases = [];
+    lineno = 0;
+    
+    if (llGetInventoryType("*" + stateName) == INVENTORY_NOTECARD) kQuery = llGetNotecardLine("*" + stateName,0);
+    
     if (stateName != currentState) {
         if (automated) minMinutes = 0;
-        else minMinutes = 5;
-    
-        // I am unsure what this function is doing it seems like
-        // a possible hangover but maybe I am missing something.
-        // Commenting for now until confirmed.
-        //sendStateName();
+        else minMinutes = 5;    
+        typeFolder = "";
+        llSetTimerEvent(3.0);
     
         currentState = stateName;
-        clothingprefix = "*" + stateName;
-        currentphrases = [];
-        lineno = 0;
-        
-        if (llGetInventoryType("*" + stateName) == INVENTORY_NOTECARD) kQuery = llGetNotecardLine("*" + stateName,0);
-    
         lmSendConfig("dollType", stateName);
         lmSendConfig("currentState", stateName);
-        llSleep(0.5);
-        
-        lmSendConfig("typeFolder", clothingprefix);
         llSleep(0.5);
     
         lmInternalCommand("randomDress", "", NULL_KEY);
     
-        if (!quiet) llSay(0, dollname + " has become a " + stateName + " Doll.");
+        if (!quiet) llSay(0, dollName + " has become a " + stateName + " Doll.");
         else llOwnerSay("You have become a " + stateName + " Doll.");
     }
 }
@@ -185,7 +192,7 @@ runTimedTriggers() {
 default {
     state_entry() {
         dollID =   llGetOwner();
-        dollname = llGetDisplayName(dollID);
+        dollName = llGetDisplayName(dollID);
         stateName = "Regular";
     }
     //----------------------------------------
@@ -211,7 +218,44 @@ default {
     // TIMER
     //----------------------------------------
     timer() {
-        kQuery = llGetNotecardLine("*" + currentState,lineno);
+        list outfitsFolders = [ "> Outfits", "Outfits", "> Dressup", "Dressup" ];
+        
+
+        if (tryOutfits) {
+            if (outfitsFolder == "") {
+                if ((outfitsTest == "") || (retryOutfits < 2)) {
+                    outfitsTest = llList2String(outfitsFolders, tryOutfits - 1);
+                }
+                else {
+                    if (tryOutfits == llGetListLength(outfitsFolders)) {
+                        tryOutfits = 0;
+                        outfitsTest = "";
+                        if (!readingNC) {
+                            llSetTimerEvent(0.0);
+                            return;
+                        }
+                    }
+                    outfitsTest = llList2String(outfitsFolders, tryOutfits++);
+                    retryOutfits = 0;
+                }
+            }
+            else if ((typeFolder == "") && (retryOutfits < 2)) {
+                outfitsTest = clothingprefix;
+            }
+            else {
+                tryOutfits = 0;
+                llSetTimerEvent(0.0);
+            }
+            
+            llListenControl(rlvHandle, 1);
+            llOwnerSay("@findfolder:" + outfitsTest + "=" + (string)rlvChannel);
+            retryOutfits++;
+        }
+        
+        
+        if (readingNC) {
+            kQuery = llGetNotecardLine("*" + currentState,lineno);
+        }
     }
 
     //----------------------------------------
@@ -260,17 +304,21 @@ default {
         }
         
         else if (code == 300) {
+            string value = name;
             string name = choice;
-            string value = llList2String(split, 2);
             
             if (script != SCRIPT_NAME) {
                      if (name == "quiet")                                          quiet = (integer)value;
                 else if (name == "mustAgreeToType")                      mustAgreeToType = (integer)value;
                 else if (name == "showPhrases")                              showPhrases = (integer)value;
                 else if (name == "currentState")                            currentState = value;
-                else if (name == "dialogChannel") {                        dialogChannel = (integer)value;
-                                                                              rlvChannel = (integer)value ^ 0x80000000; }
-                else if (name == "debugLevel")                                debugLevel = (integer)value;
+                else if (name == "dialogChannel") {
+                                                                           dialogChannel = (integer)value;
+                                                                              rlvChannel = dialogChannel ^ 0x80000000;
+                }
+                else if (name == "debugLevel") {
+                                                                              debugLevel = (integer)value;
+                }
                 
                 else if (name == "dollType") setDollType((stateName = value), 1);
                 
@@ -279,7 +327,28 @@ default {
         }
         
         else if (code == 350) {
-            RLVok = llList2Integer(split, 0);
+            RLVok = (integer)choice;
+            
+            outfitsFolder = "";
+            typeFolder = "";
+            tryOutfits = 1;
+            retryOutfits = 0;
+            
+            if (RLVok) {
+                if (!rlvHandle) rlvHandle = llListen(rlvChannel, "", "", "");
+                else {
+                    rlvHandle = 0;
+                    llListenRemove(rlvHandle);
+                }
+            }
+            else {
+                if (rlvHandle) {
+                    rlvHandle = 0;
+                    llListenRemove(rlvHandle);
+                }
+            }
+            
+            llSetTimerEvent(3.0);
         }
         
         if (code == 500) {
@@ -309,10 +378,10 @@ default {
                 // Doll must remain in a type for a period of time
                 if (minMinutes > 0) {
                     // Since the output goes to the listener "handle" of 9999, it is discarded silently
-                    llDialog(id,"The Doll " + dollname + " cannot be transformed right now. The Doll was recently transformed. Dolly can be transformed in " + (string)minMinutes + " minutes.",["OK"], 9999);
+                    llDialog(id,"The Doll " + dollName + " cannot be transformed right now. The Doll was recently transformed. Dolly can be transformed in " + (string)minMinutes + " minutes.",["OK"], 9999);
                 }
                 else {
-                    string msg = "These change the personality of " + dollname + " This Doll is currently a " + stateName + " Doll. What type of doll do you want the Doll to be?";
+                    string msg = "These change the personality of " + dollName + " This Doll is currently a " + stateName + " Doll. What type of doll do you want the Doll to be?";
                     list choices = types;
 
                     llOwnerSay(name + " is looking at your doll types.");
@@ -352,16 +421,39 @@ default {
     //----------------------------------------
     // LISTEN
     //----------------------------------------
-    /*listen(integer channel, string name, key id, string choice) {
-        
-
-        // Verify current Transform choice
+    listen(integer channel, string name, key id, string choice) {
+        /* Verify current Transform choice
         if (channel == channelAsk) {
             if (choice == "ask") {
                 sendStateName();
             }
+        }*/
+        
+        if ((outfitsFolder == "") && (llGetSubString(choice, -llStringLength(outfitsTest), -1) == outfitsTest)) {
+            outfitsFolder = choice;
+            lmSendConfig("outfitsFolder", outfitsFolder);
+            if (typeFolder != "") {
+                tryOutfits = 0;
+                llSetTimerEvent(0.0);
+            }
+            llOwnerSay("Your outfits folder is '" + outfitsFolder + "'");
+            retryOutfits = 0;
         }
-    }*/
+        else if ((typeFolder == "") && (llGetSubString(choice, -llStringLength(clothingprefix), -1) == clothingprefix)) {
+            typeFolder = choice;
+            lmSendConfig("typeFolder", typeFolder);
+            tryOutfits = 0;
+            llSetTimerEvent(0.0);
+            if (llGetSubString(typeFolder, 0, llStringLength(outfitsFolder) - 1) != outfitsFolder) {
+                llOwnerSay("WARNING: Found type folder '" + typeFolder + "' is not within the outfits folder '" + outfitsFolder + 
+                           "' please check it is correct and you do not have two of more folders named *" + stateName);
+            }
+            else {
+                llOwnerSay("Your type folder is " + typeFolder);
+            }
+            retryOutfits = 0;
+        }
+    }
 
     //----------------------------------------
     // DATASERVER
@@ -375,9 +467,10 @@ default {
                 }
 
                 lineno++;
-                llSetTimerEvent(0.5);
+                
+                readingNC = 1;
+                llSetTimerEvent(3.0);
             }
-            else llSetTimerEvent(0.0);
         }
     }
 }

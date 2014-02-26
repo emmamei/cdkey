@@ -45,7 +45,7 @@ memReport(float delay) {
         #define debugHandler(script,level,prefix,msg) debugMainHandler(script, level, prefix, msg)
         #define linkDebug(sender,code,data,id) linkDebugHandler(sender, code, data, id)
     #else
-        #define debugSay(level,prefix,msg) if (debugLevel > level) llMessageLinked(LINK_THIS, 700, SCRIPT_NAME + "|" + (string)level + "|" + prefix + "|" + msg, NULL_KEY)
+        #define debugSay(level,prefix,msg) if (debugLevel >= level) llMessageLinked(LINK_THIS, 700, SCRIPT_NAME + "|" + (string)level + "|" + prefix + "|" + msg, NULL_KEY)
     #endif
 #else
 #define debugSay(level,prefix,msg)
