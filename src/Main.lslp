@@ -8,6 +8,7 @@
 
 #include "include/GlobalDefines.lsl"
 
+#define STRING_END -1
 #define NO_FILTER ""
 #define NO_ARG ""
 
@@ -108,7 +109,9 @@ integer wearLock;
 integer initState = 104;
 integer timeReporting = 1;
 
+#ifdef DEVELOPER_MODE
 integer debugLevel = DEBUG_LEVEL;
+#endif
 
 // If the key is a Transforming Key - one that can transform from one
 // type of Doll to another - this tracks the current type of doll.
@@ -338,7 +341,7 @@ default {
             }
 
             // Update sign if appropriate
-            string primText = cdListItem(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
+            string primText = cdListElement(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
 
             if (collapsed && primText != "Disabled Dolly!")            cdSetHoverText("Disabled Dolly!",        EMERGENCY_COLOR);
             else if (afk && primText != dollType + " Doll (AFK)")      cdSetHoverText(dollType + " Doll (AFK)", WARN_COLOR);
@@ -485,7 +488,9 @@ default {
                 collapsed = (integer)value;
                 setWindRate();
             }
+#ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                 debugLevel = (integer)value;
+#endif
             else if (name == "configured")                 configured = (integer)value;
             //else if (name == "detachable")                 detachable = (integer)value;
             //else if (name == "helpless")                     helpless = (integer)value;
@@ -509,7 +514,6 @@ default {
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
             else if (name == "blacklist")                   blacklist = split;
             else if (name == "dialogChannel")           dialogChannel = (integer)value;
-            else if (name == "debugLevel")                 debugLevel = (integer)value;
             else if (name == "keyHandler") {
                 keyHandler = (key)value;
             }
