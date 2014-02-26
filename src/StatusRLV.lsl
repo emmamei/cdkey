@@ -71,7 +71,11 @@ default {
             memReport(cdListFloatElement(split, 1));
         }
         else if (code == 300) {
+#ifdef DEVELOPER_MODE
             if (cdListElement(split, 1) == "debugLevel") debugLevel = (integer)cdListElement(split, 2);
+#else
+            ;
+#endif
         }
         else if (code == 315) {
             string realScript = cdListElement(split, 0);

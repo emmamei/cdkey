@@ -333,9 +333,11 @@ default {
                                                                            dialogChannel = (integer)value;
                                                                               rlvChannel = dialogChannel ^ 0x80000000;
                 }
+#ifdef DEVELOPER_MODE
                 else if (name == "debugLevel") {
                                                                               debugLevel = (integer)value;
                 }
+#endif
 
                 else if (name == "dollType") setDollType((stateName = value), 1);
 
