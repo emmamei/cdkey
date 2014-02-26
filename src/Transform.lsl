@@ -14,6 +14,8 @@
 
 #define STRING_END -1
 #define TYPE_FLAG "*"
+#define YES 1
+#define NO 0
 
 #define cdGetChar(s,a) llGetSubString(s, a, a)
 #define cdGetFirstChar(s) llGetSubString(s, 0, 0)
