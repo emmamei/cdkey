@@ -341,7 +341,7 @@ default {
             string name = llList2String(split, 1);
             string value = llList2String(split, 2);
 
-            //debugSay(5, "From " + script + ": " + name + "=" + value);
+            //debugXay(5, "From " + script + ": " + name + "=" + value);
 
                  if (name == "timeLeftOnKey")            timeLeftOnKey = (float)value;
             else if (name == "ncPrefsLoadedUUID")    ncPrefsLoadedUUID = (key)value;
@@ -362,7 +362,9 @@ default {
             else if (name == "quiet")                            quiet = (integer)value;
             else if (name == "lowScriptMode")            lowScriptMode = (integer)value;
             else if (name == "dialogChannel")            dialogChannel = (integer)value;
+#ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                  debugLevel = (integer)value;
+#endif
 //          else if (name == "nameOverride")              nameOverride = value;
             else if (name == "userBaseRLVcmd")          userBaseRLVcmd = value;
             else if (name == "userCollapseRLVcmd")  userCollapseRLVcmd = value;
