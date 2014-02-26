@@ -1,5 +1,6 @@
 #ifndef UTILITY_LSL
 #define UTILITY_LSL
+#include "config.h"
 /*
  * ========================================
  * UTILITY FUNCTIONS
