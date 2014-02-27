@@ -1,30 +1,14 @@
-//========================================
-// Transform.lsl
-//========================================
-//
-// vim:sw=4 et nowrap filetype=lsl
-//
-// DATE: 25 February 2014
-
 // 29 March: Formatting and general cleanup
+
 //Aug 14, totally changing
 //Nov. 12, adding compatibility with hypnosisHUD
-
 #include "include/GlobalDefines.lsl"
 
-#define STRING_END -1
-#define TYPE_FLAG "*"
-#define YES 1
-#define NO 0
-
-#define cdGetChar(s,a) llGetSubString(s, a, a)
-#define cdGetFirstChar(s) llGetSubString(s, 0, 0)
-
 //========================================
-// VARIABLES
+// VARIABLES 
 //========================================
 string dollName;
-string stateName;
+string stateName; 
 list types;
 integer lineno;
 integer readingNC;
@@ -41,7 +25,7 @@ string typeFolder;
 //integer cd8666;
 //integer cd8667;
 //integer cd8665;
-
+ 
 integer dialogChannel;
 integer rlvChannel;
 
@@ -58,7 +42,7 @@ integer minMinutes = 0;
 integer configured;
 integer RLVok;
 
-integer startup = YES;
+integer startup = 1;
 
 //integer menulimit = 9;     // 1.5 minute
 
@@ -83,26 +67,26 @@ integer quiet;
 setDollType(string choice, integer automated) {
     if (choice == "Transform") stateName = transform;
     else stateName = choice;
-
-    stateName = cdGetFirstChar(llToUpper(stateName)) + llGetSubString(llToLower(stateName), 1, STRING_END);
-
+    
+    stateName = llGetSubString(llToUpper(stateName), 0, 0) + llGetSubString(llToLower(stateName), 1, -1);
+    
     // I am unsure what this function is doing it seems like
     // a possible hangover but maybe I am missing something.
     // Commenting for now until confirmed.
     //sendStateName();
 
-    clothingprefix = TYPE_FLAG + stateName;
+    clothingprefix = "*" + stateName;
     currentphrases = [];
     lineno = 0;
     
-    if (llGetInventoryType(TYPE_FLAG + stateName) == INVENTORY_NOTECARD) kQuery = llGetNotecardLine(TYPE_FLAG + stateName, 0);
+    if (llGetInventoryType("*" + stateName) == INVENTORY_NOTECARD) kQuery = llGetNotecardLine("*" + stateName,0);
     
     if (stateName != currentState) {
         if (automated) minMinutes = 0;
-        else minMinutes = 5;
+        else minMinutes = 5;    
         typeFolder = "";
         llSetTimerEvent(3.0);
-
+    
         currentState = stateName;
         lmSendConfig("dollType", stateName);
         lmSendConfig("currentState", stateName);
@@ -134,7 +118,7 @@ setDollType(string choice, integer automated) {
 
     llSay(channelHUD,stateToSend);
 }*/
-
+    
 reloadTypeNames() {
     string typeName;
 
@@ -143,8 +127,8 @@ reloadTypeNames() {
 
     while(n) {
         typeName = llGetInventoryName(INVENTORY_NOTECARD, --n);
-        if (cdGetFirstChar(typeName) == TYPE_FLAG) {
-            types += llGetSubString(typeName, 1, STRING_END);
+        if (llGetSubString(typeName, 0, 0) == "*") {
+            types += llGetSubString(typeName, 1, -1);
         }
     }
 }
@@ -167,9 +151,9 @@ runTimedTriggers() {
         // Starting with a '*' marks a fragment; with none,
         // the phrase is used as is
 
-        if (cdGetFirstChar(phrase) == "*") {
+        if (llGetSubString(phrase, 0, 0) == "*") {
 
-            phrase = llGetSubString(phrase, 1, STRING_END);
+            phrase = llGetSubString(phrase, 1, -1);
             float r = llFrand(3);
 
             if (r < 1.0) {
@@ -192,7 +176,7 @@ runTimedTriggers() {
 
         //if (currentState == "Regular") {
         //  phrase += " ***";
-        //} else {
+        //} else {        
         //    phrase += " (since you are a " + stateName + " Doll) ***";
         //}
 
@@ -228,17 +212,17 @@ default {
             reloadTypeNames();
         }
     }
-
+    
     //----------------------------------------
     // TIMER
     //----------------------------------------
     timer() {
         list outfitsFolders = [ "> Outfits", "Outfits", "> Dressup", "Dressup" ];
-
+        
 
         if (tryOutfits) {
             if (outfitsFolder == "") {
-                if ((outfitsTest == "") || (retryOutfits < 2)) {
+                if ((outfitsTest == "") || (retryOutfits < 3)) {
                     outfitsTest = llList2String(outfitsFolders, tryOutfits - 1);
                 }
                 else {
@@ -254,7 +238,7 @@ default {
                     retryOutfits = 0;
                 }
             }
-            else if ((typeFolder == "") && (retryOutfits < 2)) {
+            else if ((typeFolder == "") && (retryOutfits < 3)) {
                 outfitsTest = clothingprefix;
             }
             else {
@@ -265,16 +249,17 @@ default {
                     return;
                 }
             }
-
+            
             llListenControl(rlvHandle, 1);
             llOwnerSay("@findfolder:" + outfitsTest + "=" + (string)rlvChannel);
             retryOutfits++;
         }
-
-
+        
+        
         if (readingNC) {
-            kQuery = llGetNotecardLine(TYPE_FLAG + currentState,lineno);
+            kQuery = llGetNotecardLine("*" + currentState,lineno);
         }
+        else llSetTimerEvent(0.0);
     }
 
     //----------------------------------------
@@ -285,19 +270,17 @@ default {
         string script = llList2String(split, 0);
         string choice = llList2String(split, 1);
         string name = llList2String(split, 2);
-
+        
         scaleMem();
-
+        
         if (code == 102) {
             // Trigger Transforming Key setting
             if (!isTransformingKey) lmSendConfig("isTransformingKey", (string)(isTransformingKey = 1));
-
-            if (choice == "Start") {
-                configured = 1;
-                if(stateName != currentState) setDollType(stateName, 1);
-            }
+            
+            configured = 1;
+            if(stateName != currentState) setDollType(stateName, 1);
         }
-
+        
         else if (code == 104) {
             if (script != "Start") return;
             reloadTypeNames();
@@ -305,27 +288,27 @@ default {
             llSetTimerEvent(60.0);   // every minute
             if (initState == 104) lmInitState(initState++);
         }
-
+        
         else if (code == 105) {
             if (script != "Start") return;
             if (initState == 105) lmInitState(initState++);
         }
-
+        
         else if (code == 110) {
             initState = 105;
             setDollType(stateName, 1);
             startup = 0;
         }
-
+        
         else if (code == 135) {
             float delay = (float)choice;
             memReport(delay);
         }
-
+        
         else if (code == 300) {
             string value = name;
             string name = choice;
-
+            
             if (script != SCRIPT_NAME) {
                      if (name == "quiet")                                          quiet = (integer)value;
                 else if (name == "mustAgreeToType")                      mustAgreeToType = (integer)value;
@@ -342,19 +325,19 @@ default {
 #endif
                 
                 else if (name == "dollType") setDollType((stateName = value), 1);
-
+                
                 else if (script == "Main" && name == "timeLeftOnKey") runTimedTriggers();
             }
         }
-
+        
         else if (code == 350) {
             RLVok = (integer)choice;
-
+            
             outfitsFolder = "";
             typeFolder = "";
             tryOutfits = 1;
             retryOutfits = 0;
-
+            
             if (RLVok) {
                 if (!rlvHandle) rlvHandle = llListen(rlvChannel, "", "", "");
                 else {
@@ -368,15 +351,15 @@ default {
                     llListenRemove(rlvHandle);
                 }
             }
-
-            llSetTimerEvent(3.0);
+            
+            llSetTimerEvent(5.0);
         }
-
+        
         if (code == 500) {
             string name = llList2String(split, 2);
-            string optName = llGetSubString(choice, 2, STRING_END);
-            string curState = cdGetFirstChar(choice);
-
+            string optName = llGetSubString(choice, 2, -1);
+            string curState = llGetSubString(choice, 0, 0);
+            
             if (choice == "Type Options") {
                 list choices;
 
@@ -414,7 +397,7 @@ default {
                     llDialog(id, msg, dialogSort(llListSort(choices, 1, 1) + MAIN), dialogChannel);
                 }
             }
-            else if ((cdListElementP(types, choice) != NOT_FOUND) || (choice == "Transform")) {
+            else if ((llListFindList(types, [ choice ]) != -1) || (choice == "Transform")) {
                 if (choice == "Transform") choice = transform;
                 else if (mustAgreeToType) {
                     transform = choice;
@@ -423,12 +406,12 @@ default {
                     string msg = "Do you wish to transform to a " + choice + " Doll?";
 
                     llDialog(dollID, msg, choices, dialogChannel);
-
+                    
                     // Return for now until we get confirmation
                     return;
                     //avoid = TRUE;
                 }
-
+                
                 //avoid = FALSE;
                 debugSay(5, "DEBUG", "transform = " + (string)transform);
                 debugSay(5, "DEBUG", "stateName = " + (string)choice);
@@ -449,7 +432,7 @@ default {
                 sendStateName();
             }
         }*/
-
+        
         if ((outfitsFolder == "") && (llGetSubString(choice, -llStringLength(outfitsTest), -1) == outfitsTest)) {
             outfitsFolder = choice;
             lmSendConfig("outfitsFolder", outfitsFolder);
@@ -468,7 +451,7 @@ default {
             tryOutfits = 0;
             llSetTimerEvent(0.0);
             if (llGetSubString(typeFolder, 0, llStringLength(outfitsFolder) - 1) != outfitsFolder) {
-                llOwnerSay("WARNING: Found type folder '" + typeFolder + "' is not within the outfits folder '" + outfitsFolder +
+                llOwnerSay("WARNING: Found type folder '" + typeFolder + "' is not within the outfits folder '" + outfitsFolder + 
                            "' please check it is correct and you do not have two of more folders named *" + stateName);
             }
             else {
@@ -495,9 +478,9 @@ default {
                 }
 
                 lineno++;
-
+                
                 readingNC = 1;
-                llSetTimerEvent(3.0);
+                llSetTimerEvent(5.0);
             }
             else readingNC = 0;
         }
