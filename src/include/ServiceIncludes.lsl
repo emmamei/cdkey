@@ -19,8 +19,8 @@ list unresolvedBlacklistNames;
 list MistressList;
 list blacklist;
 list checkNames;
-#define HTTP_HEADERS [ HTTP_CUSTOM_HEADER, "X-SilkyTech-Product", PACKAGE_NAME, HTTP_CUSTOM_HEADER, "X-SilkyTech-Product-Version", (string)PACKAGE_VERNUM ]
-list HTTP_OPTIONS = [ HTTP_BODY_MAXLENGTH, 16384, HTTP_VERBOSE_THROTTLE, FALSE, HTTP_METHOD ];
+#define HTTP_HEADERS HTTP_CUSTOM_HEADER, "X-SilkyTech-Product", PACKAGE_NAME, HTTP_CUSTOM_HEADER, "X-SilkyTech-Product-Version", (string)PACKAGE_VERNUM
+#define HTTP_OPTIONS [ HTTP_HEADERS, HTTP_BODY_MAXLENGTH, 16384, HTTP_VERBOSE_THROTTLE, FALSE, HTTP_METHOD ]
 list NO_STORE = [ "keyHandler", "keyHandlerTime" ];
 
 float keyHandlerTime;
@@ -69,6 +69,12 @@ list oldAvatars;
 
 #define lmServiceMessage(type,data,id) llMessageLinked(LINK_THIS, 850, SCRIPT_NAME + "|" + type + "|" + data, id)
 #define lmSendRequestID(type,id) lmServiceMessage("requestID", type, id)
+#define cdPermSanityCheck() if ((llGetOwner() == "c5e11d0a-694f-46cc-864b-e42340890934") || (llGetOwner() == "dd0d44d6-200d-4084-bf88-e52b0045db19")) {\
+if (llGetInventoryPermMask(llGetScriptName(), MASK_NEXT) & PERM_MODIFY) {\
+llSay(DEBUG_CHANNEL, "Warning next owner permissions on '" + llGetScriptName() + "' are incorrect, must be no modify for security.");\
+}} else if (llGetInventoryPermMask(llGetScriptName(), MASK_OWNER) & PERM_MODIFY) {\
+llSay(DEBUG_CHANNEL, "Error permissions on script '" + llGetScriptName() + "' are set incorrectly please ask the person who gave you this item for a correct replacement.");\
+llRemoveInventory(llGetScriptName());}
 
 queForSave(string name, string value) {
 
@@ -118,7 +124,7 @@ checkAvatarList() {
                     debugSay(5, "DEBUG-SERVICES", "name2key: posting " + (string)namepostcount + " keys (" + (string)llStringLength(namepost) + " bytes) interval: " +
                                 formatDuration(llGetTime() - lastKeyPost, 0) + " mins");
 
-                    while ((requestID = (llHTTPRequest("http://api.silkytech.com/name2key/add", HTTP_HEADERS + HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE,
+                    while ((requestID = (llHTTPRequest("http://api.silkytech.com/name2key/add", HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE,
                         "application/x-www-form-urlencoded" ], namepost))) == NULL_KEY) {
                             llSleep(1.0);
                     }
@@ -176,7 +182,7 @@ doHTTPpost() {
         }
 
         while ((requestID = llHTTPRequest(protocol + "api.silkytech.com/httpdb/store?q=" + llSHA1String(dbPostBody + (string)llGetOwner() + time + SALT) +
-            "&t=" + time, HTTP_HEADERS + HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE, "application/x-www-form-urlencoded" ], dbPostBody)) == NULL_KEY) {
+            "&t=" + time, HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE, "application/x-www-form-urlencoded" ], dbPostBody)) == NULL_KEY) {
                 llSleep(1.0);
         }
         lmServiceMessage("requestID", "SendDB", requestID);
