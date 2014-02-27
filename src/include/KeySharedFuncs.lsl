@@ -28,7 +28,8 @@ float setWindRate() {
 
 #ifdef MAIN_LSL
         if ((windRate == 0.0) && (wearLockExpire == 0.0)) {
-            llSetTimerEvent(0.0);
+            llSetTimerEvent(STD_RATE * 10.0);
+            if (lowScriptMode) llSetTimerEvent(LOW_RATE * 10.0);
             timerStarted = 0;
         } else {
             if (!timerStarted) {

@@ -111,6 +111,7 @@ float windRate        = 1.0;
 float baseWindRate    = windRate;
 float displayWindRate = windRate;
 float HTTPinterval    = 60.0;
+float collapseTime;
 float lastPostTime;
 list windTimes        = [ 30 ];
 list blacklist;
@@ -384,6 +385,8 @@ default {
                         lmInternalCommand("collapse", "1", NULL_KEY);
                     }
                 }
+                else if (collapsed) lmSendConfig("collapseTime", (string)(llGetTime() - collapseTime));
+                else lmSendConfig("collapseTime", (string)(collapseTime - llGetTime()));
             
                 #ifdef DEVELOPER_MODE
                 if (timeReporting) llOwnerSay("Script Time: " + formatFloat(llList2Float(llGetObjectDetails(llGetKey(), [ OBJECT_SCRIPT_TIME ]), 0) * 1000000, 2) + "µs");
@@ -582,8 +585,9 @@ default {
                 else lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0.0));
             }
             
-            else if (cmd == "uncollapse") {
+            else if (llGetSubString(cmd,-8,-1) == "collapse") {
                 displayWindRate = setWindRate();
+                collapseTime = llGetTime();
             }
             
             // Deny access to the menus when the command was recieved from blacklisted avatar
