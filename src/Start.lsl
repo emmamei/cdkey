@@ -82,6 +82,7 @@ integer introLines;
 integer reset;
 integer rlvWait;
 integer RLVok = UNSET;
+integer databaseFinished;
 integer databaseOnline;
 
 float keyLimit;
@@ -307,22 +308,27 @@ do_Restart() {
 default {
     link_message(integer source, integer code, string data, key id) {
         list split = llParseStringKeepNulls(data, [ "|" ], []);
+        string script = llList2String(split, 0);
 
         scaleMem();
 
-        if ((code == 104) || (code == 105)) {
-            string script = llList2String(split, 0);
+        if (code == 102) {
+            if (script != "ServiceReceiver") return;
+            databaseFinished = 1;
+            if (llGetListLength(notReady()) == 0) lmInitState(105);
+        }
+        else if ((code == 104) || (code == 105)) {
             if (llListFindList(readyScripts, [ script ]) == -1) {
                 readyScripts += script;
 
-                debugSay(2, "DEBUG-STARTUP", "Reporter '" + script + "'\nStill waiting: " + llList2CSV(notReady()));
+                debugSay(8, "DEBUG-STARTUP", "Reporter '" + script + "'\nStill waiting: " + llList2CSV(notReady()));
 
                 if (!llGetListLength(notReady())) {
                   if (initState == 104) {
                       initState++;
                       initConfiguration();
                       readyScripts = [];
-                      lmInitState(105);
+                      if (databaseFinished) lmInitState(105);
                   }
                   else {
                       initializationCompleted();
