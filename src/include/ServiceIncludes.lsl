@@ -116,7 +116,7 @@ checkAvatarList() {
 
             if ((name != "") && (uuid != NULL_KEY) && (llSubStringIndex(namepost, "=" + name + "&") == -1)) {
                 integer postlen;
-                string adding = "names[" + (string)namepostcount + "]" + "=" + name + "&" +
+                string adding = "names[" + (string)namepostcount + "]" + "=" + llEscapeURL(name) + "&" +
                                 "uuids[" + (string)namepostcount + "]" + "=" + llEscapeURL(uuid);
 
                 if ((postlen = ((llStringLength(namepost + adding) + 1) < 4096)) && (postAge < HTTPlimit)) {
@@ -136,7 +136,7 @@ checkAvatarList() {
                     lastKeyPost = llGetTime();
                     lastPost = lastKeyPost;
                     postAge = llGetTime() - lastKeyPost;
-                    namepost = "names[0]=" + name +
+                    namepost = "names[0]=" + llEscapeURL(name) +
                                "&uuids[0]=" + llEscapeURL(uuid);
                     namepostcount = 1;
                     posted = 1;
