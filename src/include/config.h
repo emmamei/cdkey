@@ -3,7 +3,7 @@
 
 /* enable the inclusion of adult features such as stripping and slut doll in
    the key */
-#define ADULT_MODE 1
+//#define ADULT_MODE 1
 
 /* enable a test mode with minimal code changes in which RLV support always
    fails effectively disable the listener for the check reply */
@@ -29,7 +29,7 @@
 /* enable developer support features such as not using RLV locks which would
    prevent editing the scripts or notecards, collection and reporting of
    performance statistics etc */
-#define DEVELOPER_MODE 1
+//#define DEVELOPER_MODE 1
 
 /* enable the start up introduction/hypno text provided that the required
    "Intro Text" notecard is also present */
@@ -63,4 +63,4 @@
 
 /* enable testing and debugging features and allows the doll to access
 x   normally inaccessible functions like strip and wind */
-#define TESTER_MODE 1
+//#define TESTER_MODE 1

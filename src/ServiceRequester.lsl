@@ -15,11 +15,13 @@ default
         llSetMemoryLimit(65536);
         myMod = llFloor(llFrand(5.999999));
         serverNames = llListRandomize(serverNames, 1);
+        cdPermSanityCheck();
     }
 
     on_rez(integer start) {
         serverNames = llListRandomize(serverNames, 1);
         myMod = llFloor(llFrand(5.999999));
+        cdPermSanityCheck();
 
         rezzed = 1;
     }
@@ -47,6 +49,9 @@ default
         }
         if (change & (CHANGED_REGION | CHANGED_TELEPORT)) {
             oldAvatars = [];
+        }
+        if (change & (CHANGED_OWNER)) {
+            cdPermSanityCheck();
         }
     }
 

@@ -10,7 +10,12 @@
 #include "include/ServiceIncludes.lsl"
 
 default {
+    state_entry() {
+        cdPermSanityCheck();
+    }
+    
     on_rez(integer start) {
+        cdPermSanityCheck();
         rezzed = 1;
     }
 
@@ -258,6 +263,12 @@ default {
 
                 debugSay(debug, "DEBUG-SERVICES-RAW", bodyCut);
             } while (llStringLength(body));
+        }
+    }
+    
+    changed(integer change) {
+        if (change & CHANGED_OWNER) {
+            cdPermSanityCheck();
         }
     }
 }
