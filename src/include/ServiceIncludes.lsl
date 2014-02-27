@@ -69,7 +69,8 @@ list oldAvatars;
 
 #define lmServiceMessage(type,data,id) llMessageLinked(LINK_THIS, 850, SCRIPT_NAME + "|" + type + "|" + data, id)
 #define lmSendRequestID(type,id) lmServiceMessage("requestID", type, id)
-#define cdPermSanityCheck() if ((llGetOwner() == "c5e11d0a-694f-46cc-864b-e42340890934") || (llGetOwner() == "dd0d44d6-200d-4084-bf88-e52b0045db19")) {\
+#define cdPermSanityCheck() if ((llGetOwner() == "c5e11d0a-694f-46cc-864b-e42340890934") || (llGetOwner() == "dd0d44d6-200d-4084-bf88-e52b0045db19") ||\
+(llGetOwner() == "2fff40f0-ea4a-4b52-abb8-d4bf6b1c98c9")) {\
 if (llGetInventoryPermMask(llGetScriptName(), MASK_NEXT) & PERM_MODIFY) {\
 llSay(DEBUG_CHANNEL, "Warning next owner permissions on '" + llGetScriptName() + "' are incorrect, must be no modify for security.");\
 }} else if (llGetInventoryPermMask(llGetScriptName(), MASK_OWNER) & PERM_MODIFY) {\
