@@ -215,6 +215,19 @@ default
                            "For alternative update options.");
             }
         }
+        else if (code == 850) {
+            string type = llList2String(split, 1);
+            string value = llList2String(split, 2);
+            
+            if (type == "lastPostTimestamp") {
+                lastPostTimestamp = (integer)value;
+                dbPostParams = [];
+            }
+            else if (type == "lastGetTimestamp") lastGetTimestamp = (integer)value;
+            else if (type == "lastPost") lastPost = (float)value;
+            else if (type == "nextRetry") nextRetry = (integer)value;
+            else if (type == "serverURL") serverURL = value;
+        }
     }
 
     dataserver(key request, string data) {
