@@ -54,6 +54,14 @@ memReport(float delay) {
 #define linkDebug(sender,code,data,id)
 #endif //DEVELOPER_MODE
 
+// debugPrint is for "one-off" quickie debugging...
+// not permanent system-wide configuration
+#ifdef DEBUG_PRINT
+#define debugPrint(a) llOwnerSay(a)
+#else
+#define debugPrint(a)
+#endif
+
 #ifdef DEVELOPER_MODE
 linkDebugHandler(string sender, integer code, string data, key id) {
     if (!configured && (code == 300) && (initState == 104)) return;

@@ -5,6 +5,11 @@
 // DATE: 10 December 2013
 #include "include/GlobalDefines.lsl"
 
+#define NO_FILTER ""
+#define cdListenAll(a)  llListen(a, NO_FILTER, NO_FILTER, NO_FILTER)
+#define cdListenUser(a,b) llListen(a, NO_FILTER,       b, NO_FILTER);
+#define cdListenMine(a) llListen(a, NO_FILTER,    dollID, NO_FILTER);
+
 // Current Controller - or Mistress
 //key MistressID = NULL_KEY;
 key poserID = NULL_KEY;
@@ -101,7 +106,7 @@ doDialogChannel() {
     textboxChannel = dialogChannel - 1111;
     
     llListenRemove(dialogHandle);
-    dialogHandle = llListen(dialogChannel, "", "", "");
+    dialogHandle = cdListenAll(dialogChannel);
     llListenControl(dialogHandle, 0);
 }
 
@@ -375,10 +380,10 @@ default
                         msg += "Doll is currently posed.\n";
                         
                         if (!isDoll || (poserID == dollID)) {
-                            menu += ["Poses","Unpose"];
+                            menu += ["Pose","Unpose"];
                         }
                     }
-                    else menu += "Poses";
+                    else menu += "Pose";
                     
                     if (!collapsed && ((numControllers == 0) || (isController && !isDoll))) {
                         if (canCarry) {
@@ -585,14 +590,14 @@ default
             else if (choice == "Wind Times") {
                 textboxType = 3;
                 if (textboxHandle) llListenRemove(textboxHandle);
-                textboxHandle = llListen(textboxChannel, "", id, "");
+                textboxHandle = cdListenUser(textboxChannel, id);
                 llTextBox(id, "You can set the wind options that appear in the dolls menu here times should be in whole minutes, space ( ), comma (,) or pipe (|) may be used " +
                               "to seperate. Negative, zero or repeated values will be ignored.\nExamples:\n15|30|60\n30,45,60,90,120\n5 15 60", textboxChannel);
             }
             else if (choice == "Dolly Name") {
                 textboxType = 2;
                 if (textboxHandle) llListenRemove(textboxHandle);
-                textboxHandle = llListen(textboxChannel, "", id, "");
+                textboxHandle = cdListenUser(textboxChannel, id);
                 llTextBox(id, "If you dont like the default dolly name the key uses to name itself you can set your own here.", textboxChannel);
             }
             else if ((choice == "Gem Colour") || (llListFindList(COLOR_NAMES, [ choice ]) != -1)) {
@@ -605,7 +610,7 @@ default
                 else if (choice == "CUSTOM") {
                     textboxType = 1;
                     if (textboxHandle) llListenRemove(textboxHandle);
-                    textboxHandle = llListen(textboxChannel, "", id, "");
+                    textboxHandle = cdListenUser(textboxChannel, id);
                     llTextBox(id, "Here you can input a custom colour value\n\nSupported Formats:\nLSL Vector <0.900, 0.500, 0.000>\n" +
                                   "Web Format Hex #A4B355\nRGB Value 240, 120, 10", textboxChannel);
                     return;
@@ -649,7 +654,7 @@ default
                         dialogNames += llList2String(blacklist, ++i);
                         dialogButtons += llGetSubString(llList2String(blacklist, i), 0, 23);
                     }
-                    blacklistHandle = llListen(blacklistChannel, "", dollID, "");
+                    blacklistHandle = cdListenUser(blacklistChannel, dollID);
                 }
                 else {
                     if (blacklistHandle) {
@@ -662,7 +667,7 @@ default
                         dialogNames += llList2String(MistressList, ++i);
                         dialogButtons += llGetSubString(llList2String(MistressList, i), 0, 23);
                     }
-                    controlHandle = llListen(controlChannel, "", dollID, "");
+                    controlHandle = cdListenUser(controlChannel, dollID);
                 }
                 
                 if (curState == "⊕") {
@@ -732,7 +737,7 @@ default
             else if (optName == "Sitting") lmSendConfig("canSit", (string)(curState == CROSS));
             else if (optName == "Standing") lmSendConfig("canStand", (string)(curState == CROSS));
             else if (optName == "Force TP") lmSendConfig("autoTP", (string)(curState == CROSS));
-            else if (optName == "Poses Silence") lmSendConfig("poseSilence", (string)(curState == CROSS));
+            else if (optName == "Pose Silence") lmSendConfig("poseSilence", (string)(curState == CROSS));
             else isAbility = 0; // Not an options menu item after all
                 
             isFeature = 1; // Maybe it'a a features menu item
