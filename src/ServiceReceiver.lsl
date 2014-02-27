@@ -98,7 +98,7 @@ default {
         integer queryIndex = llSubStringIndex(body,"?");
         string location = llGetSubString(body, 10, queryIndex - 1);
         body = llStringTrim(llDeleteSubString(body, 0, locationIndex), STRING_TRIM);
-
+#ifdef UPDATE_METHOD_CDKEY
         if (request == requestUpdate) {
             if (llGetSubString(body, 0, 21) == "checkversion versionok") {
                 if (llStringLength(body) > 22) updateCheck = (integer)llGetSubString(body, 23, -1);
@@ -125,6 +125,9 @@ default {
             }
         }
         else if (location == "https://api.silkytech.com/objdns/lookup") {
+#else
+        if (location == "https://api.silkytech.com/objdns/lookup") {
+#endif
             if (status == 200) {
                 serverURL = body;
                 gotURL = 1;
