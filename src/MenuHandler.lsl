@@ -380,10 +380,10 @@ default
                         msg += "Doll is currently posed.\n";
                         
                         if (!isDoll || (poserID == dollID)) {
-                            menu += ["Poses","Unpose"];
+                            menu += ["Pose","Unpose"];
                         }
                     }
-                    else menu += "Poses";
+                    else menu += "Pose";
                     
                     if (!collapsed && ((numControllers == 0) || (isController && !isDoll))) {
                         if (canCarry) {
@@ -737,7 +737,7 @@ default
             else if (optName == "Sitting") lmSendConfig("canSit", (string)(curState == CROSS));
             else if (optName == "Standing") lmSendConfig("canStand", (string)(curState == CROSS));
             else if (optName == "Force TP") lmSendConfig("autoTP", (string)(curState == CROSS));
-            else if (optName == "Poses Silence") lmSendConfig("poseSilence", (string)(curState == CROSS));
+            else if (optName == "Pose Silence") lmSendConfig("poseSilence", (string)(curState == CROSS));
             else isAbility = 0; // Not an options menu item after all
                 
             isFeature = 1; // Maybe it'a a features menu item
