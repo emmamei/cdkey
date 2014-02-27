@@ -62,5 +62,5 @@
 #define SIM_FRIENDLY 1
 
 /* enable testing and debugging features and allows the doll to access
-x   normally inaccessible functions like strip and wind */
+   normally inaccessible functions like strip and wind */
 //#define TESTER_MODE 1
