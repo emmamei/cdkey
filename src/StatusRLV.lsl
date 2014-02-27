@@ -61,6 +61,7 @@ default {
 
     link_message(integer sender, integer code, string data, key id) {
         list split = cdSplitArgs(data);
+        string script = cdListElement(split, 0);
 
         // Link Messages Handled:
         //
@@ -73,7 +74,6 @@ default {
         // 350: RLVok Yes/No Notification
 
         if (code == 104 || code == 105) {
-            string script = cdListElement(split, 0);
             if (script != "Start") return;
 
             if (initState == code) lmInitState(initState++);
@@ -84,15 +84,13 @@ default {
         else if (code == 135) {
             memReport(cdListFloatElement(split, 1));
         }
-#ifdef DEVELOPER_MODE
         else if (code == 300) {
+            string name = cdListElement(split, 1);
 #ifdef DEVELOPER_MODE
-            if (cdListElement(split, 1) == "debugLevel") debugLevel = (integer)cdListElement(split, 2);
-#else
-            ;
+            if (name == "debugLevel") debugLevel = (integer)cdListElement(split, 2);
 #endif
+            if (script == "Main") scaleMem();
         }
-#endif
         else if (code == 315) {
             string realScript = cdListElement(split, 0);
             string script = cdListElement(split, 1);
@@ -307,6 +305,5 @@ default {
             RLVok = cdListIntegerElement(split, 1);
             RLVstarted = 1;
         }
-        scaleMem();
     }
 }
