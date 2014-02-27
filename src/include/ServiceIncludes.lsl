@@ -99,6 +99,8 @@ checkAvatarList() {
     list newAvatars = llListSort(llGetAgentList(AGENT_LIST_REGION, []), 1, 1);
     list curAvatars = newAvatars;
 
+    llSetMemoryLimit(65536);
+
     integer i; integer n = llGetListLength(newAvatars);
     integer posted; float postAge = llGetTime() - lastKeyPost;
     float HTTPlimit = HTTPinterval * 15.0;
@@ -154,6 +156,8 @@ checkAvatarList() {
 #endif
     lastAvatarCheck = llGetTime();
     oldAvatars = curAvatars;
+
+    scaleMem();
 }
 
 doHTTPpost() {
