@@ -4,8 +4,11 @@
 //-----------------------------------
 // Internal Shared Functions
 //-----------------------------------
+#define STD_RATE 2.0
+#define LOW_RATE 8.0
 
 float lastTimerEvent;
+integer timerStarted;
 
 float setWindRate() {
     float newWindRate;
@@ -22,6 +25,20 @@ float setWindRate() {
         lmSendConfig("baseWindRate", (string)baseWindRate);
 	lmSendConfig("displayWindRate", (string)newWindRate);
         lmSendConfig("windRate", (string)windRate);
+
+#ifdef MAIN_LSL
+        if ((windRate == 0.0) && (wearLockExpire == 0.0)) {
+            llSetTimerEvent(0.0);
+            timerStarted = 0;
+        } else {
+            if (!timerStarted) {
+                llResetTime();
+                llSetTimerEvent(STD_RATE);
+                if (lowScriptMode) llSetTimerEvent(LOW_RATE);
+                timerStarted = 1;
+            }
+        }
+#endif
     }
     
     // llTargetOmega: With normalized vector spinrate is equal to radians per second
