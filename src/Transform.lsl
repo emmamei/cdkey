@@ -360,7 +360,7 @@ default {
             string optName = llGetSubString(choice, 2, -1);
             string curState = llGetSubString(choice, 0, 0);
             
-            if (choice == "Type Options") {
+            if (choice == "Type...") {
                 list choices;
 
                 choices += getButton("Verify Type", id, mustAgreeToType, 0);

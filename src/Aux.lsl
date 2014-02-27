@@ -298,7 +298,7 @@ default {
                 llOwnerSay("Here is your link to the community dolls group profile secondlife:///app/group/0f0c0dd5-a611-2529-d5c7-1284fb719003/about");
                 llDialog(id, "To join the community dolls group open your chat history (CTRL+H) and click the group link there.  Just click the Join Group button when the group profile opens.", [MAIN], 9999);
             }
-            else if (choice == "Access Menu") {
+            else if (choice == "Access...") {
                 debugSay(5, "DEBUG-AUX", "Dialog channel: " + (string)dialogChannel);
                 string msg = "Key Access Menu. (" + OPTION_DATE + " version)\n" +
                              "These are powerful options allowing you to give someone total control of your key or block someone from touch or even winding your key\n" +

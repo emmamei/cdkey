@@ -557,7 +557,7 @@ default
                 string msg; list pluslist;
                 if (isDoll) {
                     msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation.";
-                    pluslist += [ "Type Options", "Access Menu" ];
+                    pluslist += [ "Type...", "Access..." ];
                     if (isController) pluslist += "Abilities...";
                 }
                 else if (isController) {
@@ -566,11 +566,11 @@ default
                 }
                 else return;
                 
-                pluslist += [ "Features...", "Key Settings" ];
+                pluslist += [ "Features...", "Key..." ];
                 
                 llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel); 
             }
-            else if (choice == "Key Settings" && (isController || isDoll)) {
+            else if (choice == "Key..." && (isController || isDoll)) {
                 list pluslist = [ "Dolly Name", "Gem Colour" ];
                 if (isController) pluslist += [ "Max Time", "Wind Times" ];
                 llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(pluslist + MAIN, 1, 1)), dialogChannel);
