@@ -110,6 +110,8 @@ float timeLeftOnKey   = windamount;
 float windRate        = 1.0;
 float baseWindRate    = windRate;
 float displayWindRate = windRate;
+float HTTPinterval    = 60.0;
+float lastPostTime;
 list windTimes        = [ 30 ];
 list blacklist;
 
@@ -338,6 +340,26 @@ default {
             wind rate to be 0.
             Others which cause this effect are not being attached to spine
             and being doll type Builder or Key*/
+            
+            // Check post interval
+            if ((lastPostTime + HTTPinterval) < llGetTime()) {
+                // Check wearlock timer
+                if (wearLock) {
+                    if (wearLockExpire == 0.0) lmInternalCommand("wearLock", (string)(wearLock = 0), NULL_KEY);
+                    else {
+                        lmSendConfig("wearLockExpire", (string)wearLockExpire);
+                    }
+                }
+                
+                // Update time left
+                if (windRate != 0.0) {
+                    lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
+                }
+                
+                // In offline mode we update the timer locally
+                if (offlineMode) lastPostTime = llGetTime();
+            }
+            
             if (ticks % 30 == 0) {
                 if (windRate != 0.0) {
                     minsLeft = llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate));
@@ -361,8 +383,6 @@ default {
                         lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0.0));
                         lmInternalCommand("collapse", "1", NULL_KEY);
                     }
-                    // Update time left only if winding down
-                    else lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
                 }
             
                 #ifdef DEVELOPER_MODE
@@ -370,12 +390,6 @@ default {
                 #endif
                 
                 scaleMem();
-                
-                // Check wearlock timer
-                if (wearLock) {
-                    if (wearLockExpire == 0.0) lmInternalCommand("wearLock", (string)(wearLock = 0), NULL_KEY);
-                    else lmSendConfig("wearLockExpire", (string)wearLockExpire);
-                }
             }
         }
     }
@@ -475,7 +489,7 @@ default {
             //else if (name == "signOn")                         signOn = (integer)value;
             else if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
             else if (name == "windamount")                 windamount = (float)value;
-            else if (name == "wearLockExpire")         wearLockExpire = llGetTime();
+            else if (name == "wearLockExpire")         wearLockExpire = (float)value;
             else if (name == "baseWindRate")             baseWindRate = (float)value;
             else if (name == "displayWindRate")       displayWindRate = (float)value;
             //else if (name == "poserID")                       poserID = (key)value;
@@ -699,6 +713,14 @@ default {
                     lmInternalCommand("setWindTimes", llDumpList2String(split, "|"), id);
                 }
             }
+        }
+        
+        else if (code == 850) {
+            string type = llList2String(split, 1);
+            string value = llList2String(split, 2);
+            
+            if (type == "HTTPinterval") HTTPinterval = (float)value;
+            if (type == "lastPostTimestamp") lastPostTime = llGetTime();
         }
     }
 

@@ -227,6 +227,14 @@ default
             else if (type == "lastPost") lastPost = (float)value;
             else if (type == "nextRetry") nextRetry = (integer)value;
             else if (type == "serverURL") serverURL = value;
+            else if (type == "HTTPthrottle") HTTPthrottle = (float)value;
+            else if (type == "HTTPinterval") HTTPinterval = (float)value;
+            else if (type == "updateCheck") updateCheck = (integer)value;
+            else if (type == "lastUpdateCheck") lastUpdateCheck = (integer)value;
+            else if (type == "useHTTPS") {
+                if (value) protocol = "https://";
+                else protocol = "http://";
+            }
         }
     }
 
