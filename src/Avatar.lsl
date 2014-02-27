@@ -129,13 +129,13 @@ ifPermissions() {
                 key curAnim = llList2Key(llGetAnimationList(dollID), 0);
                 debugSay(7, "DEBUG", "animID=" + (string)keyAnimationID + " curAnim=" + (string)curAnim + " refreshRate=" + (string)refreshRate);
                 if (!clearAnim && (curAnim == keyAnimationID)) {
-                    refreshRate *= 2.0;
-                    if (refreshRate > 32.0) refreshRate = 32.0;
+                    refreshRate *= 1.1;                                         // +10%
+                    if (refreshRate > 30.0) refreshRate = 30.0;                 // 30 Second limit
                 }
                 else if (clearAnim || (keyAnimation != "")) {
                     if ((keyAnimationID != NULL_KEY) && (keyAnimation != "")) {
-                        refreshRate /= 2.0;
-                        if (refreshRate < 0.022) refreshRate = 0.022;
+                        refreshRate /= 2.0;                                     // -50%
+                        if (refreshRate < 0.022) refreshRate = 0.022;           // Limit once per frame
                     }
                     else refreshRate = 4.0;
                     if (keyAnimation != "") {
