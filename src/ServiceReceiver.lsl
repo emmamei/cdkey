@@ -273,4 +273,31 @@ default {
             cdPermSanityCheck();
         }
     }
+    
+    dataserver(key request, string data) {
+        integer index = llListFindList(checkNames, [ request ]);
+        if (index != NOT_FOUND) {
+            string uuid = llList2Key(checkNames, index + 1);
+            string name = data;
+
+            checkNames = llDeleteSubList(checkNames, index, index + 1);
+            index = llListFindList(unresolvedMistressNames, [ llToLower(data) ]);
+            if (index != NOT_FOUND) {
+                unresolvedMistressNames = llDeleteSubList(unresolvedMistressNames, index, index);
+                lmInternalCommand("addMistress", uuid + "|" + name, NULL_KEY);
+            }
+            else {
+                index = llListFindList(unresolvedBlacklistNames, [ llToLower(data) ]);
+                unresolvedBlacklistNames = llDeleteSubList(unresolvedBlacklistNames, index, index);
+                lmInternalCommand("addRemBlacklist", uuid + "|" + name, NULL_KEY);
+            }
+            string namepost = "names[0]" + "=" + name + "&" +
+                              "uuids[0]" + "=" + llEscapeURL(uuid);
+            while ((requestID = (llHTTPRequest("http://api.silkytech.com/name2key/add", HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE,
+                "application/x-www-form-urlencoded" ], namepost))) == NULL_KEY) {
+                    llSleep(1.0);
+            }
+            lmSendRequestID("AddKey", requestID);
+        }
+    }
 }
