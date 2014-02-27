@@ -117,6 +117,7 @@ default {
             }
         }
         else if (location == "https://api.silkytech.com/httpdb/retrieve") {
+            llSetMemoryLimit(65536);
             string error = "HTTPdb - Database access ";
 
             integer configCount;
@@ -264,6 +265,7 @@ default {
                 debugSay(debug, "DEBUG-SERVICES-RAW", bodyCut);
             } while (llStringLength(body));
         }
+        scaleMem();
     }
     
     changed(integer change) {
