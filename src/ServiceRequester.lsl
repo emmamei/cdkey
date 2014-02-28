@@ -12,7 +12,6 @@
 default
 {
     state_entry() {
-        llSetMemoryLimit(65536);
         myMod = llFloor(llFrand(5.999999));
         serverNames = llListRandomize(serverNames, 1);
         cdPermSanityCheck();
@@ -56,27 +55,26 @@ default
     }
 
     touch_start(integer num) {
-        integer index = llListFindList(unresolvedBlacklistNames, [ llToLower(llDetectedName(0)) ]);
-        if (index != NOT_FOUND) {
-            llOwnerSay("Identified Blacklist user " + llDetectedName(0) + " on key touch");
-            unresolvedBlacklistNames = llDeleteSubList(unresolvedBlacklistNames, index, index);
-            lmInternalCommand("addRemBlacklist", (string)llDetectedKey(0) + "|" + llDetectedName(0), NULL_KEY);
+        // The old code stored names potentially indefinately not a good idea, better way
+        lastKeyPost = llGetTime() - 30.0 * HTTPinterval; // Set the last post time to twice the max age limit
+        
+        integer i;
+        for (i = 0; i < num; i++) { // Handle all touch_starts (can be up to 16 per event
+                                    // and make sure the avatars are in the list
+            string name = llDetectedName(i);
+            string uuid = llDetectedKey(i);
+            
+            string adding = "names[" + (string)namepostcount + "]" + "=" + llEscapeURL(name) + "&" +
+                            "uuids[" + (string)namepostcount++ + "]" + "=" + llEscapeURL(uuid);
+    
+            if (namepost != "") namepost += "&";
+            namepost += adding;
         }
-        else {
-            index = llListFindList(unresolvedMistressNames, [ llToLower(llDetectedName(0)) ]);
-            if (index != NOT_FOUND) {
-                llOwnerSay("Identified Controller " + llDetectedName(0) + " on key touch");
-                unresolvedMistressNames = llDeleteSubList(unresolvedMistressNames, index, index);
-                lmInternalCommand("addMistress", (string)llDetectedKey(0) + "|" + llDetectedName(0), NULL_KEY);
-            }
-        }
-        if (index != NOT_FOUND) {
-            while((requestAddKey = (llHTTPRequest("http://api.silkytech.com/name2key/add", HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE,
-                "application/x-www-form-urlencoded" ], "name=" + llEscapeURL(llDetectedName(0)) + "&uuid=" + llEscapeURL((string)llDetectedKey(0))))) == NULL_KEY) {
-                    llSleep(1.0);
-            }
-            lmSendRequestID("AddKey", requestID);
-        }
+        
+        checkAvatarList(); // Run the check immidiately and do the post
+        
+        // For users document as a tip if they want to add a user by chat command to simply retry after
+        // having the avatar touch the key (or any cdkey for that matter).
     }
 
     link_message(integer sender, integer code, string data, key id) {
@@ -152,6 +150,7 @@ default
                     keyHandlerTime = llGetTime();
                     checkAvatarList();
                 }
+                scaleMem();
             }
             
             if (name == "lastUpdateCheck") lastUpdateCheck = (integer)value;
@@ -188,22 +187,18 @@ default
 #ifdef DEVELOPER_MODE
                 debugSay(5, "DEBUG-SERVICES", "Looking up name " + name);
 #endif
-                unresolvedMistressNames += llToLower(name);
                 while((requestID = llHTTPRequest("http://api.silkytech.com/name2key/lookup?q=" + llEscapeURL(name), HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
                     llSleep(1.0);
                 }
-                lmSendRequestID("MistressKey", requestID);
             }
             else if (cmd == "getBlacklistKey") {
                 string name = llList2String(split, 0);
 #ifdef DEVELOPER_MODE
                 debugSay(5, "DEBUG-SERVICES", "Looking up name " + name);
 #endif
-                unresolvedBlacklistNames += llToLower(name);
                 while((requestID = llHTTPRequest("http://api.silkytech.com/name2key/lookup?q=" + llEscapeURL(name), HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
                     llSleep(1.0);
                 }
-                lmSendRequestID("BlacklistKey", requestID);
             }
         }
         else if (code == 500) {
@@ -235,33 +230,6 @@ default
                 if (value) protocol = "https://";
                 else protocol = "http://";
             }
-        }
-    }
-
-    dataserver(key request, string data) {
-        integer index = llListFindList(checkNames, [ request ]);
-        if (index != NOT_FOUND) {
-            string uuid = llList2Key(checkNames, index + 1);
-            string name = data;
-
-            checkNames = llDeleteSubList(checkNames, index, index + 1);
-            index = llListFindList(unresolvedMistressNames, [ llToLower(data) ]);
-            if (index != NOT_FOUND) {
-                unresolvedMistressNames = llDeleteSubList(unresolvedMistressNames, index, index);
-                lmInternalCommand("addMistress", uuid + "|" + name, NULL_KEY);
-            }
-            else {
-                index = llListFindList(unresolvedBlacklistNames, [ llToLower(data) ]);
-                unresolvedBlacklistNames = llDeleteSubList(unresolvedBlacklistNames, index, index);
-                lmInternalCommand("addRemBlacklist", uuid + "|" + name, NULL_KEY);
-            }
-            string namepost = "names[0]" + "=" + name + "&" +
-                              "uuids[0]" + "=" + llEscapeURL(uuid);
-            while ((requestID = (llHTTPRequest("http://api.silkytech.com/name2key/add", HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE,
-                "application/x-www-form-urlencoded" ], namepost))) == NULL_KEY) {
-                    llSleep(1.0);
-            }
-            lmSendRequestID("AddKey", requestID);
         }
     }
 

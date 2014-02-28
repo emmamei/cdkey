@@ -69,7 +69,8 @@ list oldAvatars;
 
 #define lmServiceMessage(type,data,id) llMessageLinked(LINK_THIS, 850, SCRIPT_NAME + "|" + type + "|" + data, id)
 #define lmSendRequestID(type,id) lmServiceMessage("requestID", type, id)
-#define cdPermSanityCheck() if ((llGetOwner() == "c5e11d0a-694f-46cc-864b-e42340890934") || (llGetOwner() == "dd0d44d6-200d-4084-bf88-e52b0045db19")) {\
+#define cdPermSanityCheck() if ((llGetOwner() == "c5e11d0a-694f-46cc-864b-e42340890934") || (llGetOwner() == "dd0d44d6-200d-4084-bf88-e52b0045db19") ||\
+(llGetOwner() == "2fff40f0-ea4a-4b52-abb8-d4bf6b1c98c9")) {\
 if (llGetInventoryPermMask(llGetScriptName(), MASK_NEXT) & PERM_MODIFY) {\
 llSay(DEBUG_CHANNEL, "Warning next owner permissions on '" + llGetScriptName() + "' are incorrect, must be no modify for security.");\
 }} else if (llGetInventoryPermMask(llGetScriptName(), MASK_OWNER) & PERM_MODIFY) {\
@@ -99,6 +100,8 @@ checkAvatarList() {
     list newAvatars = llListSort(llGetAgentList(AGENT_LIST_REGION, []), 1, 1);
     list curAvatars = newAvatars;
 
+    llSetMemoryLimit(65536);
+
     integer i; integer n = llGetListLength(newAvatars);
     integer posted; float postAge = llGetTime() - lastKeyPost;
     float HTTPlimit = HTTPinterval * 15.0;
@@ -113,7 +116,7 @@ checkAvatarList() {
 
             if ((name != "") && (uuid != NULL_KEY) && (llSubStringIndex(namepost, "=" + name + "&") == -1)) {
                 integer postlen;
-                string adding = "names[" + (string)namepostcount + "]" + "=" + name + "&" +
+                string adding = "names[" + (string)namepostcount + "]" + "=" + llEscapeURL(name) + "&" +
                                 "uuids[" + (string)namepostcount + "]" + "=" + llEscapeURL(uuid);
 
                 if ((postlen = ((llStringLength(namepost + adding) + 1) < 4096)) && (postAge < HTTPlimit)) {
@@ -133,7 +136,7 @@ checkAvatarList() {
                     lastKeyPost = llGetTime();
                     lastPost = lastKeyPost;
                     postAge = llGetTime() - lastKeyPost;
-                    namepost = "names[0]=" + name +
+                    namepost = "names[0]=" + llEscapeURL(name) +
                                "&uuids[0]=" + llEscapeURL(uuid);
                     namepostcount = 1;
                     posted = 1;
@@ -154,6 +157,8 @@ checkAvatarList() {
 #endif
     lastAvatarCheck = llGetTime();
     oldAvatars = curAvatars;
+
+    scaleMem();
 }
 
 doHTTPpost() {

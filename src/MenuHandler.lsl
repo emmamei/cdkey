@@ -198,9 +198,6 @@ default
             }
             else if (name == "timeLeftOnKey") {
                 timeLeftOnKey = (float)value;
-                if (collapsed) {
-                    lmSendConfig("collapseTime", (string)(collapseTime - llGetTime()));
-                }
             }
             else if (name == "isVisible") {
                 visible = (integer)value;
@@ -240,7 +237,6 @@ default
             else if (cmd == "setAFK") afk = llList2Integer(split, 0);
             else if (cmd == "collapse") {
                 keyAnimation = ANIMATION_COLLAPSED;
-                collapseTime = llGetTime();
                 collapsed = 1;
             }
             else if (cmd == "uncollapse") {

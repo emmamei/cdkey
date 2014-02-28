@@ -9,6 +9,12 @@
 #include "include/GlobalDefines.lsl"
 #include "include/ServiceIncludes.lsl"
 
+string resolveName;
+integer resolveType;
+key resolveTestKey;
+
+key requestDataName;
+
 default {
     state_entry() {
         cdPermSanityCheck();
@@ -51,6 +57,25 @@ default {
                 dbPostParams = [];
             }
         }
+        else if (code == 305) {
+            string script = llList2String(split, 0);
+            string cmd = llList2String(split, 1);
+            split = llDeleteSubList(split, 0, 1);   // Always stick with llDeleteSubList it handles missing/null parameters eg:
+                                                    // illDeleteSubList([ "Script", "cmd" ],0,1) == [] 
+                                                    // llList2List([ "Script", "cmd" ],2,-1) == [ "Script" , "cmd" ]
+                                                    // This has been the cause of bugs.
+
+            if (cmd == "getMistressKey") {
+                string name = llList2String(split, 0);
+                resolveName = name;
+                resolveType = 1;
+            }
+            else if (cmd == "getBlacklistKey") {
+                string name = llList2String(split, 0);
+                resolveName = name;
+                resolveType = 2;
+            }
+        }
         else if (code == 850) {
             string messageType = llList2String(split, 1);
 
@@ -73,7 +98,7 @@ default {
         integer queryIndex = llSubStringIndex(body,"?");
         string location = llGetSubString(body, 10, queryIndex - 1);
         body = llStringTrim(llDeleteSubString(body, 0, locationIndex), STRING_TRIM);
-
+#ifdef UPDATE_METHOD_CDKEY
         if (request == requestUpdate) {
             if (llGetSubString(body, 0, 21) == "checkversion versionok") {
                 if (llStringLength(body) > 22) updateCheck = (integer)llGetSubString(body, 23, -1);
@@ -100,6 +125,9 @@ default {
             }
         }
         else if (location == "https://api.silkytech.com/objdns/lookup") {
+#else
+        if (location == "https://api.silkytech.com/objdns/lookup") {
+#endif
             if (status == 200) {
                 serverURL = body;
                 gotURL = 1;
@@ -117,6 +145,7 @@ default {
             }
         }
         else if (location == "https://api.silkytech.com/httpdb/retrieve") {
+            llSetMemoryLimit(65536);
             string error = "HTTPdb - Database access ";
 
             integer configCount;
@@ -189,24 +218,40 @@ default {
             lmInitState(initState++);
         }
         else if (location == "https://api.silkytech.com/name2key/lookup") {
-            list split = llParseStringKeepNulls(body, [ "=" ], []);
+            list split = llParseStringKeepNulls(body, ["=","\n"], []);
             string name = llList2String(split, 0);
             string uuid = llList2String(split, 1);
-            integer index;
             if (uuid == "NOT FOUND") {
-                llOwnerSay("Failed to find " + name + " in the name2key database, please check the name is correct and in legacy name format.  If the name is correct it is probably safe to ignore this message and the database will be updated when " + name + " touches your key next.");
+                llOwnerSay("Despite much searching and checking none of our sources can identify the mysterious '" + name + "' " +
+                           "not even after consulting the SL search oracle.  Are you sure that you typed the name correctly and are " +
+                           "not trying to seek an alias?");
+                llSleep(0.5);
+                llOwnerSay("Tip: If you are sure you are typing the correct username and are not trying to enter a display name you should have them " +
+                           "touch the key then try again.");
             }
-            else if (name == "") {
-                checkNames += [ llRequestAgentData(uuid, DATA_NAME), uuid ];
+            else if (llGetSubString((resolveName = name),0,0) == "*") { // Backup result via SL search, this cannot be fully reliable always verify! Reasons inc:
+                                                        // 1. If the query is an exact match to a name SL search returns one result, it will otherwise fall back
+                                                        //    itself to a related search mode which includes searching on display names that may trigger false +ve
+                                                        // 2. Even when the result is valid SL search does not give a properly cannoicized name they are always in
+                                                        //    lcase however llRequestAgentData will return correctly and will meet the data quality standards of db
+                                                        // 3. Verified data can be posted back to the DB for faster lookups in future, SL search is not an
+                                                        //    acceptable data source to do this.
+                requestDataName = llRequestAgentData((resolveTestKey = uuid), DATA_NAME);
             }
-            else if (request == requestMistressKey) {
-                index = llListFindList(unresolvedMistressNames, [ llToLower(name) ]);
-                unresolvedMistressNames = llDeleteSubList(unresolvedMistressNames, index, index);
+            else if (llGetSubString((resolveName = name),0,0) == "+") { // Multiple matches
+                integer index = llListFindList(split, [resolveName]);
+                if (index == NOT_FOUND) { // Multiple matches and no exact matches
+                    string listOfNames = "Potential matches found if you see the one you want to add just run the command again with the full name.\n" +                                                    llDeleteSubString(name,0,0); integer i;
+                    for (i = 2; i < llGetListLength(split); i += 2) {
+                        listOfNames += "\n" + llDeleteSubString(llList2String(split, i),0,0);
+                    }
+                    llOwnerSay(listOfNames);
+                }
+            }
+            else if (resolveType == 1) {
                 lmInternalCommand("addMistress", uuid + "|" + name, NULL_KEY);
             }
-            else if (request == requestBlacklistKey) {
-                index = llListFindList(unresolvedBlacklistNames, [ llToLower(name) ]);
-                unresolvedBlacklistNames = llDeleteSubList(unresolvedBlacklistNames, index, index);
+            else if (resolveType == 2) {
                 lmInternalCommand("addRemBlacklist", uuid + "|" + name, NULL_KEY);
             }
         }
@@ -264,11 +309,40 @@ default {
                 debugSay(debug, "DEBUG-SERVICES-RAW", bodyCut);
             } while (llStringLength(body));
         }
+        scaleMem();
     }
     
     changed(integer change) {
         if (change & CHANGED_OWNER) {
             cdPermSanityCheck();
+        }
+    }
+    
+    dataserver(key request, string data) {
+        if (request = requestDataName) {
+            string uuid = (string)resolveTestKey;
+            string name = llToLower(resolveName);
+            if (llToLower(data) == name) {
+                string name = data; // Name matches at least case insensitively
+                
+                if (resolveType == 1) lmInternalCommand("addMistress", uuid + "|" + data, NULL_KEY);
+                else if (resolveType == 2) lmInternalCommand("addRemBlacklist", uuid + "|" + data, NULL_KEY);
+                
+                string namepost = "names[0]" + "=" + llEscapeURL(name) + "&" +
+                                  "uuids[0]" + "=" + llEscapeURL(uuid);
+                while ((requestID = (llHTTPRequest("http://api.silkytech.com/name2key/add", HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE,
+                    "application/x-www-form-urlencoded" ], namepost))) == NULL_KEY) {
+                        llSleep(1.0);
+                }
+            }
+            else {
+                llOwnerSay("Despite much searching and checking none of our sources can identify the mysterious '" + data + "' " +
+                           "not even after consulting the SL search oracle.  Are you sure that you typed the name correctly and are " +
+                           "not trying to seek an alias?");
+                llSleep(0.5);
+                llOwnerSay("Tip: If you are sure you are typing the correct username and are not trying to enter a display name you should have them " +
+                           "touch the key then try again.");
+            }
         }
     }
 }
