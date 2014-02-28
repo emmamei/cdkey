@@ -590,7 +590,7 @@ default
                 textboxType = 3;
                 if (textboxHandle) llListenRemove(textboxHandle);
                 textboxHandle = cdListenUser(textboxChannel, id);
-                llTextBox(id, "You can set the amount of time a wind gives to the dolly. Times are integers and can be separated by spaces, commas, or vertical bars (|).", zero or repeated values will be ignored.\nExamples:\n15|30|60\n30,45,60,90,120\n5 15 60", textboxChannel);
+                llTextBox(id, "You can set the amount of time a wind gives to the dolly. Times are integers and can be separated by spaces, commas, or vertical bars (|).", textboxChannel);
             }
             else if (choice == "Dolly Name") {
                 textboxType = 2;
