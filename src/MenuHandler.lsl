@@ -383,7 +383,10 @@ default
                             menu += ["Pose","Unpose"];
                         }
                     }
-                    else menu += "Pose";
+                    else {
+                        if ((!isDoll && canPose) || (isDoll))
+                            menu += "Pose";
+                    }
                     
                     if (!collapsed && ((numControllers == 0) || (isController && !isDoll))) {
                         if (canCarry) {
