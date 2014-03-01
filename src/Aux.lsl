@@ -183,11 +183,15 @@ default {
                     lmInternalCommand("setPose", keyAnimation, NULL_KEY);
                 }
             }
-            else if (isAttached && (name == "dollyName")) {
-                string dollyName = value;
-                llSetObjectName(dollyName + "'s Key");
-            }
+            //else if (isAttached && (name == "dollyName")) {
+            //    string dollyName = value;
+            //    llOwnerSay("AUX:300: dollyName = " + dollyName + " (setting)");
+            //    llSetObjectName(dollyName + "'s Key");
+            //}
+
+            // Only MenuHandler script can activate these selections...
             if (script != "MenuHandler") return;
+
             if (name == "canWear") {
                 if (value == "1") llOwnerSay("You are now able to change your own outfits again.");
                 else llOwnerSay("You are just a dolly and can no longer dress or undress by yourself.");
@@ -395,6 +399,12 @@ default {
                 llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
             }
         }
+
+        // 501 is a text box input - with three types:
+        //   1: Gem Color
+        //   2: Dolly Name
+        //   3: Wind Times (moved to Main.lsl)
+
         else if (code == 501) {
             string script = llList2String(split, 0);
             integer textboxType = llList2Integer(split, 1);
@@ -403,17 +413,28 @@ default {
 
             debugSay(3, "DEBUG-MENU", "Textbox input (" + (string)textboxType + ") from " + name + ": " + choice);
 
+            // Type 1 = Custom Gem Color
             if (textboxType == 1) {
                 string first = llGetSubString(choice, 0, 0);
+
                 if (first == "<") choice = (string)((vector)choice);
-                else if (first == "#") choice = (string)((vector)("<0x" + llGetSubString(choice, 1, 2) + ",0x" + llGetSubString(choice, 3, 4) + ",0x" + llGetSubString(choice, 5, 6) + ">"));
+                else if (first == "#") choice = (string)(
+                     (vector)("<0x" + llGetSubString(choice, 1, 2) +
+                              ",0x" + llGetSubString(choice, 3, 4) +
+                              ",0x" + llGetSubString(choice, 5, 6) + ">"));
                 else choice = (string)((vector)("<" + choice + ">"));
+
                 lmInternalCommand("setGemColour", choice, id);
             }
-            else if (textboxType == 2) {
-                lmSendConfig("dollyName", choice);
-            }
-            // textboxType 3 is wind times moved directly to Main.lsl which handles setting those up anyway.
+
+            // Type 2 = New Dolly Name
+            //else if (textboxType == 2) {
+            //    llOwnerSay("AUX:TEXTBOX(2): choice = " + choice + " (to 300)");
+            //    lmSendConfig("dollyName", choice);
+            //}
+
+            // Type 3 = Wind Times
+            // -- now located in Main.lsl (which handles setting those up anyway)
         }
         else if (code == 700) {
             string sender = llList2String(split, 0);
@@ -425,19 +446,25 @@ default {
         }
 
         string type = llList2String(llParseString2List(data, [ "|" ], []), 1);
+
         if (type == "MistressList" || type == "carry" || type == "uncarry" || type == "updateExceptions") {
+
             // Exempt builtin or user specified controllers from TP restictions
+
             list allow = BuiltinControllers + llList2ListStrided(MistressList, 0, -1, 2);
             integer builtin = llGetListLength(BuiltinControllers);
+
             // Also exempt the carrier if any provided they are not already exempted as a controller
+
             if ((carrierID != NULL_KEY) && (llListFindList(allow, [ (string)carrierID ]) == -1)) allow += carrierID;
 
-            // Directly dump the list using the static parts of the RLV command as a seperatior no looping
-            lmRunRLVas("Base", "tplure:" + llDumpList2String(allow, "=add,tplure:") + "=add");
-            lmRunRLVas("Base", "accepttp:" + llDumpList2String(allow, "=add,accepttp:") + "=add");
-            lmRunRLVas("Base", "sendim:" + llDumpList2String(allow, "=add,sendim:") + "=add");
-            lmRunRLVas("Base", "recvim:" + llDumpList2String(allow, "=add,recvim:") + "=add");
-            lmRunRLVas("Base", "recvchat:" + llDumpList2String(llList2List(allow, builtin - 1, -1), "=add,recvchat:") + "=add");
+            // Directly dump the list using the static parts of the RLV command as a seperator no looping
+
+            lmRunRLVas("Base", "tplure:"    + llDumpList2String(allow, "=add,tplure:")    + "=add");
+            lmRunRLVas("Base", "accepttp:"  + llDumpList2String(allow, "=add,accepttp:")  + "=add");
+            lmRunRLVas("Base", "sendim:"    + llDumpList2String(allow, "=add,sendim:")    + "=add");
+            lmRunRLVas("Base", "recvim:"    + llDumpList2String(allow, "=add,recvim:")    + "=add");
+            lmRunRLVas("Base", "recvchat:"  + llDumpList2String(llList2List(allow, builtin - 1, -1), "=add,recvchat:") + "=add");
             lmRunRLVas("Base", "recvemote:" + llDumpList2String(llList2List(allow, builtin - 1, -1), "=add,recvemote:") + "=add");
 
             // Apply exemptions to base RLV
