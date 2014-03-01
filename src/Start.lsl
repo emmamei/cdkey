@@ -235,9 +235,13 @@ initializationCompleted() {
     if (dollyName == "") {
         string name = dollName;
         integer space = llSubStringIndex(name, " ");
-        if (space != -1) name = llGetSubString(name, 0, space -1);
+
+        if (space != NOT_FOUND) name = llGetSubString(name, 0, space -1);
+
+        //llOwnerSay("INIT1: dollyName = " + dollyName + " (send to 300)");
         lmSendConfig("dollyName", (dollyName = "Dolly " + name));
     }
+    //llOwnerSay("INIT1: dollyName = " + dollyName + " (setting)");
     if (isAttached) llSetObjectName(dollyName + "'s Key");
 
     string msg = "Initialization completed";
@@ -380,12 +384,19 @@ default {
             else if (name == "blacklist")                    blacklist = llListSort(llList2List(split, 2, -1), 2, 1);
 
             else if (name == "dollyName") {
+
+                //llOwnerSay("INIT2:300: dollyName = " + dollyName);
+
                 if (dollyName == "") {
                     string name = dollName;
                     integer space = llSubStringIndex(name, " ");
-                    if (space != -1) name = llGetSubString(name, 0, space -1);
+
+                    if (space != NOT_FOUND) name = llGetSubString(name, 0, space -1);
+                    //llOwnerSay("INIT:300: dollyName = " + dollyName + " (send to 300)");
+
                     lmSendConfig("dollyName", (dollyName = "Dolly " + name));
                 }
+                //llOwnerSay("INIT:300: dollyName = " + dollyName + " (setting)");
                 if (isAttached) llSetObjectName(dollyName + "'s Key");
             }
 //                 if (name == "afk")                           afk = (integer)value;
