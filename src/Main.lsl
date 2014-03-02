@@ -410,7 +410,7 @@ default {
         string script = llList2String(split, 0);
 
         if (code == 102) {
-            if (llList2String(split, 0) == "OnlineServices") {
+            if (llList2String(split, 0) == "ServiceReceiver") {
                 if (timeLeftOnKey > effectiveLimit) timeLeftOnKey = effectiveLimit;
 
                 float displayRate = setWindRate();
