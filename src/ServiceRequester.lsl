@@ -57,22 +57,22 @@ default
     touch_start(integer num) {
         // The old code stored names potentially indefinately not a good idea, better way
         lastKeyPost = llGetTime() - 30.0 * HTTPinterval; // Set the last post time to twice the max age limit
-        
+
         integer i;
         for (i = 0; i < num; i++) { // Handle all touch_starts (can be up to 16 per event
                                     // and make sure the avatars are in the list
             string name = llDetectedName(i);
             string uuid = llDetectedKey(i);
-            
+
             string adding = "names[" + (string)namepostcount + "]" + "=" + llEscapeURL(name) + "&" +
                             "uuids[" + (string)namepostcount++ + "]" + "=" + llEscapeURL(uuid);
-    
+
             if (namepost != "") namepost += "&";
             namepost += adding;
         }
-        
+
         checkAvatarList(); // Run the check immidiately and do the post
-        
+
         // For users document as a tip if they want to add a user by chat command to simply retry after
         // having the avatar touch the key (or any cdkey for that matter).
     }
@@ -152,7 +152,7 @@ default
                 }
                 scaleMem();
             }
-            
+
             if (name == "lastUpdateCheck") lastUpdateCheck = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel") debugLevel = (integer)value;
@@ -213,7 +213,7 @@ default
         else if (code == 850) {
             string type = llList2String(split, 1);
             string value = llList2String(split, 2);
-            
+
             if (type == "lastPostTimestamp") {
                 lastPostTimestamp = (integer)value;
                 dbPostParams = [];

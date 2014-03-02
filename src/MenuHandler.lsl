@@ -1,14 +1,21 @@
+//========================================
 // MenuHandler.lsl
+//========================================
 //
-// vim:sw=4 et nowrap:
+// vim:sw=4 et nowrap filetype=lsl
 //
-// DATE: 10 December 2013
+// DATE: 28 February 2014
+
 #include "include/GlobalDefines.lsl"
 
+#define LISTENER_ACTIVE 1
+#define LISTENER_INACTIVE 0
 #define NO_FILTER ""
 #define cdListenAll(a)    llListen(a, NO_FILTER, NO_FILTER, NO_FILTER)
-#define cdListenUser(a,b) llListen(a, NO_FILTER,         b, NO_FILTER);
-#define cdListenMine(a)   llListen(a, NO_FILTER,    dollID, NO_FILTER);
+#define cdListenUser(a,b) llListen(a, NO_FILTER,         b, NO_FILTER)
+#define cdListenMine(a)   llListen(a, NO_FILTER,    dollID, NO_FILTER)
+#define cdListenerDeactivate(a) llListenControl(a, 0)
+#define cdListenerActivate(a) llListenControl(a, 1)
 
 // Current Controller - or Mistress
 //key MistressID = NULL_KEY;
@@ -107,7 +114,7 @@ doDialogChannel() {
 
     llListenRemove(dialogHandle);
     dialogHandle = cdListenAll(dialogChannel);
-    llListenControl(dialogHandle, 0);
+    cdListenerDeactivate(dialogHandle);
 }
 
 default
@@ -244,7 +251,7 @@ default
                 collapsed = 0;
             }
             else if (cmd == "dialogListen") {
-                llListenControl(dialogHandle, 1);
+                cdListenerActivate(dialogHandle);
                 llSetTimerEvent(60.0);
             }
 
@@ -419,7 +426,7 @@ default
                     if (!isDoll || !detachable) menu += [ "Detach" ];
                 }
 
-                llListenControl(dialogHandle, 1);
+                cdListenerActivate(dialogHandle);
                 llSetTimerEvent(60.0);
 
                 if (!RLVok) msg += "No RLV detected some features unavailable.\n";
@@ -444,19 +451,11 @@ default
             llSetTimerEvent(30.0);
         }
         else {
-            if(blacklistHandle) {
-                llListenRemove(blacklistHandle);
-                blacklistHandle = 0;
-            }
-            if (controlHandle) {
-                llListenRemove(controlHandle);
-                controlHandle = 0;
-            }
-            if (textboxHandle) {
-                llListenRemove(textboxHandle);
-                textboxHandle = 0;
-            }
-            llListenControl(dialogHandle, 0);
+            if(blacklistHandle) { llListenRemove(blacklistHandle); blacklistHandle = 0; }
+            if (controlHandle)  { llListenRemove(controlHandle);     controlHandle = 0; }
+            if (textboxHandle)  { llListenRemove(textboxHandle);     textboxHandle = 0; }
+
+            cdListenerDeactivate(dialogHandle);
             dialogKeys = []; dialogButtons = []; dialogNames = [];
             llSetTimerEvent(0.0);
         }

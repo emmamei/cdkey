@@ -375,7 +375,6 @@ default {
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                  debugLevel = (integer)value;
 #endif
-//          else if (name == "nameOverride")              nameOverride = value;
             else if (name == "userBaseRLVcmd")          userBaseRLVcmd = value;
             else if (name == "userCollapseRLVcmd")  userCollapseRLVcmd = value;
             else if (name == "windTimes")                    windTimes = llList2List(split, 2, -1);
@@ -399,25 +398,6 @@ default {
                 //llOwnerSay("INIT:300: dollyName = " + dollyName + " (setting)");
                 if (isAttached) llSetObjectName(dollyName + "'s Key");
             }
-//                 if (name == "afk")                           afk = (integer)value;
-//          else if (name == "autoTP")                       autoTP = (integer)value;
-//          else if (name == "canAFK")                       canAFK = (integer)value;
-//          else if (name == "canCarry")                   canCarry = (integer)value;
-//          else if (name == "canDress")                   canDress = (integer)value;
-//          else if (name == "canFly")                       canFly = (integer)value;
-//          else if (name == "canSit")                       canSit = (integer)value;
-//          else if (name == "canStand")                   canStand = (integer)value;
-//          else if (name == "isCollapsed")               collapsed = (integer)value;
-//          else if (name == "isConfigured")             configured = (integer)value;
-//          else if (name == "detachable")               detachable = (integer)value;
-//          else if (name == "helpless")                   helpless = (integer)value;
-//          else if (name == "pleasureDoll")           pleasureDoll = (integer)value;
-//          else if (name == "isTransformingKey")   transformingKey = (integer)value;
-//          else if (name == "visible")                     visible = (integer)value;
-//          else if (name == "quiet")                         quiet = (integer)value;
-//          else if (name == "RLVok")                         RLVok = (integer)value;
-//          else if (name == "signOn")                       signOn = (integer)value;
-//          else if (name == "takeoverAllowed")     takeoverAllowed = (integer)value;
         }
 
         else if (code == 305) {
@@ -561,25 +541,13 @@ default {
     attach(key id) {
         if (id == NULL_KEY) {
             llMessageLinked(LINK_SET, 106,  SCRIPT_NAME + "|" + "detached" + "|" + (string)lastAttachPoint, lastAttachAvatar);
-            //if (lastAttachPoint == ATTACH_BACK) {
-                llOwnerSay("The key is wrenched from your back, and you double over at the " +
-                           "unexpected pain as the tendrils are ripped out. You feel an emptiness, " +
-                           "as if some beautiful presence has been removed.");
-            //}
+            llOwnerSay("The key is wrenched from your back, and you double over at the unexpected pain as the tendrils are ripped out. You feel an emptiness, as if some beautiful presence has been removed.");
         } else {
             llMessageLinked(LINK_SET, 106, SCRIPT_NAME + "|" + "attached" + "|" + (string)llGetAttached(), id);
 
             if (llGetPermissionsKey() == llGetOwner() && (llGetPermissions() & PERMISSION_TAKE_CONTROLS) != 0) llTakeControls(CONTROL_MOVE, 1, 1);
             else llRequestPermissions(dollID, PERMISSION_MASK);
 
-            /*if (!isAttached) {
-                llOwnerSay("Your key stubbornly refuses to attach itself, and you " +
-                           "belatedly realize that it must be attached to your spine.");
-                llOwnerSay("@clear,detachme=force");
-
-                llSleep(2.0);
-                llDetachFromAvatar();
-            }*/
             if (lastAttachAvatar == NULL_KEY) newAttach = 1;
         }
 

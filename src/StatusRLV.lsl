@@ -100,7 +100,7 @@ default {
 
             if (isAttached && RLVok) {
                 llSetMemoryLimit(65536);
-                integer commandLoop; string sendCommands = ""; 
+                integer commandLoop; string sendCommands = "";
 #ifdef LINK_320
                 string confCommands = "";
 #endif
@@ -291,7 +291,7 @@ default {
 #ifdef LINK_320
                 if ((confCommands != "") && (confCommands != ",")) lmConfirmRLV(script, llGetSubString(confCommands, 0, -2));
 #endif
-                
+
 #ifdef DEVELOPER_MODE
                 debugSay(9, "DEBUG-RLV", "Active RLV: " + llDumpList2String(llList2ListStrided(rlvStatus, 0, -1, 2), "/"));
                 integer i;

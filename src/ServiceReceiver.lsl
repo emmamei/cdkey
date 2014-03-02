@@ -19,7 +19,7 @@ default {
     state_entry() {
         cdPermSanityCheck();
     }
-    
+
     on_rez(integer start) {
         cdPermSanityCheck();
         rezzed = 1;
@@ -61,7 +61,7 @@ default {
             string script = llList2String(split, 0);
             string cmd = llList2String(split, 1);
             split = llDeleteSubList(split, 0, 1);   // Always stick with llDeleteSubList it handles missing/null parameters eg:
-                                                    // illDeleteSubList([ "Script", "cmd" ],0,1) == [] 
+                                                    // illDeleteSubList([ "Script", "cmd" ],0,1) == []
                                                     // llList2List([ "Script", "cmd" ],2,-1) == [ "Script" , "cmd" ]
                                                     // This has been the cause of bugs.
 
@@ -92,7 +92,7 @@ default {
             }
         }
     }
-    
+
     http_response(key request, integer status, list meta, string body) {
         integer locationIndex = llSubStringIndex(body,"\n");
         integer queryIndex = llSubStringIndex(body,"?");
@@ -155,8 +155,8 @@ default {
 
                 float HTTPdbProcessStart;
                 string eventTime = formatFloat(((HTTPdbProcessStart = llGetTime()) - HTTPdbStart) * 1000, 2);
-                
-                
+
+
                 do {
                     integer nextNewLine = llSubStringIndex(body, "\n");
                     if (nextNewLine == -1) nextNewLine = llStringLength(body);
@@ -194,7 +194,7 @@ default {
 
 #ifdef DEVELOPER_MODE
                 debugSay(5, "DEBUG-SERVICES", "Service post interval setting " + formatFloat(HTTPinterval, 2) + "s throttle setting " + formatFloat(HTTPthrottle, 2) + "s");
-                
+
                 string msg = "HTTPdb - Processed " + (string)configCount + " records ";
                 if (lastPostTimestamp) msg += "with updates since our last post " + (string)((llGetUnixTime() - lastPostTimestamp) / 60) + " minutes ago ";
                 msg += "event time " + eventTime + ", processing time " + formatFloat(((llGetTime() - HTTPdbProcessStart) * 1000), 2);
@@ -285,7 +285,7 @@ default {
 
             debugSay(5, "DEBUG-SERVICES", "Posted " + (string)(old + new) + " keys: " + (string)new + " new, " + (string)old + " old");
         }
-        
+
         if (location != "https://api.silkytech.com/httpdb/retreive") {
 #ifdef DEVELOPER_MODE
             integer debug;
@@ -311,23 +311,23 @@ default {
         }
         scaleMem();
     }
-    
+
     changed(integer change) {
         if (change & CHANGED_OWNER) {
             cdPermSanityCheck();
         }
     }
-    
+
     dataserver(key request, string data) {
         if (request = requestDataName) {
             string uuid = (string)resolveTestKey;
             string name = llToLower(resolveName);
             if (llToLower(data) == name) {
                 string name = data; // Name matches at least case insensitively
-                
+
                 if (resolveType == 1) lmInternalCommand("addMistress", uuid + "|" + data, NULL_KEY);
                 else if (resolveType == 2) lmInternalCommand("addRemBlacklist", uuid + "|" + data, NULL_KEY);
-                
+
                 string namepost = "names[0]" + "=" + llEscapeURL(name) + "&" +
                                   "uuids[0]" + "=" + llEscapeURL(uuid);
                 while ((requestID = (llHTTPRequest("http://api.silkytech.com/name2key/add", HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE,
