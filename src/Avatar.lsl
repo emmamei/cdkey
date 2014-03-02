@@ -103,7 +103,7 @@ checkRLV()
 
         rlvAPIversion = "";
         myPath = "";
-        llOwnerSay("@clear,versionnew=" + (string)channel + ",getpathnew=" + (string)channel);
+        cdRlvSay("@clear,versionnew=" + (string)channel + ",getpathnew=" + (string)channel);
     }
     else processRLVResult(); // Attachment precondition failed procceed with negative result
 }
@@ -322,7 +322,7 @@ initializeRLV(integer refresh) {
     startup = 0;
 
 #ifndef DEVELOPER_MODE
-    if (llGetCreator() == dollID) llOwnerSay("@clear=unshared,clear=achallthis");
+    if (llGetCreator() == dollID) { cdRlvSay("@clear=unshared,clear=achallthis"); }
 #endif
 }
 
@@ -797,13 +797,11 @@ default {
 
             if (!RLVok && (RLVck != 0) && (RLVck <= 6)) {
                 if (isAttached && RLVck != 6 && !RLVok == 1) {
-                    llOwnerSay("@clear,versionnew=" + (string)channel + ",getpathnew=" + (string)channel);
+                    cdRlvSay("@clear,versionnew=" + (string)channel + ",getpathnew=" + (string)channel);
                     llSetTimerEvent(10.0 * ++RLVck);
                 }
-            } else if (RLVck == 6) {
-                processRLVResult();
-            } else if (RLVok && !RLVstarted) {
-                initializeRLV(0);
+            } else if (RLVck == 6) { processRLVResult();
+            } else if (RLVok && !RLVstarted) { initializeRLV(0);
             }
         }
     }
