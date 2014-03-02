@@ -416,6 +416,13 @@ default {
                 llOwnerSay("You have " + (string)llRound(timeLeftOnKey / 60.0 / displayRate) + " minutes of life remaning.");
                 lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
             }
+            
+            llSetTimerEvent(STD_RATE);
+            if (lowScriptMode) llSetTimerEvent(LOW_RATE);
+            timerStarted = 1;
+
+            if (!isAttached) llSetTimerEvent(60.0);
+            
             if (initState == 104) lmInitState(initState++);
         }
 

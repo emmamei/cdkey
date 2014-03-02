@@ -27,16 +27,13 @@ float setWindRate() {
         lmSendConfig("windRate", (string)windRate);
 
 #ifdef MAIN_LSL
-        if ((windRate == 0.0) && (wearLockExpire == 0.0)) {
-            llSetTimerEvent(STD_RATE * 10.0);
-            if (lowScriptMode) llSetTimerEvent(LOW_RATE * 10.0);
-            timerStarted = 0;
-        } else {
-            if (!timerStarted) {
-                llResetTime();
+        if (timerStarted) {
+            if (!collapsed && isAttached && (wearLockExpire == 0.0)) {
+                llSetTimerEvent(STD_RATE * 10.0);
+                if (lowScriptMode) llSetTimerEvent(LOW_RATE * 10.0);
+            } else {
                 llSetTimerEvent(STD_RATE);
                 if (lowScriptMode) llSetTimerEvent(LOW_RATE);
-                timerStarted = 1;
             }
         }
 #endif
