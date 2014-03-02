@@ -242,6 +242,7 @@ default {
     on_rez(integer start) {
         llSetTimerEvent(0.0);
         timerStarted = 0;
+        configured = 0;
     }
 
     //----------------------------------------
@@ -540,6 +541,7 @@ default {
                 }
             }
 #endif
+            if (configured) lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
         }
 
         else if (code == 305) {

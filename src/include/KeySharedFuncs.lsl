@@ -26,17 +26,6 @@ float setWindRate() {
 	lmSendConfig("displayWindRate", (string)newWindRate);
         lmSendConfig("windRate", (string)windRate);
 
-#ifdef MAIN_LSL
-        if (timerStarted) {
-            if (!collapsed && isAttached && (wearLockExpire == 0.0)) {
-                llSetTimerEvent(STD_RATE * 10.0);
-                if (lowScriptMode) llSetTimerEvent(LOW_RATE * 10.0);
-            } else {
-                llSetTimerEvent(STD_RATE);
-                if (lowScriptMode) llSetTimerEvent(LOW_RATE);
-            }
-        }
-#endif
     }
     
     // llTargetOmega: With normalized vector spinrate is equal to radians per second
