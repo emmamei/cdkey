@@ -102,6 +102,10 @@ On the initial menu seen after a Key is touched are the following buttons:
     there are multiple amounts that can be chosen, a new menu will appear
     with the choices available.
 
+    The Dolly may be repeatedly wound unless the option related to repeat
+    winding is set - in which case, one can only wind the Doll once then
+    someone else must wind.
+
     Type of Doll
     
     Convert the dolly to a particular Type of Doll. This will provide the
@@ -114,6 +118,10 @@ On the initial menu seen after a Key is touched are the following buttons:
     This will dress the Doll in a chosen outfit. If the Doll is a specific
     Doll Type, and outfits are set up properly, then this list of outfits
     will be specific to the Type of Doll chosen.
+
+    If the Doll cannot be dressed for some reason, this button will not
+    appear. This includes options such as whether the Doll can self-dress,
+    or whether dressing is allowed to others.
 
     Options
     
@@ -186,6 +194,14 @@ or another for the Key's operation.
 Carrier Operations
 ------------------
 
+When someone carries the Doll, the Doll is then solely available to the
+carrier. The other members of the public will find they have no ability to
+manipulate the Doll - and the Carrier has full control. In one particular
+area, it means that only the Carrier can wind the Doll.
+
+Under certain limited instances, a Doll can be dropped - including from an
+avatar that is not in the Sim or isn't on at all.
+
 Controller Operations
 ---------------------
 
@@ -197,6 +213,9 @@ Controller.
 The wearer will find that they have no options available and are limited
 in what they can do. The Controller may limit the Key wearer in certain
 ways, which the wearer cannot undo.
+
+The public should not see much difference unless the Controller has restricted
+the Doll.
 
 Wound Down Dolly
 ----------------
