@@ -8,43 +8,148 @@ people together. Thus, some features that would be found in a normal
 BDSM-styled key is not found here.
 
 The original Key came in two forms: a Standard Key and a Transforming Key.
-This nomenclature is still present in some places; this key incorporates
+This nomenclature may be found in some places; this key incorporates
 all of the features of both.
+
+Configuration of #RLV Folder
+----------------------------
+
+The Key uses a folder called #RLV - you should create it in the top level
+of your inventory (next to folders like "Clothing" and "Lost and Found")
+if you haven't already. This folder is used by many items that utilise
+RLV.
+
+To be able to wear an item on demand, the Key uses a set of folders located
+in #RLV. These folders will contain your outfits as well as your doll types.
+With the proper set up, users of your Key can change your wear, as well as
+your type.
+
+The first thing is to create a "> Outfits" folder (without the quotes).
+The folder is "marked" with a ">" symbol, which is a standard naming
+convention in the #RLV folder. You can create a multi-level tree using this
+convention inside your outfit folder.
+
+Inside the #RLV folder you will need two specific folders:
+
+Folder: ~normalself
+
+This folder contains the items that you need for a basic "self" - shape,
+skin, and hair for example. These items are only re-worn when a complete
+avi change is detected; normally, the items in this folder are only put
+on once.
+
+Folder: ~nude
+
+Items that may need to be put on frequently after an outfit - such as
+bare feet, jewelry, tattoos, and such can be placed here. These items
+are re-worn after every outfit change.
+
+
+If the contents of both the ~normalself and ~nude folders are worn,
+you should be in your "natural" nude state. This state may be used
+as a basis for a "Nude" button in the future.
+
+In the "> Outfits" folder, there will also be Doll Type folders.
+These folders are marked by a leading "*" in their name, and have
+a name that matches the Doll Type Notecard contained within the
+Doll's Key. For instance, a Doll Type of Japanese will have a
+notecard in the Key called "*Japanese" and a folder in the
+"#RLV/> Outfits" folder called "*Japanese".
+
+Outfits for general wear (or for a doll with the Regular Doll Type)
+can be found in the "#RLV" folder itself or in subdirectories
+thereof (when using the ">" convention). For example, one could
+have a folder "#RLV/> Outfits/> Formal" and a folder within that
+called "Red Gown" that has the items for a Red Gown in it.
+
+Outfits stored in a Doll Type Folder are only shown to the doll
+when the dolly is that type of doll. So items that are in the
+"*Japanese" folder (including perhaps subfolders!) are only shown
+when the doll is a "Japanese Doll".
+
+Menus and Control
+-----------------
+
+The Menu structure is basically the same no matter who is accessing
+the Key, but the specific items visible may change depending on options
+and who it is that is accessing the Key.
+
+There are four different people (or roles) that may access the Key at
+any given time: the Doll herself, the Doll's Controller (or dominant or
+owner), the Doll's Carrier, or the public at large.
+
+A Doll with no Controller or Carrier has generally full access to all of
+the options and capabilities contained in the Key. A Doll can submit to
+a Controller, or a member of the public can Carry the Doll - both of
+which will remove a large amount of options from the Doll's control.
+
+A Controller will have more control than a Carrier, and the public
+will see no loss of control - that is, the general public can still
+wind the Dolly, dress her up, and more.
+
+A Carrier takes control of the Dolly, and locks out the rest of the
+general public from accessing the Dolly while the Carrier is carrying the
+Doll.
 
 Main Menu
 ---------
 
 On the initial menu seen after a Key is touched are the following buttons:
 
-    Wind: Wind up the dolly a certain amount, typically 30 minutes.
+    Wind
+    
+    Wind up the dolly a certain amount, typically 30 or 60 minutes. If
+    there are multiple amounts that can be chosen, a new menu will appear
+    with the choices available.
 
-    Doll Type: Convert the dolly to a particular Type of Doll. This will
-    provide the Doll with a select choice of outfits (if set up) for that
-    Type, and will also send text affirmations and suggestions to the Doll
-    pertaining to the Doll Type selected.
+    Type of Doll
+    
+    Convert the dolly to a particular Type of Doll. This will provide the
+    Doll with a select choice of outfits (if set up) for that Type, and
+    will also send text affirmations and suggestions to the Doll pertaining
+    to the Doll Type selected.
 
-    Dress: This will dress the Doll in a chosen outfit. If the Doll is a
-    specific Doll Type, and outfits are set up properly, then this list
-    of outfits will be specific to the Type of Doll chosen.
+    Dress
+    
+    This will dress the Doll in a chosen outfit. If the Doll is a specific
+    Doll Type, and outfits are set up properly, then this list of outfits
+    will be specific to the Type of Doll chosen.
 
-    Options: these are Options that affect how the Doll operates and what
-    restrictions they operate under. When Carried or when having a Controller,
-    these options may change or be eliminated from the Wearer's consideration.
+    Options
+    
+    The Options menu provides for a number of options that affect how the
+    Doll operates and what restrictions they operate under. When Carried
+    or when having a Controller, these options may change or be eliminated
+    from the Wearer's consideration.
 
-    Visible (or Invisible): This makes the Key vanish. The Key remains
-    completely operational, and touchable - but it is Invisible. This can be
-    useful for RP and for situations where the Key appears in the "wrong"
-    place - such as poking through a chair or another person. The Key can
-    also be made Visible again.
+    Visible (or Invisible)
+    
+    This makes the Key vanish. The Key remains completely operational,
+    and touchable - but it is Invisible. This can be useful for RP and
+    for situations where the Key appears in the "wrong" place - such as
+    poking through a chair or another person. The Key can also be made
+    Visible again.
+
+    Pose (and Unpose)
+
+    A person may Pose a Dolly, in which case they will be locked into that
+    pose for 5 minutes (unless they are a Display Dolly). The Doll cannot
+    exit the pose unless they posed themselves. If the Pose Silence option
+    is selected, the Doll is forced to be silent while posed (though IMs
+    are still possible).
 
 Options Menu
 ------------
+
+The Options menu has a number of sub-menus, all of which contain some setting
+or another for the Key's operation.
 
 Carrier Operations
 ------------------
 
 Controller Operations
 ---------------------
+
 When someone takes control of a person's Key, they become the Key Controller.
 The Controller can set every option that the wearer can - plus they can
 unset every option - that is, there are no "one-way" options for the
@@ -56,4 +161,11 @@ ways, which the wearer cannot undo.
 
 Wound Down Dolly
 ----------------
+
+When wound down, the Dolly is severely restricted, but with one standard
+notable exception: IM is fully unrestricted. A wound-down Dolly is not
+a functioning Dolly - and thus cannot move or talk or any other thing that
+requires a functioning Dolly. However, Dolls are living creatures and thus
+can use their telepathy (or IMs) with the greater community to call for
+help.
 
