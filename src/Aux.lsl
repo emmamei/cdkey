@@ -222,7 +222,7 @@ default {
                 if (value == "1") msg = "Other people can now outfit you, but you remain ";
                 else msg = "Other people can no longer outfit you, but you remain ";
                 if (wearLock || !canWear) msg += "un";
-                llOwnerSay(msg + "able to dress yourself.";
+                llOwnerSay(msg + "able to dress yourself.");
             }
             else if (name == "doWarnings") {
                 if (value == "1") llOwnerSay("No warnings will be given when time remaining is low.");
