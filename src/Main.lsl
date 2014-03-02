@@ -304,6 +304,7 @@ default {
         if (timeLeftOnKey < 0) timeLeftOnKey = 0.0;
 
         if (wearLock) wearLockExpire -= timerInterval;
+        if (collapsed) collapseTime += timerInterval;
         if (wearLockExpire < 0) lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0.0));
 
         // False collapse? Collapsed = 1 while timeLeftOnKey is positive is an invalid condition
@@ -357,6 +358,7 @@ default {
     
                     // Update time left
                     lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
+                    if (collapsed) lmSendConfig("collapseTime", (string)collapseTime);
     
                     // In offline mode we update the timer locally
                     if (offlineMode) lastPostTimestamp = llGetUnixTime();
@@ -384,12 +386,10 @@ default {
                         llSay(0, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on their key.)");
                         // Must update time before executing collapse
                         lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0.0));
-                        lmSendConfig("timeLeftOnKey", (string)(collapseTime = llGetTime()));
+                        lmSendConfig("timeLeftOnKey", (string)(collapseTime = 0.0));
                         lmInternalCommand("collapse", "1", NULL_KEY);
                     }
                 }
-                else if (collapsed) lmSendConfig("collapseTime", (string)(llGetTime() - collapseTime));
-                else lmSendConfig("collapseTime", (string)(collapseTime - llGetTime()));
 
 #ifdef DEVELOPER_MODE
                 if (timeReporting) llOwnerSay("Script Time: " + formatFloat(llList2Float(llGetObjectDetails(llGetKey(), [ OBJECT_SCRIPT_TIME ]), 0) * 1000000, 2) + "µs");
@@ -497,7 +497,7 @@ default {
             else if (name == "wearLockExpire")         wearLockExpire = (float)value;
             else if (name == "baseWindRate")             baseWindRate = (float)value;
             else if (name == "displayWindRate")       displayWindRate = (float)value;
-            else if (name == "collapseTime")             collapseTime = (llGetTime() - (float)value);
+            else if (name == "collapseTime")             collapseTime = (float)value;
             //else if (name == "poserID")                       poserID = (key)value;
             else if (name == "keyAnimation")             keyAnimation = value;
             //else if (name == "mistressName")             mistressName = value;
