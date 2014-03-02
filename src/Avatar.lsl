@@ -12,6 +12,7 @@
 key carrierID = NULL_KEY;
 
 key rlvTPrequest;
+key requestLoadData;
 key keyAnimationID;
 key lastAttachedID;
 
@@ -105,8 +106,7 @@ checkRLV()
 
         rlvAPIversion = "";
         myPath = "";
-	// This can't be bracketed by an if (RLVok) or the test will never be true as there will be no check
-        llOwnerSay("@versionnew=" + (string)channel + ",getpathnew=" + (string)channel);
+        llOwnerSay("@clear,versionnew=" + (string)channel + ",getpathnew=" + (string)channel);
     }
     else processRLVResult(); // Attachment precondition failed procceed with negative result
 }
@@ -594,6 +594,7 @@ default {
             }
 #ifdef ADULT_MODE
             else if (cmd == "strip") {
+                string choice = llList2String(split, 0);
                 if (choice == "Top") cdLoadData(RLV_NC, RLV_STRIP_TOP);
                 else if (choice == "Bra") cdLoadData(RLV_NC, RLV_STRIP_BRA);
                 else if (choice == "Bottom") cdLoadData(RLV_NC, RLV_STRIP_BOTTOM);
@@ -747,12 +748,13 @@ default {
 
             if (!RLVok && (RLVck != 0) && (RLVck <= 6)) {
                 if (isAttached && RLVck != 6 && !RLVok == 1) {
-		    // This needs to be sent before we know if we have RLV or not so if (RLVok) is not applicable
                     llOwnerSay("@versionnew=" + (string)channel + ",getpathnew=" + (string)channel);
                     llSetTimerEvent(10.0 * ++RLVck);
                 }
-            } else if (RLVck == 6) { processRLVResult();
-            } else if (RLVok && !RLVstarted) { initializeRLV(0);
+            } else if (RLVck == 6) {
+                processRLVResult();
+            } else if (RLVok && !RLVstarted) {
+                initializeRLV(0);
             }
         }
     }

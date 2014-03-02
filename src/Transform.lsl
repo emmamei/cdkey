@@ -217,7 +217,7 @@ default {
             }
 
             llListenControl(rlvHandle, 1);
-            cdRlvSay("@findfolder:" + outfitsTest + "=" + (string)rlvChannel);
+            lmRunRLV("findfolder:" + outfitsTest + "=" + (string)rlvChannel);
             retryOutfits++;
         }
 

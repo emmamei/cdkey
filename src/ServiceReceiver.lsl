@@ -97,6 +97,7 @@ default {
         integer locationIndex = llSubStringIndex(body,"\n");
         integer queryIndex = llSubStringIndex(body,"?");
         string location = llGetSubString(body, 10, queryIndex - 1);
+        llOwnerSay(body + "\n" + location);
         body = llStringTrim(llDeleteSubString(body, 0, locationIndex), STRING_TRIM);
 #ifdef UPDATE_METHOD_CDKEY
         if (request == requestUpdate) {
@@ -124,9 +125,9 @@ default {
                 queForSave("nextRetry", (string)nextRetry);
             }
         }
-        else if (location == "https://api.silkytech.com/objdns/lookup") {
+        else if (location == protocol + "api.silkytech.com/objdns/lookup") {
 #else
-        if (location == "https://api.silkytech.com/objdns/lookup") {
+        if (location == protocol + "api.silkytech.com/objdns/lookup") {
 #endif
             if (status == 200) {
                 serverURL = body;
@@ -144,7 +145,7 @@ default {
                 queForSave("nextRetry", (string)nextRetry);
             }
         }
-        else if (location == "https://api.silkytech.com/httpdb/retrieve") {
+        else if (location == protocol + "api.silkytech.com/httpdb/retrieve") {
             llSetMemoryLimit(65536);
             string error = "HTTPdb - Database access ";
 
@@ -188,7 +189,7 @@ default {
                         configCount++;
                     }
 
-                    if (useHTTPS) protocol = "https://";
+                    if (useHTTPS) protocol = protocol + "";
                     else protocol = "http://";
                 } while (llStringLength(body));
 
@@ -217,7 +218,7 @@ default {
 
             lmInitState(initState++);
         }
-        else if (location == "https://api.silkytech.com/name2key/lookup") {
+        else if (location == "http://api.silkytech.com/name2key/lookup") {
             list split = llParseStringKeepNulls(body, ["=","\n"], []);
             string name = llList2String(split, 0);
             string uuid = llList2String(split, 1);
@@ -229,7 +230,7 @@ default {
                 llOwnerSay("Tip: If you are sure you are typing the correct username and are not trying to enter a display name you should have them " +
                            "touch the key then try again.");
             }
-            else if (llGetSubString((resolveName = name),0,0) == "*") { // Backup result via SL search, this cannot be fully reliable always verify! Reasons inc:
+            else if (llGetSubString(name,0,0) == "*") { // Backup result via SL search, this cannot be fully reliable always verify! Reasons inc:
                                                         // 1. If the query is an exact match to a name SL search returns one result, it will otherwise fall back
                                                         //    itself to a related search mode which includes searching on display names that may trigger false +ve
                                                         // 2. Even when the result is valid SL search does not give a properly cannoicized name they are always in
@@ -238,7 +239,7 @@ default {
                                                         //    acceptable data source to do this.
                 requestDataName = llRequestAgentData((resolveTestKey = uuid), DATA_NAME);
             }
-            else if (llGetSubString((resolveName = name),0,0) == "+") { // Multiple matches
+            else if (llGetSubString(name,0,0) == "+") { // Multiple matches
                 integer index = llListFindList(split, [resolveName]);
                 if (index == NOT_FOUND) { // Multiple matches and no exact matches
                     string listOfNames = "Potential matches found if you see the one you want to add just run the command again with the full name.\n" +                                                    llDeleteSubString(name,0,0); integer i;
@@ -246,6 +247,12 @@ default {
                         listOfNames += "\n" + llDeleteSubString(llList2String(split, i),0,0);
                     }
                     llOwnerSay(listOfNames);
+                }
+                else if (resolveType == 1) {
+                    lmInternalCommand("addMistress", llList2String(split, index + 1) + "|" + llList2String(split, index), NULL_KEY);
+                }
+                else if (resolveType == 2) {
+                    lmInternalCommand("addRemBlacklist", llList2String(split, index + 1) + "|" + llList2String(split, index), NULL_KEY);
                 }
             }
             else if (resolveType == 1) {
@@ -255,7 +262,7 @@ default {
                 lmInternalCommand("addRemBlacklist", uuid + "|" + name, NULL_KEY);
             }
         }
-        else if (location == "https://api.silkytech.com/httpdb/store") {
+        else if (location == protocol + "api.silkytech.com/httpdb/store") {
             if (status == 200) {
                 dbPostParams = [];
                 list split = llParseStringKeepNulls(body, [ "|" ], []);
@@ -278,7 +285,7 @@ default {
                 }
             }
         }
-        else if (location == "https://api.silkytech.com/name2key/add") {
+        else if (location == "http://api.silkytech.com/name2key/add") {
             list split = llParseStringKeepNulls(body, [ "|" ], []);
             integer new = llList2Integer(split, 1);
             integer old = llList2Integer(split, 2);
@@ -286,7 +293,7 @@ default {
             debugSay(5, "DEBUG-SERVICES", "Posted " + (string)(old + new) + " keys: " + (string)new + " new, " + (string)old + " old");
         }
 
-        if (location != "https://api.silkytech.com/httpdb/retreive") {
+        if (location != protocol + "api.silkytech.com/httpdb/retreive") {
 #ifdef DEVELOPER_MODE
             integer debug;
             if (status == 200) debug = 7;

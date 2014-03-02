@@ -309,7 +309,7 @@ default {
                              "Good dollies should read their key help before \n" +
                              "Blacklist - Fully block this avatar from using any key option even winding\n" +
                              "Controller - Take care choosing your controllers, they have great control over their doll can only be removed by their choice";
-                list pluslist = [ "⊕ Blacklist", "⊖ Blacklist", "List Blacklist", "⊕ Controller", "List Controllers" ];
+                list pluslist = [ "⊕ Blacklist", "⊖ Blacklist", "List Blacklist", "⊕ Controller", "List Controller" ];
 
                 if (llListFindList(BuiltinControllers, [ (string)id ]) != -1) pluslist +=  "⊖ Controller";
 

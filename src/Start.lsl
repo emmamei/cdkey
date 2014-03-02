@@ -377,10 +377,10 @@ default {
 #endif
             else if (name == "userBaseRLVcmd")          userBaseRLVcmd = value;
             else if (name == "userCollapseRLVcmd")  userCollapseRLVcmd = value;
-            else if (name == "windTimes")                    windTimes = llList2List(split, 2, -1);
+            else if (name == "windTimes")                    windTimes = llDeleteSubList(split, 0, 1);
             else if (name == "dollType")                      dollType = value;
-            else if (name == "MistressList")              MistressList = llListSort(llList2List(split, 2, -1), 2, 1);
-            else if (name == "blacklist")                    blacklist = llListSort(llList2List(split, 2, -1), 2, 1);
+            else if (name == "MistressList")              MistressList = llListSort(llDeleteSubList(split, 0, 1), 2, 1);
+            else if (name == "blacklist")                    blacklist = llListSort(llDeleteSubList(split, 0, 1), 2, 1);
 
             else if (name == "dollyName") {
 
@@ -404,7 +404,7 @@ default {
             string script = llList2String(split, 0);
             string cmd = llList2String(split, 1);
 
-            split = llList2List(split, 2, -1);
+            split = llDeleteSubList(split, 0, 1);
 
             if (cmd == "addRemBlacklist") {
                 string uuid = llList2String(split, 0);

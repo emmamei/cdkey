@@ -466,7 +466,7 @@ default
     }
 
     sensor(integer num) {
-        integer i;
+        integer i; dialogKeys = []; dialogNames = []; dialogButtons = [];
         if (num > 12) num = 12;
         for (i = 0; i < num; i++) {
             dialogKeys += llDetectedKey(i);
@@ -708,27 +708,14 @@ default
                 }
                 else if (curState == "List") {
                     integer i; string output; list tempList;
+                    
+                    llOwnerSay("Listing");
 
-                    if (optName == "Controllers") {
-                        output += "Allowed Controllers:";
+                    if (optName == "Controller") output = "Allowed Controllers:";
+                    else output = "Blacklisted Avatars:";
 
-                        tempList = llList2ListStrided(MistressList, 1, -1, 2);
-
-                        debugSay(5, "DEBUG-MENU", llDumpList2String(MistressList, "\n"));
-                        debugSay(5, "DEBUG-MENU", llDumpList2String(tempList, "\n"));
-                    }
-                    else {
-                        output += "Blacklisted Avatars:";
-
-                        tempList = llList2ListStrided(blacklist, 1, -1, 2);
-
-                        debugSay(5, "DEBUG-MENU", llDumpList2String(blacklist, "\n"));
-                        debugSay(5, "DEBUG-MENU", llDumpList2String(tempList, "\n"));
-                    }
-
-                    do {
-                        output += "\n" + (string)(i + 1) + ". " + llList2String(tempList, i++);
-                    } while (i < llGetListLength(tempList));
+                    for (i = 0; i < llGetListLength(dialogNames); i++) output += "\n" + (string)(i+1) + ". " + llList2String(dialogNames, i);
+                    
                     llOwnerSay(output);
                 }
             }

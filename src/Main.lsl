@@ -216,7 +216,7 @@ ifPermissions() {
 
     if (perm & PERMISSION_ATTACH && !isAttached) llAttachToAvatar(ATTACH_BACK);
     else if (!isAttached && llGetTime() > 120.0) {
-        cdRlvSay("@acceptpermission=add");
+        llOwnerSay("@acceptpermission=add");
         llRequestPermissions(dollID, PERMISSION_ATTACH);
     }
 }
@@ -969,7 +969,7 @@ default {
 
 #ifndef DEVELOPER_MODE
     run_time_permissions(integer perm) {
-        if (!llGetAttached()) { cdRlvSay("@acceptpermission=rem"); }
+        if (!llGetAttached()) llOwnerSay("@acceptpermission=rem");
         ifPermissions();
     }
 #endif

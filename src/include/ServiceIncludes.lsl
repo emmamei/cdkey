@@ -81,9 +81,6 @@ queForSave(string name, string value) {
 
     if (llListFindList(NO_STORE, [ name ]) != NOT_FOUND) return;
 
-    if (name == "MistressList") name = "MistressListNew";
-    if (name == "blacklist") name = "blacklistNew";
-
     integer index = llListFindList(dbPostParams, [ name ]);
 
     if (index != NOT_FOUND && index % 2 == 0)
