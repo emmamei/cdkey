@@ -36,6 +36,7 @@ string myPath;
 string pronounHerDoll = "Her";
 string pronounSheDoll = "She";
 string rlvAPIversion;
+string redirchan;
 string userBaseRLVcmd;
 string userCollapseRLVcmd;
 
@@ -854,10 +855,11 @@ default {
                 integer index;
 
                 while ( ( index = llSubStringIndex(data, "$C") ) != -1) {
-                    string channel = (string)llRound(llFrand(0x7fffffff));
-                    data = llInsertString(llDeleteSubString(data, index, index + 1), index, channel);
+                    if (redirchan == "") redirchan = (string)llRound(llFrand(0x7fffffff));
+                    data = llInsertString(llDeleteSubString(data, index, index + 1), index, redirchan);
                 }
 
+                //cdRlvSay("@clear=redir");
                 while (cdGetElementType(data, ([1,++group])) != JSON_INVALID) {
                     setState = llList2Integer(states, group);
                     cdSetRestrictionsList(data,setState);

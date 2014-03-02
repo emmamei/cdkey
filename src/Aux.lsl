@@ -180,11 +180,6 @@ default {
                     lmInternalCommand("setPose", keyAnimation, NULL_KEY);
                 }
             }
-            //else if (isAttached && (name == "dollyName")) {
-            //    string dollyName = value;
-            //    llOwnerSay("AUX:300: dollyName = " + dollyName + " (setting)");
-            //    llSetObjectName(dollyName + "'s Key");
-            //}
 
             // Only MenuHandler script can activate these selections...
             if (script != "MenuHandler") return;
@@ -204,7 +199,7 @@ default {
             else if (name == "canPose") {
                 if (value == "1") llOwnerSay("You are a dolly and can freely be posed by anyone.");
                 else {
-                    llOwnerSay("You can no longer be posed by others.");
+                    llOwnerSay("You can no longer be posed by others. but may still pose yourself.");
 
                     if ((keyAnimation != "") && (keyAnimation != ANIMATION_COLLAPSED)) { // Doll is already posed
                         if (poserID != dollID) { // Posed by another we should unpose so doll is not stuck
@@ -412,7 +407,7 @@ default {
             string script = llList2String(split, 0);
             integer textboxType = llList2Integer(split, 1);
             string name = llList2String(split, 2);
-            string choice = llDumpList2String(llList2List(split, 3, -1), "|");
+            string choice = llDumpList2String(llDeleteSubList(split, 0, 2), "|");
 
             debugSay(3, "DEBUG-MENU", "Textbox input (" + (string)textboxType + ") from " + name + ": " + choice);
 
@@ -431,10 +426,10 @@ default {
             }
 
             // Type 2 = New Dolly Name
-            //else if (textboxType == 2) {
-            //    llOwnerSay("AUX:TEXTBOX(2): choice = " + choice + " (to 300)");
-            //    lmSendConfig("dollyName", choice);
-            //}
+            else if (textboxType == 2) {
+                //llOwnerSay("AUX:TEXTBOX(2): choice = " + choice + " (to 300)");
+                lmSendConfig("dollyName", choice);
+            }
 
             // Type 3 = Wind Times
             // -- now located in Main.lsl (which handles setting those up anyway)
