@@ -7,6 +7,7 @@
 // DATE: 28 February 2014
 
 #include "include/GlobalDefines.lsl"
+#include "include/Json.lsl"
 
 key carrierID = NULL_KEY;
 
@@ -60,6 +61,7 @@ integer ticks;
 integer timerOn;
 integer wearLock;
 integer newAttach = 1;
+integer creatorNoteDone;
 
 //========================================
 // FUNCTIONS
@@ -137,7 +139,7 @@ ifPermissions() {
                 key curAnim = llList2Key(llGetAnimationList(dollID), 0);
                 debugSay(7, "DEBUG", "animID=" + (string)keyAnimationID + " curAnim=" + (string)curAnim + " refreshRate=" + (string)refreshRate);
                 if (!clearAnim && (curAnim == keyAnimationID)) {
-                    refreshRate *= 1.1;                                         // +10%
+                    refreshRate += (1.0/llGetRegionFPS());                      // +1 Frame
                     if (refreshRate > 30.0) refreshRate = 30.0;                 // 30 Second limit
                 }
                 else if (clearAnim || (keyAnimation != "")) {
@@ -254,8 +256,11 @@ initializeRLV(integer refresh) {
     // unlocked and detachable: this is because it can be detached
     // via the menu. To make the key truly "undetachable", we get
     // rid of the menu item to unlock it
-    if (llGetCreator() != dollID) lmRunRLVas("Base", "detach=n,permissive=n");  //locks key
-    else llSay(DEBUG_CHANNEL, "Back protection mechanism activated not locking on creator");
+    if (llGetInventoryCreator("Main") != dollID) lmRunRLVas("Base", "detach=n,permissive=n");  //locks key
+    else if (!creatorNoteDone) {
+        llSay(DEBUG_CHANNEL, "Backup protection mechanism activated not locking on creator");
+        creatorNoteDone = 1;
+    }
     locked = 1; // Note the locked variable also remains false for developer mode keys
                 // This way controllers are still informed of unauthorized detaching so developer dolls are still accountable
                 // With this is the implicit assumption that controllers of developer dolls will be understanding and accepting of
@@ -267,62 +272,25 @@ initializeRLV(integer refresh) {
         else llOwnerSay("Developer key not locked.");
     }
     baseRLV += "attachallthis_except:" + myPath + "=add,detachallthis_except:" + myPath + "=add,";
-#endif
+    #endif
     llListenControl(listenHandle, 0);
 
     if (userBaseRLVcmd != "")
         lmRunRLVas("User:Base", userBaseRLVcmd);
 
-    if (autoTP)    baseRLV += "accepttp=n,";     else baseRLV += "accepttp=y,";
-    if (helpless)  baseRLV += "tplm=n,tploc=n,"; else baseRLV += "tplm=y,tploc=y,";
-    if (canFly)    baseRLV += "fly=y,";          else baseRLV += "fly=n,";
-    if (canStand)  baseRLV += "unsit=y,";        else baseRLV += "unsit=n,";
-    if (canSit)    baseRLV += "sit=y";           else baseRLV += "sit=n";
+    integer posed = ((keyAnimation != "") && (keyAnimation != ANIMATION_COLLAPSED) && (poserID != dollID));
+    integer carried = (carrierID != NULL_KEY);
 
-    lmRunRLVas("Base", baseRLV);
+    string command; integer i;
 
-    if (!canWear || collapsed || wearLock || afk) lmRunRLVas("Dress", "unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
-    else lmRunRLVas("Dress", "clear");
-
-    // Handle low and no power modes (afk && collapsed)
-    string RLVpower;
-    if (afk != 0 || collapsed != 0) {
-        if (collapsed != 0) {
-            RLVpower = "sit=n,unsit=n,showhovertextall=n,redirchat:999=add,rediremote:999=add,tplure=n,";
-            lmRunRLVas("Power:User", userCollapseRLVcmd);
-        }
-        else RLVpower = "clear,";
-        RLVpower += "fly=n,tplm=n,tploc=n,temprun=n,alwaysrun=n,sendchat=n,sittp=n,standtp=n,shownames=n,";
-    }
-    // If not collapsed clear as we add to leave AFK && !collapsed restrictions
-    else {
-        RLVpower = "clear";
-        lmRunRLVas("Power:User", "clear");
-    }
-    lmRunRLVas("Power", RLVpower);
-
-    // Don't replicate state in known core, collapsed blocks all of Carry & Pose too so list these only when necessary
-    if (!collapsed && carrierID != NULL_KEY)
-        lmRunRLVas("Carry", "tplm=n,tploc=n,accepttp=rem,tplure=n,showinv=n");
-    else lmRunRLVas("Carry", "clear");
-
-    if ((keyAnimation != "") && (keyAnimation != ANIMATION_COLLAPSED) && (poserID != dollID)) {
-        string pose = "fartouch=n,fly=n,showinv=n,sit=n,sittp=n,standtp=n,touchattachother=n,tplm=n,tploc=n,unsit=n,clear=redir";
-
-        if (poseSilence) {
-            integer channel = llRound(llFrand((float)0x7fffffff));
-            pose += ",sendchat=n,sendchannel=n,redirchat:" + (string)channel + "=add,rediremote:" + (string)channel + "=add,startim=n,permissive=n";
-        }
-        lmRunRLVas("Pose", pose);
-    }
-    else lmRunRLVas("Pose", "clear");
+    cdLoadData(RLV_NC, RLV_BASE_RESTRICTIONS);
 
     RLVstarted = 1;
     RLVck = 0;
     startup = 0;
 
 #ifndef DEVELOPER_MODE
-    if (llGetCreator() == dollID) llOwnerSay("@clear=unshared,clear=achallthis");
+    if (llGetInventoryCreator("Main") == dollID) lmRunRLVas("Base", "clear=unshared,clear=achallthis");
 #endif
 }
 
@@ -481,7 +449,7 @@ default {
             split = llList2List(split, 2, -1);
             string value = llList2String(split, 0);
 
-            if (llListFindList([ "afk", "autoTP", "canFly", "canSit", "canStand", "canWear", "collapsed", "helpless", "poseSilence", "keyAnimation" ], [ name ]) != -1) {
+            if (llListFindList(llJson2List("[\"afk\",\"autoTP\",\"canFly\",\"canSit\",\"canStand\",\"canWear\",\"collapsed\",\"helpless\",\"poseSilence\",\"keyAnimation\"]"), [name]) != -1) {
                      if (name == "autoTP")                       autoTP = (integer)value;
                 else if (name == "afk")                             afk = (integer)value;
                 else if (name == "collapsed") {
@@ -625,33 +593,14 @@ default {
             }
 #ifdef ADULT_MODE
             else if (cmd == "strip") {
-                string part = llList2String(split, 2); string attachments; string extra; string layers;
-                if (part == "Top") {
-                    attachments = "chin,chest,l forearm,left hand,left pec,left shoulder,l upper arm,r forearm,right hand,right pec,right shoulder,r upper arm,r forearm,right pec,stomach";
-                    layers      = "gloves,jacket,shirt";
+                if (choice == "Top") cdLoadData(RLV_NC, RLV_STRIP_TOP);
+                else if (choice == "Bra") cdLoadData(RLV_NC, RLV_STRIP_BRA);
+                else if (choice == "Bottom") cdLoadData(RLV_NC, RLV_STRIP_BOTTOM);
+                else if (choice == "Panties") cdLoadData(RLV_NC, RLV_STRIP_PANTIES);
+                else if (choice == "Shoes") {
+                    cdLoadData(RLV_NC, RLV_STRIP_SHOES);
+                    if (barefeet != "") lmRunRLVas("Dress","attachallover:" + barefeet + "=force");
                 }
-                else if (part == "Bra") {
-                    layers      = "undershirt";
-                }
-                else if (part == "Bottom") {
-                    attachments = "left hip,left lower leg,l upper leg,pelvis,right hip,right lower leg,r upper leg";
-                    layers      = "pants,skirt";
-                }
-                else if (part == "Panties") {
-                    layers      = "underpants";
-                }
-                else if (part == "Shoes") {
-                    if (barefeet != "") extra = "attachallover:" + barefeet + "=force,";
-
-                    attachments = "left foot,l lower leg,right foot,r lower leg";
-                    layers      = "shoes,socks";
-                }
-                string rlv = "detach:" + llDumpList2String(llCSV2List(attachments), "=force,detach:") + "=force";
-                rlv += "remoutfit:" + llDumpList2String(llCSV2List(layers), "=force,remoutfit:") + "=force";
-                if (wearLock) rlv = "unsharedwear=y,unsharedunwear=y,attachallthis:=n,detachallthis:=n," + rlv;
-                if (extra != "") rlv += extra;
-                lmRunRLVas("Dress", rlv);
-                initializeRLV(0);
             }
 #endif
             else if (cmd == "uncarry") {
@@ -797,7 +746,7 @@ default {
 
             if (!RLVok && (RLVck != 0) && (RLVck <= 6)) {
                 if (isAttached && RLVck != 6 && !RLVok == 1) {
-                    llOwnerSay("@clear,versionnew=" + (string)channel + ",getpathnew=" + (string)channel);
+                    llOwnerSay("@versionnew=" + (string)channel + ",getpathnew=" + (string)channel);
                     llSetTimerEvent(10.0 * ++RLVck);
                 }
             } else if (RLVck == 6) {
@@ -895,6 +844,36 @@ default {
             llOwnerSay("Dolly is now teleporting.");
 
             lmRunRLVas("TP", "tpto:" + locx + "/" + locy + "/" + locz + "=force");
+        }
+        if (request == requestLoadData) {
+            integer dataType = (integer)cdGetValue(data, [0]);
+
+            if (dataType == RLV_STRIP) {
+                string part = cdGetValue(data, [1]);
+                string value; integer i;
+                while ( ( value = cdGetValue(data, ([2,"attachments",i++])) ) != JSON_INVALID ) lmRunRLV("remattach:" + value + "=force");
+                i = 0;
+                while ( ( value = cdGetValue(data, ([2,"layers",i++])) ) != JSON_INVALID ) lmRunRLV("remoutfit:" + value + "=force");
+
+                initializeRLV(1);
+            }
+            else if (dataType == RLV_RESTRICT) {
+                string restrictions;
+                integer group = -1; integer setState;
+                integer posed = (!collapsed && (keyAnimation != "") && (poserID != dollID));
+                list states = [ (autoTP), (!canFly || posed || collapsed || afk), (collapsed), (!canSit || collapsed || posed), (!canStand || collapsed || posed), (collapsed || (posed && poseSilence) ), (helpless || afk || hasCarrier || collapsed || posed), (afk || hasCarrier || collapsed || posed), (!canWear || collapsed || wearLock || afk) ];
+                integer index;
+
+                while ( ( index = llSubStringIndex(data, "$C") ) != -1) {
+                    string channel = (string)llRound(llFrand(0x7fffffff));
+                    data = llInsertString(llDeleteSubString(data, index, index + 1), index, channel);
+                }
+
+                while (cdGetElementType(data, ([1,++group])) != JSON_INVALID) {
+                    setState = llList2Integer(states, group);
+                    cdSetRestrictionsList(data,setState);
+                }
+            }
         }
     }
 

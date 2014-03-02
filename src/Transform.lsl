@@ -188,7 +188,7 @@ default {
 
         if (tryOutfits) {
             if (outfitsFolder == "") {
-                if ((outfitsTest == "") || (retryOutfits < 3)) {
+                if ((outfitsTest == "") || (retryOutfits < 2)) {
                     outfitsTest = llList2String(outfitsFolders, tryOutfits - 1);
                 }
                 else {
@@ -204,7 +204,7 @@ default {
                     retryOutfits = 0;
                 }
             }
-            else if ((typeFolder == "") && (retryOutfits < 3)) {
+            else if ((typeFolder == "") && (retryOutfits < 2)) {
                 outfitsTest = clothingprefix;
             }
             else {
@@ -217,7 +217,7 @@ default {
             }
 
             llListenControl(rlvHandle, 1);
-            llOwnerSay("@findfolder:" + outfitsTest + "=" + (string)rlvChannel);
+            lmRunRLV("findfolder:" + outfitsTest + "=" + (string)rlvChannel);
             retryOutfits++;
         }
 
