@@ -48,7 +48,6 @@ integer clearAnim = 1;
 integer collapsed;
 integer confgured;
 integer dialogChannel;
-integer initState = 104;
 integer listenHandle;
 integer locked;
 integer lowScriptMode;
@@ -425,19 +424,7 @@ default {
 #endif
             if (RLVok && !RLVstarted) processRLVResult();
         }
-        else if (code == 104) {
-            string script = llList2String(split, 0);
-            if (script != "Start") return;
-            if (initState == 104) lmInitState(initState++);
-        }
-        else if (code == 105) {
-            string script = llList2String(split, 0);
-            if (script != "Start") return;
-            if (initState == 105) lmInitState(initState++);
-        }
         else if (code == 110) {
-            initState = 105;
-
             ifPermissions();
         }
         else if (code == 135) {

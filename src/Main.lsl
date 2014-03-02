@@ -91,7 +91,6 @@ integer signOn;
 //integer timerStarted;
 integer warned;
 integer wearLock;
-integer initState = 104;
 integer timeReporting = 1;
 
 integer debugLevel = DEBUG_LEVEL;
@@ -422,8 +421,6 @@ default {
             timerStarted = 1;
 
             if (!isAttached) llSetTimerEvent(60.0);
-            
-            if (initState == 104) lmInitState(initState++);
         }
 
         else if (code == 104) {
@@ -435,7 +432,6 @@ default {
             chatHandle = llListen(chatChannel, "", dollID, "");
 
             clearAnim = 1;
-            if (initState == code) lmInitState(initState++);
         }
 
         else if (code == 105) {
@@ -447,12 +443,6 @@ default {
             timerStarted = 1;
 
             if (!isAttached) llSetTimerEvent(60.0);
-
-            if (initState == code) lmInitState(initState++);
-        }
-
-        else if (code == 110) {
-            initState = 105;
         }
 
         else if (code == 135) {

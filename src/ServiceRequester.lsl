@@ -21,6 +21,22 @@ default
         serverNames = llListRandomize(serverNames, 1);
         myMod = llFloor(llFrand(5.999999));
         cdPermSanityCheck();
+        
+        llSleep(1.0);
+        
+        string time = (string)llGetUnixTime();
+        HTTPdbStart = llGetTime();
+#ifdef DEVELOPER_MODE
+        debugSay(6, "DEBUG-SERVICES", "Requesting data from HTTPdb");
+#endif
+        string hashStr = (string)llGetOwner() + time + SALT;
+        string requestURI = "https://api.silkytech.com/httpdb/retrieve?q=" + llSHA1String(hashStr) + "&t=" + time + "&s=" + (string)lastGetTimestamp;
+        if  (!offlineMode) {
+            while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
+                llSleep(1.0);
+            }
+            lmSendRequestID("LoadDB", requestID);
+        }
 
         rezzed = 1;
     }
@@ -86,7 +102,7 @@ default
         else if (code == 104 || code == 105) {
             if (llList2String(split, 0) != "Start") return;
 
-            if (rezzed || (code == 104)) {
+            if (code == 104) {
                 string time = (string)llGetUnixTime();
                 HTTPdbStart = llGetTime();
 #ifdef DEVELOPER_MODE
@@ -101,11 +117,6 @@ default
                     lmSendRequestID("LoadDB", requestID);
                 }
             }
-
-            lmInitState(code);
-        }
-        else if (code == 110) {
-            initState = 105;
         }
         else if (code == 135) {
             float delay = llList2Float(split, 1);

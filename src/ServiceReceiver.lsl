@@ -32,14 +32,6 @@ default {
         if (code == 102) {
             scaleMem();
         }
-        if (code == 104 || code == 105) {
-            if (llList2String(split, 0) != "Start") return;
-
-            if (!rezzed && (code == 105)) lmInitState(initState++);
-        }
-        else if (code == 110) {
-            initState = 105;
-        }
         else if (code == 135) {
             float delay = llList2Float(split, 1);
             memReport(delay);
@@ -217,8 +209,6 @@ default {
             }
 
             lmConfigComplete(configCount);
-
-            lmInitState(initState++);
         }
         else if (location == "http://api.silkytech.com/name2key/lookup") {
             list split = llParseStringKeepNulls(body, ["=","\n"], []);

@@ -39,7 +39,7 @@
 #define PACKAGE_BUGREPORT "https://github.com/emmamei/cdkey/issues"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "Community Doll Key (Beta)"
+#define PACKAGE_NAME "Community Doll Key"
 
 /* Define to the full name and version of this package. */
 #define PACKAGE_STRING "Community Doll Key (Beta) 02-Mar-14"

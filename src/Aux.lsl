@@ -13,6 +13,7 @@
 #define APPEARANCE_NC "DataAppearance"
 
 key ncRequest;
+key lmRequest;
 key carrierID = NULL_KEY;
 float rezTime;
 float memTime;
@@ -20,13 +21,14 @@ string carrierName;
 string pronounHerDoll = "Her";
 string pronounSheDoll = "She";
 integer configured;
-integer initState = 104;
 integer ncLine;
 integer visible;
 integer memCollecting;
 integer quiet;
 integer wearLock;
 integer rezzed;
+integer visitDollhouse;
+integer targetHandle;
 list MistressList;
 list BuiltinControllers = BUILTIN_CONTROLLERS;
 list glowSettings;
@@ -82,6 +84,13 @@ default {
         configured = 0;
         rezzed = 1;
     }
+    
+    changed(integer change) {
+        if (change & CHANGED_TELEPORT) {
+            visitDollhouse = 0;
+            lmRequest = llRequestInventoryData(LANDMARK_CDROOM);
+        }
+    }
 
     link_message(integer source, integer code, string data, key id) {
         list split = llParseString2List(data, ["|"], []);
@@ -108,30 +117,14 @@ default {
             configured = 1;
             scaleMem();
         }
-        else if ((code == 104) || (code == 105)) {
-            debugSay(7, "DEBUG-STARTUP", "InitState = " + (string)code + " from '" + script + "' my state: " + (string)initState);
-
-            if (initState == code) lmInitState(initState++);
-        }
         else if (code == 110) {
             if (script != "Start") return;
 
-            initState = 105;
-
-            if (!rezzed && (llGetInventoryType(APPEARANCE_NC) == INVENTORY_NOTECARD)) {
+            if (llGetInventoryType(APPEARANCE_NC) == INVENTORY_NOTECARD) {
                 ncRequest = llGetNotecardLine(APPEARANCE_NC, ncLine++);
             }
-
-            memCollecting = 1;
-            memData = "";
-
-            lmMemReport(0.0);
-
-            llSetTimerEvent(5.0);
         }
         else if (code == 135) {
-            if (script == SCRIPT_NAME) return;
-
             memCollecting = 1;
             memData = "";
 
@@ -319,6 +312,9 @@ default {
 
                 llDialog(id, msg, dialogSort(llListSort(pluslist, 1, 1) + MAIN), dialogChannel);
             }
+            else if (choice == "Visit Dollhouse") {
+                visitDollhouse += 1;
+            }
             else if (llGetSubString(choice, 0, 4) == "Pose" && (keyAnimation == ""  || (!isDoll || poserID == dollID))) {
                 poserID = id;
                 integer page = 1; integer len = llStringLength(choice);
@@ -481,7 +477,11 @@ default {
                 doVisibility(-1);
                 ncRequest = NULL_KEY;
 
-                if (!memCollecting) llSetTimerEvent(0.0);
+                //llSleep(2.0);
+
+                lmMemReport(0.0);
+                
+                llSetTimerEvent(5.0);
             }
             else {
                 debugSay(5, "DEBUG-NOTECARDS", APPEARANCE_NC + " (" + (string)ncLine + "): " + data);
@@ -490,6 +490,18 @@ default {
                 if (!memCollecting) llSetTimerEvent(1.0);
             }
         }
+        else if (request == lmRequest) {
+            vector lmData = (vector)data;
+            if ((lmData.x < 256) && (lmData.y < 256)) {
+                targetHandle = llTarget(lmData, 1.0);
+                llMoveToTarget(lmData, 0.000001);
+            }
+        }
+    }
+    
+    at_target(integer target, vector targetPos, vector ourPos) {
+        llTargetRemove(target);
+        llStopMoveToTarget();
     }
 
     timer() {

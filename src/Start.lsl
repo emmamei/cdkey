@@ -49,8 +49,6 @@ float ncStart;
 integer lastAttachPoint;
 key lastAttachAvatar;
 
-list knownScripts;
-list readyScripts;
 list MistressList;
 list blacklist;
 list recentDilation;
@@ -219,11 +217,11 @@ doneConfiguration(integer read) {
         llResetScript();
     }
     reset = 0;
-    readyScripts = [];
-    llSleep(0.5);
-    llMessageLinked(LINK_THIS, 102, cdMyScriptName(), NULL_KEY);
-    lmInitState(++initState);
+    lmInitState(102);
+    lmInitState(105);
     startup = 2;
+    
+    initializationCompleted();
 }
 
 initializationCompleted() {
@@ -253,20 +251,9 @@ initializationCompleted() {
     sendMsg(dollID, msg);
 
     startup = 0;
-
-    lmInitState(102);
-    lmInitState(105);
+    
     lmInitState(110);
     llSetTimerEvent(1.0);
-}
-
-list notReady() {
-    list waiting; integer loop;
-    for (loop = 0; loop < llGetListLength(knownScripts); loop++) {
-        string script = llList2String(knownScripts, loop);
-        if (llListFindList(readyScripts, [ script ]) == -1 && llGetScriptState(script)) waiting += script;
-    }
-    return waiting;
 }
 
 #ifdef SIM_FRIENDLY
@@ -297,7 +284,6 @@ do_Restart() {
 
     for (loop = 0; loop < llGetInventoryNumber(INVENTORY_SCRIPT); loop++) {
         string script = llGetInventoryName(INVENTORY_SCRIPT, loop);
-        knownScripts += script;
         if (script != me) {
             cdRunScript(script);
             llResetOtherScript(script);
@@ -319,27 +305,10 @@ default {
         if (code == 102) {
             if (script != "ServiceReceiver") return;
             databaseFinished = 1;
-            if (llGetListLength(notReady()) == 0) lmInitState(105);
+            initConfiguration();
         }
         else if ((code == 104) || (code == 105)) {
-            if (llListFindList(readyScripts, [ script ]) == -1) {
-                readyScripts += script;
 
-                debugSay(8, "DEBUG-STARTUP", "Reporter '" + script + "'\nStill waiting: " + llList2CSV(notReady()));
-
-                if (!llGetListLength(notReady())) {
-                  if (initState == 104) {
-                      initState++;
-                      initConfiguration();
-                      readyScripts = [];
-                      if (databaseFinished) lmInitState(105);
-                  }
-                  else {
-                      initializationCompleted();
-                      lmInitState(105);
-                  }
-              }
-            }
         }
         else if (code == 135) {
             if (llList2String(split, 0) == cdMyScriptName()) return;
@@ -527,14 +496,7 @@ default {
         integer loop; string script;
 
         sendMsg(dollID, "Reattached, Initializing");
-        knownScripts = [];
 
-        for (loop = 0; loop < llGetInventoryNumber(INVENTORY_SCRIPT); loop++) {
-            script = llGetInventoryName(INVENTORY_SCRIPT, loop);
-            if (script != me) knownScripts += script;
-        }
-
-        readyScripts = [];
         llSleep(0.5);
         lmInitState(initState = 105);
     }
@@ -619,15 +581,12 @@ default {
     timer() {
         float t = llGetTime();
         if (t >= 300.0) llSetTimerEvent(0.0);
-        else llSetTimerEvent(10.0);
+        else llSetTimerEvent(15.0);
 
         if (initState == 104) {
             llOwnerSay("Starting initialization");
             startup = 1;
             lmInitState(initState++);
-        }
-        else if (initState == 105) {
-            lmInitState(initState);
         }
         else if (startup != 0) {
             integer i; integer n = llGetInventoryNumber(10);

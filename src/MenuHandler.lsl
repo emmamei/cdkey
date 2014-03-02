@@ -65,7 +65,6 @@ integer RLVok;
 //integer offlineMode;
 integer wearLock;
 integer dbConfig;
-integer initState = 104;
 integer textboxType;
 //integer debugLevel = DEBUG_LEVEL;
 integer startup = 1;
@@ -137,14 +136,7 @@ default
             else if (data == "Start") configured = 1;
             scaleMem();
         }
-        else if (code == 104 || code == 105) {
-            if (llList2String(split, 0) != "Start") return;
-
-            if (initState == code) lmInitState(initState++);
-        }
         else if (code == 110) {
-            initState = 105;
-
             lmInternalCommand("updateExceptions", "", NULL_KEY);
 
             startup = 0;

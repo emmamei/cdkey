@@ -33,7 +33,6 @@ string prefix;
 integer candresstemp = TRUE;
 integer candresstimeout;
 integer dresspassed;
-integer initState = 104;
 
 key dollID = NULL_KEY;
 key dresserID = NULL_KEY;
@@ -283,13 +282,10 @@ default {
         else if (code == 104) {
             if (cdListElement(split, 0) != "Start") return;
             startup = 1;
-
-            if (initState == 104) lmInitState(initState++);
         }
         else if (code == 105) {
             if (cdListElement(split, 0) != "Start") return;
             startup = 2;
-            if (initState == 105) lmInitState(initState++);
         }
         else if (code == 110) {
             initState = 105;

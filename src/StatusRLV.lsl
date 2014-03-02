@@ -44,7 +44,6 @@ list rlvStatus;
 string scriptName;
 
 integer RLVstarted;
-integer initState = 104;
 //========================================
 // STATES
 //========================================
@@ -76,15 +75,8 @@ default {
         if (code == 102) {
             scaleMem();
         }
-        else if (code == 104 || code == 105) {
-            if (script != "Start") return;
-
-            if (initState == code) lmInitState(initState++);
-        }
-        if (code == 110) {
-            initState = 105;
-        }
         else if (code == 135) {
+            scaleMem();
             memReport(cdListFloatElement(split, 1));
         }
         else if (code == 300) {

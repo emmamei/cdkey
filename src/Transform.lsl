@@ -54,7 +54,6 @@ integer startup = 1;
 
 string currentState;
 integer dbConfig;
-integer initState = 104;
 integer mustAgreeToType;
 integer showPhrases;
 integer isTransformingKey;
@@ -252,12 +251,10 @@ default {
             reloadTypeNames();
             startup = 1;
             llSetTimerEvent(60.0);   // every minute
-            if (initState == 104) lmInitState(initState++);
         }
 
         else if (code == 105) {
             if (script != "Start") return;
-            if (initState == 105) lmInitState(initState++);
         }
 
         else if (code == 110) {
