@@ -277,7 +277,10 @@ default {
 
         scaleMem();
 
-        if (code == 104) {
+        if (code == 102) {
+            scaleMem();
+        }
+        else if (code == 104) {
             if (cdListElement(split, 0) != "Start") return;
             startup = 1;
 

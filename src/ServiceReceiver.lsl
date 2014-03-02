@@ -29,6 +29,9 @@ default {
         list split = llParseString2List(data, [ "|" ], []);
         string script = llList2String(split, 0);
 
+        if (code == 102) {
+            scaleMem();
+        }
         if (code == 104 || code == 105) {
             if (llList2String(split, 0) != "Start") return;
 

@@ -154,8 +154,6 @@ checkAvatarList() {
 #endif
     lastAvatarCheck = llGetTime();
     oldAvatars = curAvatars;
-
-    scaleMem();
 }
 
 doHTTPpost() {

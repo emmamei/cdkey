@@ -104,7 +104,10 @@ default {
                 sendMsg(targetKey, msg);
             }
         }
-        else if (code == 102) configured = 1;
+        else if (code == 102) {
+            configured = 1;
+            scaleMem();
+        }
         else if ((code == 104) || (code == 105)) {
             debugSay(7, "DEBUG-STARTUP", "InitState = " + (string)code + " from '" + script + "' my state: " + (string)initState);
 

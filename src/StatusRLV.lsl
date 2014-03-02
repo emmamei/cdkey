@@ -73,7 +73,10 @@ default {
         // 315: RLV Commands
         // 350: RLVok Yes/No Notification
 
-        if (code == 104 || code == 105) {
+        if (code == 102) {
+            scaleMem();
+        }
+        else if (code == 104 || code == 105) {
             if (script != "Start") return;
 
             if (initState == code) lmInitState(initState++);

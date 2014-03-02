@@ -135,6 +135,7 @@ default
                 doDialogChannel();
             }
             else if (data == "Start") configured = 1;
+            scaleMem();
         }
         else if (code == 104 || code == 105) {
             if (llList2String(split, 0) != "Start") return;

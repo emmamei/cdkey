@@ -430,6 +430,7 @@ default {
                 integer index = llListFindList(MistressList, [ uuid ]);
 
                 if  ((cmd == "addMistress") && (index == -1)) {
+                    llOwnerSay("Adding " + name + " to controller list.");
                     if ((llGetListLength(MistressList) % 2) == 1) MistressList = llDeleteSubList(MistressList, 0, 0);
                     lmSendConfig("MistressList", llDumpList2String((MistressList = llListSort(MistressList + [ uuid, name ], 2, 1)), "|"));
                 }
