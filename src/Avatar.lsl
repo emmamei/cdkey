@@ -25,8 +25,6 @@ float poseExpire;
 float afkSlowWalkSpeed = 5;
 float timeToJamRepair;
 float refreshRate = 8.0;
-float lastPostTime;
-float HTTPinterval;
 
 vector carrierPos;
 vector lockPos;
@@ -62,6 +60,8 @@ integer timerOn;
 integer wearLock;
 integer newAttach = 1;
 integer creatorNoteDone;
+integer lastPostTimestamp;
+integer HTTPinterval;
 
 //========================================
 // FUNCTIONS
@@ -665,8 +665,8 @@ default {
             string type = llList2String(split, 1);
             string value = llList2String(split, 2);
 
-            if (type == "HTTPinterval") HTTPinterval = (float)value;
-            if (type == "lastPostTimestamp") lastPostTime = llGetTime();
+            if (type == "HTTPinterval")             HTTPinterval = (integer)value;
+            if (type == "lastPostTimestamp")        lastPostTimestamp = (integer)value;
         }
     }
 
@@ -697,7 +697,7 @@ default {
             if (timeToJamRepair != 0) timeToJamRepair -= timerInterval;
 
             // Check post interval
-            if ((lastPostTime + HTTPinterval) < llGetTime()) {
+            if ((lastPostTimestamp + HTTPinterval) < llGetUnixTime()) {
                 // Check if doll is posed and time is up
                 if (poseExpire != 0.0) {
                     if (poseExpire < 0.0) { // Pose expire is set and has passed
@@ -716,7 +716,7 @@ default {
                 }
 
                 // In offline mode we update the timer locally
-                if (offlineMode) lastPostTime = llGetTime();
+                if (offlineMode) lastPostTimestamp = llGetUnixTime();
             }
 
             ifPermissions();
