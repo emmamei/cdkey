@@ -218,8 +218,11 @@ default {
                 else llOwnerSay("Other people can no longer carry you.");
             }
             else if (name == "canDress") {
-                if (value == "1") llOwnerSay("Other people can now outfit you.");
-                else llOwnerSay("Other people can no longer outfit you.");
+                string msg;
+                if (value == "1") msg = "Other people can now outfit you, but you remain ";
+                else msg = "Other people can no longer outfit you, but you remain ";
+                if (wearLock || !canWear) msg += "un";
+                llOwnerSay(msg + "able to dress yourself.";
             }
             else if (name == "doWarnings") {
                 if (value == "1") llOwnerSay("No warnings will be given when time remaining is low.");
