@@ -8,8 +8,64 @@ people together. Thus, some features that would be found in a normal
 BDSM-styled key is not found here.
 
 The original Key came in two forms: a Standard Key and a Transforming Key.
-This nomenclature is still present in some places; this key incorporates
+This nomenclature may be found in some places; this key incorporates
 all of the features of both.
+
+Configuration of #RLV Folder
+----------------------------
+
+The Key uses a folder called #RLV - you should create it in the top level
+of your inventory (next to folders like "Clothing" and "Lost and Found")
+if you haven't already. This folder is used by many items that utilise
+RLV.
+
+To be able to wear an item on demand, the Key uses a set of folders located
+in #RLV. These folders will contain your outfits as well as your doll types.
+With the proper set up, users of your Key can change your wear, as well as
+your type.
+
+The first thing is to create a "> Outfits" folder (without the quotes).
+The folder is "marked" with a ">" symbol, which is a standard naming
+convention in the #RLV folder. You can create a multi-level tree using this
+convention inside your outfit folder.
+
+Inside the #RLV folder you will need two specific folders:
+
+Folder: ~normalself
+
+This folder contains the items that you need for a basic "self" - shape,
+skin, and hair for example. These items are only re-worn when a complete
+avi change is detected; normally, the items in this folder are only put
+on once.
+
+Folder: ~nude
+
+Items that may need to be put on frequently after an outfit - such as
+bare feet, jewelry, tattoos, and such can be placed here. These items
+are re-worn after every outfit change.
+
+
+If the contents of both the ~normalself and ~nude folders are worn,
+you should be in your "natural" nude state. This state may be used
+as a basis for a "Nude" button in the future.
+
+In the "> Outfits" folder, there will also be Doll Type folders.
+These folders are marked by a leading "*" in their name, and have
+a name that matches the Doll Type Notecard contained within the
+Doll's Key. For instance, a Doll Type of Japanese will have a
+notecard in the Key called "*Japanese" and a folder in the
+"#RLV/> Outfits" folder called "*Japanese".
+
+Outfits for general wear (or for a doll with the Regular Doll Type)
+can be found in the "#RLV" folder itself or in subdirectories
+thereof (when using the ">" convention). For example, one could
+have a folder "#RLV/> Outfits/> Formal" and a folder within that
+called "Red Gown" that has the items for a Red Gown in it.
+
+Outfits stored in a Doll Type Folder are only shown to the doll
+when the dolly is that type of doll. So items that are in the
+"*Japanese" folder (including perhaps subfolders!) are only shown
+when the doll is a "Japanese Doll".
 
 Main Menu
 ---------
