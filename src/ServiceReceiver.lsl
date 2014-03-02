@@ -97,7 +97,6 @@ default {
         integer locationIndex = llSubStringIndex(body,"\n");
         integer queryIndex = llSubStringIndex(body,"?");
         string location = llGetSubString(body, 10, queryIndex - 1);
-        llOwnerSay(body + "\n" + location);
         body = llStringTrim(llDeleteSubString(body, 0, locationIndex), STRING_TRIM);
 #ifdef UPDATE_METHOD_CDKEY
         if (request == requestUpdate) {
