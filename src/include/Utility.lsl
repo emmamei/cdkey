@@ -42,7 +42,7 @@ memReport(float delay) {
        used_memory = 16384 - free_memory;
        max_memory = free_memory;
     }
-    lmMemReply(used_memory, memory_limit, free_memory, max_memory);
+    llMessageLinked(LINK_THIS, 136, llGetScriptName() + "|" + llList2Json(JSON_ARRAY, [used_memory, memory_limit, free_memory, max_memory]), NULL_KEY);
 }
 
 #ifdef DEVELOPER_MODE

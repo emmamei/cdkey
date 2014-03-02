@@ -8,6 +8,7 @@
 
 #define DEBUG_HANDLER 1
 #include "include/GlobalDefines.lsl"
+#include "include/Json.lsl"
 
 #define APPEARANCE_NC "DataAppearance"
 
@@ -134,7 +135,7 @@ default {
             llSetTimerEvent(5.0);
         }
         else if (code == 136) {
-            memData += split;
+            memData += data;
 
             llSetTimerEvent(5.0);
         }
@@ -503,20 +504,31 @@ default {
                    used_memory = 16384 - free_memory;
                    available_memory = free_memory;
                 }
-                memData = llListSort(memData + [ SCRIPT_NAME, (string)used_memory, (string)memory_limit, (string)free_memory, (string)available_memory ], 5, 1);
+                memData = llListSort(memData + llList2Json(JSON_ARRAY, [SCRIPT_NAME, llList2Json(JSON_ARRAY, [used_memory, memory_limit, free_memory, available_memory])]), 1, 1);
 
                 integer i; string scriptName;
                 string output = "Script Memory Status:";
-                for (i = 0; i < llGetListLength(memData); i += 5) {
-                    scriptName =        llList2String(memData, i);
-                    used_memory =       llList2Float(memData, i + 1);
-                    memory_limit =      llList2Float(memData, i + 2);
-                    free_memory =       llList2Float(memData, i + 3);
-                    available_memory =  llList2Float(memData, i + 4);
+                for (i = 0; i < llGetListLength(memData); i += 4) {
+                    scriptName =        cdGetValue(llList2String(memData, i), [0]);
+                    used_memory =       (float)cdGetValue(llList2String(memData, i), ([1,0]));
+                    memory_limit =      (float)cdGetValue(llList2String(memData, i), ([1,1]));
+                    free_memory =       (float)cdGetValue(llList2String(memData, i), ([1,2]));
+                    available_memory =  (float)cdGetValue(llList2String(memData, i), ([1,3]));
+                    memData = llListReplaceList(memData, [ used_memory, memory_limit, free_memory, available_memory ], i, i);
+                    llOwnerSay(llList2CSV(memData));
 
                     output += "\n" + scriptName + ":\t" + formatFloat(used_memory / 1024.0, 2) + "/" + (string)llRound(memory_limit / 1024.0) + "kB (" +
                               formatFloat(free_memory / 1024.0, 2) + "kB free, " + formatFloat(available_memory / 1024.0, 2) + "kB available)";
                 }
+                
+                scriptName =        "Totals";
+                used_memory =       llListStatistics(LIST_STAT_SUM, llList2ListStrided(memData, 0, -1, 4));
+                memory_limit =      llListStatistics(LIST_STAT_SUM, llList2ListStrided(llDeleteSubList(memData, 0, 0), 0, -1, 4));
+                free_memory =       llListStatistics(LIST_STAT_SUM, llList2ListStrided(llDeleteSubList(memData, 0, 1), 0, -1, 4));
+                available_memory =  llListStatistics(LIST_STAT_SUM, llList2ListStrided(llDeleteSubList(memData, 0, 2), 0, -1, 4));
+                
+                output += "\n" + scriptName + ":\t" + formatFloat(used_memory / 1024.0, 2) + "/" + (string)llRound(memory_limit / 1024.0) + "kB (" +
+                           formatFloat(free_memory / 1024.0, 2) + "kB free, " + formatFloat(available_memory / 1024.0, 2) + "kB available)";
 
                 llOwnerSay(output);
 
