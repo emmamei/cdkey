@@ -513,19 +513,21 @@ default {
                 string output = "Script Memory Status:";
                 for (i = 0; i < llGetInventoryNumber(10); i++) {
                     scriptName =        llGetInventoryName(10, i);
-                    if (cdGetElementType(memData, ([scriptName,0])) != JSON_INVALID) {
-                        used_memory =       (float)cdGetValue(memData, ([scriptName,0]));
-                        memory_limit =      (float)cdGetValue(memData, ([scriptName,1]));
-                        free_memory =       (float)cdGetValue(memData, ([scriptName,2]));
-                        available_memory =  (float)cdGetValue(memData, ([scriptName,3]));
-                        
-                        statList += [ used_memory, memory_limit, free_memory, available_memory ];
-    
-                        output += "\n" + scriptName + ":\t" + formatFloat(used_memory / 1024.0, 2) + "/" + (string)llRound(memory_limit / 1024.0) + "kB (" +
-                                  formatFloat(free_memory / 1024.0, 2) + "kB free, " + formatFloat(available_memory / 1024.0, 2) + "kB available)";
-                    }
-                    else {
-                        output += "\n" + scriptName + ":\tNo Report";
+                    if (scriptName != "UpdateScript") {
+                        if (cdGetElementType(memData, ([scriptName,0])) != JSON_INVALID) {
+                            used_memory =       (float)cdGetValue(memData, ([scriptName,0]));
+                            memory_limit =      (float)cdGetValue(memData, ([scriptName,1]));
+                            free_memory =       (float)cdGetValue(memData, ([scriptName,2]));
+                            available_memory =  (float)cdGetValue(memData, ([scriptName,3]));
+                            
+                            statList += [ used_memory, memory_limit, free_memory, available_memory ];
+        
+                            output += "\n" + scriptName + ":\t" + formatFloat(used_memory / 1024.0, 2) + "/" + (string)llRound(memory_limit / 1024.0) + "kB (" +
+                                      formatFloat(free_memory / 1024.0, 2) + "kB free, " + formatFloat(available_memory / 1024.0, 2) + "kB available)";
+                        }
+                        else {
+                            output += "\n" + scriptName + ":\tNo Report";
+                        }
                     }
                 }
                 

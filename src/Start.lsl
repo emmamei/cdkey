@@ -624,6 +624,9 @@ default {
         if (initState == 104) {
             llOwnerSay("Starting initialization");
             startup = 1;
+            lmInitState(initState++);
+        }
+        else if (initState == 105) {
             lmInitState(initState);
         }
         else if (startup != 0) {

@@ -39,10 +39,10 @@
 #define PACKAGE_BUGREPORT "https://github.com/emmamei/cdkey/issues"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "Community Doll Key"
+#define PACKAGE_NAME "Community Doll Key (Beta)"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Community Doll Key (Beta) 26-Feb-14"
+#define PACKAGE_STRING "Community Doll Key (Beta) 02-Mar-14"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "cdkey-beta"
@@ -51,10 +51,10 @@
 #define PACKAGE_URL "https://github.com/emmamei/cdkey"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "26-Feb-14"
+#define PACKAGE_VERSION "02-Mar-14"
 
 /* Define to the numeric version of this package. */
-#define PACKAGE_VERNUM 140226
+#define PACKAGE_VERNUM 140302
 
 /* enable lag reduction mode when detecting sustained high time dilation in
    the local region. This slightly delays certain events and turns off non
