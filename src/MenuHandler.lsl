@@ -377,12 +377,12 @@ default
                     if (keyAnimation != "") {
                         msg += "Doll is currently posed.\n";
 
-                        if (!isDoll || (poserID == dollID)) {
+                        if ((!isDoll && canPose) || (isDoll && (poserID == dollID))) {
                             menu += ["Pose","Unpose"];
                         }
                     }
                     else {
-                        if ((!isDoll && canPose) || (isDoll))
+                        if ((!isDoll && canPose) || isDoll)
                             menu += "Pose";
                     }
 
