@@ -79,9 +79,9 @@ setDollType(string choice, integer automated) {
     clothingprefix = TYPE_FLAG + stateName;
     currentphrases = [];
     lineno = 0;
-
+    
     if (llGetInventoryType(TYPE_FLAG + stateName) == INVENTORY_NOTECARD) kQuery = llGetNotecardLine(TYPE_FLAG + stateName,0);
-
+    
     if (stateName != currentState) {
         if (automated) minMinutes = 0;
         else minMinutes = 5;
@@ -401,22 +401,29 @@ default {
         }
         else if ((typeFolder == "") && (llGetSubString(choice, -llStringLength(clothingprefix), STRING_END) == clothingprefix)) {
             typeFolder = choice;
-            lmSendConfig("typeFolder", typeFolder);
-            lmSendConfig("outfitsFolder", "");
-            lmSendConfig("useTypeFolder", (string)1);
             tryOutfits = 0;
 
             llSetTimerEvent(0.0);
 
             if (llGetSubString(typeFolder, 0, llStringLength(outfitsFolder) - 1) != outfitsFolder) {
-                llOwnerSay("WARNING: Found type folder '" + typeFolder + "' is not within the outfits folder '" + outfitsFolder +
-                           "' please check it is correct and you do not have two of more folders named *" + stateName);
+                llOwnerSay("Found a matching type folder in '" + typeFolder + "' but it is not located withing your outfits folder '" + outfitsFolder + "'" +
+                           "please make sure that the '" + TYPE_FLAG + stateName + "' folder is inside of '" + outfitsFolder + "'");
+                typeFolder = "";
+                useTypeFolder = 0;
             }
             else {
-                llOwnerSay("Your type folder is " + typeFolder);
+                typeFolder = llDeleteSubString(typeFolder, 0, llStringLength(outfitsFolder));
+                llOwnerSay("Your outfits folder is now " + outfitsFolder);
+                llOwnerSay("Your type folder is now " + outfitsFolder + typeFolder);
+                useTypeFolder = 1;
             }
 
+            lmSendConfig("typeFolder", typeFolder);
+            lmSendConfig("outfitsFolder", outfitsFolder);
+            lmSendConfig("useTypeFolder", (string)useTypeFolder);
+            
             cdPause();
+            
             lmInternalCommand("randomDress", "", NULL_KEY);
             retryOutfits = 0;
         }
