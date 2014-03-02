@@ -81,6 +81,7 @@ string isDollName;
 string dollType = "Regular";
 string pronounHerDoll = "Her";
 string pronounSheDoll = "She";
+string marketplaceURL = "";
 
 vector gemColour;
 
@@ -160,6 +161,7 @@ default
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
+            else if (name == "marketplaceURL")         marketplaceURL = value;
             //else if (name == "dollyName")                   dollyName = value;
             else if (name == "afk")                               afk = (integer)value;
             //else if (name == "autoTP")                         autoTP = (integer)value;
@@ -418,6 +420,10 @@ default
                     if (!isDoll) menu += [ "Options" ];
                     if (!isDoll || !detachable) menu += [ "Detach" ];
                 }
+                
+                if (!isDoll) {
+                    if (marketplaceURL != "") menu += "Get a Key";
+                }
 
                 cdListenerActivate(dialogHandle);
                 llSetTimerEvent(60.0);
@@ -536,6 +542,9 @@ default
             }
             else if (choice == "Help Notecard") {
                 llGiveInventory(id,NOTECARD_HELP);
+            }
+            else if (choice == "Get a Key") {
+                llLoadURL(id, "To get your own free community doll key from our marketplace store click \"Go to page\"", marketplaceURL);
             }
             else if (choice == "Visit Dollhouse") {
                 if (isDoll) llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|TP|" + LANDMARK_CDROOM, id);
