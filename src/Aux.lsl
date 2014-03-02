@@ -30,7 +30,7 @@ integer rezzed;
 list MistressList;
 list BuiltinControllers = BUILTIN_CONTROLLERS;
 list glowSettings;
-list memData;
+string memData;
 
 sendMsg(key target, string msg) {
     if (target) {
@@ -120,7 +120,7 @@ default {
             }
 
             memCollecting = 1;
-            memData = [];
+            memData = "";
 
             lmMemReport(0.0);
 
@@ -130,12 +130,12 @@ default {
             if (script == SCRIPT_NAME) return;
 
             memCollecting = 1;
-            memData = [];
+            memData = "";
 
             llSetTimerEvent(5.0);
         }
         else if (code == 136) {
-            memData += data;
+            memData = cdSetValue(memData, [script], llList2String(split, 1));
 
             llSetTimerEvent(5.0);
         }
@@ -465,8 +465,8 @@ default {
             lmRunRLVas("Base", "accepttp:"  + llDumpList2String(allow, "=add,accepttp:")  + "=add");
             lmRunRLVas("Base", "sendim:"    + llDumpList2String(allow, "=add,sendim:")    + "=add");
             lmRunRLVas("Base", "recvim:"    + llDumpList2String(allow, "=add,recvim:")    + "=add");
-            lmRunRLVas("Base", "recvchat:"  + llDumpList2String(llList2List(allow, builtin - 1, -1), "=add,recvchat:") + "=add");
-            lmRunRLVas("Base", "recvemote:" + llDumpList2String(llList2List(allow, builtin - 1, -1), "=add,recvemote:") + "=add");
+            lmRunRLVas("Base", "recvchat:"  + llDumpList2String(allow, "=add,recvchat:")  + "=add");
+            lmRunRLVas("Base", "recvemote:" + llDumpList2String(allow, "=add,recvemote:") + "=add");
 
             // Apply exemptions to base RLV
         }
@@ -504,28 +504,33 @@ default {
                    used_memory = 16384 - free_memory;
                    available_memory = free_memory;
                 }
-                memData = llListSort(memData + llList2Json(JSON_ARRAY, [SCRIPT_NAME, llList2Json(JSON_ARRAY, [used_memory, memory_limit, free_memory, available_memory])]), 1, 1);
+                memData = cdSetValue(memData,[SCRIPT_NAME],llList2Json(JSON_ARRAY, [used_memory, memory_limit, free_memory, available_memory]));
 
-                integer i; string scriptName;
+                integer i; string scriptName; list statList;
                 string output = "Script Memory Status:";
-                for (i = 0; i < llGetListLength(memData); i += 4) {
-                    scriptName =        cdGetValue(llList2String(memData, i), [0]);
-                    used_memory =       (float)cdGetValue(llList2String(memData, i), ([1,0]));
-                    memory_limit =      (float)cdGetValue(llList2String(memData, i), ([1,1]));
-                    free_memory =       (float)cdGetValue(llList2String(memData, i), ([1,2]));
-                    available_memory =  (float)cdGetValue(llList2String(memData, i), ([1,3]));
-                    memData = llListReplaceList(memData, [ used_memory, memory_limit, free_memory, available_memory ], i, i);
-                    llOwnerSay(llList2CSV(memData));
-
-                    output += "\n" + scriptName + ":\t" + formatFloat(used_memory / 1024.0, 2) + "/" + (string)llRound(memory_limit / 1024.0) + "kB (" +
-                              formatFloat(free_memory / 1024.0, 2) + "kB free, " + formatFloat(available_memory / 1024.0, 2) + "kB available)";
+                for (i = 0; i < llGetInventoryNumber(10); i++) {
+                    scriptName =        llGetInventoryName(10, i);
+                    if (cdGetElementType(memData, ([scriptName,0])) != JSON_INVALID) {
+                        used_memory =       (float)cdGetValue(memData, ([scriptName,0]));
+                        memory_limit =      (float)cdGetValue(memData, ([scriptName,1]));
+                        free_memory =       (float)cdGetValue(memData, ([scriptName,2]));
+                        available_memory =  (float)cdGetValue(memData, ([scriptName,3]));
+                        
+                        statList += [ used_memory, memory_limit, free_memory, available_memory ];
+    
+                        output += "\n" + scriptName + ":\t" + formatFloat(used_memory / 1024.0, 2) + "/" + (string)llRound(memory_limit / 1024.0) + "kB (" +
+                                  formatFloat(free_memory / 1024.0, 2) + "kB free, " + formatFloat(available_memory / 1024.0, 2) + "kB available)";
+                    }
+                    else {
+                        output += "\n" + scriptName + ":\tNo Report";
+                    }
                 }
                 
                 scriptName =        "Totals";
-                used_memory =       llListStatistics(LIST_STAT_SUM, llList2ListStrided(memData, 0, -1, 4));
-                memory_limit =      llListStatistics(LIST_STAT_SUM, llList2ListStrided(llDeleteSubList(memData, 0, 0), 0, -1, 4));
-                free_memory =       llListStatistics(LIST_STAT_SUM, llList2ListStrided(llDeleteSubList(memData, 0, 1), 0, -1, 4));
-                available_memory =  llListStatistics(LIST_STAT_SUM, llList2ListStrided(llDeleteSubList(memData, 0, 2), 0, -1, 4));
+                used_memory =       llListStatistics(LIST_STAT_SUM, llList2ListStrided(statList, 0, -1, 4));
+                memory_limit =      llListStatistics(LIST_STAT_SUM, llList2ListStrided(llDeleteSubList(statList, 0, 0), 0, -1, 4));
+                free_memory =       llListStatistics(LIST_STAT_SUM, llList2ListStrided(llDeleteSubList(statList, 0, 1), 0, -1, 4));
+                available_memory =  llListStatistics(LIST_STAT_SUM, llList2ListStrided(llDeleteSubList(statList, 0, 2), 0, -1, 4));
                 
                 output += "\n" + scriptName + ":\t" + formatFloat(used_memory / 1024.0, 2) + "/" + (string)llRound(memory_limit / 1024.0) + "kB (" +
                            formatFloat(free_memory / 1024.0, 2) + "kB free, " + formatFloat(available_memory / 1024.0, 2) + "kB available)";
