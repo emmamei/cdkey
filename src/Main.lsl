@@ -112,9 +112,9 @@ float timeLeftOnKey   = windamount;
 float windRate        = 1.0;
 float baseWindRate    = windRate;
 float displayWindRate = windRate;
-float HTTPinterval    = 60.0;
+integer HTTPinterval    = 60;
+integer lastPostTimestamp;
 float collapseTime;
-float lastPostTime;
 list windTimes        = [ 30 ];
 list blacklist;
 
@@ -344,23 +344,23 @@ default {
             Others which cause this effect are not being attached to spine
             and being doll type Builder or Key*/
 
-            // Check post interval
-            if ((lastPostTime + HTTPinterval) < llGetTime()) {
-                // Check wearlock timer
-                if (wearLock) {
-                    if (wearLockExpire == 0.0) lmInternalCommand("wearLock", (string)(wearLock = 0), NULL_KEY);
-                    else {
-                        lmSendConfig("wearLockExpire", (string)wearLockExpire);
+            if (ticks % 10 == 0) {
+                // Check post interval
+                if ((lastPostTimestamp + HTTPinterval) < llGetUnixTime()) {
+                    // Check wearlock timer
+                    if (wearLock) {
+                        if (wearLockExpire == 0.0) lmInternalCommand("wearLock", (string)(wearLock = 0), NULL_KEY);
+                        else {
+                            lmSendConfig("wearLockExpire", (string)wearLockExpire);
+                        }
                     }
-                }
-
-                // Update time left
-                if (windRate != 0.0) {
+    
+                    // Update time left
                     lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
+    
+                    // In offline mode we update the timer locally
+                    if (offlineMode) lastPostTimestamp = llGetUnixTime();
                 }
-
-                // In offline mode we update the timer locally
-                if (offlineMode) lastPostTime = llGetTime();
             }
 
             if (ticks % 30 == 0) {
@@ -384,6 +384,7 @@ default {
                         llSay(0, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on their key.)");
                         // Must update time before executing collapse
                         lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0.0));
+                        lmSendConfig("timeLeftOnKey", (string)(collapseTime = llGetTime()));
                         lmInternalCommand("collapse", "1", NULL_KEY);
                     }
                 }
@@ -725,8 +726,8 @@ default {
             string type = llList2String(split, 1);
             string value = llList2String(split, 2);
 
-            if (type == "HTTPinterval") HTTPinterval = (float)value;
-            if (type == "lastPostTimestamp") lastPostTime = llGetTime();
+                 if (type == "HTTPinterval")            HTTPinterval = (integer)value;
+            else if (type == "lastPostTimestamp")       lastPostTimestamp = (integer)value;
         }
     }
 

@@ -165,10 +165,10 @@ default {
 
                     if (Value == "") Value = "";
 
-                    if (Key == "useHTTPS") useHTTPS = (integer)Value;
-                    else if (Key == "HTTPinterval") HTTPinterval = (float)Value;
-                    else if (Key == "HTTPthrottle") HTTPthrottle = (float)Value;
-                    else if (Key == "updateCheck") updateCheck = (integer)Value;
+                    if (Key == "useHTTPS") lmServiceMessage("useHTTPS", (string)(useHTTPS = (integer)Value), NULL_KEY);
+                    else if (Key == "HTTPinterval") lmServiceMessage("HTTPinterval", (string)(HTTPinterval = (float)Value), NULL_KEY);
+                    else if (Key == "HTTPthrottle") lmServiceMessage("HTTPthrottle", (string)(HTTPthrottle = (float)Value), NULL_KEY);
+                    else if (Key == "updateCheck") lmServiceMessage("updateCheck", (string)(updateCheck = (integer)Value), NULL_KEY);
                     else if (Key == "lastGetTimestamp") {
                         lastGetTimestamp = (integer)Value;
                         lmServiceMessage("lastGetTimestamp", (string)(Value), NULL_KEY);
