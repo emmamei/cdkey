@@ -404,6 +404,9 @@ default {
                     lmSendConfig("MistressList", llDumpList2String((MistressList = llListSort(MistressList + [ uuid, name ], 2, 1)), "|"));
                 }
                 else if ((cmd == "remMistress") && (llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1)) {
+                    list exceptions = ["tplure","recvchat","recvemote","recvim","sendim","startim"];
+                    integer i;
+                    for (i = 0; i < 6; i++) lmRunRLVas("Base",llList2String(exceptions, i) + ":" + uuid + "=rem");
                     if ((llGetListLength(MistressList) % 2) == 1) MistressList = llDeleteSubList(MistressList, 0, 0);
                     lmSendConfig("MistressList", llDumpList2String((MistressList = llDeleteSubList(MistressList, index, ++index)), "|"));
                 }

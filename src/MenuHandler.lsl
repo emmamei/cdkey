@@ -793,9 +793,14 @@ default
 
         if ((channel == blacklistChannel) || (channel == controlChannel)) {
             if (choice == MAIN) {
-                lmInternalCommand("mainMenu", "", id);;
+                lmInternalCommand("mainMenu", "", id);
                 return;
             }
+            
+            string button = choice;
+            integer index = llListFindList(dialogButtons, [ choice ]);
+            string name = llList2String(dialogNames, index);
+            string uuid = llList2String(dialogKeys, index);
 
             list tempList; integer i;
             dialogKeys = []; dialogNames = []; dialogButtons = [];
@@ -821,10 +826,8 @@ default
                     dialogButtons += llGetSubString(llList2String(MistressList, i), 0, 23);
                 }
             }
-
-            integer index = llListFindList(dialogButtons, [ choice ]);
-            string name = llList2String(dialogNames, index);
-            string uuid = llList2String(dialogKeys, index);
+            
+            index = llListFindList(dialogButtons, [ choice ]);
 
             if (channel == blacklistChannel) lmInternalCommand("addRemBlacklist", (string)uuid + "|" + name, id);
             else if (index != -1) lmInternalCommand("remMistress", (string)uuid + "|" + name, id);
