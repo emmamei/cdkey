@@ -106,7 +106,7 @@ checkRLV()
 
         rlvAPIversion = "";
         myPath = "";
-        llOwnerSay("@clear,versionnew=" + (string)channel + ",getpathnew=" + (string)channel);
+        llOwnerSay("@versionnew=" + (string)channel + ",getpathnew=" + (string)channel);
     }
     else processRLVResult(); // Attachment precondition failed procceed with negative result
 }
