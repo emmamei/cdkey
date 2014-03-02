@@ -229,6 +229,7 @@ initializationCompleted() {
         llSay(0, llGetDisplayName(llGetOwner()) + " is now a dolly - anyone may play with their Key.");
 
     initTimer = llGetTime() * 1000;
+    
 
     if (dollyName == "") {
         string name = dollName;
@@ -241,7 +242,6 @@ initializationCompleted() {
     }
     //llOwnerSay("INIT1: dollyName = " + dollyName + " (setting)");
     if (isAttached) llSetObjectName(dollyName + "'s Key");
-
     string msg = "Initialization completed";
 #ifdef DEVELOPER_MODE
     msg += " in " + formatFloat(initTimer, 2) + "ms";
@@ -353,7 +353,7 @@ default {
 
             else if (name == "dollyName") {
 
-                //llOwnerSay("INIT2:300: dollyName = " + dollyName);
+                dollyName = value;
 
                 if (dollyName == "") {
                     string name = dollName;

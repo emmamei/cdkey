@@ -171,6 +171,7 @@ default
             else if (name == "canPose")                       canPose = (integer)value;
             else if (name == "canWear")                       canWear = (integer)value;
             else if (name == "wearLock")                     wearLock = (integer)value;
+            else if (name == "collapsed")                   collapsed = (integer)value;
             //else if (name == "canFly")                         canFly = (integer)value;
             //else if (name == "canSit")                         canSit = (integer)value;
             //else if (name == "canStand")                     canStand = (integer)value;
@@ -306,7 +307,7 @@ default
                     // Doll being carried clicked on key
                     if isDoll {
                         msg = "You are being carried by " + carrierName + ".";
-                        menu = ["OK"];
+                        menu = ["Help/Support"];
                     }
 
                     else if (isCarrier) {
@@ -318,13 +319,16 @@ default
                     // Someone else clicked on key
                     else {
                         msg = dollName + " is currently being carried by " + carrierName + ". They have full control over this doll.\n";
-                        menu = ["OK"];
+                        menu = ["Help/Support"];
+                    }
+                    if (!isCarrier) {
+                        llDialog(id, timeleft + msg, dialogSort(llListSort(menu, 1, 1)) , dialogChannel);
+                        return;
                     }
                 }
                 // When the doll is collapsed they lose their access to most key functions with a few exceptions
                 else if (collapsed && isDoll) {
                     msg = "You need winding.";
-
                     // Only present the TP home option for the doll if they have been collapsed
                     // for at least 900 seconds (15 minutes) - Suggested by Christina
                     if ((collapseTime + 900.0) < llGetTime()) {
@@ -349,12 +353,14 @@ default
 
                     // Options only available to dolly
                     if (isDoll) {
-                        menu += "Options";
-                        if (detachable) menu += "Detach";
-
-                        if (canAFK) menu += getButton("AFK", id, afk, 0);
-
-                        menu += getButton("Visible", id, visible, 0);
+                        if (!collapsed) {
+                            menu += "Options";
+                            if (detachable) menu += "Detach";
+    
+                            if (canAFK) menu += getButton("AFK", id, afk, 0);
+    
+                            menu += getButton("Visible", id, visible, 0);
+                        }
                     }
                     else {
                         manpage = "communitydoll.htm";
@@ -365,25 +371,27 @@ default
                     }
 
                     // Can the doll be dressed? Add menu button
-                    if (RLVok && ((!isDoll && canDress) || (isDoll && canWear && !wearLock))) {
+                    if (RLVok && !collapsed && ((!isDoll && canDress) || (isDoll && canWear && !wearLock))) {
                         menu += "Dress";
                     }
 
                     // Can the doll be transformed? Add menu button
-                    if (isTransformingKey) {
+                    if (!collapsed && isTransformingKey) {
                         menu += "Type of Doll";
                     }
 
-                    if (keyAnimation != "") {
-                        msg += "Doll is currently posed.\n";
-
-                        if ((!isDoll && canPose) || (poserID == dollID)) {
-                            menu += ["Pose","Unpose"];
+                    if (!collapsed) {
+                        if (keyAnimation != "") {
+                            msg += "Doll is currently posed.\n";
+    
+                            if ((!isDoll && canPose) || (poserID == dollID)) {
+                                menu += ["Pose","Unpose"];
+                            }
                         }
-                    }
-                    else {
-                        if ((!isDoll && canPose) || isDoll)
-                            menu += "Pose";
+                        else {
+                            if ((!isDoll && canPose) || isDoll)
+                                menu += "Pose";
+                        }
                     }
 
                     if (!collapsed && ((numControllers == 0) || (isController && !isDoll))) {
@@ -397,7 +405,7 @@ default
 
 #ifdef ADULT_MODE
                         // Is doll strippable?
-                        if (RLVok && (pleasureDoll || dollType == "Slut")) {
+                        if (RLVok && !collapsed && (pleasureDoll || dollType == "Slut")) {
 #ifdef TESTER_MODE
                             if (isController || isCarrier || ((debugLevel != 0) && isDoll)) {
 #else
@@ -578,8 +586,7 @@ default
             // Key menu is only shown for Controllers and for the Doll themselves
             else if (choice == "Key..." && (isController || isDoll)) {
 
-                //list pluslist = [ "Dolly Name", "Gem Colour" ];
-                list pluslist = [ "Gem Colour" ];
+                list pluslist = [ "Dolly Name", "Gem Colour" ];
                 if (isController) pluslist += [ "Max Time", "Wind Times" ];
                 llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(pluslist + MAIN, 1, 1)), dialogChannel);
             }
@@ -603,12 +610,12 @@ default
                 textboxHandle = cdListenUser(textboxChannel, id);
                 llTextBox(id, "You can set the amount of time a wind gives to the dolly. Times are integers and can be separated by spaces, commas, or vertical bars (|).", textboxChannel);
             }
-            //else if (choice == "Dolly Name") {
-            //    textboxType = 2;
-            //    if (textboxHandle) llListenRemove(textboxHandle);
-            //    textboxHandle = cdListenUser(textboxChannel, id);
-            //    llTextBox(id, "You choose your own name to be used with the key here.", textboxChannel);
-            //}
+            else if (choice == "Dolly Name") {
+                textboxType = 2;
+                if (textboxHandle) llListenRemove(textboxHandle);
+                textboxHandle = cdListenUser(textboxChannel, id);
+                llTextBox(id, "You choose your own name to be used with the key here.", textboxChannel);
+            }
             else if ((choice == "Gem Colour") || (llListFindList(COLOR_NAMES, [ choice ]) != -1)) {
                 if ((choice != "CUSTOM") && (choice != "Gem Colour")) {
                     integer index = llListFindList(COLOR_NAMES, [ choice ]);
