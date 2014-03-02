@@ -138,11 +138,50 @@ On the initial menu seen after a Key is touched are the following buttons:
     is selected, the Doll is forced to be silent while posed (though IMs
     are still possible).
 
+    Detach
+
+    If the key is detachable, then this button appears in the main menu.
+    Upon clicking this button, the Key will be detached and no longer available.
+
+    Help/Support
+
+    Help and Support is available for the Key here, including documentation.
+
+    AFK
+
+    If the Doll is AFK (or Away From Keyboard) then the Dolly operates at a
+    reduced unwinding rate, and with moderate restrictions in place. It is
+    a sort of "low-power" mode for Dolly.
+
 Options Menu
 ------------
 
 The Options menu has a number of sub-menus, all of which contain some setting
 or another for the Key's operation.
+
+    Type...
+
+    Options relating to the Key Type and it's operation can be found here.
+
+    Access...
+
+    Options related to access to the Key itself are here, including adding
+    and removing Controllers, as well as adding and removing people from
+    a blacklist.
+
+    Abilities...
+
+    These are options that affect direct viewer operation and avatar control,
+    otherwise known as RLV restrictions and operations.
+
+    Features...
+
+    These are options that affect general Key operation.
+
+    Key...
+
+    These are items like choosing the Key color and so on, relating to the
+    physical attached Key.
 
 Carrier Operations
 ------------------
