@@ -70,7 +70,7 @@
 // Dolls home landmark name
 #define LANDMARK_HOME "Home"
 // Name of the Community Dolls Room landmark
-#define LANDMARK_CDROOM "Community Dolls Room"
+#define LANDMARK_CDROOM "Community Dolls at BDSM Pasha Desires"
 // Name of the help notecard
 #define NOTECARD_HELP "Community Dolls Key Help and Manual"
 // Name of the preferences notecard
@@ -134,20 +134,20 @@
 #define lmConfigComplete(count) llMessageLinked(LINK_THIS, 102, SCRIPT_NAME + "|" + (string)(count), NULL_KEY)
 #define lmInitState(code) llMessageLinked(LINK_THIS, code, SCRIPT_NAME, NULL_KEY)
 #define lmMemReport(delay) llMessageLinked(LINK_THIS, 135, SCRIPT_NAME + "|" + (string)delay, NULL_KEY)
-#define lmMemReply(used,limit,free,available) llMessageLinked(LINK_THIS, 136, SCRIPT_NAME + "|" + (string)used + "|" + (string)limit + "|" + (string)free + "|" + (string)available, NULL_KEY)
+#define lmMemReply(json) llMessageLinked(LINK_THIS, 136, SCRIPT_NAME + "|" + json, NULL_KEY)
 #define lmRating(simrating) llMessageLinked(LINK_THIS, 150, SCRIPT_NAME + "|" + simrating, NULL_KEY)
 #define lmSendConfig(name, value) llMessageLinked(LINK_THIS, 300, SCRIPT_NAME + "|" + name + "|" + value, NULL_KEY)
-//#define lmUpdateStatistic(name, value) llMessageLinked(LINK_THIS, 399, SCRIPT_NAME + "|" + name + "|" + value, NULL_KEY)
 #define lmInternalCommand(command, parameter, id) llMessageLinked(LINK_THIS, 305, SCRIPT_NAME + "|" + command + "|" + parameter, id)
 #define lmStrip(part) llMessageLinked(LINK_THIS, 305, "strip" + "|" + part, id)
 #define lmRunRLV(command) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|" + "|" + command, NULL_KEY)
 #define lmRunRLVas(vmodule, command) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|" + vmodule + "|" + command, NULL_KEY)
 #define lmConfirmRLV(forscript, command) llMessageLinked(LINK_THIS, 320, SCRIPT_NAME + "|" + forscript + "|" + command, NULL_KEY)
 #define lmRLVreport(active, apistring, apiversion) llMessageLinked(LINK_THIS, 350, SCRIPT_NAME + "|" + (string)active + "|" + apistring + "|" + (string)apiversion, NULL_KEY)
-#define lmUpdateStatistic(name, value) llMessageLinked(LINK_THIS, 399, SCRIPT_NAME + "|" + name + "|" + value, NULL_KEY)
+//#define lmUpdateStatistic(name, value) llMessageLinked(LINK_THIS, 399, SCRIPT_NAME + "|" + name + "|" + value, NULL_KEY)
 #define lmMenuReply(choice,name,id) llMessageLinked(LINK_THIS, 500, SCRIPT_NAME + "|" + choice + "|" + name, id)
 #define lmTextboxReply(type,name,choice,id) llMessageLinked(LINK_THIS, 501, SCRIPT_NAME + "|" + (string)type + "|" + name + "|" + choice, id)
 #define lmBroadcastReceived(name,msg,id) llMessageLinked(LINK_THIS, 800, SCRIPT_NAME + "|" + name + "|" + llGetOwnerKey(id) + "|" + msg, id)
+
 // Defines for various virtual functions to save typing and memory by inlining
 #define isInteger(input) ((string)((integer)input) == input)
 #define getLinkDesc(linknum) llList2String(llGetLinkPrimitiveParams(linknum, [ PRIM_DESC ]), 0)
