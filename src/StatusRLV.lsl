@@ -53,6 +53,10 @@ default {
         scriptName = llGetScriptName();
         llSetMemoryLimit(SCRIPT_MAXMEM);
     }
+    
+    on_rez(integer start) {
+        llResetScript();
+    }
 
     //----------------------------------------
     // LINK_MESSAGE

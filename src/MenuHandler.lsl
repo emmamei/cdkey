@@ -377,7 +377,7 @@ default
                     if (keyAnimation != "") {
                         msg += "Doll is currently posed.\n";
 
-                        if ((!isDoll && canPose) || (isDoll && (poserID == dollID))) {
+                        if ((!isDoll && canPose) || (poserID == dollID)) {
                             menu += ["Pose","Unpose"];
                         }
                     }
