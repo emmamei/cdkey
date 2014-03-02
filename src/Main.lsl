@@ -416,6 +416,7 @@ default {
                 llOwnerSay("You have " + (string)llRound(timeLeftOnKey / 60.0 / displayRate) + " minutes of life remaning.");
                 lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
             }
+            if (initState == 104) lmInitState(initState++);
         }
 
         else if (code == 104) {
@@ -498,6 +499,7 @@ default {
             else if (name == "wearLockExpire")         wearLockExpire = (float)value;
             else if (name == "baseWindRate")             baseWindRate = (float)value;
             else if (name == "displayWindRate")       displayWindRate = (float)value;
+            else if (name == "collapseTime")             collapseTime = (llGetTime() - (float)value);
             //else if (name == "poserID")                       poserID = (key)value;
             else if (name == "keyAnimation")             keyAnimation = value;
             //else if (name == "mistressName")             mistressName = value;
