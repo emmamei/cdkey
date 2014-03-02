@@ -387,7 +387,7 @@ default {
                         llSay(0, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on their key.)");
                         // Must update time before executing collapse
                         lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0.0));
-                        lmSendConfig("timeLeftOnKey", (string)(collapseTime = 0.0));
+                        lmSendConfig("collapseTime", (string)(collapseTime = 0.0));
                         lmInternalCommand("collapse", "1", NULL_KEY);
                     }
                 }
@@ -713,14 +713,15 @@ default {
                 }
                 else lmInternalCommand("windMenu", "", id);
             }
-            else if (code == 501) {
-                integer textboxType = llList2Integer(split, 1);
-                split = llDeleteSubList(split, 0, 1);
-                if (textboxType == 3) {
-                    split = llParseString2List(llDumpList2String(split, "|"), [" ",",","|"], []);
+        }
+        
+        else if (code == 501) {
+            integer textboxType = llList2Integer(split, 1);
+            split = llDeleteSubList(split, 0, 2);
+            if (textboxType == 3) {
+                split = llParseString2List(llDumpList2String(split, "|"), [" ",",","|"], []);
 
-                    lmInternalCommand("setWindTimes", llDumpList2String(split, "|"), id);
-                }
+                lmInternalCommand("setWindTimes", llDumpList2String(split, "|"), id);
             }
         }
 
