@@ -160,8 +160,10 @@ default
 #ifdef DEVELOPER_MODE
                     debugSay(5, "BROADCAST-DEBUG", "Broadcast Sent: keys claimed");
 #endif
-                    lmSendConfig("keyHandler", (string)(keyHandler = llGetKey()));
-                    keyHandlerTime = llGetTime();
+                    if ((keyHandlerTime + HTTPinterval) < llGetTime()) {
+                        lmSendConfig("keyHandler", (string)(keyHandler = llGetKey()));
+                        keyHandlerTime = llGetTime();
+                    }
                     checkAvatarList();
                 }
                 scaleMem();

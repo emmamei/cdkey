@@ -504,6 +504,13 @@ default {
                     else userCollapseRLVcmd += "," +value;
                 }
             }
+            
+            if (configured) {
+                if (llListFindList(["wearLockExpire", "collapseTime", "poseExpire", "timeToJamRepair"],[name]) == -1) {
+                    if (poseExpire != 0.0) lmSendConfig("poseExpire", (string)poseExpire);
+                    if (timeToJamRepair != 0.0) lmSendConfig("timeToJamRepair", (string)timeToJamRepair);
+                }
+            }
         }
         else if (code == 305) {
             string script = llList2String(split, 0);

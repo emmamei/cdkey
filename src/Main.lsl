@@ -306,7 +306,7 @@ default {
 
         if (wearLock) wearLockExpire -= timerInterval;
         if (collapsed) collapseTime += timerInterval;
-        if (wearLockExpire < 0) lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0.0));
+        if (wearLockExpire <= 0) lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0.0));
 
         // False collapse? Collapsed = 1 while timeLeftOnKey is positive is an invalid condition
         if (collapsed == 1 && timeLeftOnKey > 0.0) {
@@ -418,6 +418,8 @@ default {
                 lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
             }
             
+            configured = 1;
+            
             llSetTimerEvent(STD_RATE);
             if (lowScriptMode) llSetTimerEvent(LOW_RATE);
             timerStarted = 1;
@@ -498,6 +500,7 @@ default {
             else if (name == "wearLockExpire")         wearLockExpire = (float)value;
             else if (name == "baseWindRate")             baseWindRate = (float)value;
             else if (name == "displayWindRate")       displayWindRate = (float)value;
+            else if (name == "collapsed")                   collapsed = (integer)value;
             else if (name == "collapseTime")             collapseTime = (float)value;
             //else if (name == "poserID")                       poserID = (key)value;
             else if (name == "keyAnimation")             keyAnimation = value;
@@ -541,7 +544,13 @@ default {
                 }
             }
 #endif
-            if (configured) lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
+            if (configured) {
+                if (llListFindList(["timeLeftOnKey", "wearLockExpire", "collapseTime", "poseExpire", "timeToJamRepair"],[name]) == -1) {
+                    if (timeLeftOnKey != 0.0) lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
+                    if (wearLockExpire != 0.0) lmSendConfig("wearLockExpire", (string)wearLockExpire);
+                    if (collapseTime != 0.0) lmSendConfig("collapseTime", (string)(collapseTime = (collapseTime * (collapsed != 0))));
+                }
+            }
         }
 
         else if (code == 305) {
@@ -592,7 +601,7 @@ default {
 
             else if (llGetSubString(cmd,-8,-1) == "collapse") {
                 displayWindRate = setWindRate();
-                collapseTime = llGetTime();
+                lmSendConfig("collapseTime", (string)(collapseTime = 0.0));
             }
 
             // Deny access to the menus when the command was recieved from blacklisted avatar
@@ -672,6 +681,7 @@ default {
                     llDialog(id, "Dolly is already fully wound.", [MAIN], dialogChannel);
                     return;
                 }
+                else if (choice == "Wind Times") return;
                 else if (choice == "Wind Emg") {
                     // Give this a time limit: can only be done once
                     // in - say - 6 hours... at least maxwindtime *2 or *3.
