@@ -304,9 +304,8 @@ default {
         timeLeftOnKey -= timerInterval * windRate;
         if (timeLeftOnKey < 0) timeLeftOnKey = 0.0;
 
-        if (wearLock) wearLockExpire -= timerInterval;
         if (collapsed) collapseTime += timerInterval;
-        if (wearLockExpire <= 0) lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0.0));
+        if (wearLock) wearLockExpire -= timerInterval;
 
         // False collapse? Collapsed = 1 while timeLeftOnKey is positive is an invalid condition
         if (collapsed == 1 && timeLeftOnKey > 0.0) {
@@ -351,10 +350,11 @@ default {
                 if ((lastPostTimestamp + HTTPinterval) < llGetUnixTime()) {
                     // Check wearlock timer
                     if (wearLock) {
-                        if (wearLockExpire == 0.0) lmInternalCommand("wearLock", (string)(wearLock = 0), NULL_KEY);
-                        else {
-                            lmSendConfig("wearLockExpire", (string)wearLockExpire);
+                        if (wearLockExpire <= 0.0) {
+                            wearLockExpire = 0.0;
+                            lmInternalCommand("wearLock", (string)(wearLock = 0), NULL_KEY);
                         }
+                        lmSendConfig("wearLockExpire", (string)wearLockExpire);
                     }
     
                     // Update time left
