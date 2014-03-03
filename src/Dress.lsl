@@ -429,6 +429,7 @@ default {
                         debugSay(6, "DEBUG", ">>> Dress Menu: " + choice);
                         ; // Do nothing
                     }
+                    llSetTimerEvent(60.0);
                 } else if (cdListElementP(outfitsList, choice) != NOT_FOUND) {
                     if (!isDresser(id)) return;
                     
@@ -438,6 +439,7 @@ default {
                         lmSendConfig("clothingFolder", clothingFolder);
                         setActiveFolder();
                         listInventoryOn("2666"); // recursion
+                        llSetTimerEvent(60.0);
                         return;
                     }
                     else if ((outfitsFolder != "") && (choice != newoutfitname)) {
@@ -584,6 +586,8 @@ default {
 
                     yfolder = oldoutfitpath;
                     if (yfolder != "") rlvRequest("getinvworn:" + yfolder + "=", 2669);
+                    
+                    llSetTimerEvent(10.0);
                 }
             }
         }
