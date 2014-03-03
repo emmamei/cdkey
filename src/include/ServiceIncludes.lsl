@@ -83,7 +83,7 @@ queForSave(string name, string value) {
 
     integer index = llListFindList(dbPostParams, [ name ]);
 
-    if (!llGetListLength(dbPostParams)) {
+    if (!llGetListLength(dbPostParams) && (name != "timeLeftOnKey")) {
         lmInternalCommand("getTimeUpdates", "", NULL_KEY);
     }
 
