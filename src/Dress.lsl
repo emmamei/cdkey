@@ -188,6 +188,21 @@ listInventoryOn(string channel) {
     else llOwnerSay("No #RLV/> Outfits folder found dressing will not work");
 }
 
+integer isDresser(key id) {
+    if (dresserID == NULL_KEY) {
+        dresserID = id;
+        dresserName = llGetDisplayName(dresserID);
+        return TRUE;
+    }
+    else if (dresserID == id) {
+        return TRUE;
+    }
+    else {
+        lmSendToAgent("You think to look in dolly's closet and noticed that " + dresserName + " is already there", id);
+        return FALSE;
+    }
+}
+
 changeComplete(integer success) {
     // And remove the temp locks we used
     // RLV.lsl knows which are ours and that is all this clears
@@ -373,7 +388,7 @@ default {
             debugSay(6, "DEBUG-DRESS", (string)candresstemp + " " + choice);
 
             if (choice == "Dress" && candresstemp) {
-                dresserID = id;
+                if (!isDresser(id)) return;
 
                 if (outfitsFolder != "") {
                     if (useTypeFolder) lmSendConfig("clothingFolder", (clothingFolder = typeFolder));
@@ -400,19 +415,23 @@ default {
 
                 if (choice == "OK") {
                     ; // No outfits: only OK is available
-                } else if (choice == "Next Outfits") {
-                    debugSay(6, "DEBUG", ">>> Dress Menu: " + choice);
-                    outfitPage++;
-                    llDialog(dresserID, msgx, ["Prev Outfits", "Next Outfits", MAIN ] + outfitsPage(outfitsList), dialogChannel);
-                } else if (choice == "Prev Outfits") {
-                    debugSay(6, "DEBUG", ">>> Dress Menu: " + choice);
-                    outfitPage--;
-                    llDialog(dresserID, msgx, ["Prev Outfits", "Next Outfits", MAIN ] + outfitsPage(outfitsList), dialogChannel);
-                } else if (choice == "Outfits " + (string)(outfitPage+1)) {
-                    debugSay(6, "DEBUG", ">>> Dress Menu: " + choice);
-                    ; // Do nothing
+                } else if (llSubStringIndex(choice, "Outfits") != -1) {
+                    if (!isDresser(id)) return;
+                    else if (choice == "Next Outfits") {
+                        debugSay(6, "DEBUG", ">>> Dress Menu: " + choice);
+                        outfitPage++;
+                        llDialog(dresserID, msgx, ["Prev Outfits", "Next Outfits", MAIN ] + outfitsPage(outfitsList), dialogChannel);
+                    } else if (choice == "Prev Outfits") {
+                        debugSay(6, "DEBUG", ">>> Dress Menu: " + choice);
+                        outfitPage--;
+                        llDialog(dresserID, msgx, ["Prev Outfits", "Next Outfits", MAIN ] + outfitsPage(outfitsList), dialogChannel);
+                    } else if (choice == "Outfits " + (string)(outfitPage+1)) {
+                        debugSay(6, "DEBUG", ">>> Dress Menu: " + choice);
+                        ; // Do nothing
+                    }
                 } else if (cdListElementP(outfitsList, choice) != NOT_FOUND) {
-
+                    if (!isDresser(id)) return;
+                    
                     if (isParentFolder(choice)) {
                         if (clothingFolder == "") clothingFolder = choice;
                         else clothingFolder += "/" + choice;
