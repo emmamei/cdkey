@@ -841,6 +841,8 @@ default {
 
             // Provide a dialog to user to choose new outfit
             llDialog(dresserID, msgx, newoutfits2, dialogChannel);
+            candresstimeout = 1;
+            llSetTimerEvent(60.0);
         }
 
         //----------------------------------------
