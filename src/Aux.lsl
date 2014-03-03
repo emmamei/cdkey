@@ -200,15 +200,7 @@ default {
             }
             else if (name == "canPose") {
                 if (value == "1") llOwnerSay("You are a dolly and can freely be posed by anyone.");
-                else {
-                    llOwnerSay("You can no longer be posed by others. but may still pose yourself.");
-
-                    if ((keyAnimation != "") && (keyAnimation != ANIMATION_COLLAPSED)) { // Doll is already posed
-                        if (poserID != dollID) { // Posed by another we should unpose so doll is not stuck
-                            lmInternalCommand("doUnpose", "", poserID);
-                        }
-                    }
-                }
+                else llOwnerSay("You can no longer be posed by others. but may still pose yourself.");
             }
             else if (name == "canCarry") {
                 if (value == "1") llOwnerSay("Other people can now carry you.");
