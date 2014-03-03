@@ -284,8 +284,12 @@ initializeRLV(integer refresh) {
     #endif
     llListenControl(listenHandle, 0);
 
-    if (userBaseRLVcmd != "")
-        lmRunRLVas("User:Base", userBaseRLVcmd);
+    if (userBaseRLVcmd != "") lmRunRLVas("User:Base", userBaseRLVcmd);
+    
+    if (userCollapseRLVcmd != "") {
+        if (collapsed) lmRunRLVas("User:Collapse", userCollapseRLVcmd);
+        else lmRunRLVas("User:Collapse", "clear");
+    }
 
     integer posed = ((keyAnimation != "") && (keyAnimation != ANIMATION_COLLAPSED) && (poserID != dollID));
     integer carried = (carrierID != NULL_KEY);
