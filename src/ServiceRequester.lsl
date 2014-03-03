@@ -9,12 +9,25 @@
 #include "include/GlobalDefines.lsl"
 #include "include/ServiceIncludes.lsl"
 
+integer useHTTPS = 1;
+string DataURL;
+key requestDataURL;
+
 default
 {
     state_entry() {
+        if (llGetInventoryType(".offline") != INVENTORY_NONE) {
+            lmSendConfig("offlineMode", (string)(offlineMode = 1));
+            invMarker = 1;
+        }
         myMod = llFloor(llFrand(5.999999));
         serverNames = llListRandomize(serverNames, 1);
         cdPermSanityCheck();
+        requestDataURL = llGetNotecardLine("DataServices",0);
+    }
+    
+    dataserver(key request, string data) {
+        if (request == requestDataURL) DataURL = data;
     }
 
     on_rez(integer start) {
@@ -30,11 +43,9 @@ default
         debugSay(6, "DEBUG-SERVICES", "Requesting data from HTTPdb");
 #endif
         string hashStr = (string)llGetOwner() + time + SALT;
-        string requestURI = "https://api.silkytech.com/httpdb/retrieve?q=" + llSHA1String(hashStr) + "&t=" + time + "&s=" + (string)lastGetTimestamp;
-        if  (!offlineMode) {
-            while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
-                llSleep(1.0);
-            }
+        string requestURI = getURL("httpdb") + "retrieve?q=" + llSHA1String(hashStr) + "&p=cdkey&t=" + time + "&s=" + (string)lastGetTimestamp;
+        while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
+            llSleep(1.0);
         }
 
         rezzed = 1;
@@ -108,11 +119,9 @@ default
                 debugSay(6, "DEBUG-SERVICES", "Requesting data from HTTPdb");
 #endif
                 string hashStr = (string)llGetOwner() + time + SALT;
-                string requestURI = "https://api.silkytech.com/httpdb/retrieve?q=" + llSHA1String(hashStr) + "&t=" + time + "&s=" + (string)lastGetTimestamp;
-                if  (!offlineMode) {
-                    while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
-                        llSleep(1.0);
-                    }
+                string requestURI = getURL("httpdb") + "retrieve?q=" + llSHA1String(hashStr) + "&p=cdkey&t=" + time + "&s=" + (string)lastGetTimestamp;
+                while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
+                    llSleep(1.0);
                 }
             }
         }
@@ -134,13 +143,13 @@ default
                     debugSay(6, "DEBUG-SERVICES", "Requesting data from HTTPdb");
 #endif
                     string hashStr = (string)llGetOwner() + time + SALT;
-                    string requestURI = "https://api.silkytech.com/httpdb/retrieve?q=" + llSHA1String(hashStr) + "&t=" + time + "&s=" + (string)lastGetTimestamp;
+                    string requestURI = getURL("httpdb") + "retrieve?q=" + llSHA1String(hashStr) + "&p=cdkey&t=" + time + "&s=" + (string)lastGetTimestamp;
                     while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
                         llSleep(1.0);
                     }
                 }
                 if (!gotURL && nextRetry < llGetUnixTime())
-                while ((requestName = llHTTPRequest(protocol + "api.silkytech.com/objdns/lookup?q=" + llEscapeURL(llList2String(serverNames, requestIndex)),
+                while ((requestName = llHTTPRequest(getURL("objdns") + "lookup?q=" + llEscapeURL(llList2String(serverNames, requestIndex)),
                         HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) llSleep(1.0);
                 if (gotURL && (lastUpdateCheck < (llGetUnixTime() - updateCheck))) {
                     lastUpdateCheck = llGetUnixTime();
@@ -199,7 +208,7 @@ default
 #ifdef DEVELOPER_MODE
                 debugSay(5, "DEBUG-SERVICES", "Looking up name " + name);
 #endif
-                while((requestID = llHTTPRequest("http://api.silkytech.com/name2key/lookup?q=" + llEscapeURL(name), HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
+                while((requestID = llHTTPRequest(getURL("name2key") + "lookup?q=" + llEscapeURL(name), HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
                     llSleep(1.0);
                 }
             }
@@ -208,7 +217,7 @@ default
 #ifdef DEVELOPER_MODE
                 debugSay(5, "DEBUG-SERVICES", "Looking up name " + name);
 #endif
-                while((requestID = llHTTPRequest("http://api.silkytech.com/name2key/lookup?q=" + llEscapeURL(name), HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
+                while((requestID = llHTTPRequest(getURL("name2key") + "lookup?q=" + llEscapeURL(name), HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
                     llSleep(1.0);
                 }
             }
@@ -238,10 +247,7 @@ default
             else if (type == "HTTPinterval") HTTPinterval = (float)value;
             else if (type == "updateCheck") updateCheck = (integer)value;
             else if (type == "lastUpdateCheck") lastUpdateCheck = (integer)value;
-            else if (type == "useHTTPS") {
-                if (value) protocol = "https://";
-                else protocol = "http://";
-            }
+            else if (type == "useHTTPS") useHTTPS = (integer)value;
         }
     }
 

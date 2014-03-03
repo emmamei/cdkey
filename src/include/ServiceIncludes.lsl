@@ -1,4 +1,5 @@
 #include "include/Secure.lsl"
+#include "include/Json.lsl"
 
 #define YES 1
 #define NO 0
@@ -19,7 +20,7 @@ list unresolvedBlacklistNames;
 list MistressList;
 list blacklist;
 list checkNames;
-#define HTTP_HEADERS HTTP_CUSTOM_HEADER, "X-SilkyTech-Product", PACKAGE_NAME, HTTP_CUSTOM_HEADER, "X-SilkyTech-Product-Version", (string)PACKAGE_VERNUM
+#define HTTP_HEADERS HTTP_CUSTOM_HEADER, "X-SilkyTech-Product", PACKAGE_NAME, HTTP_CUSTOM_HEADER, "X-SilkyTech-Product-Version", (string)PACKAGE_VERNUM, HTTP_CUSTOM_HEADER, "X-SilkyTech-Offline", (string)offlineMode
 #define HTTP_OPTIONS [ HTTP_HEADERS, HTTP_BODY_MAXLENGTH, 16384, HTTP_VERBOSE_THROTTLE, FALSE, HTTP_METHOD ]
 list NO_STORE = [ "keyHandler", "keyHandlerTime" ];
 
@@ -79,7 +80,7 @@ llRemoveInventory(llGetScriptName());}
 
 queForSave(string name, string value) {
 
-    if (llListFindList(NO_STORE, [ name ]) != NOT_FOUND) return;
+    if (offlineMode || (llListFindList(NO_STORE, [ name ]) != NOT_FOUND)) return;
 
     integer index = llListFindList(dbPostParams, [ name ]);
 
@@ -94,7 +95,7 @@ queForSave(string name, string value) {
     debugSay(5, "DEBUG-SERVICES", "Queued for save: " + name + "=" + value);
 
     //if (llListFindList(SKIP_EXPEDITE, [ name ]) == NOT_FOUND) expeditePost = 1;
-    llSetTimerEvent(HTTPthrottle);
+    llSetTimerEvent(HTTPthrottle/2);
 }
 
 checkAvatarList() {
@@ -197,4 +198,12 @@ doHTTPpost() {
         llSetTimerEvent(ThrottleTime);
         expeditePost = 0;
     }
+}
+
+string getURL(string service) {
+    string URL;
+    if (useHTTPS && (integer)cdGetValue(DataURL,([service,"HTTPS"]))) URL += "https://";
+    else URL += "http://";
+    URL += cdGetValue(DataURL,([service,"URL"]));
+    return URL;
 }

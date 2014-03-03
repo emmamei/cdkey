@@ -10,14 +10,19 @@
 #include "include/ServiceIncludes.lsl"
 
 string resolveName;
+string DataURL;
+integer useHTTPS = 1;
 integer resolveType;
 key resolveTestKey;
+key requestDataURL;
+
 
 key requestDataName;
 
 default {
     state_entry() {
         cdPermSanityCheck();
+        requestDataURL = llGetNotecardLine("DataServices",0);
     }
 
     on_rez(integer start) {
@@ -119,9 +124,9 @@ default {
                 queForSave("nextRetry", (string)nextRetry);
             }
         }
-        else if (location == protocol + "api.silkytech.com/objdns/lookup") {
+        else if (location == getURL("objdns") + "lookup") {
 #else
-        if (location == protocol + "api.silkytech.com/objdns/lookup") {
+        if (location == getURL("objdns") + "lookup") {
 #endif
             if (status == 200) {
                 serverURL = body;
@@ -139,7 +144,7 @@ default {
                 queForSave("nextRetry", (string)nextRetry);
             }
         }
-        else if (location == protocol + "api.silkytech.com/httpdb/retrieve") {
+        else if (location == getURL("httpdb") + "retrieve") {
             llSetMemoryLimit(65536);
             string error = "HTTPdb - Database access ";
 
@@ -182,9 +187,6 @@ default {
                         lmSendConfig(Key, Value);
                         configCount++;
                     }
-
-                    if (useHTTPS) protocol = protocol + "";
-                    else protocol = "http://";
                 } while (llStringLength(body));
 
 #ifdef DEVELOPER_MODE
@@ -210,7 +212,7 @@ default {
 
             lmConfigComplete(configCount);
         }
-        else if (location == "http://api.silkytech.com/name2key/lookup") {
+        else if (location == getURL("name2key") + "lookup") {
             list split = llParseStringKeepNulls(body, ["=","\n"], []);
             string name = llList2String(split, 0);
             string uuid = llList2String(split, 1);
@@ -254,7 +256,7 @@ default {
                 lmInternalCommand("addRemBlacklist", uuid + "|" + name, NULL_KEY);
             }
         }
-        else if (location == protocol + "api.silkytech.com/httpdb/store") {
+        else if (location == getURL("httpdb") + "store") {
             if (status == 200) {
                 dbPostParams = [];
                 list split = llParseStringKeepNulls(body, [ "|" ], []);
@@ -277,7 +279,7 @@ default {
                 }
             }
         }
-        else if (location == "http://api.silkytech.com/name2key/add") {
+        else if (location == getURL("name2key") + "add") {
             list split = llParseStringKeepNulls(body, [ "|" ], []);
             integer new = llList2Integer(split, 1);
             integer old = llList2Integer(split, 2);
@@ -285,7 +287,7 @@ default {
             debugSay(5, "DEBUG-SERVICES", "Posted " + (string)(old + new) + " keys: " + (string)new + " new, " + (string)old + " old");
         }
 
-        if (location != protocol + "api.silkytech.com/httpdb/retreive") {
+        if (location != getURL("httpdb") + "retreive") {
 #ifdef DEVELOPER_MODE
             integer debug;
             if (status == 200) debug = 7;
@@ -318,7 +320,8 @@ default {
     }
 
     dataserver(key request, string data) {
-        if (request = requestDataName) {
+        if (request == requestDataURL) DataURL = data;
+        else if (request = requestDataName) {
             string uuid = (string)resolveTestKey;
             string name = llToLower(resolveName);
             if (llToLower(data) == name) {
@@ -329,7 +332,7 @@ default {
 
                 string namepost = "names[0]" + "=" + llEscapeURL(name) + "&" +
                                   "uuids[0]" + "=" + llEscapeURL(uuid);
-                while ((requestID = (llHTTPRequest("http://api.silkytech.com/name2key/add", HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE,
+                while ((requestID = (llHTTPRequest(getURL("name2key") + "add", HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE,
                     "application/x-www-form-urlencoded" ], namepost))) == NULL_KEY) {
                         llSleep(1.0);
                 }
