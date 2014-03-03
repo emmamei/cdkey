@@ -379,7 +379,7 @@ default {
             // automatically this prevents neusance messages when defaultwear is
             // permitted.
             // Q: Should that be changed? Not sure the message serves much purpose with *verified* RLV and known lock.
-            lmSendToController(dollName + " has detached " + llToLower(pronounHerDoll) + " key while undetachable.");
+            lmSendToController(dollName + " has bypassed the key attachment lock and removed " + llToLower(pronounHerDoll) + " key. Appropriate authorities have been notified of this breach of security.");
         }
 
         locked = 0;
