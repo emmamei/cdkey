@@ -589,17 +589,11 @@ default
             }
 
             // Max Winding Keys
-            else if (llGetSubString(choice, 0, 3) == "Max ") {
-                if (optName == "Time") {
-                    llDialog(id, "You can set the maximum wind time here.  Dolly cannot be wound beyond this amount of time.\nDolly currently has " + (string)llRound(timeLeftOnKey / SEC_TO_MIN) +
-                                 " left, if you choose a lower time than this they will lose time immidiately.", dialogSort([
-                          "Max 60m", "Max 120m", "Max 180m",
-                         "Max 240m", "Max 300m", "Max 360m",
-                         "Max 420m", "Max 480m", "Max 540m",
-                         "Max 600m", "Max 720m", MAIN
-                    ]), dialogChannel);
-                }
-                else lmSendConfig("keyLimit", (string)((float)llGetSubString(optName, 0, -2) * SEC_TO_MIN));
+            else if (choice == "Max Time") {
+                llDialog(id, "You can set the maximum wind time here.  Dolly cannot be wound beyond this amount of time.\nDolly currently has " + (string)llRound(timeLeftOnKey / SEC_TO_MIN) + " left, if you choose a lower time than this they will lose time immidiately.", dialogSort(["45m", "60m", "75m", "90m", "120m", "150m", "180m", "240m", "300m", "360m", "480m", MAIN]), dialogChannel);
+            }
+            else if (llGetSubString(choice, -1, -1) == "m") {
+                lmSendConfig("keyLimit", (string)((float)choice * SEC_TO_MIN));
             }
             else if (choice == "Wind Times") {
                 textboxType = 3;
