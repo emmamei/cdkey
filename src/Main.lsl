@@ -672,7 +672,6 @@ default {
                     llDialog(id, "Dolly is already fully wound.", [MAIN], dialogChannel);
                     return;
                 }
-                else if (choice == "Wind Times") return;
                 else if (choice == "Wind Emg") {
                     // Give this a time limit: can only be done once
                     // in - say - 6 hours... at least maxwindtime *2 or *3.
