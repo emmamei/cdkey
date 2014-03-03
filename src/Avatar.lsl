@@ -248,15 +248,9 @@ initializeRLV(integer refresh) {
     }
 #endif
     string baseRLV;
-    if (!RLVstarted) {
-        llOwnerSay("Enabling RLV mode");
-        rlvSources = [];
-        rlvStatus = [];
-    }
+    if (RLVok && !RLVstarted) llOwnerSay("Enabling RLV mode");
 
-    if (!RLVstarted) {
-        lmRLVreport(RLVok, rlvAPIversion, 0);
-    }
+    if (!RLVstarted) lmRLVreport(RLVok, rlvAPIversion, 0);
 
     // if Doll is one of the developers... dont lock:
     // prevents inadvertent lock-in during development
@@ -265,23 +259,23 @@ initializeRLV(integer refresh) {
     // unlocked and detachable: this is because it can be detached
     // via the menu. To make the key truly "undetachable", we get
     // rid of the menu item to unlock it
-    if (llGetInventoryCreator("Main") != dollID) lmRunRLVas("Base", "detach=n,permissive=n");  //locks key
-    else if (!creatorNoteDone) {
-        llSay(DEBUG_CHANNEL, "Backup protection mechanism activated not locking on creator");
-        creatorNoteDone = 1;
+    if (llGetInventoryCreator("Main") != dollID) {
+        lmRunRLVas("Base", "detach=n,permissive=n");  //locks key
+    
+        locked = 1; // Note the locked variable also remains false for developer mode keys
+                    // This way controllers are still informed of unauthorized detaching so developer dolls are still accountable
+                    // With this is the implicit assumption that controllers of developer dolls will be understanding and accepting of
+                    // the occasional necessity of detaching during active development if this proves false we may need to fudge this
+                    // in the section below.
     }
-    locked = 1; // Note the locked variable also remains false for developer mode keys
-                // This way controllers are still informed of unauthorized detaching so developer dolls are still accountable
-                // With this is the implicit assumption that controllers of developer dolls will be understanding and accepting of
-                // the occasional necessity of detaching during active development if this proves false we may need to fudge this
-                // in the section below.
+    else if (RLVok && !RLVstarted) llSay(DEBUG_CHANNEL, "Backup protection mechanism activated not locking on creator");
 #else
-    if (!RLVstarted) {
+    if (RLVok && !RLVstarted) {
         if (!quiet) llSay(0, "Developer Key not locked.");
         else llOwnerSay("Developer key not locked.");
     }
     baseRLV += "attachallthis_except:" + myPath + "=add,detachallthis_except:" + myPath + "=add,";
-    #endif
+#endif
     llListenControl(listenHandle, 0);
 
     if (userBaseRLVcmd != "") lmRunRLVas("User:Base", userBaseRLVcmd);
@@ -298,8 +292,8 @@ initializeRLV(integer refresh) {
 
     cdLoadData(RLV_NC, RLV_BASE_RESTRICTIONS);
 
+    RLVstarted = (RLVstarted | RLVok);
     if (!refresh) {
-        RLVstarted = 1;
         RLVck = 0;
         startup = 0;
     }
