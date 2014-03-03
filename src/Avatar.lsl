@@ -123,9 +123,11 @@ checkRLV()
     }
     
     if (!isAttached || (configured && (RLVok || (RLVck == 5)))) {
-        if (RLVok && !newAttach) llOwnerSay("Logged with Community Doll Key and " + rlvAPIversion + " active...");
-        else if (RLVok && newAttach) llOwnerSay("Reattached Community Doll Key with " + rlvAPIversion + " active...");
-        else if (isAttached && !RLVok) llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
+        if (!RLVstarted) {
+            if (RLVok && !newAttach) llOwnerSay("Logged with Community Doll Key and " + rlvAPIversion + " active...");
+            else if (RLVok && newAttach) llOwnerSay("Reattached Community Doll Key with " + rlvAPIversion + " active...");
+            else if (isAttached && !RLVok) llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
+        }
     
         initializeRLV(0); // Do RLV report and initialized if appropriate
     }
@@ -395,15 +397,18 @@ default {
         if (code == 102) {
             string script = llList2String(split, 0);
             configured = 1;
+            return;
         }
         else if (code == 110) {
             ifPermissions();
             RLVck = -1;
             checkRLV();
+            return;
         }
         else if (code == 135) {
             float delay = llList2Float(split, 1);
             memReport(delay);
+            return;
         }
         else if (code == 300) { // RLV Config
             string script = llList2String(split, 0);
@@ -411,31 +416,35 @@ default {
             split = llList2List(split, 2, -1);
             string value = llList2String(split, 0);
 
-            if (llListFindList(llJson2List("[\"afk\",\"autoTP\",\"canFly\",\"canSit\",\"canStand\",\"canWear\",\"collapsed\",\"helpless\",\"poseSilence\",\"keyAnimation\"]"), [name]) != -1) {
-                     if (name == "autoTP")                       autoTP = (integer)value;
-                else if (name == "afk")                             afk = (integer)value;
-                else if (name == "collapsed") {
-                    collapsed = (integer)value;
-                    if (!collapsed && (keyAnimation == ANIMATION_COLLAPSED)) lmSendConfig("keyAnimation", (keyAnimation = ""));
-                }
-                else if (name == "canFly")                       canFly = (integer)value;
-                else if (name == "canSit")                       canSit = (integer)value;
-                else if (name == "canStand")                   canStand = (integer)value;
-                else if (name == "canWear")                     canWear = (integer)value;
-                else if (name == "helpless")                   helpless = (integer)value;
-                else if (name == "poseSilence")             poseSilence = (integer)value;
-                else if (name == "keyAnimation") {
-                    keyAnimation = value;
+                 if (name == "autoTP")                       autoTP = (integer)value;
+            else if (name == "afk")                             afk = (integer)value;
+            else if (name == "collapsed") {
+                collapsed = (integer)value;
+                if (!collapsed && (keyAnimation == ANIMATION_COLLAPSED)) lmSendConfig("keyAnimation", (keyAnimation = ""));
+            }
+            else if (name == "canFly")                       canFly = (integer)value;
+            else if (name == "canSit")                       canSit = (integer)value;
+            else if (name == "canStand")                   canStand = (integer)value;
+            else if (name == "canWear")                     canWear = (integer)value;
+            else if (name == "helpless")                   helpless = (integer)value;
+            else if (name == "poseSilence")             poseSilence = (integer)value;
+            else if (name == "userBaseRLVcmd") {
+                if (userBaseRLVcmd == "") userBaseRLVcmd = value;
+                else userBaseRLVcmd += "," +value;
+            }
+            else if (name == "userCollapseRLVcmd") {
+                if (userCollapseRLVcmd == "") userCollapseRLVcmd = value;
+                else userCollapseRLVcmd += "," +value;
+            }
+            else if (name == "keyAnimation") {
+                keyAnimation = value;
 
-                    if (!collapsed && (keyAnimation == ANIMATION_COLLAPSED)) lmSendConfig("keyAnimation", (keyAnimation = ""));
+                if (!collapsed && (keyAnimation == ANIMATION_COLLAPSED)) lmSendConfig("keyAnimation", (keyAnimation = ""));
 
-                    if (keyAnimation == "") lmSendConfig("keyAnimationID", (string)(keyAnimationID = NULL_KEY));
-                    else lmSendConfig("keyAnimationID", (string)(keyAnimationID = animStart(keyAnimation)));
-                }
-
-                if (RLVstarted) initializeRLV(1);
-                if (configured) ifPermissions();
-            } else {
+                if (keyAnimation == "") lmSendConfig("keyAnimationID", (string)(keyAnimationID = NULL_KEY));
+                else lmSendConfig("keyAnimationID", (string)(keyAnimationID = animStart(keyAnimation)));
+            }
+            else {
                      if (name == "detachable")               detachable = (integer)value;
                 else if (name == "barefeet")                   barefeet = value;
 #ifdef DEVELOPER_MODE
@@ -448,7 +457,6 @@ default {
                 else if (name == "poserID")                     poserID = (key)value;
                 else if (name == "poseExpire")               poseExpire = (float)value;
                 else if (name == "quiet")                         quiet = (integer)value;
-                else if (name == "timeLeftOnKey")         timeLeftOnKey = (float)value;
                 else if (name == "dialogChannel")         dialogChannel = (integer)value;
                 else if (name == "keyAnimationID") {
                     keyAnimationID = (key)value;
@@ -468,14 +476,7 @@ default {
                         else dollType = value;
                     }
                 }
-                else if (name == "userBaseRLVcmd") {
-                    if (userBaseRLVcmd == "") userBaseRLVcmd = value;
-                    else userBaseRLVcmd += "," +value;
-                }
-                else if (name == "userCollapseRLVcmd") {
-                    if (userCollapseRLVcmd == "") userCollapseRLVcmd = value;
-                    else userCollapseRLVcmd += "," +value;
-                }
+                return;
             }
         }
         else if (code == 305) {
@@ -490,46 +491,32 @@ default {
                 carrierName = name;
 
                 // Clear old targets to ensure there is only one
-                llTargetRemove(targetHandle);
-                llStopMoveToTarget();
+                //llTargetRemove(targetHandle);
+                //llStopMoveToTarget();
 
                 // Set updated target
-                carrierPos = llList2Vector(llGetObjectDetails(carrierID, [OBJECT_POS]), 0);
-                targetHandle = llTarget(carrierPos, CARRY_RANGE);
+                //carrierPos = llList2Vector(llGetObjectDetails(carrierID, [OBJECT_POS]), 0);
+                //targetHandle = llTarget(carrierPos, CARRY_RANGE);
 
-                if (carrierPos != ZERO_VECTOR && keyAnimation == "") llMoveToTarget(carrierPos, 0.7);
+                //if (carrierPos != ZERO_VECTOR && keyAnimation == "") llMoveToTarget(carrierPos, 0.7);
             }
             else if (cmd == "collapse") {
                 integer collapseType = llList2Integer(split, 0);
-                integer weArePosed = ((keyAnimation != "") && (keyAnimation != ANIMATION_COLLAPSED));
-                if (weArePosed) lmInternalCommand("doUnpose", "", NULL_KEY);
-                if (collapseType == 0) { // Normal (original) collapse, sending this command with timeLeftOnKey > 0.0 is an illegal operation.
-                    if (timeLeftOnKey > 0.0) {
-                        debugSay(5, "DEBUG", "Ignored illegal collapse type 0 while timeLeftOnKey is positive, use collapse type 1 to force or 2 for temporary hold key.");
-                        if (collapsed != 2) lmInternalCommand("uncollapse", "", NULL_KEY); // We have time left and not type 2 collapse make sure doll is uncollapsed
-                        return; // Return from collapse function doll will not collapse from invalid command.
-                    }
-                    collapsed = 1;
+                if ((keyAnimation != "") && (keyAnimation != ANIMATION_COLLAPSED)) lmInternalCommand("doUnpose", "", NULL_KEY);
+                if (collapseType == 0) { // Normal collapse
+                    collapsed = 1; 
                 }
-                else if (collapseType == 1) { // Immidiate forced collapse NOW! If issued while timeLeftOnKey is positive triggers a *complete* unwind of all remaining time
-                                              // When timeLeftOnKey has run down to 0.0 a type 1 collapse is functionally synomous with type 0.
-                    if (timeLeftOnKey > 0.0) timeLeftOnKey = 0.0; // Forced unwind if there was time left before
-                    collapsed = 1; // Always end collapsed
+                else if (collapseType == 1) { // Forced collapse
+                    lmSendConfig("timeLeftOnKey", (string)0.0);
+                    collapsed = 1; // After is normal collapse
                 }
-                else if (collapseType == 2) { // Type 2 collapse also forces an immidiate collapse no matter if the doll has time left however there is no unwind this is
-                                         // Effectively like jamming or holding of dolly's key preventing it turning even though the spring has time
-                    collapsed = 2; // Collapse type 2 forced collapse with timeLeftOnKey unchanged such as temporarily holding dolly's key still
-                    if (llGetListLength(split) != 1) { // Optional timer value is specified, use this in place of the default repair timer.
+                else if (collapseType == 2) { // Key Jam
+                    if (llGetListLength(split) != 1) { // Custom time provided
                         timeToJamRepair = llList2Float(split, 2);
                     }
-                    else timeToJamRepair = JAM_DEFAULT_TIME; // If non is specified default it is
-                    string msg = " key ceases suddenly stopping the flow of life giving energy.";
-                    if (!quiet) llSay(0, "The dolly's" + msg);
-                    else llOwnerSay("Your" + msg);
+                    else timeToJamRepair = JAM_DEFAULT_TIME; // If not is specified set default
                 }
                 lmSendConfig("collapsed", (string)collapsed);
-                lmSendConfig("keyAnimation", (keyAnimation = ANIMATION_COLLAPSED));
-                lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
             }
             else if (cmd == "doUnpose") {
                 if (keyAnimation != ANIMATION_COLLAPSED) {
@@ -544,7 +531,7 @@ default {
                 string pose = llList2String(split, 0);
 
                 // Force unsit before posing
-                lmRunRLVas("Pose", "unsit=force");
+                lmRunRLV("unsit=force");
 
                 // Set pose expire timeourt unless we are a display doll or are self posed
                 if ((dollType != "Display") && (poserID != dollID)) lmSendConfig("poseExpire", (string)(poseExpire = POSE_LIMIT));
@@ -567,11 +554,6 @@ default {
             }
 #endif
             else if (cmd == "uncarry") {
-                if (keyAnimation == "") {
-                    llTargetRemove(targetHandle);
-                    llStopMoveToTarget();
-                }
-
                 carrierID = NULL_KEY;
                 carrierName = "";
             }
@@ -603,9 +585,6 @@ default {
 
             if (keyAnimation == "") lmSendConfig("keyAnimationID", (string)(keyAnimationID = NULL_KEY));
             else lmSendConfig("keyAnimationID", (string)(keyAnimationID = animStart(keyAnimation)));
-
-            ifPermissions();
-            if (configured && RLVstarted) initializeRLV(1);
         }
         else if (code == 500) {
             string script = llList2String(split, 0);
@@ -639,6 +618,8 @@ default {
                 lmInternalCommand("setPose", llGetSubString(choice, 2, -1), id);
                 poserID = id;
             }
+            
+            return;
         }
         else if (code == 850) {
             string type = llList2String(split, 1);
@@ -646,7 +627,13 @@ default {
 
             if (type == "HTTPinterval")             HTTPinterval = (integer)value;
             if (type == "lastPostTimestamp")        lastPostTimestamp = (integer)value;
+            
+            return;
         }
+        else return;
+        
+        ifPermissions();
+        initializeRLV(1);
     }
 
     timer() {

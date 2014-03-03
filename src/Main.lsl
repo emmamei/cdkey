@@ -600,6 +600,7 @@ default {
 
             else if (llGetSubString(cmd,-8,-1) == "collapse") {
                 displayWindRate = setWindRate();
+                if ((cmd == "collapse") && ((llList2Integer(split,0) != 2) && (timeLeftOnKey > 0.0))) uncollapse(1);
                 lmSendConfig("collapseTime", (string)(collapseTime = 0.0));
             }
 
