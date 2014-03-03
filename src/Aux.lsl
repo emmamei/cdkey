@@ -11,12 +11,28 @@
 #include "include/Json.lsl"
 
 #define APPEARANCE_NC "DataAppearance"
+#define MESSAGE_NC "DataMessages"
+#define DISPLAY_DOLL 0
+#define SELF_DRESS 2
+#define CAN_FLY 4
+#define CAN_REPEAT 6
+#define CAN_POSE 8
+#define CAN_CARRY 10
+#define DO_WARNINGS 12
+#define OFFLINE 14
+#define VISIBLE 16
+#define POSE_SILENCE 18
+#define PLEASURE_DOLL 20
+#define SET_AFK 22
 
-key ncRequest;
+key ncRequestAppearance;
+key ncRequestDollMessage;
 key lmRequest;
 key carrierID = NULL_KEY;
 float rezTime;
 float memTime;
+string minsLeft;
+string windRate;
 string carrierName;
 string pronounHerDoll = "Her";
 string pronounSheDoll = "She";
@@ -97,6 +113,8 @@ default {
     link_message(integer source, integer code, string data, key id) {
         list split = llParseString2List(data, ["|"], []);
         string script = llList2String(split, 0);
+        
+        integer dollMessageCode; integer dollMessageVariant;
 
         if (code != 700) linkDebug(script, code, data, id);
 
@@ -123,7 +141,7 @@ default {
             if (script != "Start") return;
 
             if (llGetInventoryType(APPEARANCE_NC) == INVENTORY_NOTECARD) {
-                ncRequest = llGetNotecardLine(APPEARANCE_NC, ncLine++);
+                ncRequestAppearance = llGetNotecardLine(APPEARANCE_NC, ncLine++);
             }
         }
         else if (code == 135) {
@@ -175,9 +193,9 @@ default {
             else if (name == "dollType") {
                 if (configured && (keyAnimation != "") && (keyAnimation != ANIMATION_COLLAPSED) && (poserID != dollID)) {
                     if (value == "Display")
-                        llOwnerSay("As you feel yourself become a display doll you feel a sense of helplessness knowing you will remain posed until released.");
+                        ncRequestDollMessage = llGetNotecardLine(MESSAGE_NC, DISPLAY_DOLL + 1);
                     else if (dollType == "Display")
-                        llOwnerSay("You feel yourself transform to a " + value + " doll and know you will soon be free of your pose when the timer ends.");
+                        ncRequestDollMessage = llGetNotecardLine(MESSAGE_NC, DISPLAY_DOLL);
                     dollType = value;
                     lmInternalCommand("setPose", keyAnimation, NULL_KEY);
                 }
@@ -186,52 +204,27 @@ default {
             // Only MenuHandler script can activate these selections...
             if (script != "MenuHandler") return;
 
-            if (name == "canWear") {
-                if (value == "1") llOwnerSay("You are now able to change your own outfits again.");
-                else llOwnerSay("You are just a dolly and can no longer dress or undress by yourself.");
-            }
-            else if (name == "canFly") {
-                if (value == "1") llOwnerSay("You now find yourself able to fly.");
-                else llOwnerSay("You are just a dolly and cannot possibly fly.");
-            }
-            else if (name == "canRepeat") {
-                if (value == "1") llOwnerSay("You can now be wound several times by one person again.");
-                else llOwnerSay("You can no longer be wound twice in a row by the same person (except controllers).");
-            }
-            else if (name == "canPose") {
-                if (value == "1") llOwnerSay("You are a dolly and can freely be posed by anyone.");
-                else llOwnerSay("You can no longer be posed by others. but may still pose yourself.");
-            }
-            else if (name == "canCarry") {
-                if (value == "1") llOwnerSay("Other people can now carry you.");
-                else llOwnerSay("Other people can no longer carry you.");
-            }
-            else if (name == "canDress") {
+            if (name == "canDress") {
                 string msg;
                 if (value == "1") msg = "Other people can now outfit you, but you remain ";
                 else msg = "Other people can no longer outfit you, but you remain ";
                 if (wearLock || !canWear) msg += "un";
                 llOwnerSay(msg + "able to dress yourself.");
             }
-            else if (name == "doWarnings") {
-                if (value == "1") llOwnerSay("No warnings will be given when time remaining is low.");
-                else llOwnerSay("Warnings will now be given when time remaining is low.");
-            }
-            else if (name == "offlineMode") {
-                if (value == "1") llOwnerSay("Key now working in offline mode setting changes will no longer be backed up.");
-                else llOwnerSay("Key now working in online mode settings will be backed up online and automatically shared between your keys.");
-            }
-            else if (name == "isVisible") {
-                if (value == "1") llOwnerSay("Your key appears magically.");
-                else llOwnerSay("Your key fades from view...");
-            }
+            
+            if (name == "canWear")              dollMessageCode = SELF_DRESS;
+            else if (name == "canFly")          dollMessageCode = CAN_FLY;
+            else if (name == "canRepeat")       dollMessageCode = CAN_REPEAT;
+            else if (name == "canPose")         dollMessageCode = CAN_POSE;
+            else if (name == "canCarry")        dollMessageCode = CAN_CARRY;
+            else if (name == "doWarnings")      dollMessageCode = DO_WARNINGS;
+            else if (name == "offlineMode")     dollMessageCode = OFFLINE;
+            else if (name == "isVisible")       dollMessageCode = VISIBLE;
+            else if (name == "poseSilence")     dollMessageCode = POSE_SILENCE;
 #ifdef ADULT_MODE
-            else if (name == "pleasureDoll") {
-                if (value == "1") llOwnerSay("You are now a pleasure doll.");
-                else llOwnerSay("You are no longer a pleasure doll.");
-            }
+            else if (name == "pleasureDoll")    dollMessageCode = PLEASURE_DOLL;
 #endif
-
+            dollMessageVariant = (integer)value;
         }
         else if (code == 305) {
             string script = llList2String(split, 0);
@@ -241,18 +234,17 @@ default {
             if (cmd == "setAFK") {
                 afk = llList2Integer(split, 0);
                 integer auto = llList2Integer(split, 1);
-                string rate = llList2String(split, 2);
-                string mins = llList2String(split, 3);
+                windRate = llList2String(split, 2);
+                minsLeft = llList2String(split, 3);
+
+                dollMessageCode = SET_AFK;
 
                 if (afk) {
-                    if (auto)
-                        llOwnerSay("Automatically entering AFK mode. Wind down rate has slowed to " + rate + "x however and movements and abilities are restricted.");
-                    else
-                        llOwnerSay("You are now away from keyboard (AFK). Wind down rate has slowed to " + rate + "x however and movements and abilities are restricted.");
-                } else {
-                    llOwnerSay("You are now no longer away from keyboard (AFK). Movements are unrestricted and winding down proceeds at normal rate.");
+                    if (auto) dollMessageVariant = 0;
+                    else dollMessageVariant = 1;
                 }
-                llOwnerSay("You have " + mins + " minutes of life remaning.");
+                else dollMessageVariant = 2;
+                llOwnerSay("");
             }
             else if (cmd == "carry") {
                 carrierID = id;
@@ -499,13 +491,28 @@ default {
         else if (code == -2948813) {
             if (data == "VERSION") llOwnerSay("Your key is already up to date");
         }
+        
+        if (dollMessageCode) ncRequestDollMessage = llGetNotecardLine(MESSAGE_NC, dollMessageCode + (integer)dollMessageVariant);
     }
 
     dataserver(key request, string data) {
-        if (request == ncRequest) {
+        if (request == ncRequestDollMessage) {
+            integer i; integer index;
+            list findList = [ "windRate", "minsLeft" ];
+            list replaceList = [ windRate, minsLeft ];
+            for (i = 0; i < 2; i++) {
+                string find = "%" + llList2String(findList, i) + "%";
+                string replace = llList2String(replaceList, i);
+                while ( ( index = llSubStringIndex(data, find) ) != -1) {
+                    data = llInsertString(llDeleteSubString(data, index, index + llStringLength(find) - 1), index, replace);
+                }
+            }
+            llOwnerSay(data);
+        }
+        else if (request == ncRequestAppearance) {
             if (data == EOF) {
                 doVisibility(-1);
-                ncRequest = NULL_KEY;
+                ncRequestAppearance = NULL_KEY;
 
                 //llSleep(2.0);
 
@@ -535,8 +542,8 @@ default {
     }
 
     timer() {
-        if (ncRequest != NULL_KEY) {
-            ncRequest = llGetNotecardLine(APPEARANCE_NC, ncLine++);
+        if (ncRequestAppearance != NULL_KEY) {
+            ncRequestAppearance = llGetNotecardLine(APPEARANCE_NC, ncLine++);
         }
         else if (memCollecting) {
             if (memCollecting && (memTime < llGetTime())) {
@@ -586,7 +593,7 @@ default {
 
                 memCollecting = 0;
 
-                if (ncRequest == NULL_KEY) llSetTimerEvent(0.0);
+                if (ncRequestAppearance == NULL_KEY) llSetTimerEvent(0.0);
                 else llSetTimerEvent(1.0);
             }
         }
