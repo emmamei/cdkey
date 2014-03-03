@@ -253,9 +253,7 @@ default
     }
 
     timer() {
-        llOwnerSay("Timer1: " + llList2CSV(dbPostParams));
         doHTTPpost();
-        llOwnerSay("Timer2: " + llList2CSV(dbPostParams));
         llSetTimerEvent(0.0);
     }
 }
