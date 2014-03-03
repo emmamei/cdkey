@@ -138,8 +138,6 @@ default
             scaleMem();
         }
         else if (code == 110) {
-            lmInternalCommand("updateExceptions", "", NULL_KEY);
-
             startup = 0;
         }
         else if (code == 135) {
@@ -445,6 +443,8 @@ default
         else if (code == 350) {
             string script = llList2String(split, 0);
             RLVok = llList2Integer(split, 1);
+            
+            lmInternalCommand("updateExceptions", "", NULL_KEY);
         }
         else if (code == 500) {
             string script = llList2String(split, 0);
