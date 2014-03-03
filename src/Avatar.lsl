@@ -51,7 +51,7 @@ integer listenHandle;
 integer locked;
 integer lowScriptMode;
 integer poseSilence;
-integer RLVck;
+integer RLVck = -1;
 integer RLVok;
 integer RLVstarted;
 integer startup = 1;
@@ -93,33 +93,42 @@ checkRLV()
 { // Run RLV viewer check
     locked = 0;
     if (isAttached) {
+        if (RLVck == -1) {
 #ifndef DEBUG_BADRLV
-        // Setting the above debug flag causes the listener to not be open for the check
-        // In effect the same as the viewer having no RLV support as no reply will be heard
-        // all other code works as normal.
-        llListenControl(listenHandle, 1);
+            // Setting the above debug flag causes the listener to not be open for the check
+            // In effect the same as the viewer having no RLV support as no reply will be heard
+            // all other code works as normal.
+            llListenControl(listenHandle, 1);
 #endif
-        llSetTimerEvent(10.0);
-        RLVck = 1;
-        RLVok = 0;
-        RLVstarted = 0;
-
-        rlvAPIversion = "";
-        myPath = "";
-        llOwnerSay("@versionnew=" + (string)channel + ",getpathnew=" + (string)channel);
+            llSetTimerEvent(10.0);
+            RLVck = 1;
+            RLVok = 0;
+            RLVstarted = 0;
+    
+            rlvAPIversion = "";
+            myPath = "";
+#ifdef DEVELOPER_MODE
+            llOwnerSay("@versionnew=" + (string)channel + ",getpathnew=" + (string)channel);
+#else
+            llOwnerSay("@versionnew=" + (string)channel);
+#endif
+        }
+        else if ((RLVck != 0) && (RLVck < 5)) {
+#ifdef DEVELOPER_MODE
+            RLVok = ((rlvAPIversion != "") && (myPath != ""));
+#else
+            RLVok = (rlvAPIversion != "");
+#endif
+        }
     }
-    else processRLVResult(); // Attachment precondition failed procceed with negative result
-}
-
-processRLVResult()
-{ // Handle RLV check result
-    if (RLVok && !newAttach) llOwnerSay("Logged with Community Doll Key and " + rlvAPIversion + " active...");
-    else if (RLVok && newAttach) llOwnerSay("Reattached Community Doll Key with " + rlvAPIversion + " active...");
-    else if (isAttached && !RLVok) llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
-
-    RLVck = 0;
-
-    if (configured) initializeRLV(0);
+    
+    if (!isAttached || (configured && (RLVok || (RLVck == 5)))) {
+        if (RLVok && !newAttach) llOwnerSay("Logged with Community Doll Key and " + rlvAPIversion + " active...");
+        else if (RLVok && newAttach) llOwnerSay("Reattached Community Doll Key with " + rlvAPIversion + " active...");
+        else if (isAttached && !RLVok) llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
+    
+        initializeRLV(0); // Do RLV report and initialized if appropriate
+    }
 }
 
 ifPermissions() {
@@ -229,12 +238,9 @@ ifPermissions() {
 }
 
 initializeRLV(integer refresh) {
-    if (!refresh && RLVstarted) return;
+    if (refresh && !RLVstarted) return;
 #ifdef DEVELOPER_MODE
-    if (
-        (rlvAPIversion != "") &&
-        (myPath == "")
-    ) { // Dont enable RLV on devs if @getpath is returning no usable result to avoid lockouts.
+    if ((rlvAPIversion != "") && (myPath == "")) { // Dont enable RLV on devs if @getpath is returning no usable result to avoid lockouts.
         llSay(DEBUG_CHANNEL, "WARNING: Sanity check failure developer key not found in #RLV see README.dev for more information.");
         return;
     }
@@ -286,9 +292,11 @@ initializeRLV(integer refresh) {
 
     cdLoadData(RLV_NC, RLV_BASE_RESTRICTIONS);
 
-    RLVstarted = 1;
-    RLVck = 0;
-    startup = 0;
+    if (!refresh) {
+        RLVstarted = 1;
+        RLVck = 0;
+        startup = 0;
+    }
 
 #ifndef DEVELOPER_MODE
     if (llGetInventoryCreator("Main") == dollID) lmRunRLVas("Base", "clear=unshared,clear=achallthis");
@@ -305,7 +313,6 @@ default {
         listenHandle = llListen(channel, "", "", "");
         llListenControl(listenHandle, 0);
 
-        checkRLV();
         llRequestPermissions(dollID, PERMISSION_MASK);
     }
 
@@ -348,24 +355,7 @@ default {
                 if (myPath == "") debugSay(4, "DEBUG-RLV", "RLV Key Path: " + msg);
                 myPath = llStringTrim(msg, STRING_TRIM);
             }
-#ifdef DEVELOPER_MODE
-            RLVok = (
-                configured &&
-                (rlvAPIversion != "") &&
-                (myPath != "")
-            );
-            if (
-                (rlvAPIversion != "") &&
-                (myPath != "")
-            ) RLVck = 0;
-#else
-            RLVok = (
-                configured &&
-                (rlvAPIversion != "")
-            );
-            if (rlvAPIversion != "") RLVck = 0;
-#endif
-            if (RLVok && !RLVstarted) processRLVResult();
+            checkRLV();
         }
         //if (!RLVok && !RLVstarted) llOwnerSay("@clear,versionnew=" + (string)channel);
         //else if (RLVok && myPath == "") llOwnerSay("@getpathnew=" + (string)channel);
@@ -405,28 +395,11 @@ default {
         if (code == 102) {
             string script = llList2String(split, 0);
             configured = 1;
-
-#ifdef DEVELOPER_MODE
-            RLVok = (
-                configured &&
-                (rlvAPIversion != "") &&
-                (myPath != "")
-            );
-            if (
-                (rlvAPIversion != "") &&
-                (myPath != "")
-            ) RLVck = 0;
-#else
-            RLVok = (
-                configured &&
-                (rlvAPIversion != "")
-            );
-            if (rlvAPIversion != "") RLVck = 0;
-#endif
-            if (RLVok && !RLVstarted) processRLVResult();
         }
         else if (code == 110) {
             ifPermissions();
+            RLVck = -1;
+            checkRLV();
         }
         else if (code == 135) {
             float delay = llList2Float(split, 1);
@@ -677,25 +650,6 @@ default {
     }
 
     timer() {
-#ifdef DEVELOPER_MODE
-        RLVok = (
-            configured &&
-            (rlvAPIversion != "") &&
-            (myPath != "")
-        );
-        if (
-            (rlvAPIversion != "") &&
-            (myPath != "")
-        ) RLVck = 0;
-#else
-        RLVok = (
-            configured &&
-            (rlvAPIversion != "")
-        );
-        if (rlvAPIversion != "") RLVck = 0;
-#endif
-        if (RLVok && !RLVstarted) processRLVResult();
-
         if (RLVck == 0) {
             float timerInterval = llGetAndResetTime();
 
@@ -720,27 +674,23 @@ default {
                     lmSendConfig("timeToJamRepair", (string)timeToJamRepair);
                 }
             }
-
-            ifPermissions();
         }
         else {
+            if (!RLVok) {
+                string check;
+                if (rlvAPIversion == "") check += "@versionnew=" + (string)channel;
 #ifdef DEVELOPER_MODE
-            RLVok = ((rlvAPIversion != "") && (myPath != ""));
-#else
-            RLVok = (rlvAPIversion != "");
-#endif
-
-            if (!RLVok && (RLVck != 0) && (RLVck <= 6)) {
-                if (isAttached && RLVck != 6 && !RLVok == 1) {
-                    llOwnerSay("@versionnew=" + (string)channel + ",getpathnew=" + (string)channel);
-                    llSetTimerEvent(10.0 * ++RLVck);
+                if (myPath == "") {
+                    if (check != "") check += ",";
+                    check += "getpathnew=" + (string)channel;
                 }
-            } else if (RLVck == 6) {
-                processRLVResult();
-            } else if (RLVok && !RLVstarted) {
-                initializeRLV(0);
+#endif
+                llOwnerSay(check);
             }
+            checkRLV();
+            llSetTimerEvent(10.0 * (float)(RLVck++));
         }
+        ifPermissions();
     }
 
     //----------------------------------------

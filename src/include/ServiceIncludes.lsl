@@ -88,7 +88,7 @@ queForSave(string name, string value) {
         lmInternalCommand("getTimeUpdates", "", NULL_KEY);
     }
 
-    if (index != NOT_FOUND && index % 2 == 0)
+    if (index != NOT_FOUND)
         dbPostParams = llListReplaceList(dbPostParams, [ name, llEscapeURL(value) ], index, index + 1);
     else dbPostParams += [ name, llEscapeURL(value) ];
 
@@ -167,7 +167,7 @@ doHTTPpost() {
         return;
     }
 
-    if ((lastPost + HTTPthrottle) < llGetTime()) {
+    if ((lastPost == 0.0) || ((lastPost + HTTPthrottle) < llGetTime())) {
         if (llGetListLength(dbPostParams) == 0) return;
 
         string time = (string)llGetUnixTime();

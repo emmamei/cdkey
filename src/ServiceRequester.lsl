@@ -20,6 +20,7 @@ default
             lmSendConfig("offlineMode", (string)(offlineMode = 1));
             invMarker = 1;
         }
+        else lmSendConfig("offlineMode", (string)(offlineMode = 0));
         myMod = llFloor(llFrand(5.999999));
         serverNames = llListRandomize(serverNames, 1);
         cdPermSanityCheck();
@@ -252,7 +253,9 @@ default
     }
 
     timer() {
+        llOwnerSay("Timer1: " + llList2CSV(dbPostParams));
         doHTTPpost();
+        llOwnerSay("Timer2: " + llList2CSV(dbPostParams));
         llSetTimerEvent(0.0);
     }
 }
