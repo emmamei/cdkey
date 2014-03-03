@@ -702,8 +702,7 @@ default {
             if (poseExpire != 0.0) poseExpire -= timerInterval;
             if (timeToJamRepair != 0) timeToJamRepair -= timerInterval;
 
-            // Check post interval
-            if ((lastPostTimestamp + HTTPinterval) < llGetUnixTime()) {
+            if (ticks % llRound(60.0 / refreshRate) == 0) {
                 // Check if doll is posed and time is up
                 if (poseExpire != 0.0) {
                     if (poseExpire < 0.0) { // Pose expire is set and has passed
@@ -711,7 +710,7 @@ default {
                         lmInternalCommand("doUnpose", "", NULL_KEY);
                     }
                 }
-
+    
                 // Check if jam time passes
                 if (timeToJamRepair != 0.0) {
                     if (timeToJamRepair < 0.0) {
@@ -720,17 +719,9 @@ default {
                     }
                     lmSendConfig("timeToJamRepair", (string)timeToJamRepair);
                 }
-
-                // In offline mode we update the timer locally
-                if (offlineMode) lastPostTimestamp = llGetUnixTime();
             }
 
             ifPermissions();
-
-            if (ticks++ % 30 == 0) {
-                if (poseExpire != 0.0) lmSendConfig("poseExpire", (string)poseExpire);
-                if (timeToJamRepair != 0.0) lmSendConfig("timeToJamRepair", (string)timeToJamRepair);
-            }
         }
         else {
 #ifdef DEVELOPER_MODE

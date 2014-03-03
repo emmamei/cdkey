@@ -114,6 +114,7 @@ float baseWindRate    = windRate;
 float displayWindRate = windRate;
 integer HTTPinterval    = 60;
 integer lastPostTimestamp;
+integer lastSendTimestamp;
 float collapseTime;
 list windTimes        = [ 30 ];
 list blacklist;
@@ -347,22 +348,16 @@ default {
 
             if (ticks % 10 == 0) {
                 // Check post interval
-                if ((lastPostTimestamp + HTTPinterval) < llGetUnixTime()) {
+                if (((lastPostTimestamp + HTTPinterval) < llGetUnixTime()) && (lastSendTimestamp <= lastPostTimestamp)) {
                     // Check wearlock timer
                     if (wearLock) {
                         if (wearLockExpire <= 0.0) {
                             wearLockExpire = 0.0;
                             lmInternalCommand("wearLock", (string)(wearLock = 0), NULL_KEY);
                         }
-                        lmSendConfig("wearLockExpire", (string)wearLockExpire);
                     }
     
-                    // Update time left
-                    lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
-                    if (collapsed) lmSendConfig("collapseTime", (string)collapseTime);
-    
-                    // In offline mode we update the timer locally
-                    if (offlineMode) lastPostTimestamp = llGetUnixTime();
+                    lmInternalCommand("getTimeUpdates", "", NULL_KEY);
                 }
             }
 
@@ -572,6 +567,10 @@ default {
                 if (timeLeftOnKey != 0.0) lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
                 if (wearLockExpire != 0.0) lmSendConfig("wearLockExpire", (string)wearLockExpire);
                 if (collapseTime != 0.0) lmSendConfig("collapseTime", (string)(collapseTime = (collapseTime * (collapsed != 0))));
+                lastSendTimestamp = llGetUnixTime();
+                
+                // In offline mode we update the timer locally
+                if (offlineMode) lastPostTimestamp = lastSendTimestamp;
             }
 
             else if (cmd == "setWindTimes") {
