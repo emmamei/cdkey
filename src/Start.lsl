@@ -527,8 +527,10 @@ default {
                 doneConfiguration(1);
             }
             else {
-                if (data != "" && llGetSubString(data, 0, 0) != "#") {
-                    integer index = llSubStringIndex(data, "=");
+                integer index = llSubStringIndex(data, "#");
+                if (index != -1) data = llDeleteSubString(data, index, -1);
+                if (data != "") {
+                    index = llSubStringIndex(data, "=");
                     string name = llGetSubString(data, 0, index - 1);
                     string value = llGetSubString(data, index + 1, -1);
                     name = llStringTrim(llToLower(name), STRING_TRIM);
