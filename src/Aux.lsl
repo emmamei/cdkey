@@ -76,6 +76,8 @@ doVisibility(integer setVisible) {
 default {
     state_entry() {
         //lmSendXonfig("debugLevel", (string)debugLevel);
+        dollID = llGetOwner();
+        dollName = llGetDisplayName(dollID);
     }
 
     on_rez(integer start) {
@@ -293,7 +295,27 @@ default {
             string choice = llList2String(split, 1);
             string avatar = llList2String(split, 2);
 
-            if (choice == "Join Group") {
+            if (choice == "Help/Support") {
+                string msg = "Here you can find various options to get help with your " +
+                            "key and to connect with the community.";
+                list pluslist = [ "Join Group", "Visit Dollhouse" ];
+                if (llGetInventoryType(NOTECARD_HELP) == INVENTORY_NOTECARD) pluslist += [ "Help Notecard" ];
+                if (isController || isDoll) pluslist += "Reset Scripts";
+                if (isDoll) pluslist += ["Check Update", "Factory Reset"];
+
+                llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
+            }
+            else if (choice == "Help Notecard") {
+                llGiveInventory(id,NOTECARD_HELP);
+            }
+            else if (choice == "Visit Dollhouse") {
+                if (isDoll) llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|TP|" + LANDMARK_CDROOM, id);
+                else llGiveInventory(id, LANDMARK_CDROOM);
+            }
+            else if (choice == "Dress") {
+                if (!isDoll) llOwnerSay("secondlife:///app/agent/" + (string)id + "/about is looking at your dress menu");
+            }
+            else if (choice == "Join Group") {
                 llOwnerSay("Here is your link to the community dolls group profile secondlife:///app/group/0f0c0dd5-a611-2529-d5c7-1284fb719003/about");
                 llDialog(id, "To join the community dolls group open your chat history (CTRL+H) and click the group link there.  Just click the Join Group button when the group profile opens.", [MAIN], 9999);
             }
@@ -304,11 +326,12 @@ default {
                              "Good dollies should read their key help before \n" +
                              "Blacklist - Fully block this avatar from using any key option even winding\n" +
                              "Controller - Take care choosing your controllers, they have great control over their doll can only be removed by their choice";
-                list pluslist = [ "⊕ Blacklist", "⊖ Blacklist", "List Blacklist", "⊕ Controller", "List Controller" ];
-
+                list pluslist;
                 if (llListFindList(BuiltinControllers, [ (string)id ]) != -1) pluslist +=  "⊖ Controller";
 
-                llDialog(id, msg, dialogSort(llListSort(pluslist, 1, 1) + MAIN), dialogChannel);
+                pluslist += [ "⊕ Blacklist", "List Blacklist", "⊖ Blacklist", "⊕ Controller", "List Controller" ];
+
+                llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
             }
             else if (choice == "Visit Dollhouse") {
                 visitDollhouse += 1;
@@ -402,6 +425,7 @@ default {
         //   1: Gem Color
         //   2: Dolly Name
         //   3: Wind Times (moved to Main.lsl)
+        //   4: Safeword Confirm
 
         else if (code == 501) {
             string script = llList2String(split, 0);
@@ -433,6 +457,15 @@ default {
 
             // Type 3 = Wind Times
             // -- now located in Main.lsl (which handles setting those up anyway)
+            
+            // Type 4 = Safeword Confirm
+            else if (textboxType == 4) {
+                if (llToUpper(choice) == "FACTORY RESET") {
+                    lmSendToController(dollName + " has initiated a factory reset all key settings have been reset.");
+                    lmSendConfig("SAFEWORD", "1");
+                    llOwnerSay("You have safeworded your key will reset in 30 seconds.");
+                }
+            }
         }
         else if (code == 700) {
             string sender = llList2String(split, 0);

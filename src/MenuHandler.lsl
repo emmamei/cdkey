@@ -446,6 +446,21 @@ default
             string script = llList2String(split, 0);
             RLVok = llList2Integer(split, 1);
         }
+        else if (code == 500) {
+            string script = llList2String(split, 0);
+            string choice = llList2String(split, 1);
+            
+            if (choice == "Factory Reset") {
+                textboxType = 4;
+                if (textboxHandle) llListenRemove(textboxHandle);
+                textboxHandle = cdListenUser(textboxChannel, id);
+                llSetTimerEvent(60.0);
+                string msg = "Are you sure you want to perform a factory reset, you will lose all your settings and your controllers will be notified.\n\n";
+                if (script == SCRIPT_NAME) msg += "Type FACTORY RESET to confirm.";
+                else msg += "You must type FACTORY RESET exactly to confirm.";
+                llTextBox(dollID, msg, textboxChannel);
+            }
+        }
     }
 
     on_rez(integer start) {
@@ -538,28 +553,8 @@ default
                 return;
             }
 
-            if (choice == "Help/Support") {
-                string msg = "Here you can find various options to get help with your " +
-                            "key and to connect with the community.";
-                list pluslist = [ "Join Group", "Visit Dollhouse" ];
-                if (llGetInventoryType(NOTECARD_HELP) == INVENTORY_NOTECARD) pluslist += [ "Help Notecard" ];
-                if (isDoll) pluslist += "Check Update";
-                if (isController || isDoll) pluslist += "Reset Scripts";
-
-                llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
-            }
-            else if (choice == "Help Notecard") {
-                llGiveInventory(id,NOTECARD_HELP);
-            }
-            else if (choice == "Get a Key") {
+            if (choice == "Get a Key") {
                 llLoadURL(id, "To get your own free community doll key from our marketplace store click \"Go to page\"", marketplaceURL);
-            }
-            else if (choice == "Visit Dollhouse") {
-                if (isDoll) llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|TP|" + LANDMARK_CDROOM, id);
-                else llGiveInventory(id, LANDMARK_CDROOM);
-            }
-            else if (choice == "Dress") {
-                if (!isDoll) llOwnerSay("secondlife:///app/agent/" + (string)id + "/about is looking at your dress menu");
             }
             else if (choice == "Options") {
                 string msg; list pluslist;
@@ -575,6 +570,8 @@ default
                     msg = "See " + WEB_DOMAIN + "controller.htm. Choose what you want to happen.";
 
                     pluslist += [ "Abilities...", "Drop Control" ];
+                    
+                    if (llListFindList(BuiltinControllers, [(string)id]) != -1) pluslist += [ "Access..." ];
                 }
                 else return;
 
@@ -840,6 +837,12 @@ default
             textboxHandle = 0;
 
             lmTextboxReply(textboxType, name, choice, id);
+            if (textboxType == 4) {
+                if (choice == "FACTORY RESET") {
+                    llSleep(30.0);
+                    llResetOtherScript("Start");
+                }
+            }
         }
 
         // Ideally the listener should be closing here and only reopened when we spawn another menu
