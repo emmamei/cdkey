@@ -714,13 +714,16 @@ default
                 }
                 else if (curState == "List") {
                     integer i; string output; list tempList;
+
+                    if (optName == "Controller") output = "Allowed Controllers";
+                    else output = "Blacklisted Avatars";
                     
-                    llOwnerSay("Listing");
+                    if (llGetListLength(dialogNames) == 0) output = "No " + output;
+                    else {
+                        output += ":";
 
-                    if (optName == "Controller") output = "Allowed Controllers:";
-                    else output = "Blacklisted Avatars:";
-
-                    for (i = 0; i < llGetListLength(dialogNames); i++) output += "\n" + (string)(i+1) + ". " + llList2String(dialogNames, i);
+                        for (i = 0; i < llGetListLength(dialogNames); i++) output += "\n" + (string)(i+1) + ". " + llList2String(dialogNames, i);
+                    }
                     
                     llOwnerSay(output);
                 }
