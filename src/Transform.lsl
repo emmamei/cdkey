@@ -287,7 +287,10 @@ default {
                 }
 #endif
 
-                else if (name == "dollType") setDollType((stateName = value), 1);
+                else if (name == "dollType") {
+                    stateName = value;
+                    if (configured) setDollType(stateName, 1);
+                }
 
                 else if (script == "Main" && name == "timeLeftOnKey") runTimedTriggers();
             }
