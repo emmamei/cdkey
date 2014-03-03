@@ -455,9 +455,9 @@ default
                 if (textboxHandle) llListenRemove(textboxHandle);
                 textboxHandle = cdListenUser(textboxChannel, id);
                 llSetTimerEvent(60.0);
-                string msg = "Are you sure you want to perform a factory reset, you will lose all your settings and your controllers will be notified.\n\n";
-                if (script == SCRIPT_NAME) msg += "Type FACTORY RESET to confirm.";
-                else msg += "You must type FACTORY RESET exactly to confirm.";
+                string msg = "Are you sure you want to factory reset, all controllers and settings will be lost.  Your controllers notified if you proceed.  ";
+                if (script == SCRIPT_NAME) msg += "Type FACTORY RESET bellow to confirm.";
+                else msg = "You must type the words FACTORY RESET exactly and in capitals to confirm.";
                 llTextBox(dollID, msg, textboxChannel);
             }
         }
@@ -646,7 +646,11 @@ default
                 lmInternalCommand("TP", LANDMARK_HOME, id);
             }
             else if (optName == "AFK") {
-                afk = (curState == CROSS);
+                lmSendConfig("afk", (string)(afk = (curState == CROSS)));
+                float factor = 2.0;
+                if (afk) factor = 0.5;
+                displayWindRate *= factor;
+                windRate *= factor;
                 integer minsLeft = llRound(timeLeftOnKey / (60.0 * displayWindRate));
                 lmInternalCommand("setAFK", (string)afk + "|0|" + formatFloat(windRate, 1) + "|" + (string)minsLeft, id);
 
@@ -846,6 +850,8 @@ default
                     llResetOtherScript("Start");
                 }
             }
+            else if (textboxType == 1) lmMenuReply("Gem Colour", name, id); 
+            else lmMenuReply("Key...", name, id);
         }
 
         // Ideally the listener should be closing here and only reopened when we spawn another menu
