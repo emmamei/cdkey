@@ -112,7 +112,8 @@ float timeLeftOnKey   = windamount;
 float windRate        = 1.0;
 float baseWindRate    = windRate;
 float displayWindRate = windRate;
-integer HTTPinterval    = 60;
+integer HTTPinterval  = 60;
+integer HTTPthrottle  = 10;
 integer lastPostTimestamp;
 integer lastSendTimestamp;
 float collapseTime;
@@ -348,7 +349,7 @@ default {
 
             if (ticks % 10 == 0) {
                 // Check post interval
-                if (((lastPostTimestamp + HTTPinterval) < llGetUnixTime()) && (lastSendTimestamp <= lastPostTimestamp)) {
+                if (((lastPostTimestamp + (HTTPinterval - HTTPthrottle)) < llGetUnixTime()) && (lastSendTimestamp <= lastPostTimestamp)) {
                     // Check wearlock timer
                     if (wearLock) {
                         if (wearLockExpire <= 0.0) {
@@ -737,6 +738,7 @@ default {
             string value = llList2String(split, 2);
 
                  if (type == "HTTPinterval")            HTTPinterval = (integer)value;
+            else if (type == "HTTPthrottle")            HTTPthrottle = (integer)value;
             else if (type == "lastPostTimestamp")       lastPostTimestamp = (integer)value;
         }
     }
