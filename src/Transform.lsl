@@ -36,6 +36,7 @@ integer retryOutfits;
 integer findTypeFolder;
 integer rlvHandle;
 integer useTypeFolder;
+integer canPose;
 string transform;
 string outfitsTest;
 string outfitsFolder;
@@ -90,6 +91,12 @@ setDollType(string choice, integer automated) {
         currentState = stateName;
         lmSendConfig("dollType", stateName);
         lmSendConfig("currentState", stateName);
+        
+        if (!canPose && (stateName == "Display")) {
+            llOwnerSay("You have become a Display Doll and are now poseable by anyone and will remain in poses until released.");
+            lmSendConfig("canPose", (string)(canPose = 1));
+        }
+        
         cdPause();
 
         if (!quiet) llSay(0, dollName + " has become a " + stateName + " Doll.");
@@ -276,6 +283,7 @@ default {
                      if (name == "quiet")                                          quiet = (integer)value;
                 else if (name == "mustAgreeToType")                      mustAgreeToType = (integer)value;
                 else if (name == "showPhrases")                              showPhrases = (integer)value;
+                else if (name == "canPose")                                      canPose = (integer)value;
                 else if (name == "stateName")                                  stateName = value;
                 else if (name == "dialogChannel") {
                                                                            dialogChannel = (integer)value;

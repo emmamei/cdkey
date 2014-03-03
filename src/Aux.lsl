@@ -409,7 +409,7 @@ default {
                 pluslist += getButton("Pleasure Doll", id, pleasureDoll, 0);
 #endif
                 pluslist += getButton("Warnings", id, doWarnings, 0);
-                pluslist += getButton("Poseable", id, canPose, 0);
+                if (dollType != "Display") pluslist += getButton("Poseable", id, canPose, 0);
                 pluslist += getButton("Outfitable", id, canDress, 0);
                 pluslist += getButton("Carryable", id, canCarry, 0);
                 pluslist += getButton("Offline", id, offlineMode, 0);
@@ -460,10 +460,13 @@ default {
             
             // Type 4 = Safeword Confirm
             else if (textboxType == 4) {
-                if (llToUpper(choice) == "FACTORY RESET") {
+                if (choice == "FACTORY RESET") {
                     lmSendToController(dollName + " has initiated a factory reset all key settings have been reset.");
                     lmSendConfig("SAFEWORD", "1");
                     llOwnerSay("You have safeworded your key will reset in 30 seconds.");
+                }
+                else {
+                    lmMenuReply("Factory Reset", name, id);
                 }
             }
         }
@@ -499,6 +502,10 @@ default {
             lmRunRLVas("Base", "recvemote:" + llDumpList2String(allow, "=add,recvemote:") + "=add");
 
             // Apply exemptions to base RLV
+        }
+        // HippoUPDATE reply
+        else if (code == -2948813) {
+            if (data == "VERSION") llOwnerSay("Your key is already up to date");
         }
     }
 
