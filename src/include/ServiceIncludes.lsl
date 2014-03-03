@@ -189,8 +189,6 @@ doHTTPpost() {
             "&t=" + time, HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE, "application/x-www-form-urlencoded" ], dbPostBody)) == NULL_KEY) {
                 llSleep(1.0);
         }
-        
-        lmServiceMessage("requestID", "SendDB", requestID);
     } else {
         float ThrottleTime = lastPost - llGetTime() + HTTPthrottle;
 

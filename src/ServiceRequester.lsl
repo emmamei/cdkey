@@ -35,7 +35,6 @@ default
             while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
                 llSleep(1.0);
             }
-            lmSendRequestID("LoadDB", requestID);
         }
 
         rezzed = 1;
@@ -114,7 +113,6 @@ default
                     while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
                         llSleep(1.0);
                     }
-                    lmSendRequestID("LoadDB", requestID);
                 }
             }
         }
@@ -140,7 +138,6 @@ default
                     while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
                         llSleep(1.0);
                     }
-                    lmSendRequestID("LoadDB", requestID);
                 }
                 if (!gotURL && nextRetry < llGetUnixTime())
                 while ((requestName = llHTTPRequest(protocol + "api.silkytech.com/objdns/lookup?q=" + llEscapeURL(llList2String(serverNames, requestIndex)),
@@ -149,7 +146,6 @@ default
                     lastUpdateCheck = llGetUnixTime();
                     queForSave("lastUpdateCheck", (string)lastUpdateCheck);
                     while ((requestID = llHTTPRequest(serverURL, HTTP_OPTIONS + [ "POST" ], "checkversion " + (string)PACKAGE_VERNUM)) == NULL_KEY) llSleep(1.0);
-                    lmSendRequestID("Update", requestID);
 
                 }
                 if ((keyHandler == NULL_KEY) || (keyHandlerTime < (llGetTime() - 60))) {
