@@ -506,7 +506,7 @@ default {
             }
             
             if (configured) {
-                if (llListFindList(["wearLockExpire", "collapseTime", "poseExpire", "timeToJamRepair"],[name]) == -1) {
+                if (llListFindList(["keyHandler", "keyHandlerTime", "wearLockExpire", "collapseTime", "poseExpire", "timeToJamRepair"],[name]) == -1) {
                     if (poseExpire != 0.0) lmSendConfig("poseExpire", (string)poseExpire);
                     if (timeToJamRepair != 0.0) lmSendConfig("timeToJamRepair", (string)timeToJamRepair);
                 }

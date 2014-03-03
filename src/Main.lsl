@@ -545,7 +545,7 @@ default {
             }
 #endif
             if (configured) {
-                if (llListFindList(["timeLeftOnKey", "wearLockExpire", "collapseTime", "poseExpire", "timeToJamRepair"],[name]) == -1) {
+                if (llListFindList(["keyHandler", "keyHandlerTime", "timeLeftOnKey", "wearLockExpire", "collapseTime", "poseExpire", "timeToJamRepair"],[name]) == -1) {
                     if (timeLeftOnKey != 0.0) lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
                     if (wearLockExpire != 0.0) lmSendConfig("wearLockExpire", (string)wearLockExpire);
                     if (collapseTime != 0.0) lmSendConfig("collapseTime", (string)(collapseTime = (collapseTime * (collapsed != 0))));
