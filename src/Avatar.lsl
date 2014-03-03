@@ -504,13 +504,6 @@ default {
                     else userCollapseRLVcmd += "," +value;
                 }
             }
-            
-            if (configured) {
-                if (llListFindList(["keyHandler", "keyHandlerTime", "wearLockExpire", "collapseTime", "poseExpire", "timeToJamRepair"],[name]) == -1) {
-                    if (poseExpire != 0.0) lmSendConfig("poseExpire", (string)poseExpire);
-                    if (timeToJamRepair != 0.0) lmSendConfig("timeToJamRepair", (string)timeToJamRepair);
-                }
-            }
         }
         else if (code == 305) {
             string script = llList2String(split, 0);
@@ -627,6 +620,11 @@ default {
                 else llDetachFromAvatar();
                 return;
             }
+            else if (cmd == "getTimeUpdates") {
+                if (poseExpire != 0.0) lmSendConfig("poseExpire", (string)poseExpire);
+                if (timeToJamRepair != 0.0) lmSendConfig("timeToJamRepair", (string)timeToJamRepair);
+                return;
+            }
             else if (cmd == "wearLock") lmSendConfig("wearLock", (string)(wearLock = llList2Integer(split, 0)));
             else return;
 
@@ -634,7 +632,7 @@ default {
             else lmSendConfig("keyAnimationID", (string)(keyAnimationID = animStart(keyAnimation)));
 
             ifPermissions();
-            initializeRLV(1);
+            if (configured && RLVstarted) initializeRLV(1);
         }
         else if (code == 500) {
             string script = llList2String(split, 0);

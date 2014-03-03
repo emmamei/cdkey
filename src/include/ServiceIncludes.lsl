@@ -28,7 +28,7 @@ float lastAvatarCheck;
 float lastKeyPost;
 float lastPost;
 float HTTPdbStart;
-float HTTPthrottle = 20.0;
+float HTTPthrottle = 10.0;
 float HTTPinterval = 60.0;
 
 integer broadcastOn = -1873418555;
@@ -83,6 +83,10 @@ queForSave(string name, string value) {
 
     integer index = llListFindList(dbPostParams, [ name ]);
 
+    if (!llGetListLength(dbPostParams)) {
+        lmInternalCommand("getTimeUpdates", "", NULL_KEY);
+    }
+
     if (index != NOT_FOUND && index % 2 == 0)
         dbPostParams = llListReplaceList(dbPostParams, [ name, llEscapeURL(value) ], index, index + 1);
     else dbPostParams += [ name, llEscapeURL(value) ];
@@ -90,7 +94,7 @@ queForSave(string name, string value) {
     debugSay(5, "DEBUG-SERVICES", "Queued for save: " + name + "=" + value);
 
     //if (llListFindList(SKIP_EXPEDITE, [ name ]) == NOT_FOUND) expeditePost = 1;
-    llSetTimerEvent(5.0);
+    llSetTimerEvent(HTTPthrottle);
 }
 
 checkAvatarList() {
@@ -185,6 +189,7 @@ doHTTPpost() {
             "&t=" + time, HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE, "application/x-www-form-urlencoded" ], dbPostBody)) == NULL_KEY) {
                 llSleep(1.0);
         }
+        
         lmServiceMessage("requestID", "SendDB", requestID);
     } else {
         float ThrottleTime = lastPost - llGetTime() + HTTPthrottle;

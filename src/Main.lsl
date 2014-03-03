@@ -544,13 +544,6 @@ default {
                 }
             }
 #endif
-            if (configured) {
-                if (llListFindList(["keyHandler", "keyHandlerTime", "timeLeftOnKey", "wearLockExpire", "collapseTime", "poseExpire", "timeToJamRepair"],[name]) == -1) {
-                    if (timeLeftOnKey != 0.0) lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
-                    if (wearLockExpire != 0.0) lmSendConfig("wearLockExpire", (string)wearLockExpire);
-                    if (collapseTime != 0.0) lmSendConfig("collapseTime", (string)(collapseTime = (collapseTime * (collapsed != 0))));
-                }
-            }
         }
 
         else if (code == 305) {
@@ -573,6 +566,12 @@ default {
 
                 lmSendConfig("afk", (string)afk);
                 lmSendConfig("autoAFK", (string)autoAFK);
+            }
+            
+            else if (cmd == "getTimeUpdates") {
+                if (timeLeftOnKey != 0.0) lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
+                if (wearLockExpire != 0.0) lmSendConfig("wearLockExpire", (string)wearLockExpire);
+                if (collapseTime != 0.0) lmSendConfig("collapseTime", (string)(collapseTime = (collapseTime * (collapsed != 0))));
             }
 
             else if (cmd == "setWindTimes") {
