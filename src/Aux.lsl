@@ -547,7 +547,7 @@ default {
             string sender = llList2String(split, 0);
             integer level = llList2Integer(split, 1);
             string prefix = llList2String(split, 2);
-            string msg = llDumpList2String(llList2List(split, 3, -1), "|");
+            string msg = llDumpList2String(llDeleteSubList(split, 0, 2), "|");
 
             debugHandler(sender, level, prefix, msg);
         }

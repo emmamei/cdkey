@@ -195,7 +195,7 @@ default
                 dbPostParams = [];
             }
             if (!offlineMode) {
-                value = llDumpList2String(llList2List(split, 2, -1), "|");
+                value = llDumpList2String(llDeleteSubList(split, 0, 1), "|");
                 queForSave(name, value);
             }
         }
