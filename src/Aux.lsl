@@ -10,6 +10,9 @@
 #include "include/GlobalDefines.lsl"
 #include "include/Json.lsl"
 
+#define NO_FILTER ""
+#define cdListenUser(a,b) llListen(a, NO_FILTER,         b, NO_FILTER)
+
 #define APPEARANCE_NC "DataAppearance"
 #define MESSAGE_NC "DataMessages"
 #define DISPLAY_DOLL 0
@@ -30,7 +33,8 @@ key ncRequestDollMessage;
 key lmRequest;
 key carrierID = NULL_KEY;
 float rezTime;
-float memTime;
+float timerEvent;
+float listenTime;
 string minsLeft;
 string windRate;
 string carrierName;
@@ -45,6 +49,10 @@ integer wearLock;
 integer rezzed;
 integer visitDollhouse;
 integer targetHandle;
+integer factoryReset;
+integer textboxChannel;
+integer textboxHandle;
+integer textboxType;
 list MistressList;
 list BuiltinControllers = BUILTIN_CONTROLLERS;
 list glowSettings;
@@ -147,13 +155,54 @@ default {
         else if (code == 135) {
             memCollecting = 1;
             memData = "";
-
-            llSetTimerEvent(5.0);
         }
         else if (code == 136) {
             memData = cdSetValue(memData, [script], llList2String(split, 1));
+            
+            integer i; list scripts =[ "Avatar", "Dress", "Main", "MenuHandler", "ServiceRequester", "ServiceReceiver", "Start", "StatusRLV", "Transform" ];
+            integer ok;
+            for (i = 0; i <= 9; i++) {
+                string script = llList2String(scripts, i);
+                ok += (cdGetValue(memData, [script]) != JSON_INVALID);
+            }
+            if (ok == 9) { 
+                float memory_limit = (float)llGetMemoryLimit();
+                float free_memory = (float)llGetFreeMemory();
+                float used_memory = (float)llGetUsedMemory();
+                float available_memory = free_memory + (65536 - memory_limit);
+                if (((used_memory + free_memory) > (memory_limit * 1.05)) && (memory_limit <= 16384)) { // LSL2 compiled script
+                   memory_limit = 16384;
+                   used_memory = 16384 - free_memory;
+                   available_memory = free_memory;
+                }
+                memData = cdSetValue(memData,[SCRIPT_NAME],llList2Json(JSON_ARRAY, [used_memory, memory_limit, free_memory, available_memory]));
 
-            llSetTimerEvent(5.0);
+                float totUsed; float totLimit; float totFree; float totAvail;
+                integer i; string scriptName; list statList;
+                string output = "Script Memory Status:";
+                for (i = 0; i < llGetInventoryNumber(10); i++) {
+                    scriptName =        llGetInventoryName(10, i);
+                    if (scriptName != "UpdateScript") {
+                        if (cdGetElementType(memData, ([scriptName,0])) != JSON_INVALID) {
+                            totUsed     += used_memory          = (float)cdGetValue(memData, ([scriptName,0]));
+                            totLimit    += memory_limit         = (float)cdGetValue(memData, ([scriptName,1]));
+                            totFree     += free_memory          = (float)cdGetValue(memData, ([scriptName,2]));
+                            totAvail    += available_memory     = (float)cdGetValue(memData, ([scriptName,3]));
+        
+                            output += "\n" + scriptName + ":\t" + formatFloat(used_memory / 1024.0, 2) + "/" + (string)llRound(memory_limit / 1024.0) + "kB (" +
+                                      formatFloat(free_memory / 1024.0, 2) + "kB free, " + formatFloat(available_memory / 1024.0, 2) + "kB available)";
+                        }
+                        else {
+                            output += "\n" + scriptName + ":\tNo Report";
+                        }
+                    }
+                }
+                
+                output += "\nTotals:\t" + formatFloat(totUsed / 1024.0, 2) + "/" + (string)llRound(totLimit / 1024.0) + "kB (" +
+                           formatFloat(totFree / 1024.0, 2) + "kB free, " + formatFloat(totAvail / 1024.0, 2) + "kB available)";
+
+                llOwnerSay(output);
+            }
         }
         else if (code == 150) {
             simRating = llList2String(split, 1);
@@ -170,7 +219,6 @@ default {
 #endif
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "poserID")                       poserID = (key)value;
-            else if (name == "dialogChannel")           dialogChannel = (integer)value;
             else if (name == "quiet")                           quiet = (integer)value;
             else if (name == "autoTP")                         autoTP = (integer)value;
             else if (name == "canAFK")                         canAFK = (integer)value;
@@ -199,6 +247,10 @@ default {
                     dollType = value;
                     lmInternalCommand("setPose", keyAnimation, NULL_KEY);
                 }
+            }
+            else if (name == "dialogChannel") {
+                dialogChannel = (integer)value;
+                textboxChannel = dialogChannel - 1111;
             }
 
             // Only MenuHandler script can activate these selections...
@@ -403,6 +455,64 @@ default {
 
                 llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
             }
+            // Key menu is only shown for Controllers and for the Doll themselves
+            else if (choice == "Key..." && (isController || isDoll)) {
+
+                list pluslist = [ "Dolly Name", "Gem Colour" ];
+                if (isController) pluslist += [ "Max Time", "Wind Times" ];
+                llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(pluslist + MAIN, 1, 1)), dialogChannel);
+            }
+            // Max Winding Keys
+            else if (choice == "Max Time") {
+                llDialog(id, "You can set the maximum wind time here.  Dolly cannot be wound beyond this amount of time.\nDolly currently has " + (string)llRound(timeLeftOnKey / SEC_TO_MIN) + " left, if you choose a lower time than this they will lose time immidiately.", dialogSort(["45m", "60m", "75m", "90m", "120m", "150m", "180m", "240m", "300m", "360m", "480m", MAIN]), dialogChannel);
+            }
+            else if (llGetSubString(choice, -1, -1) == "m") {
+                lmSendConfig("keyLimit", (string)((float)choice * SEC_TO_MIN));
+            }
+            else if ((choice == "Gem Colour") || (llListFindList(COLOR_NAMES, [ choice ]) != -1)) {
+                if ((choice != "CUSTOM") && (choice != "Gem Colour")) {
+                    integer index = llListFindList(COLOR_NAMES, [ choice ]);
+                    string choice = (string)llList2Vector(COLOR_VALUE, index);
+
+                    lmInternalCommand("setGemColour", choice, id);
+                }
+
+                string msg = "Here you can set various key settingd. (" + OPTION_DATE + " version)";
+                list pluslist;
+
+                pluslist = COLOR_NAMES;
+
+                llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
+            }
+            
+            // Textbox generating menus
+            if (choice == "CUSTOM" || choice == "Dolly Name" || choice == "Wind Times" || choice == "Factory Reset") {
+                if (choice == "CUSTOM") {
+                    textboxType = 1;
+                    llTextBox(id, "Here you can input a custom colour value\n\nSupported Formats:\nLSL Vector <0.900, 0.500, 0.000>\n" +
+                                  "Web Format Hex #A4B355\nRGB Value 240, 120, 10", textboxChannel);
+                    return;
+                }
+                else if (choice == "Dolly Name") {
+                    textboxType = 2;
+                    llTextBox(id, "You choose your own name to be used with the key here.", textboxChannel);
+                }
+                else if (choice == "Wind Times") {
+                    textboxType = 3;
+                    llTextBox(id, "Enter 1 to 11 valid wind times (in minutes), separated by space, comma, or vertical bar (\"|\").", textboxChannel);
+                }
+                else if (llGetSubString(choice,0,12) == "Factory Reset") {
+                    textboxType = 4;
+                    string msg = "Are you sure you want to factory reset, all controllers and settings will be lost.  Your controllers notified if you proceed.  Type FACTORY RESET bellow to confirm.";
+                    if(llGetSubString(choice,14,14) == "2") msg = "You must type the words FACTORY RESET exactly and in capitals to confirm.";
+                    llTextBox(dollID, msg, textboxChannel);
+                }
+                
+                if (textboxHandle) llListenRemove(textboxHandle);
+                textboxHandle = cdListenUser(textboxChannel, id);
+                listenTime = llGetTime() + 60.0;
+                if (!factoryReset) llSetTimerEvent(60.0);
+            }
         }
 
         // 501 is a text box input - with three types:
@@ -410,50 +520,6 @@ default {
         //   2: Dolly Name
         //   3: Wind Times (moved to Main.lsl)
         //   4: Safeword Confirm
-
-        else if (code == 501) {
-            string script = llList2String(split, 0);
-            integer textboxType = llList2Integer(split, 1);
-            string name = llList2String(split, 2);
-            string choice = llDumpList2String(llDeleteSubList(split, 0, 2), "|");
-
-            debugSay(3, "DEBUG-MENU", "Textbox input (" + (string)textboxType + ") from " + name + ": " + choice);
-
-            // Type 1 = Custom Gem Color
-            if (textboxType == 1) {
-                string first = llGetSubString(choice, 0, 0);
-
-                if (first == "<") choice = (string)((vector)choice);
-                else if (first == "#") choice = (string)(
-                     (vector)("<0x" + llGetSubString(choice, 1, 2) +
-                              ",0x" + llGetSubString(choice, 3, 4) +
-                              ",0x" + llGetSubString(choice, 5, 6) + ">"));
-                else choice = (string)((vector)("<" + choice + ">"));
-
-                lmInternalCommand("setGemColour", choice, id);
-            }
-
-            // Type 2 = New Dolly Name
-            else if (textboxType == 2) {
-                //llOwnerSay("AUX:TEXTBOX(2): choice = " + choice + " (to 300)");
-                lmSendConfig("dollyName", choice);
-            }
-
-            // Type 3 = Wind Times
-            // -- now located in Main.lsl (which handles setting those up anyway)
-            
-            // Type 4 = Safeword Confirm
-            else if (textboxType == 4) {
-                if (choice == "FACTORY RESET") {
-                    lmSendToController(dollName + " has initiated a factory reset all key settings have been reset.");
-                    lmSendConfig("SAFEWORD", "1");
-                    llOwnerSay("You have safeworded your key will reset in 30 seconds.");
-                }
-                else {
-                    lmMenuReply("Factory Reset", name, id);
-                }
-            }
-        }
         else if (code == 700) {
             string sender = llList2String(split, 0);
             integer level = llList2Integer(split, 1);
@@ -494,6 +560,57 @@ default {
         
         if (dollMessageCode) ncRequestDollMessage = llGetNotecardLine(MESSAGE_NC, dollMessageCode + (integer)dollMessageVariant);
     }
+    
+    listen(integer channel, string name, key id, string choice) {
+        // If the current channel is from a text input box, send the data using LinkMessage 501.
+        
+        name = llGetDisplayName(id);
+        
+        if (channel == textboxChannel) {
+            llListenRemove(textboxHandle);
+            textboxHandle = 0;
+            listenTime = 0.0;
+
+            // Type 1 = Custom Gem Color
+            if (textboxType == 1) {
+                string first = llGetSubString(choice, 0, 0);
+
+                if (first == "<") choice = (string)((vector)choice);
+                else if (first == "#") choice = (string)(
+                     (vector)("<0x" + llGetSubString(choice, 1, 2) +
+                              ",0x" + llGetSubString(choice, 3, 4) +
+                              ",0x" + llGetSubString(choice, 5, 6) + ">"));
+                else choice = (string)((vector)("<" + choice + ">"));
+
+                lmInternalCommand("setGemColour", choice, id);
+            }
+
+            // Type 2 = New Dolly Name
+            else if (textboxType == 2) {
+                //llOwnerSay("AUX:TEXTBOX(2): choice = " + choice + " (to 300)");
+                lmSendConfig("dollyName", choice);
+            }
+
+            // Type 3 = Wind Times
+            // -- now located in Main.lsl (which handles setting those up anyway)
+            
+            // Type 4 = Safeword Confirm
+            else if (textboxType == 4) {
+                if (choice == "FACTORY RESET") {
+                    lmSendToController(dollName + " has initiated a factory reset all key settings have been reset.");
+                    lmSendConfig("SAFEWORD", "1");
+                    llOwnerSay("You have safeworded your key will reset in 30 seconds.");
+                    factoryReset = 1;
+                    llSetTimerEvent(30.0);
+                }
+                else {
+                    lmMenuReply("Factory Reset", name, id);
+                }
+            }
+            else if (textboxType == 1) lmMenuReply("Gem Colour", name, id); 
+            else lmMenuReply("Key...", name, id);
+        }
+    }
 
     dataserver(key request, string data) {
         if (request == ncRequestDollMessage) {
@@ -514,17 +631,11 @@ default {
                 doVisibility(-1);
                 ncRequestAppearance = NULL_KEY;
 
-                //llSleep(2.0);
-
                 lmMemReport(0.0);
-                
-                llSetTimerEvent(5.0);
             }
             else {
-                debugSay(5, "DEBUG-NOTECARDS", APPEARANCE_NC + " (" + (string)ncLine + "): " + data);
                 glowSettings += llJson2List(data);
-
-                if (!memCollecting) llSetTimerEvent(1.0);
+                ncRequestAppearance = llGetNotecardLine(APPEARANCE_NC, ncLine++);
             }
         }
         else if (request == lmRequest) {
@@ -542,60 +653,11 @@ default {
     }
 
     timer() {
-        if (ncRequestAppearance != NULL_KEY) {
-            ncRequestAppearance = llGetNotecardLine(APPEARANCE_NC, ncLine++);
+        if (factoryReset) llResetOtherScript("Start");
+        else if (textboxHandle && (listenTime < llGetTime())) {
+            llListenRemove(textboxHandle);
+            textboxHandle = 0;
         }
-        else if (memCollecting) {
-            if (memCollecting && (memTime < llGetTime())) {
-                float memory_limit = (float)llGetMemoryLimit();
-                float free_memory = (float)llGetFreeMemory();
-                float used_memory = (float)llGetUsedMemory();
-                float available_memory = free_memory + (65536 - memory_limit);
-                if (((used_memory + free_memory) > (memory_limit * 1.05)) && (memory_limit <= 16384)) { // LSL2 compiled script
-                   memory_limit = 16384;
-                   used_memory = 16384 - free_memory;
-                   available_memory = free_memory;
-                }
-                memData = cdSetValue(memData,[SCRIPT_NAME],llList2Json(JSON_ARRAY, [used_memory, memory_limit, free_memory, available_memory]));
-
-                integer i; string scriptName; list statList;
-                string output = "Script Memory Status:";
-                for (i = 0; i < llGetInventoryNumber(10); i++) {
-                    scriptName =        llGetInventoryName(10, i);
-                    if (scriptName != "UpdateScript") {
-                        if (cdGetElementType(memData, ([scriptName,0])) != JSON_INVALID) {
-                            used_memory =       (float)cdGetValue(memData, ([scriptName,0]));
-                            memory_limit =      (float)cdGetValue(memData, ([scriptName,1]));
-                            free_memory =       (float)cdGetValue(memData, ([scriptName,2]));
-                            available_memory =  (float)cdGetValue(memData, ([scriptName,3]));
-                            
-                            statList += [ used_memory, memory_limit, free_memory, available_memory ];
-        
-                            output += "\n" + scriptName + ":\t" + formatFloat(used_memory / 1024.0, 2) + "/" + (string)llRound(memory_limit / 1024.0) + "kB (" +
-                                      formatFloat(free_memory / 1024.0, 2) + "kB free, " + formatFloat(available_memory / 1024.0, 2) + "kB available)";
-                        }
-                        else {
-                            output += "\n" + scriptName + ":\tNo Report";
-                        }
-                    }
-                }
-                
-                scriptName =        "Totals";
-                used_memory =       llListStatistics(LIST_STAT_SUM, llList2ListStrided(statList, 0, -1, 4));
-                memory_limit =      llListStatistics(LIST_STAT_SUM, llList2ListStrided(llDeleteSubList(statList, 0, 0), 0, -1, 4));
-                free_memory =       llListStatistics(LIST_STAT_SUM, llList2ListStrided(llDeleteSubList(statList, 0, 1), 0, -1, 4));
-                available_memory =  llListStatistics(LIST_STAT_SUM, llList2ListStrided(llDeleteSubList(statList, 0, 2), 0, -1, 4));
-                
-                output += "\n" + scriptName + ":\t" + formatFloat(used_memory / 1024.0, 2) + "/" + (string)llRound(memory_limit / 1024.0) + "kB (" +
-                           formatFloat(free_memory / 1024.0, 2) + "kB free, " + formatFloat(available_memory / 1024.0, 2) + "kB available)";
-
-                llOwnerSay(output);
-
-                memCollecting = 0;
-
-                if (ncRequestAppearance == NULL_KEY) llSetTimerEvent(0.0);
-                else llSetTimerEvent(1.0);
-            }
-        }
+        else if (!textboxHandle) llSetTimerEvent(0.0);
     }
 }

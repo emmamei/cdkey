@@ -575,17 +575,20 @@ default {
             }
 
             else if (cmd == "setWindTimes") {
-                integer i; integer timesCount = llGetListLength(split);
+                integer i; integer start = llGetListLength(split);
 
                 windTimesInput = split;
                 windTimes = [];
 
-                for (i = 0; i < timesCount; i++) {
+                for (i = 0; i < start; i++) {
                     integer value = (integer)llStringTrim(llList2String(split, i), STRING_TRIM);
                     if ((value > 0) && (llListFindList(windTimes, [ value ]) == -1) && (((float)value * 60.0) <= keyLimit)) windTimes += value;
                 }
-                windTimes = llListSort(windTimes, 1, 1);
-
+                
+                integer l = llGetListLength(windTimes); i = 1;
+                while (l > 11) windTimes = llDeleteSubList(llListSort(windTimes, l-- / ++i, 1), i, i);
+                
+                if (start > l) lmSendToAgent("One or more times were filtered accepted list is " + llList2CSV(windTimes), id);
                 if (script != "ServiceReceiver") lmSendConfig("windTimes", llDumpList2String(windTimes, "|"));
             }
 

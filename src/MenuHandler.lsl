@@ -70,11 +70,9 @@ integer textboxType;
 integer startup = 1;
 
 integer blacklistChannel;
-integer textboxChannel;
 integer controlChannel;
 integer dialogChannel;
 integer blacklistHandle;
-integer textboxHandle;
 integer controlHandle;
 integer dialogHandle;
 string isDollName;
@@ -110,7 +108,6 @@ doDialogChannel() {
 
     blacklistChannel = dialogChannel - 666;
     controlChannel = dialogChannel - 888;
-    textboxChannel = dialogChannel - 1111;
 
     llListenRemove(dialogHandle);
     dialogHandle = cdListenAll(dialogChannel);
@@ -446,21 +443,6 @@ default
             
             lmInternalCommand("updateExceptions", "", NULL_KEY);
         }
-        else if (code == 500) {
-            string script = llList2String(split, 0);
-            string choice = llList2String(split, 1);
-            
-            if (choice == "Factory Reset") {
-                textboxType = 4;
-                if (textboxHandle) llListenRemove(textboxHandle);
-                textboxHandle = cdListenUser(textboxChannel, id);
-                llSetTimerEvent(60.0);
-                string msg = "Are you sure you want to factory reset, all controllers and settings will be lost.  Your controllers notified if you proceed.  ";
-                if (script == SCRIPT_NAME) msg += "Type FACTORY RESET bellow to confirm.";
-                else msg = "You must type the words FACTORY RESET exactly and in capitals to confirm.";
-                llTextBox(dollID, msg, textboxChannel);
-            }
-        }
     }
 
     on_rez(integer start) {
@@ -473,9 +455,8 @@ default
             llSetTimerEvent(30.0);
         }
         else {
-            if(blacklistHandle) { llListenRemove(blacklistHandle); blacklistHandle = 0; }
-            if (controlHandle)  { llListenRemove(controlHandle);     controlHandle = 0; }
-            if (textboxHandle)  { llListenRemove(textboxHandle);     textboxHandle = 0; }
+            if (blacklistHandle) { llListenRemove(blacklistHandle); blacklistHandle = 0; }
+            if (controlHandle)   { llListenRemove(controlHandle);     controlHandle = 0; }
 
             cdListenerDeactivate(dialogHandle);
             dialogKeys = []; dialogButtons = []; dialogNames = [];
@@ -534,13 +515,11 @@ default
         string optName = llDumpList2String(llList2List(split, 1, -1), " ");
         string curState = llList2String(split, 0);
 
-        if (channel != textboxChannel) {
-            debugSay(3, "DEBUG-MENU", "Button clicked: " + choice + ", optName=\"" + optName + "\", curState=\"" + curState + "\"");
-            lmMenuReply(choice, name, id);
+        debugSay(3, "DEBUG-MENU", "Button clicked: " + choice + ", optName=\"" + optName + "\", curState=\"" + curState + "\"");
+        lmMenuReply(choice, name, id);
 
-            menuID = id;
-            menuName = name;
-        }
+        menuID = id;
+        menuName = name;
 
         if (channel == dialogChannel) {
             integer isAbility; // Temporary variables used to determine if an option
@@ -576,57 +555,6 @@ default
                 else return;
 
                 pluslist += [ "Features...", "Key..." ];
-
-                llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
-            }
-
-            // Key menu is only shown for Controllers and for the Doll themselves
-            else if (choice == "Key..." && (isController || isDoll)) {
-
-                list pluslist = [ "Dolly Name", "Gem Colour" ];
-                if (isController) pluslist += [ "Max Time", "Wind Times" ];
-                llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(pluslist + MAIN, 1, 1)), dialogChannel);
-            }
-
-            // Max Winding Keys
-            else if (choice == "Max Time") {
-                llDialog(id, "You can set the maximum wind time here.  Dolly cannot be wound beyond this amount of time.\nDolly currently has " + (string)llRound(timeLeftOnKey / SEC_TO_MIN) + " left, if you choose a lower time than this they will lose time immidiately.", dialogSort(["45m", "60m", "75m", "90m", "120m", "150m", "180m", "240m", "300m", "360m", "480m", MAIN]), dialogChannel);
-            }
-            else if (llGetSubString(choice, -1, -1) == "m") {
-                lmSendConfig("keyLimit", (string)((float)choice * SEC_TO_MIN));
-            }
-            else if (choice == "Wind Times") {
-                textboxType = 3;
-                if (textboxHandle) llListenRemove(textboxHandle);
-                textboxHandle = cdListenUser(textboxChannel, id);
-                llTextBox(id, "You can set the amount of time a wind gives to the dolly. Times are integers and can be separated by spaces, commas, or vertical bars (|).", textboxChannel);
-            }
-            else if (choice == "Dolly Name") {
-                textboxType = 2;
-                if (textboxHandle) llListenRemove(textboxHandle);
-                textboxHandle = cdListenUser(textboxChannel, id);
-                llTextBox(id, "You choose your own name to be used with the key here.", textboxChannel);
-            }
-            else if ((choice == "Gem Colour") || (llListFindList(COLOR_NAMES, [ choice ]) != -1)) {
-                if ((choice != "CUSTOM") && (choice != "Gem Colour")) {
-                    integer index = llListFindList(COLOR_NAMES, [ choice ]);
-                    string choice = (string)llList2Vector(COLOR_VALUE, index);
-
-                    lmInternalCommand("setGemColour", choice, id);
-                }
-                else if (choice == "CUSTOM") {
-                    textboxType = 1;
-                    if (textboxHandle) llListenRemove(textboxHandle);
-                    textboxHandle = cdListenUser(textboxChannel, id);
-                    llTextBox(id, "Here you can input a custom colour value\n\nSupported Formats:\nLSL Vector <0.900, 0.500, 0.000>\n" +
-                                  "Web Format Hex #A4B355\nRGB Value 240, 120, 10", textboxChannel);
-                    return;
-                }
-
-                string msg = "Here you can set various key settingd. (" + OPTION_DATE + " version)";
-                list pluslist;
-
-                pluslist = COLOR_NAMES;
 
                 llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
             }
@@ -830,22 +758,6 @@ default
             if (channel == blacklistChannel) lmInternalCommand("addRemBlacklist", (string)uuid + "|" + name, id);
             else if (index != -1) lmInternalCommand("remMistress", (string)uuid + "|" + name, id);
             else lmInternalCommand("addMistress", (string)uuid + "|" + name, id);
-        }
-
-        // If the current channel is from a text input box, send the data using LinkMessage 501.
-        if (channel == textboxChannel) {
-            llListenRemove(textboxHandle);
-            textboxHandle = 0;
-
-            lmTextboxReply(textboxType, name, choice, id);
-            if (textboxType == 4) {
-                if (choice == "FACTORY RESET") {
-                    llSleep(30.0);
-                    llResetOtherScript("Start");
-                }
-            }
-            else if (textboxType == 1) lmMenuReply("Gem Colour", name, id); 
-            else lmMenuReply("Key...", name, id);
         }
 
         // Ideally the listener should be closing here and only reopened when we spawn another menu
