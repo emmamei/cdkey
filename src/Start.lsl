@@ -382,15 +382,18 @@ default {
                 integer index = llListFindList(blacklist, [ uuid ]);
 
                 if (index == -1) {
-                    llOwnerSay("Adding " + name + " to blacklist");
+                    lmSendToAgentPlusDoll("Adding " + name + " to blacklist", id);
                     if ((llGetListLength(blacklist) % 2) == 1) blacklist = llDeleteSubList(blacklist, 0, 0);
-                    lmSendConfig("blacklist", llDumpList2String((blacklist = llListSort(blacklist + [ uuid, name ], 2, 1)), "|"));
+                    blacklist = llListSort(blacklist + [ uuid, name ], 2, 1);
                 }
                 else {
-                    llOwnerSay("Removing " + name + " from blacklist");
+                    lmSendToAgentPlusDoll("Removing " + name + " from blacklist.", id);
                     if ((llGetListLength(blacklist) % 2) == 1) blacklist = llDeleteSubList(blacklist, 0, 0);
-                    lmSendConfig("blacklist", llDumpList2String((blacklist = llDeleteSubList(blacklist, index, ++index)), "|"));
+                    blacklist = llDeleteSubList(blacklist, index, ++index);
+                    
                 }
+                
+                lmSendConfig("blacklist", llDumpList2String(blacklist,"|") );
             }
             else if ((cmd == "addMistress") || (cmd == "remMistress")) {
                 string uuid = llList2String(split, 0);
@@ -399,17 +402,20 @@ default {
                 integer index = llListFindList(MistressList, [ uuid ]);
 
                 if  ((cmd == "addMistress") && (index == -1)) {
-                    llOwnerSay("Adding " + name + " to controller list.");
+                    lmSendToAgentPlusDoll("Adding " + name + " to controller list.", id);
                     if ((llGetListLength(MistressList) % 2) == 1) MistressList = llDeleteSubList(MistressList, 0, 0);
-                    lmSendConfig("MistressList", llDumpList2String((MistressList = llListSort(MistressList + [ uuid, name ], 2, 1)), "|"));
+                    MistressList = llListSort(MistressList + [ uuid, name ], 2, 1);
                 }
-                else if ((cmd == "remMistress") && (llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1)) {
-                    list exceptions = ["tplure","recvchat","recvemote","recvim","sendim","startim"];
-                    integer i;
+                else if ((cmd == "remMistress") && isBuiltinController) {
+                    lmSendToAgentPlusDoll("Removing " + name + " from controller list.", id);
+                    if ((llGetListLength(MistressList) % 2) == 1) MistressList = llDeleteSubList(MistressList, 0, 0);
+                    MistressList = llDeleteSubList(MistressList, index, ++index);
+                    
+                    list exceptions = ["tplure","recvchat","recvemote","recvim","sendim","startim"]; integer i;
                     for (i = 0; i < 6; i++) lmRunRLVas("Base",llList2String(exceptions, i) + ":" + uuid + "=rem");
-                    if ((llGetListLength(MistressList) % 2) == 1) MistressList = llDeleteSubList(MistressList, 0, 0);
-                    lmSendConfig("MistressList", llDumpList2String((MistressList = llDeleteSubList(MistressList, index, ++index)), "|"));
                 }
+                
+                lmSendConfig("MistressList", llDumpList2String(MistressList,"|") );
             }
 #ifdef SIM_FRIENDLY
             else if (cmd == "setAFK") afk = llList2Integer(split, 2);

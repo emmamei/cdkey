@@ -17,6 +17,10 @@
 #define cdListenerDeactivate(a) llListenControl(a, 0)
 #define cdListenerActivate(a) llListenControl(a, 1)
 
+// Simpler and more useful List2ListStrided returns as follows.
+// Starting at list index start in src until end return a list of every every'th item
+#define cdList2ListStrided(src,start,end,every) llList2ListStrided(llList2List(src, start, end), 0, -1, every)
+
 // Current Controller - or Mistress
 //key MistressID = NULL_KEY;
 key poserID = NULL_KEY;
@@ -519,10 +523,13 @@ default
         string displayName = llGetDisplayName(id);
         if ((displayName != "") && (displayName != "???")) name = displayName;
 
-        string optName = llDumpList2String(llList2List(split, 1, -1), " ");
-        string curState = llList2String(split, 0);
+        integer space = llSubStringIndex(choice, " ");
+        // 04-03-2014 Dev-Note:
+        // Varnames for these two sub strings have changed, current usage makes them misleading.
+        string beforeSpace = llStringTrim(llGetSubString(choice, 0, space),STRING_TRIM);
+        string afterSpace = llDeleteSubString(choice, 0, space);
 
-        debugSay(3, "DEBUG-MENU", "Button clicked: " + choice + ", optName=\"" + optName + "\", curState=\"" + curState + "\"");
+        debugSay(3, "DEBUG-MENU", "Button clicked: " + choice + ", afterSpace=\"" + afterSpace + "\", beforeSpace=\"" + beforeSpace + "\"");
         lmMenuReply(choice, name, id);
 
         menuID = id;
@@ -567,15 +574,15 @@ default
             }
             else if (choice == "Detach")
                 lmInternalCommand("detach", "", id);
-            else if (optName == "Visible") lmSendConfig("isVisible", (string)(visible = (curState == CROSS)));
+            else if (afterSpace == "Visible") lmSendConfig("isVisible", (string)(visible = (beforeSpace == CROSS)));
             else if (choice == "Reload Config") {
                 llResetOtherScript("Start");
             }
             else if (choice == "TP Home") {
                 lmInternalCommand("TP", LANDMARK_HOME, id);
             }
-            else if (optName == "AFK") {
-                lmSendConfig("afk", (string)(afk = (curState == CROSS)));
+            else if (afterSpace == "AFK") {
+                lmSendConfig("afk", (string)(afk = (beforeSpace == CROSS)));
                 float factor = 2.0;
                 if (afk) factor = 0.5;
                 displayWindRate *= factor;
@@ -586,21 +593,18 @@ default
                 string nextMenu = "mainMenu";
                 llSetTimerEvent(1.0);
             }
-            if ((optName == "Blacklist") || (optName == "Controller")) {
-                integer activeChannel; integer i;
-                dialogKeys = []; dialogNames = []; dialogButtons = [];
-                if (optName == "Blacklist") {
+            if ((afterSpace == "Blacklist") || (afterSpace == "Controller")) {
+                integer activeChannel; string msg;
+                if (afterSpace == "Blacklist") {
                     if (controlHandle) {
                         llListenRemove(controlHandle);
                         controlHandle = 0;
                     }
                     activeChannel = blacklistChannel;
-                    for (i = 0; i < llGetListLength(blacklist); i++) {
-                        dialogKeys += llList2Key(blacklist, i);
-                        dialogNames += llList2String(blacklist, ++i);
-                        dialogButtons += llGetSubString(llList2String(blacklist, i), 0, 23);
-                    }
-                    blacklistHandle = cdListenUser(blacklistChannel, dollID);
+                    msg = "blacklist";
+                    dialogKeys  = cdList2ListStrided(blacklist, 0, -1, 2);
+                    dialogNames = cdList2ListStrided(blacklist, 1, -1, 2); 
+                    blacklistHandle = cdListenUser(blacklistChannel, id);
                 }
                 else {
                     if (blacklistHandle) {
@@ -608,89 +612,77 @@ default
                         blacklistHandle = 0;
                     }
                     activeChannel = controlChannel;
-                    for (i = 0; i < llGetListLength(MistressList); i++) {
-                        dialogKeys += llList2Key(MistressList, i);
-                        dialogNames += llList2String(MistressList, ++i);
-                        dialogButtons += llGetSubString(llList2String(MistressList, i), 0, 23);
-                    }
-                    controlHandle = cdListenUser(controlChannel, dollID);
+                    msg = "controller list";
+                    dialogKeys  = cdList2ListStrided(MistressList, 0, -1, 2);
+                    dialogNames = cdList2ListStrided(MistressList, 1, -1, 2); 
+                    controlHandle = cdListenUser(controlChannel, id);
                 }
+                
+                // Only need this once now, make dialogButtons = numbered list of names truncated to 24 char limit
+                dialogButtons = []; integer i; integer n = llGetListLength(dialogKeys);
+                for (i = 0; i < n; i++) dialogButtons += llGetSubString((string)(i+1) + ". " + llList2String(dialogNames, i), 0, 23);
 
-                if (curState == "⊕") {
+                if (beforeSpace == "⊕") {
                     if (llGetListLength(dialogKeys) < 11) {
                         llSensor("", "", AGENT, 20.0, PI);
                     }
                     else {
-                        string msg = "You already have the maximum (11) entries in your ";
-                        if (activeChannel == controlChannel) msg += "controller list, ";
-                        else msg += "blacklist, ";
-                        msg += "please remove one or more entries before attempting to add another.";
+                        msg = "You already have the maximum (11) entries in your " + msg;
+                        msg += " please remove one or more entries before attempting to add another.";
                         llRegionSayTo(id, 0, msg);
                     }
                 }
-                else if (curState == "⊖") {
-                    string msg;
-                    if (dialogKeys != []) msg = "Choose a person to remove from ";
-                    else msg = "You currently have nobody listed in your ";
-
-                    if (activeChannel == controlChannel) msg += "controller list.";
-                    else msg += "blacklist.";
-
+                else if (beforeSpace == "⊖") {
                     if (dialogKeys == []) {
-                        msg += "did you mean to select the add option instead?.";
+                        msg = "You currently have nobody listed in your " + msg;
+                        msg += " did you mean to select the add option instead?.";
                         llRegionSayTo(id, 0, msg);
                         return;
                     }
+                    else msg = "Choose a person to remove from your " + msg;
 
                     llDialog(id, msg, dialogSort(llListSort(dialogButtons, 1, 1) + MAIN), activeChannel);
                     llSetTimerEvent(60.0);
                 }
-                else if (curState == "List") {
-                    integer i; string output; list tempList;
-
-                    if (optName == "Controller") output = "Allowed Controllers";
-                    else output = "Blacklisted Avatars";
-                    
-                    if (llGetListLength(dialogNames) == 0) output = "No " + output;
+                else if (beforeSpace == "List") {
+                    if (dialogNames == []) msg = "Your " + msg + " is empty.";
                     else {
-                        output += ":";
-
-                        for (i = 0; i < llGetListLength(dialogNames); i++) output += "\n" + (string)(i+1) + ". " + llList2String(dialogNames, i);
+                        msg = "Current " + msg + ":";
+                        for (i = 0; i < n; i++) msg += "\n" + (string)(i+1) + ". " + llList2String(dialogNames, i);
                     }
-                    
-                    llOwnerSay(output);
+                    llOwnerSay(msg);
                 }
             }
 
             // Entering options menu section
             
             // Entering key menu section
-                 if (optName == "Gem Light") lmSendConfig("primLight", (string)(curState == CROSS));
-            else if (optName == "Key Glow") lmSendConfig("primGlow", (string)(curState == CROSS));
+                 if (afterSpace == "Gem Light")     lmSendConfig("primLight", (string)(beforeSpace == CROSS));
+            else if (afterSpace == "Key Glow")      lmSendConfig("primGlow", (string)(beforeSpace == CROSS));
 
             // Entering abilities menu section
             isAbility = 1;
-            if (optName == "Self TP") lmSendConfig("helpless", (string)(curState == CHECK));
-            else if (optName == "Self Dress") lmSendConfig("canWear", (string)(canWear = (curState == CROSS)));
-            else if (optName == "Detachable") lmSendConfig("detachable", (string)(detachable = (curState == CROSS)));
-            else if (optName == "Flying") lmSendConfig("canFly", (string)(curState == CROSS));
-            else if (optName == "Sitting") lmSendConfig("canSit", (string)(curState == CROSS));
-            else if (optName == "Standing") lmSendConfig("canStand", (string)(curState == CROSS));
-            else if (optName == "Force TP") lmSendConfig("autoTP", (string)(curState == CROSS));
-            else if (optName == "Pose Silence") lmSendConfig("poseSilence", (string)(curState == CROSS));
+            if (afterSpace == "Self TP") lmSendConfig("helpless", (string)(beforeSpace == CHECK));
+            else if (afterSpace == "Self Dress") lmSendConfig("canWear", (string)(canWear = (beforeSpace == CROSS)));
+            else if (afterSpace == "Detachable") lmSendConfig("detachable", (string)(detachable = (beforeSpace == CROSS)));
+            else if (afterSpace == "Flying") lmSendConfig("canFly", (string)(beforeSpace == CROSS));
+            else if (afterSpace == "Sitting") lmSendConfig("canSit", (string)(beforeSpace == CROSS));
+            else if (afterSpace == "Standing") lmSendConfig("canStand", (string)(beforeSpace == CROSS));
+            else if (afterSpace == "Force TP") lmSendConfig("autoTP", (string)(beforeSpace == CROSS));
+            else if (afterSpace == "Pose Silence") lmSendConfig("poseSilence", (string)(beforeSpace == CROSS));
             else isAbility = 0; // Not an options menu item after all
 
             isFeature = 1; // Maybe it'a a features menu item
-            if (optName == "Type Text") lmSendConfig("signOn", (string)(curState == CROSS));
-            else if (optName == "Quiet Key") lmSendConfig("quiet", (string)(quiet = (curState == CROSS)));
-            else if (optName == "Rpt Wind") lmSendConfig("canRepeat", (string)(curState == CROSS));
-            else if (optName == "Carryable") lmSendConfig("canCarry", (string)(canCarry = (curState == CROSS)));
-            else if (optName == "Outfitable") lmSendConfig("canDress", (string)(canDress = (curState == CROSS)));
-            else if (optName == "Poseable") lmSendConfig("canPose", (string)(canPose = (curState == CROSS)));
-            else if (optName == "Warnings") lmSendConfig("doWarnings", (string)(curState == CROSS));
-            else if (optName == "Offline") lmSendConfig("offlineMode", (string)(curState == CROSS));
-            else if (optName == "Allow AFK") {
-                lmSendConfig("canAFK", (string)(canAFK = (curState == CROSS)));
+            if (afterSpace == "Type Text") lmSendConfig("signOn", (string)(beforeSpace == CROSS));
+            else if (afterSpace == "Quiet Key") lmSendConfig("quiet", (string)(quiet = (beforeSpace == CROSS)));
+            else if (afterSpace == "Rpt Wind") lmSendConfig("canRepeat", (string)(beforeSpace == CROSS));
+            else if (afterSpace == "Carryable") lmSendConfig("canCarry", (string)(canCarry = (beforeSpace == CROSS)));
+            else if (afterSpace == "Outfitable") lmSendConfig("canDress", (string)(canDress = (beforeSpace == CROSS)));
+            else if (afterSpace == "Poseable") lmSendConfig("canPose", (string)(canPose = (beforeSpace == CROSS)));
+            else if (afterSpace == "Warnings") lmSendConfig("doWarnings", (string)(beforeSpace == CROSS));
+            else if (afterSpace == "Offline") lmSendConfig("offlineMode", (string)(beforeSpace == CROSS));
+            else if (afterSpace == "Allow AFK") {
+                lmSendConfig("canAFK", (string)(canAFK = (beforeSpace == CROSS)));
                 if (!canAFK && afk) {
                     afk = 0;
                     displayWindRate = setWindRate();
@@ -699,7 +691,7 @@ default
                 }
             }
 #ifdef ADULT_MODE
-            else if (optName == "Pleasure Doll") lmSendConfig("pleasureDoll", (string)(curState == CROSS));
+            else if (afterSpace == "Pleasure Doll") lmSendConfig("pleasureDoll", (string)(beforeSpace == CROSS));
 #endif
             else isFeature = 0;
 
@@ -735,40 +727,25 @@ default
             }
             
             string button = choice;
-            integer index = llListFindList(dialogButtons, [ choice ]);
-            string name = llList2String(dialogNames, index);
-            string uuid = llList2String(dialogKeys, index);
+            integer i = llListFindList(dialogButtons, [ choice ]);
+            string name = llList2String(dialogNames, i);
+            string uuid = llList2String(dialogKeys, i);
 
-            list tempList; integer i;
-            dialogKeys = []; dialogNames = []; dialogButtons = [];
             if (channel == blacklistChannel) {
                 if (blacklistHandle) {
                     llListenRemove(blacklistHandle);
                     blacklistHandle = 0;
                 }
-                for (i = 0; i < llGetListLength(blacklist); i++) {
-                    dialogKeys += llList2Key(blacklist, i);
-                    dialogNames += llList2String(blacklist, ++i);
-                    dialogButtons += llGetSubString(llList2String(blacklist, i), 0, 23);
-                }
+                lmInternalCommand("addRemBlacklist", (string)uuid + "|" + name, id);
             }
             else {
                 if (controlHandle) {
                     llListenRemove(controlHandle);
                     controlHandle = 0;
                 }
-                for (i = 0; i < llGetListLength(MistressList); i++) {
-                    dialogKeys += llList2Key(MistressList, i);
-                    dialogNames += llList2String(MistressList, ++i);
-                    dialogButtons += llGetSubString(llList2String(MistressList, i), 0, 23);
-                }
+                if (llListFindList(MistressList, [uuid,name]) == -1)    lmInternalCommand("addMistress", (string)uuid + "|" + name, id);
+                else if (isBuiltinController)                           lmInternalCommand("remMistress", (string)uuid + "|" + name, id);
             }
-            
-            index = llListFindList(dialogButtons, [ choice ]);
-
-            if (channel == blacklistChannel) lmInternalCommand("addRemBlacklist", (string)uuid + "|" + name, id);
-            else if (index != -1) lmInternalCommand("remMistress", (string)uuid + "|" + name, id);
-            else lmInternalCommand("addMistress", (string)uuid + "|" + name, id);
         }
 
         // Ideally the listener should be closing here and only reopened when we spawn another menu

@@ -64,15 +64,15 @@ list BuiltinControllers = BUILTIN_CONTROLLERS;
 list glowSettings;
 string memData;
 
-sendMsg(key target, string msg) {
-    if (target) {
+sendMsg(key id, string msg) {
+    if (id) {
         if (llGetSubString(msg, 0, 0) == "%" && llGetSubString(msg, -1, -1) == "%") {
             msg = findString(msg);
         }
 
-        if (target == dollID) llOwnerSay(msg);
-        else if (llGetAgentSize(target)) llRegionSayTo(target, 0, msg);
-        else llInstantMessage(target, msg);
+        if          isDoll                  llOwnerSay(msg);
+        else if     (llGetAgentSize(id))    llRegionSayTo(id, 0, msg);
+        else                                llInstantMessage(id, msg);
     }
 }
 
@@ -132,10 +132,11 @@ default {
 
         if (code != 700) linkDebug(script, code, data, id);
 
-        if (code == 11) {
+        if ((code == 11) || (code == 12)) {
             string msg = llList2String(split, 1);
             debugSay(7, "DEBUG", "Send message to: " + (string)id + "\n" + msg);
             sendMsg(id, msg);
+            if (!isDoll && (code == 12)) sendMsg(id, msg);
         }
         else if (code == 15) {
             string msg = llList2String(split, 1);
