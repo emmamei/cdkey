@@ -92,7 +92,7 @@ key animStart(string animation) {
 checkRLV()
 { // Run RLV viewer check
     locked = 0;
-    if (isAttached) {
+    if (cdAttached()) {
         if (RLVck == -1) {
 #ifndef DEBUG_BADRLV
             // Setting the above debug flag causes the listener to not be open for the check
@@ -122,11 +122,11 @@ checkRLV()
         }
     }
     
-    if (!isAttached || (configured && (RLVok || (RLVck == 5)))) {
+    if (!cdAttached() || (configured && (RLVok || (RLVck == 5)))) {
         if (!RLVstarted) {
             if (RLVok && !newAttach) llOwnerSay("Logged with Community Doll Key and " + rlvAPIversion + " active...");
             else if (RLVok && newAttach) llOwnerSay("Reattached Community Doll Key with " + rlvAPIversion + " active...");
-            else if (isAttached && !RLVok) llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
+            else if (cdAttached() && !RLVok) llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
         }
     
         initializeRLV(0); // Do RLV report and initialized if appropriate
@@ -134,7 +134,7 @@ checkRLV()
 }
 
 ifPermissions() {
-    if (isAttached) {
+    if (cdAttached()) {
         key grantorID = llGetPermissionsKey();
         integer permMask = llGetPermissions();
 
@@ -208,7 +208,7 @@ ifPermissions() {
                     lockPos = ZERO_VECTOR;
                     llTargetRemove(targetHandle);
                     llStopMoveToTarget();
-                    if (carrierID != NULL_KEY) {
+                    if (cdCarried()) {
                         vector carrierPos = llList2Vector(llGetObjectDetails(carrierID, [ OBJECT_POS ]), 0);
                         targetHandle = llTarget(carrierPos, CARRY_RANGE);
                     }
@@ -285,8 +285,8 @@ initializeRLV(integer refresh) {
         else lmRunRLVas("User:Collapse", "clear");
     }
 
-    integer posed = ((keyAnimation != "") && (keyAnimation != ANIMATION_COLLAPSED) && (poserID != dollID));
-    integer carried = (carrierID != NULL_KEY);
+    integer posed = (cdPosed() && !cdSelfPosed());
+    integer carried = cdCarried();
 
     string command; integer i;
 
@@ -389,6 +389,8 @@ default {
 
     link_message(integer sender, integer code, string data, key id) {
         list split = llParseStringKeepNulls(data, [ "|" ], []);
+        
+        integer posed = cdPosed();
 
         scaleMem();
 
@@ -418,7 +420,7 @@ default {
             else if (name == "afk")                             afk = (integer)value;
             else if (name == "collapsed") {
                 collapsed = (integer)value;
-                if (!collapsed && (keyAnimation == ANIMATION_COLLAPSED)) lmSendConfig("keyAnimation", (keyAnimation = ""));
+                if (!collapsed && cdCollapsedAnim()) lmSendConfig("keyAnimation", (keyAnimation = ""));
             }
             else if (name == "canFly")                       canFly = (integer)value;
             else if (name == "canSit")                       canSit = (integer)value;
@@ -437,7 +439,7 @@ default {
             else if (name == "keyAnimation") {
                 keyAnimation = value;
 
-                if (!collapsed && (keyAnimation == ANIMATION_COLLAPSED)) lmSendConfig("keyAnimation", (keyAnimation = ""));
+                if (!collapsed && cdCollapsedAnim()) lmSendConfig("keyAnimation", (keyAnimation = ""));
 
                 if (keyAnimation == "") lmSendConfig("keyAnimationID", (string)(keyAnimationID = NULL_KEY));
                 else lmSendConfig("keyAnimationID", (string)(keyAnimationID = animStart(keyAnimation)));
@@ -463,7 +465,7 @@ default {
                 else if (name == "dollType") {
                     if (dollType == value) return;
                     else {
-                        if (configured && (keyAnimation != "") && (keyAnimation != ANIMATION_COLLAPSED) && (poserID != dollID)) {
+                        if (configured && posed && (poserID != dollID)) {
                             if (value == "Display")
                                 llOwnerSay("As you feel yourself become a display doll you feel a sense of helplessness knowing you will remain posed until released.");
                             else if (dollType == "Display")
@@ -487,16 +489,6 @@ default {
 
                 carrierID = id;
                 carrierName = name;
-
-                // Clear old targets to ensure there is only one
-                //llTargetRemove(targetHandle);
-                //llStopMoveToTarget();
-
-                // Set updated target
-                //carrierPos = llList2Vector(llGetObjectDetails(carrierID, [OBJECT_POS]), 0);
-                //targetHandle = llTarget(carrierPos, CARRY_RANGE);
-
-                //if (carrierPos != ZERO_VECTOR && keyAnimation == "") llMoveToTarget(carrierPos, 0.7);
             }
             else if (cmd == "collapse") {
                 integer collapseType = llList2Integer(split, 0);
@@ -517,7 +509,7 @@ default {
                 lmSendConfig("collapsed", (string)collapsed);
             }
             else if (cmd == "doUnpose") {
-                if (keyAnimation != ANIMATION_COLLAPSED) {
+                if (!cdCollapsedAnim()) {
                     lmSendConfig("lockPos", (string)(lockPos = ZERO_VECTOR));
                     lmSendConfig("poseExpire", (string)(poseExpire = 0.0));
                     lmSendConfig("keyAnimation", (keyAnimation = ""));
@@ -589,29 +581,29 @@ default {
             string choice = llList2String(split,1);
             string name = llList2String(split, 2);
 
-            if ((choice == "Carry") && !isDoll) {
+            if ((choice == "Carry") && !cdIsDoll(id)) {
                 // Doll has been picked up...
                 carrierID = id;
                 carrierName = name;
                 lmInternalCommand("carry", carrierName, carrierID);
                 lmInternalCommand("mainMenu", "", id);
             }
-            else if ((choice == "Uncarry") && isCarrier) {
+            else if ((choice == "Uncarry") && cdIsCarrier(id)) {
                 // Doll has been placed down...
                 llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|uncarry|" + carrierName, carrierID);
                 carrierID = NULL_KEY;
                 carrierName = "";
                 lmInternalCommand("mainMenu", "", id);
             }
-            else if ((!isDoll || poserID == dollID) && choice == "Unpose") {
+            else if ((!cdIsDoll(id) || cdSelfPosed()) && choice == "Unpose") {
                 lmInternalCommand("doUnpose", "", id);
             }
-            else if ((keyAnimation == "" || (!isDoll || poserID == dollID)) && llGetInventoryType(choice) == 20) {
+            else if ((keyAnimation == "" || (!cdIsDoll(id) || cdSelfPosed())) && llGetInventoryType(choice) == 20) {
                 keyAnimation = choice;
                 lmInternalCommand("setPose", choice, id);
                 poserID = id;
             }
-            else if ((keyAnimation == "" || (!isDoll || poserID == dollID)) && llGetInventoryType(llGetSubString(choice, 2, -1)) == 20) {
+            else if ((keyAnimation == "" || (!cdIsDoll(id) || cdSelfPosed())) && llGetInventoryType(llGetSubString(choice, 2, -1)) == 20) {
                 keyAnimation = llGetSubString(choice, 2, -1);
                 lmInternalCommand("setPose", llGetSubString(choice, 2, -1), id);
                 poserID = id;
@@ -686,7 +678,7 @@ default {
         llTargetRemove(targetHandle);
         llStopMoveToTarget();
 
-        if (carrierID != NULL_KEY) {
+        if (cdCarried()) {
             if (keyAnimation == "") {
                 // Get updated position and set target
                 carrierPos = llList2Vector(llGetObjectDetails(carrierID, [OBJECT_POS]), 0);
@@ -710,7 +702,7 @@ default {
     // NOT AT FOLLOW/MOVELOCK TARGET
     //----------------------------------------
     not_at_target() {
-        if (keyAnimation == "" && carrierID != NULL_KEY) {
+        if (cdNoAnim() && cdCarried()) {
             vector newCarrierPos = llList2Vector(llGetObjectDetails(carrierID,[OBJECT_POS]),0);
             llStopMoveToTarget();
 
@@ -724,9 +716,9 @@ default {
                 carryExpire = CARRY_TIMEOUT;
                 carryMoved = 1;
             }
-            else if (carrierID != NULL_KEY && llGetTime() > carryExpire) uncarry();
+            else if (cdCarried() && llGetTime() > carryExpire) uncarry();
         }
-        else if (keyAnimation != "") {
+        else if (!cdNoAnim()) {
             llMoveToTarget(lockPos, 0.7);
         }
     }
@@ -781,8 +773,8 @@ default {
             else if (dataType == RLV_RESTRICT) {
                 string restrictions;
                 integer group = -1; integer setState;
-                integer posed = (!collapsed && (keyAnimation != "") && (poserID != dollID));
-                list states = [ (autoTP), (!canFly || posed || collapsed || afk), (collapsed), (!canSit || collapsed || posed), (!canStand || collapsed || posed), (collapsed || (posed && poseSilence) ), (helpless || afk || hasCarrier || collapsed || posed), (afk || hasCarrier || collapsed || posed), (!canWear || collapsed || wearLock || afk) ];
+                integer posed = (cdPosed() && (poserID != dollID));
+                list states = [ (autoTP), (!canFly || posed || collapsed || afk), (collapsed), (!canSit || collapsed || posed), (!canStand || collapsed || posed), (collapsed || (posed && poseSilence) ), (helpless || afk || cdCarried() || collapsed || posed), (afk || cdCarried() || collapsed || posed), (!canWear || collapsed || wearLock || afk) ];
                 integer index;
 
                 while ( ( index = llSubStringIndex(data, "$C") ) != -1) {

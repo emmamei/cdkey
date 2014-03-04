@@ -10,6 +10,7 @@ key poserID                 = NULL_KEY;
 key uniqueID		    = NULL_KEY;
 key keyAnimationID          = NULL_KEY;
 
+list BuiltinControllers     = BUILTIN_CONTROLLERS;
 list MistressList           = [];
 list blacklist		    = [];
 

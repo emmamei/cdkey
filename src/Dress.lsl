@@ -312,12 +312,12 @@ default {
         else if (code == 150) {
             string script = cdListElement(split, 0);
             simRating = cdListElement(split, 1);
-            integer outfitRating = outfitRating(newoutfitname);
-            integer regionRating = rating2Integer(simRating);
-            debugSay(3, "DEBUG", "Region rating " + llToLower(simRating) + " outfit " + newoutfitname + " outfitRating: " + (string)outfitRating +
+            integer cdOutfitRating = cdOutfitRating(newoutfitname);
+            integer regionRating = cdRating2Integer(simRating);
+            debugSay(3, "DEBUG", "Region rating " + llToLower(simRating) + " outfit " + newoutfitname + " cdOutfitRating: " + (string)cdOutfitRating +
                         " regionRating: " + (string)regionRating);
             if (RLVok) {
-                if (outfitRating > regionRating) {
+                if (cdOutfitRating > regionRating) {
                     pushRandom = 1;
                     clothingFolder = newoutfitpath;
                     listInventoryOn("2665");
@@ -749,7 +749,7 @@ default {
                     //
                     // Note this skips *Regular too
 
-                    if (!isHiddenItem(itemname) && !isTransformingItem(itemname) && !isGroupItem(itemname) && !(outfitRating(itemname) > rating2Integer(simRating))) {
+                    if (!isHiddenItem(itemname) && !isTransformingItem(itemname) && !isGroupItem(itemname) && !(cdOutfitRating(itemname) > cdRating2Integer(simRating))) {
                         total += 1;
                         outfitsList += itemname;
                     }
@@ -821,7 +821,7 @@ default {
                 if (isHiddenItem(itemname) ||
                     isGroupItem(itemname) ||
                     isTransformingItem(itemname) ||
-                    (outfitRating(itemname) > rating2Integer(simRating)) ||
+                    (cdOutfitRating(itemname) > cdRating2Integer(simRating)) ||
                     itemname == newoutfitname) {
 
                     outfitsList = llDeleteSubList(outfitsList, n, n--);

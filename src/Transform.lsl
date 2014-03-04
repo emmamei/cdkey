@@ -337,8 +337,8 @@ default {
             if (choice == "Type...") {
                 list choices;
 
-                choices += getButton("Verify Type", id, mustAgreeToType, 0);
-                choices += getButton("Show Phrases", id, showPhrases, 0);
+                choices += cdGetButton("Verify Type", id, mustAgreeToType, 0);
+                choices += cdGetButton("Show Phrases", id, showPhrases, 0);
 
                 llDialog(dollID, "Options", dialogSort(choices + MAIN), dialogChannel);
             }

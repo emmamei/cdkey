@@ -225,7 +225,7 @@ doneConfiguration(integer read) {
 }
 
 initializationCompleted() {
-    if (newAttach && !quiet && isAttached)
+    if (newAttach && !quiet && cdAttached())
         llSay(0, llGetDisplayName(llGetOwner()) + " is now a dolly - anyone may play with their Key.");
 
     initTimer = llGetTime() * 1000;
@@ -241,7 +241,7 @@ initializationCompleted() {
         lmSendConfig("dollyName", (dollyName = "Dolly " + name));
     }
     //llOwnerSay("INIT1: dollyName = " + dollyName + " (setting)");
-    if (isAttached) llSetObjectName(dollyName + "'s Key");
+    if (cdAttached()) llSetObjectName(dollyName + "'s Key");
     string msg = "Initialization completed";
 #ifdef DEVELOPER_MODE
     msg += " in " + formatFloat(initTimer, 2) + "ms";
@@ -365,7 +365,7 @@ default {
                     lmSendConfig("dollyName", (dollyName = "Dolly " + name));
                 }
                 //llOwnerSay("INIT:300: dollyName = " + dollyName + " (setting)");
-                if (isAttached) llSetObjectName(dollyName + "'s Key");
+                if (cdAttached()) llSetObjectName(dollyName + "'s Key");
             }
         }
 
@@ -406,7 +406,7 @@ default {
                     if ((llGetListLength(MistressList) % 2) == 1) MistressList = llDeleteSubList(MistressList, 0, 0);
                     MistressList = llListSort(MistressList + [ uuid, name ], 2, 1);
                 }
-                else if ((cmd == "remMistress") && isBuiltinController) {
+                else if ((cmd == "remMistress") && cdIsBuiltinController(id)) {
                     lmSendToAgentPlusDoll("Removing " + name + " from controller list.", id);
                     if ((llGetListLength(MistressList) % 2) == 1) MistressList = llDeleteSubList(MistressList, 0, 0);
                     MistressList = llDeleteSubList(MistressList, index, ++index);
@@ -427,7 +427,7 @@ default {
             RLVok = llList2Integer(split, 1);
             rlvWait = 0;
 
-            if (!newAttach && isAttached) {
+            if (!newAttach && cdAttached()) {
                 string msg = dollName + " has logged in with";
                 if (!RLVok) msg += "out";
                 msg += " RLV at " + wwGetSLUrl();
@@ -442,7 +442,7 @@ default {
             string name = llList2String(split, 2);
 
             if (selection == "Reset Scripts") {
-                if (isController) llResetScript();
+                if (cdIsController(id)) llResetScript();
                 else if (id == dollID) {
                     if (RLVok == YES)
                         llOwnerSay("Unable to reset scripts while running with RLV enabled, please relog without RLV disabled or " +
@@ -472,7 +472,7 @@ default {
         else lastAttachAvatar = NULL_KEY;
 
         reset = 2;
-        if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
+        if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
         else do_Restart();
     }
 
@@ -480,7 +480,7 @@ default {
     // TOUCHED
     //----------------------------------------
     touch_start(integer num) {
-        if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
+        if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
         integer i;
 #ifdef SIM_FRIENDLY
         if (!llGetScriptState("MenuHandler")) wakeMenu();
@@ -491,7 +491,7 @@ default {
     on_rez(integer start) {
         dollID = llGetOwner();
         databaseOnline = 0;
-        if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
+        if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
         RLVok = UNSET;
         startup = 2;
 #ifdef SIM_FRIENDLY

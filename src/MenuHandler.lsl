@@ -17,10 +17,6 @@
 #define cdListenerDeactivate(a) llListenControl(a, 0)
 #define cdListenerActivate(a) llListenControl(a, 1)
 
-// Simpler and more useful List2ListStrided returns as follows.
-// Starting at list index start in src until end return a list of every every'th item
-#define cdList2ListStrided(src,start,end,every) llList2ListStrided(llList2List(src, start, end), 0, -1, every)
-
 // Current Controller - or Mistress
 //key MistressID = NULL_KEY;
 key poserID = NULL_KEY;
@@ -285,6 +281,13 @@ default
             }
             else if (cmd == "mainMenu") {
                 string msg; list menu; string manpage;
+                
+                // Cache access test results
+                integer hasCarrier      = cdCarried();
+                integer isCarrier       = cdIsCarrier(id);
+                integer isController    = cdIsController(id);
+                integer isDoll          = cdIsDoll(id);
+                integer numControllers  = cdControllerCount();
 
                 // Compute "time remaining" message for mainMenu/windMenu
                 string timeleft;
@@ -311,7 +314,7 @@ default
                 // When the doll is carried they have exclusive control
                 if (hasCarrier) {
                     // Doll being carried clicked on key
-                    if isDoll {
+                    if (isDoll) {
                         msg = "You are being carried by " + carrierName + ".";
                         menu = ["Help/Support"];
                     }
@@ -363,9 +366,9 @@ default
                             menu += "Options";
                             if (detachable) menu += "Detach";
     
-                            if (canAFK) menu += getButton("AFK", id, afk, 0);
+                            if (canAFK) menu += cdGetButton("AFK", id, afk, 0);
     
-                            menu += getButton("Visible", id, visible, 0);
+                            menu += cdGetButton("Visible", id, visible, 0);
                         }
                     }
                     else {
@@ -517,11 +520,17 @@ default
             lmSendToAgent("You are not permitted to access this key.", id);
             return;
         }
+        
+        // Cache access test results
+        integer hasCarrier      = cdCarried();
+        integer isCarrier       = cdIsCarrier(id);
+        integer isController    = cdIsController(id);
+        integer isDoll          = cdIsDoll(id);
+        integer numControllers  = cdControllerCount();
 
         list split = llParseStringKeepNulls(choice, [ " " ], []);
 
-        string displayName = llGetDisplayName(id);
-        if ((displayName != "") && (displayName != "???")) name = displayName;
+        name = llGetDisplayName(id);
 
         integer space = llSubStringIndex(choice, " ");
         // 04-03-2014 Dev-Note:
@@ -744,7 +753,7 @@ default
                     controlHandle = 0;
                 }
                 if (llListFindList(MistressList, [uuid,name]) == -1)    lmInternalCommand("addMistress", (string)uuid + "|" + name, id);
-                else if (isBuiltinController)                           lmInternalCommand("remMistress", (string)uuid + "|" + name, id);
+                else if (cdIsBuiltinController(id))                     lmInternalCommand("remMistress", (string)uuid + "|" + name, id);
             }
         }
 

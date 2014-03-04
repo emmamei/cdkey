@@ -172,7 +172,7 @@ float windKey() {
 }
 
 doWind(string name, key id) {
-    if (!canRepeat && (id == winderID) && !((id == NULL_KEY) || isDoll || isController)) {
+    if (!canRepeat && (id == winderID) && !((id == NULL_KEY) || cdIsDoll(id) || cdIsController(id))) {
         lmSendToAgent("Dolly needs to be wound by someone else before you can wind her again.", id);
         return;
     }
@@ -215,8 +215,8 @@ ifPermissions() {
     if (!((perm & PERMISSION_MASK) == PERMISSION_MASK))
         llRequestPermissions(dollID, PERMISSION_MASK);
 
-    if (perm & PERMISSION_ATTACH && !isAttached) llAttachToAvatar(ATTACH_BACK);
-    else if (!isAttached && llGetTime() > 120.0) {
+    if (perm & PERMISSION_ATTACH && !cdAttached()) llAttachToAvatar(ATTACH_BACK);
+    else if (!cdAttached() && llGetTime() > 120.0) {
         llOwnerSay("@acceptpermission=add");
         llRequestPermissions(dollID, PERMISSION_ATTACH);
     }
@@ -263,7 +263,7 @@ default {
             string msg = "Entered " + llGetRegionName() + " rating is " + llToLower(simRating);
 #ifdef ADULT_MODE
             if (pleasureDoll || (dollType == "Slut")) {
-                if (rating2Integer(simRating) < 2) msg += " stripping disabled.";
+                if (cdRating2Integer(simRating) < 2) msg += " stripping disabled.";
                 else msg += " stripping enabled.";
             }
 #endif
@@ -296,7 +296,7 @@ default {
         //    5. How far away is carrier? ("follow")
         displayWindRate = setWindRate();
         float timerInterval;
-        if (isAttached) timerInterval = llGetAndResetTime();
+        if (cdAttached()) timerInterval = llGetAndResetTime();
 
         // Increment a counter
         ticks++;
@@ -420,7 +420,7 @@ default {
             if (lowScriptMode) llSetTimerEvent(LOW_RATE);
             timerStarted = 1;
 
-            if (!isAttached) llSetTimerEvent(60.0);
+            if (!cdAttached()) llSetTimerEvent(60.0);
         }
 
         else if (code == 104) {
@@ -442,7 +442,7 @@ default {
             if (lowScriptMode) llSetTimerEvent(LOW_RATE);
             timerStarted = 1;
 
-            if (!isAttached) llSetTimerEvent(60.0);
+            if (!cdAttached()) llSetTimerEvent(60.0);
         }
 
         else if (code == 135) {
@@ -761,7 +761,7 @@ default {
 
             if (llGetInventoryType(choice) == 20 || llGetSubString(choice, 0, 0) == "." | llGetSubString(choice, 0, 0) == "!") {
                 if (llGetInventoryType(choice) != 20) choice = llGetSubString(choice, 1, -1);
-                if (keyAnimation == "" || (keyAnimation != ANIMATION_COLLAPSED && poserID == dollID)) {
+                if (cdNoAnim() || (!cdCollapsedAnim() && cdSelfPosed())) {
                     lmInternalCommand("setPose", choice, dollID);
                 }
                 else llOwnerSay("You try to regain control over your body in an effort to set your own pose but even that is beyond doll's control.");
@@ -902,7 +902,7 @@ default {
                         llOwnerSay("Controller: none");
                     }*/
 
-                    if (keyAnimation != ANIMATION_COLLAPSED && keyAnimation != "") {
+                    if (!cdCollapsedAnim() && !cdNoAnim()) {
                     //    llOwnerSay(dollID, "Current pose: " + currentAnimation);
                     //    llOwnerSay(dollID, "Pose time remaining: " + (string)(poseTime / SEC_TO_MIN) + " minutes.");
                         llOwnerSay("Doll is posed.");
@@ -940,9 +940,6 @@ default {
                     lmInternalCommand("getBlacklistKey", cannoizeName(param), NULL_KEY);
                 }
 #ifdef DEVELOPER_MODE
-                else if (choice == "timereporting") {
-                    lmSendConfig("timeReporting", (string)(timeReporting = (integer)param));
-                }
                 else if (choice == "debug") {
                     lmSendConfig("debugLevel", (string)(debugLevel = (integer)param));
                     llOwnerSay("DEBUG_LEVEL = " + (string)debugLevel);
@@ -954,12 +951,15 @@ default {
                                "Key: " + (string)llList2Key(params, 2));
                     llMessageLinked(LINK_THIS, llList2Integer(params, 0), SCRIPT_NAME + "|" + llList2String(params, 1), llList2Key(params, 2));
                 }
+                else if (choice == "timereporting") {
+                    lmSendConfig("timeReporting", (string)(timeReporting = (integer)param));
+                }
 #else
 #ifdef TESTER_MODE
-                        else if (choice == "debug") {
-                            lmSendConfig("debugLevel", (string)(debugLevel = (integer)param));
-                            llOwnerSay("DEBUG_LEVEL = " + (string)debugLevel);
-                        }
+                else if (choice == "debug") {
+                    lmSendConfig("debugLevel", (string)(debugLevel = (integer)param));
+                    llOwnerSay("DEBUG_LEVEL = " + (string)debugLevel);
+                }
 #endif
 #endif
                 else llOwnerSay("Unrecognised command '" + choice + "' recieved on channel " + (string)chatChannel);

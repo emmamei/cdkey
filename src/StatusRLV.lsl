@@ -97,7 +97,7 @@ default {
 
             if (script == "") script = realScript;
 
-            if (isAttached && RLVok) {
+            if (cdAttached() && RLVok) {
                 llSetMemoryLimit(65536);
                 integer commandLoop; string sendCommands = "";
 #ifdef LINK_320

@@ -14,13 +14,12 @@ float setWindRate() {
     float newWindRate;
     vector agentPos = llList2Vector(llGetObjectDetails(dollID, [ OBJECT_POS ]), 0);
     integer agentInfo = llGetAgentInfo(dollID);
-    integer windDown = isAttached && !collapsed && dollType != "Builder" && dollType != "Key";
     
     newWindRate = baseWindRate;
     if (afk) newWindRate *= 0.5;
     
-    if (windRate != newWindRate * windDown) {
-        windRate = newWindRate * windDown;
+    if (windRate != newWindRate * cdWindDown()) {
+        windRate = newWindRate * cdWindDown();
         
         lmSendConfig("baseWindRate", (string)baseWindRate);
 	lmSendConfig("displayWindRate", (string)newWindRate);
@@ -40,20 +39,20 @@ float setWindRate() {
 #define CHECK "✔"
 #define CROSS "✘"
 
-list getButton(string text, key id, integer enabled, integer oneWay) {
+list cdGetButton(string text, key id, integer enabled, integer oneWay) {
    if (enabled) return [CHECK + " " + text];
-   else if (!oneWay || getControllerStatus(id)) return [CROSS + " " + text];
+   else if (!oneWay || cdIsController(id)) return [CROSS + " " + text];
    return [];
 }
 
-integer rating2Integer(string simRating) {
+integer cdRating2Integer(string simRating) {
          if (simRating == "ADULT")      return 3;
     else if (simRating == "MATURE")     return 2;
     else if (simRating == "GENERAL")    return 1;
     else                                return 0;
 }
 
-integer outfitRating(string outfit) {
+integer cdOutfitRating(string outfit) {
     string rating = llGetSubString(outfit, 0, 2);
          if (rating == "{A}")     return 3;
     else if (rating == "{M}")     return 2;

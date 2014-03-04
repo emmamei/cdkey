@@ -60,7 +60,6 @@ integer textboxChannel;
 integer textboxHandle;
 integer textboxType;
 list MistressList;
-list BuiltinControllers = BUILTIN_CONTROLLERS;
 list glowSettings;
 string memData;
 
@@ -70,7 +69,7 @@ sendMsg(key id, string msg) {
             msg = findString(msg);
         }
 
-        if          isDoll                  llOwnerSay(msg);
+        if          cdIsDoll(id)                  llOwnerSay(msg);
         else if     (llGetAgentSize(id))    llRegionSayTo(id, 0, msg);
         else                                llInstantMessage(id, msg);
     }
@@ -136,12 +135,12 @@ default {
             string msg = llList2String(split, 1);
             debugSay(7, "DEBUG", "Send message to: " + (string)id + "\n" + msg);
             sendMsg(id, msg);
-            if (!isDoll && (code == 12)) sendMsg(id, msg);
+            if (!cdIsDoll(id) && (code == 12)) sendMsg(id, msg);
         }
         else if (code == 15) {
             string msg = llList2String(split, 1);
             integer i;
-            for (i = 0; i < llGetListLength(llList2ListStrided(MistressList, 0, -1, 2)); i++) {
+            for (i = 0; i < llGetListLength(cdList2ListStrided(MistressList, 0, -1, 2)); i++) {
                 string targetName = llList2String(MistressList, i * 2 + 1);
                 key targetKey = llList2Key(MistressList, i * 2);
                 debugSay(7, "DEBUG", "MistressMsg To: " + targetName + " (" + (string)targetKey + ")\n" + msg);
@@ -358,8 +357,8 @@ default {
                             "key and to connect with the community.";
                 list pluslist = [ "Join Group", "Visit Dollhouse" ];
                 if (llGetInventoryType(NOTECARD_HELP) == INVENTORY_NOTECARD) pluslist += [ "Help Notecard" ];
-                if (isController || isDoll) pluslist += "Reset Scripts";
-                if (isDoll) pluslist += ["Check Update", "Factory Reset"];
+                if (cdIsController(id) || cdIsDoll(id)) pluslist += "Reset Scripts";
+                if (cdIsDoll(id)) pluslist += ["Check Update", "Factory Reset"];
 
                 llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
             }
@@ -367,11 +366,11 @@ default {
                 llGiveInventory(id,NOTECARD_HELP);
             }
             else if (choice == "Visit Dollhouse") {
-                if (isDoll) llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|TP|" + LANDMARK_CDROOM, id);
+                if (cdIsDoll(id)) llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|TP|" + LANDMARK_CDROOM, id);
                 else llGiveInventory(id, LANDMARK_CDROOM);
             }
             else if (choice == "Dress") {
-                if (!isDoll) llOwnerSay("secondlife:///app/agent/" + (string)id + "/about is looking at your dress menu");
+                if (!cdIsDoll(id)) llOwnerSay("secondlife:///app/agent/" + (string)id + "/about is looking at your dress menu");
             }
             else if (choice == "Join Group") {
                 llOwnerSay("Here is your link to the community dolls group profile secondlife:///app/group/0f0c0dd5-a611-2529-d5c7-1284fb719003/about");
@@ -385,7 +384,7 @@ default {
                              "Blacklist - Fully block this avatar from using any key option even winding\n" +
                              "Controller - Take care choosing your controllers, they have great control over their doll can only be removed by their choice";
                 list pluslist;
-                if (llListFindList(BuiltinControllers, [ (string)id ]) != -1) pluslist +=  "⊖ Controller";
+                if cdIsBuiltinController(id) pluslist +=  "⊖ Controller";
 
                 pluslist += [ "⊕ Blacklist", "List Blacklist", "⊖ Blacklist", "⊕ Controller", "List Controller" ];
 
@@ -394,7 +393,7 @@ default {
             else if (choice == "Visit Dollhouse") {
                 visitDollhouse += 1;
             }
-            else if (llGetSubString(choice, 0, 4) == "Pose" && (keyAnimation == ""  || (!isDoll || poserID == dollID))) {
+            else if (llGetSubString(choice, 0, 4) == "Pose" && (keyAnimation == ""  || (!cdIsDoll(id) || poserID == dollID))) {
                 poserID = id;
                 integer page = 1; integer len = llStringLength(choice);
                 if (len > 5) {
@@ -409,8 +408,8 @@ default {
                 for (i = 0; i < poseCount; i++) {
                     string poseName = llGetInventoryName(20, i);
                     if (poseName != ANIMATION_COLLAPSED &&
-                        ((isDoll || isController) || llGetSubString(poseName, 0, 0) != "!") &&
-                        (isDoll || llGetSubString(poseName, 0, 0) != ".")) {
+                        ((cdIsDoll(id) || cdIsController(id)) || llGetSubString(poseName, 0, 0) != "!") &&
+                        (cdIsDoll(id) || llGetSubString(poseName, 0, 0) != ".")) {
                         if (poseName != keyAnimation) poseList += poseName;
                         else poseList += [ "* " + poseName ];
                     }
@@ -439,15 +438,15 @@ default {
 
                 if (RLVok) {
                     // One-way options
-                    pluslist += getButton("Detachable", id, detachable, 1);
-                    pluslist += getButton("Flying", id, canFly, 1);
-                    pluslist += getButton("Sitting", id, canSit, 1);
-                    pluslist += getButton("Standing", id, canStand, 1);
-                    pluslist += getButton("Self Dress", id, canWear, 1);
-                    pluslist += getButton("Self TP", id, !helpless, 1);
-                    pluslist += getButton("Force TP", id, autoTP, 1);
+                    pluslist += cdGetButton("Detachable", id, detachable, 1);
+                    pluslist += cdGetButton("Flying", id, canFly, 1);
+                    pluslist += cdGetButton("Sitting", id, canSit, 1);
+                    pluslist += cdGetButton("Standing", id, canStand, 1);
+                    pluslist += cdGetButton("Self Dress", id, canWear, 1);
+                    pluslist += cdGetButton("Self TP", id, !helpless, 1);
+                    pluslist += cdGetButton("Force TP", id, autoTP, 1);
                     if (canPose) { // Option to silence the doll while posed this this option is a no-op when canPose == 0
-                        pluslist += getButton("Pose Silence", id, poseSilence, 1);
+                        pluslist += cdGetButton("Pose Silence", id, poseSilence, 1);
                     }
                 }
                 else {
@@ -461,30 +460,30 @@ default {
                 string msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
                 list pluslist;
 
-                if (isTransformingKey) pluslist += getButton("Type Text", id, signOn, 0);
-                pluslist += getButton("Quiet Key", id, quiet, 0);
+                if (isTransformingKey) pluslist += cdGetButton("Type Text", id, signOn, 0);
+                pluslist += cdGetButton("Quiet Key", id, quiet, 0);
 #ifdef ADULT_MODE
-                pluslist += getButton("Pleasure Doll", id, pleasureDoll, 0);
+                pluslist += cdGetButton("Pleasure Doll", id, pleasureDoll, 0);
 #endif
-                pluslist += getButton("Warnings", id, doWarnings, 0);
-                if (dollType != "Display") pluslist += getButton("Poseable", id, canPose, 0);
-                pluslist += getButton("Outfitable", id, canDress, 0);
-                pluslist += getButton("Carryable", id, canCarry, 0);
-                pluslist += getButton("Offline", id, offlineMode, 0);
+                pluslist += cdGetButton("Warnings", id, doWarnings, 0);
+                if (dollType != "Display") pluslist += cdGetButton("Poseable", id, canPose, 0);
+                pluslist += cdGetButton("Outfitable", id, canDress, 0);
+                pluslist += cdGetButton("Carryable", id, canCarry, 0);
+                pluslist += cdGetButton("Offline", id, offlineMode, 0);
                 // One-way options
-                pluslist += getButton("Allow AFK", id, canAFK, 1);
-                pluslist += getButton("Rpt Wind", id, canRepeat, 1);
+                pluslist += cdGetButton("Allow AFK", id, canAFK, 1);
+                pluslist += cdGetButton("Rpt Wind", id, canRepeat, 1);
 
                 llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
             }
             // Key menu is only shown for Controllers and for the Doll themselves
-            else if (choice == "Key..." && (isController || isDoll)) {
+            else if (choice == "Key..." && (cdIsController(id) || cdIsDoll(id))) {
 
                 list pluslist = [ "Dolly Name", "Gem Colour" ];
-                pluslist += getButton("Gem Light", id, primLight, 0);
-                pluslist += getButton("Key Glow", id, primGlow, 0);
+                pluslist += cdGetButton("Gem Light", id, primLight, 0);
+                pluslist += cdGetButton("Key Glow", id, primGlow, 0);
                 
-                if (isController) pluslist += [ "Max Time", "Wind Times" ];
+                if (cdIsController(id)) pluslist += [ "Max Time", "Wind Times" ];
                 llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(pluslist + MAIN, 1, 1)), dialogChannel);
             }
             // Max Winding Keys
@@ -559,21 +558,20 @@ default {
 
             // Exempt builtin or user specified controllers from TP restictions
 
-            list allow = BuiltinControllers + llList2ListStrided(MistressList, 0, -1, 2);
-            integer builtin = llGetListLength(BuiltinControllers);
+            list allow = BUILTIN_CONTROLLERS + cdList2ListStrided(MistressList, 0, -1, 2);
 
-            // Also exempt the carrier if any provided they are not already exempted as a controller
+            // Also exempt the carrier StatusRLV will ignore the duplicate if carrier is a controller so save work
 
-            if ((carrierID != NULL_KEY) && (llListFindList(allow, [ (string)carrierID ]) == -1)) allow += carrierID;
+            if cdCarried() allow += carrierID;
 
             // Directly dump the list using the static parts of the RLV command as a seperator no looping
 
-            lmRunRLVas("Base", "tplure:"    + llDumpList2String(allow, "=add,tplure:")    + "=add");
-            lmRunRLVas("Base", "accepttp:"  + llDumpList2String(allow, "=add,accepttp:")  + "=add");
-            lmRunRLVas("Base", "sendim:"    + llDumpList2String(allow, "=add,sendim:")    + "=add");
-            lmRunRLVas("Base", "recvim:"    + llDumpList2String(allow, "=add,recvim:")    + "=add");
-            lmRunRLVas("Base", "recvchat:"  + llDumpList2String(allow, "=add,recvchat:")  + "=add");
-            lmRunRLVas("Base", "recvemote:" + llDumpList2String(allow, "=add,recvemote:") + "=add");
+            lmRunRLVas("Base", "clear=tplure:,tplure:"          + llDumpList2String(allow, "=add,tplure:")    + "=add");
+            lmRunRLVas("Base", "clear=accepttp:,accepttp:"      + llDumpList2String(allow, "=add,accepttp:")  + "=add");
+            lmRunRLVas("Base", "clear=sendim:,sendim:"          + llDumpList2String(allow, "=add,sendim:")    + "=add");
+            lmRunRLVas("Base", "clear=recvim:,recvim:"          + llDumpList2String(allow, "=add,recvim:")    + "=add");
+            lmRunRLVas("Base", "clear=recvchat:,recvchat:"      + llDumpList2String(allow, "=add,recvchat:")  + "=add");
+            lmRunRLVas("Base", "clear=recvemote:,recvemote:"    + llDumpList2String(allow, "=add,recvemote:") + "=add");
 
             // Apply exemptions to base RLV
         }

@@ -7,6 +7,29 @@
 
 #include "config.h"
 
+// Keys of important people in life of the Key:
+#define AGENT_CHRISTINA_HALPIN        "42c7aaec-38bc-4b0c-94dd-ae562eb67e6d"
+#define AGENT_ANDROMEDA_LAMPLIGHT     "636bf2bd-45f5-46e0-ad9a-b00f54224e01"
+#define AGENT_MAYSTONE_RESIDENT       "c5e11d0a-694f-46cc-864b-e42340890934"
+#define AGENT_SILKY_MESMERISER        "2fff40f0-ea4a-4b52-abb8-d4bf6b1c98c9"
+
+#define BUILTIN_CONTROLLERS [ AGENT_SILKY_MESMERISER, AGENT_MAYSTONE_RESIDENT, AGENT_CHRISTINA_HALPIN, AGENT_ANDROMEDA_LAMPLIGHT ]
+#define USER_CONTROLLERS MistressList
+#include "CommonGlobals.lsl"
+
+// Once CommonGlobals is included redefine BUILTIN_CONTROLLERS to use the BuiltinControllers variable
+// otherwise we end up with many copies of the actual list data itself using more memory.
+#undef BUILTIN_CONTROLLERS
+#define BUILTIN_CONTROLLERS BuiltinControllers
+#define ALL_CONTROLLERS USER_CONTROLLERS + BUILTIN_CONTROLLERS
+
+// Tests of id
+#define cdIsDoll(id)			(id == dollID)
+#define cdIsCarrier(id)			(id == carrierID)
+#define cdIsBuiltinController(id)	(llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1)
+#define cdIsUserController(id)		(llListFindList(USER_CONTROLLERS, [ (string)id ]) != -1)
+#define cdIsController(id)		cdGetControllerStatus(id)
+
 // Used by this file below for OPTION_DATE
 //#define PACKAGE_VERSION "26 February 2014"
 
@@ -20,6 +43,7 @@
 #define OPTION_DATE PACKAGE_VERSION
 
 // List definitions: makes things easier to comprehend
+
 // Note: ....P in names is a LISP convention: acts like a question mark
 #define cdListElement(a,b) llList2String(a, b)
 #define cdListFloatElement(a,b) llList2Float(a, b)
@@ -27,21 +51,7 @@
 #define cdListElementP(a,b) llListFindList(a, [ b ])
 #define cdSplitArgs(a) llParseStringKeepNulls((a), [ "|" ], [])
 #define cdSplitString(a) llParseString2List(a, [ "," ], [])
-
-#define hasCarrier (carrierID != NULL_KEY)
-#define numControllers llFloor(llGetListLength(USER_CONTROLLERS) / 2)
-#define isAttached llGetAttached()
-#define isDollAway ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0)
-#define isWindingDown (!collapsed && isAttached && dollType != "Builder" && dollType != "Key")
-#define mainTimerEnable (configured && isAttached && RLVchecked)
-
-// Tests of id
-#define isDoll (id == dollID)
-#define isSelf (id == dollID)
-#define isCarrier (id == carrierID)
-#define isBuiltinController (llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1)
-#define isUserController (llListFindList(USER_CONTROLLERS, [ (string)id ]) != -1)
-#define isController getControllerStatus(id)
+#define cdList2ListStrided(src,start,end,every) llList2ListStrided(llList2List(src, start, end), 0, -1, every)
 
 #define CHECK "✔"
 #define CROSS "✘"
@@ -109,7 +119,18 @@
 
 // Max Controllers - Set a limit on the number of user defined controllers so the list
 // cannot grow to arbitrary lengths and consume all memory.
-#define MAX_USER_CONTROLLERS 12
+#define MAX_ACCESS_ITEMS 11
+
+#define cdControllerCount()             llFloor(llGetListLength(USER_CONTROLLERS) / 2)
+#define cdAttached()                    llGetAttached()
+#define cdDollAway()                    ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0)
+#define cdCarried()                     (carrierID != NULL_KEY)
+#define cdCollapsedAnim()               (keyAnimation == ANIMATION_COLLAPSED)
+#define cdNoAnim()                      (keyAnimation == "")
+#define cdPosed()                       (!collapsed && !cdNoAnim())
+#define cdSelfPosed()			(poserID == dollID)
+#define cdWindDown()                    (!collapsed && cdAttached() && (dollType != "Builder") && (dollType != "Key"))
+#define cdRunTimer()                    (configured && cdAttached() && RLVchecked)
 
 #define SCRIPT_NAME llGetScriptName()
 
@@ -160,31 +181,18 @@
 #define uncarry() lmInternalCommand("uncarry", "", NULL_KEY)
 #define uncollapse(timeSent) lmInternalCommand("uncollapse", (string)timeSent, NULL_KEY)
 
-// Keys of important people in life of the Key:
-#define AGENT_CHRISTINA_HALPIN        "42c7aaec-38bc-4b0c-94dd-ae562eb67e6d"
-#define AGENT_GREIGHIGHLAND_RESIDENT  "64d26535-f390-4dc4-a371-a712b946daf8"
-#define AGENT_ANDROMEDA_LAMPLIGHT     "636bf2bd-45f5-46e0-ad9a-b00f54224e01"
-#define AGENT_MAYSTONE_RESIDENT       "c5e11d0a-694f-46cc-864b-e42340890934"
-#define AGENT_SILKY_MESMERISER        "2fff40f0-ea4a-4b52-abb8-d4bf6b1c98c9"
-
-#define BUILTIN_CONTROLLERS [ AGENT_SILKY_MESMERISER, AGENT_MAYSTONE_RESIDENT, AGENT_CHRISTINA_HALPIN, AGENT_ANDROMEDA_LAMPLIGHT ]
-#define USER_CONTROLLERS MistressList
-#define ALL_CONTROLLERS USER_CONTROLLERS + BUILTIN_CONTROLLERS
-
-list BuiltinControllers = BUILTIN_CONTROLLERS;
-integer getControllerStatus(key id) {
-    return isBuiltinController || (isUserController && !isDoll) || ((numControllers == 0) && isDoll);
-}
-
 #define NORMAL_TIMER_RATE 0.5 * mainTimerEnable
 #ifdef LOW_SCRIPT_MODE
 #define REDUCED_TIMER_RATE 5.0 * mainTimerEnable
 #endif
 
-#include "CommonGlobals.lsl"
 #include "KeySharedFuncs.lsl"
 #include "RestrainedLoveAPI.lsl"
 #include "Utility.lsl"
+
+integer cdGetControllerStatus(key id) {
+    return (cdIsBuiltinController(id) || (cdIsDoll(id) && !cdControllerCount()) || (!cdIsDoll(id) && cdIsUserController(id)));
+}
 
 #endif // GLOBAL_DEFINES
 
