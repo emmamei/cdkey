@@ -47,6 +47,7 @@ integer canRepeat = 1;
 //integer canWear;
 //integer canUnwear;
 integer carryMoved;
+integer primLight = 1;
 integer clearAnim;
 integer collapsed;
 integer configured;
@@ -187,6 +188,10 @@ default
             else if (name == "poserID")                       poserID = (key)value;
             else if (name == "collapseTime")             collapseTime = (llGetTime() - (float)value);
             else if (name == "winderRechargeTime") winderRechargeTime = (float)value;
+            else if (name == "primLight") {
+                primLight = (integer)value;
+                lmInternalCommand("setGemColour", llList2String(llGetLinkPrimitiveParams(4, [PRIM_DESC]), 0), NULL_KEY);
+            }
             else if (name == "gemColour") {
                 if (gemColour != (vector)value) lmInternalCommand("setGemColour", value, NULL_KEY);
             }
@@ -255,21 +260,23 @@ default
                 string value = llList2String(split, 0);
                 integer i; list params;
 
-                if (gemColour != (vector)value) lmSendConfig("gemColour", (string)(gemColour = (vector)value));
+                if (gemColour != (vector)value) {
+                    lmSendConfig("gemColour", (string)(gemColour = (vector)value));
 
-                for (i = 0; i < llGetLinkNumberOfSides(4); i++) {
-                    vector shade = <llFabs((llFrand(0.2) - 0.1) + gemColour.x), llFabs((llFrand(0.2) - 0.1) + gemColour.y), llFabs((llFrand(0.2) - 0.1) + gemColour.z)>;
-                    float mag = llVecMag(shade);
-
-                    if (llVecMag(shade) > 1.0) {
-                        if (llVecMag(shade) < 1.2) shade = llVecNorm(shade);
-                        else shade /= 256.0;
+                    for (i = 0; i < llGetLinkNumberOfSides(4); i++) {
+                        vector shade = <llFabs((llFrand(0.2) - 0.1) + gemColour.x), llFabs((llFrand(0.2) - 0.1) + gemColour.y), llFabs((llFrand(0.2) - 0.1) + gemColour.z)>;
+                        float mag = llVecMag(shade);
+    
+                        if (llVecMag(shade) > 1.0) {
+                            if (llVecMag(shade) < 1.2) shade = llVecNorm(shade);
+                            else shade /= 256.0;
+                        }
+    
+                        params += [ PRIM_COLOR, i, shade, 1.0 ];
                     }
-
-                    params += [ PRIM_COLOR, i, shade, 1.0 ];
                 }
 
-                params = [ PRIM_POINT_LIGHT, TRUE, gemColour, 0.350, 3.50, 2.00 ] + params;
+                params = [ PRIM_POINT_LIGHT, primLight, gemColour, 0.3, 3.0, 2.0 ] + params;
                 llSetLinkPrimitiveParamsFast(4, params + [ PRIM_LINK_TARGET, 5 ] + params);
             }
             else if (cmd == "mainMenu") {
@@ -656,6 +663,10 @@ default
             }
 
             // Entering options menu section
+            
+            // Entering key menu section
+                 if (optName == "Gem Light") lmSendConfig("primLight", (string)(curState == CROSS));
+            else if (optName == "Key Glow") lmSendConfig("primGlow", (string)(curState == CROSS));
 
             // Entering abilities menu section
             isAbility = 1;

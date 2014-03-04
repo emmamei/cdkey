@@ -37,9 +37,13 @@ float timerEvent;
 float listenTime;
 string minsLeft;
 string windRate;
+string dollyName;
 string carrierName;
 string pronounHerDoll = "Her";
 string pronounSheDoll = "She";
+string curWindTimes;
+string curGemColour;
+integer maxMins;
 integer configured;
 integer ncLine;
 integer visible;
@@ -47,6 +51,8 @@ integer memCollecting;
 integer quiet;
 integer wearLock;
 integer rezzed;
+integer primGlow = 1;
+integer primLight = 1;
 integer visitDollhouse;
 integer targetHandle;
 integer factoryReset;
@@ -88,7 +94,7 @@ doVisibility(integer setVisible) {
     if (llGetInventoryType(APPEARANCE_NC) == INVENTORY_NOTECARD) {
         if (setVisible != -1) visible = setVisible;
 
-        if (visible == 0) {
+        if (!visible || !primGlow) {
             llSetLinkPrimitiveParamsFast(LINK_SET, [ PRIM_GLOW, 0, 0.0, PRIM_GLOW, 1, 0.0, PRIM_GLOW, 2, 0.0, PRIM_GLOW, 3, 0.0, PRIM_GLOW, 4, 0.0, PRIM_GLOW, 5, 0.0, PRIM_GLOW, 6, 0.0, PRIM_GLOW, 7, 0.0 ]);
         }
         else {
@@ -219,6 +225,8 @@ default {
 #endif
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "poserID")                       poserID = (key)value;
+            else if (name == "keyLimit")                      maxMins = llRound((float)value / 60.0);
+            else if (name == "timeLeftOnKey")                minsLeft = (string)llRound((float)value / 60.0);
             else if (name == "quiet")                           quiet = (integer)value;
             else if (name == "autoTP")                         autoTP = (integer)value;
             else if (name == "canAFK")                         canAFK = (integer)value;
@@ -230,6 +238,7 @@ default {
             else if (name == "canSit")                         canSit = (integer)value;
             else if (name == "canStand")                     canStand = (integer)value;
             else if (name == "canRepeat")                   canRepeat = (integer)value;
+            else if (name == "dollyName")                   dollyName = value;
             else if (name == "doWarnings")                 doWarnings = (integer)value;
             else if (name == "poseSilence")               poseSilence = (integer)value;
             else if (name == "detachable")                 detachable = (integer)value;
@@ -238,6 +247,15 @@ default {
             else if (name == "signOn")                         signOn = (integer)value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
+            else if (name == "primLight")                   primLight = (integer)value;
+            else if (name == "primGlow") {
+                primGlow = (integer)value;
+                doVisibility(-1);
+            }
+            else if (name == "gemColour") {
+                curGemColour = value;
+                llSetLinkPrimitiveParamsFast(4, [ PRIM_DESC, curGemColour, PRIM_LINK_TARGET, 5, PRIM_DESC, curGemColour ]);
+            }
             else if (name == "dollType") {
                 if (configured && (keyAnimation != "") && (keyAnimation != ANIMATION_COLLAPSED) && (poserID != dollID)) {
                     if (value == "Display")
@@ -252,6 +270,8 @@ default {
                 dialogChannel = (integer)value;
                 textboxChannel = dialogChannel - 1111;
             }
+            
+           if ((script == "Main") && (name == "windTimes")) curWindTimes = llDumpList2String(split,"|");
 
             // Only MenuHandler script can activate these selections...
             if (script != "MenuHandler") return;
@@ -281,7 +301,7 @@ default {
         else if (code == 305) {
             string script = llList2String(split, 0);
             string cmd = llList2String(split, 1);
-            split = llList2List(split, 2, -1);
+            split = llDeleteSubList(split, 0, 1);
 
             if (cmd == "setAFK") {
                 afk = llList2Integer(split, 0);
@@ -307,6 +327,7 @@ default {
                     llRegionSayTo(carrierID, 0, "You have picked up the doll " + dollName);
                 }
             }
+            else if (((script == "Main") || (script == "ServiceReceiver")) && (cmd == "setWindTimes")) curWindTimes = llDumpList2String(split,"|");
             else if (cmd == "strip") {
                 string part = llList2String(split, 0);
                 if (id != dollID) {
@@ -459,12 +480,15 @@ default {
             else if (choice == "Key..." && (isController || isDoll)) {
 
                 list pluslist = [ "Dolly Name", "Gem Colour" ];
+                pluslist += getButton("Gem Light", id, primLight, 0);
+                pluslist += getButton("Key Glow", id, primGlow, 0);
+                
                 if (isController) pluslist += [ "Max Time", "Wind Times" ];
                 llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(pluslist + MAIN, 1, 1)), dialogChannel);
             }
             // Max Winding Keys
             else if (choice == "Max Time") {
-                llDialog(id, "You can set the maximum wind time here.  Dolly cannot be wound beyond this amount of time.\nDolly currently has " + (string)llRound(timeLeftOnKey / SEC_TO_MIN) + " left, if you choose a lower time than this they will lose time immidiately.", dialogSort(["45m", "60m", "75m", "90m", "120m", "150m", "180m", "240m", "300m", "360m", "480m", MAIN]), dialogChannel);
+                llDialog(id, "You can set the maximum wind time here.  Dolly cannot be wound beyond this amount of time.\nDolly currently has " + (string)llRound(timeLeftOnKey / SEC_TO_MIN) + " mins left of " + (string)maxMins + ", if you choose a lower time than this they will lose time immidiately.", dialogSort(["45m", "60m", "75m", "90m", "120m", "150m", "180m", "240m", "300m", "360m", "480m", MAIN]), dialogChannel);
             }
             else if (llGetSubString(choice, -1, -1) == "m") {
                 lmSendConfig("keyLimit", (string)((float)choice * SEC_TO_MIN));
@@ -477,7 +501,7 @@ default {
                     lmInternalCommand("setGemColour", choice, id);
                 }
 
-                string msg = "Here you can set various key settingd. (" + OPTION_DATE + " version)";
+                string msg = "Here you can choose your own gem colour.";
                 list pluslist;
 
                 pluslist = COLOR_NAMES;
@@ -489,17 +513,16 @@ default {
             if (choice == "CUSTOM" || choice == "Dolly Name" || choice == "Wind Times" || choice == "Factory Reset") {
                 if (choice == "CUSTOM") {
                     textboxType = 1;
-                    llTextBox(id, "Here you can input a custom colour value\n\nSupported Formats:\nLSL Vector <0.900, 0.500, 0.000>\n" +
-                                  "Web Format Hex #A4B355\nRGB Value 240, 120, 10", textboxChannel);
+                    llTextBox(id, "Here you can input a custom colour value\nCurrent colour: " + curGemColour + "\nEnter vector eg <0.900, 0.500, 0.000>\nOr Hex eg #A4B355\nOr RGB eg 240, 120, 10", textboxChannel);
                     return;
                 }
                 else if (choice == "Dolly Name") {
                     textboxType = 2;
-                    llTextBox(id, "You choose your own name to be used with the key here.", textboxChannel);
+                    llTextBox(id, "Here you can change your dolly name from " + dollyName + " to a name of your choice.", textboxChannel);
                 }
                 else if (choice == "Wind Times") {
                     textboxType = 3;
-                    llTextBox(id, "Enter 1 to 11 valid wind times (in minutes), separated by space, comma, or vertical bar (\"|\").", textboxChannel);
+                    llTextBox(id, "Enter 1 to 11 valid wind times between 1 and " + (string)(maxMins/2) + " (in minutes), separated by space, comma, or vertical bar (\"|\").\nCurrent: " + curWindTimes, textboxChannel);
                 }
                 else if (llGetSubString(choice,0,12) == "Factory Reset") {
                     textboxType = 4;
@@ -562,8 +585,6 @@ default {
     }
     
     listen(integer channel, string name, key id, string choice) {
-        // If the current channel is from a text input box, send the data using LinkMessage 501.
-        
         name = llGetDisplayName(id);
         
         if (channel == textboxChannel) {
@@ -592,7 +613,10 @@ default {
             }
 
             // Type 3 = Wind Times
-            // -- now located in Main.lsl (which handles setting those up anyway)
+            // -- send the raw list Main.lsl processes (which handles setting those up anyway)
+            else if (textboxType == 3) {
+                lmInternalCommand("setWindTimes", llDumpList2String(llParseString2List(choice, [" ",",","|"], []),"|"), NULL_KEY);
+            }
             
             // Type 4 = Safeword Confirm
             else if (textboxType == 4) {
@@ -606,8 +630,10 @@ default {
                 else {
                     lmMenuReply("Factory Reset", name, id);
                 }
+                return;
             }
-            else if (textboxType == 1) lmMenuReply("Gem Colour", name, id); 
+            
+            if (textboxType == 1) lmMenuReply("Gem Colour", name, id); 
             else lmMenuReply("Key...", name, id);
         }
     }
