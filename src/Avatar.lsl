@@ -411,7 +411,7 @@ default {
         else if (code == 300) { // RLV Config
             string script = llList2String(split, 0);
             string name = llList2String(split, 1);
-            split = llList2List(split, 2, -1);
+            split = llDeleteSubList(split, 0, 1);
             string value = llList2String(split, 0);
 
                  if (name == "autoTP")                       autoTP = (integer)value;
@@ -480,7 +480,7 @@ default {
         else if (code == 305) {
             string script = llList2String(split, 0);
             string cmd = llList2String(split, 1);
-            split = llList2List(split, 2, -1);
+            split = llDeleteSubList(split, 0, 1);
 
             if (cmd == "carry") {
                 string name = llList2String(split, 0);

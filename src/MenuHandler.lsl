@@ -225,7 +225,7 @@ default
         else if (code == 305) {
             string script = llList2String(split, 0);
             string cmd = llList2String(split, 1);
-            split = llList2List(split, 2, -1);
+            split = llDeleteSubList(split, 0, 1);
 
             if (cmd == "carry") {
                 // Doll has been picked up...
