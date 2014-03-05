@@ -170,6 +170,10 @@
 #define lmTextboxReply(type,name,choice,id)		llMessageLinked(LINK_THIS, 501, SCRIPT_NAME + "|" + (string)type + "|" + name + "|" + choice, id)
 #define lmBroadcastReceived(name,msg,id)		llMessageLinked(LINK_THIS, 800, SCRIPT_NAME + "|" + name + "|" + llGetOwnerKey(id) + "|" + msg, id)
 
+// Virtual function style new link commands
+#define cdCarry(id)		lmInternalCommand("carry", (carrierName = llGetDisplayName(id)), (carrierID = id))
+#define cdUncarry()		lmInternalCommand("uncarry", carrierName, carrierID)
+
 // Defines for various virtual functions to save typing and memory by inlining
 #define isInteger(input) ((string)((integer)input) == input)
 #define getLinkDesc(linknum) llList2String(llGetLinkPrimitiveParams(linknum, [ PRIM_DESC ]), 0)

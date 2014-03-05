@@ -72,7 +72,8 @@ key animStart(string animation) {
 
     while (llGetListLength(llGetAnimationList(dollID))) llStopAnimation(llList2Key(llGetAnimationList(dollID), 0));
 
-    integer i; list oldList = llGetAnimationList(dollID);
+    integer i; key animID = llGetInventoryKey(animation);
+    list oldList = llGetAnimationList(dollID);
     llStartAnimation(animation);
     list newList = llGetAnimationList(dollID);
 
@@ -83,7 +84,8 @@ key animStart(string animation) {
         oldList = llDeleteSubList(oldList, 0, 0);
     }
 
-    if (llGetListLength(newList) == 1) return llList2Key(newList, 0);
+    if (animID) return animID;
+    else if (llGetListLength(newList) == 1) return llList2Key(newList, 0);
     else return NULL_KEY;
 }
 //----------------------------------------
@@ -149,21 +151,28 @@ ifPermissions() {
         if (grantorID == dollID) {
             if (permMask & PERMISSION_TRIGGER_ANIMATION) {
                 key curAnim = llList2Key(llGetAnimationList(dollID), 0);
-                debugSay(7, "DEBUG", "animID=" + (string)keyAnimationID + " curAnim=" + (string)curAnim + " refreshRate=" + (string)refreshRate);
-                if (!clearAnim && (curAnim == keyAnimationID)) {
-                    refreshRate += (1.0/llGetRegionFPS());                      // +1 Frame
-                    if (refreshRate > 30.0) refreshRate = 30.0;                 // 30 Second limit
-                }
-                else if (clearAnim || (keyAnimation != "")) {
-                    if ((keyAnimationID != NULL_KEY) && (keyAnimation != "")) {
-                        refreshRate /= 2.0;                                     // -50%
-                        if (refreshRate < 0.022) refreshRate = 0.022;           // Limit once per frame
+                
+                if (keyAnimationID) {
+                    debugSay(7, "DEBUG", "animID=" + (string)keyAnimationID + " curAnim=" + (string)curAnim + " refreshRate=" + (string)refreshRate);
+                    if (!clearAnim && (curAnim == keyAnimationID)) {
+                        refreshRate += (1.0/llGetRegionFPS());                      // +1 Frame
+                        if (refreshRate > 30.0) refreshRate = 30.0;                 // 30 Second limit
+                    }
+                    else if (clearAnim || (keyAnimation != "")) {
+                        if ((keyAnimationID != NULL_KEY) && (keyAnimation != "")) {
+                            refreshRate /= 2.0;                                     // -50%
+                            if (refreshRate < 0.022) refreshRate = 0.022;           // Limit once per frame
+                        }
                     }
                     else refreshRate = 4.0;
-                    if (keyAnimation != "") {
-                        llWhisper(LOCKMEISTER_CHANNEL, (string)dollID + "bootoff");
+                }
+                
+                if (keyAnimation != "") {
+                    llWhisper(LOCKMEISTER_CHANNEL, (string)dollID + "bootoff");
 
-                        list animList; integer i; integer animCount; key animKey = llGetInventoryKey(keyAnimation);
+                    list animList; integer i; integer animCount;
+                    key animKey = llGetInventoryKey(keyAnimation);
+                    if (animKey) {
                         while ((animList = llGetAnimationList(dollID)) != [ animKey ]) {
                             animCount = llGetListLength(animList);
                             for (i = 0; i < animCount; i++) {
@@ -171,17 +180,18 @@ ifPermissions() {
                             }
                             llStartAnimation(keyAnimation);
                         }
-                    } else if (keyAnimation == "" && clearAnim) {
-                        list animList = llGetAnimationList(dollID);
-                        integer i; integer animCount = llGetInventoryNumber(20);
-                        for (i = 0; i < animCount; i++) {
-                            key animKey = llGetInventoryKey(llGetInventoryName(20, i));
-                            if (llListFindList(animList, [ llGetInventoryKey(llGetInventoryName(20, i)) ]) != -1)
-                                llStopAnimation(animKey);
-                        }
-                        clearAnim = 0;
-                        llWhisper(LOCKMEISTER_CHANNEL, (string)dollID + "booton");
                     }
+                    else animKey = animStart(keyAnimation);
+                } else if (keyAnimation == "" && clearAnim) {
+                    list animList = llGetAnimationList(dollID);
+                    integer i; integer animCount = llGetInventoryNumber(20);
+                    for (i = 0; i < animCount; i++) {
+                        key animKey = llGetInventoryKey(llGetInventoryName(20, i));
+                        if (llListFindList(animList, [ llGetInventoryKey(llGetInventoryName(20, i)) ]) != -1)
+                            llStopAnimation(animKey);
+                    }
+                    clearAnim = 0;
+                    llWhisper(LOCKMEISTER_CHANNEL, (string)dollID + "booton");
                 }
             }
 
@@ -346,14 +356,14 @@ default {
 
     listen(integer chan, string name, key id, string msg) {
         if (chan == channel) {
+            msg = llStringTrim(msg, STRING_TRIM);
             if (llGetSubString(msg, 0, 13) == "RestrainedLove") {
-                RLVok = 1;
                 if (rlvAPIversion == "") debugSay(4, "DEBUG-RLV", "RLV Version: " + msg);
-                rlvAPIversion = llStringTrim(msg, STRING_TRIM);
+                rlvAPIversion = msg; 
             }
             else {
                 if (myPath == "") debugSay(4, "DEBUG-RLV", "RLV Key Path: " + msg);
-                myPath = llStringTrim(msg, STRING_TRIM);
+                myPath = msg;
             }
             checkRLV();
         }
@@ -655,14 +665,14 @@ default {
         else {
             if (!RLVok) {
                 string check;
-                if (rlvAPIversion == "") check += "@versionnew=" + (string)channel;
+                if (rlvAPIversion == "") check += "versionnew=" + (string)channel;
 #ifdef DEVELOPER_MODE
                 if (myPath == "") {
                     if (check != "") check += ",";
                     check += "getpathnew=" + (string)channel;
                 }
 #endif
-                llOwnerSay(check);
+                llOwnerSay("@"+check);
             }
             checkRLV();
             llSetTimerEvent(10.0 * (float)(RLVck++));
