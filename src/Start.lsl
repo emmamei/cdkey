@@ -545,9 +545,6 @@ default {
         if (id == NULL_KEY) {
             llMessageLinked(LINK_SET, 106,  SCRIPT_NAME + "|" + "detached" + "|" + (string)lastAttachPoint, lastAttachAvatar);
             llOwnerSay("The key is wrenched from your back, and you double over at the unexpected pain as the tendrils are ripped out. You feel an emptiness, as if some beautiful presence has been removed.");
-            
-            saveAttachment = cdSetValue(saveAttachment, [attachName], llList2Json(JSON_ARRAY,[llGetLocalPos(),llGetLocalRot()]));
-            llOwnerSay(saveAttachment);
         } else {
             llMessageLinked(LINK_SET, 106, SCRIPT_NAME + "|" + "attached" + "|" + (string)llGetAttached(), id);
 
