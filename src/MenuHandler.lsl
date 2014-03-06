@@ -190,7 +190,7 @@ default
             else if (name == "winderRechargeTime") winderRechargeTime = (float)value;
             else if (name == "primLight") {
                 primLight = (integer)value;
-                lmInternalCommand("setGemColour", llList2String(llGetLinkPrimitiveParams(4, [PRIM_DESC]), 0), NULL_KEY);
+                lmInternalCommand("setGemColour", llList2String(llGetLinkPrimitiveParams(5, [PRIM_DESC]), 0), NULL_KEY);
             }
             else if (name == "gemColour") {
                 if (gemColour != (vector)value) lmInternalCommand("setGemColour", value, NULL_KEY);
@@ -258,26 +258,60 @@ default
             }
             else if (cmd == "setGemColour") {
                 string value = llList2String(split, 0);
-                integer i; list params;
+                integer i; integer j; integer s; list params; list colourParams;
 
-                if (gemColour != (vector)value) {
-                    lmSendConfig("gemColour", (string)(gemColour = (vector)value));
-
-                    for (i = 0; i < llGetLinkNumberOfSides(4); i++) {
-                        vector shade = <llFabs((llFrand(0.2) - 0.1) + gemColour.x), llFabs((llFrand(0.2) - 0.1) + gemColour.y), llFabs((llFrand(0.2) - 0.1) + gemColour.z)>;
-                        float mag = llVecMag(shade);
-    
-                        if (llVecMag(shade) > 1.0) {
-                            if (llVecMag(shade) < 1.2) shade = llVecNorm(shade);
-                            else shade /= 256.0;
+                for (i = 1; i < llGetNumberOfPrims(); i++) {
+                    params += [ PRIM_LINK_TARGET, i ];
+                    if (llGetSubString(llGetLinkName(i), 0, 4) == "Heart") {
+                        if (gemColour != (vector)value) {
+                            if (!s) {
+                                lmSendConfig("gemColour", (string)(gemColour = (vector)value));
+            
+                                for (j = 0; j < llGetLinkNumberOfSides(i); j++) {
+                                    vector shade = <llFabs((llFrand(0.2) - 0.1) + gemColour.x), llFabs((llFrand(0.2) - 0.1) + gemColour.y), llFabs((llFrand(0.2) - 0.1) + gemColour.z)>;
+                                    float mag = llVecMag(shade);
+                
+                                    if (llVecMag(shade) > 1.0) {
+                                        if (llVecMag(shade) < 1.2) shade = llVecNorm(shade);
+                                        else shade /= 256.0;
+                                    }
+                
+                                    colourParams += [ PRIM_COLOR, j, shade, 1.0 ];
+                                }
+                                params += colourParams;
+                                s = 1;
+                            }
+                            else {
+                                params += colourParams;
+                            }
                         }
-    
-                        params += [ PRIM_COLOR, i, shade, 1.0 ];
+                        params += [PRIM_POINT_LIGHT] + llListReplaceList(llGetLinkPrimitiveParams(i, [PRIM_POINT_LIGHT]),[primLight],0,0);
                     }
+                    else params += [PRIM_POINT_LIGHT, 0, ZERO_VECTOR, 0, 0, 0];
                 }
+                llSetLinkPrimitiveParamsFast(0, params);
+                params = [];
+            }
+            else if (cmd == "updateExceptions") {
 
-                params = [ PRIM_POINT_LIGHT, primLight, gemColour, 0.3, 3.0, 2.0 ] + params;
-                llSetLinkPrimitiveParamsFast(4, params + [ PRIM_LINK_TARGET, 5 ] + params);
+                // Exempt builtin or user specified controllers from TP restictions
+    
+                list allow = BUILTIN_CONTROLLERS + cdList2ListStrided(MistressList, 0, -1, 2);
+    
+                // Also exempt the carrier StatusRLV will ignore the duplicate if carrier is a controller so save work
+    
+                if cdCarried() allow += carrierID;
+    
+                // Directly dump the list using the static parts of the RLV command as a seperator no looping
+    
+                lmRunRLVas("Base", "clear=tplure:,tplure:"          + llDumpList2String(allow, "=add,tplure:")    + "=add");
+                lmRunRLVas("Base", "clear=accepttp:,accepttp:"      + llDumpList2String(allow, "=add,accepttp:")  + "=add");
+                lmRunRLVas("Base", "clear=sendim:,sendim:"          + llDumpList2String(allow, "=add,sendim:")    + "=add");
+                lmRunRLVas("Base", "clear=recvim:,recvim:"          + llDumpList2String(allow, "=add,recvim:")    + "=add");
+                lmRunRLVas("Base", "clear=recvchat:,recvchat:"      + llDumpList2String(allow, "=add,recvchat:")  + "=add");
+                lmRunRLVas("Base", "clear=recvemote:,recvemote:"    + llDumpList2String(allow, "=add,recvemote:") + "=add");
+    
+                // Apply exemptions to base RLV
             }
             else if (cmd == "mainMenu") {
                 string msg; list menu; string manpage;

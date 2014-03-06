@@ -72,8 +72,10 @@ string barefeet;
 string dollType;
 string attachName;
 string saveAttachment = "{\"chest\":[\"<0.000000, 0.184040, -0.279770>\",\"<1.000000, 0.000000, 0.000000, 0.000000>\"],\"spine\":[\"<0.000000, -0.200000, 0.000000>\",\"<0.000000, 0.000000, 0.000000, 1.000000>\"]}";
+string userAfkRLVcmd;
 string userBaseRLVcmd;
 string userCollapseRLVcmd;
+string userPoseRLVcmd;
 string dollGender = "Female";
 string pronounHerDoll = "Her";
 string pronounSheDoll = "She";
@@ -126,9 +128,7 @@ processConfiguration(string name, list values) {
     else if (name == "doll gender") {
         setGender(value);
     }
-
-    else if (name == "user startup rlv")  { lmSendConfig("userBaseRLVcmd",     value); }
-    else if (name == "user collapse rlv") { lmSendConfig("userCollapseRLVcmd", value); }
+    
     else if (name == "helpless dolly")    { lmSendConfig("helpless",           value); }
     else if (name == "auto tp")           { lmSendConfig("autoTP",             value); }
     else if (name == "pleasure doll")     { lmSendConfig("pleasureDoll",       value); }
@@ -169,6 +169,13 @@ processConfiguration(string name, list values) {
     //    llMessageLinked(LINK_SET, 101, name + param, NULL_KEY);
     //}
     else {
+        if (llGetSubString(name, -3, -1) == "rlv") {
+            name = llToUpper(llGetSubString(name, 0, 0)) + llGetSubString(name, 1, -5);
+            if (llListFindList(llJson2List("[\"base\",\"collapse\",\"pose\",\"afk\"]"),[name]) != -1) {
+                lmSendConfig("user" + name + "RLVcmd", value);
+                return;
+            }
+        }
         llOwnerSay("Unknown configuration value: " + name + " on line " + (string)(ncLine + 1));
     }
 }
@@ -301,7 +308,7 @@ do_Restart() {
 
     reset = 0;
 
-    llSetTimerEvent(0.1);
+    ncResetAttach = llGetNotecardLine(NC_ATTACHLIST, cdAttached() - 1);
 }
 
 default {
@@ -343,6 +350,9 @@ default {
             else if (name == "canFly")                          canFly = (integer)value;
             else if (name == "canSit")                          canSit = (integer)value;
             else if (name == "canStand")                      canStand = (integer)value;
+            else if (name == "collapsed")                    collapsed = (integer)value;
+            else if (name == "afk")                                afk = (integer)value;
+            else if (name == "keyAnimation")              keyAnimation = value;
             else if (name == "detachable")                  detachable = (integer)value;
             else if (name == "keyLimit")                      keyLimit = (float)value;
             else if (name == "helpless")                      helpless = (integer)value;
@@ -355,6 +365,8 @@ default {
 #endif
             else if (name == "userBaseRLVcmd")          userBaseRLVcmd = value;
             else if (name == "userCollapseRLVcmd")  userCollapseRLVcmd = value;
+            else if (name == "userPoseRLVcmd")          userPoseRLVcmd = value;
+            else if (name == "userAfkRLVcmd")            userAfkRLVcmd = value;
             else if (name == "windTimes")                    windTimes = llDeleteSubList(split, 0, 1);
             else if (name == "dollType")                      dollType = value;
             else if (name == "MistressList")              MistressList = llListSort(llDeleteSubList(split, 0, 1), 2, 1);
@@ -375,6 +387,19 @@ default {
                 }
                 //llOwnerSay("INIT:300: dollyName = " + dollyName + " (setting)");
                 if (cdAttached()) llSetObjectName(dollyName + "'s Key");
+            }
+            
+            if ((name == "collapsed") && (userCollapseRLVcmd != "")) {
+                if (collapsed) lmRunRLVas("UserCollapse", userCollapseRLVcmd);
+                else lmRunRLVas("UserCollapse", "clear");
+            }
+            else if ((name == "afk") && (userAfkRLVcmd != "")) {
+                if (collapsed) lmRunRLVas("UserAfk", userAfkRLVcmd);
+                else lmRunRLVas("UserAfk", "clear");
+            }
+            else if ((name == "keyAnimation") && (userPoseRLVcmd != "")) {
+                if (!cdNoAnim() && !cdCollapsedAnim()) lmRunRLVas("UserPose", userPoseRLVcmd);
+                else lmRunRLVas("UserPose", "clear");
             }
         }
 
@@ -477,8 +502,6 @@ default {
         //llTargetOmega(<0,0,0>,0,0);
         llSetObjectName(PACKAGE_STRING);
 
-        ncResetAttach = llGetNotecardLine(NC_ATTACHLIST, cdAttached() - 1);
-
         reset = 2;
         if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
         else do_Restart();
@@ -545,6 +568,12 @@ default {
             data = llStringTrim(data,STRING_TRIM);
             llSetPrimitiveParams([PRIM_POS_LOCAL, (vector)cdGetValue(saveAttachment,([data,0])), PRIM_ROT_LOCAL, (rotation)cdGetValue(saveAttachment,([data,1]))]);
             attachName = data;
+            
+            if (initState == 104) {
+                llOwnerSay("Starting initialization");
+                startup = 1;
+                lmInitState(initState++);
+            }
         }
         else if (query_id == ncPrefsKey) {
             if (data == EOF) {
@@ -612,12 +641,8 @@ default {
         if (t >= 300.0) llSetTimerEvent(6-.0);
         else llSetTimerEvent(15.0);
 
-        if ((startup != 0) && (initState == 104)) {
-            llOwnerSay("Starting initialization");
-            startup = 1;
-            lmInitState(initState++);
-        }
-        else if (startup != 0) {
+        
+        if (startup != 0) {
             integer i; integer n = llGetInventoryNumber(10);
             for (i = 0; i < n; i++) {
                 string script = llGetInventoryName(10, i);
