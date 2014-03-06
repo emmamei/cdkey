@@ -564,7 +564,7 @@ default {
         if (query_id == ncResetAttach) {
             data = llStringTrim(data,STRING_TRIM);
             list input = llJson2List(cdGetValue(saveAttachment,[data]));
-            llOwnerSay(llList2CSV(input));
+            llOwnerSay(attachName + " " + llList2CSV(input));
             llSetPrimitiveParams([PRIM_POS_LOCAL, (vector)llList2String(input, 0), PRIM_ROT_LOCAL, (rotation)llList2String(input, 1)]);
             attachName = data;
             
@@ -665,9 +665,8 @@ default {
             }
         }
         else {
-            if (attachName = "") return;
-            saveAttachment = cdSetValue(saveAttachment,([attachName,0]),(string)llGetLocalPos());
-            saveAttachment = cdSetValue(saveAttachment,([attachName,1]),(string)llGetLocalRot());
+            if (attachName == "") return;
+            saveAttachment = cdSetValue(saveAttachment,([attachName]),llList2Json(JSON_ARRAY, [llGetLocalPos(), llGetLocalRot()]));
         }
     }
 

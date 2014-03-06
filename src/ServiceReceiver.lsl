@@ -311,12 +311,6 @@ default {
         scaleMem();
     }
 
-    changed(integer change) {
-        if (change & CHANGED_OWNER) {
-            cdPermSanityCheck();
-        }
-    }
-
     dataserver(key request, string data) {
         if (request == requestDataURL) DataURL = data;
         else if (request = requestDataName) {
