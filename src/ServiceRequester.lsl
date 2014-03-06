@@ -14,6 +14,20 @@ integer useHTTPS = 1;
 string DataURL;
 key requestDataURL;
 
+string correctName(string name) {
+    // Many new SL users fail to undersand the meaning of "Legacy Name" the name format of the DB
+    // and many older SL residents confuse usernames and legasy names.  This function checks for
+    // the presence of features inidcating we have been supplied with an invalid name which seems tp
+    // be encoded in username format and makes the converstion to the valid legacy name.
+    integer index;
+
+    if ((index = llSubStringIndex(name, ".")) != -1)
+        name = llInsertString(llDeleteSubString(name, index, index), index, " ");
+    else if (llSubStringIndex(name, " ") == -1) name += " resident";
+
+    return llToLower(name);
+}
+
 default
 {
     state_entry() {
@@ -205,17 +219,8 @@ default
             string cmd = llList2String(split, 1);
             split = llDeleteSubList(split, 0, 1);
 
-            if (cmd == "getMistressKey") {
-                string name = llList2String(split, 0);
-#ifdef DEVELOPER_MODE
-                debugSay(5, "DEBUG-SERVICES", "Looking up name " + name);
-#endif
-                while((requestID = llHTTPRequest(getURL("name2key") + "lookup?q=" + llEscapeURL(name), HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
-                    llSleep(1.0);
-                }
-            }
-            else if (cmd == "getBlacklistKey") {
-                string name = llList2String(split, 0);
+            if ((cmd == "getBlacklistKey") || (cmd == "getMistressKey")) {
+                string name = correctName(llList2String(split, 0));
 #ifdef DEVELOPER_MODE
                 debugSay(5, "DEBUG-SERVICES", "Looking up name " + name);
 #endif

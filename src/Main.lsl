@@ -132,20 +132,6 @@ key simRatingQuery;
 //========================================
 // FUNCTIONS
 //========================================
-string cannoizeName(string name) {
-    // Many new SL users fail to undersand the meaning of "Legacy Name" the name format of the DB
-    // and many older SL residents confuse usernames and legasy names.  This function checks for
-    // the presence of features inidcating we have been supplied with an invalid name which seems tp
-    // be encoded in username format and makes the converstion to the valid legacy name.
-    integer index;
-
-    if ((index = llSubStringIndex(name, ".")) != -1)
-        name = llInsertString(llDeleteSubString(name, index, index), index, " ");
-    else if (llSubStringIndex(name, " ") == -1) name += " resident";
-
-    return llToLower(name);
-}
-
 float windKey() {
     float windLimit = effectiveLimit - timeLeftOnKey;
     float wound;
@@ -725,6 +711,12 @@ default {
                 }
                 else lmInternalCommand("windMenu", "", id);
             }
+            else if (choice == "Max Time") {
+                llDialog(id, "You can set the maximum wind time here.  Dolly cannot be wound beyond this amount of time.\nDolly currently has " + (string)llFloor(timeLeftOnKey / SEC_TO_MIN) + " mins left of " + (string)llFloor(keyLimit / SEC_TO_MIN) + ", if you choose a lower time than this they will lose time immidiately.", dialogSort(["45m", "60m", "75m", "90m", "120m", "150m", "180m", "240m", "300m", "360m", "480m", MAIN]), dialogChannel);
+            }
+            else if (llGetSubString(choice, -1, -1) == "m") {
+                lmSendConfig("keyLimit", (string)(keyLimit = ((float)choice * SEC_TO_MIN)));
+            }
         }
         
         else if (code == 501) {
@@ -931,13 +923,10 @@ default {
                     }
                 }
                 else if (choice == "controller") {
-                    lmInternalCommand("getMistressKey", cannoizeName(param), NULL_KEY);
+                    lmInternalCommand("getMistressKey", param, NULL_KEY);
                 }
-                else if (choice == "blacklist") {
-                    lmInternalCommand("getBlacklistKey", cannoizeName(param), NULL_KEY);
-                }
-                else if (choice == "unblacklist") {
-                    lmInternalCommand("getBlacklistKey", cannoizeName(param), NULL_KEY);
+                else if (llGetSubString(choice, 2, -1) == "blacklist") {
+                    lmInternalCommand("getBlacklistKey", param, NULL_KEY);
                 }
 #ifdef DEVELOPER_MODE
                 else if (choice == "debug") {
