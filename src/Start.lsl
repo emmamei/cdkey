@@ -477,7 +477,7 @@ default {
         //llTargetOmega(<0,0,0>,0,0);
         llSetObjectName(PACKAGE_STRING);
 
-        //ncResetAttach = llGetNotecardLine(NC_ATTACHLIST, cdAttached() - 1);
+        ncResetAttach = llGetNotecardLine(NC_ATTACHLIST, cdAttached() - 1);
 
         reset = 2;
         if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
