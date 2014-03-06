@@ -71,7 +71,7 @@ integer offlineMode = NO;
 string barefeet;
 string dollType;
 string attachName;
-string saveAttachment = "{\"chest\":[\"<0.00000,0.18404,-0.27977>\",\"<0.00000,0.00000,0.00000,1.00000>\"],\"spine\":[\"<0.00000,-0.20000,0.00000>\"\"<0.00000,0.00000,0.00000,1.00000>\"]}";
+string saveAttachment = "{\"chest\":[\"<0.000000, 0.184040, -0.279770>\",\"<1.000000, 0.000000, 0.000000, 0.000000>\"],\"spine\":[\"<0.000000, -0.200000, 0.000000>\",\"<0.000000, 0.000000, 0.000000, 1.000000>\"]}";
 string userBaseRLVcmd;
 string userCollapseRLVcmd;
 string dollGender = "Female";
@@ -524,13 +524,14 @@ default {
             llOwnerSay("The key is wrenched from your back, and you double over at the unexpected pain as the tendrils are ripped out. You feel an emptiness, as if some beautiful presence has been removed.");
             
             saveAttachment = cdSetValue(saveAttachment, [attachName], llList2Json(JSON_ARRAY,[llGetLocalPos(),llGetLocalRot()]));
+            llOwnerSay(saveAttachment);
         } else {
             llMessageLinked(LINK_SET, 106, SCRIPT_NAME + "|" + "attached" + "|" + (string)llGetAttached(), id);
 
             if (llGetPermissionsKey() == llGetOwner() && (llGetPermissions() & PERMISSION_TAKE_CONTROLS) != 0) llTakeControls(CONTROL_MOVE, 1, 1);
             else llRequestPermissions(dollID, PERMISSION_MASK);
             
-            if ((cdAttached() != lastAttachPoint)) ncResetAttach = llGetNotecardLine(NC_ATTACHLIST, cdAttached() - 1);
+            ncResetAttach = llGetNotecardLine(NC_ATTACHLIST, cdAttached() - 1);
 
             if (lastAttachAvatar == NULL_KEY) newAttach = 1;
         }
@@ -608,10 +609,10 @@ default {
 
     timer() {
         float t = llGetTime();
-        if (t >= 300.0) llSetTimerEvent(0.0);
+        if (t >= 300.0) llSetTimerEvent(6-.0);
         else llSetTimerEvent(15.0);
 
-        if (initState == 104) {
+        if ((startup != 0) && (initState == 104)) {
             llOwnerSay("Starting initialization");
             startup = 1;
             lmInitState(initState++);
@@ -638,6 +639,11 @@ default {
                     }
                 }
             }
+        }
+        else {
+            if (attachName = "") return;
+            saveAttachment = cdSetValue(saveAttachment,([attachName,0]),(string)llGetLocalPos());
+            saveAttachment = cdSetValue(saveAttachment,([attachName,1]),(string)llGetLocalRot());
         }
     }
 
