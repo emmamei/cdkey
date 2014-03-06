@@ -25,11 +25,14 @@ some of them:
 * Color of the gem can be changed - and it shines too!
 
 * The winding time can be changed, and multiple amounts can be presented
-  to the winder. Repeat windings can be allowed - or not, as desired.
+  to the winder.
 
-* A posed Dolly can be a silent Dolly with the proper option set.
+* Repeat windings are greatly simplified - and can be allowed, or not,
+  as desired.
 
-* Multiple Controllers are possible.
+* A posed Dolly can optionally be a silent Dolly.
+
+* Multiple Dolly Controllers are possible.
 
 * A Blacklist is available with multiple entries available.
 
@@ -93,6 +96,24 @@ Outfits stored in a Doll Type Folder are only shown to the doll
 when the dolly is that type of doll. So items that are in the
 "*Japanese" folder (including perhaps subfolders!) are only shown
 when the doll is a "Japanese Doll".
+
+Doll Types
+----------
+
+The Type of Doll does two main things: it limits the number of
+outfits available to be worn by the Doll, and presents the Doll
+with a number of "hypnotic" messages from time to time.
+
+The messages are created with a notecard put into the Doll with
+a message per line. The notecard is named with the Typename and
+a leading "*"; for example, a Sexy Doll Type has a notecard with
+the name "*Sexy" and it is this notecard that tells the Doll that
+this Type is available.
+
+The outfits available for each Doll Type are in a folder in the
+outfits folder (typically "> Outfits") with the name of the Type
+prefixed by a "*"; so a folder for the Sexy Doll Type would be
+named "*Sexy" (without the quotes).
 
 Menus and Control
 -----------------
@@ -456,4 +477,12 @@ help.
 
 The Community Dolls group is made in part for just such a case, and dolls
 and winders are often in the group and able and willing to help if asked.
+
+Any additional restrictions contained within the Preferences notecard will
+also be applied upon collapse. For example, if the notecard contains this line:
+
+    collapse rlv = fartouch=n,touchall=n
+
+Then upon collapse, touch will be removed from the Dolly. When Dolly is
+wound, those added restrictions are removed along with the rest.
 
