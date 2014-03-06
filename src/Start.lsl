@@ -566,7 +566,9 @@ default {
     dataserver(key query_id, string data) {
         if (query_id == ncResetAttach) {
             data = llStringTrim(data,STRING_TRIM);
-            llSetPrimitiveParams([PRIM_POS_LOCAL, (vector)cdGetValue(saveAttachment,([data,0])), PRIM_ROT_LOCAL, (rotation)cdGetValue(saveAttachment,([data,1]))]);
+            list input = llJson2List(cdGetValue(saveAttachment,[data]));
+            llOwnerSay(llList2CSV(input));
+            llSetPrimitiveParams([PRIM_POS_LOCAL, (vector)llList2String(input, 0), PRIM_ROT_LOCAL, (rotation)llList2String(input, 1)]);
             attachName = data;
             
             if (initState == 104) {
