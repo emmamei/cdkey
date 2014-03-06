@@ -7,6 +7,7 @@
 // DATE: 25 February 2014
 
 #include "include/GlobalDefines.lsl"
+#include "include/Secure.lsl"
 #include "include/ServiceIncludes.lsl"
 
 integer useHTTPS = 1;

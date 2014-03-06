@@ -1,4 +1,3 @@
-#include "include/Secure.lsl"
 #include "include/Json.lsl"
 
 #define YES 1

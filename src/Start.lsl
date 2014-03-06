@@ -6,6 +6,7 @@
 //
 // DATE: 25 February 2014
 
+#include "include/Json.lsl"
 #include "include/GlobalDefines.lsl"
 #define sendMsg(id,msg) lmSendToAgent(msg, id);
 
@@ -39,9 +40,11 @@ key MistressID = NULL_KEY;
 string dollName;
 string dollyName;
 
+#define NC_ATTACHLIST "DataAttachments"
 key ncPrefsKey;
 key ncPrefsLoadedUUID = NULL_KEY;
 key ncIntroKey;
+key ncResetAttach;
 float timeLeftOnKey = UNSET;
 integer ncLine;
 
@@ -67,6 +70,8 @@ integer offlineMode = NO;
 
 string barefeet;
 string dollType;
+string attachName;
+string saveAttachment = "{\"chest\":[\"<0.00000,0.18404,-0.27977>\",\"<0.00000,0.00000,0.00000,1.00000>\"],\"spine\":[\"<0.00000,-0.20000,0.00000>\"\"<0.00000,0.00000,0.00000,1.00000>\"]}";
 string userBaseRLVcmd;
 string userCollapseRLVcmd;
 string dollGender = "Female";
@@ -119,21 +124,7 @@ processConfiguration(string name, list values) {
         lmSendConfig("dollType", value);
     }
     else if (name == "doll gender") {
-        if (value == "male") {
-            lmSendConfig("dollGender",     (dollGender     = "Male"));
-            lmSendConfig("pronounHerDoll", (pronounHerDoll = "His"));
-            lmSendConfig("pronounSheDoll", (pronounSheDoll = "He"));
-            return;
-        } else {
-            if (value == "sissy") {
-                lmSendConfig("dollGender", (dollGender = "Sissy"));
-            } else {
-                lmSendConfig("dollGender", (dollGender = "Female"));
-            }
-
-            lmSendConfig("pronounHerDoll", (pronounHerDoll = "Her"));
-            lmSendConfig("pronounSheDoll", (pronounSheDoll = "She"));
-        }
+        setGender(value);
     }
 
     else if (name == "user startup rlv")  { lmSendConfig("userBaseRLVcmd",     value); }
@@ -179,6 +170,24 @@ processConfiguration(string name, list values) {
     //}
     else {
         llOwnerSay("Unknown configuration value: " + name + " on line " + (string)(ncLine + 1));
+    }
+}
+
+setGender(string gender) {
+    if (gender == "male") {
+        lmSendConfig("dollGender",     (dollGender     = "Male"));
+        lmSendConfig("pronounHerDoll", (pronounHerDoll = "His"));
+        lmSendConfig("pronounSheDoll", (pronounSheDoll = "He"));
+        return;
+    } else {
+        if (gender == "sissy") {
+            lmSendConfig("dollGender", (dollGender = "Sissy"));
+        } else {
+            lmSendConfig("dollGender", (dollGender = "Female"));
+        }
+
+        lmSendConfig("pronounHerDoll", (pronounHerDoll = "Her"));
+        lmSendConfig("pronounSheDoll", (pronounSheDoll = "She"));
     }
 }
 
@@ -468,8 +477,7 @@ default {
         //llTargetOmega(<0,0,0>,0,0);
         llSetObjectName(PACKAGE_STRING);
 
-        if (lastAttachPoint = llGetAttached()) lastAttachAvatar = llGetOwner();
-        else lastAttachAvatar = NULL_KEY;
+        //ncResetAttach = llGetNotecardLine(NC_ATTACHLIST, cdAttached() - 1);
 
         reset = 2;
         if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
@@ -514,21 +522,30 @@ default {
         if (id == NULL_KEY) {
             llMessageLinked(LINK_SET, 106,  SCRIPT_NAME + "|" + "detached" + "|" + (string)lastAttachPoint, lastAttachAvatar);
             llOwnerSay("The key is wrenched from your back, and you double over at the unexpected pain as the tendrils are ripped out. You feel an emptiness, as if some beautiful presence has been removed.");
+            
+            saveAttachment = cdSetValue(saveAttachment, [attachName], llList2Json(JSON_ARRAY,[llGetLocalPos(),llGetLocalRot()]));
         } else {
             llMessageLinked(LINK_SET, 106, SCRIPT_NAME + "|" + "attached" + "|" + (string)llGetAttached(), id);
 
             if (llGetPermissionsKey() == llGetOwner() && (llGetPermissions() & PERMISSION_TAKE_CONTROLS) != 0) llTakeControls(CONTROL_MOVE, 1, 1);
             else llRequestPermissions(dollID, PERMISSION_MASK);
+            
+            if ((cdAttached() != lastAttachPoint)) ncResetAttach = llGetNotecardLine(NC_ATTACHLIST, cdAttached() - 1);
 
             if (lastAttachAvatar == NULL_KEY) newAttach = 1;
         }
 
-        lastAttachPoint = llGetAttached();
+        lastAttachPoint = cdAttached();
         lastAttachAvatar = id;
     }
 
     dataserver(key query_id, string data) {
-        if (query_id == ncPrefsKey) {
+        if (query_id == ncResetAttach) {
+            data = llStringTrim(data,STRING_TRIM);
+            llSetPrimitiveParams([PRIM_POS_LOCAL, (vector)cdGetValue(saveAttachment,([data,0])), PRIM_ROT_LOCAL, (rotation)cdGetValue(saveAttachment,([data,1]))]);
+            attachName = data;
+        }
+        else if (query_id == ncPrefsKey) {
             if (data == EOF) {
                 doneConfiguration(1);
             }

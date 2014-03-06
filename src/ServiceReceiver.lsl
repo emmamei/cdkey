@@ -21,12 +21,10 @@ key requestDataName;
 
 default {
     state_entry() {
-        cdPermSanityCheck();
         requestDataURL = llGetNotecardLine("DataServices",0);
     }
 
     on_rez(integer start) {
-        cdPermSanityCheck();
         rezzed = 1;
     }
 
