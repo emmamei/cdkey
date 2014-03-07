@@ -38,7 +38,6 @@ string pronounSheDoll = "She";
 string rlvAPIversion;
 string redirchan;
 string userBaseRLVcmd;
-string userCollapseRLVcmd;
 
 integer afk;
 integer carryMoved;
@@ -288,15 +287,10 @@ initializeRLV(integer refresh) {
 #endif
     llListenControl(listenHandle, 0);
 
-    if (userBaseRLVcmd != "") lmRunRLVas("User:Base", userBaseRLVcmd);
-    
-    if (userCollapseRLVcmd != "") {
-        if (collapsed) lmRunRLVas("User:Collapse", userCollapseRLVcmd);
-        else lmRunRLVas("User:Collapse", "clear");
-    }
-
     integer posed = (cdPosed() && !cdSelfPosed());
     integer carried = cdCarried();
+
+    if (userBaseRLVcmd != "") lmRunRLVas("User:Base", userBaseRLVcmd);
 
     string command; integer i;
 
@@ -420,7 +414,7 @@ default {
             memReport(delay);
             return;
         }
-        else if (code == 300) { // RLV Config
+        else if (code == 300) {
             string script = llList2String(split, 0);
             string name = llList2String(split, 1);
             split = llDeleteSubList(split, 0, 1);
@@ -430,6 +424,7 @@ default {
             else if (name == "afk")                             afk = (integer)value;
             else if (name == "collapsed") {
                 collapsed = (integer)value;
+                if (collapsed && !cdNoAnim()) lmInternalCommand("doUnpose", "", NULL_KEY);
                 if (!collapsed && cdCollapsedAnim()) lmSendConfig("keyAnimation", (keyAnimation = ""));
             }
             else if (name == "canFly")                       canFly = (integer)value;
@@ -442,13 +437,10 @@ default {
                 if (userBaseRLVcmd == "") userBaseRLVcmd = value;
                 else userBaseRLVcmd += "," +value;
             }
-            else if (name == "userCollapseRLVcmd") {
-                if (userCollapseRLVcmd == "") userCollapseRLVcmd = value;
-                else userCollapseRLVcmd += "," +value;
-            }
             else if (name == "keyAnimation") {
                 keyAnimation = value;
 
+                if (collapsed && !cdNoAnim()) lmInternalCommand("doUnpose", "", NULL_KEY);
                 if (!collapsed && cdCollapsedAnim()) lmSendConfig("keyAnimation", (keyAnimation = ""));
 
                 if (keyAnimation == "") lmSendConfig("keyAnimationID", (string)(keyAnimationID = NULL_KEY));
@@ -468,6 +460,11 @@ default {
                 else if (name == "poseExpire")               poseExpire = (float)value;
                 else if (name == "quiet")                         quiet = (integer)value;
                 else if (name == "dialogChannel")         dialogChannel = (integer)value;
+                else if (name == "timeLeftOnKey") {
+                    if ((collapsed == 1) && ((float)value > 0.0)) {
+                        lmInternalCommand("uncollapse", "", NULL_KEY);
+                    }
+                }
                 else if (name == "keyAnimationID") {
                     keyAnimationID = (key)value;
                     ifPermissions();
@@ -499,24 +496,6 @@ default {
 
                 carrierID = id;
                 carrierName = name;
-            }
-            else if (cmd == "collapse") {
-                integer collapseType = llList2Integer(split, 0);
-                if ((keyAnimation != "") && (keyAnimation != ANIMATION_COLLAPSED)) lmInternalCommand("doUnpose", "", NULL_KEY);
-                if (collapseType == 0) { // Normal collapse
-                    collapsed = 1; 
-                }
-                else if (collapseType == 1) { // Forced collapse
-                    lmSendConfig("timeLeftOnKey", (string)0.0);
-                    collapsed = 1; // After is normal collapse
-                }
-                else if (collapseType == 2) { // Key Jam
-                    if (llGetListLength(split) != 1) { // Custom time provided
-                        timeToJamRepair = llList2Float(split, 2);
-                    }
-                    else timeToJamRepair = JAM_DEFAULT_TIME; // If not is specified set default
-                }
-                lmSendConfig("collapsed", (string)collapsed);
             }
             else if (cmd == "doUnpose") {
                 if (!cdCollapsedAnim()) {
@@ -560,9 +539,8 @@ default {
             else if (cmd == "uncollapse") {
                 debugSay(5, "DEBUG", "Restoring from collapse");
                 clearAnim = 1;
-                lmSendConfig("collapsed", (string)(collapsed = 0));
+                collapsed = 0;
                 lmSendConfig("keyAnimation", (keyAnimation = ""));
-                lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
             }
             else if (cmd == "TP") {
                 string lm = llList2String(split, 0);

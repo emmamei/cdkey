@@ -296,7 +296,7 @@ default {
         if (wearLock) wearLockExpire -= timerInterval;
 
         // False collapse? Collapsed = 1 while timeLeftOnKey is positive is an invalid condition
-        if (collapsed == 1 && timeLeftOnKey > 0.0) {
+        if ((collapsed == 1) && (timeLeftOnKey > 0.0)) {
             uncollapse(0);
         }
 
@@ -589,8 +589,22 @@ default {
 
             else if (llGetSubString(cmd,-8,-1) == "collapse") {
                 displayWindRate = setWindRate();
-                if ((cmd == "collapse") && ((llList2Integer(split,0) != 2) && (timeLeftOnKey > 0.0))) uncollapse(1);
+                if (cmd == "collapse") {
+                    integer collapseType = llList2Integer(split, 0);
+                    if (collapseType < 2) {
+                        if (collapseType == 1) timeLeftOnKey = 0.0;
+                        else if (timeLeftOnKey > 0.0) uncollapse(0);
+                        collapsed = 1;
+                    }
+                    else collapsed = 2;
+                } else if (timeLeftOnKey <= 0.0) {
+                    timeLeftOnKey = 0.0;
+                    lmInternalCommand("collapse", "0", NULL_KEY);
+                    collapsed = 1;
+                }
+                lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
                 lmSendConfig("collapseTime", (string)(collapseTime = 0.0));
+                lmSendConfig("collapsed", (string)collapsed);
             }
 
             // Deny access to the menus when the command was recieved from blacklisted avatar
@@ -925,7 +939,10 @@ default {
                 else if (choice == "controller") {
                     lmInternalCommand("getMistressKey", param, NULL_KEY);
                 }
-                else if (llGetSubString(choice, 2, -1) == "blacklist") {
+                else if (choice == "blacklist") {
+                    lmInternalCommand("getBlacklistKey", param, NULL_KEY);
+                }
+                else if (choice == "unblacklist") {
                     lmInternalCommand("getBlacklistKey", param, NULL_KEY);
                 }
 #ifdef DEVELOPER_MODE
