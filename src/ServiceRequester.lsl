@@ -14,6 +14,9 @@ integer useHTTPS = 1;
 string DataURL;
 key requestDataURL;
 
+list blacklist;
+list MistressList;
+
 string correctName(string name) {
     // Many new SL users fail to undersand the meaning of "Legacy Name" the name format of the DB
     // and many older SL residents confuse usernames and legasy names.  This function checks for
@@ -21,9 +24,18 @@ string correctName(string name) {
     // be encoded in username format and makes the converstion to the valid legacy name.
     integer index;
 
-    if ((index = llSubStringIndex(name, ".")) != -1)
-        name = llInsertString(llDeleteSubString(name, index, index), index, " ");
-    else if (llSubStringIndex(name, " ") == -1) name += " resident";
+    list split = llParseStringKeepNulls(name, [ "."," " ], []);
+    integer n = llGetListLength(split);
+    if (n == 0) {
+        llOwnerSay("You must enter a username or legacy name.");
+        return "INVALID";
+    }
+    else if (n == 1)    name = llList2String(split, 0) + " Resident";
+    else if (n == 2)    name = llList2String(split, 0) + " " + llList2String(split, 1);
+    else {
+        llOwnerSay("The name " + name + " does not appear to be  valid username or legacy name, there should only be one period (.) or space ( )");
+        return "INVALID";
+    }
 
     return llToLower(name);
 }
@@ -210,7 +222,10 @@ default
                 dbPostParams = [];
             }
             if (!offlineMode) {
-                value = llDumpList2String(llDeleteSubList(split, 0, 1), "|");
+                split = llDeleteSubList(split, 0, 1);
+                if (name == "blacklist") blacklist = split;
+                else if (name == "MistressList") MistressList = split;
+                value = llDumpList2String(split, "|");
                 queForSave(name, value);
             }
         }
@@ -221,6 +236,32 @@ default
 
             if ((cmd == "getBlacklistKey") || (cmd == "getMistressKey")) {
                 string name = correctName(llList2String(split, 0));
+                if (name == "INVALID") return;
+                
+                if (llGetListLength(split) == 2) {
+                    if (cmd == "getBlacklistKey") {
+                        integer add = llList2Integer(split, 1);
+                        if (add && (llListFindList(blacklist, [name]) != -1)) {
+                            llOwnerSay("User '" + name + "' is already blacklisted.");
+                            return;
+                        }
+                        else if (!add && (llListFindList(blacklist, [name]) != -1)) {
+                            llOwnerSay("User '" + name + "' is not blacklisted.");
+                            return;
+                        }
+                        else if (!add) {
+                            integer index = llListFindList(blacklist, [name]);
+                            string uuid = llList2String(blacklist, --index);
+                            lmInternalCommand("addRemBlacklist", uuid + "|" + name, NULL_KEY);
+                        }
+                    }
+                    else if (cmd == "getMistressKey") {
+                        if (llListFindList(MistressList, [name]) != -1) {
+                            llOwnerSay("User '" + name + "' is already on the controller list.");
+                            return;
+                        }
+                    }
+                }
 #ifdef DEVELOPER_MODE
                 debugSay(5, "DEBUG-SERVICES", "Looking up name " + name);
 #endif

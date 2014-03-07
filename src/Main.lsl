@@ -490,8 +490,8 @@ default {
                     if ((value > 0) && (value <= 240) && (llListFindList(windTimes, [ value ]) == -1)) windTimes += value;
                 }
                 
-                integer l = llGetListLength(windTimes); i = -(l/2);
-                while (l > 11) llDeleteSubList(llListSort(windTimes,1,--l&1),++i,i);
+                integer l = llGetListLength(windTimes); i = l;
+                while (l > 11) llDeleteSubList(llListSort(windTimes,1,--l&1),i-=2,i);
                 windTimes = llListSort(windTimes,1,1);
                 
                 if (start > l) lmSendToAgent("One or more times were filtered accepted list is " + llList2CSV(windTimes), id);
@@ -628,6 +628,7 @@ default {
                             lmSendToController(dollName + " has activated the emergency winder.");
 
                             windamount = effectiveLimit * 0.2;
+                            if (windamount > 2700.0) windamount = 2700.0;
                             lmSendConfig("winderRechargeTime", (string)(winderRechargeTime = (llGetUnixTime() + EMERGENCY_LIMIT_TIME)));
                             
                             llOwnerSay("With an electical sound the motor whirls into life and gives you " + (string)llRound(windamount / SEC_TO_MIN) + " minutes of life before it's battery wears out, it will take " + (string)llRound(EMERGENCY_LIMIT_TIME / 3600.0) + " hours to recharge.");
