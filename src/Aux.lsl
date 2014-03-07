@@ -13,7 +13,6 @@
 #define NO_FILTER ""
 #define cdListenUser(a,b) llListen(a, NO_FILTER,         b, NO_FILTER)
 
-#define APPEARANCE_NC "DataAppearance"
 #define MESSAGE_NC "DataMessages"
 #define DISPLAY_DOLL 0
 #define SELF_DRESS 2
@@ -27,14 +26,16 @@
 #define POSE_SILENCE 18
 #define PLEASURE_DOLL 20
 #define SET_AFK 22
+#define JOIN_GROUP 25
 
-key ncRequestAppearance;
 key ncRequestDollMessage;
+key ncRequestDollDialog;
 key lmRequest;
 key carrierID = NULL_KEY;
 float rezTime;
 float timerEvent;
 float listenTime;
+float memTime;
 string minsLeft;
 string windRate;
 string dollyName;
@@ -60,7 +61,6 @@ integer textboxChannel;
 integer textboxHandle;
 integer textboxType;
 list MistressList;
-list glowSettings;
 string memData;
 
 sendMsg(key id, string msg) {
@@ -87,19 +87,6 @@ string findString(string msg) {
     demo ........... toggle demo mode\n
     channel ........ change channel\n\n";
     else return "";
-}
-
-doVisibility(integer setVisible) {
-    if (llGetInventoryType(APPEARANCE_NC) == INVENTORY_NOTECARD) {
-        if (setVisible != -1) visible = setVisible;
-
-        if (!visible || !primGlow) {
-            llSetLinkPrimitiveParamsFast(LINK_SET, [ PRIM_GLOW, 0, 0.0, PRIM_GLOW, 1, 0.0, PRIM_GLOW, 2, 0.0, PRIM_GLOW, 3, 0.0, PRIM_GLOW, 4, 0.0, PRIM_GLOW, 5, 0.0, PRIM_GLOW, 6, 0.0, PRIM_GLOW, 7, 0.0 ]);
-        }
-        else {
-            llSetLinkPrimitiveParamsFast(1, glowSettings);
-        }
-    }
 }
 
 default {
@@ -153,16 +140,14 @@ default {
         }
         else if (code == 110) {
             if (script != "Start") return;
-
-            if (llGetInventoryType(APPEARANCE_NC) == INVENTORY_NOTECARD) {
-                ncRequestAppearance = llGetNotecardLine(APPEARANCE_NC, ncLine++);
-            }
+            lmMemReport(0.0);
         }
         else if (code == 135) {
             memCollecting = 1;
             memData = "";
         }
         else if (code == 136) {
+            if (llList2String(split, 1) != "");
             memData = cdSetValue(memData, [script], llList2String(split, 1));
             
             integer i; list scripts =[ "Avatar", "Dress", "Main", "MenuHandler", "ServiceRequester", "ServiceReceiver", "Start", "StatusRLV", "Transform" ];
@@ -208,6 +193,9 @@ default {
                            formatFloat(totFree / 1024.0, 2) + "kB free, " + formatFloat(totAvail / 1024.0, 2) + "kB available)";
 
                 llOwnerSay(output);
+                memData = "";
+                memCollecting = 0;
+                memTime = 0.0;
             }
         }
         else if (code == 150) {
@@ -219,14 +207,12 @@ default {
             split = llDeleteSubList(split, 0, 1);
 
                  if (name == "MistressList")             MistressList = split;
-            else if (name == "isVisible")                  doVisibility((integer)value);
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "poserID")                       poserID = (key)value;
             else if (name == "keyLimit")                      maxMins = llRound((float)value / 60.0);
-            else if (name == "timeLeftOnKey")                minsLeft = (string)llRound((float)value / 60.0);
             else if (name == "quiet")                           quiet = (integer)value;
             else if (name == "autoTP")                         autoTP = (integer)value;
             else if (name == "canAFK")                         canAFK = (integer)value;
@@ -250,11 +236,12 @@ default {
             else if (name == "primLight")                   primLight = (integer)value;
             else if (name == "primGlow") {
                 primGlow = (integer)value;
-                doVisibility(-1);
+            }
+            else if (name == "isVisible") {
+                visible = (integer)value;
             }
             else if (name == "gemColour") {
                 curGemColour = value;
-                llSetLinkPrimitiveParamsFast(4, [ PRIM_DESC, curGemColour, PRIM_LINK_TARGET, 5, PRIM_DESC, curGemColour ]);
             }
             else if (name == "dollType") {
                 if (configured && (keyAnimation != "") && (keyAnimation != ANIMATION_COLLAPSED) && (poserID != dollID)) {
@@ -369,18 +356,15 @@ default {
                 if (cdIsDoll(id)) llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|TP|" + LANDMARK_CDROOM, id);
                 else llGiveInventory(id, LANDMARK_CDROOM);
             }
-            else if (choice == "Dress") {
-                if (!cdIsDoll(id)) llOwnerSay("secondlife:///app/agent/" + (string)id + "/about is looking at your dress menu");
-            }
             else if (choice == "Join Group") {
-                llOwnerSay("Here is your link to the community dolls group profile secondlife:///app/group/0f0c0dd5-a611-2529-d5c7-1284fb719003/about");
-                llDialog(id, "To join the community dolls group open your chat history (CTRL+H) and click the group link there.  Just click the Join Group button when the group profile opens.", [MAIN], 9999);
+                dollMessageCode = JOIN_GROUP;
+                ncRequestDollDialog = llGetNotecardLine(MESSAGE_NC, dollMessageCode + 1);
             }
             else if (choice == "Access...") {
                 debugSay(5, "DEBUG-AUX", "Dialog channel: " + (string)dialogChannel);
-                string msg = "Key Access Menu. (" + OPTION_DATE + " version)\n" +
+                string msg = "Key Access Menu.\n" +
                              "These are powerful options allowing you to give someone total control of your key or block someone from touch or even winding your key\n" +
-                             "Good dollies should read their key help before \n" +
+                             "Good dollies should read their key help before\n" +
                              "Blacklist - Fully block this avatar from using any key option even winding\n" +
                              "Controller - Take care choosing your controllers, they have great control over their doll can only be removed by their choice";
                 list pluslist;
@@ -486,27 +470,19 @@ default {
                 if (cdIsController(id)) pluslist += [ "Max Time", "Wind Times" ];
                 llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(pluslist + MAIN, 1, 1)), dialogChannel);
             }
-            // Max Winding Keys
-            else if (choice == "Max Time") {
-                llDialog(id, "You can set the maximum wind time here.  Dolly cannot be wound beyond this amount of time.\nDolly currently has " + (string)llRound(timeLeftOnKey / SEC_TO_MIN) + " mins left of " + (string)maxMins + ", if you choose a lower time than this they will lose time immidiately.", dialogSort(["45m", "60m", "75m", "90m", "120m", "150m", "180m", "240m", "300m", "360m", "480m", MAIN]), dialogChannel);
-            }
-            else if (llGetSubString(choice, -1, -1) == "m") {
-                lmSendConfig("keyLimit", (string)((float)choice * SEC_TO_MIN));
-            }
-            else if ((choice == "Gem Colour") || (llListFindList(COLOR_NAMES, [ choice ]) != -1)) {
-                if ((choice != "CUSTOM") && (choice != "Gem Colour")) {
-                    integer index = llListFindList(COLOR_NAMES, [ choice ]);
-                    string choice = (string)llList2Vector(COLOR_VALUE, index);
-
-                    lmInternalCommand("setGemColour", choice, id);
-                }
-
+            else if (choice == "Gem Colour") {
                 string msg = "Here you can choose your own gem colour.";
-                list pluslist;
+                    list pluslist;
+    
+                    pluslist = COLOR_NAMES;
+    
+                    llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
+            }
+            else if ((llListFindList(COLOR_NAMES, [ choice ]) != -1) && (choice != "CUSTOM")) {
+                integer index = llListFindList(COLOR_NAMES, [ choice ]);
+                string choice = (string)llList2Vector(COLOR_VALUE, index);
 
-                pluslist = COLOR_NAMES;
-
-                llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
+                lmInternalCommand("setGemColour", choice, id);
             }
             
             // Textbox generating menus
@@ -514,7 +490,6 @@ default {
                 if (choice == "CUSTOM") {
                     textboxType = 1;
                     llTextBox(id, "Here you can input a custom colour value\nCurrent colour: " + curGemColour + "\nEnter vector eg <0.900, 0.500, 0.000>\nOr Hex eg #A4B355\nOr RGB eg 240, 120, 10", textboxChannel);
-                    return;
                 }
                 else if (choice == "Dolly Name") {
                     textboxType = 2;
@@ -537,12 +512,6 @@ default {
                 if (!factoryReset) llSetTimerEvent(60.0);
             }
         }
-
-        // 501 is a text box input - with three types:
-        //   1: Gem Color
-        //   2: Dolly Name
-        //   3: Wind Times (moved to Main.lsl)
-        //   4: Safeword Confirm
         else if (code == 700) {
             string sender = llList2String(split, 0);
             integer level = llList2Integer(split, 1);
@@ -552,29 +521,6 @@ default {
             debugHandler(sender, level, prefix, msg);
         }
 
-        string type = llList2String(llParseString2List(data, [ "|" ], []), 1);
-
-        if (type == "MistressList" || type == "carry" || type == "uncarry" || type == "updateExceptions") {
-
-            // Exempt builtin or user specified controllers from TP restictions
-
-            list allow = BUILTIN_CONTROLLERS + cdList2ListStrided(MistressList, 0, -1, 2);
-
-            // Also exempt the carrier StatusRLV will ignore the duplicate if carrier is a controller so save work
-
-            if cdCarried() allow += carrierID;
-
-            // Directly dump the list using the static parts of the RLV command as a seperator no looping
-
-            lmRunRLVas("Base", "clear=tplure:,tplure:"          + llDumpList2String(allow, "=add,tplure:")    + "=add");
-            lmRunRLVas("Base", "clear=accepttp:,accepttp:"      + llDumpList2String(allow, "=add,accepttp:")  + "=add");
-            lmRunRLVas("Base", "clear=sendim:,sendim:"          + llDumpList2String(allow, "=add,sendim:")    + "=add");
-            lmRunRLVas("Base", "clear=recvim:,recvim:"          + llDumpList2String(allow, "=add,recvim:")    + "=add");
-            lmRunRLVas("Base", "clear=recvchat:,recvchat:"      + llDumpList2String(allow, "=add,recvchat:")  + "=add");
-            lmRunRLVas("Base", "clear=recvemote:,recvemote:"    + llDumpList2String(allow, "=add,recvemote:") + "=add");
-
-            // Apply exemptions to base RLV
-        }
         // HippoUPDATE reply
         else if (code == -2948813) {
             if (data == "VERSION") llOwnerSay("Your key is already up to date");
@@ -586,21 +532,36 @@ default {
     listen(integer channel, string name, key id, string choice) {
         name = llGetDisplayName(id);
         
+        llOwnerSay((string)channel + "=" + (string)textboxChannel + "? " + (string)textboxType + " " + choice);
+        
         if (channel == textboxChannel) {
             llListenRemove(textboxHandle);
             textboxHandle = 0;
             listenTime = 0.0;
+            
+            // Text box input - 4 types
+            //   1: Gem Color
+            //   2: Dolly Name
+            //   3: Wind Times (moved to Main.lsl)
+            //   4: Safeword Confirm
 
             // Type 1 = Custom Gem Color
             if (textboxType == 1) {
                 string first = llGetSubString(choice, 0, 0);
 
-                if (first == "<") choice = (string)((vector)choice);
-                else if (first == "#") choice = (string)(
-                     (vector)("<0x" + llGetSubString(choice, 1, 2) +
-                              ",0x" + llGetSubString(choice, 3, 4) +
-                              ",0x" + llGetSubString(choice, 5, 6) + ">"));
-                else choice = (string)((vector)("<" + choice + ">"));
+                if (first == "<") {                                             // User entry is vector
+                    choice = (string)((vector)choice);
+                }
+                else {
+                    vector tmp;
+                    if (first == "#") tmp = 
+                        (vector)("<0x" + llGetSubString(choice, 1, 2) +
+                                 ",0x" + llGetSubString(choice, 3, 4) +
+                                 ",0x" + llGetSubString(choice, 5, 6) + ">");   // User entry is in hex
+                    else tmp = (vector)("<" + choice + ">");                    // User entry is RGB
+                    tmp /= 256.0;
+                    choice = (string)tmp;
+                }
 
                 lmInternalCommand("setGemColour", choice, id);
             }
@@ -638,8 +599,9 @@ default {
     }
 
     dataserver(key request, string data) {
+        integer index;
         if (request == ncRequestDollMessage) {
-            integer i; integer index;
+            integer i;
             list findList = [ "windRate", "minsLeft" ];
             list replaceList = [ windRate, minsLeft ];
             for (i = 0; i < 2; i++) {
@@ -650,18 +612,6 @@ default {
                 }
             }
             llOwnerSay(data);
-        }
-        else if (request == ncRequestAppearance) {
-            if (data == EOF) {
-                doVisibility(-1);
-                ncRequestAppearance = NULL_KEY;
-
-                lmMemReport(0.0);
-            }
-            else {
-                glowSettings += llJson2List(data);
-                ncRequestAppearance = llGetNotecardLine(APPEARANCE_NC, ncLine++);
-            }
         }
         else if (request == lmRequest) {
             vector lmData = (vector)data;

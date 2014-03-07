@@ -39,12 +39,16 @@ key MistressID = NULL_KEY;
 
 string dollName;
 string dollyName;
+string appearanceData;
 
+#define APPEARANCE_NC "DataAppearance"
 #define NC_ATTACHLIST "DataAttachments"
 key ncPrefsKey;
 key ncPrefsLoadedUUID = NULL_KEY;
 key ncIntroKey;
 key ncResetAttach;
+key ncRequestAppearance;
+
 float timeLeftOnKey = UNSET;
 integer ncLine;
 
@@ -67,6 +71,11 @@ integer canDress = YES;
 integer detachable = YES;
 integer busyIsAway = NO;
 integer offlineMode = NO;
+integer visible = YES;
+integer primGlow = YES;
+integer primLight = UNSET;
+
+vector gemColour;
 
 string barefeet;
 string dollType;
@@ -96,6 +105,34 @@ float keyLimit;
 integer afk;
 integer lowScriptMode;
 #endif
+
+doVisibility() {
+    if (llGetInventoryType(APPEARANCE_NC) == INVENTORY_NOTECARD) {
+        if (!visible || !primGlow) {
+            llSetLinkPrimitiveParamsFast(LINK_SET, [ PRIM_GLOW, ALL_SIDES, 0.0 ]);
+        }
+        else {
+            integer i; integer type;
+            list types = [ "Light", 23, "Glow", 25 ];
+            for (type = 0; type < (llGetListLength(types)/2); type++) {
+                for (i = 1; i < llGetNumberOfPrims(); i++) {
+                    string name = llGetLinkName(i); string typeName = llList2String(types, type * 2);
+                    if (cdGetElementType(appearanceData,([name,typeName])) != JSON_INVALID) {
+                        integer j;
+                        while(cdGetElementType(appearanceData,([name,typeName,j])) != JSON_INVALID) {
+                            list params = llJson2List(cdGetValue(appearanceData,([name,typeName,j++])));
+                            if (typeName == "Light") {
+                                if (primLight == UNSET) primLight = llList2Integer(params,0);
+                                params = llListReplaceList(params, [primLight,(vector)llList2String(params,1)], 0, 1);
+                            }
+                            llSetLinkPrimitiveParamsFast(i, llList2List(types, type * 2 + 1, type * 2 + 1) + params);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
 //---------------------------------------
 // Configuration Functions
@@ -269,6 +306,11 @@ initializationCompleted() {
     startup = 0;
     
     lmInitState(110);
+
+    if (llGetInventoryType(APPEARANCE_NC) == INVENTORY_NOTECARD) {
+        ncLine = 0;
+        ncRequestAppearance = llGetNotecardLine(APPEARANCE_NC, ncLine++);
+    }
     llSetTimerEvent(1.0);
 }
 
@@ -371,6 +413,16 @@ default {
             else if (name == "dollType")                      dollType = value;
             else if (name == "MistressList")              MistressList = llListSort(llDeleteSubList(split, 0, 1), 2, 1);
             else if (name == "blacklist")                    blacklist = llListSort(llDeleteSubList(split, 0, 1), 2, 1);
+            else if (name == "primLight")                    primLight = (integer)value;
+
+            else if (name == "primGlow") {
+                primGlow = (integer)value;
+                doVisibility();
+            }
+            else if (name == "isVisible") {
+                visible = (integer)value;
+                doVisibility();
+            }
 
             else if (name == "dollyName") {
 
@@ -563,15 +615,28 @@ default {
     dataserver(key query_id, string data) {
         if (query_id == ncResetAttach) {
             data = llStringTrim(data,STRING_TRIM);
-            list input = llJson2List(cdGetValue(saveAttachment,[data]));
-            llOwnerSay(attachName + " " + llList2CSV(input));
-            llSetPrimitiveParams([PRIM_POS_LOCAL, (vector)llList2String(input, 0), PRIM_ROT_LOCAL, (rotation)llList2String(input, 1)]);
+            if (cdAttached()) llSetPrimitiveParams([PRIM_POS_LOCAL, (vector)cdGetValue(saveAttachment,([data,0])), PRIM_ROT_LOCAL, (rotation)cdGetValue(saveAttachment,([data,1]))]);
             attachName = data;
             
             if (initState == 104) {
                 llOwnerSay("Starting initialization");
                 startup = 1;
                 lmInitState(initState++);
+            }
+        }
+        else if (query_id == ncRequestAppearance) {
+            if (data == EOF) {
+                doVisibility();
+                ncRequestAppearance = NULL_KEY;
+            }
+            else {
+                data = llStringTrim(data,STRING_TRIM);
+                string find = "\"ALL\""; integer index;
+                while ( ( index = llSubStringIndex(data, find) ) != -1) {
+                    data = llInsertString(llDeleteSubString(data, index, index + llStringLength(find) - 1), index, "-1");
+                }
+                appearanceData += data;
+                ncRequestAppearance = llGetNotecardLine(APPEARANCE_NC, ncLine++);
             }
         }
         else if (query_id == ncPrefsKey) {
@@ -665,8 +730,9 @@ default {
             }
         }
         else {
-            if (attachName == "") return;
-            saveAttachment = cdSetValue(saveAttachment,([attachName]),llList2Json(JSON_ARRAY, [llGetLocalPos(), llGetLocalRot()]));
+            if (!cdAttached() || (attachName == "")) return;
+            saveAttachment = cdSetValue(saveAttachment,([attachName,0]),(string)llGetLocalPos());
+            saveAttachment = cdSetValue(saveAttachment,([attachName,1]),(string)llGetLocalRot());
         }
     }
 

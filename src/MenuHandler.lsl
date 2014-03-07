@@ -190,10 +190,7 @@ default
             else if (name == "winderRechargeTime") winderRechargeTime = (float)value;
             else if (name == "primLight") {
                 primLight = (integer)value;
-                lmInternalCommand("setGemColour", llList2String(llGetLinkPrimitiveParams(5, [PRIM_DESC]), 0), NULL_KEY);
-            }
-            else if (name == "gemColour") {
-                if (gemColour != (vector)value) lmInternalCommand("setGemColour", value, NULL_KEY);
+                lmInternalCommand("setGemColour", (string)gemColour, NULL_KEY);
             }
             else if (name == "uniqueID") {
                 if (script != "ServiceReceiver") return;
@@ -257,39 +254,40 @@ default
                 return;
             }
             else if (cmd == "setGemColour") {
-                string value = llList2String(split, 0);
+                vector newColour = (vector)llList2String(split, 0);
                 integer i; integer j; integer s; list params; list colourParams;
 
                 for (i = 1; i < llGetNumberOfPrims(); i++) {
                     params += [ PRIM_LINK_TARGET, i ];
                     if (llGetSubString(llGetLinkName(i), 0, 4) == "Heart") {
-                        if (gemColour != (vector)value) {
+                        if (gemColour != newColour) {
                             if (!s) {
-                                lmSendConfig("gemColour", (string)(gemColour = (vector)value));
-            
                                 for (j = 0; j < llGetLinkNumberOfSides(i); j++) {
-                                    vector shade = <llFabs((llFrand(0.2) - 0.1) + gemColour.x), llFabs((llFrand(0.2) - 0.1) + gemColour.y), llFabs((llFrand(0.2) - 0.1) + gemColour.z)>;
-                                    float mag = llVecMag(shade);
-                
-                                    if (llVecMag(shade) > 1.0) {
-                                        if (llVecMag(shade) < 1.2) shade = llVecNorm(shade);
-                                        else shade /= 256.0;
-                                    }
+                                    vector shade = <llFrand(0.4) - 0.2 + newColour.x, llFrand(0.4) - 0.2 + newColour.y, llFrand(0.4) - 0.2 + newColour.z>;
+                                    
+                                    if (shade.x < 0.0) shade.x = 0.0;
+                                    if (shade.y < 0.0) shade.y = 0.0;
+                                    if (shade.z < 0.0) shade.z = 0.0;
+                                    
+                                    if (shade.x > 1.0) shade.x = 1.0;
+                                    if (shade.y > 1.0) shade.y = 1.0;
+                                    if (shade.z > 1.0) shade.z = 1.0;
                 
                                     colourParams += [ PRIM_COLOR, j, shade, 1.0 ];
                                 }
                                 params += colourParams;
                                 s = 1;
                             }
-                            else {
-                                params += colourParams;
-                            }
+                            else params += colourParams;
                         }
-                        params += [PRIM_POINT_LIGHT] + llListReplaceList(llGetLinkPrimitiveParams(i, [PRIM_POINT_LIGHT]),[primLight],0,0);
+                        params += [PRIM_POINT_LIGHT] + llListReplaceList(llGetLinkPrimitiveParams(i, [PRIM_POINT_LIGHT]),[primLight,newColour],0,1);
                     }
                     else params += [PRIM_POINT_LIGHT, 0, ZERO_VECTOR, 0, 0, 0];
                 }
                 llSetLinkPrimitiveParamsFast(0, params);
+                if (gemColour != newColour) {
+                    lmSendConfig("gemColour", (string)(gemColour = newColour));
+                }
                 params = [];
             }
             else if (cmd == "updateExceptions") {
