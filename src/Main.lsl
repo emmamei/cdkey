@@ -577,7 +577,7 @@ default {
 
         else if (code == 350) {
             string script = llList2String(split, 0);
-            RLVok = llList2Integer(split, 1);
+            RLVok = (llList2Integer(split, 1) == 1);
             rlvAPIversion = llList2String(split, 2);
             // When rlv confirmed....vefify collapse state... no escape!
             if (collapsed == 1 && timeLeftOnKey > 0) uncollapse(0);
@@ -596,7 +596,7 @@ default {
             
             if ((keyLimit < 1800.0) || (keyLimit > 25200.0)) {
                 llOwnerSay("Max time setting " + (string)llRound(keyLimit / SEC_TO_MIN) + " mins is invalid must be between 30 and 420 mins resetting to 180 min default.");
-                keyLimit = 10800.0;
+                lmSendConfig("keyLimit", (string)(keyLimit = 10800.0));
             }
             float effectiveLimit = (DEMO_LIMIT * demoMode + keyLimit * !demoMode);
             if (timeLeftOnKey > effectiveLimit) timeLeftOnKey = effectiveLimit;

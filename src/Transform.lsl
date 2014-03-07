@@ -305,7 +305,7 @@ default {
         }
 
         else if (code == 350) {
-            RLVok = (integer)choice;
+            RLVok = ((integer)choice == 1);
 
             outfitsFolder = "";
             typeFolder = "";

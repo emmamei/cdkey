@@ -192,6 +192,7 @@ integer isDresser(key id) {
     if (dresserID == NULL_KEY) {
         dresserID = id;
         dresserName = llGetDisplayName(dresserID);
+        llOwnerSay("secondlife:///app/agent/" + (string)id + "/about is looking at your dress menu");
         return TRUE;
     }
     else if (dresserID == id) {
@@ -377,7 +378,7 @@ default {
         }
         else if (code == 350) {
             string script = cdListElement(split, 0);
-            RLVok = cdListIntegerElement(split, 1);
+            RLVok = (cdListIntegerElement(split, 1) == 1);
         }
         // Choice #500: (From Main Menu) Dress Dolly
         else if (code == 500)  {

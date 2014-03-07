@@ -511,7 +511,7 @@ default {
 
         else if (code == 350) {
             string script = llList2String(split, 0);
-            RLVok = llList2Integer(split, 1);
+            RLVok = (llList2Integer(split, 1) == 1);
             rlvWait = 0;
 
             if (!newAttach && cdAttached()) {
@@ -644,8 +644,9 @@ default {
             if (data == EOF) {
                 if (!prefsReread) doneConfiguration(1);
                 else {
-                    llOwnerSay("Preferences reread restarting in 30 seconds.");
-                    llSleep(30.0);
+                    llOwnerSay("Preferences reread restarting in 20 seconds.");
+                    lmInternalCommand("getTimeUpdates","",NULL_KEY);
+                    llSleep(20.0);
                     llOwnerSay("@clear");
                 }
             }
@@ -699,8 +700,9 @@ default {
                 }
             }
             else {
-                llOwnerSay("Inventory modified restarting in 30 seconds.");
-                llSleep(30.0);
+                llOwnerSay("Inventory modified restarting in 20 seconds.");
+                lmInternalCommand("getTimeUpdates","",NULL_KEY);
+                llSleep(20.0);
                 llOwnerSay("@clear");
             }
 

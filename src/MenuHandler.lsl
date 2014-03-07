@@ -59,7 +59,7 @@ integer demoMode;
 integer isTransformingKey;
 integer visible = 1;
 //integer quiet;
-integer RLVok;
+integer RLVok = -1;
 //integer signOn;
 //integer takeoverAllowed;
 //integer warned;
@@ -120,6 +120,10 @@ default
     state_entry() {
         dollID = llGetOwner();
         dollName = llGetDisplayName(dollID);
+    }
+    
+    on_rez(integer start) {
+        RLVok = -1;
     }
 
     link_message(integer sender, integer code, string data, key id) {
@@ -263,7 +267,7 @@ default
                         if (gemColour != newColour) {
                             if (!s) {
                                 for (j = 0; j < llGetLinkNumberOfSides(i); j++) {
-                                    vector shade = <llFrand(0.4) - 0.2 + newColour.x, llFrand(0.4) - 0.2 + newColour.y, llFrand(0.4) - 0.2 + newColour.z>;
+                                    vector shade = <llFrand(0.2) - 0.1 + newColour.x, llFrand(0.2) - 0.1 + newColour.y, llFrand(0.2) - 0.1 + newColour.z> * (1.0 + (llFrand(0.2) - 0.1));
                                     
                                     if (shade.x < 0.0) shade.x = 0.0;
                                     if (shade.y < 0.0) shade.y = 0.0;
@@ -412,7 +416,7 @@ default
                     }
 
                     // Can the doll be dressed? Add menu button
-                    if (RLVok && !collapsed && ((!isDoll && canDress) || (isDoll && canWear && !wearLock))) {
+                    if ((RLVok == 1) && !collapsed && ((!isDoll && canDress) || (isDoll && canWear && !wearLock))) {
                         menu += "Dress";
                     }
 
@@ -446,7 +450,7 @@ default
 
 #ifdef ADULT_MODE
                         // Is doll strippable?
-                        if (RLVok && !collapsed && (pleasureDoll || dollType == "Slut")) {
+                        if ((RLVok == 1) && !collapsed && (pleasureDoll || dollType == "Slut")) {
 #ifdef TESTER_MODE
                             if (isController || isCarrier || ((debugLevel != 0) && isDoll)) {
 #else
@@ -477,7 +481,11 @@ default
                 cdListenerActivate(dialogHandle);
                 llSetTimerEvent(60.0);
 
-                if (!RLVok) msg += "No RLV detected some features unavailable.\n";
+                if (RLVok == -1) msg += "Still checking for RLV support some features unavailable.\n";
+                if (RLVok == 0) {
+                    msg += "No RLV detected some features unavailable.\n";
+                    if (cdIsDoll(id) || cdIsController(id)) menu += "*RLV On*";
+                }
 
                 msg += "See " + WEB_DOMAIN + manpage + " for more information." ;
                 llDialog(id, timeleft + msg, dialogSort(llListSort(menu, 1, 1)) , dialogChannel);
@@ -489,10 +497,6 @@ default
             
             lmInternalCommand("updateExceptions", "", NULL_KEY);
         }
-    }
-
-    on_rez(integer start) {
-        dbConfig = 0;
     }
 
     timer() {

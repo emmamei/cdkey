@@ -51,6 +51,7 @@ integer locked;
 integer lowScriptMode;
 integer poseSilence;
 integer RLVck = -1;
+integer RLVrecheck;
 integer RLVok;
 integer RLVstarted;
 integer startup = 1;
@@ -124,7 +125,7 @@ checkRLV()
     }
     
     if (!cdAttached() || (configured && (RLVok || (RLVck == 5)))) {
-        if (!RLVstarted) {
+        if (!RLVstarted && !RLVrecheck) {
             if (RLVok && !newAttach) llOwnerSay("Logged with Community Doll Key and " + rlvAPIversion + " active...");
             else if (RLVok && newAttach) llOwnerSay("Reattached Community Doll Key with " + rlvAPIversion + " active...");
             else if (cdAttached() && !RLVok) llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
@@ -153,24 +154,23 @@ ifPermissions() {
                 
                 if (keyAnimationID) {
                     debugSay(7, "DEBUG", "animID=" + (string)keyAnimationID + " curAnim=" + (string)curAnim + " refreshRate=" + (string)refreshRate);
-                    if (!clearAnim && (curAnim == keyAnimationID)) {
-                        refreshRate += (1.0/llGetRegionFPS());                      // +1 Frame
-                        if (refreshRate > 30.0) refreshRate = 30.0;                 // 30 Second limit
+                    if (keyAnimationID == NULL_KEY) refreshRate = 4.0;          // In case anim is no mod use default 4 sec
+                    else if (curAnim == keyAnimationID) {
+                        refreshRate += (1.0/llGetRegionFPS());                  // +1 Frame
+                        if (refreshRate > 30.0) refreshRate = 30.0;             // 30 Second limit
                     }
-                    else if (clearAnim || (keyAnimation != "")) {
-                        if ((keyAnimationID != NULL_KEY) && (keyAnimation != "")) {
-                            refreshRate /= 2.0;                                     // -50%
-                            if (refreshRate < 0.022) refreshRate = 0.022;           // Limit once per frame
-                        }
+                    else if (curAnim != keyAnimationID) {
+                        refreshRate /= 2.0;                                     // -50%
+                        if (refreshRate < 0.022) refreshRate = 0.022;           // Limit once per frame
                     }
-                    else refreshRate = 4.0;
                 }
                 
-                if (keyAnimation != "") {
+                if (!clearAnim && (keyAnimation != "")) {
                     llWhisper(LOCKMEISTER_CHANNEL, (string)dollID + "bootoff");
 
                     list animList; integer i; integer animCount;
-                    key animKey = llGetInventoryKey(keyAnimation);
+                    key animKey = keyAnimationID;
+                    if (animKey == NULL_KEY) animKey = llGetInventoryKey(keyAnimation);
                     if (animKey) {
                         while ((animList = llGetAnimationList(dollID)) != [ animKey ]) {
                             animCount = llGetListLength(animList);
@@ -181,7 +181,9 @@ ifPermissions() {
                         }
                     }
                     else animKey = animStart(keyAnimation);
-                } else if (keyAnimation == "" && clearAnim) {
+                    if ((keyAnimationID == NULL_KEY) && (animKey != NULL_KEY)) lmSendConfig("keyAnimationID", (string)(keyAnimationID = animKey));
+                    if (cdCollapsedAnim()) lmSendConfig("poseExpire", (string)(poseExpire = 0.0));
+                } else if (clearAnim) {
                     list animList = llGetAnimationList(dollID);
                     integer i; integer animCount = llGetInventoryNumber(20);
                     for (i = 0; i < animCount; i++) {
@@ -191,6 +193,11 @@ ifPermissions() {
                     }
                     clearAnim = 0;
                     llWhisper(LOCKMEISTER_CHANNEL, (string)dollID + "booton");
+                    
+                    lmSendConfig("keyAnimation", (keyAnimation = ""));
+                    lmSendConfig("keyAnimationID", (string)(keyAnimationID = NULL_KEY));
+                    lmSendConfig("poserID", (string)(poserID = NULL_KEY));
+                    lmSendConfig("poseExpire", (string)(poseExpire = 0.0));
                 }
             }
 
@@ -205,7 +212,7 @@ ifPermissions() {
                 llTakeControls(CONTROL_MOVE, 0, 1);
 
                 if (keyAnimation != "") {
-                    if (lockPos == ZERO_VECTOR) lockPos = llGetPos();
+                    if (lockPos == ZERO_VECTOR) lmSendConfig("lockPos", (string)(lockPos = llGetPos()));
                     if (llVecDist(llGetPos(), lockPos) > 1.0) {
                         llTargetRemove(targetHandle);
                         targetHandle = llTarget(lockPos, 1.0);
@@ -214,7 +221,7 @@ ifPermissions() {
                     llTakeControls(CONTROL_ALL, 1, 0);
                 }
                 else {
-                    lockPos = ZERO_VECTOR;
+                    if (lockPos != ZERO_VECTOR) lmSendConfig("lockPos", (string)(lockPos = ZERO_VECTOR));
                     llTargetRemove(targetHandle);
                     llStopMoveToTarget();
                     if (cdCarried()) {
@@ -323,6 +330,8 @@ default {
     on_rez(integer start) {
         locked = 0;
         startup = 0;
+        
+        RLVck = -1;
 
         rlvAPIversion = "";
 
@@ -405,7 +414,7 @@ default {
         }
         else if (code == 110) {
             ifPermissions();
-            RLVck = -1;
+            RLVrecheck = 0;
             checkRLV();
             return;
         }
@@ -498,13 +507,7 @@ default {
                 carrierName = name;
             }
             else if (cmd == "doUnpose") {
-                if (!cdCollapsedAnim()) {
-                    lmSendConfig("lockPos", (string)(lockPos = ZERO_VECTOR));
-                    lmSendConfig("poseExpire", (string)(poseExpire = 0.0));
-                    lmSendConfig("keyAnimation", (keyAnimation = ""));
-                    lmSendConfig("poserID", (string)(poserID = NULL_KEY));
-                    clearAnim = 1;
-                }
+                if (!cdCollapsedAnim()) clearAnim = 1;
             }
             else if (cmd == "setPose" && !collapsed) {
                 string pose = llList2String(split, 0);
@@ -514,8 +517,6 @@ default {
 
                 // Set pose expire timeourt unless we are a display doll or are self posed
                 if ((dollType != "Display") && (poserID != dollID)) lmSendConfig("poseExpire", (string)(poseExpire = POSE_LIMIT));
-                // Also include region name with location so we know to reset if changed.
-                lmSendConfig("lockPos", llGetRegionName() + "|" + (string)(lockPos = llGetPos()));
                 lmSendConfig("keyAnimation", (keyAnimation = pose));
                 lmSendConfig("poserID", (string)(poserID = id));
             }
@@ -536,11 +537,10 @@ default {
                 carrierID = NULL_KEY;
                 carrierName = "";
             }
-            else if (cmd == "uncollapse") {
-                debugSay(5, "DEBUG", "Restoring from collapse");
-                clearAnim = 1;
-                collapsed = 0;
-                lmSendConfig("keyAnimation", (keyAnimation = ""));
+            else if (llGetSubString(cmd, 2, -1) == "collapse") {
+                collapsed = llList2Integer(split, 0);
+                if (!collapsed) clearAnim = 1;
+                else lmSendConfig("keyAnimation", (keyAnimation = ANIMATION_COLLAPSED));
             }
             else if (cmd == "TP") {
                 string lm = llList2String(split, 0);
@@ -560,9 +560,6 @@ default {
             }
             else if (cmd == "wearLock") lmSendConfig("wearLock", (string)(wearLock = llList2Integer(split, 0)));
             else return;
-
-            if (keyAnimation == "") lmSendConfig("keyAnimationID", (string)(keyAnimationID = NULL_KEY));
-            else lmSendConfig("keyAnimationID", (string)(keyAnimationID = animStart(keyAnimation)));
         }
         else if (code == 500) {
             string script = llList2String(split, 0);
@@ -582,6 +579,16 @@ default {
                 carrierID = NULL_KEY;
                 carrierName = "";
                 lmInternalCommand("mainMenu", "", id);
+            }
+            else if (choice == "*RLV On*") {
+                if (RLVok == 0) {
+                    llOwnerSay("Trying to enable RLV, you must have a compatible viewer and the RLV setting enabled for this to work.");
+                    RLVck = -1;
+                    lmRLVreport(-1,"",0);
+                    RLVrecheck = 1;
+                    checkRLV();
+                }
+                else checkRLV();
             }
             else if ((!cdIsDoll(id) || cdSelfPosed()) && choice == "Unpose") {
                 lmInternalCommand("doUnpose", "", id);

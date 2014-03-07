@@ -150,13 +150,13 @@ default {
             if (llList2String(split, 1) != "");
             memData = cdSetValue(memData, [script], llList2String(split, 1));
             
-            integer i; list scripts =[ "Avatar", "Dress", "Main", "MenuHandler", "ServiceRequester", "ServiceReceiver", "Start", "StatusRLV", "Transform" ];
+            integer i; list scripts =[ "Avatar", "ChatHandler", "Dress", "Main", "MenuHandler", "ServiceRequester", "ServiceReceiver", "Start", "StatusRLV", "Transform" ];
             integer ok;
-            for (i = 0; i <= 9; i++) {
+            for (i = 0; i <= 10; i++) {
                 string script = llList2String(scripts, i);
                 ok += (cdGetValue(memData, [script]) != JSON_INVALID);
             }
-            if (ok == 9) { 
+            if (ok == 10) { 
                 float memory_limit = (float)llGetMemoryLimit();
                 float free_memory = (float)llGetFreeMemory();
                 float used_memory = (float)llGetUsedMemory();
@@ -332,7 +332,7 @@ default {
             }
         }
         else if (code == 350) {
-            RLVok = llList2Integer(split, 1);
+            RLVok = (llList2Integer(split, 1) == 1);
         }
         else if (code == 500) {
             string script = llList2String(split, 0);

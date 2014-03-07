@@ -301,7 +301,7 @@ default {
             }
         }
         else if (code == 350) {
-            RLVok = cdListIntegerElement(split, 1);
+            RLVok = (cdListIntegerElement(split, 1) == 1);
             RLVstarted = 1;
         }
     }
