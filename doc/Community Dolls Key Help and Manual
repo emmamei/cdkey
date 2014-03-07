@@ -17,6 +17,8 @@ New Features Over Previous Model
 There many, many, many New Features - perhaps too many to list. Here are
 some of them:
 
+* Built-in Demo Mode - for trying key out
+
 * Better Carrying handling - Carried Dolly stays close and moves more
   smoothly
 
@@ -277,7 +279,7 @@ Options > Type
     * Verify Type
 
     When Dolly is transformed, this option determines whether the Doll will
-    be able to choose to allow the transformation or not. 
+    be able to choose to allow the transformation or not.
 
 Options > Access
 ----------------
@@ -346,7 +348,7 @@ Options > Features
     in the message.
 
     * Pleasure Doll
-    
+
     A "Pleasure Doll" is one that is available for sex at any time,
     and may be stripped and used by its owner. With this option,
     any Doll Type may become a "Pleasure Doll" and have this capability.
@@ -506,5 +508,75 @@ Chat Commands
 -------------
 
 The Key has a chat interface on Channel 75, though the channel can be
-set to whatever you like with a chat command.
+set to whatever you like with a chat command. To talk to your Key, use
+local chat with a line like:
+
+    /75 stat
+
+This does a status report. You must always prefix the command with "/75"
+(or whatever channel is being used). If you are using an RLV item that
+restricts chat, you may find yourself cut off from talking to your Key
+this way.
+
+Commands are these:
+
+    blacklist <name>
+    unblacklist <name>
+
+    These commands modify the blacklist, adding and subtracting users from
+    the list.
+
+    channel <num>
+
+    This command changes the channel that the Key listens on. It will no longer
+    listen on the default 75, but will listen on an alternative channel as
+    specified by number.
+
+    controller <name>
+
+    This adds a controller by name to the list of controllers on the Key.
+
+    demo
+
+    Toggle Demo Mode. The Key's time limit is set to 5 minutes, and wind times
+    adjusted. The previous maximum time and wind times are preserved for when
+    demo mode is exited.
+
+    detach
+
+    Detaches the key from the wearer. After this command executes, the key is
+    no longer available as it has been removed.
+
+    help
+
+    This provides a short, quick, help - a list of commands.
+
+    poses
+
+    This lists the available poses in the Key.
+
+    release
+
+    stat
+    stats
+    xstats
+
+    These commands provide different sorts of statistics and information
+    from the key. "stats" is a normal list, "xstats" is a list of extended
+    stats, and "stat" is a one line time status report.
+
+    wind
+
+    This is the emergency winder. It can be activated once every 12 hours.
+
+Demo Mode
+---------
+When Demo Mode is activated, the key goes to a 5 minute maximum, and
+winding is adjusted accordingly. If a single wind amount is being used,
+the wind time is set to 1 minute. All functions remain operational in their
+normal ways.
+
+The purpose is to allow people to try the key out, see what it is like to
+be collapsed and to be wound and returned to normal. There is no functional
+difference between a demo key and the normal key but time.
 
