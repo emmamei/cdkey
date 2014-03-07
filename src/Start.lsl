@@ -74,6 +74,7 @@ integer offlineMode = NO;
 integer visible = YES;
 integer primGlow = YES;
 integer primLight = UNSET;
+integer prefsReread = NO;
 
 vector gemColour;
 
@@ -148,7 +149,7 @@ processConfiguration(string name, list values) {
     else if (value == "no"  || value == "off") value = "0";
 
     if (name == "initial time") {
-        lmSendConfig("timeLeftOnKey", (string)((float)value * SEC_TO_MIN));
+        if (!prefsReread) lmSendConfig("timeLeftOnKey", (string)((float)value * SEC_TO_MIN));
     }
     else if (name == "wind time") {
         lmSendConfig("windTimes", llDumpList2String(values, "|"));
@@ -641,7 +642,12 @@ default {
         }
         else if (query_id == ncPrefsKey) {
             if (data == EOF) {
-                doneConfiguration(1);
+                if (!prefsReread) doneConfiguration(1);
+                else {
+                    llOwnerSay("Preferences reread restarting in 30 seconds.");
+                    llSleep(30.0);
+                    llOwnerSay("@clear");
+                }
             }
             else {
                 integer index = llSubStringIndex(data, "#");
@@ -675,14 +681,11 @@ default {
             llResetScript();
         }
         if (change & CHANGED_INVENTORY) {
-            llOwnerSay("Inventory modified restarting in 30 seconds.");
-
-            llSleep(30.0);
-
             if (llGetInventoryType(NOTECARD_PREFERENCES) == INVENTORY_NOTECARD) {
                 key ncKey = llGetInventoryKey(NOTECARD_PREFERENCES);
                 if (ncPrefsLoadedUUID != NULL_KEY && ncKey != NULL_KEY && ncKey != ncPrefsLoadedUUID) {
-                    databaseOnline = 0;
+                    databaseOnline = NO;
+                    prefsReread = YES;
                     reset = 1;
 
                     sendMsg(dollID, "Loading preferences notecard");
@@ -694,6 +697,11 @@ default {
 
                     return;
                 }
+            }
+            else {
+                llOwnerSay("Inventory modified restarting in 30 seconds.");
+                llSleep(30.0);
+                llOwnerSay("@clear");
             }
 
             llResetScript();

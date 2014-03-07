@@ -183,7 +183,7 @@
 #define timerNextFrame() llSetTimerEvent(0.01 * mainTimerEnable)
 
 #define uncarry() lmInternalCommand("uncarry", "", NULL_KEY)
-#define uncollapse(timeSent) lmInternalCommand("uncollapse", (string)timeSent, NULL_KEY)
+#define uncollapse(old) lmInternalCommand("uncollapse", "0", NULL_KEY)
 
 #define NORMAL_TIMER_RATE 0.5 * mainTimerEnable
 #ifdef LOW_SCRIPT_MODE
