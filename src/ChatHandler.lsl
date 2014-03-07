@@ -1,4 +1,15 @@
+//========================================
+// ChatHandler.lsl
+//========================================
+//
+// vim:sw=4 et nowrap filetype=lsl
+//
+// DATE: 7 March 2014
+
 #include "include/GlobalDefines.lsl"
+#define cdGetFirstChar(a) llGetSubString(a,0,0)
+#define NOT_FOUND -1
+#define STRING_END -1
 
 key keyHandler              = NULL_KEY;
 
@@ -31,6 +42,9 @@ default
         chatHandle = llListen(chatChannel, "", dollID, "");
     }
     
+    //----------------------------------------
+    // LINK MESSAGE
+    //----------------------------------------
     link_message(integer source, integer code, string data, key id) {
         list split = llParseString2List(data, [ "|" ], []);
         string script = llList2String(split, 0);
@@ -96,6 +110,7 @@ default
             }
         }
     }
+
     //----------------------------------------
     // LISTEN
     //----------------------------------------
@@ -108,8 +123,11 @@ default
         // Text commands
         if (channel == chatChannel) {
 
-            if (llGetInventoryType(choice) == 20 || llGetSubString(choice, 0, 0) == "." | llGetSubString(choice, 0, 0) == "!") {
-                if (llGetInventoryType(choice) != 20) choice = llGetSubString(choice, 1, -1);
+            string firstChar = cdGetFirstChar(choice);
+            integer choiceType = llGetInventoryType(choice);
+
+            if (choiceType == INVENTORY_ANIMATION || firstChar == "." | firstChar == "!") {
+                if (choiceType != INVENTORY_ANIMATION) choice = llGetSubString(choice, 1, STRING_END);
                 if (cdNoAnim() || (!cdCollapsedAnim() && cdSelfPosed())) {
                     lmInternalCommand("setPose", choice, dollID);
                 }
@@ -118,7 +136,7 @@ default
             }
 
             integer space = llSubStringIndex(choice, " ");
-            if (space == -1) {
+            if (space == NOT_FOUND) {
                 // Normal user commands
                 if (choice == "detach") {
                     if (detachable) {
@@ -142,7 +160,7 @@ default
                     llOwnerSay("Key set to run " + mode + ": time limit set to " + (string)llRound(currentLimit / SEC_TO_MIN) + " minutes.");
                 }
                 else if (choice == "poses") {
-                    integer  n = llGetInventoryNumber(20);
+                    integer  n = llGetInventoryNumber(INVENTORY_ANIMATION);
 
                     // Menu max limit of 11... report error
                     if (n > 11) {
@@ -150,7 +168,7 @@ default
                     }
 
                     while(n) {
-                        string thisPose = llGetInventoryName(20, --n);
+                        string thisPose = llGetInventoryName(INVENTORY_ANIMATION, --n);
 
                         if (!(thisPose == ANIMATION_COLLAPSED || llGetSubString(thisPose,1,1) == ".")) {
                             if (keyAnimation == thisPose) {
@@ -259,7 +277,7 @@ default
                 else lmInternalCommand("doUnpose", "", dollID);
             }
             else {
-                string param = llStringTrim(llGetSubString(choice, space + 1, -1), STRING_TRIM);
+                string param = llStringTrim(llGetSubString(choice, space + 1, STRING_END), STRING_TRIM);
                 choice = llStringTrim(llGetSubString(choice, 0, space - 1), STRING_TRIM);
 
                 if (choice == "channel") {
@@ -310,7 +328,7 @@ default
         }
         else if (channel == broadcastOn) {
             if (llGetSubString(choice, 0, 4) == "keys ") {
-                string subcommand = llGetSubString(choice, 5, -1);
+                string subcommand = llGetSubString(choice, 5, STRING_END);
                 debugSay(9, "BROADCAST-DEBUG", "Broadcast recv: From: " + name + " (" + (string)id + ") Owner: " + llGetDisplayName(llGetOwnerKey(id)) + " (" + (string)llGetOwnerKey(id) +  ") " + choice);
                 if (subcommand == "claimed") {
                     if (keyHandler == llGetKey()) {

@@ -20,7 +20,10 @@ some of them:
 * Better Carrying handling - Carried Dolly stays close and moves more
   smoothly
 
-* Support for many more outfits, with support for pages and subfolders.
+* Support for many more outfits, with support for multiple pages and
+  subfolders.
+
+* Outfits can be limited to certain Sim Ratings.
 
 * Color of the gem can be changed - and it shines too!
 
@@ -41,6 +44,13 @@ some of them:
 
 * When the Dolly goes into Away status, the Dolly automatically enters
   the "low power mode" (AFK).
+
+* An emergency winder is available on a limited basis.
+
+* A chat interface is available.
+
+* Poses can be selectively limited to Dolly use or to Dolly and Controller
+  use only
 
 Configuration of #RLV Folder
 ----------------------------
@@ -485,4 +495,16 @@ also be applied upon collapse. For example, if the notecard contains this line:
 
 Then upon collapse, touch will be removed from the Dolly. When Dolly is
 wound, those added restrictions are removed along with the rest.
+
+When Dolly is wound down, your menu will only have an "OK" button and
+nothing else. After a period of time, the emergency winder circuitry
+embedded in the Dolly activates and you can use the emergency winder
+or teleport to a preset Home landmark stored in the Key. This landmark
+can be changed by the Dolly as desired.
+
+Chat Commands
+-------------
+
+The Key has a chat interface on Channel 75, though the channel can be
+set to whatever you like with a chat command.
 
