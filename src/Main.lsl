@@ -460,10 +460,6 @@ default {
             //else if (name == "canSit")                         canSit = (integer)value;
             //else if (name == "canStand")                     canStand = (integer)value;
             else if (name == "canRepeat")                   canRepeat = (integer)value;
-            else if (name == "collapsed") {
-                collapsed = (integer)value;
-                setWindRate();
-            }
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
@@ -477,7 +473,6 @@ default {
             else if (name == "quiet")                           quiet = (integer)value;
             //else if (name == "RLVok")                           RLVok = (integer)value;
             //else if (name == "signOn")                         signOn = (integer)value;
-            else if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
             else if (name == "windamount")                 windamount = (float)value;
             else if (name == "wearLockExpire")         wearLockExpire = (float)value;
             else if (name == "baseWindRate")             baseWindRate = (float)value;
@@ -493,6 +488,11 @@ default {
             else if (name == "blacklist")                   blacklist = split;
             else if (name == "dialogChannel")           dialogChannel = (integer)value;
             else if (name == "debugLevel")                 debugLevel = (integer)value;
+            else if ((name == "timeLeftOnKey") || (name == "collapsed")) {
+                if (name == "timeLeftOnKey")            timeLeftOnKey = (float)value;
+                if (name == "collapsed")                    collapsed = (integer)value;
+                if ((collapsed == 1) && (timeLeftOnKey > 0.0)) uncollapse(0);
+            }
             else if (name == "keyHandler") {
                 keyHandler = (key)value;
             }
