@@ -487,11 +487,11 @@ default {
 
                 for (i = 0; i < start; i++) {
                     integer value = (integer)llStringTrim(llList2String(split, i), STRING_TRIM);
-                    if ((value > 0) && (llListFindList(windTimes, [ value ]) == -1)) windTimes += value;
+                    if ((value > 0) && (value <= 240) && (llListFindList(windTimes, [ value ]) == -1)) windTimes += value;
                 }
                 
-                integer l = llGetListLength(windTimes); i = 1;
-                while (l > 11) windTimes = llDeleteSubList(llListSort(windTimes, l-- / ++i, 1), i, i);
+                integer l = llGetListLength(windTimes); i = -(l/2);
+                while (l > 11) llDeleteSubList(llListSort(windTimes,1,--l&1),++i,i);
                 windTimes = llListSort(windTimes,1,1);
                 
                 if (start > l) lmSendToAgent("One or more times were filtered accepted list is " + llList2CSV(windTimes), id);
@@ -541,10 +541,10 @@ default {
                     else split = [1,2];
                 } else {
                     integer i = 0; float time; split = [];
-                    while ((i <= n) && ( ( time = (llList2Float(windTimes, i++) * SEC_TO_MIN) ) <= windLimit)) {
+                    while ((i <= n) && ( ( time = (llList2Float(windTimes, i++) * SEC_TO_MIN) ) <= windLimit) && (time <= (keyLimit / 2))) {
                         split += ["Wind " + (string)llFloor(time / SEC_TO_MIN)];
                     }
-                    if (i <= n) split += ["Wind Full"];
+                    if ((i <= n) && (windLimit <= (keyLimit / 2))) split += ["Wind Full"];
                     
                     llOwnerSay(llList2CSV(split));
                 }
