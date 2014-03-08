@@ -27,6 +27,7 @@ default
     // STATE ENTRY
     //----------------------------------------
     state_entry() {
+        dollID = llGetOwner();
         broadcastHandle = llListen(broadcastOn, "", "", "");
         chatHandle = llListen(chatChannel, "", dollID, "");
     }

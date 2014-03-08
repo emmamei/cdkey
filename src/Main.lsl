@@ -628,7 +628,7 @@ default {
                             lmSendToController(dollName + " has activated the emergency winder.");
 
                             windamount = effectiveLimit * 0.2;
-                            if (windamount > 2700.0) windamount = 2700.0;
+                            if (windamount > 3600.0) windamount = 3600.0;
                             lmSendConfig("winderRechargeTime", (string)(winderRechargeTime = (llGetUnixTime() + EMERGENCY_LIMIT_TIME)));
                             
                             llOwnerSay("With an electical sound the motor whirls into life and gives you " + (string)llRound(windamount / SEC_TO_MIN) + " minutes of life before it's battery wears out, it will take " + (string)llRound(EMERGENCY_LIMIT_TIME / 3600.0) + " hours to recharge.");
@@ -654,6 +654,10 @@ default {
                 else if ((choice == "Wind") && (llGetListLength(windTimes) > 1)) {
                     split = windTimes;
                     if (demoMode) split = [1,2];
+                    if (llGetListLength(split) == 0) {
+                        split = [30];
+                        lmSendConfig("windTimes","30");
+                    }
                     if (llListStatistics(LIST_STAT_MIN, split) < (windLimit / SEC_TO_MIN)) {
                         lmInternalCommand("windMenu", name + "|" + (string)windLimit, id);
                         return;
