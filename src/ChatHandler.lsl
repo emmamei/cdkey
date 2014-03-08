@@ -148,7 +148,44 @@ default
                     }
                 }
                 else if (choice == "help") {
-                    lmSendToAgent("%TEXT_HELP%", dollID);
+                    string help = "Commands:\n\n
+    detach ......... detach key if possible\n
+    stat ........... concise current status\n
+    stats .......... selected statistics and settings\n
+    xstats ......... extended statistics and settings\n
+    poses .......... list all poses\n
+    wind ........... trigger emergency autowind\n
+    demo ........... toggle demo mode\n
+    [posename] ..... activate the named pose if possible\n
+    release ........ stop the current pose if possible\n
+    channel # ...... change channel\n
+    help ........... this list of commands\n
+    listhelp ....... list controller/blacklist commands";
+#ifndef DEVELOPER_MODE
+                    llOwnerSay(help);
+                }
+#else
+                    help += "\n
+    devhelp ........ list of developer commands";
+                    llOwnerSay(help);
+                }
+                else if (choice == "devhelp") {
+                    string help = "Developer Commands:\n
+    timereporting .. periodic reporting of script time usage\n
+    debug # ........ set the debugging message verbosity 0-9\n
+    inject ......... inject an aribtary link message the format is
+                     integer#string#key";
+                     llOwnerSay(help);
+                }
+#endif
+                else if (choice == "listhelp") {
+                    string help = "Access Commands:\n
+                     The following commands must be followed by the desired\n
+                     user's username, not display name.\n
+    controller ..... add the username to the controller list\n
+    blacklist ...... blacklist the username if not blacklisted\n
+    unblacklist .... unblacklist the username if they are blacklisted";
+                    llOwnerSay(help);
                 }
                 // Demo: short time span
                 else if (choice == "demo") {
