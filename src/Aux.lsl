@@ -49,6 +49,7 @@ integer configured;
 integer ncLine;
 integer visible;
 integer memCollecting;
+integer memRequested;
 integer quiet;
 integer wearLock;
 integer rezzed;
@@ -122,15 +123,33 @@ default {
         }
         else if (code == 110) {
             if (script != "Start") return;
-            lmMemReport(0.0);
+            lmMemReport(0.5, 0);
         }
         else if (code == 135) {
+            memRequested = llList2Integer(split, 2);
             memCollecting = 1;
             memData = "";
         }
         else if (code == 136) {
-            if (llList2String(split, 1) != "");
-            memData = cdSetValue(memData, [script], llList2String(split, 1));
+            string json = llList2String(split, 1);
+            if ((json != "") && (json != JSON_INVALID));
+#ifdef DEVELOPER_MODE            
+            memData = cdSetValue(memData, [script], json);
+#else //DEVELOPER_MODE
+#ifdef TESTER_MODE 
+            memData = cdSetValue(memData, [script], json);
+#else //TESTER_MODE
+            if (memRequested) {
+                memData = cdSetValue(memData, [script], json);
+            }
+            else {
+                if ((integer)cdGetValue(json,[1]) > 64512) {
+                    memData = cdSetValue(memData, [script], json);
+                }
+                else memData = cdSetValue(memData, [script], "");
+            }
+#endif //TESTER_MODE
+#endif //DEVELOPER_MODE
             
             integer i; list scripts =[ "Avatar", "ChatHandler", "Dress", "Main", "MenuHandler", "ServiceRequester", "ServiceReceiver", "Start", "StatusRLV", "Transform" ];
             integer ok;
@@ -156,14 +175,17 @@ default {
                 for (i = 0; i < llGetInventoryNumber(10); i++) {
                     scriptName =        llGetInventoryName(10, i);
                     if (scriptName != "UpdateScript") {
-                        if (cdGetElementType(memData, ([scriptName,0])) != JSON_INVALID) {
-                            totUsed     += used_memory          = (float)cdGetValue(memData, ([scriptName,0]));
-                            totLimit    += memory_limit         = (float)cdGetValue(memData, ([scriptName,1]));
-                            totFree     += free_memory          = (float)cdGetValue(memData, ([scriptName,2]));
-                            totAvail    += available_memory     = (float)cdGetValue(memData, ([scriptName,3]));
-        
-                            output += "\n" + scriptName + ":\t" + formatFloat(used_memory / 1024.0, 2) + "/" + (string)llRound(memory_limit / 1024.0) + "kB (" +
-                                      formatFloat(free_memory / 1024.0, 2) + "kB free, " + formatFloat(available_memory / 1024.0, 2) + "kB available)";
+                        string type;
+                        if ( ( type = cdGetElementType(memData, ([scriptName])) ) != JSON_INVALID) {
+                            if (type == JSON_ARRAY) {
+                                totUsed     += used_memory          = (float)cdGetValue(memData, ([scriptName,0]));
+                                totLimit    += memory_limit         = (float)cdGetValue(memData, ([scriptName,1]));
+                                totFree     += free_memory          = (float)cdGetValue(memData, ([scriptName,2]));
+                                totAvail    += available_memory     = (float)cdGetValue(memData, ([scriptName,3]));
+            
+                                output += "\n" + scriptName + ":\t" + formatFloat(used_memory / 1024.0, 2) + "/" + (string)llRound(memory_limit / 1024.0) + "kB (" +
+                                          formatFloat(free_memory / 1024.0, 2) + "kB free, " + formatFloat(available_memory / 1024.0, 2) + "kB available)";
+                            }
                         }
                         else {
                             output += "\n" + scriptName + ":\tNo Report";
@@ -177,6 +199,7 @@ default {
                 llOwnerSay(output);
                 memData = "";
                 memCollecting = 0;
+                memRequested = 0;
                 memTime = 0.0;
             }
         }
