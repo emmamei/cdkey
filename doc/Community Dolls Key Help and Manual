@@ -2,38 +2,28 @@ Community Dolls Key
 ===================
 4 March 2014
 
-This Key is different from others; it is designed to force a wearer to
-interact with others and to make friends, build community, and to bring
-people together. Thus, some features that would be found in a normal
-BDSM-styled key is not found here.
+This Key is different from others; it is designed to force a wearer to interact with others and to make friends, build community, and to bring people together. Thus, some features that would be found in a normal BDSM-styled key is not found here.
 
-The original Key came in two forms: a Standard Key and a Transforming Key.
-This nomenclature may be found in some places; this key incorporates
-all of the features of both.
+The original Key came in two forms: a Standard Key and a Transforming Key.  This nomenclature may be found in some places; this key incorporates all of the features of both.
 
 New Features Over Previous Model
 --------------------------------
 
-There many, many, many New Features - perhaps too many to list. Here are
-some of them:
+There many, many, many New Features - perhaps too many to list. Here are some of them:
 
 * Built-in Demo Mode - for trying key out
 
-* Better Carrying handling - Carried Dolly stays close and moves more
-  smoothly
+* Better Carrying handling - Carried Dolly stays close and moves more smoothly
 
-* Support for many more outfits, with support for multiple pages and
-  subfolders.
+* Support for many more outfits, with support for multiple pages and subfolders.
 
 * Outfits can be limited to certain Sim Ratings.
 
 * Color of the gem can be changed - and it shines too!
 
-* The winding time can be changed, and multiple amounts can be presented
-  to the winder.
+* The winding time can be changed, and multiple amounts can be presented to the winder.
 
-* Repeat windings are greatly simplified - and can be allowed, or not,
-  as desired.
+* Repeat windings are greatly simplified - and can be allowed, or not, as desired.
 
 * A posed Dolly can optionally be a silent Dolly.
 
@@ -41,126 +31,91 @@ some of them:
 
 * A Blacklist is available with multiple entries available.
 
-* In AFK mode, the Dolly continues to run down - but at a lower rate.
-  Thus a Dolly in AFK CAN run out of time.
+* In AFK mode, the Dolly continues to run down - but at a lower rate.  Thus a Dolly in AFK CAN run out of time.
 
-* When the Dolly goes into Away status, the Dolly automatically enters
-  the "low power mode" (AFK).
+* When the Dolly goes into Away status, the Dolly automatically enters the "low power mode" (AFK).
 
 * An emergency winder is available on a limited basis.
 
 * A chat interface is available.
 
-* Poses can be selectively limited to Dolly use or to Dolly and Controller
-  use only
+* Poses can be selectively limited to Dolly use or to Dolly and Controller use only
 
 Configuration of #RLV Folder
 ----------------------------
 
-The Key uses a folder called #RLV - you should create it in the top level
-of your inventory (next to folders like "Clothing" and "Lost and Found")
-if you haven't already. This folder is used by many items that utilise
-RLV.
+The Key uses a folder called #RLV - you should create it in the top level of your inventory (next to folders like "Clothing" and "Lost and Found") if you haven't already. This folder is used by many items that utilise RLV.
 
-To be able to wear an item on demand, the Key uses a set of folders located
-in #RLV. These folders will contain your outfits as well as your doll types.
-With the proper set up, users of your Key can change your wear, as well as
-your type.
+To be able to wear an item on demand, the Key uses a set of folders located in #RLV. These folders will contain your outfits as well as your doll types.  With the proper set up, users of your Key can change your wear, as well as your type.
 
-The first thing is to create a "> Outfits" folder (without the quotes).
-The folder is "marked" with a ">" symbol, which is a standard naming
-convention in the #RLV folder. You can create a multi-level tree using this
-convention inside your outfit folder.
+The first thing is to create a "> Outfits" folder (without the quotes).  The folder is "marked" with a ">" symbol, which is a standard naming convention in the #RLV folder. You can create a multi-level tree using this convention inside your outfit folder.
 
 Inside the #RLV folder you will need two specific folders:
 
     Folder: ~normalself
 
-    This folder contains the items that you need for a basic "self" - shape,
-    skin, and hair for example. These items are only re-worn when a complete
-    avi change is detected; normally, the items in this folder are only put
-    on once.
+    This folder contains the items that you need for a basic "self" - shape, skin, and hair for example. These items are only re-worn when a complete avi change is detected; normally, the items in this folder are only put on once.
 
     Folder: ~nude
 
-    Items that may need to be put on frequently after an outfit - such as
-    bare feet, jewelry, tattoos, and such can be placed here. These items
-    are re-worn after every outfit change.
+    Items that may need to be put on frequently after an outfit - such as bare feet, jewelry, tattoos, and such can be placed here. These items are re-worn after every outfit change.
 
-If the contents of both the ~normalself and ~nude folders are worn,
-you should be in your "natural" nude state. This state may be used
-as a basis for a "Nude" button in the future.
+If the contents of both the ~normalself and ~nude folders are worn, you should be in your "natural" nude state. This state may be used as a basis for a "Nude" button in the future.
 
-In the "> Outfits" folder, there will also be Doll Type folders.
-These folders are marked by a leading "*" in their name, and have
-a name that matches the Doll Type Notecard contained within the
-Doll's Key. For instance, a Doll Type of Japanese will have a
-notecard in the Key called "*Japanese" and a folder in the
-"#RLV/> Outfits" folder called "*Japanese".
+In the "> Outfits" folder, there will also be Doll Type folders.  These folders are marked by a leading "*" in their name, and have a name that matches the Doll Type Notecard contained within the Doll's Key. For instance, a Doll Type of Japanese will have a notecard in the Key called "*Japanese" and a folder in the "#RLV/> Outfits" folder called "*Japanese".
 
-Outfits for general wear (or for a doll with the Regular Doll Type)
-can be found in the "#RLV" folder itself or in subdirectories
-thereof (when using the ">" convention). For example, one could
-have a folder "#RLV/> Outfits/> Formal" and a folder within that
-called "Red Gown" that has the items for a Red Gown in it.
+Outfits for general wear (or for a doll with the Regular Doll Type) can be found in the "#RLV" folder itself or in subdirectories thereof (when using the ">" convention). For example, one could have a folder "#RLV/> Outfits/> Formal" and a folder within that called "Red Gown" that has the items for a Red Gown in it.  
 
-Outfits stored in a Doll Type Folder are only shown to the doll
-when the dolly is that type of doll. So items that are in the
-"*Japanese" folder (including perhaps subfolders!) are only shown
-when the doll is a "Japanese Doll".
+Outfits stored in a Doll Type Folder are only shown to the doll when the dolly is that type of doll. So items that are in the "*Japanese" folder (including perhaps subfolders!) are only shown when the doll is a "Japanese Doll".
+
+Outfits can also be restricted to certain ratings: prefix the Outfit name with "{M}" (without quotes) to make an outfit only available for Moderate and Adult rated sims (and hidden in G-rated sims); and prefix with "{A}" to make the outfit only visible for Adult sims (and hidden on Moderate and G-rated sims).
 
 Doll Types
 ----------
 
-The Type of Doll does two main things: it limits the number of
-outfits available to be worn by the Doll, and presents the Doll
-with a number of "hypnotic" messages from time to time.
+The Type of Doll does two main things: it limits the number of outfits available to be worn by the Doll, and presents the Doll with a number of "hypnotic" messages from time to time.
 
-The messages are created with a notecard put into the Doll with
-a message per line. The notecard is named with the Typename and
-a leading "*"; for example, a Sexy Doll Type has a notecard with
-the name "*Sexy" and it is this notecard that tells the Doll that
-this Type is available.
+The messages are created with a notecard put into the Doll with a message per line. The notecard is named with the Typename and a leading "*"; for example, a Sexy Doll Type has a notecard with the name "*Sexy" and it is this notecard that tells the Doll that this Type is available.
 
-The outfits available for each Doll Type are in a folder in the
-outfits folder (typically "> Outfits") with the name of the Type
-prefixed by a "*"; so a folder for the Sexy Doll Type would be
-named "*Sexy" (without the quotes).
+The outfits available for each Doll Type are in a folder in the outfits folder (typically "> Outfits") with the name of the Type prefixed by a "*"; so a folder for the Sexy Doll Type would be named "*Sexy" (without the quotes).
+
+Doll Poses
+----------
+
+Poses are generally fixed poses which are animations contained within the Key. Each pose is presented to the Key user as a possible pose to put the Dolly in.
+
+Poses will time out in 5 minutes; if the Dolly is a Display Dolly, then poses do NOT time out at all.
+
+Access to each pose can be limited through the use of a prefix. No prefix means any Key user will see the pose and can select it from the Pose menu. If a prefix of "!" (exclamation point) is used, then the Dolly and their Controller can see the pose and select it. If a prefix of "." (period) is used, then only the Dolly can see and select the pose for use.
+
+Poses can also be activated through the chat interface (described below). Specify a pose at the command line (with or without prefix) to activate it:
+
+    /75 kneel
+    /75 !kneel
+
+To release a pose, use the "release" command:
+
+    /75 release
 
 Menus and Control
 -----------------
 
-The Menu structure is basically the same no matter who is accessing
-the Key, but the specific items visible may change depending on options
-and who it is that is accessing the Key.
+The Menu structure is basically the same no matter who is accessing the Key, but the specific items visible may change depending on options and who it is that is accessing the Key.
 
-There are four different people (or roles) that may access the Key at
-any given time: the Doll herself, the Doll's Controller (or dominant or
-owner), the Doll's Carrier, or the public at large.
+There are four different people (or roles) that may access the Key at any given time: the Doll herself, the Doll's Controller (or dominant or owner), the Doll's Carrier, or the public at large.
 
-A Doll with no Controller or Carrier has generally full access to all of
-the options and capabilities contained in the Key. A Doll can submit to
-a Controller, or a member of the public can Carry the Doll - both of
-which will remove a large amount of options from the Doll's control.
+A Doll with no Controller or Carrier has generally full access to all of the options and capabilities contained in the Key. A Doll can submit to a Controller, or a member of the public can Carry the Doll - both of which will remove a large amount of options from the Doll's control.
 
-A Controller will have more control than a Carrier, and the public
-will see no loss of control - that is, the general public can still
-wind the Dolly, dress her up, and more.
+A Controller will have more control than a Carrier, and the public will see no loss of control - that is, the general public can still wind the Dolly, dress her up, and more.
 
-A Carrier takes control of the Dolly, and locks out the rest of the
-general public from accessing the Dolly while the Carrier is carrying the
-Doll.
+A Carrier takes control of the Dolly, and locks out the rest of the general public from accessing the Dolly while the Carrier is carrying the Doll.
 
 Preferences Card
 ----------------
 
-The Preferences can be set on a NoteCard within the Key called "Preferences";
-there is an example notecard included. Note that each line within the NoteCard
-increases the processing time; so it is best to keep the card's number of
-lines to a minimum.
+The Preferences can be set on a NoteCard within the Key called "Preferences"; there is an example notecard included. Note that each line within the NoteCard increases the processing time; so it is best to keep the card's number of lines to a minimum.
 
-The example card should contain all the documentation for what it supports
-and what options are available.
+The example card should contain all the documentation for what it supports and what options are available.
 
 Main Menu
 ---------
@@ -169,62 +124,35 @@ On the initial menu seen after a Key is touched are the following buttons:
 
     * Wind
 
-    Wind up the dolly a certain amount, typically 30 or 60 minutes. If
-    there are multiple amounts that can be chosen, a new menu will appear
-    with the choices available. If the winding amount is fixed (i.e., not
-    multiple amounts to choose from) then there will be no menu, just a
-    normal winding. If the doll is fully wound by a wind, then the winding
-    will not return to the menu.
+    Wind up the dolly a certain amount, typically 30 or 60 minutes. If there are multiple amounts that can be chosen, a new menu will appear with the choices available. If the winding amount is fixed (i.e., not multiple amounts to choose from) then there will be no menu, just a normal winding. If the doll is fully wound by a wind, then the winding will not return to the menu.
 
-    Normally, the Dolly may be wound several times in a row by a winder.
-    If the Repeat Winding option is unset, then a Winder is not able to
-    wind the Dolly repeatedly, but must be wound by different people in
-    succession.
+    Normally, the Dolly may be wound several times in a row by a winder.  If the Repeat Winding option is unset, then a Winder is not able to wind the Dolly repeatedly, but must be wound by different people in succession.
 
     * Type of Doll
 
-    Convert the dolly to a particular Type of Doll. This will provide the
-    Doll with a select choice of outfits (if set up) for that Type, and
-    will also send text affirmations and suggestions to the Doll pertaining
-    to the Doll Type selected.
+    Convert the dolly to a particular Type of Doll. This will provide the Doll with a select choice of outfits (if set up) for that Type, and will also send text affirmations and suggestions to the Doll pertaining to the Doll Type selected.
 
     * Dress
 
-    This will dress the Doll in a chosen outfit. If the Doll is a specific
-    Doll Type, and outfits are set up properly, then this list of outfits
-    will be specific to the Type of Doll chosen.
+    This will dress the Doll in a chosen outfit. If the Doll is a specific Doll Type, and outfits are set up properly, then this list of outfits will be specific to the Type of Doll chosen.
 
-    If the Doll cannot be dressed for some reason, this button will not
-    appear. This includes options such as whether the Doll can self-dress,
-    or whether dressing is allowed to others.
+    If the Doll cannot be dressed for some reason, this button will not appear. This includes options such as whether the Doll can self-dress, or whether dressing is allowed to others.
 
     * Options
 
-    The Options menu provides for a number of options that affect how the
-    Doll operates and what restrictions they operate under. When Carried
-    or when having a Controller, these options may change or be eliminated
-    from the Wearer's consideration.
+    The Options menu provides for a number of options that affect how the Doll operates and what restrictions they operate under. When Carried or when having a Controller, these options may change or be eliminated from the Wearer's consideration.
 
     * Visible (or Invisible)
 
-    This makes the Key vanish. The Key remains completely operational,
-    and touchable - but it is Invisible. This can be useful for RP and
-    for situations where the Key appears in the "wrong" place - such as
-    poking through a chair or another person. The Key can also be made
-    Visible again.
+    This makes the Key vanish. The Key remains completely operational, and touchable - but it is Invisible. This can be useful for RP and for situations where the Key appears in the "wrong" place - such as poking through a chair or another person. The Key can also be made Visible again.
 
     * Pose (and Unpose)
 
-    A person may Pose a Dolly, in which case they will be locked into that
-    pose for 5 minutes (unless they are a Display Dolly). The Doll cannot
-    exit the pose unless they posed themselves. If the Pose Silence option
-    is selected, the Doll is forced to be silent while posed (though IMs
-    are still possible).
+    A person may Pose a Dolly, in which case they will be locked into that pose for 5 minutes (unless they are a Display Dolly). The Doll cannot exit the pose unless they posed themselves. If the Pose Silence option is selected, the Doll is forced to be silent while posed (though IMs are still possible).
 
     * Detach
 
-    If the key is detachable, then this button appears in the main menu.
-    Upon clicking this button, the Key will be detached and no longer available.
+    If the key is detachable, then this button appears in the main menu.  Upon clicking this button, the Key will be detached and no longer available.
 
     * Help/Support
 
@@ -232,32 +160,24 @@ On the initial menu seen after a Key is touched are the following buttons:
 
     * AFK
 
-    If the Doll is AFK (or Away From Keyboard) then the Dolly operates at a
-    reduced unwinding rate, and with moderate restrictions in place. It is
-    a sort of "low-power" mode for Dolly.
+    If the Doll is AFK (or Away From Keyboard) then the Dolly operates at a reduced unwinding rate, and with moderate restrictions in place. It is a sort of "low-power" mode for Dolly.
 
 Options Menu
 ------------
 
-The Options menu has a number of sub-menus, all of which contain some setting
-or another for the Key's operation.
+The Options menu has a number of sub-menus, all of which contain some setting or another for the Key's operation.
 
     * Type...
 
-    Options relating to the Key Type and it's operation can be found here.
-    This includes turning the hypnotic phrases on and off, and allowing a
-    verification of whether to transform or not.
+    Options relating to the Key Type and it's operation can be found here.  This includes turning the hypnotic phrases on and off, and allowing a verification of whether to transform or not.
 
     * Access...
 
-    Options related to access to the Key itself are here, including adding
-    and removing Controllers, as well as adding and removing people from
-    a blacklist.
+    Options related to access to the Key itself are here, including adding and removing Controllers, as well as adding and removing people from a blacklist.
 
     * Abilities...
 
-    These are options that affect direct viewer operation and avatar control,
-    otherwise known as RLV restrictions and operations.
+    These are options that affect direct viewer operation and avatar control, otherwise known as RLV restrictions and operations.
 
     * Features...
 
@@ -265,21 +185,18 @@ or another for the Key's operation.
 
     * Key...
 
-    These are items like choosing the Key color and so on, relating to the
-    physical attached Key.
+    These are items like choosing the Key color and so on, relating to the physical attached Key.
 
 Options > Type
 --------------
 
     * Show Phrases
 
-    If the hypnotic phrases are on, a message will appear once every 60 seconds
-    or so, a suggestion, to get the Doll to accept her new Type.
+    If the hypnotic phrases are on, a message will appear once every 60 seconds or so, a suggestion, to get the Doll to accept her new Type.
 
     * Verify Type
 
-    When Dolly is transformed, this option determines whether the Doll will
-    be able to choose to allow the transformation or not.
+    When Dolly is transformed, this option determines whether the Doll will be able to choose to allow the transformation or not.
 
 Options > Access
 ----------------
@@ -294,8 +211,7 @@ Options > Access
     * - Blacklist
     * List Blacklist
 
-    These options manipulate the Blacklist, a list of those that cannot use
-    the key at all.
+    These options manipulate the Blacklist, a list of those that cannot use the key at all.
 
 Options > Abilities
 -------------------
@@ -322,15 +238,11 @@ Options > Abilities
 
     * Self TP
 
-    Is the Dolly able to TP? When this is disabled, it is called
-    "Helpless Dolly" - that is, Dolly goes nowhere unless someone
-    brings them along.
+    Is the Dolly able to TP? When this is disabled, it is called "Helpless Dolly" - that is, Dolly goes nowhere unless someone brings them along.
 
     * Force TP
 
-    Will Dolly respond automatically to a request for TP? Note that
-    this is for anyone in Second Life at all - any TP that is sent
-    to the Dolly is immediately responded to and activated.
+    Will Dolly respond automatically to a request for TP? Note that this is for anyone in Second Life at all - any TP that is sent to the Dolly is immediately responded to and activated.
 
 
 Options > Features
@@ -338,96 +250,69 @@ Options > Features
 
     * Type Text
 
-    The Doll Type can be made visible to all through hovertext over
-    the Key. This selects or deselects this possibility.
+    The Doll Type can be made visible to all through hovertext over the Key. This selects or deselects this possibility.
 
     * Quiet Key
 
-    A Quiet Key puts very little out to the general chat, usually
-    only displaying messages to the user who would be most interested
-    in the message.
+    A Quiet Key puts very little out to the general chat, usually only displaying messages to the user who would be most interested in the message.
 
     * Pleasure Doll
 
-    A "Pleasure Doll" is one that is available for sex at any time,
-    and may be stripped and used by its owner. With this option,
-    any Doll Type may become a "Pleasure Doll" and have this capability.
+    A "Pleasure Doll" is one that is available for sex at any time, and may be stripped and used by its owner or carrier. With this option, any Doll Type may become a "Pleasure Doll" and have this capability.
 
     * Warnings
 
-    Warnings can be put out that you are running out of time soon.
-    This option activates or deactivates these warnings.
+    Warnings can be put out that you are running out of time soon.  This option activates or deactivates these warnings.
 
     * Poseable
 
-    A Poseable Dolly can be Posed by the public, and put on display.
-    A Display Dolly does not have that option: they are poseable
-    by definition.
+    A Poseable Dolly can be Posed by the public, and put on display.  A Display Dolly does not have that option: they are poseable by definition.
 
     * Outfitable
 
-    Can the Doll's outfits be chaned by the general public? This
-    option selects this possibility.
+    Can the Doll's outfits be chaned by the general public? This option selects this possibility.
 
     * Carryable
 
-    Can the Doll be Carried? This option will make the Doll
-    available to be carried or not.
+    Can the Doll be Carried? This option will make the Doll available to be carried or not.
 
     * Offline
 
-    The Key uses an external server to save the Key's settings
-    from one run to the next. If this bothers you, then use this
-    setting to go "offline" and no data will be stored externally.
+    The Key uses an external server to save the Key's settings from one run to the next. If this bothers you, then use this setting to go "offline" and no data will be stored externally.
 
     * Allow AFK
 
-    Can the Doll go away from the keyboard (AFK)? This option determines
-    the answer to this question.
+    Can the Doll go away from the keyboard (AFK)? This option determines the answer to this question.
 
     * Repeat Wind
 
-    A user may wind the Dolly over and over, until the Dolly's Key
-    is fully wound. If this option is set, then a different user must
-    wind the Dolly each sequential time: no user may wind two times in
-    a row.
+    A user may wind the Dolly over and over, until the Dolly's Key is fully wound. If this option is set, then a different user must wind the Dolly each sequential time: no user may wind two times in a row.
 
 Options > Key
 -------------
 
     * Dolly Name
 
-    The name of the Dolly may be set here. By default, the name is the
-    first "word" in the Dolly's name. Any name may be set.
+    The name of the Dolly may be set here. By default, the name is the first "word" in the Dolly's name. Any name may be set.
 
     * Gem Color
 
-    The crystal gem contained within the Key has a color changing
-    mechanism stored within it, and this menu option allows control
-    over the color. Set colors may be used, or a custom color if
-    desired.
+    The crystal gem contained within the Key has a color changing mechanism stored within it, and this menu option allows control over the color. Set colors may be used, or a custom color if desired.
 
     * Max Time
 
-    The Maximum Time a Dolly may be wound. Typical maximums are
-    120 minutes or 180 minutes - but it can be made shorter or longer.
+    The Maximum Time a Dolly may be wound. Typical maximums are 120 minutes or 180 minutes - but it can be made shorter or longer.
 
     * Wind Times
 
-    How much time is each wind? This option allows the Dolly to set
-    the amount of time in each wind; multiple values are possible,
-    in which case the winder gets to choose which one to use. If
-    only one value is provided, then there is no winding time menu
-    and a Wind is automatically done.
+    How much time is each wind? This option allows the Dolly to set the amount of time in each wind; multiple values are possible, in which case the winder gets to choose which one to use. If only one value is provided, then there is no winding time menu and a Wind is automatically done.
 
 Help/Support
 ------------
 
     * Join Group
 
-    The Community Dolls Group is a group of Dolls and Owners and
-    Winders all focused on Dollies. When a Doll expires, there is
-    usually someone listening in in the group who can and will help.
+    The Community Dolls Group is a group of Dolls and Owners and Winders all focused on Dollies. When a Doll expires, there is usually someone listening in in the group who can and will help.
 
     * Help Notecard
 
@@ -435,8 +320,7 @@ Help/Support
 
     * Visit Dollhouse
 
-    The Community Dolls Dollhouse is available for all to come and
-    visit and talk and wind each other and more.
+    The Community Dolls Dollhouse is available for all to come and visit and talk and wind each other and more.
 
     * Reset Scripts
 
@@ -448,89 +332,58 @@ Help/Support
 
     * Factory Reset
 
-    The Factory Reset will reset all values in the Key to their
-    original state.
+    The Factory Reset will reset all values in the Key to their original state.
 
 Carrier Operations
 ------------------
 
-When someone carries the Doll, the Doll is then solely available to the
-carrier. The other members of the public will find they have no ability to
-manipulate the Doll - and the Carrier has full control. In one particular
-area, it means that only the Carrier can wind the Doll.
+When someone carries the Doll, the Doll is then solely available to the carrier. The other members of the public will find they have no ability to manipulate the Doll - and the Carrier has full control. In one particular area, it means that only the Carrier can wind the Doll.
 
-Under certain limited instances, a Doll can be dropped - including from a
-Carrier that is not in the Sim or isn't on at all.
+Under certain limited instances, a Doll can be dropped - including from a Carrier that is not in the Sim or isn't on at all.
 
 Controller Operations
 ---------------------
 
-When someone takes control of a person's Key, they become the Key Controller.
-The Controller can set every option that the wearer can - plus they can
-unset every option - that is, there are no "one-way" options for the
-Controller.
+When someone takes control of a person's Key, they become the Key Controller.  The Controller can set every option that the wearer can - plus they can unset every option - that is, there are no "one-way" options for the Controller.
 
-The wearer will find that they have no options available and are limited
-in what they can do. The Controller may limit the Key wearer in certain
-ways, which the wearer cannot undo.
+The wearer will find that they have no options available and are limited in what they can do. The Controller may limit the Key wearer in certain ways, which the wearer cannot undo.
 
-The public should not see much difference unless the Controller has restricted
-the Doll.
+The public should not see much difference unless the Controller has restricted the Doll.
 
 Wound Down Dolly
 ----------------
 
-When wound down, the Dolly is severely restricted, but with one standard
-notable exception: IM is fully unrestricted. A wound-down Dolly is not
-a functioning Dolly - and thus cannot move or talk or any other thing that
-requires a functioning Dolly. However, Dolls are living creatures and thus
-can use their telepathy (or IMs) with the greater community to call for
-help.
+When wound down, the Dolly is severely restricted, but with one standard notable exception: IM is fully unrestricted. A wound-down Dolly is not a functioning Dolly - and thus cannot move or talk or any other thing that requires a functioning Dolly. However, Dolls are living creatures and thus can use their telepathy (or IMs) with the greater community to call for help.
 
-The Community Dolls group is made in part for just such a case, and dolls
-and winders are often in the group and able and willing to help if asked.
+The Community Dolls group is made in part for just such a case, and dolls and winders are often in the group and able and willing to help if asked.
 
-Any additional restrictions contained within the Preferences notecard will
-also be applied upon collapse. For example, if the notecard contains this line:
+Any additional restrictions contained within the Preferences notecard will also be applied upon collapse. For example, if the notecard contains this line:
 
     collapse rlv = fartouch=n,touchall=n
 
-Then upon collapse, touch will be removed from the Dolly. When Dolly is
-wound, those added restrictions are removed along with the rest.
+Then upon collapse, touch will be removed from the Dolly. When Dolly is wound, those added restrictions are removed along with the rest.
 
-When Dolly is wound down, your menu will only have an "OK" button and
-nothing else. After a period of time, the emergency winder circuitry
-embedded in the Dolly activates and you can use the emergency winder
-or teleport to a preset Home landmark stored in the Key. This landmark
-can be changed by the Dolly as desired.
+When Dolly is wound down, your menu will only have an "OK" button and nothing else. After a period of time, the emergency winder circuitry embedded in the Dolly activates and you can use the emergency winder or teleport to a preset Home landmark stored in the Key. This landmark can be changed by the Dolly as desired.
 
 Chat Commands
 -------------
 
-The Key has a chat interface on Channel 75, though the channel can be
-set to whatever you like with a chat command. To talk to your Key, use
-local chat with a line like:
+The Key has a chat interface on Channel 75, though the channel can be set to whatever you like with a chat command. To talk to your Key, use local chat with a line like:
 
     /75 stat
 
-This does a status report. You must always prefix the command with "/75"
-(or whatever channel is being used). If you are using an RLV item that
-restricts chat, you may find yourself cut off from talking to your Key
-this way.
+This does a status report. You must always prefix the command with "/75" (or whatever channel is being used). If you are using an RLV item that restricts chat, you may find yourself cut off from talking to your Key this way.
 
 Commands are these:
 
     blacklist <name>
     unblacklist <name>
 
-    These commands modify the blacklist, adding and subtracting users from
-    the list.
+    These commands modify the blacklist, adding and subtracting users from the list.
 
     channel <num>
 
-    This command changes the channel that the Key listens on. It will no longer
-    listen on the default 75, but will listen on an alternative channel as
-    specified by number.
+    This command changes the channel that the Key listens on. It will no longer listen on the default 75, but will listen on an alternative channel as specified by number.
 
     controller <name>
 
@@ -538,14 +391,11 @@ Commands are these:
 
     demo
 
-    Toggle Demo Mode. The Key's time limit is set to 5 minutes, and wind times
-    adjusted. The previous maximum time and wind times are preserved for when
-    demo mode is exited.
+    Toggle Demo Mode. The Key's time limit is set to 5 minutes, and wind times adjusted. The previous maximum time and wind times are preserved for when demo mode is exited.
 
     detach
 
-    Detaches the key from the wearer. After this command executes, the key is
-    no longer available as it has been removed.
+    Detaches the key from the wearer. After this command executes, the key is no longer available as it has been removed.
 
     help
 
@@ -557,13 +407,13 @@ Commands are these:
 
     release
 
+    This releases the user from the current pose, if possibble.
+
     stat
     stats
     xstats
 
-    These commands provide different sorts of statistics and information
-    from the key. "stats" is a normal list, "xstats" is a list of extended
-    stats, and "stat" is a one line time status report.
+    These commands provide different sorts of statistics and information from the key. "stats" is a normal list, "xstats" is a list of extended stats, and "stat" is a one line time status report.
 
     wind
 
@@ -571,12 +421,7 @@ Commands are these:
 
 Demo Mode
 ---------
-When Demo Mode is activated, the key goes to a 5 minute maximum, and
-winding is adjusted accordingly. If a single wind amount is being used,
-the wind time is set to 1 minute. All functions remain operational in their
-normal ways.
+When Demo Mode is activated, the key goes to a 5 minute maximum, and winding is adjusted accordingly. If a single wind amount is being used, the wind time is set to 1 minute. All functions remain operational in their normal ways.
 
-The purpose is to allow people to try the key out, see what it is like to
-be collapsed and to be wound and returned to normal. There is no functional
-difference between a demo key and the normal key but time.
+The purpose is to allow people to try the key out, see what it is like to be collapsed and to be wound and returned to normal. There is no functional difference between a demo key and the normal key but time.
 
