@@ -7,7 +7,12 @@
 // DATE: 25 February 2014
 
 #include "include/GlobalDefines.lsl"
+
+#if ((__AGENTIDRAW__==AGENT_SILKY_MESMERISER_RAW) || (__AGENTIDRAW__==AGENT_MAYSTONE_RESIDENT_RAW))
+// You should create your own include or directly in this file define
+// a salt for the security hash for database posts
 #include "include/Secure.lsl"
+#endif
 #include "include/ServiceIncludes.lsl"
 
 integer useHTTPS = 1;
@@ -67,7 +72,12 @@ default
 #ifdef DEVELOPER_MODE
         debugSay(6, "DEBUG-SERVICES", "Requesting data from HTTPdb");
 #endif
+
+#ifdef SALT
         string hashStr = (string)llGetOwner() + time + SALT;
+#else
+        string hashStr = (string)llGetOwner() + time;// + SALT;
+#endif
         string requestURI = getURL("httpdb") + "retrieve?q=" + llSHA1String(hashStr) + "&p=cdkey&t=" + time + "&s=" + (string)lastGetTimestamp;
         while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
             llSleep(1.0);
@@ -143,7 +153,12 @@ default
 #ifdef DEVELOPER_MODE
                 debugSay(6, "DEBUG-SERVICES", "Requesting data from HTTPdb");
 #endif
+
+#ifdef SALT
                 string hashStr = (string)llGetOwner() + time + SALT;
+#else
+                string hashStr = (string)llGetOwner() + time;// + SALT;
+#endif
                 string requestURI = getURL("httpdb") + "retrieve?q=" + llSHA1String(hashStr) + "&p=cdkey&t=" + time + "&s=" + (string)lastGetTimestamp;
                 while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
                     llSleep(1.0);
@@ -167,7 +182,12 @@ default
 #ifdef DEVELOPER_MODE
                     debugSay(6, "DEBUG-SERVICES", "Requesting data from HTTPdb");
 #endif
+
+#ifdef SALT
                     string hashStr = (string)llGetOwner() + time + SALT;
+#else
+                    string hashStr = (string)llGetOwner() + time;// + SALT;
+#endif
                     string requestURI = getURL("httpdb") + "retrieve?q=" + llSHA1String(hashStr) + "&p=cdkey&t=" + time + "&s=" + (string)lastGetTimestamp;
                     while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
                         llSleep(1.0);
