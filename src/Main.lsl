@@ -491,7 +491,7 @@ default {
                 }
                 
                 integer l = llGetListLength(windTimes); i = -(l/2);
-                while (l > 11) llDeleteSubList(llListSort(windTimes,1,--l&1),++i,i);
+                while (l > 11) windTimes = llDeleteSubList(llListSort(windTimes,1,--l&1),++i,i);
                 windTimes = llListSort(windTimes,1,1);
                 
                 if (start > l) lmSendToAgent("One or more times were filtered accepted list is " + llList2CSV(windTimes), id);

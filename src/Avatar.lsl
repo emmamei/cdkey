@@ -9,6 +9,8 @@
 #include "include/GlobalDefines.lsl"
 #include "include/Json.lsl"
 
+//#define DEBUG_BADRLV 1
+
 key carrierID = NULL_KEY;
 
 key rlvTPrequest;
