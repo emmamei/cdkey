@@ -697,8 +697,8 @@ default {
                             lmSendToAgent("Doll is now at " + formatFloat((float)timeLeftOnKey * 100.0 / (float)effectiveLimit, 2) + "% of capacity.", id);
                             if (canRepeat || cdIsController(id)) {
                                 // No menu respawn if no repeat option is enabled!
-                                if (choice == "Wind") lmInternalCommand("mainMenu", name, id);
-                                else lmInternalCommand("windMenu", name + "|" + (string)(effectiveLimit - timeLeftOnKey), id);
+                                if (llGetListLength(windTimes) > 1) lmInternalCommand("windMenu", name + "|" + (string)(effectiveLimit - timeLeftOnKey), id);
+                                else lmInternalCommand("mainMenu", name, id);
                             }
                         }
                 
