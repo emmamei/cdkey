@@ -519,24 +519,16 @@ default
     }
 
     sensor(integer num) {
-        integer i; integer channel = blacklistChannel; string type = "blacklist";
-        list current = cdList2ListStrided(blacklist, 0, -1, 2);
-        dialogKeys = []; dialogNames = []; dialogButtons = [];
-        if (controlHandle) {
-            channel = controlChannel;
-            type = "controller list";
-            current = cdList2ListStrided(MistressList, 0, -1, 2);
-        }
-        while ((i < num) && (llGetListLength(dialogButtons) < 12)) {
-            if (llListFindList(current, [(string)llDetectedKey(i)]) == -1) { // Don't list existing users
-                dialogKeys += llDetectedKey(i);
-                dialogNames += llDetectedName(i);
-                dialogButtons += llGetSubString(llDetectedName(i), 0, 23);
-            }
-            i++;
+        integer i; dialogKeys = []; dialogNames = []; dialogButtons = [];
+        if (num > 12) num = 12;
+        for (i = 0; i < num; i++) {
+            dialogKeys += llDetectedKey(i);
+            dialogNames += llDetectedName(i);
+            dialogButtons += llGetSubString(llDetectedName(i), 0, 23);
         }
 
-        llDialog(dollID, "Select the avatar to be added to the " + type + ".", dialogSort(dialogButtons + MAIN), channel);
+        if (blacklistHandle) llDialog(dollID, "Select the avatar to be added to the blacklist.", dialogSort(dialogButtons + MAIN), blacklistChannel);
+        else if (controlHandle) llDialog(dollID, "Select the avatar to be added to the controller list.", dialogSort(dialogButtons + MAIN), controlChannel);
     }
 
     no_sensor() {

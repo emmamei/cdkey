@@ -490,8 +490,8 @@ default {
                     if ((value > 0) && (value <= 240) && (llListFindList(windTimes, [ value ]) == -1)) windTimes += value;
                 }
                 
-                integer l = llGetListLength(windTimes); i = l;
-                while (l > 11) llDeleteSubList(llListSort(windTimes,1,--l&1),i-=2,i);
+                integer l = llGetListLength(windTimes); i = -(l/2);
+                while (l > 11) llDeleteSubList(llListSort(windTimes,1,--l&1),++i,i);
                 windTimes = llListSort(windTimes,1,1);
                 
                 if (start > l) lmSendToAgent("One or more times were filtered accepted list is " + llList2CSV(windTimes), id);
