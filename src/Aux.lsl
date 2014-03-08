@@ -65,28 +65,10 @@ string memData;
 
 sendMsg(key id, string msg) {
     if (id) {
-        if (llGetSubString(msg, 0, 0) == "%" && llGetSubString(msg, -1, -1) == "%") {
-            msg = findString(msg);
-        }
-
         if          cdIsDoll(id)                  llOwnerSay(msg);
         else if     (llGetAgentSize(id))    llRegionSayTo(id, 0, msg);
         else                                llInstantMessage(id, msg);
     }
-}
-
-string findString(string msg) {
-    if (msg == "%TEXT_HELP%") return "Commands:\n\n
-    detach ......... detach key if possible\n
-    stat ........... concise current status\n
-    stats .......... selected statistics and settings\n
-    xstats ......... extended statistics and settings\n
-    poses .......... list all poses\n
-    help ........... this list of commands\n
-    wind ........... trigger emergency autowind\n
-    demo ........... toggle demo mode\n
-    channel ........ change channel\n\n";
-    else return "";
 }
 
 default {
