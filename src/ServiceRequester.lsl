@@ -21,9 +21,18 @@ string correctName(string name) {
     // be encoded in username format and makes the converstion to the valid legacy name.
     integer index;
 
-    if ((index = llSubStringIndex(name, ".")) != -1)
-        name = llInsertString(llDeleteSubString(name, index, index), index, " ");
-    else if (llSubStringIndex(name, " ") == -1) name += " resident";
+    list split = llParseStringKeepNulls(name, [ "."," " ], []);
+    integer n = llGetListLength(split);
+    if (n == 0) {
+        llOwnerSay("You must enter a username or legacy name.");
+        return "INVALID";
+    }
+    else if (n == 1)    name = llList2String(split, 0) + " Resident";
+    else if (n == 2)    name = llList2String(split, 0) + " " + llList2String(split, 1);
+    else {
+        llOwnerSay("The name " + name + " does not appear to be  valid username or legacy name, there should only be one period (.) or space ( )");
+        return "INVALID";
+    }
 
     return llToLower(name);
 }
