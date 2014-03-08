@@ -157,7 +157,7 @@
 #define lmSendToController(msg)				llMessageLinked(LINK_THIS, 15,  SCRIPT_NAME + "|" + msg, NULL_KEY)
 #define lmConfigComplete(count)				llMessageLinked(LINK_THIS, 102, SCRIPT_NAME + "|" + (string)(count), NULL_KEY)
 #define lmInitState(num)				llMessageLinked(LINK_THIS, num, SCRIPT_NAME, NULL_KEY)
-#define lmMemReport(delay)				llMessageLinked(LINK_THIS, 135, SCRIPT_NAME + "|" + (string)delay, NULL_KEY)
+#define lmMemReport(delay,man)				llMessageLinked(LINK_THIS, 135, SCRIPT_NAME + "|" + (string)delay + "|" + (string)man, NULL_KEY)
 #define lmMemReply(json)				llMessageLinked(LINK_THIS, 136, SCRIPT_NAME + "|" + json, NULL_KEY)
 #define lmRating(simrating)				llMessageLinked(LINK_THIS, 150, SCRIPT_NAME + "|" + simrating, NULL_KEY)
 #define lmSendConfig(name,value)			llMessageLinked(LINK_THIS, 300, SCRIPT_NAME + "|" + name + "|" + value, NULL_KEY)
@@ -195,6 +195,8 @@
 #include "KeySharedFuncs.lsl"
 #include "RestrainedLoveAPI.lsl"
 #include "Utility.lsl"
+
+#include "Config.lsl"
 
 integer cdGetControllerStatus(key id) {
     return (cdIsBuiltinController(id) || (cdIsDoll(id) && !cdControllerCount()) || (!cdIsDoll(id) && cdIsUserController(id)));
