@@ -199,8 +199,6 @@
 
 #include "Config.lsl"
 
-#include "LinkMessage.lsl"
-
 integer cdGetControllerStatus(key id) {
     return (cdIsBuiltinController(id) || (cdIsDoll(id) && !cdControllerCount()) || (!cdIsDoll(id) && cdIsUserController(id)));
 }
