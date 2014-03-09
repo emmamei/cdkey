@@ -54,8 +54,10 @@ default
         if (code == 135) {
             float delay = llList2Float(split, 0);
             scaleMem();
-            memReport(delay);
+            memReport(cdMyScriptName(),delay);
         }
+        
+        cdConfigReport();
 
         else if (code == 300) {
             string name = llList2String(split, 0);
@@ -307,7 +309,10 @@ default
                         llOwnerSay("Doll is posed.");
                     }
 
-                    lmMemReport(2.0);
+                    lmMemReport(1.0, 1);
+                }
+                else if (choice == "build") {
+                    lmConfigReport();
                 }
             }
             else if (choice == "release") {
@@ -346,9 +351,9 @@ default
                 else if (choice == "inject") {
                     list params = llParseString2List(param, ["#"], []);
                     llOwnerSay("INJECT LINK:\nLink Code: " + (string)llList2Integer(params, 0) + "\n" +
-                               "Data: " + SCRIPT_NAME + "|" + llList2String(params, 1) + "\n" +
+                               "Data: " + cdMyScriptName() + "|" + llList2String(params, 1) + "\n" +
                                "Key: " + (string)llList2Key(params, 2));
-                    llMessageLinked(LINK_THIS, llList2Integer(params, 0), SCRIPT_NAME + "|" + llList2String(params, 1), llList2Key(params, 2));
+                    llMessageLinked(LINK_THIS, llList2Integer(params, 0), cdMyScriptName() + "|" + llList2String(params, 1), llList2Key(params, 2));
                 }
                 else if (choice == "timereporting") {
                     lmSendConfig("timeReporting", (string)(timeReporting = (integer)param));

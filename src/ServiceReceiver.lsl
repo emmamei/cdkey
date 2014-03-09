@@ -37,8 +37,11 @@ default {
         }
         else if (code == 135) {
             float delay = llList2Float(split, 1);
-            memReport(delay);
+            memReport(cdMyScriptName(),delay);
         }
+        
+        cdConfigReport();
+        
         else if (code == 300) {
             string script = llList2String(split, 0);
             string name = llList2String(split, 1);
@@ -46,9 +49,9 @@ default {
 
 #ifdef DEVELOPER_MODE
             if (name == "debugLevel")                   debugLevel = (integer)value;
-            else if (script == SCRIPT_NAME) return;
+            else if (script == cdMyScriptName()) return;
 #else
-            if (script == SCRIPT_NAME) return;
+            if (script == cdMyScriptName()) return;
 #endif
             else if (name == "offlineMode") {
                 offlineMode = (integer)value;
@@ -309,6 +312,12 @@ default {
             } while (llStringLength(body));
         }
         scaleMem();
+    }
+
+    changed(integer change) {
+        if (change & CHANGED_OWNER) {
+            cdPermSanityCheck();
+        }
     }
 
     dataserver(key request, string data) {

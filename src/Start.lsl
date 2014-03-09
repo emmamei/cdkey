@@ -23,9 +23,10 @@
 #define NLR "+"
 #define NLE "</NEXT-READ-LINE>"
 
-#define cdMyScriptName() llGetScriptName()
 #define cdRunScript(a) llSetScriptState(a, RUNNING);
 #define cdStopScript(a) llSetScriptState(a, NOT_RUNNING);
+#define cdResetSelf() llResetScript()
+#define cdResetScript(a) llResetOtherScript(a) 
 
 //#define HYPNO_START   // Enable hypno messages on startup
 //
@@ -69,6 +70,7 @@ list MistressList;
 list blacklist;
 list recentDilation;
 list windTimes;
+list coreScripts = CORE_SCRIPTS;
 
 integer quiet = NO;
 integer newAttach = YES;
@@ -158,7 +160,7 @@ processConfiguration(string name, string value) {
          if (value == "yes" || value == "on")  value = "1";
     else if (value == "no"  || value == "off") value = "0";
 
-    integer i;
+    integer i; integer error;
     list firstWord = [ "barefeet path", "helpless dolly", "quiet key" ];
     list capSubsiquent = [ "busy is away", "can afk", "can fly", "can pose", "can sit", "can stand", "can wear", "detachable", "doll type", "pleasure doll", "pose silence" ];
     list rlv = [ "afk rlv", "base rlv", "collapse rlv", "pose rlv" ];
@@ -185,7 +187,7 @@ processConfiguration(string name, string value) {
         if (!prefsReread) lmSendConfig("timeLeftOnKey", (string)((float)value * SEC_TO_MIN));
     }
     else if (llGetSubString(name, 0, 8) == "wind time") {
-        lmInternalCommand("setWindTimes", llDumpList2String(llParseString2List(value, [ ",", " ", "|" ], [ ] ), "|" ), NULL_KEY);
+        lmInternalCommand("setWindTimes", value, NULL_KEY);
     }
     else if (name == "max time") {
         lmSendConfig("keyLimit", (string)((float)value * SEC_TO_MIN));
@@ -213,15 +215,6 @@ processConfiguration(string name, string value) {
     else if (name == "controller name") {
         lmInternalCommand("getMistressName", value, NULL_KEY);
     }
-    //--------------------------------------------------------------------------
-    // Disabled for future use, allows for extention scripts to add support for
-    // their own peferences by using names starting with the prefix 'ext'. These
-    // are sent with a different link code to prevent clashes with built in names
-    //--------------------------------------------------------------------------
-    //else if (llGetSubString(name, 0, 2) == "ext") {
-    //    string param = "|" + llDumpList2String(values, "|");
-    //    llMessageLinked(LINK_SET, 101, name + param, NULL_KEY);
-    //}
     
     // Report with first line is 1 numbering this is more recognizable for non developers
     else llOwnerSay("Unknown configuration value: " + name + " on line " + (string)(ncLine + 1));
@@ -248,13 +241,12 @@ setGender(string gender) {
 initConfiguration() {
     // Check to see if the file exists and is a notecard
     if (llGetInventoryType(NOTECARD_PREFERENCES) == INVENTORY_NOTECARD) {
-        if (databaseOnline && (offlineMode || (ncPrefsLoadedUUID == NULL_KEY) || (ncPrefsLoadedUUID != llGetInventoryKey(NOTECARD_PREFERENCES)))) {
+        if ((databaseOnline && (offlineMode || (ncPrefsLoadedUUID == NULL_KEY) || (ncPrefsLoadedUUID != llGetInventoryKey(NOTECARD_PREFERENCES)))) || prefsReread) {
             sendMsg(dollID, "Loading preferences notecard");
             ncStart = llGetTime();
 
             // Start reading from first line (which is 0)
-            ncLine = 0;
-            ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ncLine);
+            ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, (ncLine = 0));
         }
         else {
             debugSay(7, "DEBUG", "Skipping preferences notecard as it is unchanged");
@@ -277,7 +269,7 @@ doneConfiguration(integer read) {
     }
     if (reset) {
         llSleep(7.5);
-        llResetScript();
+        cdResetSelf();
     }
     reset = 0;
     lmInitState(102);
@@ -327,32 +319,38 @@ wakeMenu() {
 #ifdef DEVELOPER_MODE
     llOwnerSay("Waking menu scripts");
 #endif
-    cdRunScript("MenuHandler");
-    cdRunScript("Transform");
-    cdRunScript("Dress");
+    cdRunScript("MenuHandler.lsl");
+    cdRunScript("Transform.lsl");
+    cdRunScript("Dress.lsl");
 }
 
 sleepMenu() {
 #ifdef DEVELOPER_MODE
     llOwnerSay("Sleeping menu scripts");
 #endif
-    cdStopScript("MenuHandler");
-    cdStopScript("Transform");
-    cdStopScript("Dress");
+    cdStopScript("MenuHandler.lsl");
+    cdStopScript("Transform.lsl");
+    cdStopScript("Dress.lsl");
 }
 #endif
 
 do_Restart() {
-    integer loop; string me = cdMyScriptName();
-    reset = 0;
+    integer i;
 
     llOwnerSay("Resetting scripts");
+    
+    // NEW RESET POLICY
+    // In Short: Keep to our own.
+    // Policy: The key must only reset our own scrips and which it knows about, and thus knows that such an operation is safe.
+    // Rationale: Resetting unknown scripts we have at best limited knowledge of their purpose, functions or data handling. We
+    // may trigger adverse effects including data loss or otherwise disrupting the operation of those scripts in a negative way.
+    // Action: Do not reset, send a link message to the link set any other script can hook into and take their own actions.
 
-    for (loop = 0; loop < llGetInventoryNumber(INVENTORY_SCRIPT); loop++) {
-        string script = llGetInventoryName(INVENTORY_SCRIPT, loop);
-        if (script != me) {
+    for (i = 0; i < llGetListLength(coreScripts); i++) {
+        string script = cdListElement(coreScripts, i);
+        if (script != cdMyScriptName()) {
             cdRunScript(script);
-            llResetOtherScript(script);
+            cdResetScript(script);
         }
     }
 
@@ -369,7 +367,7 @@ default {
         scaleMem();
 
         if (code == 102) {
-            if (script != "ServiceReceiver") return;
+            if (script != "ServiceReceiver.lsl") return;
             databaseFinished = 1;
             initConfiguration();
         }
@@ -379,7 +377,7 @@ default {
         else if (code == 135) {
             if (llList2String(split, 0) == cdMyScriptName()) return;
             float delay = llList2Float(split, 1);
-            memReport(delay);
+            memReport(cdMyScriptName(),delay);
         }
         else if (code == 300) {
             string script = llList2String(split, 0);
@@ -536,14 +534,14 @@ default {
             string name = llList2String(split, 2);
 
             if (selection == "Reset Scripts") {
-                if (cdIsController(id)) llResetScript();
+                if (cdIsController(id)) cdResetSelf();
                 else if (id == dollID) {
                     if (RLVok == YES)
                         llOwnerSay("Unable to reset scripts while running with RLV enabled, please relog without RLV disabled or " +
                                     "you can use login a Linden Lab viewer to perform a script reset.");
                     else if (RLVok == UNSET && (llGetTime() < 300.0))
                         llOwnerSay("Key is currently still checking your RLV status please wait until the check completes and then try again.");
-                    else llResetScript();
+                    else cdResetSelf();
                 }
             }
 
@@ -555,9 +553,6 @@ default {
         rlvWait = 1;
         dollID = llGetOwner();
         dollName = llGetDisplayName(dollID);
-
-        //llTargetOmega(<0,0,0>,0,0);
-        llSetObjectName(PACKAGE_STRING);
 
         reset = 2;
         if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
@@ -571,7 +566,7 @@ default {
         if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
         integer i;
 #ifdef SIM_FRIENDLY
-        if (!llGetScriptState("MenuHandler")) wakeMenu();
+        if (!llGetScriptState("MenuHandler.lsl")) wakeMenu();
         nextLagCheck = llGetTime() + SEC_TO_MIN;
 #endif
     }
@@ -597,10 +592,10 @@ default {
 
     attach(key id) {
         if (id == NULL_KEY) {
-            llMessageLinked(LINK_SET, 106,  SCRIPT_NAME + "|" + "detached" + "|" + (string)lastAttachPoint, lastAttachAvatar);
+            llMessageLinked(LINK_SET, 106,  cdMyScriptName() + "|" + "detached" + "|" + (string)lastAttachPoint, lastAttachAvatar);
             llOwnerSay("The key is wrenched from your back, and you double over at the unexpected pain as the tendrils are ripped out. You feel an emptiness, as if some beautiful presence has been removed.");
         } else {
-            llMessageLinked(LINK_SET, 106, SCRIPT_NAME + "|" + "attached" + "|" + (string)llGetAttached(), id);
+            llMessageLinked(LINK_SET, 106, cdMyScriptName() + "|" + "attached" + "|" + (string)llGetAttached(), id);
 
             if (llGetPermissionsKey() == llGetOwner() && (llGetPermissions() & PERMISSION_TAKE_CONTROLS) != 0) llTakeControls(CONTROL_MOVE, 1, 1);
             else llRequestPermissions(dollID, PERMISSION_MASK);
@@ -616,7 +611,67 @@ default {
 
     dataserver(key query_id, string data) {
         integer i;
-        if (query_id == ncResetAttach) {
+        if (query_id == ncPrefsKey) {
+            if (ncLine == 0) {
+                if (configured) prefsReread = 1;
+                // These should be reset at the start of reading so that we do not
+                // concentrate one copy ad infinitum until we run out of mem.
+                lmSendConfig("userAfkRLVcmd"      , ( userAfkRLVcmd      = "" ) );
+                lmSendConfig("userBaseRLVcmd"     , ( userBaseRLVcmd     = "" ) );
+                lmSendConfig("userCollapseRLVcmd" , ( userCollapseRLVcmd = "" ) );
+                lmSendConfig("userPoseRLVcmd"     , ( userPoseRLVcmd     = "" ) );
+            }
+            
+            if ((data == EOF) || (data == EOC)) {
+                if (prefsReread) {
+                    llOwnerSay("Preferences reread restarting in 20 seconds.");
+                    lmInternalCommand("getTimeUpdates","",NULL_KEY);
+                    llSleep(20.0);
+                    llOwnerSay("@clear");
+                    cdResetSelf();
+                }
+                else doneConfiguration(1);
+            }
+            else {
+                if (llGetSubString(data, 0, 15) == NLS) {
+                    i = (integer)llGetSubString(data, 16, -18);
+                    if (llGetSubString(data, -17, -1) == NLE) {
+                        if ((i > 0) && (llGetSubString(data, 16, 16) == NLR)) ncLine += i; // NLR prefix = relative line number
+                        else if (i && (i > (ncLine + 1))) ncLine =  i -1; // Line number starts from 1 while LSL starts at 0
+                        else i = 0; // Set error flag
+                    }
+                    else i = 0; // Set error flag
+                    
+                    if (i == 0) { // Error flag set
+                        // ncLine + 1 convert LSL 0 index count to the more familiar start at 1
+                        llOwnerSay( "Preferences line " + (string)(ncLine + 1) + " is too confusing is being skipped, I read the line like this:\n" + data +
+                                    "\nPlease check your key help notecard for the proper format to use and edit the notecard with a corrected line.");
+                        ncLine++; // Continue reading at next line
+                    }
+                }
+                else {
+                    // Fast tidy one line comment stripping, if no comment returns full line
+                    data = llGetSubString(data, 0, llSubStringIndex(data, "#") & 0xFF);
+                    data = llGetSubString(data, 0, llSubStringIndex(data,"//") & 0xFF);
+                    // Trim any whitespace
+                    data = llStringTrim(data,STRING_TRIM);
+                    
+                    if (data != "") { // Skip if blank else line holds (potentially) useful data, we process
+                        if ( ( i = llSubStringIndex(data, "=") ) != -1) {
+                            string name     =      llStringTrim( llGetSubString(data, 0, i - 1), STRING_TRIM );
+                            string value    =      llStringTrim( llDeleteSubString(data, 0, i),  STRING_TRIM );
+                            debugSay(3, "DEBUG-PREFS", "Line " + (string)(ncLine+1) + " parsed as " + name + "=" + value);
+                            processConfiguration(name, value);
+                        }
+                    }
+                    ncLine++;
+                }
+
+                debugSay(3, "DEBUG-PREFS", ": Mext line: " + (string)(ncLine + 1));
+                ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ncLine);
+            }
+        }
+        else if (query_id == ncResetAttach) {
             data = llStringTrim(data,STRING_TRIM);
             if (cdAttached()) llSetPrimitiveParams([PRIM_POS_LOCAL, (vector)cdGetValue(saveAttachment,([data,0])), PRIM_ROT_LOCAL, (rotation)cdGetValue(saveAttachment,([data,1]))]);
             attachName = data;
@@ -643,74 +698,6 @@ default {
                 ncRequestAppearance = llGetNotecardLine(APPEARANCE_NC, ncLine++);
             }
         }
-        else if (query_id == ncPrefsKey) {
-            if (ncLine == 0) {
-                // These should be reset at the start of reading so that we do not
-                // concentrate one copy ad infinitum until we run out of mem.
-                lmSendConfig("userAfkRLVcmd"      , ( userAfkRLVcmd      = "" ) );
-                lmSendConfig("userBaseRLVcmd"     , ( userBaseRLVcmd     = "" ) );
-                lmSendConfig("userCollapseRLVcmd" , ( userCollapseRLVcmd = "" ) );
-                lmSendConfig("userPoseRLVcmd"     , ( userPoseRLVcmd     = "" ) );
-                
-                cdReadHint = "";
-                
-                llSleep(2.0);
-            }
-            
-            data = llStringTrim(data, STRING_TRIM);
-            if ((data == EOF) || (data == EOC)) {
-                if (!prefsReread) {
-                    llOwnerSay("Preferences reread restarting in 20 seconds.");
-                    lmInternalCommand("getTimeUpdates","",NULL_KEY);
-                    llSleep(20.0);
-                    llOwnerSay("@clear");
-                }
-                else doneConfiguration(1);
-            }
-            else {
-                if (llGetSubString(data, 0, 15) == NLS) {
-                    i = (integer)llGetSubString(data, 16, -18);
-                    if (llGetSubString(data, -17, -1) == NLE) {
-                        if ((i > 0) && (llGetSubString(data, 16, 16) == NLR)) ncLine += i; // NLR prefix = relative line number
-                        else if (i && (i > (ncLine + 1))) ncLine =  i -1; // Line number starts from 1 while LSL starts at 0
-                        else i = 0; // Set error flag
-                    }
-                    else i = 0; // Set error flag
-                    
-                    if (i == 0) { // Error flag set
-                        // ncLine + 1 convert LSL 0 index count to the more familiar start at 1
-                        llOwnerSay( "Preferences line " + (string)(ncLine + 1) + " is too confusing is being skipped, I read the line like this:\n" + data +
-                                    "\nPlease check your key help notecard for the proper format to use and edit the notecard with a corrected line.");
-                        ncLine++; // Continue reading at next line
-                    }
-                }
-                else {
-                    // Idea for commenting notecards with reduced penalty
-                    if (ncLine == 0) { // Only works on line 0 to not add overhead if unused
-                        if (llGetSubString(data, 0, 12) == "#!cdReadHint:") {
-                            cdReadHint = llDeleteSubString(data, 0, 12); // Save hint for use
-                        }
-                    }
-                    // Fast tidy one line comment stripping, if no comment returns full line
-                    data = llGetSubString(data, 0, (i = llSubStringIndex(data, "#") ) - i>>31);
-                    data = llGetSubString(data, 0, (i = llSubStringIndex(data,"//") ) - i>>31);
-                    
-                    // Trim any whitespace
-                    data = llStringTrim(data,STRING_TRIM);
-                    
-                    if (data != "") { // Blank
-                        // Line holds (potentially) useful data, we process
-                        if ( ( i = llSubStringIndex(data, "=") ) != -1) {
-                            string name     =      llStringTrim( llGetSubString(data, 0, i - 1), STRING_TRIM );
-                            string value    =      llStringTrim( llDeleteSubString(data, 0, i),  STRING_TRIM );
-                            processConfiguration(name, value);
-                        }
-                    }
-                    ncLine++;
-                }
-                ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ncLine);
-            }
-        }
         else if ( ( i = llListFindList(nameRequests, [ query_id ]) ) != -1) {
             string name = llList2String(nameRequests, --i);
             string uuid = data;
@@ -720,7 +707,8 @@ default {
     }
 
     changed(integer change) {
-        if (change & CHANGED_OWNER) {
+        // No longer needed with no transfers keys it would only get in the way of us including a default.
+        /*if (change & CHANGED_OWNER) {
             if (llGetInventoryType(NOTECARD_PREFERENCES) != INVENTORY_NONE) {
                 llOwnerSay("Deleting old preferences notecard on owner change.");
                 llOwnerSay("Look at PreferencesExample to see how to make yours.");
@@ -729,13 +717,12 @@ default {
 
             llSleep(5.0);
 
-            llResetScript();
-        }
+            cdResetSelf();
+        }*/
         if (change & CHANGED_INVENTORY) {
             if (llGetInventoryType(NOTECARD_PREFERENCES) == INVENTORY_NOTECARD) {
                 key ncKey = llGetInventoryKey(NOTECARD_PREFERENCES);
                 if (ncPrefsLoadedUUID != NULL_KEY && ncKey != NULL_KEY && ncKey != ncPrefsLoadedUUID) {
-                    databaseOnline = NO;
                     prefsReread = YES;
                     reset = 1;
                     
@@ -746,8 +733,7 @@ default {
                     ncStart = llGetTime();
 
                     // Start reading from first line (which is 0)
-                    ncLine = 0;
-                    ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ncLine);
+                    ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ncLine = 0);
 
                     return;
                 }
@@ -757,9 +743,8 @@ default {
                 lmInternalCommand("getTimeUpdates","",NULL_KEY);
                 llSleep(20.0);
                 llOwnerSay("@clear");
+                cdResetSelf();
             }
-
-            llResetScript();
         }
     }
 
@@ -775,7 +760,7 @@ default {
                 string script = llGetInventoryName(10, i);
 
                 if (!llGetScriptState(script)) {
-                    if (llListFindList([ "Aux", "Avatar", "ChatHandler", "Dress", "Main", "MenuHandler", "ServiceRequester", "ServiceReceiver", "StatusRLV", "Transform" ], [ script ]) != -1) {
+                    if (llListFindList(coreScripts, [script]) != -1) {
                         // Core key script appears to have suffered a fatal error try restarting
                         float delay = 30.0;
 #ifdef DEVELOPER_MODE
@@ -787,7 +772,7 @@ default {
                         llSleep(delay);
 
                         cdRunScript(script);
-                        llResetScript();
+                        cdResetSelf();
                     }
                 }
             }

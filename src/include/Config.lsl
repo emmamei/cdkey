@@ -1,3 +1,5 @@
+#ifndef CONFIG_LSL
+#define CONFIG_LSL
 #ifdef ADULT_MODE
 #define ADULT ["Adult"]
 #else
@@ -54,6 +56,8 @@
 
 #define BUILD_REPORT llListSort(ADULT + DEV + L320 + HAVE_SALT + FRI + TEST + UPCDKEY + BADRLV + DEBUG, 1, 1)
 
-#define lmConfigReport() llMessageLinked(LINK_THIS, 142, SCRIPT_NAME, NULL_KEY)
+#define lmConfigReport() llMessageLinked(LINK_THIS, 142, cdMyScriptName(), NULL_KEY)
 
-#define cdConfigReport() if (code == 142) llOwnerSay(SCRIPT_NAME + ":\t\tCompiled  by " + __AGENTNAME__ + "\t" +  __DATE__ + " " + __TIME__ + "\nWith: " + llList2CSV(BUILD_REPORT))
+#define cdConfigReport() if (code == 142) llOwnerSay(__SHORTFILE__ + ":" + (string)__LINE__ + "\t\t\t\tCompiled  by " + __AGENTNAME__ + "\t" +  __DATE__ + " " + __TIME__ + "\nWith: " + llList2CSV(BUILD_REPORT))
+
+#endif //CONFIG_LSL

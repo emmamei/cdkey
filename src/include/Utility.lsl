@@ -30,8 +30,7 @@ list dialogSort(list srcButtons) {
     return outButtons;
 }
 
-
-memReport(float delay) {
+memReport(string script, float delay) {
     if (delay != 0.0) llSleep(delay);
     float memory_limit = (float)llGetMemoryLimit();
     float free_memory = (float)llGetFreeMemory();
@@ -42,20 +41,21 @@ memReport(float delay) {
        used_memory = 16384 - free_memory;
        max_memory = free_memory;
     }
-    llMessageLinked(LINK_THIS, 136, llGetScriptName() + "|" + llList2Json(JSON_ARRAY, [used_memory, memory_limit, free_memory, max_memory]), NULL_KEY);
+    llMessageLinked(LINK_THIS, 136, script + "|" + llList2Json(JSON_ARRAY, [used_memory, memory_limit, free_memory, max_memory]), NULL_KEY);
 }
 
 #ifdef DEVELOPER_MODE
 #ifdef DEBUG_HANDLER
-#define debugSay(level,prefix,msg) debugMainHandler(SCRIPT_NAME, level, prefix, msg)
-#define debugHandler(script,level,prefix,msg) debugMainHandler(script, level, prefix, msg)
-#define linkDebug(sender,code,data,id) linkDebugHandler(sender, code, data, id)
-#else
-#define debugSay(level,prefix,msg) if (debugLevel >= level) llMessageLinked(LINK_THIS, 700, SCRIPT_NAME + "|" + (string)level + "|" + prefix + "|" + msg, NULL_KEY)
-#endif
-#else
+#define debugSay(level,prefix,msg) debugMainHandler(cdMyScriptName()+":"+(string)cdMyScriptLine(),level,prefix,msg)
+#define debugHandler(script,level,prefix,msg) debugMainHandler(script,level,prefix,msg)
+#define linkDebug(code,data,id) linkDebugHandler(cdMyScriptName()+":"+(string)cdMyScriptLine(),code,data,id)
+#else //DEBUG_HANDLER
+#define debugSay(level,prefix,msg) if (debugLevel >= level) llMessageLinked(LINK_THIS,700,cdMyScriptName()+":"+(string)__LINE__+"|"+(string)level+"|"+prefix+"|"+msg,NULL_KEY)
+#endif //DEBUG_HANDLER
+#endif //DEVELOPER_MODE
+#ifndef DEVELOPER_MODE
 #define debugSay(level,prefix,msg)
-#define debugHandler(script,level,prefix,msg)
+#define debugHandler(script,level,prefix,msg) debugSay(level,prefix,msg)
 #define linkDebug(sender,code,data,id)
 #endif //DEVELOPER_MODE
 
@@ -71,10 +71,14 @@ memReport(float delay) {
 linkDebugHandler(string sender, integer code, string data, key id) {
     if (!configured && (code == 300) && (initState == 104)) return;
 
-    list split = llParseStringKeepNulls(data, ["|"], []);
-    string script = llList2String(split, 0);
-    if (llGetInventoryType(script) != INVENTORY_SCRIPT) llShout(DEBUG_CHANNEL, "Error invalid script name in link " + (string)code + " with data = " + data);
-    data = llDumpList2String(llDeleteSubList(split, 0, 0), "|");
+    list split 		= llParseStringKeepNulls(data,[],["|"]);
+    string script 	= llList2String(split,0);
+    data		= (string)llDeleteSubList(split,0,0);
+    integer sub 	= llSubStringIndex(data,":");
+    string lineno	= llGetSubString(script,sub+1,-1);
+    script		= llGetSubString(data,0,sub-1);
+
+    if (llGetInventoryType(script) != INVENTORY_SCRIPT) llShout(DEBUG_CHANNEL,"Error invalid source specifier '"+script+":"+line+"' in link #"+ (string)code + " message containing data: " + data);
 
     integer level = 5;
          if (llListFindList([ 350, 399, 999 ], [ code ]) != -1)                 level = 2;
@@ -93,7 +97,7 @@ linkDebugHandler(string sender, integer code, string data, key id) {
 
 debugMainHandler(string script, integer level, string prefix, string msg) {
     if (debugLevel >= level) {
-        msg = formatFloat(llGetTime() - rezTime, 3) + " " + prefix + "(" + (string)level + "/" + (string)debugLevel + "): " + script + ": " + msg;
+	msg = "["+formatFloat(llGetTime(),3)+ "]"+script+": " + prefix + "(" + (string)level + ") " + msg;
         if (DEBUG_TARGET == 1) llOwnerSay(msg);
         else llSay(DEBUG_CHANNEL, msg);
     }
