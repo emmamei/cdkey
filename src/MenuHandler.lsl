@@ -132,11 +132,11 @@ default
         string script = llList2String(split, 0);
 
         if (code == 102) {
-            if (script == "ServiceReceiver") {
+            if (script == "ServiceReceiver.lsl") {
                 dbConfig = 1;
                 doDialogChannel();
             }
-            else if (data == "Start") configured = 1;
+            else if (data == "Start.lsl") configured = 1;
             scaleMem();
         }
         else if (code == 110) {
@@ -145,8 +145,11 @@ default
         }
         else if (code == 135) {
             float delay = llList2Float(split, 1);
-            memReport(delay);
+            memReport(cdMyScriptName(),delay);
         }
+        
+        cdConfigReport();
+        
         else if (code == 150) {
             string script = llList2String(split, 0);
             simRating = llList2String(split, 1);
@@ -198,7 +201,7 @@ default
                 lmInternalCommand("setGemColour", (string)gemColour, NULL_KEY);
             }
             else if (name == "uniqueID") {
-                if (script != "ServiceReceiver") return;
+                if (script != "ServiceReceiver.lsl") return;
                 uniqueID = (key)value;
             }
             else if (name == "timeLeftOnKey") {
@@ -416,7 +419,7 @@ default
 
                     // Can the doll be dressed? Add menu button
                     if ((RLVok == 1) && !collapsed && ((!isDoll && canDress) || (isDoll && canWear && !wearLock))) {
-                        menu += "Dress";
+                        menu += "Dress.lsl";
                     }
 
                     // Can the doll be transformed? Add menu button
@@ -628,7 +631,7 @@ default
                 lmInternalCommand("detach", "", id);
             else if (afterSpace == "Visible") lmSendConfig("isVisible", (string)(visible = (beforeSpace == CROSS)));
             else if (choice == "Reload Config") {
-                llResetOtherScript("Start");
+                llResetOtherScript("Start.lsl");
             }
             else if (choice == "TP Home") {
                 lmInternalCommand("TP", LANDMARK_HOME, id);

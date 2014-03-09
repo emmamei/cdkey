@@ -81,14 +81,17 @@ default {
         }
         else if (code == 135) {
             scaleMem();
-            memReport(cdListFloatElement(split, 1));
+            memReport(cdMyScriptName(),cdListFloatElement(split, 1));
         }
+        
+        cdConfigReport();
+        
         else if (code == 300) {
             string name = cdListElement(split, 1);
 #ifdef DEVELOPER_MODE
             if (name == "debugLevel") debugLevel = (integer)cdListElement(split, 2);
 #endif
-            if (script == "Main") scaleMem();
+            if (script == "Main.lsl") scaleMem();
         }
         else if (code == 315) {
             string realScript = cdListElement(split, 0);

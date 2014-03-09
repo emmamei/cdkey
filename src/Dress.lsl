@@ -296,11 +296,11 @@ default {
             scaleMem();
         }
         else if (code == 104) {
-            if (cdListElement(split, 0) != "Start") return;
+            if (cdListElement(split, 0) != "Start.lsl") return;
             startup = 1;
         }
         else if (code == 105) {
-            if (cdListElement(split, 0) != "Start") return;
+            if (cdListElement(split, 0) != "Start.lsl") return;
             startup = 2;
         }
         else if (code == 110) {
@@ -308,8 +308,11 @@ default {
         }
         else if (code == 135) {
             float delay = cdListFloatElement(split, 1);
-            memReport(delay);
+            memReport(cdMyScriptName(),delay);
         }
+        
+        cdConfigReport();
+        
         else if (code == 150) {
             string script = cdListElement(split, 0);
             simRating = cdListElement(split, 1);
@@ -388,7 +391,7 @@ default {
 
             debugSay(6, "DEBUG-DRESS", (string)candresstemp + " " + choice);
 
-            if (choice == "Dress" && candresstemp) {
+            if (choice == "Dress.lsl" && candresstemp) {
                 if (!isDresser(id)) return;
 
                 if (outfitsFolder != "") {
@@ -515,7 +518,7 @@ default {
                     // one outfit using a miniskirt and one a long dress.
                     //
                     // This is unnessary we can do the same job with locking and @detachallthis
-                    /*if (RLVok) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|getpathnew:pants=2670," +
+                    /*if (RLVok) llMessageLinked(LINK_THIS, 315, cdMyScriptName() + "|getpathnew:pants=2670," +
                                                                  "getpathnew:shirt=2670," +
                                                                  "getpathnew:jacket=2670," +
                                                                  "getpathnew:skirt=2670," +

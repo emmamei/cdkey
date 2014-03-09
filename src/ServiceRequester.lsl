@@ -8,11 +8,9 @@
 
 #include "include/GlobalDefines.lsl"
 
-#if ((__AGENTIDRAW__==AGENT_SILKY_MESMERISER_RAW) || (__AGENTIDRAW__==AGENT_MAYSTONE_RESIDENT_RAW))
 // You should create your own include or directly in this file define
 // a salt for the security hash for database posts
 #include "include/Secure.lsl"
-#endif
 #include "include/ServiceIncludes.lsl"
 
 integer useHTTPS = 1;
@@ -73,11 +71,7 @@ default
         debugSay(6, "DEBUG-SERVICES", "Requesting data from HTTPdb");
 #endif
 
-#ifdef SALT
         string hashStr = (string)llGetOwner() + time + SALT;
-#else
-        string hashStr = (string)llGetOwner() + time;// + SALT;
-#endif
         string requestURI = getURL("httpdb") + "retrieve?q=" + llSHA1String(hashStr) + "&p=cdkey&t=" + time + "&s=" + (string)lastGetTimestamp;
         while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
             llSleep(1.0);
@@ -145,7 +139,7 @@ default
             scaleMem();
         }
         else if (code == 104 || code == 105) {
-            if (llList2String(split, 0) != "Start") return;
+            if (llList2String(split, 0) != "Start.lsl") return;
 
             if (code == 104) {
                 string time = (string)llGetUnixTime();
@@ -153,12 +147,7 @@ default
 #ifdef DEVELOPER_MODE
                 debugSay(6, "DEBUG-SERVICES", "Requesting data from HTTPdb");
 #endif
-
-#ifdef SALT
                 string hashStr = (string)llGetOwner() + time + SALT;
-#else
-                string hashStr = (string)llGetOwner() + time;// + SALT;
-#endif
                 string requestURI = getURL("httpdb") + "retrieve?q=" + llSHA1String(hashStr) + "&p=cdkey&t=" + time + "&s=" + (string)lastGetTimestamp;
                 while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
                     llSleep(1.0);
@@ -167,14 +156,17 @@ default
         }
         else if (code == 135) {
             float delay = llList2Float(split, 1);
-            memReport(delay);
+            memReport(cdMyScriptName(),delay);
         }
+        
+        cdConfigReport();
+        
         else if (code == 300) {
             string script = llList2String(split, 0);
             string name = llList2String(split, 1);
             string value = llList2String(split, 2);
 
-            if (script == "Main" && name == "timeLeftOnKey") {
+            if (script == "Main.lsl" && name == "timeLeftOnKey") {
                 if (databaseReload && (databaseReload < llGetUnixTime())) {
                     databaseReload = llGetUnixTime() + 120;
                     string time = (string)llGetUnixTime();
@@ -182,12 +174,7 @@ default
 #ifdef DEVELOPER_MODE
                     debugSay(6, "DEBUG-SERVICES", "Requesting data from HTTPdb");
 #endif
-
-#ifdef SALT
                     string hashStr = (string)llGetOwner() + time + SALT;
-#else
-                    string hashStr = (string)llGetOwner() + time;// + SALT;
-#endif
                     string requestURI = getURL("httpdb") + "retrieve?q=" + llSHA1String(hashStr) + "&p=cdkey&t=" + time + "&s=" + (string)lastGetTimestamp;
                     while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
                         llSleep(1.0);
@@ -232,7 +219,7 @@ default
                 keyHandlerTime = llGetTime() - (float)(llGetUnixTime() - (integer)value);
             }
 
-            if ((script == "ServiceReceiver") || (script == SCRIPT_NAME)) return;
+            if ((script == "ServiceReceiver.lsl") || (script == cdMyScriptName())) return;
 
             else if (name == "offlineMode") {
                 offlineMode = (integer)value;

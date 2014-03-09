@@ -99,7 +99,7 @@ default {
         
         integer dollMessageCode; integer dollMessageVariant;
 
-        if (code != 700) linkDebug(script, code, data, id);
+        if (code != 700) linkDebugHandler(script, code, data, id);
 
         if ((code == 11) || (code == 12)) {
             string msg = llList2String(split, 1);
@@ -122,7 +122,7 @@ default {
             scaleMem();
         }
         else if (code == 110) {
-            if (script != "Start") return;
+            if (script != "Start.lsl") return;
             lmMemReport(0.5, 0);
         }
         else if (code == 135) {
@@ -151,7 +151,7 @@ default {
 #endif //TESTER_MODE
 #endif //DEVELOPER_MODE
             
-            integer i; list scripts =[ "Avatar", "ChatHandler", "Dress", "Main", "MenuHandler", "ServiceRequester", "ServiceReceiver", "Start", "StatusRLV", "Transform" ];
+            integer i; list scripts =[ "Avatar.lsl", "ChatHandler.lsl", "Dress.lsl", "Main.lsl", "MenuHandler.lsl", "ServiceRequester.lsl", "ServiceReceiver.lsl", "Start.lsl", "StatusRLV.lsl", "Transform.lsl" ];
             integer ok;
             for (i = 0; i <= 10; i++) {
                 string script = llList2String(scripts, i);
@@ -167,7 +167,7 @@ default {
                    used_memory = 16384 - free_memory;
                    available_memory = free_memory;
                 }
-                memData = cdSetValue(memData,[SCRIPT_NAME],llList2Json(JSON_ARRAY, [used_memory, memory_limit, free_memory, available_memory]));
+                memData = cdSetValue(memData,[cdMyScriptName()],llList2Json(JSON_ARRAY, [used_memory, memory_limit, free_memory, available_memory]));
 
                 float totUsed; float totLimit; float totFree; float totAvail;
                 integer i; string scriptName; list statList;
@@ -263,10 +263,10 @@ default {
                 textboxChannel = dialogChannel - 1111;
             }
             
-           if ((script == "Main") && (name == "windTimes")) curWindTimes = llDumpList2String(split,"|");
+           if ((script == "Main.lsl") && (name == "windTimes")) curWindTimes = llDumpList2String(split,"|");
 
             // Only MenuHandler script can activate these selections...
-            if (script != "MenuHandler") return;
+            if (script != "MenuHandler.lsl") return;
 
             if (name == "canDress") {
                 string msg;
@@ -319,7 +319,7 @@ default {
                     llRegionSayTo(carrierID, 0, "You have picked up the doll " + dollName);
                 }
             }
-            else if (((script == "Main") || (script == "ServiceReceiver")) && (cmd == "setWindTimes")) curWindTimes = llDumpList2String(split,"|");
+            else if (((script == "Main.lsl") || (script == "ServiceReceiver.lsl")) && (cmd == "setWindTimes")) curWindTimes = llDumpList2String(split,"|");
             else if (cmd == "strip") {
                 string part = llList2String(split, 0);
                 if (id != dollID) {
@@ -580,7 +580,7 @@ default {
             // Type 3 = Wind Times
             // -- send the raw list Main.lsl processes (which handles setting those up anyway)
             else if (textboxType == 3) {
-                lmInternalCommand("setWindTimes", llDumpList2String(llParseString2List(choice, [" ",",","|"], []),"|"), NULL_KEY);
+                lmInternalCommand("setWindTimes", choice, id);
             }
             
             // Type 4 = Safeword Confirm
@@ -633,7 +633,7 @@ default {
     }
 
     timer() {
-        if (factoryReset) llResetOtherScript("Start");
+        if (factoryReset) llResetOtherScript("Start.lsl");
         else if (textboxHandle && (listenTime < llGetTime())) {
             llListenRemove(textboxHandle);
             textboxHandle = 0;

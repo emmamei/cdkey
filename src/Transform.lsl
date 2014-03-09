@@ -71,7 +71,7 @@ integer quiet;
 // FUNCTIONS
 //========================================
 setDollType(string choice, integer automated) {
-    if (choice == "Transform") stateName = transform;
+    if (choice == "Transform.lsl") stateName = transform;
     else stateName = choice;
 
     stateName = cdGetFirstChar(llToUpper(stateName)) + cdButFirstChar(llToLower(stateName));
@@ -254,14 +254,14 @@ default {
         }
 
         else if (code == 104) {
-            if (script != "Start") return;
+            if (script != "Start.lsl") return;
             reloadTypeNames();
             startup = 1;
             llSetTimerEvent(60.0);   // every minute
         }
 
         else if (code == 105) {
-            if (script != "Start") return;
+            if (script != "Start.lsl") return;
         }
 
         else if (code == 110) {
@@ -272,14 +272,16 @@ default {
 
         else if (code == 135) {
             float delay = (float)choice;
-            memReport(delay);
+            memReport(cdMyScriptName(),delay);
         }
+        
+        cdConfigReport();
 
         else if (code == 300) {
             string value = name;
             string name = choice;
 
-            if (script != SCRIPT_NAME) {
+            if (script != cdMyScriptName()) {
                      if (name == "quiet")                                          quiet = (integer)value;
                 else if (name == "mustAgreeToType")                      mustAgreeToType = (integer)value;
                 else if (name == "showPhrases")                              showPhrases = (integer)value;
@@ -300,7 +302,7 @@ default {
                     if (configured) setDollType(stateName, 1);
                 }
 
-                else if (script == "Main" && name == "timeLeftOnKey") runTimedTriggers();
+                else if (script == "Main.lsl" && name == "timeLeftOnKey") runTimedTriggers();
             }
         }
 
@@ -367,11 +369,11 @@ default {
                     llDialog(id, msg, dialogSort(llListSort(choices, 1, 1) + MAIN), dialogChannel);
                 }
             }
-            else if ((cdListElementP(types, choice) != NOT_FOUND) || (choice == "Transform")) {
-                if (choice == "Transform") choice = transform;
+            else if ((cdListElementP(types, choice) != NOT_FOUND) || (choice == "Transform.lsl")) {
+                if (choice == "Transform.lsl") choice = transform;
                 else if (mustAgreeToType) {
                     transform = choice;
-                    list choices = ["Transform", "Dont Transform", MAIN ];
+                    list choices = ["Transform.lsl", "Dont Transform", MAIN ];
 
                     string msg = "Do you wish to transform to a " + choice + " Doll?";
 

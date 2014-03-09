@@ -9,7 +9,7 @@
 #include "include/GlobalDefines.lsl"
 #include "include/Json.lsl"
 
-//#define DEBUG_BADRLV 1
+//#define DEBUG_BADRLV
 
 key carrierID = NULL_KEY;
 
@@ -98,12 +98,15 @@ checkRLV()
     locked = 0;
     if (cdAttached()) {
         if (RLVck == -1) {
-#ifndef DEBUG_BADRLV
             // Setting the above debug flag causes the listener to not be open for the check
             // In effect the same as the viewer having no RLV support as no reply will be heard
             // all other code works as normal.
-            llListenControl(listenHandle, 1);
+#ifdef DEBUG_BADRLV
+#define LISTEN_OPEN 0
+#else
+#define LISTEN_OPEN 1
 #endif
+            llListenControl(listenHandle, LISTEN_OPEN);
             llSetTimerEvent(10.0);
             RLVck = 1;
             RLVok = 0;
@@ -143,7 +146,7 @@ ifPermissions() {
         integer permMask = llGetPermissions();
 
         if (grantorID != NULL_KEY && grantorID != dollID) {
-            llResetOtherScript("Start");
+            llResetOtherScript("Start.lsl");
             llSleep(10.0);
         }
 
@@ -277,7 +280,7 @@ initializeRLV(integer refresh) {
     // unlocked and detachable: this is because it can be detached
     // via the menu. To make the key truly "undetachable", we get
     // rid of the menu item to unlock it
-    if (llGetInventoryCreator("Main") != dollID) {
+    if (llGetInventoryCreator("Main.lsl") != dollID) {
         lmRunRLVas("Base", "detach=n,permissive=n");  //locks key
     
         locked = 1; // Note the locked variable also remains false for developer mode keys
@@ -312,7 +315,7 @@ initializeRLV(integer refresh) {
     }
 
 #ifndef DEVELOPER_MODE
-    if (llGetInventoryCreator("Main") == dollID) lmRunRLVas("Base", "clear=unshared,clear=achallthis");
+    if (llGetInventoryCreator("Main.lsl") == dollID) lmRunRLVas("Base", "clear=unshared,clear=achallthis");
 #endif
 }
 
@@ -422,9 +425,12 @@ default {
         }
         else if (code == 135) {
             float delay = llList2Float(split, 1);
-            memReport(delay);
+            memReport(cdMyScriptName(),delay);
             return;
         }
+        
+        cdConfigReport();
+        
         else if (code == 300) {
             string script = llList2String(split, 0);
             string name = llList2String(split, 1);
@@ -531,7 +537,7 @@ default {
                 else if (choice == "Panties") cdLoadData(RLV_NC, RLV_STRIP_PANTIES);
                 else if (choice == "Shoes") {
                     cdLoadData(RLV_NC, RLV_STRIP_SHOES);
-                    if (barefeet != "") lmRunRLVas("Dress","attachallover:" + barefeet + "=force");
+                    if (barefeet != "") lmRunRLVas("Dress.lsl","attachallover:" + barefeet + "=force");
                 }
             }
 #endif

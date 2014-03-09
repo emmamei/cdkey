@@ -131,7 +131,7 @@ ifPermissions() {
     integer perm = llGetPermissions();
 
     if (grantor != NULL_KEY && grantor != dollID) {
-        llResetOtherScript("Start");
+        llResetOtherScript("Start.lsl");
         llSleep(10);
     }
 
@@ -326,7 +326,7 @@ default {
         string script = llList2String(split, 0);
 
         if (code == 102) {
-            if (llList2String(split, 0) == "ServiceReceiver") {
+            if (llList2String(split, 0) == "ServiceReceiver.lsl") {
                 lmMenuReply("Wind", "", NULL_KEY);
 
                 float displayRate = setWindRate();
@@ -344,7 +344,7 @@ default {
         }
 
         else if (code == 104) {
-            if (script != "Start") return;
+            if (script != "Start.lsl") return;
             dollID = llGetOwner();
             dollName = llGetDisplayName(dollID);
 
@@ -352,7 +352,7 @@ default {
         }
 
         else if (code == 105) {
-            if (script != "Start") return;
+            if (script != "Start.lsl") return;
             clearAnim = 1;
 
             llSetTimerEvent(STD_RATE);
@@ -365,8 +365,10 @@ default {
         else if (code == 135) {
             float delay = llList2Float(split, 1);
             scaleMem();
-            memReport(delay);
+            memReport(cdMyScriptName(),delay);
         }
+        
+        cdConfigReport();
 
         else if (code == 300) {
             string script = llList2String(split, 0);
@@ -481,6 +483,8 @@ default {
             }
 
             else if (cmd == "setWindTimes") {
+                split = llDeleteSubList(llParseString2List(data,[","," ","|"],[]),0,1);
+                
                 integer i; integer start = llGetListLength(split);
 
                 windTimes = [];
@@ -490,12 +494,12 @@ default {
                     if ((value > 0) && (value <= 240) && (llListFindList(windTimes, [ value ]) == -1)) windTimes += value;
                 }
                 
-                integer l = llGetListLength(windTimes); i = -(l/2);
-                while (l > 11) windTimes = llDeleteSubList(llListSort(windTimes,1,--l&1),++i,i);
+                integer l = llGetListLength(windTimes); i = l;
+                while (l > 11) llDeleteSubList(llListSort(windTimes,1,--l&1),i-=2,i);
                 windTimes = llListSort(windTimes,1,1);
                 
                 if (start > l) lmSendToAgent("One or more times were filtered accepted list is " + llList2CSV(windTimes), id);
-                if (script != "ServiceReceiver") lmSendConfig("windTimes", llDumpList2String(windTimes,"|"));
+                if (script != "ServiceReceiver.lsl") lmSendConfig("windTimes", llDumpList2String(windTimes,"|"));
             }
 
             else if (cmd == "wearLock") {
@@ -541,7 +545,7 @@ default {
                     else split = [1,2];
                 } else {
                     integer i = 0; float time; split = [];
-                    while ((i <= n) && ( ( time = (llList2Float(windTimes, i++) * SEC_TO_MIN) ) <= windLimit) && (time <= (keyLimit / 2))) {
+                    while ((i <= n) && ( ( time = (llList2Float(windTimes, i++) * SEC_TO_MIN) ) < (windLimit - 60.0)) && (time <= (keyLimit / 2))) {
                         split += ["Wind " + (string)llFloor(time / SEC_TO_MIN)];
                     }
                     if ((i <= n) && (windLimit <= (keyLimit / 2))) split += ["Wind Full"];

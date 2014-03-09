@@ -1,6 +1,8 @@
 #ifndef KEY_SHARED_FUNC_LSL
 #define KEY_SHARED_FUNC_LSL
 
+#include "GlobalDefines.lsl"
+
 //-----------------------------------
 // Internal Shared Functions
 //-----------------------------------

@@ -116,6 +116,7 @@
 #define CARRY_TIMEOUT 60.0
 #define JAM_DEFAULT_TIME 90.0
 
+#define CORE_SCRIPTS [ "Aux.lsl", "Avatar.lsl", "ChatHandler.lsl", "Dress.lsl", "Main.lsl", "MenuHandler.lsl", "ServiceRequester.lsl", "ServiceReceiver.lsl", "Start.lsl", "StatusRLV.lsl", "Transform.lsl" ]
 #define COLOR_NAMES [ "Purple", "Pink", "Red", "Green", "Blue", "Cyan", "Yellow", "Orange", "White", "Black", "CUSTOM" ]
 #define COLOR_VALUE [ <0.3, 0.1, 0.6>, <0.9, 0.1, 0.8>, <0.8, 0.1, 0.1>, <0.1, 0.8, 0.1>, <0.1, 0.1, 0.8>, <0.1, 0.8, 0.8>, <0.8, 0.8, 0.1>, <0.8, 0.4, 0.1>, <0.9, 0.9, 0.9>, <0.1, 0.1, 0.1>, <0,0,0> ]
 
@@ -123,18 +124,18 @@
 // cannot grow to arbitrary lengths and consume all memory.
 #define MAX_ACCESS_ITEMS 11
 
-#define cdControllerCount()             llFloor(llGetListLength(USER_CONTROLLERS) / 2)
-#define cdAttached()                    llGetAttached()
-#define cdDollAway()                    ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0)
-#define cdCarried()                     (carrierID != NULL_KEY)
-#define cdCollapsedAnim()               (keyAnimation == ANIMATION_COLLAPSED)
-#define cdNoAnim()                      (keyAnimation == "")
-#define cdPosed()                       (!collapsed && !cdNoAnim())
+#define cdControllerCount()		llFloor(llGetListLength(USER_CONTROLLERS) / 2)
+#define cdAttached()			llGetAttached()
+#define cdDollAway()			((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0)
+#define cdCarried()			(carrierID != NULL_KEY)
+#define cdCollapsedAnim()		(keyAnimation == ANIMATION_COLLAPSED)
+#define cdNoAnim()			(keyAnimation == "")
+#define cdPosed()			(!collapsed && !cdNoAnim())
 #define cdSelfPosed()			(poserID == dollID)
-#define cdWindDown()                    (!collapsed && cdAttached() && (dollType != "Builder") && (dollType != "Key"))
-#define cdRunTimer()                    (configured && cdAttached() && RLVchecked)
-
-#define SCRIPT_NAME llGetScriptName()
+#define cdWindDown()			(!collapsed && cdAttached() && (dollType != "Builder") && (dollType != "Key"))
+#define cdRunTimer()			(configured && cdAttached() && RLVchecked)
+#define cdMyScriptName()		__SHORTFILE__
+#define cdMyScriptLine()		__LINE__
 
 #define ATTACH_BACK 9
 #define ATTACH_HUD_CENTER_1 35
@@ -152,25 +153,25 @@
 #define WIND_NORMAL 1
 
 // Link messages
-#define lmSendToAgent(msg, id)				llMessageLinked(LINK_THIS, 11,  SCRIPT_NAME + "|" + msg, id)
-#define lmSendToAgentPlusDoll(msg,id)			llMessageLinked(LINK_THIS, 12,  SCRIPT_NAME + "|" + msg, id)
-#define lmSendToController(msg)				llMessageLinked(LINK_THIS, 15,  SCRIPT_NAME + "|" + msg, NULL_KEY)
-#define lmConfigComplete(count)				llMessageLinked(LINK_THIS, 102, SCRIPT_NAME + "|" + (string)(count), NULL_KEY)
-#define lmInitState(num)				llMessageLinked(LINK_THIS, num, SCRIPT_NAME, NULL_KEY)
-#define lmMemReport(delay,man)				llMessageLinked(LINK_THIS, 135, SCRIPT_NAME + "|" + (string)delay + "|" + (string)man, NULL_KEY)
-#define lmMemReply(json)				llMessageLinked(LINK_THIS, 136, SCRIPT_NAME + "|" + json, NULL_KEY)
-#define lmRating(simrating)				llMessageLinked(LINK_THIS, 150, SCRIPT_NAME + "|" + simrating, NULL_KEY)
-#define lmSendConfig(name,value)			llMessageLinked(LINK_THIS, 300, SCRIPT_NAME + "|" + name + "|" + value, NULL_KEY)
-#define lmInternalCommand(command,parameter,id)		llMessageLinked(LINK_THIS, 305, SCRIPT_NAME + "|" + command + "|" + parameter, id)
-#define lmStrip(part)					llMessageLinked(LINK_THIS, 305, SCRIPT_NAME + "|" + "strip" + "|" + part, id)
-#define lmRunRLV(command)				llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|" + "|" + command, NULL_KEY)
-#define lmRunRLVas(vmodule,command)			llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|" + vmodule + "|" + command, NULL_KEY)
-#define lmConfirmRLV(forscript,command)			llMessageLinked(LINK_THIS, 320, SCRIPT_NAME + "|" + forscript + "|" + command, NULL_KEY)
-#define lmRLVreport(active,apistring,apiversion)	llMessageLinked(LINK_THIS, 350, SCRIPT_NAME + "|" + (string)active + "|" + apistring + "|" + (string)apiversion, NULL_KEY)
-//#define lmUpdateStatistic(name,value)			llMessageLinked(LINK_THIS, 399, SCRIPT_NAME + "|" + name + "|" + value, NULL_KEY)
-#define lmMenuReply(choice,name,id)			llMessageLinked(LINK_THIS, 500, SCRIPT_NAME + "|" + choice + "|" + name, id)
-#define lmTextboxReply(type,name,choice,id)		llMessageLinked(LINK_THIS, 501, SCRIPT_NAME + "|" + (string)type + "|" + name + "|" + choice, id)
-#define lmBroadcastReceived(name,msg,id)		llMessageLinked(LINK_THIS, 800, SCRIPT_NAME + "|" + name + "|" + llGetOwnerKey(id) + "|" + msg, id)
+#define lmSendToAgent(msg, id)				llMessageLinked(LINK_THIS, 11,  cdMyScriptName()+":"+cdMyScriptLine() + "|" + msg, id)
+#define lmSendToAgentPlusDoll(msg,id)			llMessageLinked(LINK_THIS, 12,  cdMyScriptName()+":"+cdMyScriptLine() + "|" + msg, id)
+#define lmSendToController(msg)				llMessageLinked(LINK_THIS, 15,  cdMyScriptName()+":"+cdMyScriptLine() + "|" + msg, NULL_KEY)
+#define lmConfigComplete(count)				llMessageLinked(LINK_THIS, 102, cdMyScriptName()+":"+cdMyScriptLine() + "|" + (string)(count), NULL_KEY)
+#define lmInitState(num)				llMessageLinked(LINK_THIS, num, cdMyScriptName()+":"+cdMyScriptLine(), NULL_KEY)
+#define lmMemReport(delay)				llMessageLinked(LINK_THIS, 135, cdMyScriptName()+":"+cdMyScriptLine() + "|" + (string)delay, NULL_KEY)
+#define lmMemReply(json)				llMessageLinked(LINK_THIS, 136, cdMyScriptName()+":"+cdMyScriptLine() + "|" + json, NULL_KEY)
+#define lmRating(simrating)				llMessageLinked(LINK_THIS, 150, cdMyScriptName()+":"+cdMyScriptLine() + "|" + simrating, NULL_KEY)
+#define lmSendConfig(name,value)			llMessageLinked(LINK_THIS, 300, cdMyScriptName()+":"+cdMyScriptLine() + "|" + name + "|" + value, NULL_KEY)
+#define lmInternalCommand(command,parameter,id)		llMessageLinked(LINK_THIS, 305, cdMyScriptName()+":"+cdMyScriptLine() + "|" + command + "|" + parameter, id)
+#define lmStrip(part)					llMessageLinked(LINK_THIS, 305, cdMyScriptName()+":"+cdMyScriptLine() + "|" + "strip" + "|" + part, id)
+#define lmRunRLV(command)				llMessageLinked(LINK_THIS, 315, cdMyScriptName()+":"+cdMyScriptLine() + "|" + "|" + command, NULL_KEY)
+#define lmRunRLVas(vmodule,command)			llMessageLinked(LINK_THIS, 315, cdMyScriptName()+":"+cdMyScriptLine() + "|" + vmodule + "|" + command, NULL_KEY)
+#define lmConfirmRLV(forscript,command)			llMessageLinked(LINK_THIS, 320, cdMyScriptName()+":"+cdMyScriptLine() + "|" + forscript + "|" + command, NULL_KEY)
+#define lmRLVreport(active,apistring,apiversion)	llMessageLinked(LINK_THIS, 350, cdMyScriptName()+":"+cdMyScriptLine() + "|" + (string)active + "|" + apistring + "|" + (string)apiversion, NULL_KEY)
+//#define lmUpdateStatistic(name,value)			llMessageLinked(LINK_THIS, 399, cdMyScriptName()+":"+cdMyScriptLine() + "|" + name + "|" + value, NULL_KEY)
+#define lmMenuReply(choice,name,id)			llMessageLinked(LINK_THIS, 500, cdMyScriptName()+":"+cdMyScriptLine() + "|" + choice + "|" + name, id)
+#define lmTextboxReply(type,name,choice,id)		llMessageLinked(LINK_THIS, 501, cdMyScriptName()+":"+cdMyScriptLine() + "|" + (string)type + "|" + name + "|" + choice, id)
+#define lmBroadcastReceived(name,msg,id)		llMessageLinked(LINK_THIS, 800, cdMyScriptName()+":"+cdMyScriptLine() + "|" + name + "|" + llGetOwnerKey(id) + "|" + msg, id)
 
 // Virtual function style new link commands
 #define cdCarry(id)		lmInternalCommand("carry", (carrierName = llGetDisplayName(id)), (carrierID = id))
@@ -198,10 +199,10 @@
 
 #include "Config.lsl"
 
+#include "LinkMessage.lsl"
+
 integer cdGetControllerStatus(key id) {
     return (cdIsBuiltinController(id) || (cdIsDoll(id) && !cdControllerCount()) || (!cdIsDoll(id) && cdIsUserController(id)));
 }
 
 #endif // GLOBAL_DEFINES
-
-
