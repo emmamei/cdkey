@@ -51,7 +51,6 @@ default {
     state_entry() {
         dollID = llGetOwner();
         scriptName = llGetScriptName();
-        llSetMemoryLimit(SCRIPT_MAXMEM);
     }
     
     on_rez(integer start) {
@@ -63,8 +62,7 @@ default {
     //----------------------------------------
 
     link_message(integer sender, integer code, string data, key id) {
-        list split = cdSplitArgs(data);
-        string script = cdListElement(split, 0);
+        cdReadLinkHeader();
 
         // Link Messages Handled:
         //
@@ -87,16 +85,16 @@ default {
         cdConfigReport();
         
         else if (code == 300) {
-            string name = cdListElement(split, 1);
+            string name = cdListElement(split, 0);
 #ifdef DEVELOPER_MODE
-            if (name == "debugLevel") debugLevel = (integer)cdListElement(split, 2);
+            if (name == "debugLevel") debugLevel = (integer)cdListElement(split, 1);
 #endif
             if (script == "Main.lsl") scaleMem();
         }
         else if (code == 315) {
-            string realScript = cdListElement(split, 0);
-            string script = cdListElement(split, 1);
-            string commandString = cdListElement(split, 2);
+            string realScript = script;
+            script = cdListElement(split, 0);
+            string commandString = cdListElement(split, 1);
 
             if (script == "") script = realScript;
 
@@ -304,7 +302,7 @@ default {
             }
         }
         else if (code == 350) {
-            RLVok = (cdListIntegerElement(split, 1) == 1);
+            RLVok = (cdListIntegerElement(split, 0) == 1);
             RLVstarted = 1;
         }
     }

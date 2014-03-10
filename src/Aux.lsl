@@ -32,6 +32,7 @@ key ncRequestDollMessage;
 key ncRequestDollDialog;
 key lmRequest;
 key carrierID = NULL_KEY;
+list coreScripts = CORE_SCRIPTS;
 float rezTime;
 float timerEvent;
 float listenTime;
@@ -94,21 +95,20 @@ default {
     }
 
     link_message(integer source, integer code, string data, key id) {
-        list split = llParseString2List(data, ["|"], []);
-        string script = llList2String(split, 0);
+        cdReadLinkHeader();
         
         integer dollMessageCode; integer dollMessageVariant;
 
-        if (code != 700) linkDebugHandler(script, code, data, id);
+        if (code != 700) linkDebug(script, line, code, llDumpList2String("|"), id);
 
         if ((code == 11) || (code == 12)) {
-            string msg = llList2String(split, 1);
+            string msg = llList2String(split, 0);
             debugSay(7, "DEBUG", "Send message to: " + (string)id + "\n" + msg);
             sendMsg(id, msg);
             if (!cdIsDoll(id) && (code == 12)) sendMsg(id, msg);
         }
         else if (code == 15) {
-            string msg = llList2String(split, 1);
+            string msg = llList2String(split, 0);
             integer i;
             for (i = 0; i < llGetListLength(cdList2ListStrided(MistressList, 0, -1, 2)); i++) {
                 string targetName = llList2String(MistressList, i * 2 + 1);
@@ -126,12 +126,12 @@ default {
             lmMemReport(0.5, 0);
         }
         else if (code == 135) {
-            memRequested = llList2Integer(split, 2);
+            memRequested = llList2Integer(split, 0);
             memCollecting = 1;
             memData = "";
         }
         else if (code == 136) {
-            string json = llList2String(split, 1);
+            string json = llList2String(split, 0);
             if ((json != "") && (json != JSON_INVALID));
 #ifdef DEVELOPER_MODE            
             memData = cdSetValue(memData, [script], json);
@@ -151,10 +151,9 @@ default {
 #endif //TESTER_MODE
 #endif //DEVELOPER_MODE
             
-            integer i; list scripts =[ "Avatar.lsl", "ChatHandler.lsl", "Dress.lsl", "Main.lsl", "MenuHandler.lsl", "ServiceRequester.lsl", "ServiceReceiver.lsl", "Start.lsl", "StatusRLV.lsl", "Transform.lsl" ];
-            integer ok;
+            integer i; integer ok;
             for (i = 0; i <= 10; i++) {
-                string script = llList2String(scripts, i);
+                string script = llList2String(coreScripts, i);
                 ok += (cdGetValue(memData, [script]) != JSON_INVALID);
             }
             if (ok == 10) { 
@@ -204,12 +203,12 @@ default {
             }
         }
         else if (code == 150) {
-            simRating = llList2String(split, 1);
+            simRating = llList2String(split,0);
         }
         else if (code == 300) {
-            string name = llList2String(split, 1);
-            string value = llList2String(split, 2);
-            split = llDeleteSubList(split, 0, 1);
+            string name = llList2String(split,0);
+            string value = llList2String(split,1);
+            split = llDeleteSubList(split,0,0);
 
                  if (name == "MistressList")             MistressList = split;
 #ifdef DEVELOPER_MODE
@@ -291,15 +290,14 @@ default {
             dollMessageVariant = (integer)value;
         }
         else if (code == 305) {
-            string script = llList2String(split, 0);
-            string cmd = llList2String(split, 1);
-            split = llDeleteSubList(split, 0, 1);
+            string cmd = llList2String(split,0);
+            split = llDeleteSubList(split,0,0);
 
             if (cmd == "setAFK") {
-                afk = llList2Integer(split, 0);
-                integer auto = llList2Integer(split, 1);
-                windRate = llList2String(split, 2);
-                minsLeft = llList2String(split, 3);
+                afk = llList2Integer(split,0);
+                integer auto = llList2Integer(split,1);
+                windRate = llList2String(split,2);
+                minsLeft = llList2String(split,3);
 
                 dollMessageCode = SET_AFK;
 
@@ -312,7 +310,7 @@ default {
             }
             else if (cmd == "carry") {
                 carrierID = id;
-                carrierName = llList2String(split, 0);
+                carrierName = llList2String(split,0);
                 if (!quiet) llSay(0, "The doll " + dollName + " has been picked up by " + carrierName);
                 else {
                     llOwnerSay("You have been picked up by " + carrierName);
@@ -321,7 +319,7 @@ default {
             }
             else if (((script == "Main.lsl") || (script == "ServiceReceiver.lsl")) && (cmd == "setWindTimes")) curWindTimes = llDumpList2String(split,"|");
             else if (cmd == "strip") {
-                string part = llList2String(split, 0);
+                string part = llList2String(split,0);
                 if (id != dollID) {
                     lmInternalCommand("wearLock", (string)(wearLock = 1), NULL_KEY);
                     if (!quiet) llSay(0, "The dolly " + dollName + " has " + llToLower(pronounHerDoll) + " " + llToLower(part) + " stripped off " + llToLower(pronounHerDoll) + " and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes.  (Timer will start over for dolly if " + llToLower(pronounSheDoll) + " is stripped again)");
@@ -337,12 +335,11 @@ default {
             }
         }
         else if (code == 350) {
-            RLVok = (llList2Integer(split, 1) == 1);
+            RLVok = (llList2Integer(split,1) == 1);
         }
         else if (code == 500) {
-            string script = llList2String(split, 0);
-            string choice = llList2String(split, 1);
-            string avatar = llList2String(split, 2);
+            string choice = llList2String(split,0);
+            string avatar = llList2String(split,1);
 
             if (choice == "Help/Support") {
                 string msg = "Here you can find various options to get help with your " +
@@ -518,12 +515,11 @@ default {
             }
         }
         else if (code == 700) {
-            string sender = llList2String(split, 0);
-            integer level = llList2Integer(split, 1);
-            string prefix = llList2String(split, 2);
-            string msg = llDumpList2String(llDeleteSubList(split, 0, 2), "|");
+            integer level = llList2Integer(split,0);
+            string prefix = llList2String(split,1);
+            string msg = llDumpList2String(llDeleteSubList(split,0,1), "|");
 
-            debugHandler(sender, level, prefix, msg);
+            debugHandler(script, level, prefix, msg);
         }
 
         // HippoUPDATE reply

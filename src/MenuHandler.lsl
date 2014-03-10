@@ -127,9 +127,7 @@ default
     }
 
     link_message(integer sender, integer code, string data, key id) {
-        list split = llParseString2List(data, [ "|" ], []);
-
-        string script = llList2String(split, 0);
+        cdReadLinkHeader();
 
         if (code == 102) {
             if (script == "ServiceReceiver.lsl") {
@@ -144,21 +142,19 @@ default
             lmInternalCommand("setGemColour", (string)gemColour, NULL_KEY);
         }
         else if (code == 135) {
-            float delay = llList2Float(split, 1);
+            float delay = llList2Float(split, 0);
             memReport(cdMyScriptName(),delay);
         }
         
         cdConfigReport();
         
         else if (code == 150) {
-            string script = llList2String(split, 0);
-            simRating = llList2String(split, 1);
+            simRating = llList2String(split, 0);
         }
         else if (code == 300) {
-            string script = llList2String(split, 0);
-            string name = llList2String(split, 1);
-            string value = llList2String(split, 2);
-            split = llDeleteSubList(split, 0, 1);
+            string name = llList2String(split, 0);
+            string value = llList2String(split, 1);
+            split = llDeleteSubList(split, 0, 0);
 
                  if (name == "baseWindRate")             baseWindRate = (float)value;
             else if (name == "displayWindRate")       displayWindRate = (float)value;
@@ -228,9 +224,8 @@ default
             }
         }
         else if (code == 305) {
-            string script = llList2String(split, 0);
-            string cmd = llList2String(split, 1);
-            split = llDeleteSubList(split, 0, 1);
+            string cmd = llList2String(split, 0);
+            split = llDeleteSubList(split, 0, 0);
 
             if (cmd == "carry") {
                 // Doll has been picked up...

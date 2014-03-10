@@ -46,9 +46,9 @@ memReport(string script, float delay) {
 
 #ifdef DEVELOPER_MODE
 #ifdef DEBUG_HANDLER
-#define debugSay(level,prefix,msg) debugMainHandler(cdMyScriptName()+":"+(string)cdMyScriptLine(),level,prefix,msg)
+#define debugSay(level,prefix,msg) debugMainHandler(cdMyScriptLine(),cdMyScriptLine(),level,prefix,msg)
 #define debugHandler(script,level,prefix,msg) debugMainHandler(script,level,prefix,msg)
-#define linkDebug(code,data,id) linkDebugHandler(cdMyScriptName()+":"+(string)cdMyScriptLine(),code,data,id)
+#define linkDebug(script,line,code,data,id) linkDebugHandler(cdMyScriptName()+"|"+(string)cdMyScriptLine(),code,data,id)
 #else //DEBUG_HANDLER
 #define debugSay(level,prefix,msg) if (debugLevel >= level) llMessageLinked(LINK_THIS,700,cdMyScriptName()+":"+(string)__LINE__+"|"+(string)level+"|"+prefix+"|"+msg,NULL_KEY)
 #endif //DEBUG_HANDLER
@@ -56,7 +56,7 @@ memReport(string script, float delay) {
 #ifndef DEVELOPER_MODE
 #define debugSay(level,prefix,msg)
 #define debugHandler(script,level,prefix,msg) debugSay(level,prefix,msg)
-#define linkDebug(sender,code,data,id)
+#define linkDebug(script,line,code,data,id)
 #endif //DEVELOPER_MODE
 
 // debugPrint is for "one-off" quickie debugging...
@@ -68,15 +68,8 @@ memReport(string script, float delay) {
 #endif
 
 #ifdef DEVELOPER_MODE
-linkDebugHandler(string sender, integer code, string data, key id) {
+linkDebugHandler(string script, integer line, integer code, string data, key id) {
     if (!configured && (code == 300) && (initState == 104)) return;
-
-    list split 		= llParseStringKeepNulls(data,[],["|"]);
-    string script 	= llList2String(split,0);
-    data		= (string)llDeleteSubList(split,0,0);
-    integer sub 	= llSubStringIndex(data,":");
-    string lineno	= llGetSubString(script,sub+1,-1);
-    script		= llGetSubString(data,0,sub-1);
 
     if (llGetInventoryType(script) != INVENTORY_SCRIPT) llShout(DEBUG_CHANNEL,"Error invalid source specifier '"+script+":"+line+"' in link #"+ (string)code + " message containing data: " + data);
 
@@ -95,9 +88,9 @@ linkDebugHandler(string sender, integer code, string data, key id) {
     debugHandler(sender, level, "LINK-DEBUG", msg);
 }
 
-debugMainHandler(string script, integer level, string prefix, string msg) {
+debugMainHandler(string script, integer line, integer level, string prefix, string msg) {
     if (debugLevel >= level) {
-	msg = "["+formatFloat(llGetTime(),3)+ "]"+script+": " + prefix + "(" + (string)level + ") " + msg;
+	msg = "["+formatFloat(llGetTime(),3)+ "]"+script+":"+(string)line + " " + prefix + "(" + (string)level + ") " + msg;
         if (DEBUG_TARGET == 1) llOwnerSay(msg);
         else llSay(DEBUG_CHANNEL, msg);
     }
@@ -283,7 +276,7 @@ scaleMem() {
 
       if (newlimit != limit) {
          llSetMemoryLimit(newlimit);
-         debugSay(7, "DEBUG", "Memory limit changed from " + formatFloat((float)limit / 1024.0, 2) + "kB to " + formatFloat((float)newlimit / 1024.0, 2) + "kB (" + formatFloat((float)(newlimit - limit) / 1024.0, 2) + "kB) " + formatFloat((float)llGetFreeMemory() / 1024.0, 2) + "kB free");
+         debugSay(5, "DEBUG", "Memory limit changed from " + formatFloat((float)limit / 1024.0, 2) + "kB to " + formatFloat((float)newlimit / 1024.0, 2) + "kB (" + formatFloat((float)(newlimit - limit) / 1024.0, 2) + "kB) " + formatFloat((float)llGetFreeMemory() / 1024.0, 2) + "kB free");
       }
    }
 }

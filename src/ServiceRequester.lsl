@@ -43,24 +43,33 @@ string correctName(string name) {
 default
 {
     state_entry() {
+        dollID = llGetOwner();
         if (llGetInventoryType(".offline") != INVENTORY_NONE) {
             lmSendConfig("offlineMode", (string)(offlineMode = 1));
             invMarker = 1;
         }
         else lmSendConfig("offlineMode", (string)(offlineMode = 0));
+        cdPermSanityCheck();
+        
+#ifdef CDKEY_UPDATER
         myMod = llFloor(llFrand(5.999999));
         serverNames = llListRandomize(serverNames, 1);
-        cdPermSanityCheck();
         requestDataURL = llGetNotecardLine("DataServices",0);
+#endif
     }
     
-    dataserver(key request, string data) {
+//  This is not presently used as we are using HippoUPDATE
+#ifdef CDKEY_UPDATER
+     dataserver(key request, string data) {
         if (request == requestDataURL) DataURL = data;
     }
-
+#endif
+ 
     on_rez(integer start) {
+#ifdef CDKEY_UPDATER
         serverNames = llListRandomize(serverNames, 1);
         myMod = llFloor(llFrand(5.999999));
+#endif
         cdPermSanityCheck();
         
         llSleep(1.0);
@@ -71,8 +80,12 @@ default
         debugSay(6, "DEBUG-SERVICES", "Requesting data from HTTPdb");
 #endif
 
-        string hashStr = (string)llGetOwner() + time + SALT;
-        string requestURI = getURL("httpdb") + "retrieve?q=" + llSHA1String(hashStr) + "&p=cdkey&t=" + time + "&s=" + (string)lastGetTimestamp;
+        // As a result of the beta testing program and in particular the fact that a script
+        // reset resulting in a complete refresh of settings from the database fixes the majority
+        // of glitches a small trial, lets see if this effect holds true if we do a refrsh on
+        // login/attach or if the resetting of (at least some) of the scripts is also needed.
+        string hashStr = (string)dollID + time + SALT;
+        string requestURI = getURL("httpdb") + "retrieve?q=" + llSHA1String(hashStr) + "&p=cdkey&t=" + time + "&s=0";  // + (string)lastGetTimestamp;
         while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
             llSleep(1.0);
         }
@@ -81,12 +94,19 @@ default
     }
 
     attach(key id) {
-        if (keyHandler == llGetKey() && id == NULL_KEY) {
+        if ((keyHandler == llGetKey()) && (id == NULL_KEY)) {
             llRegionSay(broadcastOn, "keys released");
-#ifdef DEVELOPER_MODE
             debugSay(5, "BROADCAST-DEBUG", "Broadcast sent: keys released");
-#endif
             lmSendConfig("keyHandler", (string)(keyHandler = NULL_KEY));
+        }
+        else {
+            debugSay(6, "DEBUG-SERVICES", "Requesting data from HTTPdb");
+            string time = (string)llGetUnixTime();
+            string hashStr = (string)dollID + time + SALT;
+            string requestURI = getURL("httpdb") + "retrieve?q=" + llSHA1String(hashStr) + "&p=cdkey&t=" + time + "&s=0";  // + (string)lastGetTimestamp;
+            while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
+                llSleep(1.0);
+            }
         }
     }
 
@@ -133,13 +153,13 @@ default
     }
 
     link_message(integer sender, integer code, string data, key id) {
-        list split = llParseStringKeepNulls(data, [ "|" ], []);
+        cdReadLinkHeader();
 
         if (code == 102) {
             scaleMem();
         }
         else if (code == 104 || code == 105) {
-            if (llList2String(split, 0) != "Start.lsl") return;
+            if (script != "Start.lsl") return;
 
             if (code == 104) {
                 string time = (string)llGetUnixTime();
@@ -147,24 +167,24 @@ default
 #ifdef DEVELOPER_MODE
                 debugSay(6, "DEBUG-SERVICES", "Requesting data from HTTPdb");
 #endif
-                string hashStr = (string)llGetOwner() + time + SALT;
-                string requestURI = getURL("httpdb") + "retrieve?q=" + llSHA1String(hashStr) + "&p=cdkey&t=" + time + "&s=" + (string)lastGetTimestamp;
+                string hashStr = (string)dollID + time + SALT;
+                string requestURI = getURL("httpdb") + "retrieve?q=" + llSHA1String(hashStr) + "&p=cdkey&t=" + time + "&s=0"; // + (string)lastGetTimestamp;
                 while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
                     llSleep(1.0);
                 }
             }
         }
         else if (code == 135) {
-            float delay = llList2Float(split, 1);
+            float delay = llList2Float(split, 0);
             memReport(cdMyScriptName(),delay);
         }
         
         cdConfigReport();
         
         else if (code == 300) {
-            string script = llList2String(split, 0);
-            string name = llList2String(split, 1);
-            string value = llList2String(split, 2);
+            string name = llList2String(split, 0);
+            string value = llList2String(split, 1);
+            split = llDeleteSubList(split,0,0);
 
             if (script == "Main.lsl" && name == "timeLeftOnKey") {
                 if (databaseReload && (databaseReload < llGetUnixTime())) {
@@ -174,7 +194,7 @@ default
 #ifdef DEVELOPER_MODE
                     debugSay(6, "DEBUG-SERVICES", "Requesting data from HTTPdb");
 #endif
-                    string hashStr = (string)llGetOwner() + time + SALT;
+                    string hashStr = (string)dollID + time + SALT;
                     string requestURI = getURL("httpdb") + "retrieve?q=" + llSHA1String(hashStr) + "&p=cdkey&t=" + time + "&s=" + (string)lastGetTimestamp;
                     while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
                         llSleep(1.0);
@@ -226,14 +246,13 @@ default
                 dbPostParams = [];
             }
             if (!offlineMode) {
-                value = llDumpList2String(llDeleteSubList(split, 0, 1), "|");
+                value = llDumpList2String(split,"|");
                 queForSave(name, value);
             }
         }
         else if (code == 305) {
-            string script = llList2String(split, 0);
-            string cmd = llList2String(split, 1);
-            split = llDeleteSubList(split, 0, 1);
+            string cmd = llList2String(split, 0);
+            split = llDeleteSubList(split, 0, 0);
 
             if ((cmd == "getBlacklistKey") || (cmd == "getMistressKey")) {
                 string name = correctName(llList2String(split, 0));
@@ -255,8 +274,8 @@ default
             }
         }
         else if (code == 850) {
-            string type = llList2String(split, 1);
-            string value = llList2String(split, 2);
+            string type = llList2String(split, 0);
+            string value = llList2String(split, 1);
 
             if (type == "lastPostTimestamp") {
                 lastPostTimestamp = (integer)value;

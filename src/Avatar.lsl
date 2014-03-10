@@ -406,14 +406,19 @@ default {
     }
 
     link_message(integer sender, integer code, string data, key id) {
-        list split = llParseStringKeepNulls(data, [ "|" ], []);
+        list split =        llParseString2List(data, ["|"], []);
+        string script =     llList2String(split,0);
+        integer line  =     llList2Integer(split, 1);
+        integer seq =       (code & 0xFFFF0000) >> 16;
+        integer opt =       (code & 0x00000D00) >> 10;
+        integer code =      (code & 0x000002FF);
+             split   =      llDeleteSubList(split,0,1+opt);
         
         integer posed = cdPosed();
 
         scaleMem();
 
         if (code == 102) {
-            string script = llList2String(split, 0);
             configured = 1;
             return;
         }
@@ -424,7 +429,7 @@ default {
             return;
         }
         else if (code == 135) {
-            float delay = llList2Float(split, 1);
+            float delay = llList2Float(split, 0);
             memReport(cdMyScriptName(),delay);
             return;
         }
@@ -432,9 +437,8 @@ default {
         cdConfigReport();
         
         else if (code == 300) {
-            string script = llList2String(split, 0);
-            string name = llList2String(split, 1);
-            split = llDeleteSubList(split, 0, 1);
+            string name = llList2String(split, 0);
+            split = llDeleteSubList(split, 0, 0);
             string value = llList2String(split, 0);
 
                  if (name == "autoTP")                       autoTP = (integer)value;
@@ -504,9 +508,8 @@ default {
             }
         }
         else if (code == 305) {
-            string script = llList2String(split, 0);
-            string cmd = llList2String(split, 1);
-            split = llDeleteSubList(split, 0, 1);
+            string cmd = llList2String(split, 0);
+            split = llDeleteSubList(split, 0, 0);
 
             if (cmd == "carry") {
                 string name = llList2String(split, 0);
@@ -570,9 +573,8 @@ default {
             else return;
         }
         else if (code == 500) {
-            string script = llList2String(split, 0);
-            string choice = llList2String(split,1);
-            string name = llList2String(split, 2);
+            string choice = llList2String(split,0);
+            string name = llList2String(split, 1);
 
             if ((choice == "Carry") && !cdIsDoll(id)) {
                 // Doll has been picked up...
@@ -615,8 +617,8 @@ default {
             return;
         }
         else if (code == 850) {
-            string type = llList2String(split, 1);
-            string value = llList2String(split, 2);
+            string type = llList2String(split, 0);
+            string value = llList2String(split, 1);
 
             if (type == "HTTPinterval")             HTTPinterval = (integer)value;
             if (type == "lastPostTimestamp")        lastPostTimestamp = (integer)value;

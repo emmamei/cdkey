@@ -23,7 +23,6 @@
 #define NLR "+"
 #define NLE "</NEXT-READ-LINE>"
 
-#define cdMyScriptName() llGetScriptName()
 #define cdRunScript(a) llSetScriptState(a, RUNNING);
 #define cdStopScript(a) llSetScriptState(a, NOT_RUNNING);
 #define cdResetSelf() llResetScript()
@@ -71,6 +70,7 @@ list blacklist;
 list recentDilation;
 list windTimes;
 list coreScripts = CORE_SCRIPTS;
+list nameRequests;
 
 integer quiet = NO;
 integer newAttach = YES;
@@ -153,11 +153,9 @@ doVisibility() {
 // Configuration Functions
 //---------------------------------------
 // This code assumes a human-generated config file
-processConfiguration(string name, list values) {
+processConfiguration(string name, string value) {
     //----------------------------------------
     // Assign values to program variables
-
-    string value = llList2String(values,0);
 
          if (value == "yes" || value == "on")  value = "1";
     else if (value == "no"  || value == "off") value = "0";
@@ -197,15 +195,16 @@ processConfiguration(string name, list values) {
     else if (name == "auto tp")           { lmSendConfig("autoTP",             value); }
     else if (name == "outfitable")        { lmSendConfig("canDress",           value); }
 
-    
-    else if (name == "blacklist") {
-        if (llListFindList(blacklist, [ value ]) == NOT_FOUND)
-            lmSendConfig("blacklist", llDumpList2String((blacklist = llListSort(blacklist + [ value, llRequestAgentData((key)value, DATA_NAME) ], 2, 1)), "|"));
-    }
-    else if (name == "controller") {
-        if (llListFindList(MistressList, [ value ]) == NOT_FOUND)
-            lmSendConfig("MistressList", llDumpList2String((MistressList = llListSort(MistressList + [ value, llRequestAgentData((key)value, DATA_NAME) ], 2, 1)), "|"));
-    }
+     else if (name == "blacklist") {
+        if (llListFindList(blacklist, [ value ]) == NOT_FOUND) {
+            nameRequests = llListSort(nameRequests + [ llGetUnixTime(), llRequestAgentData((key)value, DATA_NAME) ], 3, 1);
+        }
+     }
+     else if (name == "controller") {
+        if (llListFindList(MistressList, [ value ]) == NOT_FOUND) {
+            nameRequests = llListSort(nameRequests + [ llGetUnixTime(), llRequestAgentData((key)value, DATA_NAME) ], 3, 1);
+        }
+    } 
     else if (name == "blacklist name") {
         lmInternalCommand("getBlacklistName", value, NULL_KEY);
     }
@@ -376,8 +375,7 @@ do_Restart() {
 
 default {
     link_message(integer source, integer code, string data, key id) {
-        list split = llParseStringKeepNulls(data, [ "|" ], []);
-        string script = llList2String(split, 0);
+        cdReadLinkHeader();
 
         scaleMem();
 
@@ -390,17 +388,17 @@ default {
 
         }
         else if (code == 135) {
-            if (llList2String(split, 0) == cdMyScriptName()) return;
-            float delay = llList2Float(split, 1);
+            if (script== cdMyScriptName()) return;
+            float delay = llList2Float(split, 0);
             memReport(cdMyScriptName(),delay);
         }
         
         cdConfigReport();
         
         else if (code == 300) {
-            string script = llList2String(split, 0);
-            string name = llList2String(split, 1);
-            string value = llList2String(split, 2);
+            string name = llList2String(split, 0);
+            string value = llList2String(split, 1);
+            split = llDeleteSubList(split,0,0);
 
             //debugXay(5, "From " + script + ": " + name + "=" + value);
 
@@ -433,10 +431,10 @@ default {
             else if (name == "userCollapseRLVcmd")  userCollapseRLVcmd = value;
             else if (name == "userPoseRLVcmd")          userPoseRLVcmd = value;
             else if (name == "userAfkRLVcmd")            userAfkRLVcmd = value;
-            else if (name == "windTimes")                    windTimes = llDeleteSubList(split, 0, 1);
+            else if (name == "windTimes")                    windTimes = split;
             else if (name == "dollType")                      dollType = value;
-            else if (name == "MistressList")              MistressList = llListSort(llDeleteSubList(split, 0, 1), 2, 1);
-            else if (name == "blacklist")                    blacklist = llListSort(llDeleteSubList(split, 0, 1), 2, 1);
+            else if (name == "MistressList")              MistressList = llListSort(split, 2, 1);
+            else if (name == "blacklist")                    blacklist = llListSort(split, 2, 1);
             else if (name == "primLight")                    primLight = (integer)value;
             else if (name == "gemColour") {
                 gemColour = (vector)value;
@@ -484,10 +482,8 @@ default {
         }
 
         else if (code == 305) {
-            string script = llList2String(split, 0);
-            string cmd = llList2String(split, 1);
-
-            split = llDeleteSubList(split, 0, 1);
+            string cmd = llList2String(split, 0);
+            split = llDeleteSubList(split, 0, 0);
 
             if (cmd == "addRemBlacklist") {
                 string uuid = llList2String(split, 0);
@@ -537,8 +533,7 @@ default {
         }
 
         else if (code == 350) {
-            string script = llList2String(split, 0);
-            RLVok = (llList2Integer(split, 1) == 1);
+            RLVok = (llList2Integer(split, 0) == 1);
             rlvWait = 0;
 
             if (!newAttach && cdAttached()) {
@@ -551,9 +546,8 @@ default {
             newAttach = 0;
         }
         else if (code == 500) {
-            string script = llList2String(split, 0);
-            string selection = llList2String(split, 1);
-            string name = llList2String(split, 2);
+            string selection = llList2String(split, 0);
+            string name = llList2String(split, 1);
 
             if (selection == "Reset Scripts") {
                 if (cdIsController(id)) cdResetSelf();
@@ -665,40 +659,25 @@ default {
                 }
             }
             else {
-                integer index = llSubStringIndex(data, "#");
-                if (index != -1) data = llDeleteSubString(data, index, -1);
-                if (data != "") {
-                    index = llSubStringIndex(data, "=");
-                    string name = llGetSubString(data, 0, index - 1);
-                    string value = llGetSubString(data, index + 1, -1);
-                    name = llStringTrim(llToLower(name), STRING_TRIM);
-                    value = llStringTrim(value, STRING_TRIM);
-                    list split = llParseStringKeepNulls(value, [ "|" ], []);
-                    if (name == "windTimes") split = llParseString2List(value, ["|",","," "], []); // Accept pipe (|), space ( ) or comma (,) as seperators
-
-                    processConfiguration(name, split);
-                }
-                else {
-                    // Fast tidy one line comment stripping, if no comment returns full line
-                    data = llGetSubString(data, 0, llSubStringIndex(data, "#") & 0xFF);
-                    data = llGetSubString(data, 0, llSubStringIndex(data,"//") & 0xFF);
-                    // Trim any whitespace
-                    data = llStringTrim(data,STRING_TRIM);
-                    
-                    if (data != "") { // Skip if blank else line holds (potentially) useful data, we process
-                        if ( ( i = llSubStringIndex(data, "=") ) != -1) {
-                            string name     =      llStringTrim( llGetSubString(data, 0, i - 1), STRING_TRIM );
-                            string value    =      llStringTrim( llDeleteSubString(data, 0, i),  STRING_TRIM );
-                            debugSay(3, "DEBUG-PREFS", "Line " + (string)(ncLine+1) + " parsed as " + name + "=" + value);
-                            processConfiguration(name, value);
-                        }
+                // Fast tidy one line comment stripping, if no comment returns full line
+                data = llGetSubString(data, 0, llSubStringIndex(data, "#") & 0xFF);
+                data = llGetSubString(data, 0, llSubStringIndex(data,"//") & 0xFF);
+                // Trim any whitespace
+                data = llStringTrim(data,STRING_TRIM);
+                
+                if (data != "") { // Skip if blank else line holds (potentially) useful data, we process
+                    if ( ( i = llSubStringIndex(data, "=") ) != -1) {
+                        string name     =      llStringTrim( llGetSubString(data, 0, i - 1), STRING_TRIM );
+                        string value    =      llStringTrim( llDeleteSubString(data, 0, i),  STRING_TRIM );
+                        debugSay(3, "DEBUG-PREFS", "Line " + (string)(ncLine+1) + " parsed as " + name + "=" + value);
+                        processConfiguration(name, value);
                     }
-                    ncLine++;
                 }
-
-                debugSay(3, "DEBUG-PREFS", ": Mext line: " + (string)(ncLine + 1));
-                ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ncLine);
+                ncLine++;
             }
+
+            debugSay(3, "DEBUG-PREFS", ": Mext line: " + (string)(ncLine + 1));
+            ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ncLine);
         }
         else if (query_id == ncResetAttach) {
             data = llStringTrim(data,STRING_TRIM);

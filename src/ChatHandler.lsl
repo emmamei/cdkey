@@ -47,17 +47,15 @@ default
     // LINK MESSAGE
     //----------------------------------------
     link_message(integer source, integer code, string data, key id) {
-        list split = llParseString2List(data, [ "|" ], []);
-        string script = llList2String(split, 0);
-        split = llDeleteSubList(split, 0, 0);
+        cdReadLinkHeader();
+
+        cdConfigReport();
 
         if (code == 135) {
             float delay = llList2Float(split, 0);
             scaleMem();
             memReport(cdMyScriptName(),delay);
         }
-        
-        cdConfigReport();
 
         else if (code == 300) {
             string name = llList2String(split, 0);

@@ -288,7 +288,7 @@ default {
     // LINK_MESSAGE
     //----------------------------------------
     link_message(integer source, integer code, string data, key id) {
-        list split = llParseString2List(data, [ "|" ], []);
+        cdReadLinkHeader();
 
         scaleMem();
 
@@ -296,26 +296,25 @@ default {
             scaleMem();
         }
         else if (code == 104) {
-            if (cdListElement(split, 0) != "Start.lsl") return;
+            if (script != "Start.lsl") return;
             startup = 1;
         }
         else if (code == 105) {
-            if (cdListElement(split, 0) != "Start.lsl") return;
+            if (script != "Start.lsl") return;
             startup = 2;
         }
         else if (code == 110) {
             initState = 105;
         }
         else if (code == 135) {
-            float delay = cdListFloatElement(split, 1);
+            float delay = cdListFloatElement(split, 0);
             memReport(cdMyScriptName(),delay);
         }
         
         cdConfigReport();
         
         else if (code == 150) {
-            string script = cdListElement(split, 0);
-            simRating = cdListElement(split, 1);
+            simRating = cdListElement(split, 0);
             integer cdOutfitRating = cdOutfitRating(newoutfitname);
             integer regionRating = cdRating2Integer(simRating);
             debugSay(3, "DEBUG", "Region rating " + llToLower(simRating) + " outfit " + newoutfitname + " cdOutfitRating: " + (string)cdOutfitRating +
@@ -329,9 +328,8 @@ default {
             }
         }
         else if (code == 300) {
-            string script = cdListElement(split, 0);
-            string name = cdListElement(split, 1);
-            string value = cdListElement(split, 2);
+            string name = cdListElement(split, 0);
+            string value = cdListElement(split, 0);
 
             if (name == "dialogChannel") {
                 dialogChannel = (integer)value;
@@ -360,8 +358,7 @@ default {
 #endif
         }
         else if (code == 305) {
-            string script = cdListElement(split, 0);
-            string cmd = cdListElement(split, 1);
+            string cmd = cdListElement(split, 0);
 
             // If this code is linked with an argument of "random", then
             // choose random outfit and be done
@@ -380,14 +377,12 @@ default {
             }
         }
         else if (code == 350) {
-            string script = cdListElement(split, 0);
-            RLVok = (cdListIntegerElement(split, 1) == 1);
+            RLVok = (cdListIntegerElement(split, 0) == 1);
         }
         // Choice #500: (From Main Menu) Dress Dolly
         else if (code == 500)  {
-            string script = cdListElement(split, 0);
-            string choice = cdListElement(split, 1);
-            string name = cdListElement(split, 2);
+            string choice = cdListElement(split, 0);
+            string name = cdListElement(split, 1);
 
             debugSay(6, "DEBUG-DRESS", (string)candresstemp + " " + choice);
 

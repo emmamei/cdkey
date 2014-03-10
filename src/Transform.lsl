@@ -238,10 +238,7 @@ default {
     // LINK MESSAGE
     //----------------------------------------
     link_message(integer source, integer code, string data, key id) {
-        list split = llParseString2List(data, [ "|" ], []);
-        string script = cdListElement(split, 0);
-        string choice = cdListElement(split, 1);
-        string name = cdListElement(split, 2);
+        cdReadLinkHeader();
 
         scaleMem();
 
@@ -271,15 +268,15 @@ default {
         }
 
         else if (code == 135) {
-            float delay = (float)choice;
+            float delay = llList2Float(split,0);
             memReport(cdMyScriptName(),delay);
         }
         
         cdConfigReport();
 
         else if (code == 300) {
-            string value = name;
-            string name = choice;
+            string value = llList2String(split,0);
+            string name = llList2String(split,1);
 
             if (script != cdMyScriptName()) {
                      if (name == "quiet")                                          quiet = (integer)value;
@@ -307,7 +304,7 @@ default {
         }
 
         else if (code == 350) {
-            RLVok = ((integer)choice == 1);
+            RLVok = ((integer)llList2String(split,0) == 1);
 
             outfitsFolder = "";
             typeFolder = "";
@@ -332,7 +329,8 @@ default {
         }
 
         if (code == 500) {
-            string name = cdListElement(split, 2);
+            string name = cdListElement(split,1);
+            string choice = cdListElement(split,0);
             string optName = llGetSubString(choice, 2, STRING_END);
             string curState = cdGetFirstChar(choice);
 

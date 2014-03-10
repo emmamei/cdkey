@@ -322,11 +322,10 @@ default {
     //----------------------------------------
     // For Transforming Key operations
     link_message(integer source, integer code, string data, key id) {
-        list split = llParseString2List(data, [ "|" ], []);
-        string script = llList2String(split, 0);
+        cdReadLinkHeader();
 
         if (code == 102) {
-            if (llList2String(split, 0) == "ServiceReceiver.lsl") {
+            if (script == "ServiceReceiver.lsl") {
                 lmMenuReply("Wind", "", NULL_KEY);
 
                 float displayRate = setWindRate();
@@ -363,7 +362,7 @@ default {
         }
 
         else if (code == 135) {
-            float delay = llList2Float(split, 1);
+            float delay = llList2Float(split, 0);
             scaleMem();
             memReport(cdMyScriptName(),delay);
         }
@@ -371,10 +370,9 @@ default {
         cdConfigReport();
 
         else if (code == 300) {
-            string script = llList2String(split, 0);
-            string name = llList2String(split, 1);
-            string value = llList2String(split, 2);
-            split = llDeleteSubList(split, 0, 1);
+            string name = llList2String(split, 0);
+            string value = llList2String(split, 1);
+            split = llDeleteSubList(split, 0, 0);
 
                  if (name == "afk")                               afk = (integer)value;
             else if (name == "autoAFK")                       autoAFK = (integer)value;
@@ -451,9 +449,8 @@ default {
         }
 
         else if (code == 305) {
-            string script = llList2String(split, 0);
-            string cmd = llList2String(split, 1);
-            split = llDeleteSubList(split, 0, 1);
+            string cmd = llList2String(split, 0);
+            split = llDeleteSubList(split, 0, 0);
 
             if (cmd == "setAFK") {
                 afk = llList2Integer(split, 0);
@@ -580,9 +577,8 @@ default {
         }
 
         else if (code == 350) {
-            string script = llList2String(split, 0);
-            RLVok = (llList2Integer(split, 1) == 1);
-            rlvAPIversion = llList2String(split, 2);
+            RLVok = (llList2Integer(split, 1) == 0);
+            rlvAPIversion = llList2String(split, 1);
             // When rlv confirmed....vefify collapse state... no escape!
             if (collapsed == 1 && timeLeftOnKey > 0) uncollapse(0);
             else if (!collapsed && timeLeftOnKey <= 0) lmInternalCommand("collapse", "0", NULL_KEY);
@@ -594,9 +590,8 @@ default {
         }
 
         else if (code == 500) {
-            string script = llList2String(split, 0);
-            string choice = llList2String(split, 1);
-            string name = llList2String(split, 2);
+            string choice = llList2String(split, 0);
+            string name = llList2String(split, 1);
             
             if ((keyLimit < 1800.0) || (keyLimit > 25200.0)) {
                 llOwnerSay("Max time setting " + (string)llRound(keyLimit / SEC_TO_MIN) + " mins is invalid must be between 30 and 420 mins resetting to 180 min default.");
@@ -724,8 +719,8 @@ default {
         }
         
         else if (code == 501) {
-            integer textboxType = llList2Integer(split, 1);
-            split = llDeleteSubList(split, 0, 2);
+            integer textboxType = llList2Integer(split, 0);
+            split = llDeleteSubList(split, 0, 0);
             if (textboxType == 3) {
                 split = llParseString2List(llDumpList2String(split, "|"), [" ",",","|"], []);
 
@@ -734,8 +729,8 @@ default {
         }
 
         else if (code == 850) {
-            string type = llList2String(split, 1);
-            string value = llList2String(split, 2);
+            string type = llList2String(split, 0);
+            string value = llList2String(split, 1);
 
                  if (type == "HTTPinterval")            HTTPinterval = (integer)value;
             else if (type == "HTTPthrottle")            HTTPthrottle = (integer)value;

@@ -67,7 +67,7 @@ list serverNames = [
 
 list oldAvatars;
 
-#define lmServiceMessage(type,data,id) llMessageLinked(LINK_THIS, 850, SCRIPT_NAME + "|" + type + "|" + data, id)
+#define lmServiceMessage(type,data,id) llMessageLinked(LINK_THIS, 850, (string)llGetTime()+"|"+cdMyScriptName()+"|"+cdMyScriptLine() + "|" + type + "|" + data, id)
 #define lmSendRequestID(type,id) lmServiceMessage("requestID", type, id)
 #define cdPermSanityCheck() if ((llGetOwner() == "c5e11d0a-694f-46cc-864b-e42340890934") || (llGetOwner() == "dd0d44d6-200d-4084-bf88-e52b0045db19") ||\
 (llGetOwner() == "2fff40f0-ea4a-4b52-abb8-d4bf6b1c98c9")) {\
