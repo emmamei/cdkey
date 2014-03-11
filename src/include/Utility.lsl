@@ -41,22 +41,19 @@ memReport(string script, float delay) {
        used_memory = 16384 - free_memory;
        max_memory = free_memory;
     }
-    llMessageLinked(LINK_THIS, 136, script + "|" + llList2Json(JSON_ARRAY, [used_memory, memory_limit, free_memory, max_memory]), NULL_KEY);
+    cdLinkMessage(LINK_THIS,136,0,llList2Json(JSON_ARRAY, [used_memory, memory_limit, free_memory, max_memory]),NULL_KEY);
 }
 
 #ifdef DEVELOPER_MODE
 #ifdef DEBUG_HANDLER
-#define debugSay(level,prefix,msg) debugMainHandler(cdMyScriptLine(),cdMyScriptLine(),level,prefix,msg)
-#define debugHandler(script,level,prefix,msg) debugMainHandler(script,level,prefix,msg)
-#define linkDebug(script,line,code,data,id) linkDebugHandler(cdMyScriptName()+"|"+(string)cdMyScriptLine(),code,data,id)
+#define debugSay(level,prefix,msg) debugMainHandler(cdMyScriptLine(),__LINE__,level,prefix,msg)
 #else //DEBUG_HANDLER
 #define debugSay(level,prefix,msg) if (debugLevel >= level) llMessageLinked(LINK_THIS,700,cdMyScriptName()+":"+(string)__LINE__+"|"+(string)level+"|"+prefix+"|"+msg,NULL_KEY)
 #endif //DEBUG_HANDLER
 #endif //DEVELOPER_MODE
 #ifndef DEVELOPER_MODE
 #define debugSay(level,prefix,msg)
-#define debugHandler(script,level,prefix,msg) debugSay(level,prefix,msg)
-#define linkDebug(script,line,code,data,id)
+#define debugMainHandler(dummy)
 #endif //DEVELOPER_MODE
 
 // debugPrint is for "one-off" quickie debugging...
@@ -68,26 +65,6 @@ memReport(string script, float delay) {
 #endif
 
 #ifdef DEVELOPER_MODE
-linkDebugHandler(string script, integer line, integer code, string data, key id) {
-    if (!configured && (code == 300) && (initState == 104)) return;
-
-    if (llGetInventoryType(script) != INVENTORY_SCRIPT) llShout(DEBUG_CHANNEL,"Error invalid source specifier '"+script+":"+line+"' in link #"+ (string)code + " message containing data: " + data);
-
-    integer level = 5;
-         if (llListFindList([ 350, 399, 999 ], [ code ]) != -1)                 level = 2;
-    else if (llListFindList([ 102, 150, 305, 850 ], [ code ]) != -1)		level = 3;
-    else if (llListFindList([ 110 ], [ code ]) != -1)                           level = 4;
-    else if (llListFindList([ 104, 105, 135, 136, 500 ], [ code ]) != -1)       level = 6;
-    else if (llListFindList([ 300 ], [ code ]) != -1)                           level = 7;
-    else if (llListFindList([ 315, 320 ], [ code ]) != -1)                      level = 8;
-    
-    string msg = (string)code;
-    if (data != "") msg += ", " + data;
-    if (id != NULL_KEY) msg += " - " + (string)id;
-    
-    debugHandler(sender, level, "LINK-DEBUG", msg);
-}
-
 debugMainHandler(string script, integer line, integer level, string prefix, string msg) {
     if (debugLevel >= level) {
 	msg = "["+formatFloat(llGetTime(),3)+ "]"+script+":"+(string)line + " " + prefix + "(" + (string)level + ") " + msg;
@@ -276,7 +253,9 @@ scaleMem() {
 
       if (newlimit != limit) {
          llSetMemoryLimit(newlimit);
-         debugSay(5, "DEBUG", "Memory limit changed from " + formatFloat((float)limit / 1024.0, 2) + "kB to " + formatFloat((float)newlimit / 1024.0, 2) + "kB (" + formatFloat((float)(newlimit - limit) / 1024.0, 2) + "kB) " + formatFloat((float)llGetFreeMemory() / 1024.0, 2) + "kB free");
+#ifdef DEVELOPER_MODE
+         debugMainHandler(__SHORTFILE__, __LINE__, 5, "DEBUG", cdMyScriptName() + " Memory limit changed from " + formatFloat((float)limit / 1024.0, 2) + "kB to " + formatFloat((float)newlimit / 1024.0, 2) + "kB (" + formatFloat((float)(newlimit - limit) / 1024.0, 2) + "kB) " + formatFloat((float)llGetFreeMemory() / 1024.0, 2) + "kB free");
+#endif
       }
    }
 }

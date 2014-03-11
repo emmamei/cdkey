@@ -1,5 +1,6 @@
 #ifndef COMMON_GLOBALS
 #define COMMON_GLOBALS
+#include "GlobalDefines.lsl"
 //----------------------------
 // COMMON GLOBALS
 //----------------------------
@@ -27,6 +28,8 @@ float keyLimit              = 10800.0;
 float timeLeftOnKey         = 1800.0;
 float windamount            = 1800.0;
 float baseWindRate          = RATE_STANDARD;
+float displayWindRate	    = RATE_STANDARD;
+float windRate              = RATE_STANDARD;
 
 integer afk;
 integer autoTP;

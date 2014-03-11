@@ -8,8 +8,6 @@
 
 #include "include/GlobalDefines.lsl"
 
-// You should create your own include or directly in this file define
-// a salt for the security hash for database posts
 #include "include/Secure.lsl"
 #include "include/ServiceIncludes.lsl"
 
@@ -43,33 +41,26 @@ string correctName(string name) {
 default
 {
     state_entry() {
-        dollID = llGetOwner();
         if (llGetInventoryType(".offline") != INVENTORY_NONE) {
             lmSendConfig("offlineMode", (string)(offlineMode = 1));
             invMarker = 1;
         }
         else lmSendConfig("offlineMode", (string)(offlineMode = 0));
-        cdPermSanityCheck();
-        
-#ifdef CDKEY_UPDATER
         myMod = llFloor(llFrand(5.999999));
         serverNames = llListRandomize(serverNames, 1);
+        cdPermSanityCheck();
         requestDataURL = llGetNotecardLine("DataServices",0);
-#endif
+        
+        cdInitializeSeq();
     }
     
-//  This is not presently used as we are using HippoUPDATE
-#ifdef CDKEY_UPDATER
-     dataserver(key request, string data) {
+    dataserver(key request, string data) {
         if (request == requestDataURL) DataURL = data;
     }
-#endif
- 
+
     on_rez(integer start) {
-#ifdef CDKEY_UPDATER
         serverNames = llListRandomize(serverNames, 1);
         myMod = llFloor(llFrand(5.999999));
-#endif
         cdPermSanityCheck();
         
         llSleep(1.0);
@@ -80,12 +71,8 @@ default
         debugSay(6, "DEBUG-SERVICES", "Requesting data from HTTPdb");
 #endif
 
-        // As a result of the beta testing program and in particular the fact that a script
-        // reset resulting in a complete refresh of settings from the database fixes the majority
-        // of glitches a small trial, lets see if this effect holds true if we do a refrsh on
-        // login/attach or if the resetting of (at least some) of the scripts is also needed.
-        string hashStr = (string)dollID + time + SALT;
-        string requestURI = getURL("httpdb") + "retrieve?q=" + llSHA1String(hashStr) + "&p=cdkey&t=" + time + "&s=0";  // + (string)lastGetTimestamp;
+        string hashStr = (string)llGetOwner() + time + SALT;
+        string requestURI = getURL("httpdb") + "retrieve?q=" + llSHA1String(hashStr) + "&p=cdkey&t=" + time + "&s=" + (string)lastGetTimestamp;
         while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
             llSleep(1.0);
         }
@@ -94,19 +81,12 @@ default
     }
 
     attach(key id) {
-        if ((keyHandler == llGetKey()) && (id == NULL_KEY)) {
+        if (keyHandler == llGetKey() && id == NULL_KEY) {
             llRegionSay(broadcastOn, "keys released");
+#ifdef DEVELOPER_MODE
             debugSay(5, "BROADCAST-DEBUG", "Broadcast sent: keys released");
+#endif
             lmSendConfig("keyHandler", (string)(keyHandler = NULL_KEY));
-        }
-        else {
-            debugSay(6, "DEBUG-SERVICES", "Requesting data from HTTPdb");
-            string time = (string)llGetUnixTime();
-            string hashStr = (string)dollID + time + SALT;
-            string requestURI = getURL("httpdb") + "retrieve?q=" + llSHA1String(hashStr) + "&p=cdkey&t=" + time + "&s=0";  // + (string)lastGetTimestamp;
-            while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
-                llSleep(1.0);
-            }
         }
     }
 
@@ -152,14 +132,23 @@ default
         // having the avatar touch the key (or any cdkey for that matter).
     }
 
-    link_message(integer sender, integer code, string data, key id) {
-        cdReadLinkHeader();
+    link_message(integer sender, integer i, string data, key id) {
+        
+        // Parse link message header information
+        list split        =     cdSplitArgs(data);
+        string script     =     cdListElement(split, 0);
+        integer remoteSeq =     (i & 0xFFFF0000) >> 16;
+        integer optHeader =     (i & 0x00000C00) >> 10;
+        integer code      =      i & 0x000003FF;
+        split             =     llDeleteSubList(split, 0, 0 + optHeader);
+        
+        cdCheckSeqNum(script, remoteSeq);
 
         if (code == 102) {
             scaleMem();
         }
         else if (code == 104 || code == 105) {
-            if (script != "Start.lsl") return;
+            if (script != "Start") return;
 
             if (code == 104) {
                 string time = (string)llGetUnixTime();
@@ -167,8 +156,9 @@ default
 #ifdef DEVELOPER_MODE
                 debugSay(6, "DEBUG-SERVICES", "Requesting data from HTTPdb");
 #endif
-                string hashStr = (string)dollID + time + SALT;
-                string requestURI = getURL("httpdb") + "retrieve?q=" + llSHA1String(hashStr) + "&p=cdkey&t=" + time + "&s=0"; // + (string)lastGetTimestamp;
+
+                string hashStr = (string)llGetOwner() + time + SALT;
+                string requestURI = getURL("httpdb") + "retrieve?q=" + llSHA1String(hashStr) + "&p=cdkey&t=" + time + "&s=" + (string)lastGetTimestamp;
                 while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
                     llSleep(1.0);
                 }
@@ -184,9 +174,8 @@ default
         else if (code == 300) {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
-            split = llDeleteSubList(split,0,0);
 
-            if (script == "Main.lsl" && name == "timeLeftOnKey") {
+            if (script == "Main" && name == "timeLeftOnKey") {
                 if (databaseReload && (databaseReload < llGetUnixTime())) {
                     databaseReload = llGetUnixTime() + 120;
                     string time = (string)llGetUnixTime();
@@ -194,7 +183,8 @@ default
 #ifdef DEVELOPER_MODE
                     debugSay(6, "DEBUG-SERVICES", "Requesting data from HTTPdb");
 #endif
-                    string hashStr = (string)dollID + time + SALT;
+
+                    string hashStr = (string)llGetOwner() + time + SALT;
                     string requestURI = getURL("httpdb") + "retrieve?q=" + llSHA1String(hashStr) + "&p=cdkey&t=" + time + "&s=" + (string)lastGetTimestamp;
                     while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
                         llSleep(1.0);
@@ -239,14 +229,14 @@ default
                 keyHandlerTime = llGetTime() - (float)(llGetUnixTime() - (integer)value);
             }
 
-            if ((script == "ServiceReceiver.lsl") || (script == cdMyScriptName())) return;
+            if ((script == "ServiceReceiver") || (script == cdMyScriptName())) return;
 
             else if (name == "offlineMode") {
                 offlineMode = (integer)value;
                 dbPostParams = [];
             }
             if (!offlineMode) {
-                value = llDumpList2String(split,"|");
+                value = llDumpList2String(llDeleteSubList(split, 0, 1), "|");
                 queForSave(name, value);
             }
         }

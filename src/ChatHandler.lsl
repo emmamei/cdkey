@@ -13,8 +13,6 @@
 
 key keyHandler              = NULL_KEY;
 
-float windRate              = 1.0;
-float displayWindRate       = 1.0;
 float collapseTime          = 0.0;
 float currentLimit          = 10800.0;
 float wearLockExpire        = 0.0;
@@ -41,21 +39,32 @@ default
         dollID = llGetOwner();
         broadcastHandle = llListen(broadcastOn, "", "", "");
         chatHandle = llListen(chatChannel, "", dollID, "");
+        
+        cdInitializeSeq();
     }
     
     //----------------------------------------
     // LINK MESSAGE
     //----------------------------------------
-    link_message(integer source, integer code, string data, key id) {
-        cdReadLinkHeader();
-
-        cdConfigReport();
+    link_message(integer source, integer i, string data, key id) {
+        
+        // Parse link message header information
+        list split        =     cdSplitArgs(data);
+        string script     =     cdListElement(split, 0);
+        integer remoteSeq =     (i & 0xFFFF0000) >> 16;
+        integer optHeader =     (i & 0x00000C00) >> 10;
+        integer code      =      i & 0x000003FF;
+        split             =     llDeleteSubList(split, 0, 0 + optHeader);
+        
+        cdCheckSeqNum(script, remoteSeq);
 
         if (code == 135) {
             float delay = llList2Float(split, 0);
             scaleMem();
             memReport(cdMyScriptName(),delay);
         }
+        
+        cdConfigReport();
 
         else if (code == 300) {
             string name = llList2String(split, 0);
@@ -93,6 +102,8 @@ default
             else if (name == "debugLevel")                 debugLevel = (integer)value;
             else if (name == "timeReporting")           timeReporting = (integer)value;
 #endif
+            else if (name == "blacklist")                   blacklist = llListSort(split, 2, 1);
+            else if (name == "MistressList")             MistressList = llListSort(split, 2, 1);
             else if ((name == "timeLeftOnKey") || (name == "collapsed")) {
                 if (name == "timeLeftOnKey")            timeLeftOnKey = (float)value;
                 if (name == "collapsed")                    collapsed = (integer)value;
@@ -108,6 +119,55 @@ default
                 demoMode = (integer)value;
                 if (!demoMode) currentLimit = keyLimit;
                 else currentLimit = DEMO_LIMIT;
+            }
+        }
+        
+        else if (code == 305) {
+            string cmd = llList2String(split, 0);
+
+            split = llDeleteSubList(split, 0, 0);
+
+            if (cmd == "addRemBlacklist") {
+                string uuid = llList2String(split, 0);
+                string name = llList2String(split, 1);
+
+                integer index = llListFindList(blacklist, [ uuid ]);
+
+                if (index == -1) {
+                    lmSendToAgentPlusDoll("Adding " + name + " to blacklist", id);
+                    if ((llGetListLength(blacklist) % 2) == 1) blacklist = llDeleteSubList(blacklist, 0, 0);
+                    blacklist = llListSort(blacklist + [ uuid, name ], 2, 1);
+                }
+                else {
+                    lmSendToAgentPlusDoll("Removing " + name + " from blacklist.", id);
+                    if ((llGetListLength(blacklist) % 2) == 1) blacklist = llDeleteSubList(blacklist, 0, 0);
+                    blacklist = llDeleteSubList(blacklist, index, ++index);
+                    
+                }
+                
+                lmSendConfig("blacklist", llDumpList2String(blacklist,"|") );
+            }
+            else if ((cmd == "addMistress") || (cmd == "remMistress")) {
+                string uuid = llList2String(split, 0);
+                string name = llList2String(split, 1);
+
+                integer index = llListFindList(MistressList, [ uuid ]);
+
+                if  ((cmd == "addMistress") && (index == -1)) {
+                    lmSendToAgentPlusDoll("Adding " + name + " to controller list.", id);
+                    if ((llGetListLength(MistressList) % 2) == 1) MistressList = llDeleteSubList(MistressList, 0, 0);
+                    MistressList = llListSort(MistressList + [ uuid, name ], 2, 1);
+                }
+                else if ((cmd == "remMistress") && cdIsBuiltinController(id)) {
+                    lmSendToAgentPlusDoll("Removing " + name + " from controller list.", id);
+                    if ((llGetListLength(MistressList) % 2) == 1) MistressList = llDeleteSubList(MistressList, 0, 0);
+                    MistressList = llDeleteSubList(MistressList, index, ++index);
+                    
+                    list exceptions = ["tplure","recvchat","recvemote","recvim","sendim","startim"]; integer i;
+                    for (i = 0; i < 6; i++) lmRunRLVas("Base",llList2String(exceptions, i) + ":" + uuid + "=rem");
+                }
+                
+                lmSendConfig("MistressList", llDumpList2String(MistressList,"|") );
             }
         }
     }

@@ -3,7 +3,7 @@
 
 /* enable the inclusion of adult features such as stripping and slut doll in
    the key */
-//#define ADULT_MODE 1
+#define ADULT_MODE 1
 
 /* enable a test mode with minimal code changes in which RLV support always
    fails effectively disable the listener for the check reply */
@@ -16,10 +16,10 @@
 //#define DEBUG_LEVEL 7
 //#define DEBUG_LEVEL 6
 //#define DEBUG_LEVEL 5
-//#define DEBUG_LEVEL 4
+#define DEBUG_LEVEL 4
 //#define DEBUG_LEVEL 3
 //#define DEBUG_LEVEL 1
-#define DEBUG_LEVEL 0
+//#define DEBUG_LEVEL 0
 #endif
 
 /* sets the target for debugging messages either DEBUG to send on debug
@@ -29,7 +29,7 @@
 /* enable developer support features such as not using RLV locks which would
    prevent editing the scripts or notecards, collection and reporting of
    performance statistics etc */
-//#define DEVELOPER_MODE 1
+#define DEVELOPER_MODE 1
 
 /* enable the start up introduction/hypno text provided that the required
    "Intro Text" notecard is also present */
@@ -42,7 +42,7 @@
 #define PACKAGE_NAME "Community Doll Key"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Community Doll Key (Beta) 08-Mar-14"
+#define PACKAGE_STRING "Community Doll Key (Beta) 10-Mar-14"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "cdkey-beta"
@@ -51,10 +51,10 @@
 #define PACKAGE_URL "https://github.com/emmamei/cdkey"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "08-Mar-14"
+#define PACKAGE_VERSION "10-Mar-14"
 
 /* Define to the numeric version of this package. */
-#define PACKAGE_VERNUM 140308
+#define PACKAGE_VERNUM 140310
 
 /* enable lag reduction mode when detecting sustained high time dilation in
    the local region. This slightly delays certain events and turns off non
@@ -63,4 +63,4 @@
 
 /* enable testing and debugging features and allows the doll to access
    normally inaccessible functions like strip and wind */
-//#define TESTER_MODE 1
+#define TESTER_MODE 1

@@ -146,7 +146,7 @@ ifPermissions() {
         integer permMask = llGetPermissions();
 
         if (grantorID != NULL_KEY && grantorID != dollID) {
-            llResetOtherScript("Start.lsl");
+            llResetOtherScript("Start");
             llSleep(10.0);
         }
 
@@ -268,10 +268,18 @@ initializeRLV(integer refresh) {
         return;
     }
 #endif
+    if (!RLVstarted) {
+        lmRLVreport(RLVok, rlvAPIversion, 0);
+        if (RLVok)      llOwnerSay("Enabling RLV mode");
+        if (RLVok && !refresh)   {
+            cdRlvSay("@clear");
+            llResetOtherScript("StatusRLV");
+            llSetScriptState("StatusRLV", 1);
+            llSleep(1.0);
+        }
+    }
+    
     string baseRLV;
-    if (RLVok && !RLVstarted) llOwnerSay("Enabling RLV mode");
-
-    if (!RLVstarted) lmRLVreport(RLVok, rlvAPIversion, 0);
 
     // if Doll is one of the developers... dont lock:
     // prevents inadvertent lock-in during development
@@ -280,7 +288,7 @@ initializeRLV(integer refresh) {
     // unlocked and detachable: this is because it can be detached
     // via the menu. To make the key truly "undetachable", we get
     // rid of the menu item to unlock it
-    if (llGetInventoryCreator("Main.lsl") != dollID) {
+    if (llGetInventoryCreator("Main") != dollID) {
         lmRunRLVas("Base", "detach=n,permissive=n");  //locks key
     
         locked = 1; // Note the locked variable also remains false for developer mode keys
@@ -295,7 +303,7 @@ initializeRLV(integer refresh) {
         if (!quiet) llSay(0, "Developer Key not locked.");
         else llOwnerSay("Developer key not locked.");
     }
-    baseRLV += "attachallthis_except:" + myPath + "=add,detachallthis_except:" + myPath + "=add,";
+    baseRLV += "attachallthis_except=add,detachallthis_except=add,";
 #endif
     llListenControl(listenHandle, 0);
 
@@ -315,7 +323,7 @@ initializeRLV(integer refresh) {
     }
 
 #ifndef DEVELOPER_MODE
-    if (llGetInventoryCreator("Main.lsl") == dollID) lmRunRLVas("Base", "clear=unshared,clear=achallthis");
+    if (llGetInventoryCreator("Main") == dollID) lmRunRLVas("Base", "clear=unshared,clear=achallthis");
 #endif
 }
 
@@ -328,6 +336,8 @@ default {
         channel = (integer)("0x" + llGetSubString((string)llGenerateKey(),-7,-1)) + 3467;
         listenHandle = llListen(channel, "", "", "");
         llListenControl(listenHandle, 0);
+        
+        cdInitializeSeq();
 
         llRequestPermissions(dollID, PERMISSION_MASK);
     }
@@ -405,18 +415,20 @@ default {
         lastAttachedID = id;
     }
 
-    link_message(integer sender, integer code, string data, key id) {
-        list split =        llParseString2List(data, ["|"], []);
-        string script =     llList2String(split,0);
-        integer line  =     llList2Integer(split, 1);
-        integer seq =       (code & 0xFFFF0000) >> 16;
-        integer opt =       (code & 0x00000D00) >> 10;
-        integer code =      (code & 0x000002FF);
-             split   =      llDeleteSubList(split,0,1+opt);
+    link_message(integer sender, integer i, string data, key id) {
+        
+        // Parse link message header information
+        list split        =     cdSplitArgs(data);
+        string script     =     cdListElement(split, 0);
+        integer remoteSeq =     (i & 0xFFFF0000) >> 16;
+        integer optHeader =     (i & 0x00000C00) >> 10;
+        integer code      =      i & 0x000003FF;
+        split             =     llDeleteSubList(split, 0, 0 + optHeader);
+        
+        cdCheckSeqNum(script, remoteSeq);
+        scaleMem();
         
         integer posed = cdPosed();
-
-        scaleMem();
 
         if (code == 102) {
             configured = 1;
@@ -540,7 +552,7 @@ default {
                 else if (choice == "Panties") cdLoadData(RLV_NC, RLV_STRIP_PANTIES);
                 else if (choice == "Shoes") {
                     cdLoadData(RLV_NC, RLV_STRIP_SHOES);
-                    if (barefeet != "") lmRunRLVas("Dress.lsl","attachallover:" + barefeet + "=force");
+                    if (barefeet != "") lmRunRLVas("Dress","attachallover:" + barefeet + "=force");
                 }
             }
 #endif

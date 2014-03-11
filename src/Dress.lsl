@@ -207,9 +207,13 @@ integer isDresser(key id) {
 changeComplete(integer success) {
     // And remove the temp locks we used
     // RLV.lsl knows which are ours and that is all this clears
+#ifdef DEVELOPER_MODE
+    llOwnerSay("Your key is now unlocked again as you are a developer.");
+#endif
     lmRunRLV("clear");
 
     if (change) llOwnerSay("Change to new outfit " + newoutfitname + " complete.");
+
 
     lmInternalCommand("wearLock", (string)(wearLock = (wearLock ||
                                                       ((dresserID != NULL_KEY) && (dresserID != dollID)))), NULL_KEY);
@@ -264,6 +268,8 @@ string folderStatus() {
 default {
     state_entry() {
         dollID = llGetOwner();
+        
+        cdInitializeSeq();
     }
 
     on_rez(integer start) {
@@ -287,20 +293,28 @@ default {
     //----------------------------------------
     // LINK_MESSAGE
     //----------------------------------------
-    link_message(integer source, integer code, string data, key id) {
-        cdReadLinkHeader();
+    link_message(integer source, integer i, string data, key id) {
+        
+        // Parse link message header information
+        list split        =     cdSplitArgs(data);
+        string script     =     cdListElement(split, 0);
+        integer remoteSeq =     (i & 0xFFFF0000) >> 16;
+        integer optHeader =     (i & 0x00000C00) >> 10;
+        integer code      =      i & 0x000003FF;
+        split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
+        cdCheckSeqNum(script, remoteSeq);
         scaleMem();
 
         if (code == 102) {
             scaleMem();
         }
         else if (code == 104) {
-            if (script != "Start.lsl") return;
+            if (script != "Start") return;
             startup = 1;
         }
         else if (code == 105) {
-            if (script != "Start.lsl") return;
+            if (script != "Start") return;
             startup = 2;
         }
         else if (code == 110) {
@@ -329,7 +343,7 @@ default {
         }
         else if (code == 300) {
             string name = cdListElement(split, 0);
-            string value = cdListElement(split, 0);
+            string value = cdListElement(split, 1);
 
             if (name == "dialogChannel") {
                 dialogChannel = (integer)value;
@@ -386,7 +400,7 @@ default {
 
             debugSay(6, "DEBUG-DRESS", (string)candresstemp + " " + choice);
 
-            if (choice == "Dress.lsl" && candresstemp) {
+            if (choice == "Dress" && candresstemp) {
                 if (!isDresser(id)) return;
 
                 if (outfitsFolder != "") {
@@ -442,11 +456,14 @@ default {
                         return;
                     }
                     else if ((outfitsFolder != "") && (choice != newoutfitname)) {
+                        string rlv;
 #ifdef DEVELOPER_MODE
                         // If we are in developer mode we are in danger of being ripped
                         // off here.  We therefore will use a temporary @detach=n restriction.
-                        lmRunRLV("detach=n");
+                        llOwnerSay("Developer key locked in place to prevent accidental detachment during dressing.");
+                        rlv="attachthis=y,detachthis=n,detach=n,";
 #endif
+                        lmRunRLV(rlv + "touchall=n,showinv=n");
                         candresstemp = FALSE;
 
                         dressingFailures = 0;
@@ -513,14 +530,11 @@ default {
                     // one outfit using a miniskirt and one a long dress.
                     //
                     // This is unnessary we can do the same job with locking and @detachallthis
-                    /*if (RLVok) llMessageLinked(LINK_THIS, 315, cdMyScriptName() + "|getpathnew:pants=2670," +
+                    /*if (RLVok) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|getpathnew:pants=2670," +
                                                                  "getpathnew:shirt=2670," +
                                                                  "getpathnew:jacket=2670," +
                                                                  "getpathnew:skirt=2670," +
                                                                  "getpathnew:underpants=2670," +                                                                                                                          "getpathnew:undershirt=2670", NULL_KEY);*/
-
-                        if (RLVok) lmRunRLV("clear,touchall=n,showinv=n");
-                        llSleep(1.0);
 
                     // Original outfit was a complete avi reset....
                     // Restore our usual look from the ~normalself
@@ -555,8 +569,7 @@ default {
                         llSleep(1.0);
                     //}
 
-                    // Add items that cant replace what is already there
-                    if (RLVok) lmRunRLV("attachalloverorreplace:" + newoutfit + "=force,detachallthis:" + newoutfit + "=n," +
+                    if (RLVok) lmRunRLV("attachallover:" + newoutfit + "=force,detachallthis:" + newoutfit + "=n," +
                              "detachallthis:" + nudeFolder + "=n");
                     llSleep(1.0);
 
@@ -570,15 +583,13 @@ default {
                     if (RLVok) lmRunRLV("detachall:" + outfitsFolder + "=force");
                     llSleep(1.0);
 
-                    if (RLVok) lmRunRLV("attachallover:" + newoutfit + "=force");
+                    if (RLVok) lmRunRLV("attachall:" + newoutfit + "=force");
 
                     llSleep(2.0);
 
                     // And now send an attempt to clean up any remaining stray pieces
                     string parts = "gloves|jacket|pants|shirt|shoes|skirt|socks|underpants|undershirt|alpha|pelvis|left foot|right foot|r lower leg|l lower leg|r forearm|l forearm|r upper arm|l upper arm|r upper leg|l upper leg";
                     if (RLVok) lmRunRLV("detachallthis:" + llDumpList2String(llParseString2List(parts, [ "|" ], []), "=force,detachallthis:") + "=force");
-
-                    lmRunRLV("clear");
 
                     xfolder = normalselfFolder;
                     rlvRequest("getinvworn:" + xfolder + "=", 2668);

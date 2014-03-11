@@ -7,66 +7,6 @@
 
 #include "config.h"
 
-// Keys of important people in life of the Key:
-#define AGENT_CHRISTINA_HALPIN        "42c7aaec-38bc-4b0c-94dd-ae562eb67e6d"
-#define AGENT_ANDROMEDA_LAMPLIGHT     "636bf2bd-45f5-46e0-ad9a-b00f54224e01"
-#define AGENT_MAYSTONE_RESIDENT_RAW   c5e11d0a-694f-46cc-864b-e42340890934
-#define AGENT_MAYSTONE_RESIDENT       "c5e11d0a-694f-46cc-864b-e42340890934"
-#define AGENT_SILKY_MESMERISER_RAW    2fff40f0-ea4a-4b52-abb8-d4bf6b1c98c9
-#define AGENT_SILKY_MESMERISER        "2fff40f0-ea4a-4b52-abb8-d4bf6b1c98c9"
-
-#define BUILTIN_CONTROLLERS [ AGENT_SILKY_MESMERISER, AGENT_MAYSTONE_RESIDENT, AGENT_CHRISTINA_HALPIN, AGENT_ANDROMEDA_LAMPLIGHT ]
-#define USER_CONTROLLERS MistressList
-#include "CommonGlobals.lsl"
-
-// Once CommonGlobals is included redefine BUILTIN_CONTROLLERS to use the BuiltinControllers variable
-// otherwise we end up with many copies of the actual list data itself using more memory.
-#undef BUILTIN_CONTROLLERS
-#define BUILTIN_CONTROLLERS BuiltinControllers
-#define ALL_CONTROLLERS USER_CONTROLLERS + BUILTIN_CONTROLLERS
-
-// Tests of id
-#define cdIsDoll(id)			(id == dollID)
-#define cdIsCarrier(id)			(id == carrierID)
-#define cdIsBuiltinController(id)	(llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1)
-#define cdIsUserController(id)		(llListFindList(USER_CONTROLLERS, [ (string)id ]) != -1)
-#define cdIsController(id)		cdGetControllerStatus(id)
-
-// Used by this file below for OPTION_DATE
-//#define PACKAGE_VERSION "26 February 2014"
-
-// used by ServiceRequestor.lsl for updates
-//#define PACKAGE_VERNUM "11.11"
-
-// used by Start.lsl to set key name
-//#define PACKAGE_STRING "Community Doll Key"
-
-// The date of this code in this key, we should really look into a proper version numbering system sometime
-#define OPTION_DATE PACKAGE_VERSION
-
-// List definitions: makes things easier to comprehend
-
-// Note: ....P in names is a LISP convention: acts like a question mark
-#define cdListElement(a,b) llList2String(a, b)
-#define cdListFloatElement(a,b) llList2Float(a, b)
-#define cdListIntegerElement(a,b) llList2Integer(a, b)
-#define cdListElementP(a,b) llListFindList(a, [ b ])
-#define cdSplitArgs(a) llParseStringKeepNulls((a), [ "|" ], [])
-#define cdSplitString(a) llParseString2List(a, [ "," ], [])
-#define cdList2ListStrided(src,start,end,every) llList2ListStrided(llList2List(src, start, end), 0, -1, every)
-
-#define CHECK "✔"
-#define CROSS "✘"
-
-// Dress module prefix test defines
-#define isGroupItem(f)        (llGetSubString(f,0,0) == "#")
-#define isHiddenItem(f)       (llGetSubString(f,0,0) == "~")
-#define isPlusItem(f)         (llGetSubString(f,0,0) == "+")
-#define isStandAloneItem(f)   (llGetSubString(f,0,0) == "=")
-#define isTransformingItem(f) (llGetSubString(f,0,0) == "*")
-#define isParentFolder(f)     (llGetSubString(f,0,0) == ">")
-#define isChrootFolder(f)     (llGetSubString(f,0,1) == "!>")
-
 #define VSTR  + "\nScript Date: " + PACKAGE_VERSION
 #define MAIN "~Main Menu~"
 // Collapse animation - and documentation
@@ -116,7 +56,67 @@
 #define CARRY_TIMEOUT 60.0
 #define JAM_DEFAULT_TIME 90.0
 
-#define CORE_SCRIPTS [ "Aux.lsl", "Avatar.lsl", "ChatHandler.lsl", "Dress.lsl", "Main.lsl", "MenuHandler.lsl", "ServiceRequester.lsl", "ServiceReceiver.lsl", "Start.lsl", "StatusRLV.lsl", "Transform.lsl" ]
+// Keys of important people in life of the Key:
+#define AGENT_CHRISTINA_HALPIN        "42c7aaec-38bc-4b0c-94dd-ae562eb67e6d"
+#define AGENT_ANDROMEDA_LAMPLIGHT     "636bf2bd-45f5-46e0-ad9a-b00f54224e01"
+#define AGENT_MAYSTONE_RESIDENT_RAW   c5e11d0a-694f-46cc-864b-e42340890934
+#define AGENT_MAYSTONE_RESIDENT       "c5e11d0a-694f-46cc-864b-e42340890934"
+#define AGENT_SILKY_MESMERISER_RAW    2fff40f0-ea4a-4b52-abb8-d4bf6b1c98c9
+#define AGENT_SILKY_MESMERISER        "2fff40f0-ea4a-4b52-abb8-d4bf6b1c98c9"
+
+#define BUILTIN_CONTROLLERS [ AGENT_SILKY_MESMERISER, AGENT_MAYSTONE_RESIDENT, AGENT_CHRISTINA_HALPIN, AGENT_ANDROMEDA_LAMPLIGHT ]
+#define USER_CONTROLLERS MistressList
+#include "CommonGlobals.lsl"
+
+// Once CommonGlobals is included redefine BUILTIN_CONTROLLERS to use the BuiltinControllers variable
+// otherwise we end up with many copies of the actual list data itself using more memory.
+#undef BUILTIN_CONTROLLERS
+#define BUILTIN_CONTROLLERS BuiltinControllers
+#define ALL_CONTROLLERS USER_CONTROLLERS + BUILTIN_CONTROLLERS
+
+// Tests of id
+#define cdIsDoll(id)                    (id == dollID)
+#define cdIsCarrier(id)                 (id == carrierID)
+#define cdIsBuiltinController(id)       (llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1)
+#define cdIsUserController(id)          (llListFindList(USER_CONTROLLERS, [ (string)id ]) != -1)
+#define cdIsController(id)              cdGetControllerStatus(id)
+
+// Used by this file below for OPTION_DATE
+//#define PACKAGE_VERSION "26 February 2014"
+
+// used by ServiceRequestor.lsl for updates
+//#define PACKAGE_VERNUM "11.11"
+
+// used by Start.lsl to set key name
+//#define PACKAGE_STRING "Community Doll Key"
+
+// The date of this code in this key, we should really look into a proper version numbering system sometime
+#define OPTION_DATE PACKAGE_VERSION
+
+// List definitions: makes things easier to comprehend
+
+// Note: ....P in names is a LISP convention: acts like a question mark
+#define cdListElement(a,b) llList2String(a, b)
+#define cdListFloatElement(a,b) llList2Float(a, b)
+#define cdListIntegerElement(a,b) llList2Integer(a, b)
+#define cdListElementP(a,b) llListFindList(a, [ b ])
+#define cdSplitArgs(a) llParseStringKeepNulls((a), [ "|" ], [])
+#define cdSplitString(a) llParseString2List(a, [ "," ], [])
+#define cdList2ListStrided(src,start,end,every) llList2ListStrided(llList2List(src, start, end), 0, -1, every)
+
+#define CHECK "✔"
+#define CROSS "✘"
+
+// Dress module prefix test defines
+#define isGroupItem(f)        (llGetSubString(f,0,0) == "#")
+#define isHiddenItem(f)       (llGetSubString(f,0,0) == "~")
+#define isPlusItem(f)         (llGetSubString(f,0,0) == "+")
+#define isStandAloneItem(f)   (llGetSubString(f,0,0) == "=")
+#define isTransformingItem(f) (llGetSubString(f,0,0) == "*")
+#define isParentFolder(f)     (llGetSubString(f,0,0) == ">")
+#define isChrootFolder(f)     (llGetSubString(f,0,1) == "!>")
+
+#define CORE_SCRIPTS [ "Aux", "Avatar", "ChatHandler", "Dress", "Main", "MenuHandler", "ServiceRequester", "ServiceReceiver", "Start", "StatusRLV", "Transform" ]
 #define COLOR_NAMES [ "Purple", "Pink", "Red", "Green", "Blue", "Cyan", "Yellow", "Orange", "White", "Black", "CUSTOM" ]
 #define COLOR_VALUE [ <0.3, 0.1, 0.6>, <0.9, 0.1, 0.8>, <0.8, 0.1, 0.1>, <0.1, 0.8, 0.1>, <0.1, 0.1, 0.8>, <0.1, 0.8, 0.8>, <0.8, 0.8, 0.1>, <0.8, 0.4, 0.1>, <0.9, 0.9, 0.9>, <0.1, 0.1, 0.1>, <0,0,0> ]
 
@@ -134,7 +134,7 @@
 #define cdSelfPosed()			(poserID == dollID)
 #define cdWindDown()			(!collapsed && cdAttached() && (dollType != "Builder") && (dollType != "Key"))
 #define cdRunTimer()			(configured && cdAttached() && RLVchecked)
-#define cdMyScriptName()		__SHORTFILE__
+#define cdMyScriptName()		llGetScriptName()
 #define cdMyScriptLine()		(string)__LINE__
 
 #define ATTACH_BACK 9

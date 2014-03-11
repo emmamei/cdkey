@@ -2,6 +2,7 @@
 #define KEY_SHARED_FUNC_LSL
 
 #include "GlobalDefines.lsl"
+#include "LinkMessage.lsl"
 
 //-----------------------------------
 // Internal Shared Functions

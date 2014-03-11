@@ -13,6 +13,7 @@ string resolveName;
 string DataURL;
 integer useHTTPS = 1;
 integer resolveType;
+list storedConfigs;
 key resolveTestKey;
 key requestDataURL;
 
@@ -21,6 +22,7 @@ key requestDataName;
 
 default {
     state_entry() {
+        cdInitializeSeq();
         requestDataURL = llGetNotecardLine("DataServices",0);
     }
 
@@ -28,8 +30,17 @@ default {
         rezzed = 1;
     }
 
-    link_message(integer sender, integer code, string data, key id) {
-        cdReadLinkHeader();
+    link_message(integer sender, integer i, string data, key id) {
+        
+        // Parse link message header information
+        list split        =     cdSplitArgs(data);
+        string script     =     cdListElement(split, 0);
+        integer remoteSeq =     (i & 0xFFFF0000) >> 16;
+        integer optHeader =     (i & 0x00000C00) >> 10;
+        integer code      =      i & 0x000003FF;
+        split             =     llDeleteSubList(split, 0, 0 + optHeader);
+        
+        cdCheckSeqNum(script, remoteSeq);
 
         if (code == 102) {
             scaleMem();
@@ -75,10 +86,10 @@ default {
             }
         }
         else if (code == 850) {
-            string messageType = llList2String(split, 0);
+            string messageType = llList2String(split, 1);
 
             if (messageType == "requestID") {
-                string requestType = llList2String(split, 1);
+                string requestType = llList2String(split, 2);
 
                      if (requestType == "BlacklistKey")     requestBlacklistKey = id;
                 else if (requestType == "AddKey")           requestAddKey = id;
@@ -176,15 +187,18 @@ default {
                         lastGetTimestamp = (integer)Value;
                         lmServiceMessage("lastGetTimestamp", (string)(Value), NULL_KEY);
                     }
-                    //else if (Key == "MistressListNew") handleAvList(Value, 1, 0);
-                    //else if (Key == "MistressList") handleAvList(Value, 1, 1);
-                    //else if (Key == "blacklistNew") handleAvList(Value, 2, 0);
-                    //else if (Key == "blacklist") handleAvList(Value, 2, 1);
                     else if (Key == "windTimes") lmInternalCommand("setWindTimes", Value, NULL_KEY);
                     else {
                         lmSendConfig(Key, Value);
                         configCount++;
                     }
+                    
+                    // Store configuration information
+                    integer i;
+                    if ( ( i = llListFindList(storedConfigs,[Key]) ) != -1) storedConfigs = llListReplaceList(storedConfigs, [Key,Value], i, i++);
+                    else storedConfigs += [Key,Value];
+                    
+                    debugSay(3, "DEBUG-LOCALDB", "Local DB now contains " + (string)(llGetListLength(storedConfigs) / 2) + " key=>value pairs and " + cdMyScriptName() + " is using " + formatFloat((float)llGetUsedMemory() / 1024.0, 2) + "kB of memory.");
                 } while (llStringLength(body));
 
 #ifdef DEVELOPER_MODE

@@ -51,6 +51,9 @@ default {
     state_entry() {
         dollID = llGetOwner();
         scriptName = llGetScriptName();
+        llSetMemoryLimit(SCRIPT_MAXMEM);
+        
+        cdInitializeSeq();
     }
     
     on_rez(integer start) {
@@ -61,8 +64,17 @@ default {
     // LINK_MESSAGE
     //----------------------------------------
 
-    link_message(integer sender, integer code, string data, key id) {
-        cdReadLinkHeader();
+    link_message(integer sender, integer i, string data, key id) {
+        
+        // Parse link message header information
+        list split        =     cdSplitArgs(data);
+        string script     =     cdListElement(split, 0);
+        integer remoteSeq =     (i & 0xFFFF0000) >> 16;
+        integer optHeader =     (i & 0x00000C00) >> 10;
+        integer code      =      i & 0x000003FF;
+        split             =     llDeleteSubList(split, 0, 0 + optHeader);
+        
+        cdCheckSeqNum(script, remoteSeq);
 
         // Link Messages Handled:
         //
@@ -78,8 +90,9 @@ default {
             scaleMem();
         }
         else if (code == 135) {
+            float delay = cdListFloatElement(split, 0);
             scaleMem();
-            memReport(cdMyScriptName(),cdListFloatElement(split, 1));
+            memReport(cdMyScriptName(),delay);
         }
         
         cdConfigReport();
@@ -89,12 +102,12 @@ default {
 #ifdef DEVELOPER_MODE
             if (name == "debugLevel") debugLevel = (integer)cdListElement(split, 1);
 #endif
-            if (script == "Main.lsl") scaleMem();
+            if (script == "Main") scaleMem();
         }
         else if (code == 315) {
             string realScript = script;
-            script = cdListElement(split, 0);
-            string commandString = cdListElement(split, 1);
+            string script = cdListElement(split, 1);
+            string commandString = cdListElement(split, 2);
 
             if (script == "") script = realScript;
 
@@ -302,7 +315,7 @@ default {
             }
         }
         else if (code == 350) {
-            RLVok = (cdListIntegerElement(split, 0) == 1);
+            RLVok = (cdListIntegerElement(split, 1) == 1);
             RLVstarted = 1;
         }
     }

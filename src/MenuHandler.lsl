@@ -28,10 +28,7 @@ list windTimes = [ 30 ];
 
 float timeLeftOnKey;
 float windDefault = 1800.0;
-float windRate = 1.0;
-float baseWindRate = 1.0;
 float collapseTime;
-float displayWindRate = 1.0;
 
 integer afk;
 integer autoAFK = 1;
@@ -120,21 +117,32 @@ default
     state_entry() {
         dollID = llGetOwner();
         dollName = llGetDisplayName(dollID);
+        
+        cdInitializeSeq();
     }
     
     on_rez(integer start) {
         RLVok = -1;
     }
 
-    link_message(integer sender, integer code, string data, key id) {
-        cdReadLinkHeader();
+    link_message(integer sender, integer i, string data, key id) {
+        
+        // Parse link message header information
+        list split        =     cdSplitArgs(data);
+        string script     =     cdListElement(split, 0);
+        integer remoteSeq =     (i & 0xFFFF0000) >> 16;
+        integer optHeader =     (i & 0x00000C00) >> 10;
+        integer code      =      i & 0x000003FF;
+        split             =     llDeleteSubList(split, 0, 0 + optHeader);
+        
+        cdCheckSeqNum(script, remoteSeq);
 
         if (code == 102) {
-            if (script == "ServiceReceiver.lsl") {
+            if (script == "ServiceReceiver") {
                 dbConfig = 1;
                 doDialogChannel();
             }
-            else if (data == "Start.lsl") configured = 1;
+            else if (data == "Start") configured = 1;
             scaleMem();
         }
         else if (code == 110) {
@@ -197,7 +205,7 @@ default
                 lmInternalCommand("setGemColour", (string)gemColour, NULL_KEY);
             }
             else if (name == "uniqueID") {
-                if (script != "ServiceReceiver.lsl") return;
+                if (script != "ServiceReceiver") return;
                 uniqueID = (key)value;
             }
             else if (name == "timeLeftOnKey") {
@@ -414,7 +422,7 @@ default
 
                     // Can the doll be dressed? Add menu button
                     if ((RLVok == 1) && !collapsed && ((!isDoll && canDress) || (isDoll && canWear && !wearLock))) {
-                        menu += "Dress.lsl";
+                        menu += "Dress";
                     }
 
                     // Can the doll be transformed? Add menu button
@@ -626,7 +634,7 @@ default
                 lmInternalCommand("detach", "", id);
             else if (afterSpace == "Visible") lmSendConfig("isVisible", (string)(visible = (beforeSpace == CROSS)));
             else if (choice == "Reload Config") {
-                llResetOtherScript("Start.lsl");
+                llResetOtherScript("Start");
             }
             else if (choice == "TP Home") {
                 lmInternalCommand("TP", LANDMARK_HOME, id);

@@ -102,7 +102,6 @@ float timeToJamRepair;
 float windamount      = 1800.0; // 30 * SEC_TO_MIN;    // 30 minutes
 float keyLimit        = 10800.0;
 float timeLeftOnKey   = windamount;
-float windRate        = 1.0;
 float baseWindRate    = windRate;
 float displayWindRate = windRate;
 integer HTTPinterval  = 60;
@@ -131,7 +130,7 @@ ifPermissions() {
     integer perm = llGetPermissions();
 
     if (grantor != NULL_KEY && grantor != dollID) {
-        llResetOtherScript("Start.lsl");
+        llResetOtherScript("Start");
         llSleep(10);
     }
 
@@ -162,6 +161,8 @@ default {
     state_entry() {
         dollID = llGetOwner();
         if (llGetAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
+        
+        cdInitializeSeq();
     }
 
     on_rez(integer start) {
@@ -321,11 +322,20 @@ default {
     // RECEIVED A LINK MESSAGE
     //----------------------------------------
     // For Transforming Key operations
-    link_message(integer source, integer code, string data, key id) {
-        cdReadLinkHeader();
+    link_message(integer source, integer i, string data, key id) {
+        
+        // Parse link message header information
+        list split        =     cdSplitArgs(data);
+        string script     =     cdListElement(split, 0);
+        integer remoteSeq =     (i & 0xFFFF0000) >> 16;
+        integer optHeader =     (i & 0x00000C00) >> 10;
+        integer code      =      i & 0x000003FF;
+        split             =     llDeleteSubList(split, 0, 0 + optHeader);
+        
+        cdCheckSeqNum(script, remoteSeq);
 
         if (code == 102) {
-            if (script == "ServiceReceiver.lsl") {
+            if (script == "ServiceReceiver") {
                 lmMenuReply("Wind", "", NULL_KEY);
 
                 float displayRate = setWindRate();
@@ -343,7 +353,7 @@ default {
         }
 
         else if (code == 104) {
-            if (script != "Start.lsl") return;
+            if (script != "Start") return;
             dollID = llGetOwner();
             dollName = llGetDisplayName(dollID);
 
@@ -351,7 +361,7 @@ default {
         }
 
         else if (code == 105) {
-            if (script != "Start.lsl") return;
+            if (script != "Start") return;
             clearAnim = 1;
 
             llSetTimerEvent(STD_RATE);
@@ -480,8 +490,6 @@ default {
             }
 
             else if (cmd == "setWindTimes") {
-                split = llDeleteSubList(llParseString2List(data,[","," ","|"],[]),0,1);
-                
                 integer i; integer start = llGetListLength(split);
 
                 windTimes = [];
@@ -496,7 +504,7 @@ default {
                 windTimes = llListSort(windTimes,1,1);
                 
                 if (start > l) lmSendToAgent("One or more times were filtered accepted list is " + llList2CSV(windTimes), id);
-                if (script != "ServiceReceiver.lsl") lmSendConfig("windTimes", llDumpList2String(windTimes,"|"));
+                if (script != "ServiceReceiver") lmSendConfig("windTimes", llDumpList2String(windTimes,"|"));
             }
 
             else if (cmd == "wearLock") {
@@ -577,7 +585,7 @@ default {
         }
 
         else if (code == 350) {
-            RLVok = (llList2Integer(split, 1) == 0);
+            RLVok = (llList2Integer(split, 0) == 1);
             rlvAPIversion = llList2String(split, 1);
             // When rlv confirmed....vefify collapse state... no escape!
             if (collapsed == 1 && timeLeftOnKey > 0) uncollapse(0);

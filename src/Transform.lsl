@@ -71,7 +71,7 @@ integer quiet;
 // FUNCTIONS
 //========================================
 setDollType(string choice, integer automated) {
-    if (choice == "Transform.lsl") stateName = transform;
+    if (choice == "Transform") stateName = transform;
     else stateName = choice;
 
     stateName = cdGetFirstChar(llToUpper(stateName)) + cdButFirstChar(llToLower(stateName));
@@ -164,6 +164,8 @@ default {
         dollID =   llGetOwner();
         dollName = llGetDisplayName(dollID);
         stateName = "Regular";
+        
+        cdInitializeSeq();
     }
 
     //----------------------------------------
@@ -237,8 +239,20 @@ default {
     //----------------------------------------
     // LINK MESSAGE
     //----------------------------------------
-    link_message(integer source, integer code, string data, key id) {
-        cdReadLinkHeader();
+    link_message(integer source, integer i, string data, key id) {
+        
+        // Parse link message header information
+        list split        =     cdSplitArgs(data);
+        string script     =     cdListElement(split, 0);
+        integer remoteSeq =     (i & 0xFFFF0000) >> 16;
+        integer optHeader =     (i & 0x00000C00) >> 10;
+        integer code      =      i & 0x000003FF;
+        split             =     llDeleteSubList(split, 0, 0 + optHeader);
+        
+        cdCheckSeqNum(script, remoteSeq);
+        
+        string choice = cdListElement(split, 0);
+        string name = cdListElement(split, 1);
 
         scaleMem();
 
@@ -251,14 +265,14 @@ default {
         }
 
         else if (code == 104) {
-            if (script != "Start.lsl") return;
+            if (script != "Start") return;
             reloadTypeNames();
             startup = 1;
             llSetTimerEvent(60.0);   // every minute
         }
 
         else if (code == 105) {
-            if (script != "Start.lsl") return;
+            if (script != "Start") return;
         }
 
         else if (code == 110) {
@@ -268,15 +282,15 @@ default {
         }
 
         else if (code == 135) {
-            float delay = llList2Float(split,0);
+            float delay = (float)choice;
             memReport(cdMyScriptName(),delay);
         }
         
         cdConfigReport();
 
         else if (code == 300) {
-            string value = llList2String(split,0);
-            string name = llList2String(split,1);
+            string value = name;
+            string name = choice;
 
             if (script != cdMyScriptName()) {
                      if (name == "quiet")                                          quiet = (integer)value;
@@ -299,12 +313,12 @@ default {
                     if (configured) setDollType(stateName, 1);
                 }
 
-                else if (script == "Main.lsl" && name == "timeLeftOnKey") runTimedTriggers();
+                else if (script == "Main" && name == "timeLeftOnKey") runTimedTriggers();
             }
         }
 
         else if (code == 350) {
-            RLVok = ((integer)llList2String(split,0) == 1);
+            RLVok = ((integer)choice == 1);
 
             outfitsFolder = "";
             typeFolder = "";
@@ -329,8 +343,7 @@ default {
         }
 
         if (code == 500) {
-            string name = cdListElement(split,1);
-            string choice = cdListElement(split,0);
+            string name = cdListElement(split, 2);
             string optName = llGetSubString(choice, 2, STRING_END);
             string curState = cdGetFirstChar(choice);
 
@@ -367,11 +380,11 @@ default {
                     llDialog(id, msg, dialogSort(llListSort(choices, 1, 1) + MAIN), dialogChannel);
                 }
             }
-            else if ((cdListElementP(types, choice) != NOT_FOUND) || (choice == "Transform.lsl")) {
-                if (choice == "Transform.lsl") choice = transform;
+            else if ((cdListElementP(types, choice) != NOT_FOUND) || (choice == "Transform")) {
+                if (choice == "Transform") choice = transform;
                 else if (mustAgreeToType) {
                     transform = choice;
-                    list choices = ["Transform.lsl", "Dont Transform", MAIN ];
+                    list choices = ["Transform", "Dont Transform", MAIN ];
 
                     string msg = "Do you wish to transform to a " + choice + " Doll?";
 
