@@ -359,7 +359,7 @@ default
                     // Doll being carried clicked on key
                     if (isDoll) {
                         msg = "You are being carried by " + carrierName + ".";
-                        menu = ["Help/Support"];
+                        menu = ["Help..."];
                     }
 
                     else if (isCarrier) {
@@ -371,7 +371,7 @@ default
                     // Someone else clicked on key
                     else {
                         msg = dollName + " is currently being carried by " + carrierName + ". They have full control over this doll.\n";
-                        menu = ["Help/Support"];
+                        menu = ["Help..."];
                     }
                     if (!isCarrier) {
                         llDialog(id, timeleft + msg, dialogSort(llListSort(menu, 1, 1)) , dialogChannel);
@@ -724,12 +724,18 @@ default
             // Entering options menu section
             
             // Entering key menu section
-                 if (afterSpace == "Gem Light")     lmSendConfig("primLight", (string)(beforeSpace == CROSS));
-            else if (afterSpace == "Key Glow")      lmSendConfig("primGlow", (string)(beforeSpace == CROSS));
+            if (afterSpace == "Gem Light") {
+                 lmSendConfig("primLight", (string)(beforeSpace == CROSS));
+                 lmMenuReply("Key...", name, id);
+            }
+            else if (afterSpace == "Key Glow") {
+                lmSendConfig("primGlow", (string)(beforeSpace == CROSS));
+                lmMenuReply("Key...", name, id);
+            }
 
             // Entering abilities menu section
             isAbility = 1;
-            if (afterSpace == "Self TP") lmSendConfig("helpless", (string)(beforeSpace == CHECK));
+            if (afterSpace == "Self TP") lmSendConfig("helpless", (string)(beforeSpace != CROSS));
             else if (afterSpace == "Self Dress") lmSendConfig("canWear", (string)(canWear = (beforeSpace == CROSS)));
             else if (afterSpace == "Detachable") lmSendConfig("detachable", (string)(detachable = (beforeSpace == CROSS)));
             else if (afterSpace == "Flying") lmSendConfig("canFly", (string)(beforeSpace == CROSS));

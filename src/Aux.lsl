@@ -352,7 +352,7 @@ default {
             string choice = llList2String(split, 0);
             string avatar = llList2String(split, 1);
 
-            if (choice == "Help/Support") {
+            if (choice == "Help...") {
                 string msg = "Here you can find various options to get help with your " +
                             "key and to connect with the community.";
                 list pluslist = [ "Join Group", "Visit Dollhouse" ];
