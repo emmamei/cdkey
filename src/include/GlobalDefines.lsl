@@ -42,7 +42,7 @@
 // LockMeister/FS AO channel
 #define LOCKMEISTER_CHANNEL -8888
 // Seconds per minute
-#define SEC_TO_MIN 60
+#define SEC_TO_MIN 60.0
 // Community dolls website
 #define WEB_DOMAIN "http://communitydolls.com/"
 // Maximum number of @getinvworn failures while dressing
