@@ -463,7 +463,7 @@ default
 #else
                             if (isController || isCarrier) {
 #endif
-                                if (simRating == "MATURE" || simRating == "ADULT") menu += "Strip";
+                                if (simRating == "MATURE" || simRating == "ADULT") menu += "Strip...";
                             }
                         }
 #endif
@@ -769,7 +769,7 @@ default
 #ifdef ADULT_MODE
                 // Strip items... only for Pleasure Doll and Slut Doll Types...
                 list buttons = llListSort(["Top", "Bra", "Bottom", "Panties", "Shoes", "*ALL*"], 1, 1);
-                if (choice == "Strip")
+                if (choice == "Strip...")
                     llDialog(id, "Take off:", dialogSort(buttons + MAIN), dialogChannel); // Do strip menu
                 else if (llListFindList(buttons, [ choice ]) != -1)
                     lmStrip(choice);
