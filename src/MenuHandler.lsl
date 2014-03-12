@@ -406,12 +406,12 @@ default
                     // Options only available to dolly
                     if (isDoll) {
                         if (!collapsed) {
-                            menu += "Options";
+                            menu += "Options...";
                             if (detachable) menu += "Detach";
     
-                            if (canAFK) menu += cdGetButton("AFK", id, afk, 0);
+                            if (canAFK) menu += "AFK";
     
-                            menu += cdGetButton("Visible", id, visible, 0);
+                            menu += "Visible";
                         }
                     }
                     else {
@@ -495,7 +495,14 @@ default
                 }
 
                 msg += "See " + WEB_DOMAIN + manpage + " for more information." ;
-                llDialog(id, timeleft + msg, dialogSort(llListSort(menu, 1, 1)) , dialogChannel);
+                
+                menu = llListSort(menu, 1, 1);
+                
+                integer i;
+                if ( ( i = llListFindList(menu, ["AFK"]) ) != -1) menu = llListReplaceList(menu, cdGetButton("AFK", id, afk, 0), i, i);
+                if ( ( i = llListFindList(menu, ["Visible"]) ) != -1) menu = llListReplaceList(menu, cdGetButton("Visible", id, visible, 0), i, i);
+                
+                llDialog(id, timeleft + msg, dialogSort(menu) , dialogChannel);
             }
         }
         else if (code == 350) {

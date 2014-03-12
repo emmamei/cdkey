@@ -455,21 +455,21 @@ default {
             }
             else if (choice == "Features...") {
                 string msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
-                list pluslist;
+                list pluslist = [];
 
-                if (isTransformingKey) pluslist += cdGetButton("Type Text", id, signOn, 0);
-                pluslist += cdGetButton("Quiet Key", id, quiet, 0);
-#ifdef ADULT_MODE
-                pluslist += cdGetButton("Pleasure Doll", id, pleasureDoll, 0);
-#endif
-                pluslist += cdGetButton("Warnings", id, doWarnings, 0);
-                if (dollType != "Display") pluslist += cdGetButton("Poseable", id, canPose, 0);
-                pluslist += cdGetButton("Outfitable", id, canDress, 0);
                 pluslist += cdGetButton("Carryable", id, canCarry, 0);
+                pluslist += cdGetButton("Outfitable", id, canDress, 0);
+#ifdef ADULT_MODE
+                pluslist += cdGetButton("Pleasure", id, pleasureDoll, 0);
+#endif
+                if (dollType != "Display") pluslist += cdGetButton("Poseable", id, canPose, 0);
+                pluslist += cdGetButton("Quiet Key", id, quiet, 0);
+                if (isTransformingKey) pluslist += cdGetButton("Type Text", id, signOn, 0);
+                pluslist += cdGetButton("Warnings", id, doWarnings, 0);
                 pluslist += cdGetButton("Offline", id, offlineMode, 0);
                 // One-way options
-                pluslist += cdGetButton("Allow AFK", id, canAFK, 1);
-                pluslist += cdGetButton("Rpt Wind", id, canRepeat, 1);
+                pluslist = llListInsertList(pluslist, cdGetButton("Allow AFK", id, canAFK, 1), 0);
+                pluslist = llListInsertList(pluslist, cdGetButton("Rpt Wind", id, canRepeat, 1), 6);
 
                 llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
             }
@@ -477,11 +477,9 @@ default {
             else if (choice == "Key..." && (cdIsController(id) || cdIsDoll(id))) {
 
                 list pluslist = [ "Dolly Name", "Gem Colour" ];
-                pluslist += cdGetButton("Gem Light", id, primLight, 0);
-                pluslist += cdGetButton("Key Glow", id, primGlow, 0);
                 
                 if (cdIsController(id)) pluslist += [ "Max Time", "Wind Times" ];
-                llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(pluslist + MAIN, 1, 1)), dialogChannel);
+                llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(pluslist, 1, 1) + cdGetButton("Key Glow", id, primGlow, 0) + cdGetButton("Gem Light", id, primLight, 0) + MAIN), dialogChannel);
             }
             else if (choice == "Gem Colour") {
                 string msg = "Here you can choose your own gem colour.";
