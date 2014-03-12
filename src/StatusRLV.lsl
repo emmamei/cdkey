@@ -51,9 +51,11 @@ default {
     state_entry() {
         dollID = llGetOwner();
         scriptName = llGetScriptName();
-        llSetMemoryLimit(SCRIPT_MAXMEM);
         
         cdInitializeSeq();
+        scaleMem();
+        
+        llSetScriptState("StatusRLV",0);
     }
     
     on_rez(integer start) {
@@ -73,8 +75,6 @@ default {
         integer optHeader =     (i & 0x00000C00) >> 10;
         integer code      =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
-        
-        cdCheckSeqNum(script, remoteSeq);
 
         // Link Messages Handled:
         //
@@ -106,8 +106,8 @@ default {
         }
         else if (code == 315) {
             string realScript = script;
-            string script = cdListElement(split, 1);
-            string commandString = cdListElement(split, 2);
+            string script = cdListElement(split, 0);
+            string commandString = cdListElement(split, 1);
 
             if (script == "") script = realScript;
 
@@ -315,7 +315,7 @@ default {
             }
         }
         else if (code == 350) {
-            RLVok = (cdListIntegerElement(split, 1) == 1);
+            RLVok = (cdListIntegerElement(split, 0) == 1);
             RLVstarted = 1;
         }
     }

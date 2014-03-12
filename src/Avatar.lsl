@@ -261,22 +261,20 @@ ifPermissions() {
 }
 
 initializeRLV(integer refresh) {
-    if (refresh && !RLVstarted) return;
 #ifdef DEVELOPER_MODE
     if ((rlvAPIversion != "") && (myPath == "")) { // Dont enable RLV on devs if @getpath is returning no usable result to avoid lockouts.
         llSay(DEBUG_CHANNEL, "WARNING: Sanity check failure developer key not found in #RLV see README.dev for more information.");
         return;
     }
 #endif
-    if (!RLVstarted) {
-        lmRLVreport(RLVok, rlvAPIversion, 0);
-        if (RLVok)      llOwnerSay("Enabling RLV mode");
-        if (RLVok && !refresh)   {
+    if (!refresh) {
+        if (RLVok) {
+            llOwnerSay("Enabling RLV mode");
             cdRlvSay("@clear");
-            llResetOtherScript("StatusRLV");
-            llSetScriptState("StatusRLV", 1);
-            llSleep(1.0);
+            llSetScriptState("StatusRLV",1);
+            llSleep(2.0);
         }
+        lmRLVreport(RLVok, rlvAPIversion, 0);
     }
     
     string baseRLV;
@@ -302,13 +300,10 @@ initializeRLV(integer refresh) {
     if (RLVok && !RLVstarted) {
         if (!quiet) llSay(0, "Developer Key not locked.");
         else llOwnerSay("Developer key not locked.");
+        baseRLV += "attachallthis_except=add,detachallthis_except=add,";
     }
-    baseRLV += "attachallthis_except=add,detachallthis_except=add,";
 #endif
     llListenControl(listenHandle, 0);
-
-    integer posed = (cdPosed() && !cdSelfPosed());
-    integer carried = cdCarried();
 
     if (userBaseRLVcmd != "") lmRunRLVas("User:Base", userBaseRLVcmd);
 
@@ -425,7 +420,6 @@ default {
         integer code      =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
         
-        cdCheckSeqNum(script, remoteSeq);
         scaleMem();
         
         integer posed = cdPosed();
