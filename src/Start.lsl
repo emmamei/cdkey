@@ -43,13 +43,15 @@ string appearanceData;
 #define APPEARANCE_NC "DataAppearance"
 #define NC_ATTACHLIST "DataAttachments"
 key ncPrefsKey;
-key ncPrefsLoadedUUID = NULL_KEY;
+list ncPrefsLoadedUUID;
 key ncIntroKey;
 key ncResetAttach;
 key ncRequestAppearance;
 
-float timeLeftOnKey = UNSET;
+float timeLeftOnKey;
+float keyLimit;
 integer ncLine;
+integer demoMode;
 
 float ncStart;
 integer lastAttachPoint;
@@ -72,7 +74,7 @@ integer busyIsAway = NO;
 integer offlineMode = NO;
 integer visible = YES;
 integer primGlow = YES;
-integer primLight = UNSET;
+integer primLight = YES;
 integer prefsReread = NO;
 
 vector gemColour;
@@ -107,33 +109,35 @@ integer lowScriptMode;
 #endif
 
 doVisibility() {
+    vector colour = gemColour;
     if (llGetInventoryType(APPEARANCE_NC) == INVENTORY_NOTECARD) {
-        if (!visible || !primGlow) {
+        if (!visible || !primGlow || collapsed) {
             llSetLinkPrimitiveParamsFast(LINK_SET, [ PRIM_GLOW, ALL_SIDES, 0.0 ]);
+            return;
         }
-        else {
-            integer i; integer type;
-            list types = [ "Light", 23, "Glow", 25 ];
-            for (type = 0; type < (llGetListLength(types)/2); type++) {
-                for (i = 1; i < llGetNumberOfPrims(); i++) {
-                    string name = llGetLinkName(i); string typeName = llList2String(types, type * 2);
-                    if (cdGetElementType(appearanceData,([name,typeName])) != JSON_INVALID) {
-                        integer j;
-                        while(cdGetElementType(appearanceData,([name,typeName,j])) != JSON_INVALID) {
-                            list params = llJson2List(cdGetValue(appearanceData,([name,typeName,j++])));
-                            if (typeName == "Light") {
-                                if (primLight == UNSET) primLight = llList2Integer(params,0);
-                                vector colour = gemColour;
-                                if (colour == ZERO_VECTOR) colour = (vector)llList2String(llGetLinkPrimitiveParams(i,[PRIM_DESC]),0);
-                                if (colour == ZERO_VECTOR) colour = (vector)llList2String(params,1);
-                                params = llListReplaceList(params, [primLight,colour], 0, 1);
-                            }
-                            llSetLinkPrimitiveParamsFast(i, llList2List(types, type * 2 + 1, type * 2 + 1) + params);
+        integer i; integer type; list params;
+        list types = [ "Light", 23, "Glow", 25 ];
+        for (type = 0; type < (llGetListLength(types)/2); type++) {
+            for (i = 1; i < llGetNumberOfPrims(); i++) {
+                string name = llGetLinkName(i); string typeName = llList2String(types, type * 2);
+                params += [ PRIM_LINK_TARGET, i ];
+                if (cdGetElementType(appearanceData,([name,typeName])) != JSON_INVALID) {
+                    integer j; integer typeval = llList2Integer(types, llListFindList(types, [typeName]) + 1);
+                    if (typeName == "Light") {
+                        if (colour == ZERO_VECTOR) colour = (vector)llList2String(llGetLinkPrimitiveParams(i,[PRIM_DESC]),0);
+                        if (colour == ZERO_VECTOR) colour = (vector)llList2String(params,1);
+                        params += [ typeval, (primLight & !collapsed), colour, 0.5, 2.5, 2.0 ];
+                    }
+                    while(cdGetElementType(appearanceData,([name,typeName,j])) != JSON_INVALID) {
+                        if (typeName == "Glow") {
+                            params += [ 25 ] + llJson2List(cdGetValue(appearanceData,([name,typeName,j++])));
                         }
                     }
                 }
             }
         }
+        llOwnerSay(llList2CSV(params));
+        llSetLinkPrimitiveParamsFast(0, params);
     }
 }
 
@@ -141,11 +145,9 @@ doVisibility() {
 // Configuration Functions
 //---------------------------------------
 // This code assumes a human-generated config file
-processConfiguration(string name, list values) {
+processConfiguration(string name, string value) {
     //----------------------------------------
     // Assign values to program variables
-
-    string value = llList2String(values,0);
 
          if (value == "yes" || value == "on")  value = "1";
     else if (value == "no"  || value == "off") value = "0";
@@ -166,7 +168,6 @@ processConfiguration(string name, list values) {
         integer j;
         while( ( j = llSubStringIndex(name, " ") ) != -1) {
             name = llInsertString(llDeleteSubString(name, j, j + 1), j, llToUpper(llGetSubString(name, j + 1, j + 1)));
-            llOwnerSay(name);
         }
         lmSendConfig(name, value);
     }
@@ -240,21 +241,22 @@ setGender(string gender) {
 }
 
 initConfiguration() {
+    ncStart = llGetTime();
+    
     // Check to see if the file exists and is a notecard
     if (llGetInventoryType(NOTECARD_PREFERENCES) == INVENTORY_NOTECARD) {
-        if (databaseOnline && (offlineMode || (ncPrefsLoadedUUID == NULL_KEY) || (ncPrefsLoadedUUID != llGetInventoryKey(NOTECARD_PREFERENCES)))) {
+        if (!databaseOnline || offlineMode || !llGetListLength(ncPrefsLoadedUUID) || (llListFindList(ncPrefsLoadedUUID,[(string)llGetInventoryKey(NOTECARD_PREFERENCES)]) == -1)) {
             sendMsg(dollID, "Loading preferences notecard");
-            ncStart = llGetTime();
 
             // Start reading from first line (which is 0)
             ncLine = 0;
             ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ncLine);
         }
         else {
-            debugSay(7, "DEBUG", "Skipping preferences notecard as it is unchanged");
+            debugSay(7, "DEBUG", "Skipping preferences notecard as it is unchanged and settings were found in database.");
             doneConfiguration(0);
         }
-    } else {
+    } else if (!databaseOnline || offlineMode) {
         // File missing - report for debugging only
         debugSay(1, "DEBUG", "No configuration found (" + NOTECARD_PREFERENCES + ")");
         doneConfiguration(0);
@@ -263,8 +265,6 @@ initConfiguration() {
 
 doneConfiguration(integer read) {
     if (startup == 1 && read) {
-        ncPrefsLoadedUUID = llGetInventoryKey(NOTECARD_PREFERENCES);
-        lmSendConfig("ncPrefsLoadedUUID", (string)ncPrefsLoadedUUID);
 #ifdef DEVELOPER_MODE
         sendMsg(dollID, "Preferences read in " + formatFloat(llGetTime() - ncStart, 2) + "s");
 #endif
@@ -294,10 +294,8 @@ initializationCompleted() {
 
         if (space != NOT_FOUND) name = llGetSubString(name, 0, space -1);
 
-        //llOwnerSay("INIT1: dollyName = " + dollyName + " (send to 300)");
         lmSendConfig("dollyName", (dollyName = "Dolly " + name));
     }
-    //llOwnerSay("INIT1: dollyName = " + dollyName + " (setting)");
     if (cdAttached()) llSetObjectName(dollyName + "'s Key");
     string msg = "Initialization completed";
 #ifdef DEVELOPER_MODE
@@ -315,7 +313,7 @@ initializationCompleted() {
         ncLine = 0;
         ncRequestAppearance = llGetNotecardLine(APPEARANCE_NC, ncLine++);
     }
-    llSetTimerEvent(1.0);
+    llSetTimerEvent(10.0);
 }
 
 #ifdef SIM_FRIENDLY
@@ -367,17 +365,13 @@ default {
         integer optHeader =     (i & 0x00000C00) >> 10;
         integer code      =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
-
-        cdCheckSeqNum(script, remoteSeq);
+        
         scaleMem();
 
         if (code == 102) {
             if (script != "ServiceReceiver") return;
             databaseFinished = 1;
             initConfiguration();
-        }
-        else if ((code == 104) || (code == 105)) {
-
         }
         else if (code == 135) {
             if (script == cdMyScriptName()) return;
@@ -391,54 +385,28 @@ default {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
 
-            //debugXay(5, "From " + script + ": " + name + "=" + value);
-
-                 if (name == "timeLeftOnKey")            timeLeftOnKey = (float)value;
-            else if (name == "ncPrefsLoadedUUID")    ncPrefsLoadedUUID = (key)value;
+                 if (name == "ncPrefsLoadedUUID")    ncPrefsLoadedUUID = llDeleteSubList(split,0,0);
             else if (name == "offlineMode")                offlineMode = (integer)value;
             else if (name == "databaseOnline")          databaseOnline = (integer)value;
-            else if (name == "autoTP")                          autoTP = (integer)value;
-            else if (name == "barefeet")                      barefeet = value;
-            else if (name == "busyIsAway")                  busyIsAway = (integer)value;
-            else if (name == "canAFK")                          canAFK = (integer)value;
-            else if (name == "canDress")                      canDress = (integer)value;
-            else if (name == "canFly")                          canFly = (integer)value;
-            else if (name == "canSit")                          canSit = (integer)value;
-            else if (name == "canStand")                      canStand = (integer)value;
-            else if (name == "collapsed")                    collapsed = (integer)value;
-            else if (name == "afk")                                afk = (integer)value;
-            else if (name == "keyAnimation")              keyAnimation = value;
-            else if (name == "detachable")                  detachable = (integer)value;
-            else if (name == "keyLimit")                      keyLimit = (float)value;
-            else if (name == "helpless")                      helpless = (integer)value;
-            else if (name == "pleasureDoll")              pleasureDoll = (integer)value;
-            else if (name == "quiet")                            quiet = (integer)value;
             else if (name == "lowScriptMode")            lowScriptMode = (integer)value;
             else if (name == "dialogChannel")            dialogChannel = (integer)value;
+            else if (name == "demoMode")                      demoMode = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                  debugLevel = (integer)value;
 #endif
+            else if (name == "keyLimit")                      keyLimit = (float)value;
             else if (name == "userBaseRLVcmd")          userBaseRLVcmd = value;
             else if (name == "userCollapseRLVcmd")  userCollapseRLVcmd = value;
             else if (name == "userPoseRLVcmd")          userPoseRLVcmd = value;
             else if (name == "userAfkRLVcmd")            userAfkRLVcmd = value;
-            else if (name == "windTimes")                    windTimes = llDeleteSubList(split, 0, 1);
-            else if (name == "dollType")                      dollType = value;
-            else if (name == "MistressList")              MistressList = llListSort(llDeleteSubList(split, 0, 1), 2, 1);
-            else if (name == "blacklist")                    blacklist = llListSort(llDeleteSubList(split, 0, 1), 2, 1);
-            else if (name == "primLight")                    primLight = (integer)value;
-            else if (name == "gemColour") {
-                gemColour = (vector)value;
-                if (configured) doVisibility();
-            }
-
-            else if (name == "primGlow") {
-                primGlow = (integer)value;
-                if (configured) doVisibility();
-            }
-            else if (name == "isVisible") {
-                visible = (integer)value;
-                if (configured) doVisibility();
+            
+            if ((name == "gemColour") || (name == "primGlow") || (name == "primLight") || (name == "isVisible") || (name == "collapsed")) {
+                     if (name == "gemColour")       gemColour = (vector)value;
+                else if (name == "primGlow")         primGlow = (integer)value;
+                else if (name == "primLight")       primLight = (integer)value;
+                else if (name == "isVisible")         visible = (integer)value;
+                else if (name == "collapsed")       collapsed = (integer)value;
+                doVisibility();
             }
 
             else if (name == "dollyName") {
@@ -472,57 +440,6 @@ default {
             }
         }
 
-        else if (code == 305) {
-            string cmd = llList2String(split, 0);
-            split = llDeleteSubList(split, 0, 0);
-
-            if (cmd == "addRemBlacklist") {
-                string uuid = llList2String(split, 0);
-                string name = llList2String(split, 1);
-
-                integer index = llListFindList(blacklist, [ uuid ]);
-
-                if (index == -1) {
-                    lmSendToAgentPlusDoll("Adding " + name + " to blacklist", id);
-                    if ((llGetListLength(blacklist) % 2) == 1) blacklist = llDeleteSubList(blacklist, 0, 0);
-                    blacklist = llListSort(blacklist + [ uuid, name ], 2, 1);
-                }
-                else {
-                    lmSendToAgentPlusDoll("Removing " + name + " from blacklist.", id);
-                    if ((llGetListLength(blacklist) % 2) == 1) blacklist = llDeleteSubList(blacklist, 0, 0);
-                    blacklist = llDeleteSubList(blacklist, index, ++index);
-                    
-                }
-                
-                lmSendConfig("blacklist", llDumpList2String(blacklist,"|") );
-            }
-            else if ((cmd == "addMistress") || (cmd == "remMistress")) {
-                string uuid = llList2String(split, 0);
-                string name = llList2String(split, 1);
-
-                integer index = llListFindList(MistressList, [ uuid ]);
-
-                if  ((cmd == "addMistress") && (index == -1)) {
-                    lmSendToAgentPlusDoll("Adding " + name + " to controller list.", id);
-                    if ((llGetListLength(MistressList) % 2) == 1) MistressList = llDeleteSubList(MistressList, 0, 0);
-                    MistressList = llListSort(MistressList + [ uuid, name ], 2, 1);
-                }
-                else if ((cmd == "remMistress") && cdIsBuiltinController(id)) {
-                    lmSendToAgentPlusDoll("Removing " + name + " from controller list.", id);
-                    if ((llGetListLength(MistressList) % 2) == 1) MistressList = llDeleteSubList(MistressList, 0, 0);
-                    MistressList = llDeleteSubList(MistressList, index, ++index);
-                    
-                    list exceptions = ["tplure","recvchat","recvemote","recvim","sendim","startim"]; integer i;
-                    for (i = 0; i < 6; i++) lmRunRLVas("Base",llList2String(exceptions, i) + ":" + uuid + "=rem");
-                }
-                
-                lmSendConfig("MistressList", llDumpList2String(MistressList,"|") );
-            }
-#ifdef SIM_FRIENDLY
-            else if (cmd == "setAFK") afk = llList2Integer(split, 2);
-#endif
-        }
-
         else if (code == 350) {
             RLVok = (llList2Integer(split, 0) == 1);
             rlvWait = 0;
@@ -554,9 +471,6 @@ default {
 
             nextLagCheck = llGetTime() + SEC_TO_MIN;
         }
-//      else if (code == 999 && reset == 1) {
-//          llResetScript();
-//      }
     }
 
     state_entry() {
@@ -597,16 +511,13 @@ default {
         wakeMenu();
 #endif
 
-        //llTargetOmega(<0,0,0>,0,0);
+        databaseFinished = 0;
 
         llResetTime();
         string me = cdMyScriptName();
         integer loop; string script;
 
         sendMsg(dollID, "Reattached, Initializing");
-
-        llSleep(0.5);
-        lmInitState(initState = 105);
     }
 
     attach(key id) {
@@ -635,11 +546,7 @@ default {
             if (cdAttached()) llSetPrimitiveParams([PRIM_POS_LOCAL, (vector)cdGetValue(saveAttachment,([data,0])), PRIM_ROT_LOCAL, (rotation)cdGetValue(saveAttachment,([data,1]))]);
             attachName = data;
             
-            if (initState == 104) {
-                llOwnerSay("Starting initialization");
-                startup = 1;
-                lmInitState(initState++);
-            }
+            llSetTimerEvent(10.0);
         }
         else if (query_id == ncRequestAppearance) {
             if (data == EOF) {
@@ -659,13 +566,15 @@ default {
         }
         else if (query_id == ncPrefsKey) {
             if (data == EOF) {
-                if (!prefsReread) doneConfiguration(1);
-                else {
+                lmSendConfig("ncPrefsLoadedUUID", llDumpList2String(llList2List((string)llGetInventoryKey(NOTECARD_PREFERENCES) + ncPrefsLoadedUUID, 0, 9),"|"));
+                lmInternalCommand("getTimeUpdates","",NULL_KEY);
+                
+                if (prefsReread) {
                     llOwnerSay("Preferences reread restarting in 20 seconds.");
-                    lmInternalCommand("getTimeUpdates","",NULL_KEY);
                     llSleep(20.0);
-                    llOwnerSay("@clear");
+                    llResetScript();
                 }
+                else doneConfiguration(1);
             }
             else {
                 integer index = llSubStringIndex(data, "#");
@@ -676,10 +585,8 @@ default {
                     string value = llGetSubString(data, index + 1, -1);
                     name = llStringTrim(llToLower(name), STRING_TRIM);
                     value = llStringTrim(value, STRING_TRIM);
-                    list split = llParseStringKeepNulls(value, [ "|" ], []);
-                    if (name == "windTimes") split = llParseString2List(value, ["|",","," "], []); // Accept pipe (|), space ( ) or comma (,) as seperators
 
-                    processConfiguration(name, split);
+                    processConfiguration(name, value);
                 }
                 ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ++ncLine);
             }
@@ -702,8 +609,7 @@ default {
         if (change & CHANGED_INVENTORY) {
             if (llGetInventoryType(NOTECARD_PREFERENCES) == INVENTORY_NOTECARD) {
                 key ncKey = llGetInventoryKey(NOTECARD_PREFERENCES);
-                if (ncPrefsLoadedUUID != NULL_KEY && ncKey != NULL_KEY && ncKey != ncPrefsLoadedUUID) {
-                    databaseOnline = NO;
+                if (llListFindList(ncPrefsLoadedUUID,[(string)llGetInventoryKey(NOTECARD_PREFERENCES)]) == -1) {
                     prefsReread = YES;
                     reset = 1;
 
@@ -730,17 +636,21 @@ default {
 
     timer() {
         float t = llGetTime();
-        if (t >= 300.0) llSetTimerEvent(6-.0);
+        if (t >= 300.0) llSetTimerEvent(60.0);
         else llSetTimerEvent(15.0);
 
-        
+        if (!databaseFinished && !databaseOnline) {
+            databaseFinished = 1;
+            databaseOnline = 0;
+            initConfiguration();
+        }
         if (startup != 0) {
             integer i; integer n = llGetInventoryNumber(10);
             for (i = 0; i < n; i++) {
                 string script = llGetInventoryName(10, i);
 
                 if (!llGetScriptState(script)) {
-                    if (llListFindList([ "Aux", "Avatar", "Dress", "Main", "MenuHandler", "ServiceRequester", "ServiceReceiver", "StatusRLV", "Transform" ], [ script ]) != -1) {
+                    if (llListFindList([ "Aux", "Avatar", "ChatHandler", "Dress", "Main", "MenuHandler", "ServiceRequester", "ServiceReceiver", "StatusRLV", "Transform" ], [ script ]) != -1) {
                         // Core key script appears to have suffered a fatal error try restarting
                         float delay = 30.0;
 #ifdef DEVELOPER_MODE
