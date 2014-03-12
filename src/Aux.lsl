@@ -32,10 +32,12 @@ key ncRequestDollMessage;
 key ncRequestDollDialog;
 key lmRequest;
 key carrierID = NULL_KEY;
+list MistressList;
 float rezTime;
 float timerEvent;
 float listenTime;
 float memTime;
+string memData;
 string minsLeft;
 string windRate;
 string windTimes;
@@ -43,7 +45,6 @@ string dollyName;
 string carrierName;
 string pronounHerDoll = "Her";
 string pronounSheDoll = "She";
-string curWindTimes;
 string curGemColour;
 integer maxMins;
 integer configured;
@@ -63,8 +64,6 @@ integer textboxChannel;
 integer textboxHandle;
 integer textboxType;
 integer offlineMode;
-list MistressList;
-string memData;
 
 sendMsg(key id, string msg) {
     if (id) {
@@ -106,8 +105,6 @@ default {
         integer optHeader =     (i & 0x00000C00) >> 10;
         integer code      =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
-        
-        cdCheckSeqNum(script, remoteSeq);
         
         integer dollMessageCode; integer dollMessageVariant;
 
@@ -276,8 +273,6 @@ default {
                 dialogChannel = (integer)value;
                 textboxChannel = dialogChannel - 1111;
             }
-            
-           if ((script == "Main") && (name == "windTimes")) curWindTimes = llDumpList2String(split,"|");
 
             // Only MenuHandler script can activate these selections...
             if (script != "MenuHandler") return;
@@ -332,7 +327,6 @@ default {
                     llRegionSayTo(carrierID, 0, "You have picked up the doll " + dollName);
                 }
             }
-            else if (((script == "Main") || (script == "ServiceReceiver")) && (cmd == "setWindTimes")) curWindTimes = llDumpList2String(split,"|");
             else if (cmd == "strip") {
                 string part = llList2String(split, 0);
                 if (id != dollID) {
