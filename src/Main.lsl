@@ -420,7 +420,7 @@ default {
             else if (name == "windamount")                 windamount = (float)value;
             else if (name == "wearLockExpire")         wearLockExpire = (float)value;
             else if (name == "baseWindRate")             baseWindRate = (float)value;
-            else if (name == "collapsed")                   collapsed = cdCollapsed();
+            else if (name == "collapsed")                   collapsed = (integer)value;
             else if (name == "collapseTime")             collapseTime = llGetTime() - (float)collapseTime;
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "dollType")                     dollType = value;
