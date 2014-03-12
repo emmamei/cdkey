@@ -470,14 +470,14 @@ default
                 }
 
 #ifdef TESTER_MODE
-                if ((debugLevel != 0) && isDoll) menu += "Wind";
+                if ((debugLevel != 0) && isDoll) menu += windButton;
 #endif
-                if (!isDoll) menu += "Wind";
-                menu += "Help/Support";
+                if (!isDoll) menu += windButton;
+                menu += "Help...";
 
                 // Options only available if controller
                 if (isController) {
-                    if (!isDoll) menu += [ "Options" ];
+                    if (!isDoll) menu += [ "Options..." ];
                     if (!isDoll || !detachable) menu += [ "Detach" ];
                 }
                 
@@ -557,15 +557,6 @@ default
         llDialog(dollID, "No avatars detected within chat range", [MAIN], dialogChannel);
     }
 
-    touch_start(integer num) {
-        integer i;
-        for (i = 0; i < num; i++) {
-            key id = llDetectedKey(i);
-            if (startup) lmSendToAgent("Dolly's key is still establishing connections with " + llToLower(pronounHerDoll) + " systems please try again in a few minutes.", id);
-            else lmInternalCommand("mainMenu", llGetDisplayName(id), id);
-        }
-    }
-
     //----------------------------------------
     // LISTEN
     //----------------------------------------
@@ -608,15 +599,8 @@ default
                                // way we can restore it making setting several choices
                                // much more user friendly.
 
-            if (choice == MAIN) {
-                lmInternalCommand("mainMenu", "", id);
-                return;
-            }
-
-            if (choice == "Get a Key") {
-                llLoadURL(id, "To get your own free community doll key from our marketplace store click \"Go to page\"", marketplaceURL);
-            }
-            else if (choice == "Options") {
+                 if (choice == "Get a Key") llLoadURL(id, "To get your own free community doll key from our marketplace store click \"Go to page\"", marketplaceURL);
+            else if (choice == "Options...") {
                 string msg; list pluslist;
                 if (isDoll) {
                     msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation.";
@@ -657,8 +641,7 @@ default
                 integer minsLeft = llRound(timeLeftOnKey / (60.0 * displayWindRate));
                 lmInternalCommand("setAFK", (string)afk + "|0|" + formatFloat(windRate, 1) + "|" + (string)minsLeft, id);
 
-                string nextMenu = "mainMenu";
-                llSetTimerEvent(1.0);
+                lmMenuReply(MAIN, name, id);
             }
             if ((afterSpace == "Blacklist") || (afterSpace == "Controller")) {
                 integer activeChannel; string msg;
@@ -795,7 +778,7 @@ default
 
         if ((channel == blacklistChannel) || (channel == controlChannel)) {
             if (choice == MAIN) {
-                lmInternalCommand("mainMenu", "", id);
+                lmMenuReply(MAIN, name, id);
                 return;
             }
             

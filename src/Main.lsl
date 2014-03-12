@@ -207,6 +207,22 @@ default {
             llSleep(60);
         }
     }
+    
+    //----------------------------------------
+    // TOUCH START
+    //----------------------------------------
+    touch_start(integer num) {
+        string windButton = "Wind...";
+        float windLimit = (float)(DEMO_LIMIT * demoMode + keyLimit * !demoMode) - timeLeftOnKey;
+        if ((llGetListLength(windTimes) == 1) || ((llListStatistics(LIST_STAT_MIN, windTimes) * SEC_TO_MIN) < windLimit)) windButton = "Wind";
+        
+        integer i;
+        for (i = 0; i < num; i++) {
+            key id = llDetectedKey(i);
+    
+            lmInternalCommand("mainMenu", windButton + "|" + llGetDisplayName(id), id);
+        }
+    }
 
     //----------------------------------------
     // TIMER
@@ -615,11 +631,17 @@ default {
                 lmSendToAgent("You are not permitted to access this key.", id);
                 return;
             }
+            
+            float windLimit = effectiveLimit - timeLeftOnKey;
 
-            if (llGetSubString(choice, 0, 3) == "Wind") {
+            if (choice == MAIN) {
+                string windButton = "Wind...";
+                if ((llGetListLength(windTimes) == 1) || ((llListStatistics(LIST_STAT_MIN, windTimes) * SEC_TO_MIN) < windLimit)) windButton = "Wind";
+                lmInternalCommand("mainMenu", windButton + "|" + name, id);
+            }
+            else if (llGetSubString(choice, 0, 3) == "Wind") {
                 if (choice == "Wind Times") return; // Handled in MenuHandler
                 
-                float windLimit = effectiveLimit - timeLeftOnKey;
                 integer i = 0;
                 
                 if ((collapsed == 1) && (timeLeftOnKey > 0.0)) uncollapse(0);
@@ -658,7 +680,7 @@ default {
                     lmSendToAgent("Dolly needs to be wound by someone else before you can wind her again.", id);
                     return;
                 }
-                else if ((choice == "Wind") && (llGetListLength(windTimes) > 1)) {
+                else if ((choice == "Wind...") || ((choice == "Wind") && (llGetListLength(windTimes) == 1))) {
                     split = windTimes;
                     if (demoMode) split = [1,2];
                     if (llGetListLength(split) == 0) {
@@ -705,7 +727,7 @@ default {
                             if (canRepeat || cdIsController(id)) {
                                 // No menu respawn if no repeat option is enabled!
                                 if (llGetListLength(windTimes) > 1) lmInternalCommand("windMenu", name + "|" + (string)(effectiveLimit - timeLeftOnKey), id);
-                                else lmInternalCommand("mainMenu", name, id);
+                                else lmInternalCommand("mainMenu", "Wind" + "|" + name, id);
                             }
                         }
                 
