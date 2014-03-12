@@ -17,6 +17,8 @@
 #define NOT_FOUND -1
 #define cdGetFirstChar(a) llGetSubString(a, 0, 0)
 #define cdButFirstChar(a) llGetSubString(a, 1, STRING_END)
+#define cdChat(a) llSay(0, a)
+#define cdStopTimer() llSetTimerEvent(0.0)
 #define NO_FILTER ""
 #define cdListenAll(a) llListen(a, NO_FILTER, NO_FILTER, NO_FILTER)
 #define cdPause() llSleep(0.5)
@@ -56,13 +58,14 @@ string currentState;
 integer dbConfig;
 integer mustAgreeToType;
 integer showPhrases;
+integer wearAtLogin;
 integer isTransformingKey;
 key dollID;
 string clothingprefix;
 
 key kQuery;
 
-list currentphrases;
+list currentPhrases;
 
 integer quiet;
 
@@ -76,24 +79,25 @@ setDollType(string choice, integer automated) {
     stateName = cdGetFirstChar(llToUpper(stateName)) + cdButFirstChar(llToLower(stateName));
 
     clothingprefix = TYPE_FLAG + stateName;
-    currentphrases = [];
+    currentPhrases = [];
     lineno = 0;
-    
+
     if (llGetInventoryType(TYPE_FLAG + stateName) == INVENTORY_NOTECARD) kQuery = llGetNotecardLine(TYPE_FLAG + stateName,0);
-    
+
     if (stateName != currentState) {
         if (automated) minMinutes = 0;
         else minMinutes = 5;
+
         typeFolder = "";
         llSetTimerEvent(3.0);
 
         currentState = stateName;
         lmSendConfig("dollType", stateName);
         lmSendConfig("currentState", stateName);
-        
+
         cdPause();
 
-        if (!quiet) llSay(0, dollName + " has become a " + stateName + " Doll.");
+        if (!quiet) cdChat(dollName + " has become a " + stateName + " Doll.");
         else llOwnerSay("You have become a " + stateName + " Doll.");
     }
 }
@@ -116,12 +120,12 @@ runTimedTriggers() {
     if (minMinutes > 0) minMinutes--;
 
     if (showPhrases) {
-        integer i = (integer) llFrand(llGetListLength(currentphrases));
+        integer phraseCount = (integer) llGetListLength(currentPhrases);
 
-        // if no phrases to be used, exit
-        if (i == 0) return;
+        if (phraseCount == 0) return;
 
-        string phrase  = llList2String(currentphrases, i);
+        // select a phrase from the notecard at random
+        string phrase  = llList2String(currentPhrases, llFrand(phraseCount));
 
         // Starting with a '*' marks a fragment; with none,
         // the phrase is used as is
@@ -139,12 +143,6 @@ runTimedTriggers() {
             }
         } else phrase = "*** " + phrase;
 
-        // Add reminder of Doll type
-        // FIXME: Do we want constant type reminders?
-
-        //if (currentState == "Regular") phrase += " ***";
-        //else phrase += " (since you are a " + stateName + " Doll) ***";
-
         // Phrase has been chosen and put together; now say it
         llOwnerSay(phrase);
     }
@@ -158,7 +156,7 @@ default {
         dollID =   llGetOwner();
         dollName = llGetDisplayName(dollID);
         stateName = "Regular";
-        
+
         cdInitializeSeq();
     }
 
@@ -187,7 +185,6 @@ default {
     timer() {
         list outfitsFolders = [ "> Outfits", "Outfits", "> Dressup", "Dressup" ];
 
-
         if (tryOutfits) {
             if (outfitsFolder == "") {
                 if ((outfitsTest == "") || (retryOutfits < 2)) {
@@ -198,7 +195,7 @@ default {
                         tryOutfits = 0;
                         outfitsTest = "";
                         if (!readingNC) {
-                            llSetTimerEvent(0.0);
+                            cdStopTimer();
                             return;
                         }
                     }
@@ -213,7 +210,7 @@ default {
                 if (typeFolder == "") lmSendConfig("useTypeFolder", (string)(useTypeFolder = 0));
                 tryOutfits = 0;
                 if (!readingNC) {
-                    llSetTimerEvent(0.0);
+                    cdStopTimer();
                     return;
                 }
             }
@@ -227,14 +224,14 @@ default {
         if (readingNC) {
             kQuery = llGetNotecardLine(TYPE_FLAG + currentState,lineno);
         }
-        else llSetTimerEvent(0.0);
+        else cdStopTimer();
     }
 
     //----------------------------------------
     // LINK MESSAGE
     //----------------------------------------
     link_message(integer source, integer i, string data, key id) {
-        
+
         // Parse link message header information
         list split        =     cdSplitArgs(data);
         string script     =     cdListElement(split, 0);
@@ -242,13 +239,14 @@ default {
         integer optHeader =     (i & 0x00000C00) >> 10;
         integer code      =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
-        
+
         string choice = cdListElement(split, 0);
         string name = cdListElement(split, 1);
 
         scaleMem();
 
         if (code == 102) {
+            // FIXME: Is this relevant?
             // Trigger Transforming Key setting
             if (!isTransformingKey) lmSendConfig("isTransformingKey", (string)(isTransformingKey = 1));
 
@@ -277,7 +275,7 @@ default {
             float delay = (float)choice;
             memReport(cdMyScriptName(),delay);
         }
-        
+
         cdConfigReport();
 
         else if (code == 300) {
@@ -353,6 +351,7 @@ default {
 
                 choices += cdGetButton("Verify Type", id, mustAgreeToType, 0);
                 choices += cdGetButton("Show Phrases", id, showPhrases, 0);
+                choices += cdGetButton("Wear @ Login", id, wearAtLogin, 0);
 
                 llDialog(dollID, "Options", dialogSort(choices + MAIN), dialogChannel);
             }
@@ -393,10 +392,8 @@ default {
 
                     // Return for now until we get confirmation
                     return;
-                    //avoid = TRUE;
                 }
 
-                //avoid = FALSE;
                 debugSay(5, "DEBUG", "transform = " + (string)transform);
                 debugSay(5, "DEBUG", "stateName = " + (string)choice);
                 debugSay(5, "DEBUG", "currentState = " + (string)currentState);
@@ -416,7 +413,7 @@ default {
             lmSendConfig("outfitsFolder", outfitsFolder);
             if (typeFolder != "") {
                 tryOutfits = 0;
-                llSetTimerEvent(0.0);
+                cdStopTimer();
             }
             llOwnerSay("Your outfits folder is '" + outfitsFolder + "'");
             retryOutfits = 0;
@@ -425,7 +422,7 @@ default {
             typeFolder = choice;
             tryOutfits = 0;
 
-            llSetTimerEvent(0.0);
+            cdStopTimer();
 
             if (llGetSubString(typeFolder, 0, llStringLength(outfitsFolder) - 1) != outfitsFolder) {
                 llOwnerSay("Found a matching type folder in '" + typeFolder + "' but it is not located withing your outfits folder '" + outfitsFolder + "'" +
@@ -443,9 +440,9 @@ default {
             lmSendConfig("typeFolder", typeFolder);
             lmSendConfig("outfitsFolder", outfitsFolder);
             lmSendConfig("useTypeFolder", (string)useTypeFolder);
-            
+
             cdPause();
-            
+
             lmInternalCommand("randomDress", "", NULL_KEY);
             retryOutfits = 0;
         }
@@ -457,7 +454,7 @@ default {
     dataserver(key query_id, string data)  {
         if (query_id == kQuery) {
             if (data != EOF) {
-                if (llStringLength(data) > 1) currentphrases += data;
+                if (llStringLength(data) > 1) currentPhrases += data;
 
                 lineno++;
                 readingNC = YES;
