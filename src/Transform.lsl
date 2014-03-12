@@ -125,7 +125,7 @@ runTimedTriggers() {
         if (phraseCount == 0) return;
 
         // select a phrase from the notecard at random
-        string phrase  = llList2String(currentPhrases, llFloor(llFrand(phraseCount)));
+        string phrase  = llList2String(currentPhrases, llFrand(phraseCount));
 
         // Starting with a '*' marks a fragment; with none,
         // the phrase is used as is
