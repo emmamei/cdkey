@@ -132,45 +132,30 @@ default {
             if (script != "Start") return;
             lmMemReport(0.5, 0);
         }
-        else if ((code == 135) || (code == 136)) {
-            if (code == 135) {
+        else if (code == 135) {
 #ifdef DEVELOPER_MODE
-                memRequested = 1;
+            memRequested = 1;
 #else
 #ifdef TESTER_MODE
-                memRequested = 1;
+            memRequested = 1;
 #else
-                memRequested = llList2Integer(split, 1);
+            memRequested = llList2Integer(split, 1);
 #endif //TESTER_MODE
 #endif //DEVELOPER_MODE
-                memCollecting = 1;
-                memData = "";
-                
-                memTime = llGetTime();
-            }
- 
+            memCollecting = 1;
+            memData = "";
+        }
+        else if (code == 136) {
             string json = llList2String(split, 0);
             if ((json != "") && (json != JSON_INVALID));
 
             memData = cdSetValue(memData, [script], json);
 
-            integer i; list scripts = [ "Avatar", "ChatHandler", "Dress", "Main", "MenuHandler", "ServiceRequester", "ServiceReceiver", "Start", "StatusRLV", "Transform" ];
+            integer i; list scripts =[ "Avatar", "ChatHandler", "Dress", "Main", "MenuHandler", "ServiceRequester", "ServiceReceiver", "Start", "StatusRLV", "Transform" ];
             integer ok;
             for (i = 0; i <= 10; i++) {
                 string script = llList2String(scripts, i);
-                if (cdGetValue(memData, [script]) != JSON_INVALID) {
-                    ok++;
-                } else if (script != "") {
-                    // A sleeping script should not block the entire report!
-                    if (llGetScriptState(script) == 0) ok++;
-                }
-            }
-            if (ok < 10) {
-                if (llGetTime() < (memTime + 5.0)) {
-                    lmMemReport(0.5, 0);
-                    llSetTimerEvent(1.0);
-                    return;
-                }
+                ok += (cdGetValue(memData, [script]) != JSON_INVALID);
             }
             if (ok == 10) { 
                 float memory_limit = (float)llGetMemoryLimit();
@@ -205,11 +190,8 @@ default {
                                           formatFloat(free_memory / 1024.0, 2) + "kB free, " + formatFloat(available_memory / 1024.0, 2) + "kB available)";
                             }
                         }
-                        else if (llGetScriptState(script) == 0) {
-                            if (memRequested) output += "\n" + scriptName + ":\tIn sleeping state, no report available";
-                        }
                         else {
-                            output += "\n" + scriptName + ":\tScript is running but provided no report";
+                            output += "\n" + scriptName + ":\tNo Report";
                         }
                     }
                 }
@@ -490,12 +472,12 @@ default {
             // Key menu is only shown for Controllers and for the Doll themselves
             else if (choice == "Key..." && (cdIsController(id) || cdIsDoll(id))) {
 
-                list pluslist = [ "Dolly Name...", "Gem Colour..." ];
+                list pluslist = [ "Dolly Name", "Gem Colour" ];
                 
-                if (cdIsController(id)) pluslist += [ "Max Time...", "Wind Times" ];
+                if (cdIsController(id)) pluslist += [ "Max Time", "Wind Times" ];
                 llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(pluslist, 1, 1) + cdGetButton("Key Glow", id, primGlow, 0) + cdGetButton("Gem Light", id, primLight, 0) + MAIN), dialogChannel);
             }
-            else if (choice == "Gem Colour...") {
+            else if (choice == "Gem Colour") {
                 string msg = "Here you can choose your own gem colour.";
                     list pluslist;
     
@@ -503,7 +485,7 @@ default {
     
                     llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
             }
-            else if ((llListFindList(COLOR_NAMES, [ choice ]) != -1) && (choice != "Custom..")) {
+            else if ((llListFindList(COLOR_NAMES, [ choice ]) != -1) && (choice != "CUSTOM")) {
                 integer index = llListFindList(COLOR_NAMES, [ choice ]);
                 string choice = (string)llList2Vector(COLOR_VALUE, index);
 
@@ -511,16 +493,16 @@ default {
             }
             
             // Textbox generating menus
-            if (choice == "Custom..." || choice == "Dolly Name..." || choice == "Wind Times..." || choice == "Factory Reset") {
-                if (choice == "Custom...") {
+            if (choice == "CUSTOM" || choice == "Dolly Name" || choice == "Wind Times" || choice == "Factory Reset") {
+                if (choice == "CUSTOM") {
                     textboxType = 1;
                     llTextBox(id, "Here you can input a custom colour value\nCurrent colour: " + curGemColour + "\nEnter vector eg <0.900, 0.500, 0.000>\nOr Hex eg #A4B355\nOr RGB eg 240, 120, 10", textboxChannel);
                 }
-                else if (choice == "Dolly Name...") {
+                else if (choice == "Dolly Name") {
                     textboxType = 2;
                     llTextBox(id, "Here you can change your dolly name from " + dollyName + " to a name of your choice.", textboxChannel);
                 }
-                else if (choice == "Wind Times...") {
+                else if (choice == "Wind Times") {
                     textboxType = 3;
                     llTextBox(id, "Enter 1 to 11 valid wind times between 1 and " + (string)(maxMins/2) + " (in minutes), separated by space, comma, or vertical bar (\"|\").\nCurrent: " + windTimes, textboxChannel);
                 }
