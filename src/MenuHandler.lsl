@@ -429,7 +429,7 @@ default
 
                     // Can the doll be transformed? Add menu button
                     if (!collapsed && isTransformingKey) {
-                        menu += "Type of Doll";
+                        menu += "Types...";
                     }
 
                     if (!collapsed) {
