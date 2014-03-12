@@ -390,13 +390,11 @@ default {
             else if (choice == "Visit Dollhouse") {
                 visitDollhouse += 1;
             }
-            else if (llGetSubString(choice, 0, 4) == "Pose" && (keyAnimation == ""  || (!cdIsDoll(id) || poserID == dollID))) {
+            else if (llGetSubString(choice, 0, 4) == "Poses" && (keyAnimation == ""  || (!cdIsDoll(id) || poserID == dollID))) {
                 poserID = id;
-                integer page = 1; integer len = llStringLength(choice);
-                if (len > 5) {
-                    page = (integer)llGetSubString(choice, 6 - len, -1);
-                }
-                else {
+                integer page = (integer)llStringTrim(llGetSubString(choice, 5, -1), STRING_TRIM);
+                if (!page) {
+                    page = 1;
                     llOwnerSay("secondlife:///app/agent/" + (string)id + "/about is looking at your poses menu.");
                 }
                 integer poseCount = llGetInventoryNumber(20);

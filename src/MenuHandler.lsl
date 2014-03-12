@@ -437,12 +437,12 @@ default
                             msg += "Doll is currently posed.\n";
     
                             if ((!isDoll && canPose) || (poserID == dollID)) {
-                                menu += ["Pose","Unpose"];
+                                menu += ["Poses...","Unpose"];
                             }
                         }
                         else {
                             if ((!isDoll && canPose) || isDoll)
-                                menu += "Pose";
+                                menu += "Poses...";
                         }
                     }
 
