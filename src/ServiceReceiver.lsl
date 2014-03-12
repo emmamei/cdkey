@@ -13,10 +13,11 @@ string resolveName;
 string DataURL;
 integer useHTTPS = 1;
 integer resolveType;
-list storedConfigs;
+integer storedCount;
+//list storedConfigs;
+string storedConfigs;
 key resolveTestKey;
 key requestDataURL;
-
 
 key requestDataName;
 
@@ -39,8 +40,6 @@ default {
         integer optHeader =     (i & 0x00000C00) >> 10;
         integer code      =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
-        
-        cdCheckSeqNum(script, remoteSeq);
 
         if (code == 102) {
             scaleMem();
@@ -55,6 +54,14 @@ default {
         else if (code == 300) {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
+            
+            // Store configuration information
+            storedConfigs = cdSetValue(storedConfigs,[name],llDumpList2String(llDeleteSubList(split,0,0),"|"));
+            
+            if (llGetListLength(llJson2List(storedConfigs)) / 2 > storedCount) {
+                debugSay(3, "DEBUG-LOCALDB", "Local DB now contains " + (string)(storedCount = llGetListLength(llJson2List(storedConfigs)) / 2) + " key=>value pairs and " + cdMyScriptName() + " is using " + formatFloat((float)llGetUsedMemory() / 1024.0, 2) + "kB of memory.");
+                storedCount = llGetListLength(llJson2List(storedConfigs));
+            }
 
 #ifdef DEVELOPER_MODE
             if (name == "debugLevel")                   debugLevel = (integer)value;
@@ -65,6 +72,35 @@ default {
             else if (name == "offlineMode") {
                 offlineMode = (integer)value;
                 dbPostParams = [];
+            }
+        }
+        else if ((code == 301) || (code == 302)) {
+            integer type = code - 300;
+            integer i; integer n;
+            if (type == 1) n = llGetListLength(llJson2List(storedConfigs)) / 2;
+            else {
+                n = llStringLength(storedConfigs);
+                llSetObjectName("");
+            }
+            integer j;
+            while (i < n) {
+                if (type == 1) {
+                    lmSendConfig(llList2String(llJson2List(storedConfigs), i*2), llList2String(llJson2List(storedConfigs), i*2+1));
+                }
+                else {
+                    string msg = "<KeyState:" + (string)i + ">" +llGetSubString(storedConfigs, i, i + 225) + "</KeyState:";
+                    if ((i+=226) < n) msg += (string)(i-1) + ">";
+                    else msg += (string)n + ">";
+                    llOwnerSay(msg);
+                    llSleep(0.5);
+                }
+            }
+            lmSendConfig("dollyName", cdGetValue(storedConfigs,["dollyName"]));
+        }
+        else if (code == 303) {
+            while(split != []) {
+                lmSendConfig(llList2String(split,0), llList2String(split,0));
+                split = llDeleteSubList(split,0,0);
             }
         }
         else if (code == 305) {
@@ -84,6 +120,9 @@ default {
                 resolveName = name;
                 resolveType = 2;
             }
+        }
+        else if (code == 350) {
+            lmSendConfig("RLVok", llList2String(split, 0));
         }
         else if (code == 850) {
             string messageType = llList2String(split, 1);
@@ -133,9 +172,9 @@ default {
                 queForSave("nextRetry", (string)nextRetry);
             }
         }
-        else if (location == getURL("objdns") + "lookup") {
+        else if (location == "/objdns/lookup") {
 #else
-        if (location == getURL("objdns") + "lookup") {
+        if (location == "/objdns/lookup") {
 #endif
             if (status == 200) {
                 serverURL = body;
@@ -153,7 +192,7 @@ default {
                 queForSave("nextRetry", (string)nextRetry);
             }
         }
-        else if (location == getURL("httpdb") + "retrieve") {
+        else if (location == "/httpdb/retrieve") {
             llSetMemoryLimit(65536);
             string error = "HTTPdb - Database access ";
 
@@ -165,41 +204,27 @@ default {
                 float HTTPdbProcessStart;
                 string eventTime = formatFloat(((HTTPdbProcessStart = llGetTime()) - HTTPdbStart) * 1000, 2);
 
+                llOwnerSay("Processing reply: ");
+                
+                list input = llParseStringKeepNulls(body,["=","\n"],[]); body = "";
+                configCount = llGetListLength(input) / 2;
 
-                do {
-                    integer nextNewLine = llSubStringIndex(body, "\n");
-                    if (nextNewLine == -1) nextNewLine = llStringLength(body);
-
-                    string line = llDeleteSubString(body, nextNewLine, llStringLength(body));
-                    body = llDeleteSubString(body, 0, nextNewLine);
-
-                    integer splitIndex = llSubStringIndex(line, "=");
-                    string Key = llDeleteSubString(line, splitIndex, llStringLength(line));
-                    string Value = llDeleteSubString(line, 0, splitIndex);
-
-                    if (Value == "") Value = "";
-
-                    if (Key == "useHTTPS") lmServiceMessage("useHTTPS", (string)(useHTTPS = (integer)Value), NULL_KEY);
-                    else if (Key == "HTTPinterval") lmServiceMessage("HTTPinterval", (string)(HTTPinterval = (float)Value), NULL_KEY);
-                    else if (Key == "HTTPthrottle") lmServiceMessage("HTTPthrottle", (string)(HTTPthrottle = (float)Value), NULL_KEY);
-                    else if (Key == "updateCheck") lmServiceMessage("updateCheck", (string)(updateCheck = (integer)Value), NULL_KEY);
-                    else if (Key == "lastGetTimestamp") {
-                        lastGetTimestamp = (integer)Value;
-                        lmServiceMessage("lastGetTimestamp", (string)(Value), NULL_KEY);
-                    }
-                    else if (Key == "windTimes") lmInternalCommand("setWindTimes", Value, NULL_KEY);
-                    else {
-                        lmSendConfig(Key, Value);
-                        configCount++;
-                    }
+                while(input != []) {
+                    string name = llList2String(input, 0);
+                    string value = llList2String(input, 1);
                     
-                    // Store configuration information
-                    integer i;
-                    if ( ( i = llListFindList(storedConfigs,[Key]) ) != -1) storedConfigs = llListReplaceList(storedConfigs, [Key,Value], i, i++);
-                    else storedConfigs += [Key,Value];
+                    lmSendConfig(name, value);
+                    if (value == "0") value == JSON_FALSE;
+                    if (value == "1") value == JSON_TRUE;
+                    storedConfigs = cdSetValue(storedConfigs, [name], value);
                     
-                    debugSay(3, "DEBUG-LOCALDB", "Local DB now contains " + (string)(llGetListLength(storedConfigs) / 2) + " key=>value pairs and " + cdMyScriptName() + " is using " + formatFloat((float)llGetUsedMemory() / 1024.0, 2) + "kB of memory.");
-                } while (llStringLength(body));
+                    input = llDeleteSubList(input,0,1);
+                }
+                
+                if (llGetListLength(llJson2List(storedConfigs)) / 2 > storedCount) {
+                    debugSay(3, "DEBUG-LOCALDB", "Local DB now contains " + (string)(storedCount = llGetListLength(llJson2List(storedConfigs)) / 2) + " key=>value pairs and " + cdMyScriptName() + " is using " + formatFloat((float)llGetUsedMemory() / 1024.0, 2) + "kB of memory.");
+                    storedCount = llGetListLength(llJson2List(storedConfigs));
+                }
 
 #ifdef DEVELOPER_MODE
                 debugSay(5, "DEBUG-SERVICES", "Service post interval setting " + formatFloat(HTTPinterval, 2) + "s throttle setting " + formatFloat(HTTPthrottle, 2) + "s");
@@ -211,20 +236,20 @@ default {
                 debugSay(2, "DEBUG-SERVICES", msg);
 #endif
 
-                databaseReload = 0;
+                databaseReload = 600;
             }
             else {
-                databaseReload = llGetUnixTime() + llRound(llFrand(90));
+                databaseReload = llGetUnixTime() + 60 + llRound(llFrand(90));
                 if (databaseOnline) {
                     error += "failed: Continuing init in offline mode and will contintiue trying.";
                     lmSendConfig("databaseOnline", (string)(databaseOnline = 0));
                     llOwnerSay(error);
                 }
             }
-
+            
             lmConfigComplete(configCount);
         }
-        else if (location == getURL("name2key") + "lookup") {
+        else if (location == "/name2key/lookup") {
             list split = llParseStringKeepNulls(body, ["=","\n"], []);
             string name = llList2String(split, 0);
             string uuid = llList2String(split, 1);
@@ -236,31 +261,6 @@ default {
                 llOwnerSay("Tip: If you are sure you are typing the correct username and are not trying to enter a display name you should have them " +
                            "touch the key then try again.");
             }
-            else if (llGetSubString(name,0,0) == "*") { // Backup result via SL search, this cannot be fully reliable always verify! Reasons inc:
-                                                        // 1. If the query is an exact match to a name SL search returns one result, it will otherwise fall back
-                                                        //    itself to a related search mode which includes searching on display names that may trigger false +ve
-                                                        // 2. Even when the result is valid SL search does not give a properly cannoicized name they are always in
-                                                        //    lcase however llRequestAgentData will return correctly and will meet the data quality standards of db
-                                                        // 3. Verified data can be posted back to the DB for faster lookups in future, SL search is not an
-                                                        //    acceptable data source to do this.
-                requestDataName = llRequestAgentData((resolveTestKey = uuid), DATA_NAME);
-            }
-            else if (llGetSubString(name,0,0) == "+") { // Multiple matches
-                integer index = llListFindList(split, [resolveName]);
-                if (index == NOT_FOUND) { // Multiple matches and no exact matches
-                    string listOfNames = "Potential matches found if you see the one you want to add just run the command again with the full name.\n" +                                                    llDeleteSubString(name,0,0); integer i;
-                    for (i = 2; i < llGetListLength(split); i += 2) {
-                        listOfNames += "\n" + llDeleteSubString(llList2String(split, i),0,0);
-                    }
-                    llOwnerSay(listOfNames);
-                }
-                else if (resolveType == 1) {
-                    lmInternalCommand("addMistress", llList2String(split, index + 1) + "|" + llList2String(split, index), NULL_KEY);
-                }
-                else if (resolveType == 2) {
-                    lmInternalCommand("addRemBlacklist", llList2String(split, index + 1) + "|" + llList2String(split, index), NULL_KEY);
-                }
-            }
             else if (resolveType == 1) {
                 lmInternalCommand("addMistress", uuid + "|" + name, NULL_KEY);
             }
@@ -268,7 +268,7 @@ default {
                 lmInternalCommand("addRemBlacklist", uuid + "|" + name, NULL_KEY);
             }
         }
-        else if (location == getURL("httpdb") + "store") {
+        else if (location == "/httpdb/store") {
             if (status == 200) {
                 dbPostParams = [];
                 list split = llParseStringKeepNulls(body, [ "|" ], []);
@@ -291,7 +291,7 @@ default {
                 }
             }
         }
-        else if (location == getURL("name2key") + "add") {
+        else if (location == "/name2key/add") {
             list split = llParseStringKeepNulls(body, [ "|" ], []);
             integer new = llList2Integer(split, 1);
             integer old = llList2Integer(split, 2);
@@ -299,14 +299,12 @@ default {
             debugSay(5, "DEBUG-SERVICES", "Posted " + (string)(old + new) + " keys: " + (string)new + " new, " + (string)old + " old");
         }
 
-        if (location != getURL("httpdb") + "retreive") {
-#ifdef DEVELOPER_MODE
+        if (location != "/httpdb/retreive") {
             integer debug;
             if (status == 200) debug = 7;
             else debug = 1;
 
-            debugSay(debug, "DEBUG-SERVICES-RAW", "HTTP " + (string)status);
-#endif
+            debugSay(debug, "DEBUG-SERVICES-RAW", "HTTP " + (string)status + "|" + body);
 
             string lastPart;
             do {
@@ -328,35 +326,6 @@ default {
     changed(integer change) {
         if (change & CHANGED_OWNER) {
             cdPermSanityCheck();
-        }
-    }
-
-    dataserver(key request, string data) {
-        if (request == requestDataURL) DataURL = data;
-        else if (request = requestDataName) {
-            string uuid = (string)resolveTestKey;
-            string name = llToLower(resolveName);
-            if (llToLower(data) == name) {
-                string name = data; // Name matches at least case insensitively
-
-                if (resolveType == 1) lmInternalCommand("addMistress", uuid + "|" + data, NULL_KEY);
-                else if (resolveType == 2) lmInternalCommand("addRemBlacklist", uuid + "|" + data, NULL_KEY);
-
-                string namepost = "names[0]" + "=" + llEscapeURL(name) + "&" +
-                                  "uuids[0]" + "=" + llEscapeURL(uuid);
-                while ((requestID = (llHTTPRequest(getURL("name2key") + "add", HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE,
-                    "application/x-www-form-urlencoded" ], namepost))) == NULL_KEY) {
-                        llSleep(1.0);
-                }
-            }
-            else {
-                llOwnerSay("Despite much searching and checking none of our sources can identify the mysterious '" + data + "' " +
-                           "not even after consulting the SL search oracle.  Are you sure that you typed the name correctly and are " +
-                           "not trying to seek an alias?");
-                llSleep(0.5);
-                llOwnerSay("Tip: If you are sure you are typing the correct username and are not trying to enter a display name you should have them " +
-                           "touch the key then try again.");
-            }
         }
     }
 }

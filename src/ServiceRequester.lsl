@@ -49,35 +49,47 @@ default
         myMod = llFloor(llFrand(5.999999));
         serverNames = llListRandomize(serverNames, 1);
         cdPermSanityCheck();
+        
+        llSleep(1.0);
         requestDataURL = llGetNotecardLine("DataServices",0);
         
         cdInitializeSeq();
     }
     
     dataserver(key request, string data) {
-        if (request == requestDataURL) DataURL = data;
+        if (request == requestDataURL) {
+            DataURL = data;
+        
+            string time = (string)llGetUnixTime();
+            HTTPdbStart = llGetTime();
+            debugSay(3, "DEBUG-SERVICES", "Requesting data from HTTPdb");
+    
+            string hashStr = (string)llGetOwner() + time + SALT;
+            string requestURI = getURL("httpdb") + "retrieve?q=" + llSHA1String(hashStr) + "&p=cdkey&t=" + time + "&s=" + (string)lastGetTimestamp;
+            while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
+                llSleep(1.0);
+            }
+        }
     }
 
     on_rez(integer start) {
         serverNames = llListRandomize(serverNames, 1);
         myMod = llFloor(llFrand(5.999999));
         cdPermSanityCheck();
+
+        rezzed = 1;
         
-        llSleep(1.0);
-        
+        llSleep(3.0);
+
         string time = (string)llGetUnixTime();
         HTTPdbStart = llGetTime();
-#ifdef DEVELOPER_MODE
-        debugSay(6, "DEBUG-SERVICES", "Requesting data from HTTPdb");
-#endif
-
+        debugSay(3, "DEBUG-SERVICES", "Requesting data from HTTPdb");
+    
         string hashStr = (string)llGetOwner() + time + SALT;
         string requestURI = getURL("httpdb") + "retrieve?q=" + llSHA1String(hashStr) + "&p=cdkey&t=" + time + "&s=" + (string)lastGetTimestamp;
         while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
             llSleep(1.0);
         }
-
-        rezzed = 1;
     }
 
     attach(key id) {
@@ -141,28 +153,9 @@ default
         integer optHeader =     (i & 0x00000C00) >> 10;
         integer code      =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
-        
-        cdCheckSeqNum(script, remoteSeq);
 
         if (code == 102) {
             scaleMem();
-        }
-        else if (code == 104 || code == 105) {
-            if (script != "Start") return;
-
-            if (code == 104) {
-                string time = (string)llGetUnixTime();
-                HTTPdbStart = llGetTime();
-#ifdef DEVELOPER_MODE
-                debugSay(6, "DEBUG-SERVICES", "Requesting data from HTTPdb");
-#endif
-
-                string hashStr = (string)llGetOwner() + time + SALT;
-                string requestURI = getURL("httpdb") + "retrieve?q=" + llSHA1String(hashStr) + "&p=cdkey&t=" + time + "&s=" + (string)lastGetTimestamp;
-                while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
-                    llSleep(1.0);
-                }
-            }
         }
         else if (code == 135) {
             float delay = llList2Float(split, 0);
@@ -180,9 +173,8 @@ default
                     databaseReload = llGetUnixTime() + 120;
                     string time = (string)llGetUnixTime();
                     HTTPdbStart = llGetTime();
-#ifdef DEVELOPER_MODE
-                    debugSay(6, "DEBUG-SERVICES", "Requesting data from HTTPdb");
-#endif
+                    
+                    debugSay(3, "DEBUG-SERVICES", "Requesting data from HTTPdb");
 
                     string hashStr = (string)llGetOwner() + time + SALT;
                     string requestURI = getURL("httpdb") + "retrieve?q=" + llSHA1String(hashStr) + "&p=cdkey&t=" + time + "&s=" + (string)lastGetTimestamp;
@@ -190,14 +182,16 @@ default
                         llSleep(1.0);
                     }
                 }
-                if (!gotURL && nextRetry < llGetUnixTime())
-                while ((requestName = llHTTPRequest(getURL("objdns") + "lookup?q=" + llEscapeURL(llList2String(serverNames, requestIndex)),
-                        HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) llSleep(1.0);
-                if (gotURL && (lastUpdateCheck < (llGetUnixTime() - updateCheck))) {
-                    lastUpdateCheck = llGetUnixTime();
-                    queForSave("lastUpdateCheck", (string)lastUpdateCheck);
-                    while ((requestID = llHTTPRequest(serverURL, HTTP_OPTIONS + [ "POST" ], "checkversion " + (string)PACKAGE_VERNUM)) == NULL_KEY) llSleep(1.0);
-
+                if (llGetListLength(serverNames)) {
+                    if (!gotURL && nextRetry < llGetUnixTime())
+                    while ((requestName = llHTTPRequest(getURL("objdns") + "lookup?q=" + llEscapeURL(llList2String(serverNames, requestIndex)),
+                            HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) llSleep(1.0);
+                    if (gotURL && (lastUpdateCheck < (llGetUnixTime() - updateCheck))) {
+                        lastUpdateCheck = llGetUnixTime();
+                        queForSave("lastUpdateCheck", (string)lastUpdateCheck);
+                        while ((requestID = llHTTPRequest(serverURL, HTTP_OPTIONS + [ "POST" ], "checkversion " + (string)PACKAGE_VERNUM)) == NULL_KEY) llSleep(1.0);
+    
+                    }
                 }
                 if ((keyHandler == NULL_KEY) || (keyHandlerTime < (llGetTime() - 60))) {
                     keyHandler = llGetKey();
@@ -236,7 +230,7 @@ default
                 dbPostParams = [];
             }
             if (!offlineMode) {
-                value = llDumpList2String(llDeleteSubList(split, 0, 1), "|");
+                value = llDumpList2String(llDeleteSubList(split, 0, 0), "|");
                 queForSave(name, value);
             }
         }

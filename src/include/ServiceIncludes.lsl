@@ -60,10 +60,7 @@ string namepost;
 list dbPostParams;
 list updateList;
 
-list serverNames = [
-    "cdkeyserver.secondlife.silkytech.com",
-    "cdkeyserver2.secondlife.silkytech.com"
-];
+list serverNames = [];
 
 list oldAvatars;
 
