@@ -13,6 +13,10 @@
 
 key keyHandler              = NULL_KEY;
 
+list windTimes              = [30];
+
+float windRate              = 1.0;
+float displayWindRate       = 1.0;
 float collapseTime          = 0.0;
 float currentLimit          = 10800.0;
 float wearLockExpire        = 0.0;
@@ -102,6 +106,7 @@ default
 #endif
             else if (name == "blacklist")                   blacklist = llListSort(split, 2, 1);
             else if (name == "MistressList")             MistressList = llListSort(split, 2, 1);
+            else if (name == "windTimes")                   windTimes = llJson2List(value);
             else if ((name == "timeLeftOnKey") || (name == "collapsed")) {
                 if (name == "timeLeftOnKey")            timeLeftOnKey = (float)value;
                 if (name == "collapsed")                    collapsed = (integer)value;
