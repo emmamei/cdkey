@@ -41,19 +41,13 @@ memReport(string script, float delay) {
        used_memory = 16384 - free_memory;
        max_memory = free_memory;
     }
-    cdLinkMessage(LINK_THIS,136,0,llList2Json(JSON_ARRAY, [used_memory, memory_limit, free_memory, max_memory]),NULL_KEY);
+    cdLinkMessage(LINK_THIS,0,136,llList2Json(JSON_ARRAY, [used_memory, memory_limit, free_memory, max_memory]),NULL_KEY);
 }
 
 #ifdef DEVELOPER_MODE
-#ifdef DEBUG_HANDLER
-#define debugSay(level,prefix,msg) debugMainHandler(cdMyScriptLine(),__LINE__,level,prefix,msg)
-#else //DEBUG_HANDLER
-#define debugSay(level,prefix,msg) if (debugLevel >= level) llMessageLinked(LINK_THIS,700,cdMyScriptName()+":"+(string)__LINE__+"|"+(string)level+"|"+prefix+"|"+msg,NULL_KEY)
-#endif //DEBUG_HANDLER
-#endif //DEVELOPER_MODE
-#ifndef DEVELOPER_MODE
+#define debugSay(level,prefix,msg) if (debugLevel >= level) cdLinkMessage(LINK_THIS,0,700,cdMyScriptName()+":"+(string)__LINE__+"|"+(string)level+"|"+prefix+"|"+msg,NULL_KEY)
+#else
 #define debugSay(level,prefix,msg)
-#define debugMainHandler(dummy)
 #endif //DEVELOPER_MODE
 
 // debugPrint is for "one-off" quickie debugging...
@@ -64,15 +58,6 @@ memReport(string script, float delay) {
 #define debugPrint(a)
 #endif
 
-#ifdef DEVELOPER_MODE
-debugMainHandler(string script, integer line, integer level, string prefix, string msg) {
-    if (debugLevel >= level) {
-	msg = "["+formatFloat(llGetTime(),3)+ "]"+script+":"+(string)line + " " + prefix + "(" + (string)level + ") " + msg;
-        if (DEBUG_TARGET == 1) llOwnerSay(msg);
-        else llSay(DEBUG_CHANNEL, msg);
-    }
-}
-#endif
 /*
  * ----------------------------------------
  * NUMERIC FUNCTIONS
@@ -253,9 +238,7 @@ scaleMem() {
 
       if (newlimit != limit) {
          llSetMemoryLimit(newlimit);
-#ifdef DEVELOPER_MODE
-         debugMainHandler(__SHORTFILE__, __LINE__, 5, "DEBUG", cdMyScriptName() + " Memory limit changed from " + formatFloat((float)limit / 1024.0, 2) + "kB to " + formatFloat((float)newlimit / 1024.0, 2) + "kB (" + formatFloat((float)(newlimit - limit) / 1024.0, 2) + "kB) " + formatFloat((float)llGetFreeMemory() / 1024.0, 2) + "kB free");
-#endif
+         debugSay(5, "DEBUG", cdMyScriptName() + " Memory limit changed from " + formatFloat((float)limit / 1024.0, 2) + "kB to " + formatFloat((float)newlimit / 1024.0, 2) + "kB (" + formatFloat((float)(newlimit - limit) / 1024.0, 2) + "kB) " + formatFloat((float)llGetFreeMemory() / 1024.0, 2) + "kB free");
       }
    }
 }

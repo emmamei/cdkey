@@ -523,14 +523,6 @@ default {
                 if (!factoryReset) llSetTimerEvent(60.0);
             }
         }
-        else if (code == 700) {
-            integer line = llList2Integer(split, 1);
-            integer level = llList2Integer(split, 2);
-            string prefix = llList2String(split, 3);
-            string msg = llDumpList2String(llDeleteSubList(split, 0, 3), "|");
-
-            debugMainHandler(script, line, level, prefix, msg);
-        }
 
         // HippoUPDATE reply
         else if (code == -2948813) {
