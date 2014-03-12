@@ -747,7 +747,7 @@ default
                 }
             }
 #ifdef ADULT_MODE
-            else if (afterSpace == "Pleasure Doll") lmSendConfig("pleasureDoll", (string)(beforeSpace == CROSS));
+            else if (afterSpace == "Pleasure") lmSendConfig("pleasureDoll", (string)(beforeSpace == CROSS));
 #endif
             else isFeature = 0;
 
