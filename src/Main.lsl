@@ -347,8 +347,6 @@ default {
         integer optHeader =     (i & 0x00000C00) >> 10;
         integer code      =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
-        
-        cdCheckSeqNum(script, remoteSeq);
 
         if (code == 102) {
             if (script == "ServiceReceiver") {
@@ -411,40 +409,34 @@ default {
                     lmInternalCommand("setAFK", (string)afk + "|1|" + formatFloat(windRate, 1) + "|" + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate)), NULL_KEY);
                 }
             }
-            //else if (name == "canCarry")                     canCarry = (integer)value;
-            //else if (name == "canDress")                     canDress = (integer)value;
-            //else if (name == "canFly")                         canFly = (integer)value;
-            //else if (name == "canSit")                         canSit = (integer)value;
-            //else if (name == "canStand")                     canStand = (integer)value;
             else if (name == "canRepeat")                   canRepeat = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
             else if (name == "configured")                 configured = (integer)value;
-            //else if (name == "detachable")                 detachable = (integer)value;
-            //else if (name == "helpless")                     helpless = (integer)value;
-            //else if (name == "pleasureDoll")             pleasureDoll = (integer)value;
-            //else if (name == "isTransformingKey")   isTransformingKey = (integer)value;
-            //else if (name == "isVisible")                     visible = (integer)value;
             else if (name == "busyIsAway")                 busyIsAway = (integer)value;
             else if (name == "quiet")                           quiet = (integer)value;
-            //else if (name == "RLVok")                           RLVok = (integer)value;
-            //else if (name == "signOn")                         signOn = (integer)value;
+            else if (name == "signOn")                         signOn = (integer)value;
             else if (name == "windamount")                 windamount = (float)value;
             else if (name == "wearLockExpire")         wearLockExpire = (float)value;
             else if (name == "baseWindRate")             baseWindRate = (float)value;
-            else if (name == "displayWindRate")       displayWindRate = (float)value;
-            else if (name == "collapsed")                   collapsed = (integer)value;
-            else if (name == "collapseTime")             collapseTime = (float)value;
-            //else if (name == "poserID")                       poserID = (key)value;
+            else if (name == "collapsed")                   collapsed = cdCollapsed();
+            else if (name == "collapseTime")             collapseTime = llGetTime() - (float)collapseTime;
             else if (name == "keyAnimation")             keyAnimation = value;
-            //else if (name == "mistressName")             mistressName = value;
             else if (name == "dollType")                     dollType = value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
             else if (name == "blacklist")                   blacklist = split;
             else if (name == "dialogChannel")           dialogChannel = (integer)value;
             else if (name == "debugLevel")                 debugLevel = (integer)value;
+            else if (name == "windTimes") {
+                // If we see wind times sent as a config and not by this script then we pass the input through or
+                // setWindTimes handler to make sure that it has been properly processed and all invalids cleaned.
+                if (script != "Main") lmInternalCommand("setWindTimes", llDumpList2String(llJson2List(value),"|"), id);
+            }
+            else if (name == "displayWindRate") {
+                if ((float)value != 0) displayWindRate = (float)value;
+            }
             else if ((name == "timeLeftOnKey") || (name == "collapsed")) {
                 if (name == "timeLeftOnKey")            timeLeftOnKey = (float)value;
                 if (name == "collapsed")                    collapsed = (integer)value;
@@ -506,6 +498,7 @@ default {
             }
 
             else if (cmd == "setWindTimes") {
+                split = llDeleteSubList(llParseString2List(data, [","," ","|"], []), 0, 1);
                 integer i; integer start = llGetListLength(split);
 
                 windTimes = [];
@@ -519,8 +512,8 @@ default {
                 while (l > 11) llDeleteSubList(llListSort(windTimes,1,--l&1),i-=2,i);
                 windTimes = llListSort(windTimes,1,1);
                 
-                if (start > l) lmSendToAgent("One or more times were filtered accepted list is " + llList2CSV(windTimes), id);
-                if (script != "ServiceReceiver") lmSendConfig("windTimes", llDumpList2String(windTimes,"|"));
+                if (start > l) lmSendToAgent("One or more times were filtered, accepted list is " + llList2CSV(windTimes), id);
+                if (script != "ServiceReceiver") lmSendConfig("windTimes", llList2Json(JSON_ARRAY, windTimes));
             }
 
             else if (cmd == "wearLock") {
