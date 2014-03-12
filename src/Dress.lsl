@@ -56,6 +56,7 @@ integer pushRandom;
 integer wearLock;
 
 // These are the paths of the outfits relative to #RLV
+string lastfolder;
 string newoutfit;
 string oldoutfit;
 string xfolder;
@@ -302,8 +303,6 @@ default {
         integer optHeader =     (i & 0x00000C00) >> 10;
         integer code      =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
-
-        cdCheckSeqNum(script, remoteSeq);
         scaleMem();
 
         if (code == 102) {
@@ -400,7 +399,7 @@ default {
 
             debugSay(6, "DEBUG-DRESS", (string)candresstemp + " " + choice);
 
-            if (choice == "Dress" && candresstemp) {
+            if (choice == "Outfits..." && candresstemp) {
                 if (!isDresser(id)) return;
 
                 if (outfitsFolder != "") {
@@ -428,20 +427,32 @@ default {
 
                 if (choice == "OK") {
                     ; // No outfits: only OK is available
-                } else if (llSubStringIndex(choice, "Outfits") != -1) {
+                } else if (llGetSubString(choice, 0, 6) == "Outfits") {
                     if (!isDresser(id)) return;
-                    else if (choice == "Next Outfits") {
+                    else if (choice == "Outfits Next") {
                         debugSay(6, "DEBUG", ">>> Dress Menu: " + choice);
                         outfitPage++;
-                        llDialog(dresserID, msgx, ["Prev Outfits", "Next Outfits", MAIN ] + outfitsPage(outfitsList), dialogChannel);
-                    } else if (choice == "Prev Outfits") {
+                    } else if (choice == "Outfits Prev") {
                         debugSay(6, "DEBUG", ">>> Dress Menu: " + choice);
                         outfitPage--;
-                        llDialog(dresserID, msgx, ["Prev Outfits", "Next Outfits", MAIN ] + outfitsPage(outfitsList), dialogChannel);
-                    } else if (choice == "Outfits " + (string)(outfitPage+1)) {
+                    } else if ("Outfits Parent") {
                         debugSay(6, "DEBUG", ">>> Dress Menu: " + choice);
-                        ; // Do nothing
+                        if (clothingFolder != "") { // Return to the parent folder
+                            list pathParts = llParseString2List(clothingFolder, [ "/" ], []);
+                            clothingFolder = llDumpList2String(llDeleteSubList(pathParts, -1, -1), "/");
+                            lmSendConfig("clothingFolder", clothingFolder);
+                            setActiveFolder();
+                            llOwnerSay("Trying the " + activeFolder + " folder.");
+                            listInventoryOn("2666");
+                            return;
+                        }
+                        else lmMenuReply(MAIN, name, id); // No parent folder to return to, go to main menu instead
                     }
+                    
+                    string UpMain = "Outfits Parent";
+                    if (outfitsFolder == "") UpMain = MAIN;
+                    
+                    llDialog(dresserID, msgx, ["Prev Outfits", "Next Outfits", UpMain ] + outfitsPage(outfitsList), dialogChannel);
                     llSetTimerEvent(60.0);
                 } else if (cdListElementP(outfitsList, choice) != NOT_FOUND) {
                     if (!isDresser(id)) return;

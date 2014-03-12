@@ -134,8 +134,6 @@ default
         integer optHeader =     (i & 0x00000C00) >> 10;
         integer code      =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
-        
-        cdCheckSeqNum(script, remoteSeq);
 
         if (code == 102) {
             if (script == "ServiceReceiver") {
@@ -165,7 +163,6 @@ default
             split = llDeleteSubList(split, 0, 0);
 
                  if (name == "baseWindRate")             baseWindRate = (float)value;
-            else if (name == "displayWindRate")       displayWindRate = (float)value;
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
@@ -200,6 +197,9 @@ default
             else if (name == "poserID")                       poserID = (key)value;
             else if (name == "collapseTime")             collapseTime = (llGetTime() - (float)value);
             else if (name == "winderRechargeTime") winderRechargeTime = (float)value;
+            else if (name == "displayWindRate") {
+                if ((float)value != 0) displayWindRate = (float)value;
+            }
             else if (name == "primLight") {
                 primLight = (integer)value;
                 lmInternalCommand("setGemColour", (string)gemColour, NULL_KEY);
@@ -321,7 +321,9 @@ default
                 // Apply exemptions to base RLV
             }
             else if (cmd == "mainMenu") {
-                string msg; list menu; string manpage;
+                string msg; list menu; string manpage; string windButton = llList2String(split, 0);
+                
+                if (startup) lmSendToAgent("Dolly's key is still establishing connections with " + llToLower(pronounHerDoll) + " systems please try again in a few minutes.", id);
                 
                 // Cache access test results
                 integer hasCarrier      = cdCarried()  ;
@@ -422,7 +424,7 @@ default
 
                     // Can the doll be dressed? Add menu button
                     if ((RLVok == 1) && !collapsed && ((!isDoll && canDress) || (isDoll && canWear && !wearLock))) {
-                        menu += "Dress";
+                        menu += "Outfits...";
                     }
 
                     // Can the doll be transformed? Add menu button
