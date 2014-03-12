@@ -36,7 +36,6 @@ integer retryOutfits;
 integer findTypeFolder;
 integer rlvHandle;
 integer useTypeFolder;
-integer canPose;
 string transform;
 string outfitsTest;
 string outfitsFolder;
@@ -91,11 +90,6 @@ setDollType(string choice, integer automated) {
         currentState = stateName;
         lmSendConfig("dollType", stateName);
         lmSendConfig("currentState", stateName);
-        
-        if (!canPose && (stateName == "Display")) {
-            llOwnerSay("You have become a Display Doll and are now poseable by anyone and will remain in poses until released.");
-            lmSendConfig("canPose", (string)(canPose = 1));
-        }
         
         cdPause();
 
@@ -249,8 +243,6 @@ default {
         integer code      =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
         
-        cdCheckSeqNum(script, remoteSeq);
-        
         string choice = cdListElement(split, 0);
         string name = cdListElement(split, 1);
 
@@ -296,8 +288,17 @@ default {
                      if (name == "quiet")                                          quiet = (integer)value;
                 else if (name == "mustAgreeToType")                      mustAgreeToType = (integer)value;
                 else if (name == "showPhrases")                              showPhrases = (integer)value;
-                else if (name == "canPose")                                      canPose = (integer)value;
                 else if (name == "stateName")                                  stateName = value;
+                else if (name == "RLVok") {
+                    RLVok = (integer)value;
+                    if (RLVok) {
+                        if (!rlvHandle) rlvHandle = cdListenAll(rlvChannel);
+                        else {
+                            rlvHandle = 0;
+                            llListenRemove(rlvHandle);
+                        }
+                    }
+                }
                 else if (name == "dialogChannel") {
                                                                            dialogChannel = (integer)value;
                                                                               rlvChannel = dialogChannel ^ 0x80000000;
@@ -365,7 +366,7 @@ default {
                 if (showPhrases) llOwnerSay("Hypnotic phrases will be displayed.");
                 else llOwnerSay("No hypnotic phrases will be displayed.");
             }
-            else if (choice == "Type of Doll") {
+            else if (choice == "Types...") {
                 // Doll must remain in a type for a period of time
                 if (minMinutes > 0) {
                     // Since the output goes to the listener "handle" of 9999, it is discarded silently
