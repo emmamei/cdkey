@@ -374,17 +374,16 @@ default {
                 ncRequestDollDialog = llGetNotecardLine(MESSAGE_NC, dollMessageCode + 1);
             }
             else if ((!cdIsDoll(id) || cdSelfPosed()) && choice == "Unpose") {
-                lmInternalCommand("doUnpose", "", id);
+                lmSendConfig("keyAnimation", (string)(keyAnimation = ""));
+                lmSendConfig("poserID", (string)(poserID = NULL_KEY));
             }
             else if ((keyAnimation == "" || (!cdIsDoll(id) || cdSelfPosed())) && llGetInventoryType(choice) == 20) {
-                keyAnimation = choice;
-                lmInternalCommand("setPose", choice, id);
-                poserID = id;
+                lmSendConfig("keyAnimation", (string)(keyAnimation = choice));
+                lmSendConfig("poserID", (string)(poserID = id));
             }
             else if ((keyAnimation == "" || (!cdIsDoll(id) || cdSelfPosed())) && llGetInventoryType(llGetSubString(choice, 2, -1)) == 20) {
-                keyAnimation = llGetSubString(choice, 2, -1);
-                lmInternalCommand("setPose", llGetSubString(choice, 2, -1), id);
-                poserID = id;
+                lmSendConfig("keyAnimation", (string)(keyAnimation = llGetSubString(choice, 2, -1)));
+                lmSendConfig("poserID", (string)(poserID = id));
             }
             else if (choice == "Access...") {
                 debugSay(5, "DEBUG-AUX", "Dialog channel: " + (string)dialogChannel);

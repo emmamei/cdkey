@@ -119,7 +119,7 @@ checkRLV()
     RLVok = (rlvAPIversion != "");
 #endif
     
-    if (RLVok != 1) {
+    if ((RLVok != 1) && (RLVck < 5)) {
         // Setting the above debug flag causes the listener to not be open for the check
         // In effect the same as the viewer having no RLV support as no reply will be heard
         // all other code works as normal.
@@ -138,11 +138,9 @@ checkRLV()
 #endif
         llSetTimerEvent(10.0);
     }
-    
-    if (configured && (RLVok || (RLVck >= 5))) {
+    else {
         if (!RLVstarted && !RLVrecheck) {
-            if (RLVok && !newAttach) llOwnerSay("Logged with Community Doll Key and " + rlvAPIversion + " active...");
-            else if (RLVok && newAttach) llOwnerSay("Reattached Community Doll Key with " + rlvAPIversion + " active...");
+            if (RLVok) llOwnerSay("Reattached Community Doll Key with " + rlvAPIversion + " active...");
             else if (cdAttached() && !RLVok) llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
         }
     
@@ -153,8 +151,7 @@ checkRLV()
         }
 #endif
 
-        RLVstarted = 0;
-        cdLoadData(RLV_NC, RLV_BASE_RESTRICTIONS);
+        if (cdAttached() && !RLVstarted) cdLoadData(RLV_NC, RLV_BASE_RESTRICTIONS);
     }
 }
 
@@ -316,19 +313,16 @@ default {
 
     listen(integer chan, string name, key id, string msg) {
         if (chan == rlvChannel) {
-            msg = llStringTrim(msg, STRING_TRIM);
             if (llGetSubString(msg, 0, 13) == "RestrainedLove") {
-                if (rlvAPIversion == "") debugSay(4, "DEBUG-RLV", "RLV Version: " + msg);
-                rlvAPIversion = msg; 
+                if (rlvAPIversion == "") debugSay(2, "DEBUG-RLV", "RLV Version: " + msg);
+                rlvAPIversion = msg;
             }
             else {
-                if (myPath == "") debugSay(4, "DEBUG-RLV", "RLV Key Path: " + msg);
+                if (myPath == "") debugSay(2, "DEBUG-RLV", "RLV Key Path: " + msg);
                 myPath = msg;
             }
             checkRLV();
         }
-        //if (!RLVok && !RLVstarted) llOwnerSay("@clear,versionnew=" + (string)rlvChannel);
-        //else if (RLVok && myPath == "") llOwnerSay("@getpathnew=" + (string)rlvChannel);
     }
 
     attach(key id) {
@@ -372,8 +366,9 @@ default {
         scaleMem();
 
         if (code == 110) {
-            ifPermissions();
             configured = 1;
+            checkRLV();
+            ifPermissions();
             return;
         }
         else if (code == 135) {
@@ -412,6 +407,7 @@ default {
                 else userBaseRLVcmd += "," +value;
             }
             else if (name == "keyAnimation") {
+                if (((dollState & DOLL_ANIMATED) != 0) && (value != "")) clearAnim = 1; 
                 keyAnimation = value;
                 
                 cdSetDollStateIf(DOLL_ANIMATED, (keyAnimation != ""));
@@ -447,7 +443,6 @@ default {
                     rlvChannel = ~dialogChannel + 1;
                     listenHandle = llListen(rlvChannel, "", "", "");
                     llListenControl(listenHandle, 0);
-                    checkRLV();
                 }
                 else if (name == "keyAnimationID") {
                     keyAnimationID = (key)value;
@@ -514,7 +509,7 @@ default {
         else return;
         
         ifPermissions();
-        cdLoadData(RLV_NC, RLV_BASE_RESTRICTIONS);
+        if (RLVstarted) cdLoadData(RLV_NC, RLV_BASE_RESTRICTIONS);
     }
 
     timer() {
@@ -618,7 +613,7 @@ default {
                 i = 0;
                 while ( ( value = cdGetValue(data, ([2,"layers",i++])) ) != JSON_INVALID ) lmRunRLV("remoutfit:" + value + "=force");
 
-                cdLoadData(RLV_NC, RLV_BASE_RESTRICTIONS);
+                if (RLVstarted) cdLoadData(RLV_NC, RLV_BASE_RESTRICTIONS);
             }
             else if (dataType == RLV_RESTRICT) {
                 string restrictions;
@@ -661,12 +656,10 @@ default {
     
                 if (!RLVstarted && RLVok) {
                     llOwnerSay("Enabling RLV mode");
-                    llSetScriptState("StatusRLV",1);
-                    llSleep(2.0);
-                    lmRLVreport(RLVok, rlvAPIversion, 0);
-                    llSleep(3.0);
-                    
                     llListenControl(listenHandle, 0);
+                    llSetScriptState("StatusRLV",1);
+                    lmRLVreport(RLVok, rlvAPIversion, 0);
+                    llSleep(2.0);
                 }
             
                 if (userBaseRLVcmd != "") lmRunRLVas("User:Base", userBaseRLVcmd);

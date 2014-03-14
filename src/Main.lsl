@@ -43,10 +43,10 @@ float lastEmergencyTime;
 string rlvAPIversion;
 
 // Current Controller - or Mistress
+key carrierID = NULL_KEY;
 key winderID = NULL_KEY;
 key dollID = NULL_KEY;
 key keyHandler = NULL_KEY;
-key sabotagerID = NULL_KEY;
 
 integer dialogChannel;
 integer targetHandle;
@@ -170,7 +170,7 @@ collapse(integer n) {
         collapseTime = llGetTime();
         llSleep(0.1);
     }
-    lmSendConfig("collapseTime",                    (string)(llGetTime() - collapseTime));
+    lmSendConfig("collapseTime",                    (string)(collapseTime - llGetTime()));
     lmSendConfig("collapsed",                       (string)(collapsed = n));
     lmInternalCommand("collapse",                   (string)(collapsed = n),                     llGetKey());
 }
@@ -275,6 +275,11 @@ default {
         float thisTimerEvent = llGetTime();
         float timerInterval = thisTimerEvent - lastTimerEvent;
         
+        if (carryExpire != 0.0) {
+            if (llGetAgentSize(carrierID) == ZERO_VECTOR)       lmSendConfig("carryExpire", (string)(carryExpire -= timerInterval));
+            else                                                lmSendConfig("carryExpire", (string)(carryExpire = CARRY_TIMEOUT));
+        }
+        
         if (cdAttached()) timerInterval = ((thisTimerEvent = llGetTime()) - lastTimerEvent);
 
         lastTimerEvent = thisTimerEvent;
@@ -353,7 +358,7 @@ default {
                     collapse(NO_TIME);
                 }
                 llSleep(0.25); // Sleep long enough to be passing a non zero value as zero represents it as not applicable.
-                lmSendConfig("collapseTime", (string)(llGetTime() - collapseTime));
+                lmSendConfig("collapseTime", (string)(collapseTime - llGetTime()));
             }
         }
 
@@ -365,7 +370,11 @@ default {
         
         // Determine Next Timer Event
         list possibleEvents;
-        if (carryExpire != 0.0)         possibleEvents += carryExpire - thisTimerEvent;
+        if (carryExpire != 0.0) {
+                                        possibleEvents += carryExpire - thisTimerEvent;
+                                        possibleEvents += 10.0;
+        }
+        
         if (poseExpire != 0.0)          possibleEvents += poseExpire - thisTimerEvent;
         if (wearLockExpire != 0.0)      possibleEvents += wearLockExpire - thisTimerEvent;
         if (timeToJamRepair != 0.0)     possibleEvents += timeToJamRepair - thisTimerEvent;
@@ -451,6 +460,12 @@ default {
             split = llDeleteSubList(split, 0, 0);
 
                  if (name == "afk")                               afk = (integer)value;
+            else if (name == "carrierID") {
+                carrierID = (key)value;
+                if (carrierID) {
+                    lmSendConfig("carryExpire", (string)(carryExpire = CARRY_TIMEOUT));
+                }
+            }
             else if (name == "autoAFK")                       autoAFK = (integer)value;
             //else if (name == "autoTP")                         autoTP = (integer)value;
             else if (name == "canAFK") {
@@ -483,24 +498,25 @@ default {
                 if (script != "Main") {
                     float timeNow = llGetTime();
                     
-                        if (name == "wearLockExpire") {
-                            wearLockExpire = (float)value;
-                            if (wearLockExpire > 0.0)       wearLockExpire += timeNow;
-                        }
+                    if (name == "wearLockExpire") {
+                        if ((float)value > 0.0)         wearLockExpire = timeNow + (float)value;
+                        else                            wearLockExpire = 0.0;
+                    }
                     else if (name == "poseExpire") {
-                        poseExpire = (float)value;
-                        if (poseExpire > 0.0)               poseExpire += timeNow;
+                        if ((float)value > 0.0)         poseExpire = timeNow + (float)value;
+                        else                            poseExpire = 0.0;
                     }
                     else if (name == "timeToJamRepair") {
-                        timeToJamRepair = (float)value; 
-                        if (timeToJamRepair > 0.0)          timeToJamRepair += timeNow;
+                        if ((float)value > 0.0)         timeToJamRepair = timeNow + (float)value;
+                        else                            timeToJamRepair = 0.0;
                     }
                     else if (name == "carryExpire") {
-                        carryExpire = (float)value; 
-                        if (carryExpire > 0.0)              carryExpire += timeNow;
+                        if ((float)value > 0.0)         carryExpire = timeNow + (float)value;
+                        else                            carryExpire = 0.0;
                     }
                     else if (name == "collapseTime") {
-                        if (collapseTime > 0.0)             collapseTime = timeNow - collapseTime;
+                        if ((float)value > 0.0)         collapseTime = timeNow + (float)value;
+                        else                            collapseTime = 0.0;
                     }
                 }
             }
@@ -572,7 +588,7 @@ default {
                 if (wearLockExpire != 0.0)      lmSendConfig("wearLockExpire",      (string)(wearLockExpire - llGetTime()));
                 if (poseExpire != 0.0)          lmSendConfig("poseExpire",          (string)(poseExpire - llGetTime()));
                 if (carryExpire != 0.0)         lmSendConfig("carryExpire",         (string)(carryExpire - llGetTime()));
-                if (collapseTime != 0.0)        lmSendConfig("collapseTime",        (string)(llGetTime() - collapseTime));
+                if (collapseTime != 0.0)        lmSendConfig("collapseTime",        (string)(collapseTime - llGetTime()));
                 lastSendTimestamp = llGetUnixTime();
                 
                 // In offline mode we update the timer locally

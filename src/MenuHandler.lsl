@@ -88,7 +88,7 @@ string keyAnimation;
 string nextMenu;
 string menuName;
 
-float winderRechargeTime;
+integer winderRechargeTime;
 
 list blacklist;
 list dialogKeys;
@@ -196,8 +196,11 @@ default
             //else if (name == "signOn")                         signOn = (integer)value;
             else if (name == "dialogChannel")           dialogChannel = (integer)value;
             else if (name == "poserID")                       poserID = (key)value;
-            else if (name == "collapseTime")             collapseTime = (llGetTime() - (float)value);
-            else if (name == "winderRechargeTime") winderRechargeTime = (float)value;
+            else if (name == "collapseTime") {
+                if ((float)value != 0.0)                 collapseTime = (llGetTime() + (float)value);
+                else                                     collapseTime = 0.0;
+            }
+            else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
             else if (name == "displayWindRate") {
                 if ((float)value != 0) displayWindRate = (float)value;
             }
@@ -384,13 +387,13 @@ default
                     msg = "You need winding.";
                     // Only present the TP home option for the doll if they have been collapsed
                     // for at least 900 seconds (15 minutes) - Suggested by Christina
-                    if ((collapseTime + 900.0) < llGetTime()) {
+                    if ((collapseTime != 0.0) && (llGetTime() - collapseTime) > 900.0) {
                         if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK) {
                             menu = ["TP Home"];
                         }
                         // If the doll is still down after 1800 seconds (30 minutes) and their emergency winder
                         // is recharged add a button for it
-                        if (((collapseTime + 1800.0) < llGetTime()) && (winderRechargeTime == 0.0)) {
+                        if ((collapseTime != 0.0) && ((llGetTime() - collapseTime) > 1800.0) && (winderRechargeTime <= llGetUnixTime())) {
                             menu += ["Wind Emg"];
                         }
                     }
@@ -796,6 +799,15 @@ default
                     lmSendConfig("MistressList", llDumpList2String(MistressList, "|"));
                 }
             }
+
+#ifdef ADULT_MODE
+                // Strip items... only for Pleasure Doll and Slut Doll Types...
+                list buttons = llListSort(["Top", "Bra", "Bottom", "Panties", "Shoes", "*ALL*"], 1, 1);
+                if (choice == "Strip...")
+                    llDialog(id, "Take off:", dialogSort(buttons + MAIN), dialogChannel); // Do strip menu
+                else if (llListFindList(buttons, [ choice ]) != -1)
+                    lmStrip(choice);
+#endif
         }
 
         if ((channel == blacklistChannel) || (channel == controlChannel)) {
