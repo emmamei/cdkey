@@ -16,9 +16,9 @@
 //#define DEBUG_LEVEL 7
 //#define DEBUG_LEVEL 6
 //#define DEBUG_LEVEL 5
-#define DEBUG_LEVEL 4
+//#define DEBUG_LEVEL 4
 //#define DEBUG_LEVEL 3
-//#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 1
 //#define DEBUG_LEVEL 0
 #endif
 

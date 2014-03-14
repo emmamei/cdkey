@@ -76,6 +76,7 @@ integer visible = YES;
 integer primGlow = YES;
 integer primLight = YES;
 integer prefsReread = NO;
+integer dbConfigCount;
 
 vector gemColour;
 
@@ -136,7 +137,6 @@ doVisibility() {
                 }
             }
         }
-        llOwnerSay(llList2CSV(params));
         llSetLinkPrimitiveParamsFast(0, params);
     }
 }
@@ -245,18 +245,18 @@ initConfiguration() {
     
     // Check to see if the file exists and is a notecard
     if (llGetInventoryType(NOTECARD_PREFERENCES) == INVENTORY_NOTECARD) {
-        if (!databaseOnline || offlineMode || !llGetListLength(ncPrefsLoadedUUID) || (llListFindList(ncPrefsLoadedUUID,[(string)llGetInventoryKey(NOTECARD_PREFERENCES)]) == -1)) {
-            sendMsg(dollID, "Loading preferences notecard");
+        if ((llListFindList(ncPrefsLoadedUUID,      [(string)llGetInventoryKey(NOTECARD_PREFERENCES)]) == -1)) {
+            llOwnerSay("Loading preferences notecard");
 
             // Start reading from first line (which is 0)
             ncLine = 0;
             ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ncLine);
         }
         else {
-            debugSay(7, "DEBUG", "Skipping preferences notecard as it is unchanged and settings were found in database.");
+            debugSay(2, "DEBUG", "Skipping preferences notecard as it is unchanged and settings were found in database.");
             doneConfiguration(0);
         }
-    } else if (!databaseOnline || offlineMode) {
+    } else {
         // File missing - report for debugging only
         debugSay(1, "DEBUG", "No configuration found (" + NOTECARD_PREFERENCES + ")");
         doneConfiguration(0);
@@ -384,6 +384,8 @@ default {
         else if (code == 300) {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
+            
+            if (script == "ServiceReceiver") dbConfigCount++;
 
                  if (name == "ncPrefsLoadedUUID")    ncPrefsLoadedUUID = llDeleteSubList(split,0,0);
             else if (name == "offlineMode")                offlineMode = (integer)value;
@@ -639,10 +641,14 @@ default {
         if (t >= 300.0) llSetTimerEvent(60.0);
         else llSetTimerEvent(15.0);
 
-        if (!databaseFinished && !databaseOnline) {
-            databaseFinished = 1;
-            databaseOnline = 0;
-            initConfiguration();
+        if (!databaseOnline || 
+            (!databaseFinished && (
+            (llGetTime() > 60.0) || (
+            (llGetTime() > 10.0) && 
+            (llGetTime() > dbConfigCount))))) {
+                databaseFinished = 1;
+                databaseOnline = 0;
+                initConfiguration();
         }
         if (startup != 0) {
             integer i; integer n = llGetInventoryNumber(10);

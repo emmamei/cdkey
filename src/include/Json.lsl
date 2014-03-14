@@ -26,7 +26,7 @@ key requestLoadData;
 #define cdSetRestrictionsList(restrictions,state) {integer i;\
 string restriction;\
 string param = cdInteger2ParamRLV(state);\
-while( ( restriction = cdGetValue(restrictions,([1,group,i++])) ) != JSON_INVALID) lmRunRLV(restriction + "=" + param);}
+while( ( restriction = cdGetValue(restrictions,([1,group,i++])) ) != JSON_INVALID) restrictionList += restriction + "=" + param + ",";}
 
 #define cdSendConfig(json) llMessageLinked(LINK_THIS, 301, json, NULL_KEY)
 

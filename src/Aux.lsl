@@ -32,6 +32,8 @@ key ncRequestDollMessage;
 key ncRequestDollDialog;
 key lmRequest;
 key carrierID = NULL_KEY;
+key dollID = NULL_KEY;
+key poserID = NULL_KEY;
 list MistressList;
 float rezTime;
 float timerEvent;
@@ -143,10 +145,12 @@ default {
                 memRequested = llList2Integer(split, 1);
 #endif //TESTER_MODE
 #endif //DEVELOPER_MODE
-                memCollecting = 1;
-                memData = "";
-                
-                memTime = llGetTime();
+                if (memTime == 0.0) {
+                    memCollecting = 1;
+                    memData = "";
+                    memTime = llGetTime();
+                    llSetTimerEvent(1.0);
+                }
             }
  
             string json = llList2String(split, 0);
@@ -165,14 +169,9 @@ default {
                     if (llGetScriptState(script) == 0) ok++;
                 }
             }
-            if (ok < 10) {
-                if (llGetTime() < (memTime + 5.0)) {
-                    lmMemReport(0.5, 0);
-                    llSetTimerEvent(1.0);
-                    return;
-                }
-            }
-            if (ok == 10) { 
+            if (ok == 10) {
+                memCollecting = 0;
+                llSetTimerEvent(0.0);
                 float memory_limit = (float)llGetMemoryLimit();
                 float free_memory = (float)llGetFreeMemory();
                 float used_memory = (float)llGetUsedMemory();
@@ -336,15 +335,6 @@ default {
                 else dollMessageVariant = 2;
                 llOwnerSay("");
             }
-            else if (cmd == "carry") {
-                carrierID = id;
-                carrierName = llList2String(split, 0);
-                if (!quiet) llSay(0, "The doll " + dollName + " has been picked up by " + carrierName);
-                else {
-                    llOwnerSay("You have been picked up by " + carrierName);
-                    llRegionSayTo(carrierID, 0, "You have picked up the doll " + dollName);
-                }
-            }
             else if (cmd == "strip") {
                 string part = llList2String(split, 0);
                 if (id != dollID) {
@@ -353,12 +343,6 @@ default {
                     else llOwnerSay("You have had your " + llToLower(part) + " stripped off you and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes, your time will restart if you are stripped again.");
                 }
                 else llOwnerSay("You have stripped off your own " + llToLower(part) + ".");
-            }
-            else if (cmd == "uncarry") {
-                if (quiet) lmSendToAgent("You were carrying " + dollName + " and have now placed them down.", carrierID);
-                else llSay(0, "Dolly " + dollName + " has been placed down by " + carrierName);
-                carrierID = NULL_KEY;
-                carrierName = "";
             }
         }
         else if (code == 350) {
@@ -388,6 +372,19 @@ default {
             else if (choice == "Join Group") {
                 dollMessageCode = JOIN_GROUP;
                 ncRequestDollDialog = llGetNotecardLine(MESSAGE_NC, dollMessageCode + 1);
+            }
+            else if ((!cdIsDoll(id) || cdSelfPosed()) && choice == "Unpose") {
+                lmInternalCommand("doUnpose", "", id);
+            }
+            else if ((keyAnimation == "" || (!cdIsDoll(id) || cdSelfPosed())) && llGetInventoryType(choice) == 20) {
+                keyAnimation = choice;
+                lmInternalCommand("setPose", choice, id);
+                poserID = id;
+            }
+            else if ((keyAnimation == "" || (!cdIsDoll(id) || cdSelfPosed())) && llGetInventoryType(llGetSubString(choice, 2, -1)) == 20) {
+                keyAnimation = llGetSubString(choice, 2, -1);
+                lmInternalCommand("setPose", llGetSubString(choice, 2, -1), id);
+                poserID = id;
             }
             else if (choice == "Access...") {
                 debugSay(5, "DEBUG-AUX", "Dialog channel: " + (string)dialogChannel);
@@ -492,7 +489,7 @@ default {
 
                 list pluslist = [ "Dolly Name...", "Gem Colour..." ];
                 
-                if (cdIsController(id)) pluslist += [ "Max Time...", "Wind Times" ];
+                if (cdIsController(id)) pluslist += [ "Max Time...", "Wind Times..." ];
                 llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(pluslist, 1, 1) + cdGetButton("Key Glow", id, primGlow, 0) + cdGetButton("Gem Light", id, primLight, 0) + MAIN), dialogChannel);
             }
             else if (choice == "Gem Colour...") {
@@ -640,6 +637,9 @@ default {
     }
 
     timer() {
+        if ((memCollecting) && (llGetTime() < memTime)) {
+            lmMemReport(0.5, memRequested);
+        }
         if (factoryReset) llResetOtherScript("Start");
         else if (textboxHandle && (listenTime < llGetTime())) {
             llListenRemove(textboxHandle);

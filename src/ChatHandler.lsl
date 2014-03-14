@@ -13,15 +13,15 @@
 
 key keyHandler              = NULL_KEY;
 
-list windTimes              = [30];
+list windTimes;
 
-float windRate              = 1.0;
-float displayWindRate       = 1.0;
 float collapseTime          = 0.0;
 float currentLimit          = 10800.0;
 float wearLockExpire        = 0.0;
 
 string dollGender           = "Female";
+string RLVver               = "";
+string pronounHerDoll       = "Her";
 
 integer autoAFK             = 1;
 integer broadcastOn         = -1873418555;
@@ -33,6 +33,7 @@ integer chatHandle          = 0;
 integer timeReporting       = 0;
 integer debugLevel          = DEBUG_LEVEL;
 #endif
+integer RLVok               = -1;
 
 default
 {
@@ -41,8 +42,8 @@ default
     //----------------------------------------
     state_entry() {
         dollID = llGetOwner();
-        broadcastHandle = llListen(broadcastOn, "", "", "");
         chatHandle = llListen(chatChannel, "", dollID, "");
+        broadcastHandle = llListen(broadcastOn, "", "", "");
         
         cdInitializeSeq();
     }
@@ -90,11 +91,14 @@ default
             else if (name == "isVisible")                     visible = (integer)value;
             else if (name == "busyIsAway")                 busyIsAway = (integer)value;
             else if (name == "quiet")                           quiet = (integer)value;
+            else if (name == "offlineMode")               offlineMode = (integer)value;
             else if (name == "wearLockExpire")         wearLockExpire = (float)value;
             else if (name == "windRate")                     windRate = (float)value;
             else if (name == "displayWindRate")       displayWindRate = (float)value;
+            else if (name == "keyLimit")                     keyLimit = (float)value;
             else if (name == "collapsed")                   collapsed = (integer)value;
             else if (name == "collapseTime")             collapseTime = (float)value;
+            else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "dollType")                     dollType = value;
             else if (name == "dollGender")                 dollGender = value;
@@ -107,8 +111,14 @@ default
             else if (name == "blacklist")                   blacklist = llListSort(split, 2, 1);
             else if (name == "MistressList")             MistressList = llListSort(split, 2, 1);
             else if (name == "windTimes")                   windTimes = llJson2List(value);
+            else if (name == "chatChannel") {
+                chatChannel = (integer)value;
+                dollID = llGetOwner();
+                llListenRemove(chatHandle);
+                chatHandle = llListen(chatChannel, "", dollID, "");
+            }
             else if ((name == "timeLeftOnKey") || (name == "collapsed")) {
-                if (name == "timeLeftOnKey")            timeLeftOnKey = (float)value;
+                if (name == "timeLeftOnKey")            timeLeftOnKey = llGetTime() + (float)value;
                 if (name == "collapsed")                    collapsed = (integer)value;
             }
             else if (name == "keyHandler") {
@@ -145,7 +155,6 @@ default
                     lmSendToAgentPlusDoll("Removing " + name + " from blacklist.", id);
                     if ((llGetListLength(blacklist) % 2) == 1) blacklist = llDeleteSubList(blacklist, 0, 0);
                     blacklist = llDeleteSubList(blacklist, index, ++index);
-                    
                 }
                 
                 lmSendConfig("blacklist", llDumpList2String(blacklist,"|") );
@@ -172,6 +181,10 @@ default
                 
                 lmSendConfig("MistressList", llDumpList2String(MistressList,"|") );
             }
+        }
+        else if (code == 350) {
+            RLVok = llList2Integer(split, 0);
+            RLVver = llList2String(split, 1);
         }
     }
 
@@ -211,44 +224,85 @@ default
                     }
                 }
                 else if (choice == "help") {
-                    string help = "Commands:\n\n
-    detach ......... detach key if possible\n
-    stat ........... concise current status\n
-    stats .......... selected statistics and settings\n
-    xstats ......... extended statistics and settings\n
-    poses .......... list all poses\n
-    wind ........... trigger emergency autowind\n
-    demo ........... toggle demo mode\n
-    [posename] ..... activate the named pose if possible\n
-    release ........ stop the current pose if possible\n
-    channel # ...... change channel\n
-    help ........... this list of commands\n
-    listhelp ....... list controller/blacklist commands";
+                    string help = "Commands:
+    detach ......... detach key if possible
+    stat ........... concise current status
+    stats .......... selected statistics and settings
+    xstats ......... extended statistics and settings
+    poses .......... list all poses
+    wind ........... trigger emergency autowind
+    demo ........... toggle demo mode
+    [posename] ..... activate the named pose if possible
+    release ........ stop the current pose if possible
+    channel # ...... change channel
+    help ........... this list of commands
+    dumpstate ...... this will dump all key state to chat history
+    listhelp ....... list controller/blacklist commands
+    recoveryhelp ... some commands that may rescue a key having issues\n";
 #ifndef DEVELOPER_MODE
                     llOwnerSay(help);
                 }
 #else
-                    help += "\n
+                    help += "
     devhelp ........ list of developer commands";
                     llOwnerSay(help);
                 }
                 else if (choice == "devhelp") {
-                    string help = "Developer Commands:\n
-    timereporting .. periodic reporting of script time usage\n
-    debug # ........ set the debugging message verbosity 0-9\n
+                    string help = "Developer Commands:
+    timereporting .. periodic reporting of script time usage
+    debug # ........ set the debugging message verbosity 0-9
     inject ......... inject an aribtary link message the format is
-                     integer#string#key";
+                     inte#str#key with all but the first optional.";
                      llOwnerSay(help);
                 }
 #endif
                 else if (choice == "listhelp") {
-                    string help = "Access Commands:\n
-                     The following commands must be followed by the desired\n
-                     user's username, not display name.\n
-    controller ..... add the username to the controller list\n
-    blacklist ...... blacklist the username if not blacklisted\n
+                    string help = "Access Commands:
+                     The following commands must be followed by the desired
+                     user's username, not display name.
+    controller ..... add the username to the controller list
+    blacklist ...... blacklist the username if not blacklisted
     unblacklist .... unblacklist the username if they are blacklisted";
                     llOwnerSay(help);
+                }
+                else if (choice == "recoveryhelp") {
+                    string help = "Recovery Commandss:
+                     These commnds may help to recover a key without a script
+                     reset in some cases.
+    wakescript ..... followed by the name of a key script if the named script
+                     is not running this will attempt to restart it.
+    refreshvars .... try to refresh all variables from the internal db
+    httpreload ..... reinitialize the services scripts and fully reload all 
+                     data from the off world backup storage (OnlineMode only)
+    rlvinit ........ try RLV initialization again";
+                    llOwnerSay(help);
+                }
+                // Do an internal resresh of all local variables from local db
+                else if (choice == "refreshvars") {
+                    cdLinkMessage(LINK_THIS, 0, 301, "", NULL_KEY);
+                }
+                // Request verbose full key state dump to chat
+                else if (choice == "dumpstate") {
+                    cdLinkMessage(LINK_THIS, 0, 302, "", NULL_KEY);
+                }
+                // Service reinitialization and remote restore
+                else if (choice == "httpreload") {
+                    if (!offlineMode) {
+                        llResetOtherScript("ServiceReceiver");
+                        llSleep(1.0);
+                        llResetOtherScript("ServiceRequester");
+                        llSleep(2.0);
+                    }
+                }
+                // Try a hard RLV reinitialzation
+                else if (choice == "rlvinit") {
+                    llSetScriptState("StatusRLV", 1);
+                    llResetOtherScript("StatusRLV");
+                    llResetOtherScript("Avatar");
+                    llSleep(1.0);
+                    cdLinkMessage(LINK_THIS, 0, 301, "", NULL_KEY);
+                    llSleep(5.0);
+                    lmMenuReply("*RLV On*",llGetDisplayName(dollID), id);
                 }
                 // Demo: short time span
                 else if (choice == "demo") {
@@ -263,10 +317,11 @@ default
                 else if (choice == "poses") {
                     integer  n = llGetInventoryNumber(INVENTORY_ANIMATION);
 
+                    // New v2.0 codebase this limitiation no longer applies.
                     // Menu max limit of 11... report error
-                    if (n > 11) {
+                    /*if (n > 11) {
                         llOwnerSay("Too many poses! Found " + (string)n + " poses (max is 11)");
-                    }
+                    }*/
 
                     while(n) {
                         string thisPose = llGetInventoryName(INVENTORY_ANIMATION, --n);
@@ -285,57 +340,55 @@ default
                     lmMenuReply("Wind Emg", dollName, dollID);
                 }
                 else if (choice == "xstats") {
-                    llOwnerSay("AFK time factor: " + formatFloat(RATE_AFK, 1) + "x");
-                    llOwnerSay("Wind amount: " + (string)llRound(windamount / (SEC_TO_MIN * displayWindRate)) + " minutes.");
-
-                    {
-                        string s;
-
-                        s = "Doll can be teleported ";
-                        if (autoTP) {
-                            llOwnerSay(s + "without restriction.");
-                        }
-                        else {
-                            llOwnerSay(s + "with confirmation.");
-                        }
-
-                        s = "Key is ";
-                        if (detachable) {
-                            llOwnerSay(s + "detachable.");
-                        }
-                        else {
-                            llOwnerSay(s + "not detachable.");
-                        }
-
-                        s = " be dressed by others.";
-                        if (canDress) {
-                            llOwnerSay("Doll can" + s);
-                        }
-                        else {
-                            llOwnerSay("Doll cannot" + s);
-                        }
-
-                        s = "Doll can";
-                        if (canFly) {
-                            llOwnerSay(s + " fly.");
-                        }
-                        else {
-                            llOwnerSay(s + "not fly.");
-                        }
-
-                        s = "RLV is ";
-                        if (RLVok) {
-                            llOwnerSay(s + "active.");
-                        }
-                        else {
-                            llOwnerSay(s + "not active.");
-                        }
+                    string s = "X-Stats:\n";
+                    s += "AFK time factor: " + formatFloat(RATE_AFK, 1) + "x\n";
+                    s += "Configured wind times: " + llList2CSV(windTimes) + " mins\n";
+                    if (demoMode) {
+                        s += "Demo mode is enabled times are: 1";
+                        if (llGetListLength(windTimes) > 1) s += ", 2";
+                        s += " mins.\n";
                     }
-
-                    if (windRate == 0.0) {
-                        llOwnerSay("Key is not winding down.");
+                    // Which is the upper bound on the wind times currently? Depeding on the values this could be keyLimit/2 or windLimit
+                    s += "Current wind menu: ";
+                    integer timeLeft = llFloor((timeLeftOnKey - llGetTime()) / 60.0);
+                    float windLimit = currentLimit - (timeLeftOnKey - llGetTime());
+                    integer timesLimit = llFloor(windLimit / SEC_TO_MIN);
+                    integer time; list avail; integer i; integer n = llGetListLength(windTimes);
+                    integer maxTime = llRound(currentLimit / 60.0 / 2);
+                    while ((i <= n) && ( ( time = llList2Integer(windTimes, i++) ) < timesLimit) && (time <= maxTime)) {
+                        avail += ["Wind " + (string)time];
                     }
+                    if ((i <= n) && (timesLimit <= maxTime)) {
+                        avail += ["Wind Full"];
+                        s += " (" + (string)timeLeft  + " of " + (string)maxTime + " minutes left " + (string)timesLimit + " from max)";
+                    }
+                    s += llList2CSV(avail);
+                    if (windLimit < (keyLimit / 2)) s += " (Times limited to half max time)";
+                    s += "\n";
 
+                    string p = llToLower(pronounHerDoll);
+                    list items = [
+                        autoTP,             "Doll can? be force teleported",
+                        detachable,         "Doll can? detach " + p + " key",
+                        canDress,           "Doll can? be dressed by others",
+                        canFly,             "Doll can? fly",
+                        canPose,            "Doll can? be posed by others",
+                        canSit,             "Doll can? sit",
+                        canStand,           "Doll can? stand",
+                        canWear,            "Doll can? dress by " + p + "self",
+                        poseSilence,        "Doll is? silenced while posing",
+                        RLVok,              "RLV is? active",
+                        (windRate == 0.0),  "Key is? winding down"
+                    ];
+                    i=0; n = llGetListLength(items);
+                    while (i++ < n) {
+                        string in = llList2String(items, i--);
+                        integer index = llSubStringIndex(in, "?");
+                        in = llDeleteSubString(in, index, index);
+                        if (!llList2Integer(items, i+=2)) in = llInsertString(in, index, " not");
+                        s += in + "\n";
+                    }
+                    llOwnerSay(s);
                 }
                 else if (choice == "stat") {
                     float t1 = timeLeftOnKey / (SEC_TO_MIN * displayWindRate);
@@ -403,6 +456,31 @@ default
                 }
                 else if (choice == "unblacklist") {
                     lmInternalCommand("getBlacklistKey", param, NULL_KEY);
+                }
+                else if (choice == "wakescript") {
+                    string script;
+                    if (llGetInventoryType(param) == INVENTORY_SCRIPT) script = param;
+                    else {
+                        integer i; for (i = 0; i < llGetInventoryNumber(INVENTORY_SCRIPT); i++) {
+                            if (llToLower(llGetInventoryName(INVENTORY_SCRIPT, i)) == llToLower(param)) script = param;
+                        }
+                    }
+                    if (llGetScriptState(script)) llOwnerSay("The '" + script + "' script is already in a running state");
+                    else if ((RLVok != 1) && (script == "StatusRLV")) 
+                        llOwnerSay("StatusRLV will not run until RLV is enabled, this is by design.  Try the rlvinit command instead.");
+                    else {
+                        string msg = "Trying to wake '" + script + "'";
+                        llOwnerSay(msg);
+                        llResetOtherScript(script);
+                        llSetScriptState(script, 1);
+                        llSleep(5.0);
+                        cdLinkMessage(LINK_THIS, 0, 301, "", NULL_KEY);
+                        llSleep(5.0);
+                        msg = "Script '" + script + "'";
+                        if (llGetScriptState(script)) msg += " seems to be running now.";
+                        else msg += " appears to have stopped running again after being restarted.  If you are not getting script errors this may be intentional.";
+                        llOwnerSay(msg);
+                    }
                 }
 #ifdef DEVELOPER_MODE
                 else if (choice == "debug") {

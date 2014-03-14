@@ -64,7 +64,7 @@ integer RLVok = -1;
 integer wearLock;
 integer dbConfig;
 integer textboxType;
-//integer debugLevel = DEBUG_LEVEL;
+integer debugLevel = DEBUG_LEVEL;
 integer startup = 1;
 
 integer blacklistChannel;
@@ -183,6 +183,7 @@ default
             //else if (name == "canRepeat")                   canRepeat = (integer)value;
             //else if (name == "poseSilence")               poseSilence = (integer)value;
             else if (name == "configured")                 configured = (integer)value;
+            else if (name == "RLVok")                           RLVok = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
@@ -588,6 +589,21 @@ default
         string afterSpace = llDeleteSubString(choice, 0, space);
 
         debugSay(3, "DEBUG-MENU", "Button clicked: " + choice + ", afterSpace=\"" + afterSpace + "\", beforeSpace=\"" + beforeSpace + "\"");
+        
+        integer sleeping = 1;
+        if ((choice == "Outfits...") && (llGetScriptState("Dress") == 0)) {
+            llSetScriptState("Dress", 1);
+        }
+        else if ((choice == "Types...") && (llGetScriptState("Transform") == 0)) {
+            llSetScriptState("Transform", 1);
+        }
+        else sleeping = 0;
+        
+        if (sleeping) {
+            cdLinkMessage(LINK_THIS, 0, 301, "", NULL_KEY);
+            llSleep(1.0);
+        }
+            
         lmMenuReply(choice, name, id);
 
         menuID = id;

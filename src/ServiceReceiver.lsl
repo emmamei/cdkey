@@ -77,22 +77,18 @@ default {
         else if ((code == 301) || (code == 302)) {
             integer type = code - 300;
             integer i; integer n;
-            if (type == 1) n = llGetListLength(llJson2List(storedConfigs)) / 2;
-            else {
-                n = llStringLength(storedConfigs);
-                llSetObjectName("");
-            }
-            integer j;
+            n = llGetListLength(llJson2List(storedConfigs)) / 2;
+            integer j; string start = "\n<KeyState:"; string end = "</KeyState:";
             while (i < n) {
                 if (type == 1) {
                     lmSendConfig(llList2String(llJson2List(storedConfigs), i*2), llList2String(llJson2List(storedConfigs), i*2+1));
                 }
                 else {
-                    string msg = "<KeyState:" + (string)i + ">" +llGetSubString(storedConfigs, i, i + 225) + "</KeyState:";
-                    if ((i+=226) < n) msg += (string)(i-1) + ">";
-                    else msg += (string)n + ">";
-                    llOwnerSay(msg);
-                    llSleep(0.5);
+                    string conf = llList2Json(JSON_OBJECT, llList2List(llJson2List(storedConfigs), i*2, i*2+1) );
+                    integer len = llStringLength(conf);
+                    conf = start + (string)i + ":" + (string)len + ">" + conf + end + (string)i++ + ">";
+                    llOwnerSay(conf);
+                    llSleep(0.1);
                 }
             }
             lmSendConfig("dollyName", cdGetValue(storedConfigs,["dollyName"]));
@@ -206,19 +202,23 @@ default {
 
                 llOwnerSay("Processing reply: ");
                 
-                list input = llParseStringKeepNulls(body,["=","\n"],[]); body = "";
-                configCount = llGetListLength(input) / 2;
+                list input = llParseStringKeepNulls(body,["\n"],[]); body = "";
+                configCount = llGetListLength(input);
 
-                while(input != []) {
-                    string name = llList2String(input, 0);
-                    string value = llList2String(input, 1);
+                while(llGetListLength(input)) {
+                    list splitLine = llParseStringKeepNulls(llList2String(input, 1),["="],[]);
+                    
+                    string name = llList2String(splitLine, 0);
+                    splitLine = llDeleteSubList(splitLine,0,0);
+                    string value = llDumpList2String(splitLine,"=");
+                    
+                    input = llDeleteSubList(input,0,0);
                     
                     lmSendConfig(name, value);
                     if (value == "0") value == JSON_FALSE;
                     if (value == "1") value == JSON_TRUE;
+                    if (splitLine == []) value == JSON_NULL;
                     storedConfigs = cdSetValue(storedConfigs, [name], value);
-                    
-                    input = llDeleteSubList(input,0,1);
                 }
                 
                 if (llGetListLength(llJson2List(storedConfigs)) / 2 > storedCount) {
