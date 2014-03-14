@@ -483,6 +483,12 @@ default {
             }
 #ifdef ADULT_MODE
             else if (llGetSubString(choice,0,5) == "Strip") {
+                if (choice == "Strip...") {
+                    list buttons = llListSort(["Top", "Bra", "Bottom", "Panties", "Shoes", "*ALL*"], 1, 1);
+                    llDialog(id, "Take off:", dialogSort(buttons + MAIN), dialogChannel); // Do strip menu
+                    return;
+                }
+                
                 string part = llGetSubString(choice,7,-1);
                 list parts = [
                     "Top",      RLV_STRIP_TOP,
