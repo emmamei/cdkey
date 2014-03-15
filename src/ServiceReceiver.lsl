@@ -210,7 +210,7 @@ default {
                 float HTTPdbProcessStart;
                 string eventTime = formatFloat(((HTTPdbProcessStart = llGetTime()) - HTTPdbStart) * 1000, 2);
 
-                llOwnerSay("Processing reply: ");
+                llOwnerSay("Processing reply..."); // FIXME: sometimes, this is not followed by any report - and is printed for all keys
                 
                 list input = llParseStringKeepNulls(body,["\n"],[]); body = "";
                 configCount = llGetListLength(input);
