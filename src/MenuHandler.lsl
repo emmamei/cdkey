@@ -163,6 +163,7 @@ default
             split = llDeleteSubList(split, 0, 0);
 
                  if (name == "baseWindRate")             baseWindRate = (float)value;
+            else if (name == "carrierID")                   carrierID = (key)value;
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
@@ -239,25 +240,7 @@ default
             string cmd = llList2String(split, 0);
             split = llDeleteSubList(split, 0, 0);
 
-            if (cmd == "carry") {
-                // Doll has been picked up...
-                carrierID = id;
-                carrierName = llList2String(split, 0);
-            }
-            else if (cmd == "uncarry") {
-                // Doll has been placed down...
-                carrierID = NULL_KEY;
-                carrierName = "";
-            }
-            else if (cmd == "setAFK") afk = llList2Integer(split, 0);
-            else if (cmd == "collapse") {
-                keyAnimation = ANIMATION_COLLAPSED;
-                collapsed = 1;
-            }
-            else if (cmd == "uncollapse") {
-                keyAnimation = "";
-                collapsed = 0;
-            }
+            if (cmd == "setAFK") afk = llList2Integer(split, 0);
             else if (cmd == "dialogListen") {
                 cdListenerActivate(dialogHandle);
                 llSetTimerEvent(60.0);

@@ -210,11 +210,13 @@ ifPermissions() {
                 } else if (clearAnim) {
                     list animList = llGetAnimationList(dollID);
                     integer i; integer animCount = llGetInventoryNumber(20);
+                    keyAnimation = "";
+                    keyAnimationID = NULL_KEY;
                     for (i = 0; i < animCount; i++) {
                         key animKey = llGetInventoryKey(llGetInventoryName(20, i));
-                        if (llListFindList(animList, [ llGetInventoryKey(llGetInventoryName(20, i)) ]) != -1)
-                            llStopAnimation(animKey);
+                        if (animKey != NULL_KEY) llStopAnimation(animKey);
                     }
+                    llStartAnimation("Stand");
                     animRefreshRate = 0.0;
                     clearAnim = 0;
                     llWhisper(LOCKMEISTER_CHANNEL, (string)dollID + "booton");
@@ -411,7 +413,10 @@ default {
                 else userBaseRLVcmd += "," +value;
             }
             else if (name == "keyAnimation") {
-                if (((dollState & DOLL_ANIMATED) != 0) && (value != "")) clearAnim = 1; 
+                if (value == "") {
+                    clearAnim = 1; 
+                    ifPermissions();
+                }
                 keyAnimation = value;
                 
                 cdSetDollStateIf(DOLL_ANIMATED, (keyAnimation != ""));

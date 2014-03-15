@@ -86,7 +86,7 @@ default {
                     if (value == JSON_FALSE) value = "0";
                     else if (value == JSON_TRUE) value = "1";
                     else if (value == JSON_NULL) value = "";
-                    lmSendConfig(conf, value);
+                    if (value != JSON_INVALID) lmSendConfig(conf, value);
                 }
                 else {
                     string conf = llList2Json(JSON_OBJECT, llList2List(llJson2List(storedConfigs), i*2, i*2+1) );
@@ -105,7 +105,7 @@ default {
                 if (value == JSON_FALSE) value = "0";
                 else if (value == JSON_TRUE) value = "1";
                 else if (value == JSON_NULL) value = "";
-                lmSendConfig(conf, cdGetValue(storedConfigs,[conf]));
+                if (value != JSON_INVALID) lmSendConfig(conf, cdGetValue(storedConfigs,[conf]));
                 split = llDeleteSubList(split,0,0);
             }
         }
