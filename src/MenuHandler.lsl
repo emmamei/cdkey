@@ -117,16 +117,16 @@ default
     state_entry() {
         dollID = llGetOwner();
         dollName = llGetDisplayName(dollID);
-        
+
         cdInitializeSeq();
     }
-    
+
     on_rez(integer start) {
         RLVok = -1;
     }
 
     link_message(integer sender, integer i, string data, key id) {
-        
+
         // Parse link message header information
         list split        =     cdSplitArgs(data);
         string script     =     cdListElement(split, 0);
@@ -151,9 +151,9 @@ default
             float delay = llList2Float(split, 0);
             memReport(cdMyScriptName(),delay);
         }
-        
+
         cdConfigReport();
-        
+
         else if (code == 150) {
             simRating = llList2String(split, 0);
         }
@@ -262,15 +262,15 @@ default
                             if (!s) {
                                 for (j = 0; j < llGetLinkNumberOfSides(i); j++) {
                                     vector shade = <llFrand(0.2) - 0.1 + newColour.x, llFrand(0.2) - 0.1 + newColour.y, llFrand(0.2) - 0.1 + newColour.z> * (1.0 + (llFrand(0.2) - 0.1));
-                                    
+
                                     if (shade.x < 0.0) shade.x = 0.0;
                                     if (shade.y < 0.0) shade.y = 0.0;
                                     if (shade.z < 0.0) shade.z = 0.0;
-                                    
+
                                     if (shade.x > 1.0) shade.x = 1.0;
                                     if (shade.y > 1.0) shade.y = 1.0;
                                     if (shade.z > 1.0) shade.z = 1.0;
-                
+
                                     colourParams += [ PRIM_COLOR, j, shade, 1.0 ];
                                 }
                                 params += colourParams;
@@ -289,29 +289,29 @@ default
             else if (cmd == "updateExceptions") {
 
                 // Exempt builtin or user specified controllers from TP restictions
-    
+
                 list allow = BUILTIN_CONTROLLERS + cdList2ListStrided(MistressList, 0, -1, 2);
-    
+
                 // Also exempt the carrier StatusRLV will ignore the duplicate if carrier is a controller so save work
-    
+
                 if cdCarried() allow += carrierID;
-    
+
                 // Directly dump the list using the static parts of the RLV command as a seperator no looping
-    
+
                 lmRunRLVas("Base", "clear=tplure:,tplure:"          + llDumpList2String(allow, "=add,tplure:")    + "=add");
                 lmRunRLVas("Base", "clear=accepttp:,accepttp:"      + llDumpList2String(allow, "=add,accepttp:")  + "=add");
                 lmRunRLVas("Base", "clear=sendim:,sendim:"          + llDumpList2String(allow, "=add,sendim:")    + "=add");
                 lmRunRLVas("Base", "clear=recvim:,recvim:"          + llDumpList2String(allow, "=add,recvim:")    + "=add");
                 lmRunRLVas("Base", "clear=recvchat:,recvchat:"      + llDumpList2String(allow, "=add,recvchat:")  + "=add");
                 lmRunRLVas("Base", "clear=recvemote:,recvemote:"    + llDumpList2String(allow, "=add,recvemote:") + "=add");
-    
+
                 // Apply exemptions to base RLV
             }
             else if (cmd == "mainMenu") {
                 string msg; list menu; string manpage; string windButton = llList2String(split, 0);
-                
+
                 if (startup) lmSendToAgent("Dolly's key is still establishing connections with " + llToLower(pronounHerDoll) + " systems please try again in a few minutes.", id);
-                
+
                 // Cache access test results
                 integer hasCarrier      = cdCarried()  ;
                 integer isCarrier       = cdIsCarrier(id)       || cdIsBuiltinController(id);
@@ -345,7 +345,7 @@ default
                 if (hasCarrier) {
                     // Doll being carried clicked on key
                     if (isDoll) {
-                        msg = "You are being carried by " + carrierName + ".";
+                        msg = "You are being carried by " + carrierName + ". ";
                         menu = ["Help..."];
                     }
 
@@ -367,7 +367,7 @@ default
                 }
                 // When the doll is collapsed they lose their access to most key functions with a few exceptions
                 else if (collapsed && isDoll) {
-                    msg = "You need winding.";
+                    msg = "You need winding. ";
                     // Only present the TP home option for the doll if they have been collapsed
                     // for at least 900 seconds (15 minutes) - Suggested by Christina
                     if ((collapseTime != 0.0) && (llGetTime() - collapseTime) > 900.0) {
@@ -395,9 +395,9 @@ default
                         if (!collapsed) {
                             menu += "Options...";
                             if (detachable) menu += "Detach";
-    
+
                             if (canAFK) menu += "AFK";
-    
+
                             menu += "Visible";
                         }
                     }
@@ -422,7 +422,7 @@ default
                     if (!collapsed) {
                         if (keyAnimation != "") {
                             msg += "Doll is currently posed.\n";
-    
+
                             if ((!isDoll && canPose) || (poserID == dollID)) {
                                 menu += ["Poses...","Unpose"];
                             }
@@ -467,7 +467,7 @@ default
                     if (!isDoll) menu += [ "Options..." ];
                     if (!isDoll || !detachable) menu += [ "Detach" ];
                 }
-                
+
                 if (!isDoll) {
                     if (marketplaceURL != "") menu += "Get a Key";
                 }
@@ -481,21 +481,28 @@ default
                     if (cdIsDoll(id) || cdIsController(id)) menu += "*RLV On*";
                 }
 
-                msg += "See " + WEB_DOMAIN + manpage + " for more information." ;
-                
+                msg += "See " + WEB_DOMAIN + manpage + " for more information. " ;
+
+#ifdef DEVELOPER_MODE
+                msg += " (Key is in Developer Mode.)";
+#else
+#ifdef TESTER_MODE
+                msg += " (Key is in Tester Mode.)";
+#endif
+#endif
                 menu = llListSort(menu, 1, 1);
-                
+
                 integer i;
                 if ( ( i = llListFindList(menu, ["AFK"]) ) != -1) menu = llListReplaceList(menu, cdGetButton("AFK", id, afk, 0), i, i);
                 if ( ( i = llListFindList(menu, ["Visible"]) ) != -1) menu = llListReplaceList(menu, cdGetButton("Visible", id, visible, 0), i, i);
-                
+
                 llDialog(id, timeleft + msg, dialogSort(menu) , dialogChannel);
             }
         }
         else if (code == 350) {
             string script = llList2String(split, 0);
             RLVok = llList2Integer(split, 1);
-            
+
             lmInternalCommand("updateExceptions", "", NULL_KEY);
         }
     }
@@ -556,7 +563,7 @@ default
             lmSendToAgent("You are not permitted to access this key.", id);
             return;
         }
-        
+
         // Cache access test results
         integer hasCarrier      = cdCarried();
         integer isCarrier       = cdIsCarrier(id)       || cdIsBuiltinController(id);
@@ -575,7 +582,7 @@ default
         string afterSpace = llDeleteSubString(choice, 0, space);
 
         debugSay(3, "DEBUG-MENU", "Button clicked: " + choice + ", afterSpace=\"" + afterSpace + "\", beforeSpace=\"" + beforeSpace + "\"");
-        
+
         integer sleeping = 1;
         if ((llGetSubString(choice, 0, 3) == "Type") && (llGetScriptState("Transform") == 0)) {
             llSetScriptState("Transform", 1);
@@ -583,11 +590,11 @@ default
             cdLinkMessage(LINK_THIS, 0, 303, "debugLevel|dollType|quiet|mustAgreeToType|RLVok|showPhrases|wearAtLogin", NULL_KEY);
         }
         else sleeping = 0;
-        
+
         if (sleeping) {
             llSleep(1.0);
         }
-            
+
         lmMenuReply(choice, name, id);
 
         menuID = id;
@@ -614,7 +621,7 @@ default
                     msg = "See " + WEB_DOMAIN + "controller.htm. Choose what you want to happen.";
 
                     pluslist += [ "Abilities...", "Drop Control" ];
-                    
+
                     if (llListFindList(BuiltinControllers, [(string)id]) != -1) pluslist += [ "Access..." ];
                 }
                 else return;
@@ -668,7 +675,7 @@ default
                     activeChannel = blacklistChannel;
                     msg = "blacklist";
                     dialogKeys  = cdList2ListStrided(blacklist, 0, -1, 2);
-                    dialogNames = cdList2ListStrided(blacklist, 1, -1, 2); 
+                    dialogNames = cdList2ListStrided(blacklist, 1, -1, 2);
                     blacklistHandle = cdListenUser(blacklistChannel, id);
                 }
                 else {
@@ -679,10 +686,10 @@ default
                     activeChannel = controlChannel;
                     msg = "controller list";
                     dialogKeys  = cdList2ListStrided(MistressList, 0, -1, 2);
-                    dialogNames = cdList2ListStrided(MistressList, 1, -1, 2); 
+                    dialogNames = cdList2ListStrided(MistressList, 1, -1, 2);
                     controlHandle = cdListenUser(controlChannel, id);
                 }
-                
+
                 // Only need this once now, make dialogButtons = numbered list of names truncated to 24 char limit
                 dialogButtons = []; integer i; integer n = llGetListLength(dialogKeys);
                 for (i = 0; i < n; i++) dialogButtons += llGetSubString((string)(i+1) + ". " + llList2String(dialogNames, i), 0, 23);
@@ -720,7 +727,7 @@ default
             }
 
             // Entering options menu section
-            
+
             // Entering key menu section
             if (afterSpace == "Gem Light") {
                  lmSendConfig("primLight", (string)(beforeSpace == CROSS));
@@ -787,7 +794,7 @@ default
                 lmMenuReply(MAIN, name, id);
                 return;
             }
-            
+
             string button = choice;
             integer i = llListFindList(dialogButtons, [ choice ]);
             string name = llList2String(dialogNames, i);
