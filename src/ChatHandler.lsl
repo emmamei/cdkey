@@ -86,6 +86,8 @@ default
             else if (name == "canCarry")                     canCarry = (integer)value;
             else if (name == "canDress")                     canDress = (integer)value;
             else if (name == "canPose")                       canPose = (integer)value;
+            else if (name == "canWear")                       canWear = (integer)value;
+            else if (name == "poseSilence")               poseSilence = (integer)value;
             else if (name == "canFly")                         canFly = (integer)value;
             else if (name == "canSit")                         canSit = (integer)value;
             else if (name == "canStand")                     canStand = (integer)value;
@@ -209,17 +211,22 @@ default
             string firstChar = cdGetFirstChar(choice);
             integer choiceType = llGetInventoryType(choice);
 
-            if (choiceType == INVENTORY_ANIMATION || firstChar == "." | firstChar == "!") {
+            // Is "choice" actually a Pose to activate?
+            if (choiceType == INVENTORY_ANIMATION || firstChar == "." || firstChar == "!") {
                 if (choiceType != INVENTORY_ANIMATION) choice = llGetSubString(choice, 1, STRING_END);
                 if (cdNoAnim() || (!cdCollapsedAnim() && cdSelfPosed())) {
                     lmInternalCommand("setPose", choice, dollID);
+                    llOwnerSay("You set your pose to: " + choice);
                 }
                 else llOwnerSay("You try to regain control over your body in an effort to set your own pose but even that is beyond doll's control.");
                 return;
             }
 
+#define PARAMETERS_EXIST (space == NOT_FOUND)
+
+            // Choice is a command, not a pose
             integer space = llSubStringIndex(choice, " ");
-            if (space == NOT_FOUND) {
+            if (PARAMETERS_EXIST) {
                 // Normal user commands
                 if (choice == "detach") {
                     if (detachable) {
@@ -375,11 +382,14 @@ default
 #ifdef TESTING
                     cdCapability(autoTP,      "Doll can", "be force teleported");
                     cdCapability(detachable,  "Doll can", "detach " + p + " key");
-                    cdCapability(canDress,    "Doll can", "be dressed by others");
+                    cdCapability(canDress,    "Doll can", "be dressed by the public");
+                    cdCapability(canCarry,    "Doll can", "be carried by the public");
+                    cdCapability(canAFK,      "Doll can", "go AFK");
                     cdCapability(canFly,      "Doll can", "fly");
-                    cdCapability(canPose,     "Doll can", "be posed by others");
+                    cdCapability(canPose,     "Doll can", "be posed by the public");
                     cdCapability(canSit,      "Doll can", "sit");
                     cdCapability(canStand,    "Doll can", "stand");
+                    cdCapability(canRepeat,   "Doll can", "multiply wound");
                     cdCapability(canWear,     "Doll can", "dress by " + p + "self");
                     cdCapability(poseSilence, "Doll is",  "silenced while posing");
 #else
@@ -454,38 +464,35 @@ default
                 else if (choice == "build") {
                     lmConfigReport();
                 }
-            }
-            else if (choice == "release") {
-                if (poserID != dollID) llOwnerSay("Dolly tries to take control of her body from the pose but she is no longer in control of her form.");
-                else lmInternalCommand("doUnpose", "", dollID);
+                else if (choice == "release") {
+                    if (poserID != dollID) llOwnerSay("Dolly tries to wrest control of her body from the pose but she is no longer in control of her form.");
+                    else lmInternalCommand("doUnpose", "", dollID);
+                }
             }
             else {
                 // Command has secondary parameter
                 string param = llStringTrim(llGetSubString(choice, space + 1, STRING_END), STRING_TRIM);
-                choice = llStringTrim(llGetSubString(choice, 0, space - 1), STRING_TRIM);
+                choice       = llStringTrim(llGetSubString(choice,         0,  space - 1), STRING_TRIM);
 
                 if (choice == "channel") {
                     string c = param;
+
                     if ((string) ((integer) c) == c) {
                         integer ch = (integer) c;
-                        if (ch != 0 && ch != DEBUG_CHANNEL) {
+
+                        if (ch != 0 && ch != DEBUG_CHANNEL) { // FIXME: Sanity checking should be extended
                             chatChannel = ch;
                             llListenRemove(chatHandle);
                             chatHandle = llListen(ch, "", llGetOwner(), "");
                         }
                     }
                 }
-                else if (choice == "controller") {
-                    lmInternalCommand("getMistressKey", param, NULL_KEY);
-                }
-                else if (choice == "blacklist") {
-                    lmInternalCommand("getBlacklistKey", param, NULL_KEY);
-                }
-                else if (choice == "unblacklist") {
-                    lmInternalCommand("getBlacklistKey", param, NULL_KEY);
-                }
+                else if (choice == "controller") { lmInternalCommand("getMistressKey", param, NULL_KEY); }
+                else if (choice == "blacklist") { lmInternalCommand("getBlacklistKey", param, NULL_KEY); }
+                else if (choice == "unblacklist") { lmInternalCommand("getBlacklistKey", param, NULL_KEY); }
                 else if (choice == "wakescript") {
                     string script;
+
                     if (llGetInventoryType(param) == INVENTORY_SCRIPT) script = param;
                     else {
                         integer i; for (i = 0; i < llGetInventoryNumber(INVENTORY_SCRIPT); i++) {
@@ -497,6 +504,7 @@ default
                         llOwnerSay("StatusRLV will not run until RLV is enabled, this is by design.  Try the rlvinit command instead.");
                     else {
                         string msg = "Trying to wake '" + script + "'";
+
                         llOwnerSay(msg);
                         llResetOtherScript(script);
                         llSetScriptState(script, 1);
