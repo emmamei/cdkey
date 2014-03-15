@@ -573,7 +573,7 @@ default
 
         list split = llParseStringKeepNulls(choice, [ " " ], []);
 
-        name = llGetDisplayName(id);
+        name = llGetDisplayName(id); // FIXME: name can get set to ""
 
         integer space = llSubStringIndex(choice, " ");
         // 04-03-2014 Dev-Note:
@@ -588,12 +588,9 @@ default
             llSetScriptState("Transform", 1);
             lmSendConfig("dialogChannel", (string)dialogChannel);
             cdLinkMessage(LINK_THIS, 0, 303, "debugLevel|dollType|quiet|mustAgreeToType|RLVok|showPhrases|wearAtLogin", NULL_KEY);
-        }
-        else sleeping = 0;
-
-        if (sleeping) {
             llSleep(1.0);
         }
+        else sleeping = 0;
 
         lmMenuReply(choice, name, id);
 

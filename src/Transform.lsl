@@ -286,7 +286,7 @@ default {
             memReport(cdMyScriptName(),delay);
         }
 
-        cdConfigReport();
+        cdConfigReport(); // FIXME: this "code" is invalid
 
         else if (code == 300) {
             string value = name;
@@ -326,7 +326,6 @@ default {
                 else if (script == "Main" && name == "timeLeftOnKey") runTimedTriggers();
             }
         }
-
         else if (code == 350) {
             RLVok = ((integer)choice == 1);
 
@@ -351,8 +350,7 @@ default {
 
             llSetTimerEvent(5.0);
         }
-
-        if (code == 500) {
+        else if (code == 500) {
             string name = cdListElement(split, 2);
             string optName = llGetSubString(choice, 2, STRING_END);
             string curState = cdGetFirstChar(choice);
