@@ -746,19 +746,16 @@ default {
                             if (windamount > 3600.0) windamount = 3600.0;
                             lmSendConfig("winderRechargeTime", (string)(winderRechargeTime = (llGetUnixTime() + EMERGENCY_LIMIT_TIME)));
                             
-                            llOwnerSay("With an electical sound the motor whirls into life and gives you " + (string)llRound(windamount / SEC_TO_MIN) + " minutes of life before it's battery wears out, it will take " + (string)llRound(EMERGENCY_LIMIT_TIME / 3600.0) + " hours to recharge.");
-                        }
-                        else if (collapsed == 2) {
-                            llOwnerSay("The emergency winder motor whirrs, splutters and then falls silent unable to budge your jammed mechanism.");
-                            return;
+                            llOwnerSay("With an electical sound the motor whirrs into life and gives you " + (string)llRound(windamount / SEC_TO_MIN) + " minutes of life. The recharger requires " + (string)llRound(EMERGENCY_LIMIT_TIME / 3600.0) + " hours to recharge.");
                         }
                         else {
-                            llOwnerSay("The failsafe trigger fires with a soft click preventing the motor engaging while your mechanism is running.");
+                            if (collapsed == 2) { llOwnerSay("The emergency winder motor whirrs, splutters and then falls silent, unable to budge your jammed mechanism."); }
+                            else { llOwnerSay("The failsafe trigger fires with a soft click preventing the motor engaging while your mechanism is running."); }
                             return;
                         }
                     }
                     else {
-                       llOwnerSay("Emergency self-winder is not yet recharged there is still " + formatFloat(winderRechargeTime / 3600.0, 2) + " hours before it will be ready again.");
+                       llOwnerSay("Emergency self-winder is not yet recharged. There remains " + formatFloat(winderRechargeTime / 3600.0, 2) + " hours before it will be ready again.");
                        return;
                     }
                 }
