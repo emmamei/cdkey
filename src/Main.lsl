@@ -824,9 +824,24 @@ default {
                 }
             }
             else if (choice == "Max Time...") {
+                // If the Max Times available are changed, be sure to change the next choice also
                 llDialog(id, "You can set the maximum wind time here.  Dolly cannot be wound beyond this amount of time.\nDolly currently has " + (string)llFloor(timeLeftOnKey / SEC_TO_MIN) + " mins left of " + (string)llFloor(keyLimit / SEC_TO_MIN) + ", if you choose a lower time than this they will lose time immidiately.", dialogSort(["45m", "60m", "75m", "90m", "120m", "150m", "180m", "240m", "300m", "360m", "480m", MAIN]), dialogChannel);
             }
-            else if (llGetSubString(choice, -1, -1) == "m") {
+            // Could possibly use a substring, but that is too general: being specific avoids problems
+            else if ((choice == "45m") ||
+                     (choice == "60m") ||
+                     (choice == "60m") ||
+                     (choice == "75m") || 
+                     (choice == "90m") ||
+                     (choice == "120m") ||
+                     (choice == "150m") ||
+                     (choice == "180m") ||
+                     (choice == "240m") ||
+                     (choice == "300m") ||
+                     (choice == "360m") ||
+                     (choice == "480m")) {
+                //llOwnerSay("keyLimit being set to " + (string)keyLimit); // debugging code
+                //llOwnerSay("choice is " + (string)choice); // debugging code
                 lmSendConfig("keyLimit", (string)(keyLimit = ((float)choice * SEC_TO_MIN)));
             }
             else if (cdIsController(id) && (choice == "Hold")) {
