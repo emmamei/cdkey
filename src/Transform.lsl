@@ -299,7 +299,7 @@ default {
                 }
                 else if (name == "dialogChannel") {
                                                                            dialogChannel = (integer)value;
-                                                                              rlvChannel = dialogChannel ^ 0x80000000;
+                                                                              rlvChannel = ~dialogChannel + 1; 
                 }
 #ifdef DEVELOPER_MODE
                 else if (name == "debugLevel") {
@@ -372,6 +372,7 @@ default {
                     llDialog(id,"The Doll " + dollName + " cannot be transformed right now. The Doll was recently transformed. Dolly can be transformed in " + (string)minMinutes + " minutes.",["OK"], 9999);
                 }
                 else {
+                    reloadTypeNames();
                     string msg = "These change the personality of " + dollName + " This Doll is currently a " + stateName + " Doll. What type of doll do you want the Doll to be?";
                     list choices = types;
 
