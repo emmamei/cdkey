@@ -23,7 +23,10 @@ list rlvStatus;
 
 float baseWindRate;
 float afkSlowWalkSpeed = 5;
-float refreshRate = 8.0;
+float animRefreshRate = 8.0;
+
+float nextRLVcheck;
+float nextAnimRefresh;
 
 vector carrierPos;
 vector lockPos;
@@ -136,7 +139,8 @@ checkRLV()
 #ifdef DEVELOPER_MODE
         else if (myPath == "") llOwnerSay("@getpathnew=" + (string)rlvChannel);
 #endif
-        llSetTimerEvent(10.0);
+        llSetTimerEvent(20.0);
+        nextRLVcheck = llGetTime() + 20.0;
     }
     else {
         if (!RLVstarted && !RLVrecheck) {
@@ -156,8 +160,6 @@ checkRLV()
 }
 
 ifPermissions() {
-    llSetTimerEvent(10.0);
-    
     if (cdAttached()) {
         key grantorID = llGetPermissionsKey();
         integer permMask = llGetPermissions();
@@ -171,24 +173,8 @@ ifPermissions() {
             llRequestPermissions(dollID, PERMISSION_MASK);
 
         if (grantorID == dollID) {
-            if (permMask & PERMISSION_TRIGGER_ANIMATION) {
+            if (((permMask & PERMISSION_TRIGGER_ANIMATION) != 0) && (clearAnim || ((dollState & DOLL_ANIMATED) != 0) && (nextAnimRefresh < llGetTime()))) {
                 key curAnim = llList2Key(llGetAnimationList(dollID), 0);
-                
-                if (keyAnimationID) {
-                    debugSay(7, "DEBUG", "animID=" + (string)keyAnimationID + " curAnim=" + (string)curAnim + " refreshRate=" + (string)refreshRate);
-                    if (keyAnimationID == NULL_KEY) refreshRate = 4.0;          // In case anim is no mod use default 4 sec
-                    else if (curAnim == keyAnimationID) {
-                        refreshRate += (1.0/llGetRegionFPS());                  // +1 Frame
-                        if (refreshRate > 30.0) refreshRate = 30.0;             // 30 Second limit
-                    }
-                    else if (curAnim != keyAnimationID) {
-                        refreshRate /= 2.0;                                     // -50%
-                        if (refreshRate < 0.022) refreshRate = 0.022;           // Limit once per frame
-                    }
-                    
-                    if (RLVck == 0) llSetTimerEvent(refreshRate);
-                }
-                else if (keyAnimation != "") llSetTimerEvent(4.0);
                 
                 if (!clearAnim && (keyAnimation != "")) {
                     llWhisper(LOCKMEISTER_CHANNEL, (string)dollID + "bootoff");
@@ -207,6 +193,20 @@ ifPermissions() {
                     }
                     else animKey = animStart(keyAnimation);
                     if ((keyAnimationID == NULL_KEY) && (animKey != NULL_KEY)) lmSendConfig("keyAnimationID", (string)(keyAnimationID = animKey));
+                    
+                    if (keyAnimationID) {
+                        debugSay(7, "DEBUG", "animID=" + (string)keyAnimationID + " curAnim=" + (string)curAnim + " animRefreshRate=" + (string)animRefreshRate);
+                        if (keyAnimationID == NULL_KEY) animRefreshRate = 4.0;          // In case anim is no mod use default 4 sec
+                        else if (curAnim == keyAnimationID) {
+                            animRefreshRate += (1.0/llGetRegionFPS());                  // +1 Frame
+                            if (animRefreshRate > 30.0) animRefreshRate = 30.0;             // 30 Second limit
+                        }
+                        else if (curAnim != keyAnimationID) {
+                            animRefreshRate /= 2.0;                                     // -50%
+                            if (animRefreshRate < 0.022) animRefreshRate = 0.022;           // Limit once per frame
+                        }
+                    }
+                    else if (keyAnimation != "") animRefreshRate = 4.0;
                 } else if (clearAnim) {
                     list animList = llGetAnimationList(dollID);
                     integer i; integer animCount = llGetInventoryNumber(20);
@@ -215,9 +215,12 @@ ifPermissions() {
                         if (llListFindList(animList, [ llGetInventoryKey(llGetInventoryName(20, i)) ]) != -1)
                             llStopAnimation(animKey);
                     }
+                    animRefreshRate = 0.0;
                     clearAnim = 0;
                     llWhisper(LOCKMEISTER_CHANNEL, (string)dollID + "booton");
                 }
+                
+                if (animRefreshRate) nextAnimRefresh = llGetTime() + animRefreshRate;
             }
 
             if (permMask & PERMISSION_TAKE_CONTROLS) {
@@ -253,6 +256,7 @@ ifPermissions() {
                     }
                 }
 
+                
                 if (dollState & (DOLL_COLLAPSED | DOLL_POSED) != 0) {
                     if (lockPos == ZERO_VECTOR) lmSendConfig("lockPos", (string)(lockPos = llGetPos()));
                     if (llVecDist(llGetPos(), lockPos) > 1.0) {
@@ -261,7 +265,7 @@ ifPermissions() {
                         llMoveToTarget(lockPos, 0.7);
                     }
                 }
-                if (dollState & DOLL_CARRIED != 0) {
+                else if (dollState & DOLL_CARRIED != 0) {
                     if (lockPos != ZERO_VECTOR) lmSendConfig("lockPos", (string)(lockPos = ZERO_VECTOR));
                     llTargetRemove(targetHandle);
                     llStopMoveToTarget();
@@ -419,6 +423,8 @@ default {
 
                 if (keyAnimation == "") lmSendConfig("keyAnimationID", (string)(keyAnimationID = NULL_KEY));
                 else lmSendConfig("keyAnimationID", (string)(keyAnimationID = animStart(keyAnimation)));
+                
+                ifPermissions();
             }
             else {
                      if (name == "detachable")               detachable = (integer)value;
@@ -477,14 +483,14 @@ default {
                 checkRLV();
             }
 #ifdef ADULT_MODE
-            else if (llGetSubString(choice,0,5) == "Strip") {
+            else if ((llGetSubString(choice,0,4) == "Strip") || (choice == "Strip ALL")) {
                 if (choice == "Strip...") {
-                    list buttons = llListSort(["Top", "Bra", "Bottom", "Panties", "Shoes", "*ALL*"], 1, 1);
+                    list buttons = llListSort(["Strip Top", "Strip Bra", "Strip Bottom", "Strip Panties", "Strip Shoes", "Strip ALL"], 1, 1);
                     llDialog(id, "Take off:", dialogSort(buttons + MAIN), dialogChannel); // Do strip menu
                     return;
                 }
                 
-                string part = llGetSubString(choice,7,-1);
+                string part = llGetSubString(choice,6,-1);
                 list parts = [
                     "Top",      RLV_STRIP_TOP,
                     "Bra",      RLV_STRIP_BRA,
@@ -494,17 +500,63 @@ default {
                 ];
                 integer i;
                 if ( ( i = llListFindList(parts, [part]) ) != -1) {
-                    cdLoadData(RLV_NC, llList2Integer(parts, i++));
+                    cdLoadData(RLV_NC, llList2Integer(parts, i));
                 } else if (part = "*ALL*") {
                     for (i = 0; i < 10; i++) {
                         cdLoadData(RLV_NC, llList2Integer(parts, i++));
                     }
                 }
-                if ((part == "Shoes") || (part == "*ALL*")) {
+                if ((part == "Shoes") || (choice == "Strip ALL")) {
                     if (barefeet != "") lmRunRLVas("Dress","attachallover:" + barefeet + "=force");
                 }
             }
 #endif
+            else if ((!cdIsDoll(id) || cdSelfPosed()) && choice == "Unpose") {
+                lmSendConfig("keyAnimation", (string)(keyAnimation = ""));
+                lmSendConfig("poserID", (string)(poserID = NULL_KEY));
+            }
+            else if ((keyAnimation == "" || (!cdIsDoll(id) || cdSelfPosed())) && llGetInventoryType(choice) == 20) {
+                lmSendConfig("keyAnimation", (string)(keyAnimation = choice));
+                lmSendConfig("poserID", (string)(poserID = id));
+            }
+            else if ((keyAnimation == "" || (!cdIsDoll(id) || cdSelfPosed())) && llGetInventoryType(llGetSubString(choice, 2, -1)) == 20) {
+                lmSendConfig("keyAnimation", (string)(keyAnimation = llGetSubString(choice, 2, -1)));
+                lmSendConfig("poserID", (string)(poserID = id));
+            }
+            else if (llGetSubString(choice, 0, 4) == "Poses" && (keyAnimation == ""  || (!cdIsDoll(id) || poserID == dollID))) {
+                poserID = id;
+                integer page = (integer)llStringTrim(llGetSubString(choice, 5, -1), STRING_TRIM);
+                if (!page) {
+                    page = 1;
+                    llOwnerSay("secondlife:///app/agent/" + (string)id + "/about is looking at your poses menu.");
+                }
+                integer poseCount = llGetInventoryNumber(20);
+                list poseList; integer i;
+
+                for (i = 0; i < poseCount; i++) {
+                    string poseName = llGetInventoryName(20, i);
+                    if (poseName != ANIMATION_COLLAPSED &&
+                        ((cdIsDoll(id) || cdIsController(id)) || llGetSubString(poseName, 0, 0) != "!") &&
+                        (cdIsDoll(id) || llGetSubString(poseName, 0, 0) != ".")) {
+                        if (poseName != keyAnimation) poseList += poseName;
+                        else poseList += [ "* " + poseName ];
+                    }
+                }
+                poseCount = llGetListLength(poseList);
+                integer pages = 1;
+                if (poseCount > 11) pages = llCeil((float)poseCount / 9.0);
+                if (poseCount > 11) {
+                    poseList = llList2List(poseList, (page - 1) * 9, page * 9 - 1);
+                    integer prevPage = page - 1;
+                    integer nextPage = page + 1;
+                    if (prevPage == 0) prevPage = 1;
+                    if (nextPage > pages) nextPage = pages;
+                    poseList = [ "Poses " + (string)prevPage, "Poses " + (string)nextPage, MAIN ] + poseList;
+                }
+                else poseList = dialogSort(poseList + [ MAIN ]);
+
+                llDialog(id, "Select the pose to put the doll into", poseList, dialogChannel);
+            }
         }
         else return;
         
@@ -513,8 +565,17 @@ default {
     }
 
     timer() {
-        checkRLV();
-        ifPermissions();
+        if ((nextRLVcheck != 0.0) && (nextRLVcheck < llGetTime())) {
+            checkRLV();
+        }
+        if ((nextAnimRefresh != 0.0) && (nextAnimRefresh < llGetTime())) {
+            ifPermissions();
+        }
+        
+        list possibleEvents =       [60.0];
+        if (nextRLVcheck)           possibleEvents += nextRLVcheck - llGetTime();
+        if (nextAnimRefresh)        possibleEvents += nextAnimRefresh - llGetTime();
+        llSetTimerEvent(llListStatistics(LIST_STAT_MIN,possibleEvents));
     }
 
     //----------------------------------------

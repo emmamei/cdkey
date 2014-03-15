@@ -345,7 +345,6 @@ do_Restart() {
     for (loop = 0; loop < llGetInventoryNumber(INVENTORY_SCRIPT); loop++) {
         string script = llGetInventoryName(INVENTORY_SCRIPT, loop);
         if (script != me) {
-            cdRunScript(script);
             llResetOtherScript(script);
         }
     }
@@ -393,6 +392,7 @@ default {
             else if (name == "lowScriptMode")            lowScriptMode = (integer)value;
             else if (name == "dialogChannel")            dialogChannel = (integer)value;
             else if (name == "demoMode")                      demoMode = (integer)value;
+            else if (name == "quiet")                            quiet = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                  debugLevel = (integer)value;
 #endif

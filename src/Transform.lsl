@@ -31,6 +31,7 @@
 string dollName;
 string stateName;
 list types;
+float menuTime;
 integer lineno;
 integer readingNC;
 integer tryOutfits;
@@ -38,6 +39,7 @@ integer retryOutfits;
 integer findTypeFolder;
 integer rlvHandle;
 integer useTypeFolder;
+integer menuChangeType;
 string transform;
 string outfitsTest;
 string outfitsFolder;
@@ -99,6 +101,11 @@ setDollType(string choice, integer automated) {
 
         if (!quiet) cdChat(dollName + " has become a " + stateName + " Doll.");
         else llOwnerSay("You have become a " + stateName + " Doll.");
+        
+        typeFolder = "";
+        retryOutfits = 0;
+        tryOutfits = 1;
+        llSetTimerEvent(5.0);
     }
 }
 
@@ -185,7 +192,10 @@ default {
     timer() {
         list outfitsFolders = [ "> Outfits", "Outfits", "> Dressup", "Dressup" ];
 
-        if (tryOutfits) {
+        if (readingNC) {
+            kQuery = llGetNotecardLine(TYPE_FLAG + currentState,lineno);
+        }
+        else if (tryOutfits) {
             if (outfitsFolder == "") {
                 if ((outfitsTest == "") || (retryOutfits < 2)) {
                     outfitsTest = llList2String(outfitsFolders, tryOutfits - 1);
@@ -196,6 +206,7 @@ default {
                         outfitsTest = "";
                         if (!readingNC) {
                             cdStopTimer();
+                            if (!showPhrases) llSetScriptState(cdMyScriptName(), 0);
                             return;
                         }
                     }
@@ -211,6 +222,7 @@ default {
                 tryOutfits = 0;
                 if (!readingNC) {
                     cdStopTimer();
+                    if (!showPhrases) llSetScriptState(cdMyScriptName(), 0);
                     return;
                 }
             }
@@ -219,12 +231,10 @@ default {
             lmRunRLV("findfolder:" + outfitsTest + "=" + (string)rlvChannel);
             retryOutfits++;
         }
-
-
-        if (readingNC) {
-            kQuery = llGetNotecardLine(TYPE_FLAG + currentState,lineno);
+        else {
+            cdStopTimer();
+            if (!showPhrases) llSetScriptState(cdMyScriptName(), 0);
         }
-        else cdStopTimer();
     }
 
     //----------------------------------------
@@ -286,6 +296,7 @@ default {
                      if (name == "quiet")                                          quiet = (integer)value;
                 else if (name == "mustAgreeToType")                      mustAgreeToType = (integer)value;
                 else if (name == "showPhrases")                              showPhrases = (integer)value;
+                else if (name == "wearAtLogin")                              wearAtLogin = (integer)value;
                 else if (name == "stateName")                                  stateName = value;
                 else if (name == "RLVok") {
                     RLVok = (integer)value;
@@ -346,6 +357,7 @@ default {
             string optName = llGetSubString(choice, 2, STRING_END);
             string curState = cdGetFirstChar(choice);
 
+            menuTime = 0.0;
             if (choice == "Type...") {
                 list choices;
 
@@ -354,6 +366,7 @@ default {
                 choices += cdGetButton("Wear @ Login", id, wearAtLogin, 0);
 
                 llDialog(dollID, "Options", dialogSort(choices + MAIN), dialogChannel);
+                menuTime = llGetTime();
             }
             else if (optName == "Verify Type") {
                 lmSendConfig("mustAgreeToType", (string)(mustAgreeToType = (curState == CROSS)));
@@ -365,6 +378,11 @@ default {
                 if (showPhrases) llOwnerSay("Hypnotic phrases will be displayed.");
                 else llOwnerSay("No hypnotic phrases will be displayed.");
             }
+            else if (optName == "Wear @ Login") {
+                lmSendConfig("wearAtLogin", (string)(wearAtLogin = (curState == CROSS)));
+                if (wearAtLogin) llOwnerSay("If your type folder is set a new outfit will be chosen each login");
+                else llOwnerSay("New outfits will no longer be chosen at login");
+            }
             else if (choice == "Types...") {
                 // Doll must remain in a type for a period of time
                 if (minMinutes > 0) {
@@ -373,12 +391,14 @@ default {
                 }
                 else {
                     reloadTypeNames();
+                    
                     string msg = "These change the personality of " + dollName + " This Doll is currently a " + stateName + " Doll. What type of doll do you want the Doll to be?";
                     list choices = types;
 
                     llOwnerSay(name + " is looking at your doll types.");
 
                     llDialog(id, msg, dialogSort(llListSort(choices, 1, 1) + MAIN), dialogChannel);
+                    menuTime = llGetTime();
                 }
             }
             else if ((cdListElementP(types, choice) != NOT_FOUND) || (choice == "Transform")) {
@@ -399,8 +419,11 @@ default {
                 debugSay(5, "DEBUG", "stateName = " + (string)choice);
                 debugSay(5, "DEBUG", "currentState = " + (string)currentState);
 
+                menuChangeType = 1;
+
                 setDollType(choice, 0);
             }
+            if ((!showPhrases) && ((menuTime == 0.0) || ((menuTime + 60) < llGetTime()))) llSetScriptState(cdMyScriptName(), 0);
         }
     }
 
@@ -444,7 +467,11 @@ default {
 
             cdPause();
 
-            lmInternalCommand("randomDress", "", NULL_KEY);
+            if (menuChangeType) {
+                lmInternalCommand("randomDress", "", NULL_KEY);
+                menuChangeType = 0;
+            }
+            
             retryOutfits = 0;
         }
     }

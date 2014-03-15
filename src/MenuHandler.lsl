@@ -190,7 +190,7 @@ default
             else if (name == "detachable")                 detachable = (integer)value;
             else if (name == "demoMode")                     demoMode = (integer)value;
             //else if (name == "helpless")                     helpless = (integer)value;
-            //else if (name == "pleasureDoll")             pleasureDoll = (integer)value;
+            else if (name == "pleasureDoll")             pleasureDoll = (integer)value;
             else if (name == "isTransformingKey")   isTransformingKey = (integer)value;
             else if (name == "quiet")                           quiet = (integer)value;
             //else if (name == "signOn")                         signOn = (integer)value;
@@ -594,16 +594,14 @@ default
         debugSay(3, "DEBUG-MENU", "Button clicked: " + choice + ", afterSpace=\"" + afterSpace + "\", beforeSpace=\"" + beforeSpace + "\"");
         
         integer sleeping = 1;
-        if ((choice == "Outfits...") && (llGetScriptState("Dress") == 0)) {
-            llSetScriptState("Dress", 1);
-        }
-        else if ((choice == "Types...") && (llGetScriptState("Transform") == 0)) {
+        if ((llGetSubString(choice, 0, 3) == "Type") && (llGetScriptState("Transform") == 0)) {
             llSetScriptState("Transform", 1);
+            lmSendConfig("dialogChannel", (string)dialogChannel);
+            cdLinkMessage(LINK_THIS, 0, 303, "debugLevel|dollType|quiet|mustAgreeToType|RLVok|showPhrases|wearAtLogin", NULL_KEY);
         }
         else sleeping = 0;
         
         if (sleeping) {
-            cdLinkMessage(LINK_THIS, 0, 301, "", NULL_KEY);
             llSleep(1.0);
         }
             
@@ -799,15 +797,6 @@ default
                     lmSendConfig("MistressList", llDumpList2String(MistressList, "|"));
                 }
             }
-
-#ifdef ADULT_MODE
-                // Strip items... only for Pleasure Doll and Slut Doll Types...
-                list buttons = llListSort(["Top", "Bra", "Bottom", "Panties", "Shoes", "*ALL*"], 1, 1);
-                if (choice == "Strip...")
-                    llDialog(id, "Take off:", dialogSort(buttons + MAIN), dialogChannel); // Do strip menu
-                else if (llListFindList(buttons, [ choice ]) != -1)
-                    lmStrip(choice);
-#endif
         }
 
         if ((channel == blacklistChannel) || (channel == controlChannel)) {

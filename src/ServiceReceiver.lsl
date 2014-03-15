@@ -81,7 +81,12 @@ default {
             integer j; string start = "\n<KeyState:"; string end = "</KeyState:";
             while (i < n) {
                 if (type == 1) {
-                    lmSendConfig(llList2String(llJson2List(storedConfigs), i*2), llList2String(llJson2List(storedConfigs), i*2+1));
+                    string conf = llList2String(llJson2List(storedConfigs), i*2);
+                    string value = cdGetValue(storedConfigs,[conf]);
+                    if (value == JSON_FALSE) value = "0";
+                    else if (value == JSON_TRUE) value = "1";
+                    else if (value == JSON_NULL) value = "";
+                    lmSendConfig(conf, value);
                 }
                 else {
                     string conf = llList2Json(JSON_OBJECT, llList2List(llJson2List(storedConfigs), i*2, i*2+1) );
@@ -95,7 +100,12 @@ default {
         }
         else if (code == 303) {
             while(split != []) {
-                lmSendConfig(llList2String(split,0), llList2String(split,0));
+                string conf = llList2String(split,0);
+                string value = cdGetValue(storedConfigs,[conf]);
+                if (value == JSON_FALSE) value = "0";
+                else if (value == JSON_TRUE) value = "1";
+                else if (value == JSON_NULL) value = "";
+                lmSendConfig(conf, cdGetValue(storedConfigs,[conf]));
                 split = llDeleteSubList(split,0,0);
             }
         }

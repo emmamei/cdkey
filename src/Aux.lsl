@@ -34,6 +34,7 @@ key lmRequest;
 key carrierID = NULL_KEY;
 key dollID = NULL_KEY;
 key poserID = NULL_KEY;
+list memWait;
 list MistressList;
 float rezTime;
 float timerEvent;
@@ -132,98 +133,93 @@ default {
         }
         else if (code == 110) {
             if (script != "Start") return;
+            llSleep(5.0);
             lmMemReport(0.5, 0);
         }
         else if ((code == 135) || (code == 136)) {
-            if (code == 135) {
-#ifdef DEVELOPER_MODE
-                memRequested = 1;
-#else
-#ifdef TESTER_MODE
-                memRequested = 1;
-#else
-                memRequested = llList2Integer(split, 1);
-#endif //TESTER_MODE
-#endif //DEVELOPER_MODE
-                if (memTime == 0.0) {
-                    memCollecting = 1;
-                    memData = "";
-                    memTime = llGetTime();
-                    llSetTimerEvent(1.0);
-                }
-            }
- 
-            string json = llList2String(split, 0);
-            if ((json != "") && (json != JSON_INVALID));
-
-            memData = cdSetValue(memData, [script], json);
-
-            integer i; list scripts = [ "Avatar", "ChatHandler", "Dress", "Main", "MenuHandler", "ServiceRequester", "ServiceReceiver", "Start", "StatusRLV", "Transform" ];
-            integer ok;
-            for (i = 0; i <= 10; i++) {
-                string script = llList2String(scripts, i);
-                if (cdGetValue(memData, [script]) != JSON_INVALID) {
-                    ok++;
-                } else if (script != "") {
-                    // A sleeping script should not block the entire report!
-                    if (llGetScriptState(script) == 0) ok++;
-                }
-            }
-            if (ok == 10) {
-                memCollecting = 0;
-                llSetTimerEvent(0.0);
-                float memory_limit = (float)llGetMemoryLimit();
-                float free_memory = (float)llGetFreeMemory();
-                float used_memory = (float)llGetUsedMemory();
-                float available_memory = free_memory + (65536 - memory_limit);
-                if (((used_memory + free_memory) > (memory_limit * 1.05)) && (memory_limit <= 16384)) { // LSL2 compiled script
-                   memory_limit = 16384;
-                   used_memory = 16384 - free_memory;
-                   available_memory = free_memory;
-                }
-                memData = cdSetValue(memData,[cdMyScriptName()],llList2Json(JSON_ARRAY, [used_memory, memory_limit, free_memory, available_memory]));
-
-                float totUsed; float totLimit; float totFree; float totAvail; integer warnFlag;
-                integer i; string scriptName; list statList;
-                string output = "Script Memory Status:";
+            if ((code == 135) && (!memCollecting)) {
+                integer i;
                 for (i = 0; i < llGetInventoryNumber(10); i++) {
-                    scriptName =        llGetInventoryName(10, i);
-                    if (scriptName != "UpdateScript") {
-                        string type;
-                        if ( ( type = cdGetElementType(memData, ([scriptName])) ) == JSON_ARRAY) {
-                            totUsed     += used_memory          = (float)cdGetValue(memData, ([scriptName,0]));
-                            totLimit    += memory_limit         = (float)cdGetValue(memData, ([scriptName,1]));
-                            totFree     += free_memory          = (float)cdGetValue(memData, ([scriptName,2]));
-                            totAvail    += available_memory     = (float)cdGetValue(memData, ([scriptName,3]));
-                            if (memRequested || (available_memory < 8192)) {
-                                if (!memRequested && !warnFlag) {
-                                    output += "\nOnly showing individual scripts with less than 8kB available.";
-                                    warnFlag = 1;
-                                }
-                                output += "\n" + scriptName + ":\t" + formatFloat(used_memory / 1024.0, 2) + "/" + (string)llRound(memory_limit / 1024.0) + "kB (" +
-                                          formatFloat(free_memory / 1024.0, 2) + "kB free, " + formatFloat(available_memory / 1024.0, 2) + "kB available)";
-                            }
-                        }
-                        else if (llGetScriptState(script) == 0) {
-                            if (memRequested) output += "\n" + scriptName + ":\tIn sleeping state, no report available";
-                        }
-                        else {
-                            output += "\n" + scriptName + ":\tScript is running but provided no report";
-                        }
+                    string script = llGetInventoryName(10, i);
+                    if ((script != "UpdateScript") && (script != cdMyScriptName())) {
+                        if (llGetScriptState(script)) memWait += script;
                     }
                 }
-                
-                output += "\nTotals:\t" + formatFloat(totUsed / 1024.0, 2) + "/" + (string)llRound(totLimit / 1024.0) + "kB (" +
-                           formatFloat(totFree / 1024.0, 2) + "kB free, " + formatFloat(totAvail / 1024.0, 2) + "kB available)";
-
-                if (warnFlag) output += "\nYou have some scripts with very low memory, you may begin to suffer script crashes if memory runs out.  ";
-                                        "Please see the manual for tips how to keep memory usage low.";
-
-                llOwnerSay(output);
+                memCollecting = 1;
                 memData = "";
-                memCollecting = 0;
-                memRequested = 0;
-                memTime = 0.0;
+                memTime = llGetTime() + 5.0;
+                llSetTimerEvent(4.0);
+            }
+#ifdef DEVELOPER_MODE
+            memRequested = 1;
+#else
+#ifdef TESTER_MODE
+            memRequested = 1;
+#else
+            memRequested = llList2Integer(split, 1);
+#endif //TESTER_MODE
+#endif //DEVELOPER_MODE
+            if ((code == 136) || ((memTime < llGetTime()) && (code == 135))) {
+                string json = llList2String(split, 0);
+                if ((json != "") && (json != JSON_INVALID));
+    
+                memData = cdSetValue(memData, [script], json);
+                
+                integer i = llListFindList(memWait, [script]);
+                if ((i != -1) || ((memTime < llGetTime()) && (code == 135))) {
+                    memWait = llDeleteSubList(memWait, i, i);
+                    if (!llGetListLength(memWait) || ((memTime < llGetTime()) && (code == 135))) {
+                        llSetTimerEvent(0.0);
+                        float memory_limit = (float)llGetMemoryLimit();
+                        float free_memory = (float)llGetFreeMemory();
+                        float used_memory = (float)llGetUsedMemory();
+                        float available_memory = free_memory + (65536 - memory_limit);
+                        if (((used_memory + free_memory) > (memory_limit * 1.05)) && (memory_limit <= 16384)) { // LSL2 compiled script
+                           memory_limit = 16384;
+                           used_memory = 16384 - free_memory;
+                           available_memory = free_memory;
+                        }
+                        memData = cdSetValue(memData,[cdMyScriptName()],llList2Json(JSON_ARRAY, [used_memory, memory_limit, free_memory, available_memory]));
+        
+                        float totUsed; float totLimit; float totFree; float totAvail; integer warnFlag;
+                        integer i; string scriptName; list statList;
+                        string output = "Script Memory Status:";
+                        for (i = 0; i < llGetInventoryNumber(10); i++) {
+                            scriptName = llGetInventoryName(10, i);
+                            if (scriptName != "UpdateScript") {
+                                string type;
+                                if ( ( type = cdGetElementType(memData, ([scriptName])) ) != JSON_INVALID) {
+                                    totUsed     += used_memory          = (float)cdGetValue(memData, ([scriptName,0]));
+                                    totLimit    += memory_limit         = (float)cdGetValue(memData, ([scriptName,1]));
+                                    totFree     += free_memory          = (float)cdGetValue(memData, ([scriptName,2]));
+                                    totAvail    += available_memory     = (float)cdGetValue(memData, ([scriptName,3]));
+                                    if (memRequested || (available_memory < 6144)) {
+                                        if (!memRequested && !warnFlag) {
+                                            output += "\nOnly showing individual scripts with less than 6kB available.";
+                                            warnFlag = 1;
+                                        }
+                                        output += "\n" + scriptName + ":\t" + formatFloat(used_memory / 1024.0, 2) + "/" + (string)llRound(memory_limit / 1024.0) + "kB (" +
+                                                  formatFloat(free_memory / 1024.0, 2) + "kB free, " + formatFloat(available_memory / 1024.0, 2) + "kB available)";
+                                    }
+                                }
+                                else {
+                                    if (memRequested) output += "\n" + scriptName + ":\tNo report available, may be sleeping";
+                                }
+                            }
+                        }
+                        
+                        output += "\nTotals:\t" + formatFloat(totUsed / 1024.0, 2) + "/" + (string)llRound(totLimit / 1024.0) + "kB (" +
+                                   formatFloat(totFree / 1024.0, 2) + "kB free, " + formatFloat(totAvail / 1024.0, 2) + "kB available)";
+        
+                        if (warnFlag) output += "\nYou have some scripts with very low memory, you may begin to suffer script crashes if memory runs out.  ";
+                                                "Please see the manual for tips how to keep memory usage low.";
+        
+                        llOwnerSay(output);
+                        memCollecting = 0;
+                        memRequested = 0;
+                        memTime = 0.0;
+                    }
+                }
             }
         }
         
@@ -373,18 +369,6 @@ default {
                 dollMessageCode = JOIN_GROUP;
                 ncRequestDollDialog = llGetNotecardLine(MESSAGE_NC, dollMessageCode + 1);
             }
-            else if ((!cdIsDoll(id) || cdSelfPosed()) && choice == "Unpose") {
-                lmSendConfig("keyAnimation", (string)(keyAnimation = ""));
-                lmSendConfig("poserID", (string)(poserID = NULL_KEY));
-            }
-            else if ((keyAnimation == "" || (!cdIsDoll(id) || cdSelfPosed())) && llGetInventoryType(choice) == 20) {
-                lmSendConfig("keyAnimation", (string)(keyAnimation = choice));
-                lmSendConfig("poserID", (string)(poserID = id));
-            }
-            else if ((keyAnimation == "" || (!cdIsDoll(id) || cdSelfPosed())) && llGetInventoryType(llGetSubString(choice, 2, -1)) == 20) {
-                lmSendConfig("keyAnimation", (string)(keyAnimation = llGetSubString(choice, 2, -1)));
-                lmSendConfig("poserID", (string)(poserID = id));
-            }
             else if (choice == "Access...") {
                 debugSay(5, "DEBUG-AUX", "Dialog channel: " + (string)dialogChannel);
                 string msg = "Key Access Menu.\n" +
@@ -401,43 +385,6 @@ default {
             }
             else if (choice == "Visit Dollhouse") {
                 visitDollhouse += 1;
-            }
-            else if (llGetSubString(choice, 0, 4) == "Poses" && (keyAnimation == ""  || (!cdIsDoll(id) || poserID == dollID))) {
-                poserID = id;
-                integer page = (integer)llStringTrim(llGetSubString(choice, 5, -1), STRING_TRIM);
-                if (!page) {
-                    page = 1;
-                    llOwnerSay("secondlife:///app/agent/" + (string)id + "/about is looking at your poses menu.");
-                }
-                integer poseCount = llGetInventoryNumber(20);
-                list poseList; integer i;
-
-                for (i = 0; i < poseCount; i++) {
-                    string poseName = llGetInventoryName(20, i);
-                    if (poseName != ANIMATION_COLLAPSED &&
-                        ((cdIsDoll(id) || cdIsController(id)) || llGetSubString(poseName, 0, 0) != "!") &&
-                        (cdIsDoll(id) || llGetSubString(poseName, 0, 0) != ".")) {
-                        if (poseName != keyAnimation) poseList += poseName;
-                        else poseList += [ "* " + poseName ];
-                    }
-                }
-                poseCount = llGetListLength(poseList);
-                integer pages = 1;
-                if (poseCount > 11) pages = llCeil((float)poseCount / 9.0);
-                debugSay(7, "DEBUG", "Anims: " + (string)llGetInventoryNumber(20) + " | Avail Poses: " + (string)poseCount + " | Pages: " + (string)pages +
-                    "\nAvailable: " + llList2CSV(poseList) +
-                    "\nThis Page (" + (string)page + "): " + llList2CSV(llList2List(poseList, (page - 1) * 9, page * 9 - 1)));
-                if (poseCount > 11) {
-                    poseList = llList2List(poseList, (page - 1) * 9, page * 9 - 1);
-                    integer prevPage = page - 1;
-                    integer nextPage = page + 1;
-                    if (prevPage == 0) prevPage = 1;
-                    if (nextPage > pages) nextPage = pages;
-                    poseList = [ "Poses " + (string)prevPage, "Poses " + (string)nextPage, MAIN ] + poseList;
-                }
-                else poseList = dialogSort(poseList + [ MAIN ]);
-
-                llDialog(id, "Select the pose to put the doll into", poseList, dialogChannel);
             }
             if (choice == "Abilities...") {
                 string msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
@@ -636,10 +583,10 @@ default {
     }
 
     timer() {
-        if ((memCollecting) && (llGetTime() < memTime)) {
-            lmMemReport(0.5, memRequested);
+        if (memCollecting) {
+            lmMemReport(0.0, memRequested);
         }
-        if (factoryReset) llResetOtherScript("Start");
+        else if (factoryReset) llResetOtherScript("Start");
         else if (textboxHandle && (listenTime < llGetTime())) {
             llListenRemove(textboxHandle);
             textboxHandle = 0;

@@ -15,18 +15,21 @@
 // 2nd Param, highest link code value to match inclusive.
 // 3rd Param, if specified substring match on src script name, "" for no filter
 // 4th Param, if specified substring match on the msg payload, "" for no filter
-list selectors = [ 
+// Note on match order that may help make things faster
+// Selectors are sorted at script init by the first parameter knowing this with the fairly sparse
+// allocation of link numbers we have means that 
+list selectors = [
+     0, 1023, "", "RLV",
     100, 110, "", "",
-    136, 136, "", "",
-    301, 304, "", "",
-    315, 315, "", "",
+    135, 136, "", "",
+    300, 303, "", "",
     500, 500, "", ""
 ];
 
 default
 {
     state_entry() {
-        selectors = llListSort(selectors, 3, 1);
+        selectors = llListSort(selectors, 4, 1);
     }
     
     link_message(integer sender, integer i, string data, key id) {
@@ -41,11 +44,11 @@ default
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
         
         if (code != 700) {
-            integer i; integer n = llGetListLength(selectors) / 3; integer ok;
-            while (!ok && (i < n) && (llList2Integer(selectors, i*3) <= code)) {
-                if ((code <= llList2Integer(selectors, i*3+1)) &&
-                    ((llList2String(selectors, i*3+2) == "") || (llSubStringIndex(script, llList2String(selectors, i*3+2)) != -1)) &&
-                    ((llList2String(selectors, i*3+3) == "") || (llSubStringIndex(data, llList2String(selectors, i*3+3)) != -1))) {
+            integer i; integer n = llGetListLength(selectors) / 4; integer ok;
+            while (!ok && (i < n) && (llList2Integer(selectors, i*4) <= code)) {
+                if ((code <= llList2Integer(selectors, i*4+1)) &&
+                    ((llList2String(selectors, i*4+2) == "") || (llSubStringIndex(script, llList2String(selectors, i*4+2)) != -1)) &&
+                    ((llList2String(selectors, i*4+3) == "") || (llSubStringIndex(data, llList2String(selectors, i*4+3)) != -1))) {
                         if (id != NULL_KEY) data +=  "; " + (string)id;
                         llOwnerSay((string)code + "; " + script + "; " + llList2CSV(split));
                         ok = 1;
