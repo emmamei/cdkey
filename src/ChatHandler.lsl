@@ -10,6 +10,11 @@
 #define cdGetFirstChar(a) llGetSubString(a,0,0)
 #define NOT_FOUND -1
 #define STRING_END -1
+#define cdMenuInject(a,b,c) lmMenuReply(a,b,c)
+
+#define TESTING
+// FIXME: Depends on a variable s
+#define cdCapability(c,p,u) { s += p; if ((c)) { s += " not"; }; s += " " + u + ".\n"; }
 
 key keyHandler              = NULL_KEY;
 
@@ -80,6 +85,7 @@ default
             else if (name == "canAFK")                         canAFK = (integer)value;
             else if (name == "canCarry")                     canCarry = (integer)value;
             else if (name == "canDress")                     canDress = (integer)value;
+            else if (name == "canPose")                       canPose = (integer)value;
             else if (name == "canFly")                         canFly = (integer)value;
             else if (name == "canSit")                         canSit = (integer)value;
             else if (name == "canStand")                     canStand = (integer)value;
@@ -236,16 +242,14 @@ default
     release ........ stop the current pose if possible
     channel # ...... change channel
     help ........... this list of commands
-    dumpstate ...... this will dump all key state to chat history
+    dumpstate ...... dump all key state to chat history
+    build .......... list build configurations
     listhelp ....... list controller/blacklist commands
-    recoveryhelp ... some commands that may rescue a key having issues\n";
-#ifndef DEVELOPER_MODE
+    recoveryhelp ... some commands that may rescue a key having issues";
                     llOwnerSay(help);
-                }
-#else
-                    help += "
-    devhelp ........ list of developer commands";
-                    llOwnerSay(help);
+
+#ifdef DEVELOPER_MODE
+                    llOwnerSay("    devhelp ........ list of developer commands");
                 }
                 else if (choice == "devhelp") {
                     string help = "Developer Commands:
@@ -254,8 +258,9 @@ default
     inject ......... inject an aribtary link message the format is
                      inte#str#key with all but the first optional.";
                      llOwnerSay(help);
-                }
 #endif
+                }
+
                 else if (choice == "listhelp") {
                     string help = "Access Commands:
                      The following commands must be followed by the desired
@@ -302,7 +307,8 @@ default
                     llSleep(1.0);
                     cdLinkMessage(LINK_THIS, 0, 301, "", NULL_KEY);
                     llSleep(5.0);
-                    lmMenuReply("*RLV On*",llGetDisplayName(dollID), id);
+                    // Inject menu click
+                    cdMenuInject("*RLV On*",llGetDisplayName(dollID), id);
                 }
                 // Demo: short time span
                 else if (choice == "demo") {
@@ -316,12 +322,6 @@ default
                 }
                 else if (choice == "poses") {
                     integer  n = llGetInventoryNumber(INVENTORY_ANIMATION);
-
-                    // New v2.0 codebase this limitiation no longer applies.
-                    // Menu max limit of 11... report error
-                    /*if (n > 11) {
-                        llOwnerSay("Too many poses! Found " + (string)n + " poses (max is 11)");
-                    }*/
 
                     while(n) {
                         string thisPose = llGetInventoryName(INVENTORY_ANIMATION, --n);
@@ -337,36 +337,52 @@ default
                     }
                 }
                 else if (choice == "wind") {
-                    lmMenuReply("Wind Emg", dollName, dollID);
+                    // inject a fake Menu click
+                    cdMenuInject("Wind Emg", dollName, dollID);
                 }
                 else if (choice == "xstats") {
-                    string s = "X-Stats:\n";
+                    string s = "Extended stats:\n";
                     s += "AFK time factor: " + formatFloat(RATE_AFK, 1) + "x\n";
                     s += "Configured wind times: " + llList2CSV(windTimes) + " mins\n";
                     if (demoMode) {
-                        s += "Demo mode is enabled times are: 1";
+                        s += "Demo mode is enabled; times are: 1";
                         if (llGetListLength(windTimes) > 1) s += ", 2";
                         s += " mins.\n";
                     }
+                    
                     // Which is the upper bound on the wind times currently? Depeding on the values this could be keyLimit/2 or windLimit
                     s += "Current wind menu: ";
+
                     integer timeLeft = llFloor((timeLeftOnKey - llGetTime()) / 60.0);
                     float windLimit = currentLimit - (timeLeftOnKey - llGetTime());
                     integer timesLimit = llFloor(windLimit / SEC_TO_MIN);
                     integer time; list avail; integer i; integer n = llGetListLength(windTimes);
                     integer maxTime = llRound(currentLimit / 60.0 / 2);
+
                     while ((i <= n) && ( ( time = llList2Integer(windTimes, i++) ) < timesLimit) && (time <= maxTime)) {
                         avail += ["Wind " + (string)time];
-                    }
+                    } 
                     if ((i <= n) && (timesLimit <= maxTime)) {
                         avail += ["Wind Full"];
                         s += " (" + (string)timeLeft  + " of " + (string)maxTime + " minutes left " + (string)timesLimit + " from max)";
                     }
+
                     s += llList2CSV(avail);
                     if (windLimit < (keyLimit / 2)) s += " (Times limited to half max time)";
                     s += "\n";
 
                     string p = llToLower(pronounHerDoll);
+#ifdef TESTING
+                    cdCapability(autoTP,      "Doll can", "be force teleported");
+                    cdCapability(detachable,  "Doll can", "detach " + p + " key");
+                    cdCapability(canDress,    "Doll can", "be dressed by others");
+                    cdCapability(canFly,      "Doll can", "fly");
+                    cdCapability(canPose,     "Doll can", "be posed by others");
+                    cdCapability(canSit,      "Doll can", "sit");
+                    cdCapability(canStand,    "Doll can", "stand");
+                    cdCapability(canWear,     "Doll can", "dress by " + p + "self");
+                    cdCapability(poseSilence, "Doll is",  "silenced while posing");
+#else
                     list items = [
                         autoTP,             "Doll can? be force teleported",
                         detachable,         "Doll can? detach " + p + " key",
@@ -376,18 +392,28 @@ default
                         canSit,             "Doll can? sit",
                         canStand,           "Doll can? stand",
                         canWear,            "Doll can? dress by " + p + "self",
-                        poseSilence,        "Doll is? silenced while posing",
-                        RLVok,              "RLV is? active",
-                        (windRate == 0.0),  "Key is? winding down"
+                        poseSilence,        "Doll is? silenced while posing"
                     ];
+
                     i=0; n = llGetListLength(items);
+
                     while (i++ < n) {
                         string in = llList2String(items, i--);
                         integer index = llSubStringIndex(in, "?");
+
                         in = llDeleteSubString(in, index, index);
                         if (!llList2Integer(items, i+=2)) in = llInsertString(in, index, " not");
                         s += in + "\n";
                     }
+
+#endif
+                    if (windRate == 0.0) { s += "Key is not winding down.\n"; }
+                    else { s += "Current wind rate is " + formatFloat(windRate,2) + ".\n"; }
+
+                    if (RLVok == -1) { s += "RLV status is unknown.\n"; }
+                    else if (RLVok == 1) { s += "RLV is active.\n"; } 
+                    else s += "RLV is not active.\n";
+
                     llOwnerSay(s);
                 }
                 else if (choice == "stat") {
@@ -434,6 +460,7 @@ default
                 else lmInternalCommand("doUnpose", "", dollID);
             }
             else {
+                // Command has secondary parameter
                 string param = llStringTrim(llGetSubString(choice, space + 1, STRING_END), STRING_TRIM);
                 choice = llStringTrim(llGetSubString(choice, 0, space - 1), STRING_TRIM);
 
