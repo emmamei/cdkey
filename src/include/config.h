@@ -31,6 +31,10 @@
    performance statistics etc */
 #define DEVELOPER_MODE 1
 
+/* enable testing and debugging features and allows the doll to access
+   normally inaccessible functions like strip and wind */
+/* #define TESTER_MODE 1 */
+
 /* enable the start up introduction/hypno text provided that the required
    "Intro Text" notecard is also present */
 /* #undef INTRO_STARTUP */
@@ -60,7 +64,3 @@
    the local region. This slightly delays certain events and turns off non
    essential candy to produce a large drop in script time */
 #define SIM_FRIENDLY 1
-
-/* enable testing and debugging features and allows the doll to access
-   normally inaccessible functions like strip and wind */
-#define TESTER_MODE 1
