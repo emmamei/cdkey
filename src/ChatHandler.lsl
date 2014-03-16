@@ -319,13 +319,18 @@ default
                 }
                 // Demo: short time span
                 else if (choice == "demo") {
+                    // toggles demo mode
                     lmSendConfig("demoMode", (string)(demoMode = !demoMode));
-                    string mode = "normally";
+
+                    string s = "Key now ";
                     if (demoMode) {
-                        mode = "demo mode";
                         if (timeLeftOnKey > DEMO_LIMIT) timeLeftOnKey = DEMO_LIMIT;
+                        s += "in demo mode: " + (string)llRound(timeLeftOnKey / SEC_TO_MIN) + " of " + (string)llRound(DEMO_LIMIT / SEC_TO_MIN) + " minutes remaining.";
                     }
-                    llOwnerSay("Key set to run " + mode + ": time limit set to " + (string)llRound(currentLimit / SEC_TO_MIN) + " minutes.");
+                    else {
+                        // FIXME: currentlimit not set until later; how do we tell user what it is?
+                        s += "running normally: " + (string)(timeLeftOnKey / SEC_TO_MIN) + " minutes remaining.";
+                    }
                 }
                 else if (choice == "poses") {
                     integer  n = llGetInventoryNumber(INVENTORY_ANIMATION);
@@ -349,8 +354,10 @@ default
                 }
                 else if (choice == "xstats") {
                     string s = "Extended stats:\n";
+
                     s += "AFK time factor: " + formatFloat(RATE_AFK, 1) + "x\n";
                     s += "Configured wind times: " + llList2CSV(windTimes) + " mins\n";
+
                     if (demoMode) {
                         s += "Demo mode is enabled; times are: 1";
                         if (llGetListLength(windTimes) > 1) s += ", 2";
@@ -427,6 +434,10 @@ default
                     llOwnerSay(s);
                 }
                 else if (choice == "stat") {
+                    debugSay(6, "DEBUG", "timeLeftOnKey = " + (string)timeLeftOnKey);
+                    debugSay(6, "DEBUG", "currentLimit = " + (string)currentLimit);
+                    debugSay(6, "DEBUG", "displayWindRate = " + (string)displayWindRate);
+
                     float t1 = timeLeftOnKey / (SEC_TO_MIN * displayWindRate);
                     float t2 = currentLimit / (SEC_TO_MIN * displayWindRate);
                     float p = t1 * 100.0 / t2;
@@ -439,18 +450,31 @@ default
                     llOwnerSay(s);
                 }
                 else if (choice == "stats") {
-                    displayWindRate;
+                    debugSay(6, "DEBUG", "timeLeftOnKey = " + (string)timeLeftOnKey);
+                    debugSay(6, "DEBUG", "currentLimit = " + (string)currentLimit);
+                    debugSay(6, "DEBUG", "displayWindRate = " + (string)displayWindRate);
+
+                    //displayWindRate;
+
                     llOwnerSay("Time remaining: " + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate)) + " minutes of " +
                                 (string)llRound(currentLimit / (SEC_TO_MIN * displayWindRate)) + " minutes.");
-                    string msg = "Key is";
-                    if (windRate == 0.0) msg += " stopped.";
+
+                    string msg;
+
+                    if (windRate == 0.0) msg = "Key is stopped.";
                     else {
-                        msg = "Key is unwinding at a";
-                        if (windRate < 1.0) msg += " slowed rate";
-                        else if (windRate == 1.0) msg += " normal rate";
-                        else msg += " accelerated rate";
-                        msg += " of " + formatFloat(windRate, 1) + "x.";
+                        msg = "Key is unwinding at a ";
+
+                        if (windRate == 1.0) msg += " normal rate.";
+                        else {
+                            if (windRate < 1.0) msg += " slowed rate of ";
+                            else if (windRate > 1.0) msg += " accelerated rate of ";
+
+                            msg += " of " + formatFloat(windRate, 1) + "x.";
+                        }
+
                     }
+
                     llOwnerSay(msg);
 
                     if (!cdCollapsedAnim() && !cdNoAnim()) {
