@@ -289,18 +289,17 @@ default {
         float timerInterval;
         
         if (cdAttached()) timerInterval = ((thisTimerEvent = llGetTime()) - lastTimerEvent);
-
-        if (carryExpire != 0.0) {
-            if (llGetAgentSize(carrierID) == ZERO_VECTOR)       lmSendConfig("carryExpire", (string)(carryExpire - timerInterval));
-            else                                                lmSendConfig("carryExpire", (string)(carryExpire = CARRY_TIMEOUT));
-        }
         
         if ((thisTimerEvent < nextExpiryTime) && (timerInterval < SEC_TO_MIN)) return;
 
-        if (llGetAgentSize(carrierID) == ZERO_VECTOR)           lmSendConfig("carryExpire", (string)(carryExpire -= timerInterval));
-        lastTimerEvent = thisTimerEvent;
-
+        if (carryExpire != 0.0) {
+            if (llGetAgentSize(carrierID) == ZERO_VECTOR)       lmSendConfig("carryExpire", (string)(carryExpire -= timerInterval));
+            else                                                lmSendConfig("carryExpire", (string)(carryExpire = CARRY_TIMEOUT));
+        }
+        
         displayWindRate = setWindRate();
+        llOwnerSay((string)thisTimerEvent + " - " + (string)lastTimerEvent + " = " + (string)timerInterval + " @ " + (string)windRate);
+        lastTimerEvent = thisTimerEvent;
 
         // Increment a counter
         ticks++;
@@ -324,12 +323,12 @@ default {
             lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0.0));
         }
 
-        if (cdTimeSet(collapseTime)) lmSendConfig("collapseTime", (string)(collapseTime = 0.0)); // Setting to zero marks it as not relevant at this time.
+        if (!collapsed && cdTimeSet(collapseTime)) lmSendConfig("collapseTime", (string)(collapseTime = 0.0)); // Setting to zero marks it as not relevant at this time.
         
         lmInternalCommand("getTimeUpdates", "", NULL_KEY);
 
 #ifndef DEVELOPER_MODE
-            ifPermissions();
+        ifPermissions();
 #endif
         // Update sign if appropriate
         string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
@@ -591,7 +590,7 @@ default {
             }
             else if ((cmd == "collapse") && (script != llGetScriptName())) collapse(llList2Integer(split, 0));
             else if (cmd == "getTimeUpdates") {
-                if (cdTimeSet(timeLeftOnKey))       lmSendConfig("timeLeftOnKey",       (string)(timeLeftOnKey - llGetTime()));
+                if (cdTimeSet(timeLeftOnKey))       lmSendConfig("timeLeftOnKey",       (string)timeLeftOnKey);
                 if (cdTimeSet(wearLockExpire))      lmSendConfig("wearLockExpire",      (string)(wearLockExpire - llGetTime()));
                 if (cdTimeSet(poseExpire))          lmSendConfig("poseExpire",          (string)(poseExpire - llGetTime()));
                 if (cdTimeSet(carryExpire))         lmSendConfig("carryExpire",         (string)(carryExpire - llGetTime()));
