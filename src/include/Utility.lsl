@@ -44,8 +44,14 @@ memReport(string script, float delay) {
     cdLinkMessage(LINK_THIS,0,136,llList2Json(JSON_ARRAY, [used_memory, memory_limit, free_memory, max_memory]),NULL_KEY);
 }
 
+/*
+ * This version of debugSay() makes LinkListen.lsl a *required* part of a debug key - a COMPLETE script which is
+ * not at all part of a normal key. Differences between dev keys and normal keys MUST be minimal - if a devel key
+ * is different then you're developing *A NEW KEY!!!!!
+ */
 #ifdef DEVELOPER_MODE
 #define debugSay(level,prefix,msg) if (debugLevel >= level) cdLinkMessage(LINK_THIS,0,700,cdMyScriptName()+":"+(string)__LINE__+"|"+(string)level+"|"+prefix+"|"+msg,NULL_KEY)
+/* #define debugSay(level,prefix,msg) if (debugLevel >= level) { llOwnerSay(prefix+"("+((string)level)+"):"+((string)__LINE__)+": "+(msg)); } */
 #else
 #define debugSay(level,prefix,msg)
 #endif //DEVELOPER_MODE

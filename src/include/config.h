@@ -18,8 +18,8 @@
 //#define DEBUG_LEVEL 5
 //#define DEBUG_LEVEL 4
 //#define DEBUG_LEVEL 3
-#define DEBUG_LEVEL 1
-//#define DEBUG_LEVEL 0
+//#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 0
 #endif
 
 /* sets the target for debugging messages either DEBUG to send on debug
@@ -29,7 +29,7 @@
 /* enable developer support features such as not using RLV locks which would
    prevent editing the scripts or notecards, collection and reporting of
    performance statistics etc */
-#define DEVELOPER_MODE 1
+/* #define DEVELOPER_MODE 1 */
 
 /* enable testing and debugging features and allows the doll to access
    normally inaccessible functions like strip and wind */
