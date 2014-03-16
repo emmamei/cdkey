@@ -184,6 +184,8 @@ collapse(integer n) {
     lmSendConfig("collapseTime",  (string)(collapseTime - llGetTime()));
     lmSendConfig("collapsed",     (string)(collapsed = n));
     lmInternalCommand("collapse", (string)(collapsed = n), llGetKey());
+    
+    llSetTimerEvent(0.022);
 }
 
 //========================================
@@ -324,8 +326,9 @@ default {
             lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0.0));
         }
 
-        if (collapsed) lmSendConfig("collapseTime", (string)(llGetTime() - collapseTime));
-        else if (cdTimeSet(collapseTime)) lmSendConfig("collapseTime", (string)(collapseTime = 0.0)); // Setting to zero marks it as not relevant at this time.
+        if (cdTimeSet(collapseTime)) lmSendConfig("collapseTime", (string)(collapseTime = 0.0)); // Setting to zero marks it as not relevant at this time.
+        
+        lmInternalCommand("getTimeUpdates", "", NULL_KEY);
 
 #ifndef DEVELOPER_MODE
             ifPermissions();
@@ -387,8 +390,8 @@ default {
         // Determine Next Timer Event
         list possibleEvents;
         if (cdTimeSet(carryExpire)) {
-                                        possibleEvents += carryExpire - thisTimerEvent;
-                                        possibleEvents += 10.0;
+                                            possibleEvents += carryExpire - thisTimerEvent;
+                                            possibleEvents += 10.0;
         }
 
         if (cdTimeSet(poseExpire))          possibleEvents += poseExpire - thisTimerEvent;
@@ -402,12 +405,12 @@ default {
         }
 
         if ((possibleEvents != []) &&
-            (!lowScriptMode))           possibleEvents += 20.0;
+            (!lowScriptMode))               possibleEvents += 20.0;
 
-        if (timeLeftOnKey != 0.0)       possibleEvents += timeLeftOnKey;
+        if (timeLeftOnKey != 0.0)           possibleEvents += timeLeftOnKey;
 
-        if (!lowScriptMode)             possibleEvents += 60.0;
-        else                            possibleEvents += 300.0;
+        if (!lowScriptMode)                 possibleEvents += 60.0;
+        else                                possibleEvents += 300.0;
 
         // Set timer to the first of our predicted events.
         llSetTimerEvent(cdListMin(possibleEvents));
@@ -743,9 +746,17 @@ default {
                 return; // Handled in MenuHandler
             }
             else if (choice == "Wind...") {
+                if (!canRepeat && (id == winderID)) {
+                    lmSendToAgent("Dolly needs to be wound by someone else before you can wind her again.", id);
+                    return;
+                }
                 lmInternalCommand("windMenu", name + "|" + (string)windLimit, id);
             }
-            else if ((choice == "Wind") && ((cdIsCarrier(id)) || (cdIsController(id)))) {
+            else if ((choice == "Wind...") && ((cdIsCarrier(id)) || (cdIsController(id)))) {
+                if (!cdIsController(id) && !canRepeat && (id == winderID)) {
+                    lmSendToAgent("Dolly needs to be wound by someone else before you can wind her again.", id);
+                    return;
+                }
                 lmInternalCommand("windMenu", name + "|" + (string)windLimit, id);
             }
             else if (choice == "Wind Emg") {
@@ -786,7 +797,7 @@ default {
                 }
 
             }
-            else if (choice == "Wind" || choice == "Wind Full") {
+            else if (llGetSubString(choice, 0, 3) == "Wind" || choice == "Wind Full") {
 
                 if (collapsed == JAMMED) llDialog(id, "The dolly cannot be wound while her key is being held.", ["Help..."], dialogChannel);
 
