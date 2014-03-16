@@ -298,7 +298,7 @@ default {
         }
         
         displayWindRate = setWindRate();
-        llOwnerSay((string)thisTimerEvent + " - " + (string)lastTimerEvent + " = " + (string)timerInterval + " @ " + (string)windRate);
+        //llOwnerSay((string)thisTimerEvent + " - " + (string)lastTimerEvent + " = " + (string)timerInterval + " @ " + (string)windRate);
         lastTimerEvent = thisTimerEvent;
 
         // Increment a counter

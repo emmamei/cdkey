@@ -53,7 +53,7 @@
 #define WEAR_LOCK_TIME 600.0
 #define DEMO_LIMIT 300.0
 #define POSE_LIMIT 300.0
-#define CARRY_TIMEOUT 60.0
+#define CARRY_TIMEOUT 300.0
 #define JAM_DEFAULT_TIME 90.0
 
 // Keys of important people in life of the Key:
