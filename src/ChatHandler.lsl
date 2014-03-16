@@ -28,6 +28,7 @@ float wearLockExpire        = 0.0;
 string dollGender           = "Female";
 string RLVver               = "";
 string pronounHerDoll       = "Her";
+string dollName		    = "";
 
 integer autoAFK             = 1;
 integer broadcastOn         = -1873418555;
@@ -48,6 +49,7 @@ default
     //----------------------------------------
     state_entry() {
         dollID = llGetOwner();
+        dollName = llGetDisplayName(dollID);
         chatHandle = llListen(chatChannel, "", dollID, "");
         broadcastHandle = llListen(broadcastOn, "", "", "");
         
@@ -216,7 +218,7 @@ default
             if (choiceType == INVENTORY_ANIMATION || firstChar == "." || firstChar == "!") {
                 if (choiceType != INVENTORY_ANIMATION) choice = llGetSubString(choice, 1, STRING_END);
                 if (cdNoAnim() || (!cdCollapsedAnim() && cdSelfPosed())) {
-                    lmInternalCommand("setPose", choice, dollID);
+                    lmMenuReply(choice, dollName, dollID);
                     llOwnerSay("You set your pose to: " + choice);
                 }
                 else llOwnerSay("You try to regain control over your body in an effort to set your own pose but even that is beyond doll's control.");
