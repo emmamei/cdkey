@@ -6,13 +6,15 @@
 //
 // DATE: 28 February 2014
 
-#define MAIN_LSL
+#define MAIN_LSL 1
 #include "include/GlobalDefines.lsl"
 
 #define cdNullList(a) (llGetListLength(a)==0)
 #define cdListMin(a) llListStatistics(LIST_STAT_MIN,a)
 #define cdKeyStopped() (windRate==0.0)
 #define cdTimeSet(a) (a!=0.0)
+
+//#define debugPrint(a) llSay(DEBUG_CHANNEL,(a))
 
 // Note that some doll types are special....
 //    - regular: used for standard Dolls, including non-transformable
@@ -753,6 +755,7 @@ default {
                 // in - say - 6 hours... at least maxwindtime *2 or *3.
 
                 if (winderRechargeTime <= llGetUnixTime()) {
+                    // Winder is recharged and usable.
                     windamount = 0;
 
                     if (collapsed == NO_TIME) {
@@ -774,19 +777,25 @@ default {
                     }
                 }
                 else {
-                   float timeX = ((winderRechargeTime - llGetUnixTime()) / 60.0);
+                   float timeX = ((winderRechargeTime - llGetUnixTime()) / SEC_TO_MIN);
                    string s;
 
                    s = "Emergency self-winder is not yet recharged. There remains ";
 
+                   llSay(DEBUG_CHANNEL,"Winder recharge: timeX = " + (string)timeX + " minutes");
                    if (timeX < 60.0) s += (string)llFloor(timeX) + " minutes ";
-                   else s += "over " + (string)llFloor(timeX / 3600.0) + " hours ";
+                   else s += "over " + (string)llFloor(timeX / 60.0) + " hours ";
 
                    llOwnerSay(s + "before it will be ready again.");
                 }
 
             }
-            else if (choice == "Wind" || choice == "Wind Full") {
+
+            // Winding - pure and simple:
+            //    * Wind      - single wind time
+            //    * Wind 999  - wind amount
+            //    * Wind Full - wind to limit
+            else if (llGetSubString(choice,0,3) == "Wind") {
 
                 if (collapsed == JAMMED) llDialog(id, "The dolly cannot be wound while her key is being held.", ["Help..."], dialogChannel);
 
@@ -795,23 +804,25 @@ default {
                     return;
                 }
 
-                integer i = 0;
                 integer numberOfWindTimes = llGetListLength(windTimes);
 
-                if ((choice == "Wind") && (numberOfWindTimes < 2)) {
-                    if (demoMode) split = [1,2];
-                    else split = windTimes;
+                if (choice == "Wind") {
+                    if (numberOfWindTimes < 2) {
+                        if (demoMode) split = [1,2];
+                        else split = windTimes;
 
-                    // if WindTimes (split) is null then default to single 30m wind time
-                    if (cdNullList(split)) {
-                        split = [30];
-                        lmSendConfig("windTimes","30");
+                        // if WindTimes (split) is null then default to single 30m wind time
+                        if (cdNullList(split)) {
+                            split = [30];
+                            lmSendConfig("windTimes","30");
+                        }
+
+                        windamount = cdListMin(split) * SEC_TO_MIN;
                     }
-
-                    windamount = cdListMin(split) * SEC_TO_MIN;
                 }
                 else if (choice == "Wind Full") windamount = effectiveLimit - timeLeftOnKey;
-                else windamount = (float)llGetSubString(choice, 5, -1) * SEC_TO_MIN;
+                else // Wind 999
+                    windamount = (float)llGetSubString(choice, 5, -1) * SEC_TO_MIN;
 
                 if ((windamount + 60.0) > windLimit) { windamount = windLimit; }
 
