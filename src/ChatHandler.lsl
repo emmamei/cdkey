@@ -28,7 +28,7 @@ float wearLockExpire        = 0.0;
 string dollGender           = "Female";
 string RLVver               = "";
 string pronounHerDoll       = "Her";
-string dollName		    = "";
+string dollName            = "";
 
 integer autoAFK             = 1;
 integer broadcastOn         = -1873418555;
@@ -496,7 +496,7 @@ default
                 }
                 else if (choice == "release") {
                     if ((poserID != NULL_KEY) && (poserID != dollID)) llOwnerSay("Dolly tries to wrest control of her body from the pose but she is no longer in control of her form.");
-                    else lmInternalCommand("doUnpose", "", dollID);
+                    else lmMenuReply("Unpose", dollName, dollID);
                 }
             }
             else {

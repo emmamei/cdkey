@@ -440,6 +440,7 @@ default {
                 else if (name == "pronounHerDoll")       pronounHerDoll = value;
                 else if (name == "pronounSheDoll")       pronounSheDoll = value;
                 else if (name == "poserID") {
+                    poserID = (key)value;
                     cdSetDollStateIf(DOLL_POSER_IS_SELF, (((dollState & DOLL_POSED) == 1) && (poserID == dollID)));
                 }
                 else if (name == "dialogChannel") {
