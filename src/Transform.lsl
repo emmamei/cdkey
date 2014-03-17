@@ -356,7 +356,23 @@ default {
             string curState = cdGetFirstChar(choice);
 
             menuTime = llGetTime();
-            if (choice == "Type...") {
+            if ((choice == "Type...") || (optName == "Verify Type") || (optName == "Show Phrases") || (optName == "Wear @ Login")) {
+                if (optName == "Verify Type") {
+                    lmSendConfig("mustAgreeToType", (string)(mustAgreeToType = (curState == CROSS)));
+                    if (mustAgreeToType) llOwnerSay("Changes in Doll Types will be verified.");
+                    else llOwnerSay("Changes in Doll Types will not be verified.");
+                }
+                else if (optName == "Show Phrases") {
+                    lmSendConfig("showPhrases", (string)(showPhrases = (curState == CROSS)));
+                    if (showPhrases) llOwnerSay("Hypnotic phrases will be displayed.");
+                    else llOwnerSay("No hypnotic phrases will be displayed.");
+                }
+                else if (optName == "Wear @ Login") {
+                    lmSendConfig("wearAtLogin", (string)(wearAtLogin = (curState == CROSS)));
+                    if (wearAtLogin) llOwnerSay("If your type folder is set a new outfit will be chosen each login");
+                    else llOwnerSay("New outfits will no longer be chosen at login");
+                }
+                
                 list choices;
 
                 choices += cdGetButton("Verify Type", id, mustAgreeToType, 0);
@@ -364,21 +380,6 @@ default {
                 choices += cdGetButton("Wear @ Login", id, wearAtLogin, 0);
 
                 llDialog(dollID, "Options", dialogSort(choices + MAIN), dialogChannel);
-            }
-            else if (optName == "Verify Type") {
-                lmSendConfig("mustAgreeToType", (string)(mustAgreeToType = (curState == CROSS)));
-                if (mustAgreeToType) llOwnerSay("Changes in Doll Types will be verified.");
-                else llOwnerSay("Changes in Doll Types will not be verified.");
-            }
-            else if (optName == "Show Phrases") {
-                lmSendConfig("showPhrases", (string)(showPhrases = (curState == CROSS)));
-                if (showPhrases) llOwnerSay("Hypnotic phrases will be displayed.");
-                else llOwnerSay("No hypnotic phrases will be displayed.");
-            }
-            else if (optName == "Wear @ Login") {
-                lmSendConfig("wearAtLogin", (string)(wearAtLogin = (curState == CROSS)));
-                if (wearAtLogin) llOwnerSay("If your type folder is set a new outfit will be chosen each login");
-                else llOwnerSay("New outfits will no longer be chosen at login");
             }
             else if (choice == "Types...") {
                 // Doll must remain in a type for a period of time
