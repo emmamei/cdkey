@@ -410,6 +410,7 @@ default {
             else if (name == "collapsed") {
                 collapsed = (integer)value;
                 cdSetDollStateIf(DOLL_COLLAPSED, collapsed);
+                llOwnerSay((string)dollState);
                 if (collapsed) lmSendConfig("keyAnimation", (keyAnimation = ANIMATION_COLLAPSED));
                 else if (cdCollapsedAnim()) lmSendConfig("keyAnimation", (keyAnimation = ""));
             }
@@ -518,6 +519,21 @@ default {
                 }
             }
 #endif
+            else if (choice == "Carry") {
+                lmSendConfig("carrierID", (string)(carrierID = id));
+                lmSendConfig("carrierName", (carrierName = name));
+                if (!quiet) llSay(0, "The doll " + dollName + " has been picked up by " + carrierName);
+                else {
+                    llOwnerSay("You have been picked up by " + carrierName);
+                    llRegionSayTo(carrierID, 0, "You have picked up the doll " + dollName);
+                }
+            }
+            else if (choice == "Uncarry") {
+                if (quiet) lmSendToAgent("You were carrying " + dollName + " and have now placed them down.", carrierID);
+                else llSay(0, "Dolly " + dollName + " has been placed down by " + carrierName);
+                lmSendConfig("carrierID", (string)(carrierID = NULL_KEY));
+                lmSendConfig("carrierName", (carrierName = ""));
+            }
             else if ((!cdIsDoll(id) || cdSelfPosed()) && choice == "Unpose") {
                 lmSendConfig("keyAnimation", (string)(keyAnimation = ""));
                 lmSendConfig("poserID", (string)(poserID = NULL_KEY));
@@ -695,6 +711,7 @@ default {
                     ((dollState & (DOLL_AFK | DOLL_CARRIED | DOLL_COLLAPSED)) != 0) || posed,
                     ((dollState & (DOLL_AFK | DOLL_COLLAPSED)) != 0) || !canWear || wearLock
                 ];
+                llOwnerSay(llList2CSV(states));
                 integer index;
 
                 while ( ( index = llSubStringIndex(data, "$C") ) != -1) {

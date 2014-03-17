@@ -618,21 +618,6 @@ default
 
                 llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
             }
-            else if (choice == "Carry") {
-                lmSendConfig("carrierID", (string)(carrierID = id));
-                lmSendConfig("carrierName", (carrierName = name));
-                if (!quiet) llSay(0, "The doll " + dollName + " has been picked up by " + carrierName);
-                else {
-                    llOwnerSay("You have been picked up by " + carrierName);
-                    llRegionSayTo(carrierID, 0, "You have picked up the doll " + dollName);
-                }
-            }
-            else if (choice == "Uncarry") {
-                if (quiet) lmSendToAgent("You were carrying " + dollName + " and have now placed them down.", carrierID);
-                else llSay(0, "Dolly " + dollName + " has been placed down by " + carrierName);
-                lmSendConfig("carrierID", (string)(carrierID = NULL_KEY));
-                lmSendConfig("carrierName", (carrierName = ""));
-            }
             else if (choice == "Detach")
                 lmInternalCommand("detach", "", id);
             else if (afterSpace == "Visible") lmSendConfig("isVisible", (string)(visible = (beforeSpace == CROSS)));
