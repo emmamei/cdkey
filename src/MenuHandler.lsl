@@ -746,7 +746,11 @@ default
             else if (afterSpace == "Outfitable") lmSendConfig("canDress", (string)(canDress = (beforeSpace == CROSS)));
             else if (afterSpace == "Poseable") lmSendConfig("canPose", (string)(canPose = (beforeSpace == CROSS)));
             else if (afterSpace == "Warnings") lmSendConfig("doWarnings", (string)(beforeSpace == CROSS));
-            else if (afterSpace == "Offline") lmSendConfig("offlineMode", (string)(beforeSpace == CROSS));
+            else if (afterSpace == "Offline") {
+                lmSendConfig("offlineMode", (string)(beforeSpace == CROSS));
+                llSleep(1.0);
+                cdLinkMessage(LINK_THIS, 0, 301, "", NULL_KEY);
+            }
             else if (afterSpace == "Allow AFK") {
                 lmSendConfig("canAFK", (string)(canAFK = (beforeSpace == CROSS)));
                 if (!canAFK && afk) {

@@ -166,7 +166,6 @@ ifPermissions() {
 collapse(integer n) {
     if (n == NOT_COLLAPSED) {
         lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
-        lmSendConfig("collapseTime",  (string)(collapseTime = 0.0));
     }
     else {
         if (n == NO_TIME) {
@@ -186,9 +185,10 @@ collapse(integer n) {
         lmSendConfig("timeToJamRepair", (string)(timeToJamRepair = 0.0));
     }
 
-    lmSendConfig("collapseTime",  (string)(collapseTime - llGetTime()));
     lmSendConfig("collapsed",     (string)(collapsed = n));
-    lmInternalCommand("collapse", (string)(collapsed = n), llGetKey());
+    if (collapsed) lmSendConfig("collapseTime",  (string)(collapseTime - llGetTime()));
+    else lmSendConfig("collapseTime",  (string)(collapseTime = 0.0));
+    lmInternalCommand("collapse", (string)collapsed, llGetKey());
     
     llSetTimerEvent(0.022);
 }

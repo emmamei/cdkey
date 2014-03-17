@@ -78,6 +78,7 @@ default {
         else if ((code == 301) || (code == 302)) {
             integer type = code - 300;
             integer i; integer n = llGetListLength(storedConfigs) / 2;
+            storedConfigs = llListSort(storedConfigs, 2, 1);
             while (i < n) {
                 string conf = llList2String(storedConfigs, i * 2);
                 string value = llList2String(storedConfigs, i * 2 + 1);
@@ -92,6 +93,7 @@ default {
             if (i != -1) lmSendConfig("dollyName", llList2String(storedConfigs, i + 1));
         }
         else if (code == 303) {
+            storedConfigs = llListSort(storedConfigs, 2, 1);
             while(split != []) {
                 string conf = llList2String(split,0);
                 integer i = llListFindList(storedConfigs, [conf]);
