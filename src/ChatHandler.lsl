@@ -432,7 +432,7 @@ default
                     else { s += "Current wind rate is " + formatFloat(windRate,2) + ".\n"; }
 
                     if (RLVok == -1) { s += "RLV status is unknown.\n"; }
-                    else if (RLVok == 1) { s += "RLV is active.\n"; } 
+                    else if (RLVok == 1) { s += "RLV is active.\nRLV version: " + RLVver; } 
                     else s += "RLV is not active.\n";
 
                     llOwnerSay(s);
