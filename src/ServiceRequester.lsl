@@ -247,6 +247,7 @@ default
                     llSleep(1.0);
                 }
             }
+            else if (cmd == "getTimeUpdates") lastTimeRequest = llGetUnixTime();
         }
         else if (code == 500) {
             string selection = llList2String(split, 0);

@@ -49,6 +49,7 @@ integer invMarker;
 integer myMod;
 integer lastPostTimestamp;
 integer lastGetTimestamp;
+integer lastTimeRequest;
 integer databaseOnline = YES;
 integer databaseReload;
 integer updateCheck = 10800;
@@ -79,7 +80,7 @@ queForSave(string name, string value) {
 
     integer index = llListFindList(dbPostParams, [ name ]);
 
-    if (!llGetListLength(dbPostParams) && (name != "timeLeftOnKey")) {
+    if (!llGetListLength(dbPostParams) && ((llGetTime() - lastTimeRequest) > HTTPthrottle)) {
         lmInternalCommand("getTimeUpdates", "", NULL_KEY);
     }
 

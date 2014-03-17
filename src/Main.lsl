@@ -327,6 +327,8 @@ default {
             lmInternalCommand("wearLock", "0", NULL_KEY);
             lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0.0));
         }
+        
+        lmInternalCommand("getTimeUpdates", "", llGetKey());
 
 #ifndef DEVELOPER_MODE
         ifPermissions();
