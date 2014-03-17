@@ -592,6 +592,7 @@ default {
             else if (cmd == "getTimeUpdates") {
                 if (cdTimeSet(timeLeftOnKey))       lmSendConfig("timeLeftOnKey",       (string)timeLeftOnKey);
                 if (cdTimeSet(wearLockExpire))      lmSendConfig("wearLockExpire",      (string)(wearLockExpire - llGetTime()));
+                if (cdTimeSet(timeToJamRepair))     lmSendConfig("timeToJamRepair",     (string)(timeToJamRepair - llGetTime()));
                 if (cdTimeSet(poseExpire))          lmSendConfig("poseExpire",          (string)(poseExpire - llGetTime()));
                 if (cdTimeSet(carryExpire))         lmSendConfig("carryExpire",         (string)(carryExpire - llGetTime()));
                 if (cdTimeSet(collapseTime))        lmSendConfig("collapseTime",        (string)(collapseTime - llGetTime()));
