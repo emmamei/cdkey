@@ -434,7 +434,7 @@ default {
                 else lmRunRLVas("UserCollapse", "clear");
             }
             else if ((name == "afk") && (userAfkRLVcmd != "")) {
-                if (collapsed) lmRunRLVas("UserAfk", userAfkRLVcmd);
+                if (afk) lmRunRLVas("UserAfk", userAfkRLVcmd);
                 else lmRunRLVas("UserAfk", "clear");
             }
             else if ((name == "keyAnimation") && (userPoseRLVcmd != "")) {
@@ -453,6 +453,15 @@ default {
                 msg += " RLV at " + wwGetSLUrl();
                 lmSendToController(msg);
             }
+            
+            if (collapsed) lmRunRLVas("UserCollapse", userCollapseRLVcmd);
+            else lmRunRLVas("UserCollapse", "clear");
+            
+            if (afk) lmRunRLVas("UserAfk", userAfkRLVcmd);
+            else lmRunRLVas("UserAfk", "clear");
+            
+            if (!cdNoAnim() && !cdCollapsedAnim()) lmRunRLVas("UserPose", userPoseRLVcmd);
+            else lmRunRLVas("UserPose", "clear");
 
             newAttach = 0;
         }
