@@ -311,12 +311,12 @@ default {
         else if ((collapsed == JAMMED) && (timeToJamRepair <= thisTimerEvent)) collapse(NOT_COLLAPSED);
 
         if (cdTimeSet(poseExpire) && (poseExpire <= thisTimerEvent)) {
-            lmInternalCommand("doUnpose", "", NULL_KEY);
+            lmMenuReply("Unpose", "", llGetKey());
             lmSendConfig("poseExpire", (string)(poseExpire = 0.0));
         }
 
         if (cdTimeSet(carryExpire) && (carryExpire <= thisTimerEvent)) {
-            lmInternalCommand("uncarry", carrierName, carrierID);
+            lmMenuReply("Uncarry", carrierName, carrierID);
             lmSendConfig("carryExpire", (string)(carryExpire = 0.0));
         }
 
@@ -488,6 +488,7 @@ default {
                     lmSendConfig("carryExpire", (string)(carryExpire = CARRY_TIMEOUT));
                 }
             }
+            else if (name == "carrierName")               carrierName = value;
             else if (name == "autoAFK")                       autoAFK = (integer)value;
             //else if (name == "autoTP")                         autoTP = (integer)value;
             else if (name == "canAFK") {
