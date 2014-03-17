@@ -410,6 +410,7 @@ default {
             else if (name == "canStand")                   canStand = (integer)value;
             else if (name == "canWear")                     canWear = (integer)value;
             else if (name == "collapsed") {
+                collapsed = (integer)value;
                 cdSetDollStateIf(DOLL_COLLAPSED, ((integer)value != 0));
             }
             else if (name == "helpless")                   helpless = (integer)value;
@@ -432,6 +433,10 @@ default {
                 if (keyAnimation == "") lmSendConfig("keyAnimationID", (string)(keyAnimationID = NULL_KEY));
                 else lmSendConfig("keyAnimationID", (string)(keyAnimationID = animStart(keyAnimation)));
             }
+            else if (name == "poserID") {
+                poserID = (key)value;
+                cdSetDollStateIf(DOLL_POSER_IS_SELF, (((dollState & DOLL_POSED) == 1) && (poserID == dollID)));
+            }
             else {
                      if (name == "detachable")               detachable = (integer)value;
 #ifdef DEVELOPER_MODE
@@ -445,10 +450,6 @@ default {
                 else if (name == "MistressList")           MistressList = split;
                 else if (name == "pronounHerDoll")       pronounHerDoll = value;
                 else if (name == "pronounSheDoll")       pronounSheDoll = value;
-                else if (name == "poserID") {
-                    poserID = (key)value;
-                    cdSetDollStateIf(DOLL_POSER_IS_SELF, (((dollState & DOLL_POSED) == 1) && (poserID == dollID)));
-                }
                 else if (name == "dialogChannel") {
                     dialogChannel = (integer)value;
                     llListenRemove(listenHandle);
@@ -460,8 +461,11 @@ default {
                 else if (name == "keyAnimationID") {
                     keyAnimationID = (key)value;
                 }
+                
+                return;
             }
             ifPermissions();
+            if (RLVstarted) cdLoadData(RLV_NC, RLV_BASE_RESTRICTIONS);
         }
         else if (code == 305) {
             string cmd = llList2String(split, 0);
@@ -568,7 +572,6 @@ default {
         else return;
         
         ifPermissions();
-        if (RLVstarted) cdLoadData(RLV_NC, RLV_BASE_RESTRICTIONS);
     }
 
     timer() {
@@ -687,7 +690,7 @@ default {
                 string restrictions;
                 integer group = -1; integer setState;
                 integer posed = (cdPosed() && (poserID != dollID));
-                list states = [ (autoTP), (!canFly || posed || (collapsed!=0) || afk), (collapsed), (!canSit || (collapsed!=0) || posed), (!canStand || (collapsed!=0) || posed), ((collapsed!=0) || (posed && poseSilence) ), (helpless || afk || cdCarried() || (collapsed!=0) || posed), (afk || cdCarried() || (collapsed!=0) || posed), (!canWear || (collapsed!=0) || wearLock || afk) ];
+                list states = [ (autoTP), (!canFly || posed || collapsed || afk), (collapsed), (!canSit || collapsed || posed), (!canStand || collapsed || posed), (collapsed || (posed && poseSilence) ), (helpless || afk || cdCarried() || collapsed || posed), (afk || cdCarried() || collapsed || posed), (!canWear || collapsed || wearLock || afk) ];
                 integer index;
 
                 while ( ( index = llSubStringIndex(data, "$C") ) != -1) {

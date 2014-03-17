@@ -34,7 +34,7 @@ float setWindRate() {
     // 2𝜋 radians per rotation.  This sets a normal rotation rate of 4 rpm about the
     // Z axis multiplied by the wind rate this way the key will visually run faster as
     // the dolly begins using their time faster.
-    llTargetOmega(llVecNorm(<0.0, 0.0, 1.0>), windRate * TWO_PI / 8.0, 1);
+    llTargetOmega(<0.0, 0.0, 1.0>, windRate * TWO_PI / 8.0, 1);
 
     return newWindRate;
 }
