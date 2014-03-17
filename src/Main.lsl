@@ -644,8 +644,8 @@ default {
                 integer n = llGetListLength(windTimes);
 
                 if (demoMode) {
-                    if (n == 1) split = [1];
-                    else split = [1,2];
+                    if (n == 1) split = ["Wind 1"];
+                    else split = ["Wind 1","Wind 2"];
                 } else {
                     integer i = 0; float time; split = [];
                     while ((i <= n) && ( ( time = (llList2Float(windTimes, i++) * SEC_TO_MIN) ) < (windLimit - 60.0)) && (time <= (keyLimit / 2))) {
