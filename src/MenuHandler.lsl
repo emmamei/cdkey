@@ -781,6 +781,8 @@ default
                     llListenRemove(blacklistHandle);
                     blacklistHandle = 0;
                 }
+                if (llListFindList(blacklist, [uuid,name]) == -1) lmSendConfig("blacklistMode", (string)1);
+                else lmSendConfig("blacklistMode", (string)-1);
                 lmInternalCommand("addRemBlacklist", (string)uuid + "|" + name, id);
             }
             else {

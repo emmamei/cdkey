@@ -14,9 +14,10 @@
 
 #define TESTING
 // FIXME: Depends on a variable s
-#define cdCapability(c,p,u) { s += p; if ((c)) { s += " not"; }; s += " " + u + ".\n"; }
+#define cdCapability(c,p,u) { s += p; if (!(c)) { s += " not"; }; s += " " + u + ".\n"; }
 
 key keyHandler              = NULL_KEY;
+key listID                  = NULL_KEY;
 
 list windTimes;
 
@@ -27,7 +28,9 @@ float wearLockExpire        = 0.0;
 string dollGender           = "Female";
 string RLVver               = "";
 string pronounHerDoll       = "Her";
-string dollName            = "";
+string dollName             = "";
+string blockedControlName   = "";
+string blockedControlUUID   = "";
 
 integer autoAFK             = 1;
 integer broadcastOn         = -1873418555;
@@ -40,6 +43,8 @@ integer timeReporting       = 0;
 integer debugLevel          = DEBUG_LEVEL;
 #endif
 integer RLVok               = -1;
+integer blockedControlTime  = 0;
+integer blacklistMode       = 0;
 
 default
 {
@@ -82,6 +87,8 @@ default
             split = llDeleteSubList(split, 0, 0);
 
                  if (name == "afk")                               afk = (integer)value;
+            else if (name == "listID")                         listID = (key)value;
+            else if (name == "blacklistMode")           blacklistMode = (integer)value;
             else if (name == "autoAFK")                       autoAFK = (integer)value;
             else if (name == "autoTP")                         autoTP = (integer)value;
             else if (name == "canAFK")                         canAFK = (integer)value;
@@ -153,27 +160,58 @@ default
             if (cmd == "addRemBlacklist") {
                 string uuid = llList2String(split, 0);
                 string name = llList2String(split, 1);
+                id = listID;
 
                 integer index = llListFindList(blacklist, [ uuid ]);
 
-                if (index == -1) {
-                    lmSendToAgentPlusDoll("Adding " + name + " to blacklist", id);
-                    if ((llGetListLength(blacklist) % 2) == 1) blacklist = llDeleteSubList(blacklist, 0, 0);
-                    blacklist = llListSort(blacklist + [ uuid, name ], 2, 1);
+                if (llListFindList(MistressList, [ uuid ]) != -1) {
+                    lmSendToAgentPlusDoll(name + " is listed on your controller list they must remove themselves before you can blacklist.", id);
+                    return;
+                }
+
+                if (blacklistMode != -1) {
+                    if(index == -1) {
+                        lmSendToAgentPlusDoll("Adding " + name + " to blacklist", id);
+                        if ((llGetListLength(blacklist) % 2) == 1) blacklist = llDeleteSubList(blacklist, 0, 0);
+                        blacklist = llListSort(blacklist + [ uuid, name ], 2, 1);
+                    }
+                    else {
+                        lmSendToAgentPlusDoll(name + " is already blacklisted.", id);
+                    }
                 }
                 else {
-                    lmSendToAgentPlusDoll("Removing " + name + " from blacklist.", id);
-                    if ((llGetListLength(blacklist) % 2) == 1) blacklist = llDeleteSubList(blacklist, 0, 0);
-                    blacklist = llDeleteSubList(blacklist, index, ++index);
+                    if (index != -1) {
+                        lmSendToAgentPlusDoll("Removing " + name + " from blacklist.", id);
+                        if ((llGetListLength(blacklist) % 2) == 1) blacklist = llDeleteSubList(blacklist, 0, 0);
+                        blacklist = llDeleteSubList(blacklist, index, ++index);
+                    }
+                    else {
+                        lmSendToAgentPlusDoll(name + " is not blacklisted.", id);
+                    }
                 }
                 
                 lmSendConfig("blacklist", llDumpList2String(blacklist,"|") );
+                
+                if ((blacklistMode == -1) && (name == blockedControlName)) {
+                    lmInternalCommand("addMistress", uuid + "|" + name, dollID);
+                }
             }
             else if ((cmd == "addMistress") || (cmd == "remMistress")) {
                 string uuid = llList2String(split, 0);
                 string name = llList2String(split, 1);
+                id = listID;
 
                 integer index = llListFindList(MistressList, [ uuid ]);
+                
+                if (llListFindList(blacklist, [ uuid ]) != -1) {
+                    lmSendToAgentPlusDoll(name + " is listed on your blacklist you cannot add them as a controller without first removing them.\n" +
+                               "Type /" + (string)chatChannel + "unblacklist " + name + "\n" +
+                               "To remove them from the blacklist and confirm adding them.", id);
+                    blockedControlName = name;
+                    blockedControlUUID = uuid;
+                    blockedControlTime = llGetUnixTime();
+                    return;
+                }
 
                 if  ((cmd == "addMistress") && (index == -1)) {
                     lmSendToAgentPlusDoll("Adding " + name + " to controller list.", id);
@@ -515,9 +553,25 @@ default
                         }
                     }
                 }
-                else if (choice == "controller") { lmInternalCommand("getMistressKey", param, NULL_KEY); }
-                else if (choice == "blacklist") { lmInternalCommand("getBlacklistKey", param, NULL_KEY); }
-                else if (choice == "unblacklist") { lmInternalCommand("getBlacklistKey", param, NULL_KEY); }
+                else if (choice == "controller") {
+                    blockedControlName = "";
+                    blockedControlUUID = "";
+                    blockedControlTime = 0;
+                    lmInternalCommand("getMistressKey", param, dollID);
+                }
+                else if (choice == "blacklist") { 
+                    blacklistMode = 1;
+                    lmInternalCommand("getBlacklistKey", param, dollID);
+                }
+                else if (choice == "unblacklist") { 
+                    if ((llToLower(blockedControlName) == llToLower(param)) && (llGetUnixTime() < (blockedControlTime + 300))) {
+                        llOwnerSay("Adding previously blacklisted user " + blockedControlName + " as controller.");
+                        blacklistMode = -1;
+                        lmInternalCommand("addRemBlacklist", blockedControlUUID + "|" + blockedControlName, dollID);
+                    }
+                    blacklistMode = -1;
+                    lmInternalCommand("getBlacklistKey", param, NULL_KEY);
+                }
                 else if (choice == "wakescript") {
                     string script;
 

@@ -239,6 +239,7 @@ default
             split = llDeleteSubList(split, 0, 0);
 
             if ((cmd == "getBlacklistKey") || (cmd == "getMistressKey")) {
+                lmSendConfig("listID", (string)id);
                 string name = correctName(llList2String(split, 0));
 #ifdef DEVELOPER_MODE
                 debugSay(5, "DEBUG-SERVICES", "Looking up name " + name);

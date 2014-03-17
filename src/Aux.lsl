@@ -149,17 +149,17 @@ default {
                 memData = "";
                 memTime = llGetTime() + 5.0;
                 llSetTimerEvent(4.0);
-            }
 #ifdef DEVELOPER_MODE
-            memRequested = 1;
+                memRequested = 1;
 #else
 #ifdef TESTER_MODE
-            memRequested = 1;
+                memRequested = 1;
 #else
-            memRequested = llList2Integer(split, 1);
+                memRequested = llList2Integer(split, 1);
 #endif //TESTER_MODE
 #endif //DEVELOPER_MODE
-            if ((code == 136) || ((memTime < llGetTime()) && (code == 135))) {
+            }
+            else if ((code == 136) || ((memTime < llGetTime()) && (code == 135))) {
                 string json = llList2String(split, 0);
                 if ((json != "") && (json != JSON_INVALID));
     
