@@ -295,7 +295,7 @@ default {
         
         if (cdAttached()) timerInterval = ((thisTimerEvent = llGetTime()) - lastTimerEvent);
         
-        if ((thisTimerEvent < nextExpiryTime) && (timerInterval < SEC_TO_MIN)) return;
+        if (cdTimeSet(nextExpiryTime) && (thisTimerEvent < nextExpiryTime) && (timerInterval < 10.0)) return;
 
         if (carryExpire != 0.0) {
             if (llGetAgentSize(carrierID) == ZERO_VECTOR)       lmSendConfig("carryExpire", (string)(carryExpire -= timerInterval));
@@ -327,8 +327,6 @@ default {
             lmInternalCommand("wearLock", "0", NULL_KEY);
             lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0.0));
         }
-
-        if (!collapsed && cdTimeSet(collapseTime)) lmSendConfig("collapseTime", (string)(collapseTime = 0.0)); // Setting to zero marks it as not relevant at this time.
         
         lmInternalCommand("getTimeUpdates", "", NULL_KEY);
 
@@ -376,12 +374,7 @@ default {
                 // This message is intentionally excluded from the quiet key setting as it is not good for
                 // dolls to simply go down silently.
                 llSay(0, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on their key.)");
-
-                collapseTime = llGetTime();
                 collapse(NO_TIME);
-
-                llSleep(0.25); // Sleep long enough to be passing a non zero value as zero represents it as not applicable.
-                lmSendConfig("collapseTime", (string)(collapseTime - llGetTime()));
             }
         }
 
@@ -513,7 +506,6 @@ default {
             else if (name == "signOn")                         signOn = (integer)value;
             else if (name == "windamount")                 windamount = (float)value;
             else if (name == "baseWindRate")             baseWindRate = (float)value;
-            else if (name == "collapsed")                   collapsed = (integer)value;
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "dollType")                     dollType = value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
@@ -524,7 +516,7 @@ default {
             if ((name == "wearLockExpire") || (name == "poseExpire") || (name == "timeToJamRepair") || (name == "carryExpire") || (name == "collapseTime")) {
                 if (script != "Main") {
                     float timeSet = 0.0;
-                    if ((float)value > 0.0) timeSet = llGetTime() + (float)value;
+                    if ((float)value != 0.0) timeSet = llGetTime() + (float)value;
 
                          if (name == "wearLockExpire")    wearLockExpire = timeSet;
                     else if (name == "poseExpire")            poseExpire = timeSet;

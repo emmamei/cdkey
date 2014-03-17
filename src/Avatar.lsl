@@ -67,12 +67,11 @@ integer creatorNoteDone;
 integer chatChannel = 75;
 
 integer dollState;
-#define cdInteger2Bool(a)       a!=0
-#define cdXorSet(a,b,c)         (a ^ b) | c
+#define cdXorSet(a,b,c)         a = (a ^ b) | (c)
 #define cdXorSetDollState(a,b)  cdXorSet(dollState,a,b)
 #define cdSetDollState(a)       cdXorSetDollState(a,a)
 #define cdUnsetDollState(a)     cdXorSetDollState(a,0)
-#define cdSetDollStateIf(a,b)   cdXorSet(dollState,a,cdInteger2Bool(b))
+#define cdSetDollStateIf(a,b)   cdXorSet(dollState,a,a*((b)!=0))
 #define DOLL_AFK                0x01
 #define DOLL_ANIMATED           0x02
 #define DOLL_CARRIED            0x04
@@ -173,14 +172,14 @@ ifPermissions() {
             llSleep(10.0);
         }
 
-        if (!((permMask & PERMISSION_MASK) == PERMISSION_MASK))
+        if ((permMask & PERMISSION_MASK) != PERMISSION_MASK)
             llRequestPermissions(dollID, PERMISSION_MASK);
 
         if (grantorID == dollID) {
-            if (((permMask & PERMISSION_TRIGGER_ANIMATION) != 0) && (clearAnim || ((dollState & DOLL_ANIMATED) != 0) && (nextAnimRefresh < llGetTime()))) {
+            if ((permMask & PERMISSION_TRIGGER_ANIMATION) != 0) {
                 key curAnim = llList2Key(llGetAnimationList(dollID), 0);
                 
-                if (!clearAnim && (keyAnimation != "")) {
+                if (!clearAnim && !cdNoAnim()) {
                     llWhisper(LOCKMEISTER_CHANNEL, (string)dollID + "bootoff");
 
                     list animList; integer i; integer animCount;
@@ -213,11 +212,11 @@ ifPermissions() {
                     else if (keyAnimation != "") animRefreshRate = 4.0;
                 } else if (clearAnim) {
                     list animList = llGetAnimationList(dollID);
-                    integer i; integer animCount = llGetInventoryNumber(20);
+                    integer i; integer animCount = llGetListLength(animList);
                     keyAnimation = "";
-                    keyAnimationID = NULL_KEY;
+                    lmSendConfig("keyAnimationID", (string)(keyAnimationID = NULL_KEY));
                     for (i = 0; i < animCount; i++) {
-                        key animKey = llGetInventoryKey(llGetInventoryName(20, i));
+                        key animKey = llList2Key(animList, i);
                         if (animKey != NULL_KEY) llStopAnimation(animKey);
                     }
                     llStartAnimation("Stand");
@@ -236,7 +235,7 @@ ifPermissions() {
                     llTakeControls(-1, 0, 1);   // Controls is a bitmask not a comparison so -1 is a quick shortcut for all
                                                 // on a big endian host.
                 }
-                else if ((dollState & (DOLL_COLLAPSED | DOLL_POSED)) != 0) {
+                else if ((dollState & DOLL_ANIMATED) != 0) {
                     // When collapsed or posed the doll should not be able to move at all so the key will
                     // accept their controls instead no need to pass on.
                     llTakeControls(-1, 1, 0);
@@ -248,7 +247,7 @@ ifPermissions() {
                     llTakeControls(-1, 1, 1);
                     haveControls = 1;
                 }
-                else if (haveControls && ((dollState & (DOLL_AFK | DOLL_COLLAPSED | DOLL_POSED)) == 0)) {
+                else if (haveControls) {
                     // We don't need to grab the dolls controls but we already have them I have grounds to
                     // suspect there may be a second life bug where taking controls and then trying to let
                     // go to do ACCEPT=FALSE, PASS_ON=TRUE may not allways work reliably release and regrab
@@ -261,25 +260,24 @@ ifPermissions() {
                                                                         // get them baack.
                     }
                 }
+            }
 
-                
-                if (dollState & (DOLL_COLLAPSED | DOLL_POSED) != 0) {
-                    if (lockPos == ZERO_VECTOR) lmSendConfig("lockPos", (string)(lockPos = llGetPos()));
-                    if (llVecDist(llGetPos(), lockPos) > 1.0) {
-                        llTargetRemove(targetHandle);
-                        targetHandle = llTarget(lockPos, 1.0);
-                        llMoveToTarget(lockPos, 0.7);
-                    }
-                }
-                else if (dollState & DOLL_CARRIED != 0) {
-                    if (lockPos != ZERO_VECTOR) lmSendConfig("lockPos", (string)(lockPos = ZERO_VECTOR));
-                    llTargetRemove(targetHandle);
-                    llStopMoveToTarget();
-                    if (cdCarried()) {
-                        vector carrierPos = llList2Vector(llGetObjectDetails(carrierID, [ OBJECT_POS ]), 0);
-                        targetHandle = llTarget(carrierPos, CARRY_RANGE);
-                    }
-                }
+            if ((dollState & DOLL_ANIMATED) != 0) {
+                if (lockPos == ZERO_VECTOR) lmSendConfig("lockPos", (string)(lockPos = llGetPos()));
+                llTargetRemove(targetHandle);
+                targetHandle = llTarget(lockPos, 1.0);
+                llMoveToTarget(lockPos, 0.7);
+            }
+            else if ((dollState & DOLL_CARRIED) != 0) {
+                if (lockPos != ZERO_VECTOR) lmSendConfig("lockPos", (string)(lockPos = ZERO_VECTOR));
+                llTargetRemove(targetHandle);
+                llStopMoveToTarget();
+                vector carrierPos = llList2Vector(llGetObjectDetails(carrierID, [ OBJECT_POS ]), 0);
+                targetHandle = llTarget(carrierPos, CARRY_RANGE);
+            }
+            else {
+                llTargetRemove(targetHandle);
+                llStopMoveToTarget();
             }
         }
     }
@@ -411,8 +409,9 @@ default {
             else if (name == "canWear")                     canWear = (integer)value;
             else if (name == "collapsed") {
                 collapsed = (integer)value;
-                cdSetDollStateIf(DOLL_COLLAPSED, ((integer)value != 0));
+                cdSetDollStateIf(DOLL_COLLAPSED, collapsed);
                 if (collapsed) lmSendConfig("keyAnimation", (keyAnimation = ANIMATION_COLLAPSED));
+                else if (cdCollapsedAnim()) lmSendConfig("keyAnimation", (keyAnimation = ""));
             }
             else if (name == "helpless")                   helpless = (integer)value;
             else if (name == "poseSilence")             poseSilence = (integer)value;
@@ -421,17 +420,13 @@ default {
                 else userBaseRLVcmd += "," +value;
             }
             else if (name == "keyAnimation") {
-                if (value == "") clearAnim = 1;
                 keyAnimation = value;
                 
                 cdSetDollStateIf(DOLL_ANIMATED, (keyAnimation != ""));
                 cdSetDollStateIf(DOLL_POSED, ((dollState & (DOLL_COLLAPSED | DOLL_ANIMATED)) == DOLL_ANIMATED));
                 cdSetDollStateIf(DOLL_POSER_IS_SELF, (((dollState & DOLL_POSED) == 1) && (poserID == dollID)));
 
-                if (collapsed && !cdNoAnim()) lmInternalCommand("doUnpose", "", NULL_KEY);
-                if (!collapsed && cdCollapsedAnim()) lmSendConfig("keyAnimation", (keyAnimation = ""));
-
-                if (keyAnimation == "") lmSendConfig("keyAnimationID", (string)(keyAnimationID = NULL_KEY));
+                if (keyAnimation == "") clearAnim = 1;
                 else lmSendConfig("keyAnimationID", (string)(keyAnimationID = animStart(keyAnimation)));
             }
             else if (name == "poserID") {
@@ -579,14 +574,12 @@ default {
         if ((nextRLVcheck != 0.0) && (nextRLVcheck < llGetTime())) {
             checkRLV();
         }
-        if ((nextAnimRefresh != 0.0) && (nextAnimRefresh < llGetTime())) {
-            ifPermissions();
-        }
+        ifPermissions();
         
         list possibleEvents =       [60.0];
-        if (nextRLVcheck)           possibleEvents += nextRLVcheck - llGetTime();
-        if (nextAnimRefresh)        possibleEvents += nextAnimRefresh - llGetTime();
-        llSetTimerEvent(llListStatistics(LIST_STAT_MIN,possibleEvents));
+        if (nextRLVcheck > 0.0)     possibleEvents += nextRLVcheck - llGetTime();
+        if (nextAnimRefresh > 0.0)  possibleEvents += nextAnimRefresh - llGetTime();
+        llSetTimerEvent(llListStatistics(LIST_STAT_MIN,possibleEvents) + 0.022); // Not 0
     }
 
     //----------------------------------------
