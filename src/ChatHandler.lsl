@@ -15,7 +15,6 @@
 #define TESTING
 // FIXME: Depends on a variable s
 #define cdCapability(c,p,u) { s += p; if ((c)) { s += " not"; }; s += " " + u + ".\n"; }
-#define cdTimeLeft() (timeLeftOnKey - llGetTime())
 
 key keyHandler              = NULL_KEY;
 
@@ -129,7 +128,7 @@ default
                 chatHandle = llListen(chatChannel, "", dollID, "");
             }
             else if ((name == "timeLeftOnKey") || (name == "collapsed")) {
-                if (name == "timeLeftOnKey")            timeLeftOnKey = llGetTime() + (float)value;
+                if (name == "timeLeftOnKey")            timeLeftOnKey = (float)value;
                 if (name == "collapsed")                    collapsed = (integer)value;
             }
             else if (name == "keyHandler") {
@@ -327,15 +326,14 @@ default
 
                     string s = "Key now ";
                     if (demoMode) {
-                        if (cdTimeLeft() > DEMO_LIMIT) {
-                            lmSendConfig("timeLeftOnKey", (string)DEMO_LIMIT);
-                            timeLeftOnKey = llGetTime() + DEMO_LIMIT;
+                        if (timeLeftOnKey > DEMO_LIMIT) {
+                            lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = DEMO_LIMIT));
                         }
-                        s += "in demo mode: " + (string)llRound(cdTimeLeft() / SEC_TO_MIN) + " of " + (string)llRound(DEMO_LIMIT / SEC_TO_MIN) + " minutes remaining.";
+                        s += "in demo mode: " + (string)llRound(timeLeftOnKey / SEC_TO_MIN) + " of " + (string)llRound(DEMO_LIMIT / SEC_TO_MIN) + " minutes remaining.";
                     }
                     else {
                         // FIXME: currentlimit not set until later; how do we tell user what it is?
-                        s += "running normally: " + (string)(cdTimeLeft() / SEC_TO_MIN) + " minutes remaining.";
+                        s += "running normally: " + (string)(timeLeftOnKey / SEC_TO_MIN) + " minutes remaining.";
                     }
                 }
                 else if (choice == "poses") {
@@ -373,8 +371,8 @@ default
                     // Which is the upper bound on the wind times currently? Depeding on the values this could be keyLimit/2 or windLimit
                     s += "Current wind menu: ";
 
-                    integer timeLeft = llFloor(cdTimeLeft() / 60.0);
-                    float windLimit = currentLimit - cdTimeLeft();
+                    integer timeLeft = llFloor(timeLeftOnKey / 60.0);
+                    float windLimit = currentLimit - timeLeftOnKey;
                     integer timesLimit = llFloor(windLimit / SEC_TO_MIN);
                     integer time; list avail; integer i; integer n = llGetListLength(windTimes);
                     integer maxTime = llRound(currentLimit / 60.0 / 2);
@@ -440,11 +438,11 @@ default
                     llOwnerSay(s);
                 }
                 else if (choice == "stat") {
-                    debugSay(6, "DEBUG", "timeLeftOnKey = " + (string)cdTimeLeft());
+                    debugSay(6, "DEBUG", "timeLeftOnKey = " + (string)timeLeftOnKey);
                     debugSay(6, "DEBUG", "currentLimit = " + (string)currentLimit);
                     debugSay(6, "DEBUG", "displayWindRate = " + (string)displayWindRate);
 
-                    float t1 = cdTimeLeft() / (SEC_TO_MIN * displayWindRate);
+                    float t1 = timeLeftOnKey / (SEC_TO_MIN * displayWindRate);
                     float t2 = currentLimit / (SEC_TO_MIN * displayWindRate);
                     float p = t1 * 100.0 / t2;
 
@@ -456,13 +454,13 @@ default
                     llOwnerSay(s);
                 }
                 else if (choice == "stats") {
-                    debugSay(6, "DEBUG", "timeLeftOnKey = " + (string)cdTimeLeft());
+                    debugSay(6, "DEBUG", "timeLeftOnKey = " + (string)timeLeftOnKey);
                     debugSay(6, "DEBUG", "currentLimit = " + (string)currentLimit);
                     debugSay(6, "DEBUG", "displayWindRate = " + (string)displayWindRate);
 
                     //displayWindRate;
 
-                    llOwnerSay("Time remaining: " + (string)llRound(cdTimeLeft() / (SEC_TO_MIN * displayWindRate)) + " minutes of " +
+                    llOwnerSay("Time remaining: " + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate)) + " minutes of " +
                                 (string)llRound(currentLimit / (SEC_TO_MIN * displayWindRate)) + " minutes.");
 
                     string msg;
