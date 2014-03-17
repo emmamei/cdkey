@@ -583,6 +583,15 @@ default
 
         debugSay(3, "DEBUG-MENU", "Button clicked: " + choice + ", afterSpace=\"" + afterSpace + "\", beforeSpace=\"" + beforeSpace + "\"");
 
+        integer sleeping = 1;
+        if ((llGetSubString(choice, 0, 3) == "Type") && (llGetScriptState("Transform") == 0)) {
+            llSetScriptState("Transform", 1);
+            lmSendConfig("dialogChannel", (string)dialogChannel);
+            cdLinkMessage(LINK_THIS, 0, 303, "debugLevel|dollType|quiet|mustAgreeToType|RLVok|showPhrases|wearAtLogin", NULL_KEY);
+            llSleep(1.0);
+        }
+        else sleeping = 0;
+
         lmMenuReply(choice, name, id);
 
         menuID = id;

@@ -131,11 +131,7 @@ checkRLV()
 #else
 #define LISTEN_OPEN 1
 #endif
-        if (RLVck <= 0) {
-            RLVck = 1;
-            llSetScriptState("StatusRLV", 1);
-            cdLinkMessage(LINK_THIS, 0, 303, "debugLevel", NULL_KEY);
-        }
+        if (RLVck <= 0) RLVck = 1;
         else RLVck++;
         
         llListenControl(listenHandle, LISTEN_OPEN);
@@ -716,19 +712,16 @@ default {
                 if (RLVok && !RLVstarted) {
                     if (!quiet) llSay(0, "Developer Key not locked.");
                     else llOwnerSay("Developer key not locked.");
-                    baseRLV += "attachallthis_except:" + myPath + "=add,detachallthis_except:" + myPath + "=add,";
+                    baseRLV += "attachallthis_except=add,detachallthis_except=add,";
                 }
 #endif
     
                 if (!RLVstarted && RLVok) {
                     llOwnerSay("Enabling RLV mode");
                     llListenControl(listenHandle, 0);
+                    llSetScriptState("StatusRLV",1);
                     lmRLVreport(RLVok, rlvAPIversion, 0);
-                }
-                else if (!RLVok) {
-                    llSetScriptState("StatusRLV", 0);
-                    llListenControl(listenHandle, 0);
-                    lmRLVreport(RLVok, rlvAPIversion, 0);
+                    llSleep(2.0);
                 }
             
                 if (userBaseRLVcmd != "") lmRunRLVas("User:Base", userBaseRLVcmd);
@@ -739,7 +732,7 @@ default {
                     setState = llList2Integer(states, group);
                     cdSetRestrictionsList(data,setState);
                 }
-                lmRunRLVas("Core", baseRLV + restrictionList + "sendchannel:" + (string)chatChannel + "=rem");
+                lmRunRLVas("Core", restrictionList + "sendchannel:" + (string)chatChannel + "=rem");
                 
                 RLVstarted = (RLVstarted | RLVok);
 
