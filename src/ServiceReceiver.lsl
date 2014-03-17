@@ -51,8 +51,8 @@ default {
         cdConfigReport();
         
         else if (code == 300) {
-            string name = llList2String(split, 0);
-            string value = llList2String(split, 1);
+            string name = llStringTrim(llList2String(split, 0), STRING_TRIM);
+            string value = llStringTrim(llList2String(split, 1), STRING_TRIM);
             
             // Store configuration information
             integer i = llListFindList(storedConfigs, [name]);
@@ -208,9 +208,9 @@ default {
                 while(llGetListLength(input)) {
                     list splitLine = llParseStringKeepNulls(llList2String(input, 1),["="],[]);
                     
-                    string name = llList2String(splitLine, 0);
+                    string name = llStringTrim(llList2String(splitLine, 0), STRING_TRIM);
                     splitLine = llDeleteSubList(splitLine,0,0);
-                    string value = llDumpList2String(splitLine,"=");
+                    string value = llStringTrim(llDumpList2String(splitLine,"="), STRING_TRIM);
                     
                     input = llDeleteSubList(input,0,0);
                     
