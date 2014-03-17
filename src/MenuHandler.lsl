@@ -240,8 +240,7 @@ default
             string cmd = llList2String(split, 0);
             split = llDeleteSubList(split, 0, 0);
 
-            if (cmd == "setAFK") afk = llList2Integer(split, 0);
-            else if (cmd == "dialogListen") {
+            if (cmd == "dialogListen") {
                 cdListenerActivate(dialogHandle);
                 llSetTimerEvent(60.0);
             }

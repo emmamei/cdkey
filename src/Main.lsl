@@ -327,8 +327,6 @@ default {
             lmInternalCommand("wearLock", "0", NULL_KEY);
             lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0.0));
         }
-        
-        lmInternalCommand("getTimeUpdates", "", NULL_KEY);
 
 #ifndef DEVELOPER_MODE
         ifPermissions();
@@ -535,14 +533,8 @@ default {
             else if (name == "displayWindRate") {
                 if ((float)value != 0) displayWindRate = (float)value;
             }
-            else if ((name == "timeLeftOnKey") || (name == "collapsed")) {
-                if (script == cdMyScriptName()) return;
-                    if (name == "timeLeftOnKey")            timeLeftOnKey = (float)value;
-                    if (name == "collapsed")                    collapsed = (integer)value;
-                if (configured) {
-                    if ((collapsed == 1) && (timeLeftOnKey > 0.0)) collapse(NOT_COLLAPSED);
-                }
-            }
+            else if (name == "timeLeftOnKey")            timeLeftOnKey = (float)value;
+            else if (name == "collapsed")                    collapsed = (integer)value;
             else if (name == "keyHandler") {
                 keyHandler = (key)value;
             }
@@ -572,7 +564,7 @@ default {
             split = llDeleteSubList(split, 0, 0);
 
             if (cmd == "setAFK") {
-                afk = llList2Integer(split, 0);
+                lmSendConfig("afk", (string)(afk = llList2Integer(split, 0)));
 
                 integer autoSet = llList2Integer(split, 1);
 

@@ -67,7 +67,7 @@ integer creatorNoteDone;
 integer chatChannel = 75;
 
 integer dollState;
-#define cdXorSet(a,b,c)         a = (a ^ b) | (c)
+#define cdXorSet(a,b,c)         a = ((a ^ (a & b)) | (c))
 #define cdXorSetDollState(a,b)  cdXorSet(dollState,a,b)
 #define cdSetDollState(a)       cdXorSetDollState(a,a)
 #define cdUnsetDollState(a)     cdXorSetDollState(a,0)
@@ -273,7 +273,7 @@ ifPermissions() {
                 llTargetRemove(targetHandle);
                 llStopMoveToTarget();
                 vector carrierPos = llList2Vector(llGetObjectDetails(carrierID, [ OBJECT_POS ]), 0);
-                targetHandle = llTarget(carrierPos, CARRY_RANGE);
+                if (carrierPos != ZERO_VECTOR) targetHandle = llTarget(carrierPos, CARRY_RANGE);
             }
             else {
                 llTargetRemove(targetHandle);
@@ -401,7 +401,7 @@ default {
             }
             else if (name == "afk") {
                 afk = (integer)value;
-                cdSetDollStateIf(DOLL_AFK, (afk));
+                cdSetDollStateIf(DOLL_AFK, afk);
             }
             else if (name == "canFly")                       canFly = (integer)value;
             else if (name == "canSit")                       canSit = (integer)value;
@@ -410,7 +410,7 @@ default {
             else if (name == "collapsed") {
                 collapsed = (integer)value;
                 cdSetDollStateIf(DOLL_COLLAPSED, collapsed);
-                llOwnerSay((string)dollState);
+                llOwnerSay("0x" + bits2nybbles(dollState));
                 if (collapsed) lmSendConfig("keyAnimation", (keyAnimation = ANIMATION_COLLAPSED));
                 else if (cdCollapsedAnim()) lmSendConfig("keyAnimation", (keyAnimation = ""));
             }
@@ -711,7 +711,6 @@ default {
                     ((dollState & (DOLL_AFK | DOLL_CARRIED | DOLL_COLLAPSED)) != 0) || posed,
                     ((dollState & (DOLL_AFK | DOLL_COLLAPSED)) != 0) || !canWear || wearLock
                 ];
-                llOwnerSay(llList2CSV(states));
                 integer index;
 
                 while ( ( index = llSubStringIndex(data, "$C") ) != -1) {
