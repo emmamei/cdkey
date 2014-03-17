@@ -86,6 +86,7 @@ default {
                     llOwnerSay("\n" + conf + "=" + value);
                     llSleep(0.1);
                 }
+                i++;
             }
             i = llListFindList(storedConfigs, ["dollyName"]);
             if (i != -1) lmSendConfig("dollyName", llList2String(storedConfigs, i + 1));
