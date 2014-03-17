@@ -629,7 +629,7 @@ default
             }
             else if (choice == "Carry") {
                 lmSendConfig("carrierID", (string)(carrierID = id));
-                lmSendConfig("carrierName", (carrierName = llList2String(split, 0)));
+                lmSendConfig("carrierName", (carrierName = name));
                 if (!quiet) llSay(0, "The doll " + dollName + " has been picked up by " + carrierName);
                 else {
                     llOwnerSay("You have been picked up by " + carrierName);
