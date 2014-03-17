@@ -14,8 +14,7 @@ string DataURL;
 integer useHTTPS = 1;
 integer resolveType;
 integer storedCount;
-//list storedConfigs;
-string storedConfigs;
+list storedConfigs;
 key resolveTestKey;
 key requestDataURL;
 
@@ -56,11 +55,13 @@ default {
             string value = llList2String(split, 1);
             
             // Store configuration information
-            storedConfigs = cdSetValue(storedConfigs,[name],llDumpList2String(llDeleteSubList(split,0,0),"|"));
+            integer i = llListFindList(storedConfigs, [name]);
+            if (i == -1) storedConfigs += [ name, value ];
+            else storedConfigs = llListReplaceList(storedConfigs, [ name, value ], i, i + 1);
             
-            if (llGetListLength(llJson2List(storedConfigs)) / 2 > storedCount) {
-                debugSay(3, "DEBUG-LOCALDB", "Local DB now contains " + (string)(storedCount = llGetListLength(llJson2List(storedConfigs)) / 2) + " key=>value pairs and " + cdMyScriptName() + " is using " + formatFloat((float)llGetUsedMemory() / 1024.0, 2) + "kB of memory.");
-                storedCount = llGetListLength(llJson2List(storedConfigs));
+            if (llGetListLength(storedConfigs) / 2 > storedCount) {
+                storedCount = llGetListLength(storedConfigs) / 2;
+                debugSay(3, "DEBUG-LOCALDB", "Local DB now contains " + (string)storedCount + " key=>value pairs and " + cdMyScriptName() + " is using " + formatFloat((float)llGetUsedMemory() / 1024.0, 2) + "kB of memory.");
             }
 
 #ifdef DEVELOPER_MODE
@@ -76,36 +77,25 @@ default {
         }
         else if ((code == 301) || (code == 302)) {
             integer type = code - 300;
-            integer i; integer n;
-            n = llGetListLength(llJson2List(storedConfigs)) / 2;
-            integer j; string start = "\n<KeyState:"; string end = "</KeyState:";
+            integer i; integer n = llGetListLength(storedConfigs) / 2;
             while (i < n) {
-                if (type == 1) {
-                    string conf = llList2String(llJson2List(storedConfigs), i*2);
-                    string value = cdGetValue(storedConfigs,[conf]);
-                    if (value == JSON_FALSE) value = "0";
-                    else if (value == JSON_TRUE) value = "1";
-                    else if (value == JSON_NULL) value = "";
-                    if (value != JSON_INVALID) lmSendConfig(conf, value);
-                }
+                string conf = llList2String(storedConfigs, i * 2);
+                string value = llList2String(storedConfigs, i * 2 + 1);
+                if (type == 1) lmSendConfig(conf, value);
                 else {
-                    string conf = llList2Json(JSON_OBJECT, llList2List(llJson2List(storedConfigs), i*2, i*2+1) );
-                    integer len = llStringLength(conf);
-                    conf = start + (string)i + ":" + (string)len + ">" + conf + end + (string)i++ + ">";
-                    llOwnerSay(conf);
+                    llOwnerSay("\n" + conf + "=" + value);
                     llSleep(0.1);
                 }
             }
-            lmSendConfig("dollyName", cdGetValue(storedConfigs,["dollyName"]));
+            i = llListFindList(storedConfigs, ["dollyName"]);
+            if (i != -1) lmSendConfig("dollyName", llList2String(storedConfigs, i + 1));
         }
         else if (code == 303) {
             while(split != []) {
                 string conf = llList2String(split,0);
-                string value = cdGetValue(storedConfigs,[conf]);
-                if (value == JSON_FALSE) value = "0";
-                else if (value == JSON_TRUE) value = "1";
-                else if (value == JSON_NULL) value = "";
-                if (value != JSON_INVALID) lmSendConfig(conf, cdGetValue(storedConfigs,[conf]));
+                integer i = llListFindList(storedConfigs, [conf]);
+                if (i != -1) lmSendConfig(conf, llList2String(storedConfigs, i + 1));
+                
                 split = llDeleteSubList(split,0,0);
             }
         }
@@ -225,15 +215,11 @@ default {
                     input = llDeleteSubList(input,0,0);
                     
                     lmSendConfig(name, value);
-                    if (value == "0") value == JSON_FALSE;
-                    if (value == "1") value == JSON_TRUE;
-                    if (splitLine == []) value == JSON_NULL;
-                    storedConfigs = cdSetValue(storedConfigs, [name], value);
+                    storedConfigs += [ name, value ];
                 }
                 
-                if (llGetListLength(llJson2List(storedConfigs)) / 2 > storedCount) {
-                    debugSay(3, "DEBUG-LOCALDB", "Local DB now contains " + (string)(storedCount = llGetListLength(llJson2List(storedConfigs)) / 2) + " key=>value pairs and " + cdMyScriptName() + " is using " + formatFloat((float)llGetUsedMemory() / 1024.0, 2) + "kB of memory.");
-                    storedCount = llGetListLength(llJson2List(storedConfigs));
+                if (llGetListLength(storedConfigs) / 2 > storedCount) {
+                    debugSay(3, "DEBUG-LOCALDB", "Local DB now contains " + (string)(storedCount = llGetListLength(storedConfigs) / 2) + " key=>value pairs and " + cdMyScriptName() + " is using " + formatFloat((float)llGetUsedMemory() / 1024.0, 2) + "kB of memory.");
                 }
 
 #ifdef DEVELOPER_MODE

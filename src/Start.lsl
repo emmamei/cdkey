@@ -345,6 +345,7 @@ do_Restart() {
     for (loop = 0; loop < llGetInventoryNumber(INVENTORY_SCRIPT); loop++) {
         string script = llGetInventoryName(INVENTORY_SCRIPT, loop);
         if (script != me) {
+            cdRunScript(script);
             llResetOtherScript(script);
         }
     }
