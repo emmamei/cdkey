@@ -641,10 +641,7 @@ default {
                 integer n = llGetListLength(windTimes);
 
                 if (demoMode) {
-                    if ((n == 1) || (windLimit < 120.0)) {
-                        lmMenuReply("Wind 1", name, id);
-                        return;
-                    }
+                    if (n == 1) split = [1];
                     else split = [1,2];
                 } else {
                     integer i = 0; float time; split = [];
@@ -847,7 +844,8 @@ default {
                             lmSendToAgent("Doll is now at " + formatFloat((float)timeLeftOnKey * 100.0 / (float)effectiveLimit, 2) + "% of capacity.", id);
                             if (canRepeat || cdIsController(id)) {
                                 // No menu respawn if no repeat option is enabled!
-                                if (llGetListLength(windTimes) > 1) lmInternalCommand("windMenu", name + "|" + (string)(effectiveLimit - timeLeftOnKey), id);
+                                if ((llGetListLength(windTimes) > 1) || cdIsCarrier(id) || cdIsController(id))
+                                    lmInternalCommand("windMenu", name + "|" + (string)(effectiveLimit - timeLeftOnKey), id);
                                 else lmInternalCommand("mainMenu", "Wind|" + name, id);
                             }
                         }
