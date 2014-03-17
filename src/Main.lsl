@@ -746,13 +746,6 @@ default {
                 return; // Handled in MenuHandler
             }
             else if (choice == "Wind...") {
-                if (!canRepeat && (id == winderID)) {
-                    lmSendToAgent("Dolly needs to be wound by someone else before you can wind her again.", id);
-                    return;
-                }
-                lmInternalCommand("windMenu", name + "|" + (string)windLimit, id);
-            }
-            else if ((choice == "Wind...") && ((cdIsCarrier(id)) || (cdIsController(id)))) {
                 if (!cdIsController(id) && !canRepeat && (id == winderID)) {
                     lmSendToAgent("Dolly needs to be wound by someone else before you can wind her again.", id);
                     return;
