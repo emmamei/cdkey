@@ -636,7 +636,7 @@ default
                     llRegionSayTo(carrierID, 0, "You have picked up the doll " + dollName);
                 }
             }
-            else if (choice == "uncarry") {
+            else if (choice == "Uncarry") {
                 if (quiet) lmSendToAgent("You were carrying " + dollName + " and have now placed them down.", carrierID);
                 else llSay(0, "Dolly " + dollName + " has been placed down by " + carrierName);
                 lmSendConfig("carrierID", (string)(carrierID = NULL_KEY));
