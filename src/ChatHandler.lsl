@@ -15,6 +15,7 @@
 #define TESTING
 // FIXME: Depends on a variable s
 #define cdCapability(c,p,u) { s += p; if ((c)) { s += " not"; }; s += " " + u + ".\n"; }
+#define cdTimeLeft() (timeLeftOnKey - llGetTime())
 
 key keyHandler              = NULL_KEY;
 
@@ -27,6 +28,7 @@ float wearLockExpire        = 0.0;
 string dollGender           = "Female";
 string RLVver               = "";
 string pronounHerDoll       = "Her";
+string dollName		    = "";
 
 integer autoAFK             = 1;
 integer broadcastOn         = -1873418555;
@@ -47,6 +49,7 @@ default
     //----------------------------------------
     state_entry() {
         dollID = llGetOwner();
+        dollName = llGetDisplayName(dollID);
         chatHandle = llListen(chatChannel, "", dollID, "");
         broadcastHandle = llListen(broadcastOn, "", "", "");
         
@@ -215,7 +218,7 @@ default
             if (choiceType == INVENTORY_ANIMATION || firstChar == "." || firstChar == "!") {
                 if (choiceType != INVENTORY_ANIMATION) choice = llGetSubString(choice, 1, STRING_END);
                 if (cdNoAnim() || (!cdCollapsedAnim() && cdSelfPosed())) {
-                    lmInternalCommand("setPose", choice, dollID);
+                    lmMenuReply(choice, dollName, dollID);
                     llOwnerSay("You set your pose to: " + choice);
                 }
                 else llOwnerSay("You try to regain control over your body in an effort to set your own pose but even that is beyond doll's control.");
@@ -324,12 +327,15 @@ default
 
                     string s = "Key now ";
                     if (demoMode) {
-                        if (timeLeftOnKey > DEMO_LIMIT) timeLeftOnKey = DEMO_LIMIT;
-                        s += "in demo mode: " + (string)llRound(timeLeftOnKey / SEC_TO_MIN) + " of " + (string)llRound(DEMO_LIMIT / SEC_TO_MIN) + " minutes remaining.";
+                        if (cdTimeLeft() > DEMO_LIMIT) {
+                            lmSendConfig("timeLeftOnKey", (string)DEMO_LIMIT);
+                            timeLeftOnKey = llGetTime() + DEMO_LIMIT;
+                        }
+                        s += "in demo mode: " + (string)llRound(cdTimeLeft() / SEC_TO_MIN) + " of " + (string)llRound(DEMO_LIMIT / SEC_TO_MIN) + " minutes remaining.";
                     }
                     else {
                         // FIXME: currentlimit not set until later; how do we tell user what it is?
-                        s += "running normally: " + (string)(timeLeftOnKey / SEC_TO_MIN) + " minutes remaining.";
+                        s += "running normally: " + (string)(cdTimeLeft() / SEC_TO_MIN) + " minutes remaining.";
                     }
                 }
                 else if (choice == "poses") {
@@ -367,8 +373,8 @@ default
                     // Which is the upper bound on the wind times currently? Depeding on the values this could be keyLimit/2 or windLimit
                     s += "Current wind menu: ";
 
-                    integer timeLeft = llFloor((timeLeftOnKey - llGetTime()) / 60.0);
-                    float windLimit = currentLimit - (timeLeftOnKey - llGetTime());
+                    integer timeLeft = llFloor(cdTimeLeft() / 60.0);
+                    float windLimit = currentLimit - cdTimeLeft();
                     integer timesLimit = llFloor(windLimit / SEC_TO_MIN);
                     integer time; list avail; integer i; integer n = llGetListLength(windTimes);
                     integer maxTime = llRound(currentLimit / 60.0 / 2);
@@ -434,11 +440,11 @@ default
                     llOwnerSay(s);
                 }
                 else if (choice == "stat") {
-                    debugSay(6, "DEBUG", "timeLeftOnKey = " + (string)timeLeftOnKey);
+                    debugSay(6, "DEBUG", "timeLeftOnKey = " + (string)cdTimeLeft());
                     debugSay(6, "DEBUG", "currentLimit = " + (string)currentLimit);
                     debugSay(6, "DEBUG", "displayWindRate = " + (string)displayWindRate);
 
-                    float t1 = timeLeftOnKey / (SEC_TO_MIN * displayWindRate);
+                    float t1 = cdTimeLeft() / (SEC_TO_MIN * displayWindRate);
                     float t2 = currentLimit / (SEC_TO_MIN * displayWindRate);
                     float p = t1 * 100.0 / t2;
 
@@ -450,13 +456,13 @@ default
                     llOwnerSay(s);
                 }
                 else if (choice == "stats") {
-                    debugSay(6, "DEBUG", "timeLeftOnKey = " + (string)timeLeftOnKey);
+                    debugSay(6, "DEBUG", "timeLeftOnKey = " + (string)cdTimeLeft());
                     debugSay(6, "DEBUG", "currentLimit = " + (string)currentLimit);
                     debugSay(6, "DEBUG", "displayWindRate = " + (string)displayWindRate);
 
                     //displayWindRate;
 
-                    llOwnerSay("Time remaining: " + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate)) + " minutes of " +
+                    llOwnerSay("Time remaining: " + (string)llRound(cdTimeLeft() / (SEC_TO_MIN * displayWindRate)) + " minutes of " +
                                 (string)llRound(currentLimit / (SEC_TO_MIN * displayWindRate)) + " minutes.");
 
                     string msg;
@@ -489,7 +495,7 @@ default
                     lmConfigReport();
                 }
                 else if (choice == "release") {
-                    if (poserID != dollID) llOwnerSay("Dolly tries to wrest control of her body from the pose but she is no longer in control of her form.");
+                    if ((poserID != NULL_KEY) && (poserID != dollID)) llOwnerSay("Dolly tries to wrest control of her body from the pose but she is no longer in control of her form.");
                     else lmInternalCommand("doUnpose", "", dollID);
                 }
             }

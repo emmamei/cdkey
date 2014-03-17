@@ -186,6 +186,8 @@ collapse(integer n) {
     lmSendConfig("collapseTime",  (string)(collapseTime - llGetTime()));
     lmSendConfig("collapsed",     (string)(collapsed = n));
     lmInternalCommand("collapse", (string)(collapsed = n), llGetKey());
+    
+    llSetTimerEvent(0.022);
 }
 
 //========================================
@@ -286,26 +288,23 @@ default {
         }
 
         float thisTimerEvent = llGetTime();
-        float timerInterval = thisTimerEvent - lastTimerEvent;
+        float timerInterval;
+        
+        if (cdAttached()) timerInterval = ((thisTimerEvent = llGetTime()) - lastTimerEvent);
+        
+        if ((thisTimerEvent < nextExpiryTime) && (timerInterval < SEC_TO_MIN)) return;
 
         if (carryExpire != 0.0) {
             if (llGetAgentSize(carrierID) == ZERO_VECTOR)       lmSendConfig("carryExpire", (string)(carryExpire -= timerInterval));
             else                                                lmSendConfig("carryExpire", (string)(carryExpire = CARRY_TIMEOUT));
         }
-
-        if (cdAttached()) timerInterval = ((thisTimerEvent = llGetTime()) - lastTimerEvent);
-
-        lastTimerEvent = thisTimerEvent;
-
-        if ((thisTimerEvent < nextExpiryTime) && (timerInterval < SEC_TO_MIN)) return;
-
+        
         displayWindRate = setWindRate();
+        //llOwnerSay((string)thisTimerEvent + " - " + (string)lastTimerEvent + " = " + (string)timerInterval + " @ " + (string)windRate);
+        lastTimerEvent = thisTimerEvent;
 
         // Increment a counter
         ticks++;
-
-        timeLeftOnKey -= timerInterval * windRate;
-        if (timeLeftOnKey < 0) timeLeftOnKey = 0.0;
 
         // False collapse? Collapsed = 1 while timeLeftOnKey is positive is an invalid condition
         if ((collapsed == NO_TIME) && (timeLeftOnKey > 0.0)) collapse(NOT_COLLAPSED);
@@ -326,11 +325,12 @@ default {
             lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0.0));
         }
 
-        if (collapsed) lmSendConfig("collapseTime", (string)(llGetTime() - collapseTime));
-        else if (cdTimeSet(collapseTime)) lmSendConfig("collapseTime", (string)(collapseTime = 0.0)); // Setting to zero marks it as not relevant at this time.
+        if (!collapsed && cdTimeSet(collapseTime)) lmSendConfig("collapseTime", (string)(collapseTime = 0.0)); // Setting to zero marks it as not relevant at this time.
+        
+        lmInternalCommand("getTimeUpdates", "", NULL_KEY);
 
 #ifndef DEVELOPER_MODE
-            ifPermissions();
+        ifPermissions();
 #endif
         // Update sign if appropriate
         string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
@@ -353,6 +353,8 @@ default {
 
         if (windRate != 0.0) {
             minsLeft = llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate));
+            
+            timeLeftOnKey -= timerInterval * windRate;
 
             if (doWarnings && !warned) {
                 if (minsLeft == 30 || minsLeft == 15 || minsLeft == 10 || minsLeft ==  5 || minsLeft ==  2) {
@@ -389,8 +391,8 @@ default {
         // Determine Next Timer Event
         list possibleEvents;
         if (cdTimeSet(carryExpire)) {
-                                        possibleEvents += carryExpire - thisTimerEvent;
-                                        possibleEvents += 10.0;
+                                            possibleEvents += carryExpire - thisTimerEvent;
+                                            possibleEvents += 10.0;
         }
 
         if (cdTimeSet(poseExpire))          possibleEvents += poseExpire - thisTimerEvent;
@@ -404,12 +406,12 @@ default {
         }
 
         if ((possibleEvents != []) &&
-            (!lowScriptMode))           possibleEvents += 20.0;
+            (!lowScriptMode))               possibleEvents += 20.0;
 
-        if (timeLeftOnKey != 0.0)       possibleEvents += timeLeftOnKey;
+        if (timeLeftOnKey != 0.0)           possibleEvents += timeLeftOnKey;
 
-        if (!lowScriptMode)             possibleEvents += 60.0;
-        else                            possibleEvents += 300.0;
+        if (!lowScriptMode)                 possibleEvents += 60.0;
+        else                                possibleEvents += 300.0;
 
         // Set timer to the first of our predicted events.
         llSetTimerEvent(cdListMin(possibleEvents));
@@ -590,8 +592,9 @@ default {
             }
             else if ((cmd == "collapse") && (script != llGetScriptName())) collapse(llList2Integer(split, 0));
             else if (cmd == "getTimeUpdates") {
-                if (cdTimeSet(timeLeftOnKey))       lmSendConfig("timeLeftOnKey",       (string)(timeLeftOnKey - llGetTime()));
+                if (cdTimeSet(timeLeftOnKey))       lmSendConfig("timeLeftOnKey",       (string)timeLeftOnKey);
                 if (cdTimeSet(wearLockExpire))      lmSendConfig("wearLockExpire",      (string)(wearLockExpire - llGetTime()));
+                if (cdTimeSet(timeToJamRepair))     lmSendConfig("timeToJamRepair",     (string)(timeToJamRepair - llGetTime()));
                 if (cdTimeSet(poseExpire))          lmSendConfig("poseExpire",          (string)(poseExpire - llGetTime()));
                 if (cdTimeSet(carryExpire))         lmSendConfig("carryExpire",         (string)(carryExpire - llGetTime()));
                 if (cdTimeSet(collapseTime))        lmSendConfig("collapseTime",        (string)(collapseTime - llGetTime()));
@@ -640,10 +643,7 @@ default {
                 integer n = llGetListLength(windTimes);
 
                 if (demoMode) {
-                    if ((n == 1) || (windLimit < 120.0)) {
-                        lmMenuReply("Wind 1", name, id);
-                        return;
-                    }
+                    if (n == 1) split = [1];
                     else split = [1,2];
                 } else {
                     integer i = 0; float time; split = [];
@@ -745,9 +745,17 @@ default {
                 return; // Handled in MenuHandler
             }
             else if (choice == "Wind...") {
+                if (!canRepeat && (id == winderID)) {
+                    lmSendToAgent("Dolly needs to be wound by someone else before you can wind her again.", id);
+                    return;
+                }
                 lmInternalCommand("windMenu", name + "|" + (string)windLimit, id);
             }
-            else if ((choice == "Wind") && ((cdIsCarrier(id)) || (cdIsController(id)))) {
+            else if ((choice == "Wind...") && ((cdIsCarrier(id)) || (cdIsController(id)))) {
+                if (!cdIsController(id) && !canRepeat && (id == winderID)) {
+                    lmSendToAgent("Dolly needs to be wound by someone else before you can wind her again.", id);
+                    return;
+                }
                 lmInternalCommand("windMenu", name + "|" + (string)windLimit, id);
             }
             else if (choice == "Wind Emg") {
@@ -847,7 +855,8 @@ default {
                             lmSendToAgent("Doll is now at " + formatFloat((float)timeLeftOnKey * 100.0 / (float)effectiveLimit, 2) + "% of capacity.", id);
                             if (canRepeat || cdIsController(id)) {
                                 // No menu respawn if no repeat option is enabled!
-                                if (llGetListLength(windTimes) > 1) lmInternalCommand("windMenu", name + "|" + (string)(effectiveLimit - timeLeftOnKey), id);
+                                if ((llGetListLength(windTimes) > 1) || cdIsCarrier(id) || cdIsController(id))
+                                    lmInternalCommand("windMenu", name + "|" + (string)(effectiveLimit - timeLeftOnKey), id);
                                 else lmInternalCommand("mainMenu", "Wind|" + name, id);
                             }
                         }

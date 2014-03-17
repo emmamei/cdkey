@@ -413,10 +413,7 @@ default {
                 else userBaseRLVcmd += "," +value;
             }
             else if (name == "keyAnimation") {
-                if (value == "") {
-                    clearAnim = 1; 
-                    ifPermissions();
-                }
+                if (value == "") clearAnim = 1;
                 keyAnimation = value;
                 
                 cdSetDollStateIf(DOLL_ANIMATED, (keyAnimation != ""));
@@ -428,8 +425,6 @@ default {
 
                 if (keyAnimation == "") lmSendConfig("keyAnimationID", (string)(keyAnimationID = NULL_KEY));
                 else lmSendConfig("keyAnimationID", (string)(keyAnimationID = animStart(keyAnimation)));
-                
-                ifPermissions();
             }
             else {
                      if (name == "detachable")               detachable = (integer)value;
@@ -457,9 +452,9 @@ default {
                 }
                 else if (name == "keyAnimationID") {
                     keyAnimationID = (key)value;
-                    ifPermissions();
                 }
             }
+            ifPermissions();
         }
         else if (code == 305) {
             string cmd = llList2String(split, 0);
