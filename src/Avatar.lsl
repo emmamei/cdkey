@@ -159,7 +159,7 @@ checkRLV()
         }
 #endif
 
-        if (cdAttached() && !RLVstarted) cdLoadData(RLV_NC, RLV_BASE_RESTRICTIONS);
+        if (cdAttached()) cdLoadData(RLV_NC, RLV_BASE_RESTRICTIONS);
     }
 }
 
@@ -299,6 +299,8 @@ default {
         RLVck = 0;
         rlvAPIversion = "";
         myPath = "";
+        
+        RLVstarted = 0;
 
         llStopMoveToTarget();
         llTargetRemove(targetHandle);
