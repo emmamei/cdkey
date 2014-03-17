@@ -412,6 +412,7 @@ default {
             else if (name == "collapsed") {
                 collapsed = (integer)value;
                 cdSetDollStateIf(DOLL_COLLAPSED, ((integer)value != 0));
+                if (collapsed) lmSendConfig("keyAnimation", (keyAnimation = ANIMATION_COLLAPSED));
             }
             else if (name == "helpless")                   helpless = (integer)value;
             else if (name == "poseSilence")             poseSilence = (integer)value;
@@ -690,7 +691,17 @@ default {
                 string restrictions;
                 integer group = -1; integer setState;
                 integer posed = (cdPosed() && (poserID != dollID));
-                list states = [ (autoTP), (!canFly || posed || collapsed || afk), (collapsed), (!canSit || collapsed || posed), (!canStand || collapsed || posed), (collapsed || (posed && poseSilence) ), (helpless || afk || cdCarried() || collapsed || posed), (afk || cdCarried() || collapsed || posed), (!canWear || collapsed || wearLock || afk) ];
+                list states = [ 
+                    autoTP,
+                    ((dollState & (DOLL_AFK | DOLL_COLLAPSED)) != 0) || !canFly || posed,
+                    ((dollState & DOLL_COLLAPSED) != 0),
+                    ((dollState & DOLL_COLLAPSED) != 0) || !canSit || posed,
+                    ((dollState & DOLL_COLLAPSED) != 0) || !canStand || posed,
+                    ((dollState & DOLL_COLLAPSED) != 0) || (posed && poseSilence),
+                    ((dollState & (DOLL_AFK | DOLL_CARRIED | DOLL_COLLAPSED)) != 0) || helpless || posed,
+                    ((dollState & (DOLL_AFK | DOLL_CARRIED | DOLL_COLLAPSED)) != 0) || posed,
+                    ((dollState & (DOLL_AFK | DOLL_COLLAPSED)) != 0) || !canWear || wearLock
+                ];
                 integer index;
 
                 while ( ( index = llSubStringIndex(data, "$C") ) != -1) {
