@@ -182,6 +182,9 @@ collapse(integer n) {
             llSleep(0.1);
         }
     }
+    if (n != JAMMED) {
+        lmSendConfig("timeToJamRepair", (string)(timeToJamRepair = 0.0));
+    }
 
     lmSendConfig("collapseTime",  (string)(collapseTime - llGetTime()));
     lmSendConfig("collapsed",     (string)(collapsed = n));
@@ -414,7 +417,7 @@ default {
         else                                possibleEvents += 300.0;
 
         // Set timer to the first of our predicted events.
-        llSetTimerEvent(cdListMin(possibleEvents));
+        llSetTimerEvent(cdListMin(possibleEvents) + 0.022); // Minimum event delay is 0.022s pointless setting faster
     }
 
     //----------------------------------------
