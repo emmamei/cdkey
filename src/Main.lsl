@@ -485,6 +485,7 @@ default {
             split = llDeleteSubList(split, 0, 0);
 
                  if (name == "afk")                               afk = (integer)value;
+            else if (name == "winderID")                     winderID = (key)value;
             else if (name == "carrierID") {
                 carrierID = (key)value;
                 if (carrierID) {
@@ -863,7 +864,7 @@ default {
                         // As we are storing winderID for repeat wind how about this, give the reminder only when winder is new.
                         if (winderID != id) llOwnerSay("Have you remembered to thank " + name + " for winding you?");
 
-                        winderID = id;
+                        lmSendConfig("winderID", (string)(winderID = id));
                     }
 
                     // This shouldn't happen - but will fix if it does

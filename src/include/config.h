@@ -29,11 +29,11 @@
 /* enable developer support features such as not using RLV locks which would
    prevent editing the scripts or notecards, collection and reporting of
    performance statistics etc */
-/* #define DEVELOPER_MODE 1 */
+#define DEVELOPER_MODE 1
 
 /* enable testing and debugging features and allows the doll to access
    normally inaccessible functions like strip and wind */
-/* #define TESTER_MODE 1 */
+#define TESTER_MODE 1
 
 /* enable the start up introduction/hypno text provided that the required
    "Intro Text" notecard is also present */
