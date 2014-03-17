@@ -355,7 +355,7 @@ default {
             string optName = llGetSubString(choice, 2, STRING_END);
             string curState = cdGetFirstChar(choice);
 
-            menuTime = 0.0;
+            menuTime = llGetTime();
             if (choice == "Type...") {
                 list choices;
 
@@ -364,7 +364,6 @@ default {
                 choices += cdGetButton("Wear @ Login", id, wearAtLogin, 0);
 
                 llDialog(dollID, "Options", dialogSort(choices + MAIN), dialogChannel);
-                menuTime = llGetTime();
             }
             else if (optName == "Verify Type") {
                 lmSendConfig("mustAgreeToType", (string)(mustAgreeToType = (curState == CROSS)));
@@ -396,7 +395,6 @@ default {
                     llOwnerSay(name + " is looking at your doll types.");
 
                     llDialog(id, msg, dialogSort(llListSort(choices, 1, 1) + MAIN), dialogChannel);
-                    menuTime = llGetTime();
                 }
             }
             else if ((cdListElementP(types, choice) != NOT_FOUND) || (choice == "Transform")) {
