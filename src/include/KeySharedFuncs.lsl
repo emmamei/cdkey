@@ -10,6 +10,8 @@
 #define STD_RATE 2.0
 #define LOW_RATE 8.0
 
+#define cdWakeScript(a) llSetScriptState(a,1); lmInternalCommand("wakeScript", a, llGetKey())
+
 float lastTimerEvent;
 integer timerStarted;
 

@@ -132,8 +132,8 @@ checkRLV()
 #endif
         if (RLVck <= 0) {
             RLVck = 1;
-            llSetScriptState("StatusRLV", 1);
-            cdLinkMessage(LINK_THIS, 0, 303, "debugLevel", NULL_KEY);
+            cdWakeScript("StatusRLV");
+            cdWakeScript("Transform");
         }
         else RLVck++;
         
@@ -410,7 +410,6 @@ default {
             else if (name == "collapsed") {
                 collapsed = (integer)value;
                 cdSetDollStateIf(DOLL_COLLAPSED, collapsed);
-                llOwnerSay("0x" + bits2nybbles(dollState));
                 if (collapsed) lmSendConfig("keyAnimation", (keyAnimation = ANIMATION_COLLAPSED));
                 else if (cdCollapsedAnim()) lmSendConfig("keyAnimation", (keyAnimation = ""));
             }
@@ -745,13 +744,10 @@ default {
                 }
 #endif
     
-                if (!RLVstarted && RLVok) {
-                    llOwnerSay("Enabling RLV mode");
-                    llListenControl(listenHandle, 0);
-                    lmRLVreport(RLVok, rlvAPIversion, 0);
-                }
-                else if (!RLVok) {
-                    llSetScriptState("StatusRLV", 0);
+                if (!RLVstarted) {
+                    if (RLVok) llOwnerSay("Enabling RLV mode");
+                    else llSetScriptState("StatusRLV", 0);
+                    
                     llListenControl(listenHandle, 0);
                     lmRLVreport(RLVok, rlvAPIversion, 0);
                 }

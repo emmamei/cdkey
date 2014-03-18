@@ -51,13 +51,42 @@ default {
         cdConfigReport();
         
         else if (code == 300) {
-            string name = llList2String(split, 0);
-            string value = llList2String(split, 1);
+            string conf = llList2String(split, 0);
+            string value = llDumpList2String(llDeleteSubList(split,0,0), "|");
+            
+            integer i = llListFindList(storedConfigs, [conf]);
+            
+            if ((conf == "MistressList") || (conf == "blacklist")) {
+                string prefix = "controller"; split = llList2List(llDeleteSubList(split,0,0),0,19);
+                if (conf == "blacklist") prefix = conf;
+                
+                if (llList2String(storedConfigs, i+1) == value) return;
+                else {
+                    // Store configuration information
+                    if (i == -1) storedConfigs += [ conf, value ];
+                    else storedConfigs = llListReplaceList(storedConfigs, [ conf, value ], i, i + 1);
+                }
+                
+                integer j;
+                llOwnerSay(conf + " " + llList2CSV(split));
+                while (j < 10) {
+                    string uuid = llList2String(split,0);
+                    string name = llList2String(split,1);
+                    lmSendConfig(prefix + (string)j + "ID", uuid);
+                    lmSendConfig(prefix + (string)j++ + "Name", llList2String(split,1));
+                    split = llDeleteSubList(split,0,1);
+                    
+                    i = llListFindList(storedConfigs, [prefix + (string)j + "ID"]);
+                    if (i == -1) storedConfigs += [ prefix + (string)j + "ID", uuid, prefix + (string)j + "Name", name ];
+                    else storedConfigs = llListReplaceList(storedConfigs, [ prefix + (string)j + "ID", uuid, prefix + (string)j + "Name", name ], i, i + 3);
+                }
+                
+                return;
+            }
             
             // Store configuration information
-            integer i = llListFindList(storedConfigs, [name]);
-            if (i == -1) storedConfigs += [ name, value ];
-            else storedConfigs = llListReplaceList(storedConfigs, [ name, value ], i, i + 1);
+            if (i == -1) storedConfigs += [ conf, value ];
+            else storedConfigs = llListReplaceList(storedConfigs, [ conf, value ], i, i + 1);
             
             if (llGetListLength(storedConfigs) / 2 > storedCount) {
                 storedCount = llGetListLength(storedConfigs) / 2;
@@ -65,15 +94,12 @@ default {
             }
 
 #ifdef DEVELOPER_MODE
-            if (name == "debugLevel")                   debugLevel = (integer)value;
+            if (conf == "debugLevel")                   debugLevel = (integer)value;
             else if (script == cdMyScriptName()) return;
 #else
             if (script == cdMyScriptName()) return;
 #endif
-            else if (name == "offlineMode") {
-                offlineMode = (integer)value;
-                dbPostParams = [];
-            }
+            else if (conf == "offlineMode") offlineMode = (integer)value;
         }
         else if ((code == 301) || (code == 302)) {
             integer type = code - 300;
@@ -84,7 +110,7 @@ default {
                 string value = llList2String(storedConfigs, i * 2 + 1);
                 if (type == 1) lmSendConfig(conf, value);
                 else {
-                    llOwnerSay("\n" + conf + "=" + value);
+                    if ((conf != "MistressList") && (conf != "blacklist")) llOwnerSay("\n" + conf + "=" + value);
                     llSleep(0.1);
                 }
                 i++;
@@ -130,12 +156,8 @@ default {
                 string requestType = llList2String(split, 2);
 
                      if (requestType == "BlacklistKey")     requestBlacklistKey = id;
-                else if (requestType == "AddKey")           requestAddKey = id;
                 else if (requestType == "MistressKey")      requestMistressKey = id;
-                else if (requestType == "SendDB")           requestSendDB = id;
-                else if (requestType == "LoadDB")           requestLoadDB = id;
                 else if (requestType == "Update")           requestUpdate = id;
-                else if (requestType == "Name")             requestName = id;
             }
         }
     }
@@ -168,7 +190,7 @@ default {
                     requestIndex = 0;
                     nextRetry = llGetUnixTime() + llRound(900.0 + llFrand(900.0));
                 }
-                queForSave("nextRetry", (string)nextRetry);
+                lmSendConfig("nextRetry", (string)nextRetry);
             }
         }
         else if (location == "/objdns/lookup") {
@@ -188,7 +210,7 @@ default {
                     requestIndex = 0;
                     nextRetry = llGetUnixTime() + llRound(900.0 + llFrand(900.0));
                 }
-                queForSave("nextRetry", (string)nextRetry);
+                lmSendConfig("nextRetry", (string)nextRetry);
             }
         }
         else if (location == "/httpdb/retrieve") {
@@ -196,6 +218,7 @@ default {
             string error = "HTTPdb - Database access ";
 
             integer configCount;
+            string uuid;
 
             if (status == 200) {
                 lmSendConfig("databaseOnline", (string)(databaseOnline = 1));
@@ -203,10 +226,9 @@ default {
                 float HTTPdbProcessStart;
                 string eventTime = formatFloat(((HTTPdbProcessStart = llGetTime()) - HTTPdbStart) * 1000, 2);
 
-                llOwnerSay("Processing reply..."); // FIXME: sometimes, this is not followed by any report - and is printed for all keys
+                llOwnerSay("Processing database reply..."); // FIXME: sometimes, this is not followed by any report - and is printed for all keys
                 
                 list input = llParseStringKeepNulls(body,["\n"],[]); body = "";
-                configCount = llGetListLength(input);
 
                 while(llGetListLength(input)) {
                     list splitLine = llParseStringKeepNulls(llList2String(input, 1),["="],[]);
@@ -217,9 +239,36 @@ default {
                     
                     input = llDeleteSubList(input,0,0);
                     
-                    lmSendConfig(name, value);
-                    integer i = llListFindList(storedConfigs, [name]);
-                    if (i == -1) storedConfigs += [ name, value ];
+                    if (llGetSubString(name,0,9) == "controller") {
+                        if ((llGetSubString(name,-2,-1) == "ID") && (value != "")) uuid = value;
+                        else if (llGetSubString(name,-4,-1) == "Name") {
+                            if ((uuid != "") && (uuid != (string)NULL_KEY) && (name != "")) {
+                                lmInternalCommand("addMistress", uuid + "|" + value, llGetKey());
+                            }
+                            uuid = "";
+                        }
+                    }
+                    else if (llGetSubString(name,0,8) == "blacklist") {
+                        if ((llGetSubString(name,-2,-1) == "ID") && (value != "")) {
+                            uuid = value;
+                            lmSendConfig("blacklistMode", (string)1);
+                        }
+                        else if (llGetSubString(name,-4,-1) == "Name") {
+                            if ((uuid != "") && (uuid != (string)NULL_KEY) && (name != "")) {
+                                lmInternalCommand("addRemBlacklist", uuid + "|" + value, llGetKey());
+                            }
+                            uuid = "";
+                        }
+                    }
+                    else if (name == "MistressList") lmSendConfig(name, value);
+                    else if (name == "blacklist") lmSendConfig(name, value);
+                    else {
+                        lmSendConfig(name, value);
+                        integer i = llListFindList(storedConfigs, [name]);
+                        if (i == -1) storedConfigs += [ name, value ];
+                    }
+                    
+                    configCount++;
                 }
                 
                 if (llGetListLength(storedConfigs) / 2 > storedCount) {
@@ -234,6 +283,8 @@ default {
                 msg += "event time " + eventTime + ", processing time " + formatFloat(((llGetTime() - HTTPdbProcessStart) * 1000), 2);
                 msg += "ms, total time for DB transaction " + formatFloat((llGetTime() - HTTPdbStart) * 1000, 2) + "ms";
                 debugSay(2, "DEBUG-SERVICES", msg);
+#else
+                llOwnerSay("Successfully processed database reply.");
 #endif
 
                 databaseReload = 600;

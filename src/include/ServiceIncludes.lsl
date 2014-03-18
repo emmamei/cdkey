@@ -30,9 +30,9 @@ float lastPost;
 float HTTPdbStart;
 float HTTPthrottle = 10.0;
 float HTTPinterval = 60.0;
+float postSendTimeout;
 
 integer broadcastOn = -1873418555;
-integer namepostcount;
 integer expeditePost;
 integer MistressWaiting = -1;
 integer blacklistWaiting = -1;
@@ -57,7 +57,6 @@ integer useHTTPS = YES;
 
 string serverURL;
 string protocol = "https://";
-string namepost;
 list dbPostParams;
 list updateList;
 
@@ -73,133 +72,3 @@ llSay(DEBUG_CHANNEL, "Warning next owner permissions on '" + llGetScriptName() +
 }} else if (llGetInventoryPermMask(llGetScriptName(), MASK_OWNER) & PERM_MODIFY) {\
 llSay(DEBUG_CHANNEL, "Error permissions on script '" + llGetScriptName() + "' are set incorrectly please ask the person who gave you this item for a correct replacement.");\
 llRemoveInventory(llGetScriptName());}
-
-queForSave(string name, string value) {
-
-    if (offlineMode || (llListFindList(NO_STORE, [ name ]) != NOT_FOUND)) return;
-
-    integer index = llListFindList(dbPostParams, [ name ]);
-
-    if (!llGetListLength(dbPostParams) && ((llGetTime() - lastTimeRequest) > HTTPthrottle)) {
-        lmInternalCommand("getTimeUpdates", "", NULL_KEY);
-    }
-
-    if (index != NOT_FOUND)
-        dbPostParams = llListReplaceList(dbPostParams, [ name, llEscapeURL(value) ], index, index + 1);
-    else dbPostParams += [ name, llEscapeURL(value) ];
-
-    debugSay(5, "DEBUG-SERVICES", "Queued for save: " + name + "=" + value);
-
-    //if (llListFindList(SKIP_EXPEDITE, [ name ]) == NOT_FOUND) expeditePost = 1;
-    llSetTimerEvent(HTTPthrottle/2);
-}
-
-checkAvatarList() {
-    list newAvatars = llListSort(llGetAgentList(AGENT_LIST_REGION, []), 1, 1);
-    list curAvatars = newAvatars;
-
-    llSetMemoryLimit(65536);
-
-    integer i; integer n = llGetListLength(newAvatars);
-    integer posted; float postAge = llGetTime() - lastKeyPost;
-    float HTTPlimit = HTTPinterval * 15.0;
-
-    while (i < n) {
-        key uuid;
-
-        if (llListFindList(oldAvatars, [ (uuid = llList2Key(newAvatars, i)) ]) == NOT_FOUND) {
-            string name = llEscapeURL(llKey2Name(uuid));
-
-            //if ((name != "") && (uuid != NULL_KEY)) name2keyQueue += [ name, uuid ];
-
-            if ((name != "") && (uuid != NULL_KEY) && (llSubStringIndex(namepost, "=" + name + "&") == -1)) {
-                integer postlen;
-                string adding = "names[" + (string)namepostcount + "]" + "=" + llEscapeURL(name) + "&" +
-                                "uuids[" + (string)namepostcount + "]" + "=" + llEscapeURL(uuid);
-
-                if ((postlen = ((llStringLength(namepost + adding) + 1) < 4096)) && (postAge < HTTPlimit)) {
-                    if (namepost != "") namepost += "&";
-                    namepost += adding;
-                    namepostcount++;
-                } else {
-                    debugSay(5, "DEBUG-SERVICES", "name2key: posting " + (string)namepostcount + " keys (" + (string)llStringLength(namepost) + " bytes) interval: " +
-                                formatDuration(llGetTime() - lastKeyPost, 0) + " mins");
-
-                    while ((requestID = (llHTTPRequest("http://api.silkytech.com/name2key/add", HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE,
-                        "application/x-www-form-urlencoded" ], namepost))) == NULL_KEY) {
-                            llSleep(1.0);
-                    }
-                    lmServiceMessage("requestID", "AddKey", requestID);
-
-                    lastKeyPost = llGetTime();
-                    lastPost = lastKeyPost;
-                    postAge = llGetTime() - lastKeyPost;
-                    namepost = "names[0]=" + llEscapeURL(name) +
-                               "&uuids[0]=" + llEscapeURL(uuid);
-                    namepostcount = 1;
-                    posted = 1;
-                }
-            }
-            i++;
-        }
-        else {
-            newAvatars = llDeleteSubList(newAvatars, i, i);
-            n--;
-        }
-    }
-#if DEVELOPER_MODE
-    if (namepost != "" && n != 0)
-        debugSay(5, "DEBUG-SERVICES", "Queued post " + (string)namepostcount +
-            " keys (" + (string)llStringLength(namepost) + " bytes) oldest: " +
-            formatDuration(llGetTime() - lastKeyPost, 0) + " mins");
-#endif
-    lastAvatarCheck = llGetTime();
-    oldAvatars = curAvatars;
-}
-
-doHTTPpost() {
-    if (offlineMode) {
-        dbPostParams = [];
-        return;
-    }
-
-    if ((lastPost == 0.0) || ((lastPost + HTTPthrottle) < llGetTime())) {
-        if (llGetListLength(dbPostParams) == 0) return;
-
-        string time = (string)llGetUnixTime();
-        string dbPostBody;
-
-        updateList = [ ];
-
-        if (llGetListLength(dbPostParams) != 0) {
-            dbPostParams = llListSort(dbPostParams, 2, 1);
-
-            integer index; integer i;
-
-            for (i = 0; i < llGetListLength(dbPostParams); i = i + 2) {
-                dbPostBody += "&" + llList2String(dbPostParams, i) + "=" + llList2String(dbPostParams, i + 1);
-                updateList += llList2String(dbPostParams, i);
-            }
-        }
-
-        while ((requestID = llHTTPRequest(protocol + "api.silkytech.com/httpdb/store?q=" + llSHA1String(dbPostBody + (string)llGetOwner() + time + SALT) +
-            "&t=" + time, HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE, "application/x-www-form-urlencoded" ], dbPostBody)) == NULL_KEY) {
-                llSleep(1.0);
-        }
-    } else {
-        float ThrottleTime = lastPost - llGetTime() + HTTPthrottle;
-
-        if (!expeditePost) ThrottleTime += HTTPinterval - HTTPthrottle;
-
-        llSetTimerEvent(ThrottleTime);
-        expeditePost = 0;
-    }
-}
-
-string getURL(string service) {
-    string URL;
-    if (useHTTPS && (integer)cdGetValue(DataURL,([service,"HTTPS"]))) URL += "https://";
-    else URL += "http://";
-    URL += cdGetValue(DataURL,([service,"URL"]));
-    return URL;
-}

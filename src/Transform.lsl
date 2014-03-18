@@ -91,11 +91,9 @@ setDollType(string choice, integer automated) {
         else minMinutes = 5;
 
         typeFolder = "";
-        llSetTimerEvent(3.0);
 
         currentState = stateName;
         lmSendConfig("dollType", stateName);
-        lmSendConfig("currentState", stateName);
 
         cdPause();
 
@@ -105,7 +103,7 @@ setDollType(string choice, integer automated) {
         typeFolder = "";
         retryOutfits = 0;
         tryOutfits = 1;
-        llSetTimerEvent(5.0);
+        llSetTimerEvent(15.0);
     }
 }
 
@@ -165,6 +163,8 @@ default {
         stateName = "Regular";
 
         cdInitializeSeq();
+        
+        llSetScriptState(cdMyScriptName(),0);
     }
 
     //----------------------------------------
@@ -190,7 +190,7 @@ default {
     // TIMER
     //----------------------------------------
     timer() {
-        list outfitsFolders = [ "> Outfits", "Outfits", "> Dressup", "Dressup" ];
+        list outfitsFolders = [ ">&&Outfits", "Outfits", ">&&Dressup", "Dressup" ];
 
         if (readingNC) {
             kQuery = llGetNotecardLine(TYPE_FLAG + currentState,lineno);
@@ -204,37 +204,27 @@ default {
                     if (tryOutfits == llGetListLength(outfitsFolders)) {
                         tryOutfits = 0;
                         outfitsTest = "";
-                        if (!readingNC) {
-                            cdStopTimer();
-                            if (!showPhrases) llSetScriptState(cdMyScriptName(), 0);
-                            return;
-                        }
                     }
                     outfitsTest = llList2String(outfitsFolders, tryOutfits++);
                     retryOutfits = 0;
                 }
             }
-            else if ((typeFolder == "") && (retryOutfits < 2)) {
+            else if ((clothingprefix != "") && (typeFolder == "") && (retryOutfits < 2)) {
                 outfitsTest = clothingprefix;
             }
             else {
                 if (typeFolder == "") lmSendConfig("useTypeFolder", (string)(useTypeFolder = 0));
                 tryOutfits = 0;
-                if (!readingNC) {
-                    cdStopTimer();
-                    if (!showPhrases) llSetScriptState(cdMyScriptName(), 0);
-                    return;
-                }
             }
 
             llListenControl(rlvHandle, 1);
             lmRunRLV("findfolder:" + outfitsTest + "=" + (string)rlvChannel);
             retryOutfits++;
         }
-        else {
-            cdStopTimer();
-            if (!showPhrases) llSetScriptState(cdMyScriptName(), 0);
+        else if (!showPhrases) {
+            if ((menuTime + 60.0) < llGetTime()) llSetScriptState(cdMyScriptName(), 0);
         }
+        else cdStopTimer();
     }
 
     //----------------------------------------
@@ -301,16 +291,27 @@ default {
                 else if (name == "RLVok") {
                     RLVok = (integer)value;
                     if (RLVok) {
-                        if (!rlvHandle) rlvHandle = cdListenAll(rlvChannel);
-                        else {
-                            rlvHandle = 0;
-                            llListenRemove(rlvHandle);
+                        if (rlvChannel) {
+                            if (!rlvHandle) rlvHandle = cdListenAll(rlvChannel);
+                            else {
+                                llListenRemove(rlvHandle);
+                                rlvHandle = cdListenAll(rlvChannel);
+                            }
+                            llSetTimerEvent(15.0);
                         }
                     }
                 }
                 else if (name == "dialogChannel") {
-                                                                           dialogChannel = (integer)value;
-                                                                              rlvChannel = ~dialogChannel + 1; 
+                    dialogChannel = (integer)value;
+                    rlvChannel = ~dialogChannel + 1;
+                    if (RLVok) {
+                        if (!rlvHandle) rlvHandle = cdListenAll(rlvChannel);
+                        else {
+                            llListenRemove(rlvHandle);
+                            rlvHandle = cdListenAll(rlvChannel);
+                        }
+                        llSetTimerEvent(15.0);
+                    }
                 }
 #ifdef DEVELOPER_MODE
                 else if (name == "debugLevel") {
@@ -326,6 +327,11 @@ default {
                 else if (script == "Main" && name == "timeLeftOnKey") runTimedTriggers();
             }
         }
+        else if (code == 305) {
+            if (choice == "wakeScript") {
+                if (name == cdMyScriptName()) cdLinkMessage(LINK_THIS, 0, 303, "debugLevel|dialogChannel|dollType|quiet|mustAgreeToType|RLVok|showPhrases|wearAtLogin", llGetKey());
+            }
+        }
         else if (code == 350) {
             RLVok = ((integer)choice == 1);
 
@@ -335,20 +341,15 @@ default {
             retryOutfits = 0;
 
             if (RLVok) {
-                if (!rlvHandle) rlvHandle = cdListenAll(rlvChannel);
-                else {
-                    rlvHandle = 0;
-                    llListenRemove(rlvHandle);
+                if (rlvChannel) {
+                    if (!rlvHandle) rlvHandle = cdListenAll(rlvChannel);
+                    else {
+                        llListenRemove(rlvHandle);
+                        rlvHandle = cdListenAll(rlvChannel);
+                    }
+                    llSetTimerEvent(15.0);
                 }
             }
-            else {
-                if (rlvHandle) {
-                    rlvHandle = 0;
-                    llListenRemove(rlvHandle);
-                }
-            }
-
-            llSetTimerEvent(5.0);
         }
         else if (code == 500) {
             string name = cdListElement(split, 2);

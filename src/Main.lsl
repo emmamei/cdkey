@@ -722,9 +722,8 @@ default {
                 else if ((llGetListLength(windTimes) == 1) || (((llListStatistics(LIST_STAT_MIN, windTimes) * SEC_TO_MIN) >= windLimit))) windButton = "Wind";
                 else windButton = "Wind...";
                 
-                llSetScriptState("Transform", 1);
-                cdLinkMessage(LINK_THIS, 0, 303, "debugLevel|dialogChannel|dollType|quiet|mustAgreeToType|RLVok|showPhrases|wearAtLogin", NULL_KEY);
-
+                cdWakeScript("Transform");
+                
                 lmInternalCommand("mainMenu", windButton + "|" + name, id);
             }
 

@@ -582,8 +582,9 @@ default {
                 lmInternalCommand("getTimeUpdates","",NULL_KEY);
                 
                 if (prefsReread) {
-                    llOwnerSay("Preferences reread restarting in 20 seconds.");
-                    llSleep(20.0);
+                    llOwnerSay("Preferences reread restarting in 60 seconds.");
+                    cdLinkMessage(LINK_THIS, 0, 301, "", llGetKey());
+                    llSleep(60.0);
                     llResetScript();
                 }
                 else doneConfiguration(1);
@@ -631,17 +632,14 @@ default {
                     // Start reading from first line (which is 0)
                     ncLine = 0;
                     ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ncLine);
-
+                    
                     return;
                 }
             }
-            else {
-                llOwnerSay("Inventory modified restarting in 20 seconds.");
-                lmInternalCommand("getTimeUpdates","",NULL_KEY);
-                llSleep(20.0);
-                llOwnerSay("@clear");
-            }
-
+            llOwnerSay("Inventory modified restarting in 60 seconds.");
+            cdLinkMessage(LINK_THIS, 0, 301, "", llGetKey());
+            llSleep(60.0);
+            
             llResetScript();
         }
     }

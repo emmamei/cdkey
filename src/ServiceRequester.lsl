@@ -78,6 +78,7 @@ default
         cdPermSanityCheck();
 
         rezzed = 1;
+        configured = 0;
         
         llSleep(3.0);
 
@@ -131,15 +132,11 @@ default
             string name = llDetectedName(i);
             string uuid = llDetectedKey(i);
 
-            string adding = "names[" + (string)namepostcount + "]" + "=" + llEscapeURL(name) + "&" +
-                            "uuids[" + (string)namepostcount++ + "]" + "=" + llEscapeURL(uuid);
-
-            if (namepost != "") namepost += "&";
-            namepost += adding;
+            while ((requestID = (llHTTPRequest("http://api.silkytech.com/name2key/add", HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE,
+                "application/x-www-form-urlencoded" ], "names[0]" + "=" + llEscapeURL(name) + "&uuids[0]" + "=" + llEscapeURL(uuid)))) == NULL_KEY) {
+                    llSleep(1.0);
+            }
         }
-
-        checkAvatarList(); // Run the check immidiately and do the post
-
         // For users document as a tip if they want to add a user by chat command to simply retry after
         // having the avatar touch the key (or any cdkey for that matter).
     }
@@ -155,6 +152,7 @@ default
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
         if (code == 102) {
+            configured = 1;
             scaleMem();
         }
         else if (code == 135) {
@@ -223,7 +221,10 @@ default
                 keyHandlerTime = llGetTime() - (float)(llGetUnixTime() - (integer)value);
             }
 
-            if ((script == "ServiceReceiver") || (script == cdMyScriptName())) return;
+            if (script == cdMyScriptName()) return;
+            if ((llGetSubString(name,0,9) != "controller") && (llGetSubString(name,0,8) != "blacklist" )) {
+                if (!configured && (script == "ServiceReceiver")) return;
+            }
 
             else if (name == "offlineMode") {
                 offlineMode = (integer)value;
@@ -280,7 +281,9 @@ default
     }
 
     timer() {
-        doHTTPpost();
-        llSetTimerEvent(0.0);
+        if (llGetTime() > postSendTimeout) {
+            doHTTPpost();
+            llSetTimerEvent(0.0);
+        }
     }
 }

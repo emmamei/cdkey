@@ -10,6 +10,8 @@
 
 #include "include/GlobalDefines.lsl"
 
+integer msgcount;
+
 // Selector format
 // 1st Param, lowest link code value to match inclusive.
 // 2nd Param, highest link code value to match inclusive.
@@ -19,11 +21,7 @@
 // Selectors are sorted at script init by the first parameter knowing this with the fairly sparse
 // allocation of link numbers we have means that 
 list selectors = [
-     0, 1023, "", "RLV",
-    100, 110, "", "",
-    135, 136, "", "",
-    300, 303, "", "",
-    500, 500, "", ""
+     300, 301, "", ""
 ];
 
 default
@@ -43,6 +41,7 @@ default
         integer code      =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
         
+        string output;
         if (code != 700) {
             integer i; integer n = llGetListLength(selectors) / 4; integer ok;
             while (!ok && (i < n) && (llList2Integer(selectors, i*4) <= code)) {
@@ -50,7 +49,7 @@ default
                     ((llList2String(selectors, i*4+2) == "") || (llSubStringIndex(script, llList2String(selectors, i*4+2)) != -1)) &&
                     ((llList2String(selectors, i*4+3) == "") || (llSubStringIndex(data, llList2String(selectors, i*4+3)) != -1))) {
                         if (id != NULL_KEY) data +=  "; " + (string)id;
-                        llOwnerSay((string)code + "; " + script + "; " + llList2CSV(split));
+                        output = (string)code + "; " + script + "; " + llList2CSV(split);
                         ok = 1;
                 }
                 i++;
@@ -58,7 +57,7 @@ default
         }
         else {
             if (id != NULL_KEY) data +=  "; " + (string)id;
-            llOwnerSay((string)code + "; " + llList2String(split,0) + "; " + llList2CSV(llDeleteSubList(split,0,0)));
+            output = llList2String(split,0) + "; " + llList2CSV(llDeleteSubList(split,0,0));
         }
         
         if (code == 135) {
@@ -72,5 +71,7 @@ default
             
             if (name == "debugLevel") debugLevel = (integer)value;
         }
+        
+        if (output != "") llOwnerSay("[" + llGetSubString((string)llGetTime(),0,-2) + "] <#" + (string)(++msgcount) + "> " + output);
     }
 }
