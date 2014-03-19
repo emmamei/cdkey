@@ -15,6 +15,7 @@
 #define TYPE_FLAG "*"
 #define STRING_END -1
 #define NOT_FOUND -1
+#define DISCARD_CHANNEL 9999
 #define cdGetFirstChar(a) llGetSubString(a, 0, 0)
 #define cdButFirstChar(a) llGetSubString(a, 1, STRING_END)
 #define cdChat(a) llSay(0, a)
@@ -385,27 +386,37 @@ default {
             else if (choice == "Types...") {
                 // Doll must remain in a type for a period of time
                 if (minMinutes > 0) {
-                    // Since the output goes to the listener "handle" of 9999, it is discarded silently
-                    llDialog(id,"The Doll " + dollName + " cannot be transformed right now. The Doll was recently transformed. Dolly can be transformed in " + (string)minMinutes + " minutes.",["OK"], 9999);
+                    if (cdIsDoll(id)) {
+                        llDialog(id,"You cannot be transformed right now, as you were recently transformed. You can be transformed in " + (string)minMinutes + " minutes.",["OK"], DISCARD_CHANNEL);
+                    } else {
+                        llDialog(id,"The Doll " + dollName + " cannot be transformed right now. The Doll was recently transformed. Dolly can be transformed in " + (string)minMinutes + " minutes.",["OK"], DISCARD_CHANNEL);
+                    }
                 }
                 else {
                     reloadTypeNames();
                     
-                    string msg = "These change the personality of " + dollName + " This Doll is currently a " + stateName + " Doll. What type of doll do you want the Doll to be?";
+                    string msg = "These change the personality of " + dollName + "; Dolly is currently a " + stateName + " Doll. ";
                     list choices = types;
 
-                    llOwnerSay(name + " is looking at your doll types.");
+                    if (cdIsDoll(id)) {
+                        msg += "What type of doll do you want to be?";
+                    }
+                    else {
+                        msg += "What type of doll do you want the Doll to be?";
+                        llOwnerSay(name + " is looking at your doll types.");
+                    }
+
 
                     llDialog(id, msg, dialogSort(llListSort(choices, 1, 1) + MAIN), dialogChannel);
                 }
             }
             else if ((cdListElementP(types, choice) != NOT_FOUND) || (choice == "Transform")) {
                 if (choice == "Transform") choice = transform;
-                else if (mustAgreeToType) {
+                else if ((!cdIsDoll(id)) && mustAgreeToType) {
                     transform = choice;
                     list choices = ["Transform", "Dont Transform", MAIN ];
 
-                    string msg = "Do you wish to transform to a " + choice + " Doll?";
+                    string msg = "Do you wish to be transformed to a " + choice + " Doll?";
 
                     llDialog(dollID, msg, choices, dialogChannel);
 
