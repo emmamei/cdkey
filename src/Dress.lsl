@@ -187,23 +187,24 @@ listInventoryOn(string channel) {
         setActiveFolder();
         rlvRequest("getinv:" + activeFolder + "=", (integer)channel);
     }
-    else llOwnerSay("No #RLV/> Outfits folder found dressing will not work");
+    else llOwnerSay("No #RLV/> Outfits folder found, so unfortunately you will not be able to be dressed");
 }
 
 integer isDresser(key id) {
     if (dresserID == NULL_KEY) {
         dresserID = id;
         dresserName = llGetDisplayName(dresserID);
-        llOwnerSay("secondlife:///app/agent/" + (string)id + "/about is looking at your dress menu");
-        return TRUE;
+
+        if (!cdIsDoll(id)) {
+            llOwnerSay("secondlife:///app/agent/" + (string)id + "/about is looking at your dress menu");
+        }
     }
-    else if (dresserID == id) {
-        return TRUE;
-    }
-    else {
+    else if (dresserID != id) {
         lmSendToAgent("You think to look in dolly's closet and noticed that " + dresserName + " is already there", id);
         return FALSE;
     }
+
+    return TRUE;
 }
 
 changeComplete(integer success) {
@@ -220,9 +221,9 @@ changeComplete(integer success) {
     lmInternalCommand("wearLock", (string)(wearLock = (wearLock ||
                                                       ((dresserID != NULL_KEY) && (dresserID != dollID)))), NULL_KEY);
 
-    /*else {
-        llOwnerSay("Something seems to be preventing all outfit items being added or removed correctly, dressing cancelled");
-    }*/
+    //else {
+    //    llOwnerSay("Something seems to be preventing all outfit items being added or removed correctly, dressing cancelled");
+    //}
 
     candresstimeout = 0;
     change = 0;
@@ -257,13 +258,11 @@ string folderStatus() {
 
     if (useTypeFolder) exists = "found";
 
-    string out = "Outfits Folder: " + outfitsFolder + "\n";
-
-    out += "Current Folder: " + activeFolder + "\n";
-    out += "Type Folder: " + typeFolder + " (" + exists + ")\n";
-    out += "Use ~normalself: " + normalselfFolder + "\n";
-    out += "Use ~nude: " + nudeFolder;
-    return out;
+    return "Outfits Folder: " + outfitsFolder +
+           "\nCurrent Folder: " + activeFolder +
+           "\nType Folder: " + typeFolder + " (" + exists +
+           ")\nUse ~normalself: " + normalselfFolder +
+           "\nUse ~nude: " + nudeFolder;
 }
 
 //========================================
