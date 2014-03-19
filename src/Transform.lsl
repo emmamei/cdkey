@@ -457,7 +457,7 @@ default {
             cdStopTimer();
 
             if (llGetSubString(typeFolder, 0, llStringLength(outfitsFolder) - 1) != outfitsFolder) {
-                llOwnerSay("Found a matching type folder in '" + typeFolder + "' but it is not located withing your outfits folder '" + outfitsFolder + "'" +
+                llOwnerSay("Found a matching type folder in '" + typeFolder + "' but it is not located within your outfits folder '" + outfitsFolder + "'" +
                            "please make sure that the '" + TYPE_FLAG + stateName + "' folder is inside of '" + outfitsFolder + "'");
                 typeFolder = "";
                 useTypeFolder = 0;
