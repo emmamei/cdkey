@@ -260,8 +260,8 @@ string folderStatus() {
 
     return "Outfits Folder: " + outfitsFolder +
            "\nCurrent Folder: " + activeFolder +
-           "\nType Folder: " + typeFolder + " (" + exists +
-           ")\nUse ~normalself: " + normalselfFolder +
+           "\nType Folder: " + typeFolder + " (" + exists + ")" +
+           "\nUse ~normalself: " + normalselfFolder +
            "\nUse ~nude: " + nudeFolder;
 }
 
