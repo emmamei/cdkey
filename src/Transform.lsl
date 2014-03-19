@@ -441,7 +441,7 @@ default {
     listen(integer channel, string name, key id, string choice) {
 
         if ((outfitsFolder == "") && (llGetSubString(choice, -llStringLength(outfitsTest), STRING_END) == outfitsTest)) {
-            outfitsFolder = choice;
+            outfitsFolder = choice + "/";
             lmSendConfig("outfitsFolder", outfitsFolder);
             if (typeFolder != "") {
                 tryOutfits = 0;
