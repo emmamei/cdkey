@@ -465,7 +465,7 @@ default {
             else {
                 typeFolder = llDeleteSubString(typeFolder, 0, llStringLength(outfitsFolder));
                 llOwnerSay("Your outfits folder is now " + outfitsFolder);
-                llOwnerSay("Your type folder is now " + outfitsFolder + typeFolder);
+                llOwnerSay("Your type folder is now " + outfitsFolder + "/" + typeFolder);
                 useTypeFolder = 1;
             }
 
