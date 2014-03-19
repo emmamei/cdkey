@@ -492,7 +492,7 @@ default {
     listen(integer channel, string name, key id, string choice) {
         name = llGetDisplayName(id);
         
-        llOwnerSay((string)channel + "=" + (string)textboxChannel + "? " + (string)textboxType + " " + choice);
+        //llOwnerSay((string)channel + "=" + (string)textboxChannel + "? " + (string)textboxType + " " + choice);
         
         if (channel == textboxChannel) {
             llListenRemove(textboxHandle);
