@@ -410,27 +410,26 @@ default {
                     llDialog(id, msg, dialogSort(llListSort(choices, 1, 1) + MAIN), dialogChannel);
                 }
             }
-            else if ((cdListElementP(types, choice) != NOT_FOUND) || (choice == "Transform")) {
-                if (choice == "Transform") choice = transform;
-                else if ((!cdIsDoll(id)) && mustAgreeToType) {
-                    transform = choice;
-                    list choices = ["Transform", "Dont Transform", MAIN ];
-
-                    string msg = "Do you wish to be transformed to a " + choice + " Doll?";
-
-                    llDialog(dollID, msg, choices, dialogChannel);
-
-                    // Return for now until we get confirmation
-                    return;
-                }
-
-                debugSay(5, "DEBUG", "transform = " + (string)transform);
-                debugSay(5, "DEBUG", "stateName = " + (string)choice);
-                debugSay(5, "DEBUG", "currentState = " + (string)currentState);
-
+            else if (choice == "Transform") {
+                choice = transform;
                 menuChangeType = 1;
-
                 setDollType(choice, 0);
+            }
+            else if (cdListElementP(types, choice) != NOT_FOUND) {
+                if (cdIsDoll(id)) {
+                    menuChangeType = 1;
+                    setDollType(choice, 0);
+                }
+                else {
+                    if (mustAgreeToType) {
+                        transform = choice;
+                        list choices = ["Transform", "Dont Transform", MAIN ];
+
+                        string msg = "Do you wish to be transformed to a " + choice + " Doll?";
+
+                        llDialog(dollID, msg, choices, dialogChannel);
+                    }
+                }
             }
             if ((!showPhrases) && ((menuTime == 0.0) || ((menuTime + 60) < llGetTime()))) llSetScriptState(cdMyScriptName(), 0);
         }
