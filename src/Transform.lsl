@@ -75,6 +75,10 @@ integer quiet;
 //========================================
 // FUNCTIONS
 //========================================
+
+#define AUTOMATED 1
+#define NOT_AUTOMATED 0
+
 setDollType(string choice, integer automated) {
     if (choice == "Transform") stateName = transform;
     else stateName = choice;
@@ -252,7 +256,7 @@ default {
             if (!isTransformingKey) lmSendConfig("isTransformingKey", (string)(isTransformingKey = 1));
 
             configured = 1;
-            if(stateName != currentState) setDollType(stateName, 1);
+            if(stateName != currentState) setDollType(stateName, AUTOMATED);
         }
 
         else if (code == 104) {
@@ -268,7 +272,7 @@ default {
 
         else if (code == 110) {
             initState = 105;
-            setDollType(stateName, 1);
+            setDollType(stateName, AUTOMATED);
             startup = 0;
         }
 
@@ -327,7 +331,7 @@ default {
 
                 else if (name == "dollType") {
                     stateName = value;
-                    if (configured) setDollType(stateName, 1);
+                    if (configured) setDollType(stateName, AUTOMATED);
                 }
 
                 else if (script == "Main" && name == "timeLeftOnKey") runTimedTriggers();
@@ -363,7 +367,13 @@ default {
             string curState = cdGetFirstChar(choice);
 
             menuTime = llGetTime();
-            if ((choice == "Type...") || (optName == "Verify Type") || (optName == "Show Phrases") || (optName == "Wear @ Login")) {
+
+            // Transforming options
+            if ((choice == "Type...")        ||
+                (optName == "Verify Type")   ||
+                (optName == "Show Phrases")  ||
+                (optName == "Wear @ Login")) {
+
                 if (optName == "Verify Type") {
                     lmSendConfig("mustAgreeToType", (string)(mustAgreeToType = (curState == CROSS)));
                     if (mustAgreeToType) llOwnerSay("Changes in Doll Types will be verified.");
@@ -388,6 +398,8 @@ default {
 
                 llDialog(dollID, "Options", dialogSort(choices + MAIN), dialogChannel);
             }
+
+            // Choose a Transformation
             else if (choice == "Types...") {
                 // Doll must remain in a type for a period of time
                 if (minMinutes > 0) {
@@ -415,15 +427,17 @@ default {
                     llDialog(id, msg, dialogSort(llListSort(choices, 1, 1) + MAIN), dialogChannel);
                 }
             }
+
+            // Transform
             else if (choice == "Transform") {
                 choice = transform;
                 menuChangeType = 1;
-                setDollType(choice, 0);
+                setDollType(choice, NOT_AUTOMATED);
             }
             else if (cdListElementP(types, choice) != NOT_FOUND) {
                 if (cdIsDoll(id)) {
                     menuChangeType = 1;
-                    setDollType(choice, 0);
+                    setDollType(choice, NOT_AUTOMATED);
                 }
                 else {
                     if (mustAgreeToType) {
@@ -432,7 +446,7 @@ default {
 
                         string msg = "Do you wish to be transformed to a " + choice + " Doll?";
 
-                        llDialog(dollID, msg, choices, dialogChannel);
+                        llDialog(dollID, msg, choices, dialogChannel); // this starts a new choice on this channel
                     }
                 }
             }
