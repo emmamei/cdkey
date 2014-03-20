@@ -34,6 +34,7 @@ string dollName;
 string stateName;
 list types;
 float menuTime;
+key transformerId;
 integer lineno;
 integer readingNC;
 integer tryOutfits;
@@ -108,6 +109,8 @@ setDollType(string choice, integer automated) {
         if (!quiet) cdChat(dollName + " has become a " + stateName + " Doll.");
         else llOwnerSay("You have become a " + stateName + " Doll.");
         
+        if (!RLVok) { lmSendToAgentPlusDoll("Dolly does not have the capability to change outfit.",transformerId); };
+
         typeFolder = "";
         retryOutfits = 0;
         tryOutfits = 1;
@@ -204,7 +207,7 @@ default {
         if (readingNC) {
             kQuery = llGetNotecardLine(TYPE_FLAG + currentState,lineno);
         }
-        else if (tryOutfits) {
+        else if (tryOutfits && RLVok) {
             if (outfitsFolder == "") {
                 if ((outfitsTest == "") || (retryOutfits < 2)) {
                     outfitsTest = llList2String(outfitsFolders, tryOutfits - 1);
@@ -251,6 +254,10 @@ default {
 
         string choice = cdListElement(split, 0);
         string name = cdListElement(split, 1);
+        transformerId = id;
+
+        //if (id != NULL_KEY) llOwnerSay("Transform Link Msg:" + (string)code + ":choice/name/id = " + choice + "/" + name + "/" + (string)id); //DEBUG
+        //else llOwnerSay("Transform Link Msg:" + (string)code + ":choice/name = " + choice + "/" + name); //DEBUG
 
         scaleMem();
 
@@ -371,6 +378,7 @@ default {
             string optName = llGetSubString(choice, 2, STRING_END);
             string curState = cdGetFirstChar(choice);
 
+            // for timing out the Menu
             menuTime = llGetTime();
 
             // Transforming options
@@ -449,6 +457,8 @@ default {
                 else {
                     // Someone else chose a Type
                     if (mustAgreeToType) {
+                        if (!cdIsDoll(id)) lmSendToAgent("Getting confirmation from Doll...",id);
+
                         transform = choice; // save transformation Type
                         list choices = ["Transform", "Dont Transform", MAIN ];
                         string msg = "Do you wish to be transformed to a " + choice + " Doll?";
