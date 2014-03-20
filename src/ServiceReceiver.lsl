@@ -76,11 +76,15 @@ default {
                     else storedConfigs = llListReplaceList(storedConfigs, [ conf, value ], i, i + 1);
                     
                     integer j = -1; integer c;
+                    string uuid;
+                    string name;
+                    string value;
+
                     while (j++ < 9) {
-                        string uuid = llList2String(split,0);
-                        string name = llList2String(split,1);
+                        uuid = llList2String(split,0);
+                        name = llList2String(split,1);
                         
-                        string value = uuid + "|" + name;
+                        value = uuid + "|" + name;
                         
                         if ((uuid != (string)NULL_KEY) && (uuid != "") && (name != "") && (value != "|")) {
                             c++;
@@ -339,12 +343,16 @@ default {
     timer() {
         integer k = 16;
         
+        list splitLine;
+        string name;
+        string value;
+
         while (k-- && llGetListLength(databaseInput)) {
-            list splitLine = llParseStringKeepNulls(llList2String(databaseInput, 0),["="],[]);
+            splitLine = llParseStringKeepNulls(llList2String(databaseInput, 0),["="],[]);
             
-            string name = llList2String(splitLine, 0);
+            name = llList2String(splitLine, 0);
             splitLine = llDeleteSubList(splitLine,0,0);
-            string value = llDumpList2String(splitLine,"=");
+            value = llDumpList2String(splitLine,"=");
             
             databaseInput = llDeleteSubList(databaseInput,0,0);
             
