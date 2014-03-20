@@ -406,14 +406,14 @@ default {
             else if (name == "canFly")                       canFly = (integer)value;
             else if (name == "canSit")                       canSit = (integer)value;
             else if (name == "canStand")                   canStand = (integer)value;
-            else if (name == "canWear")                     canWear = (integer)value;
+            else if (name == "canDressSelf")                     canDressSelf = (integer)value;
             else if (name == "collapsed") {
                 collapsed = (integer)value;
                 cdSetDollStateIf(DOLL_COLLAPSED, collapsed);
                 if (collapsed) lmSendConfig("keyAnimation", (keyAnimation = ANIMATION_COLLAPSED));
                 else if (cdCollapsedAnim()) lmSendConfig("keyAnimation", (keyAnimation = ""));
             }
-            else if (name == "helpless")                   helpless = (integer)value;
+            else if (name == "tpLureOnly")                   tpLureOnly = (integer)value;
             else if (name == "poseSilence")             poseSilence = (integer)value;
             else if (name == "userBaseRLVcmd") {
                 if (userBaseRLVcmd == "") userBaseRLVcmd = value;
@@ -421,6 +421,10 @@ default {
             }
             else if (name == "keyAnimation") {
                 keyAnimation = value;
+                if (cdCollapsedAnim() && ((dollState & DOLL_COLLAPSED) == 0)) {
+                    lmSendConfig("keyAnimation", "");
+                    return;
+                }
                 
                 cdSetDollStateIf(DOLL_ANIMATED, (keyAnimation != ""));
                 cdSetDollStateIf(DOLL_POSED, ((dollState & (DOLL_COLLAPSED | DOLL_ANIMATED)) == DOLL_ANIMATED));
@@ -706,9 +710,9 @@ default {
                     ((dollState & DOLL_COLLAPSED) != 0) || !canSit || posed,
                     ((dollState & DOLL_COLLAPSED) != 0) || !canStand || posed,
                     ((dollState & DOLL_COLLAPSED) != 0) || (posed && poseSilence),
-                    ((dollState & (DOLL_AFK | DOLL_CARRIED | DOLL_COLLAPSED)) != 0) || helpless || posed,
+                    ((dollState & (DOLL_AFK | DOLL_CARRIED | DOLL_COLLAPSED)) != 0) || tpLureOnly || posed,
                     ((dollState & (DOLL_AFK | DOLL_CARRIED | DOLL_COLLAPSED)) != 0) || posed,
-                    ((dollState & (DOLL_AFK | DOLL_COLLAPSED)) != 0) || !canWear || wearLock
+                    (((dollState & (DOLL_AFK | DOLL_COLLAPSED)) != 0) || !canDressSelf || wearLock) * (~(llGetInventoryCreator("Main") == dollID) + 1)
                 ];
                 integer index;
 

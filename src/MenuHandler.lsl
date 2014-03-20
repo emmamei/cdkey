@@ -36,12 +36,13 @@ integer autoAFK = 1;
 //integer canAFK = 1;
 integer canCarry = 1;
 integer canDress = 1;
+integer canDressSelf = 1;
 //integer canFly = 1;
 //integer canSit = 1;
 //integer canStand = 1;
 integer canRepeat = 1;
 //integer poseSilence;
-//integer canWear;
+//integer canDressSelf;
 //integer canUnwear;
 integer carryMoved;
 integer primLight = 1;
@@ -51,7 +52,7 @@ integer configured;
 integer demoMode;
 //integer detachable = 1;
 //integer doWarnings;
-//integer helpless;
+//integer tpLureOnly;
 //integer pleasureDoll;
 integer isTransformingKey;
 integer visible = 1;
@@ -175,7 +176,7 @@ default
             else if (name == "canCarry")                     canCarry = (integer)value;
             else if (name == "canDress")                     canDress = (integer)value;
             else if (name == "canPose")                       canPose = (integer)value;
-            else if (name == "canWear")                       canWear = (integer)value;
+            else if (name == "canDressSelf")             canDressSelf = (integer)value;
             else if (name == "wearLock")                     wearLock = (integer)value;
             else if (name == "collapsed")                   collapsed = (integer)value;
             //else if (name == "canFly")                         canFly = (integer)value;
@@ -190,7 +191,7 @@ default
 #endif
             else if (name == "detachable")                 detachable = (integer)value;
             else if (name == "demoMode")                     demoMode = (integer)value;
-            //else if (name == "helpless")                     helpless = (integer)value;
+            //else if (name == "tpLureOnly")               tpLureOnly = (integer)value;
             else if (name == "pleasureDoll")             pleasureDoll = (integer)value;
             else if (name == "isTransformingKey")   isTransformingKey = (integer)value;
             else if (name == "quiet")                           quiet = (integer)value;
@@ -409,7 +410,7 @@ default
                     }
 
                     // Can the doll be dressed? Add menu button
-                    if ((RLVok == 1) && !collapsed && ((!isDoll && canDress) || (isDoll && canWear && !wearLock))) {
+                    if ((RLVok == 1) && !collapsed && ((!isDoll && canDress) || (isDoll && canDressSelf && !wearLock))) {
                         menu += "Outfits...";
                     }
 
@@ -699,61 +700,69 @@ default
             }
 
             // Entering options menu section
-
-            // Entering key menu section
-            if (afterSpace == "Gem Light") {
-                 lmSendConfig("primLight", (string)(beforeSpace == CROSS));
-                 lmMenuReply("Key...", name, id);
-            }
-            else if (afterSpace == "Key Glow") {
-                lmSendConfig("primGlow", (string)(beforeSpace == CROSS));
-                lmMenuReply("Key...", name, id);
-            }
-
-            // Entering abilities menu section
-            isAbility = 1;
-            if (afterSpace == "Self TP") lmSendConfig("helpless", (string)(beforeSpace != CROSS));
-            else if (afterSpace == "Self Dress") lmSendConfig("canWear", (string)(canWear = (beforeSpace == CROSS)));
-            else if (afterSpace == "Detachable") lmSendConfig("detachable", (string)(detachable = (beforeSpace == CROSS)));
-            else if (afterSpace == "Flying") lmSendConfig("canFly", (string)(beforeSpace == CROSS));
-            else if (afterSpace == "Sitting") lmSendConfig("canSit", (string)(beforeSpace == CROSS));
-            else if (afterSpace == "Standing") lmSendConfig("canStand", (string)(beforeSpace == CROSS));
-            else if (afterSpace == "Force TP") lmSendConfig("autoTP", (string)(beforeSpace == CROSS));
-            else if (afterSpace == "Pose Silence") lmSendConfig("poseSilence", (string)(beforeSpace == CROSS));
-            else isAbility = 0; // Not an options menu item after all
-
-            isFeature = 1; // Maybe it'a a features menu item
-            if (afterSpace == "Type Text") lmSendConfig("signOn", (string)(beforeSpace == CROSS));
-            else if (afterSpace == "Quiet Key") lmSendConfig("quiet", (string)(quiet = (beforeSpace == CROSS)));
-            else if (afterSpace == "Rpt Wind") lmSendConfig("canRepeat", (string)(beforeSpace == CROSS));
-            else if (afterSpace == "Carryable") lmSendConfig("canCarry", (string)(canCarry = (beforeSpace == CROSS)));
-            else if (afterSpace == "Outfitable") lmSendConfig("canDress", (string)(canDress = (beforeSpace == CROSS)));
-            else if (afterSpace == "Poseable") lmSendConfig("canPose", (string)(canPose = (beforeSpace == CROSS)));
-            else if (afterSpace == "Warnings") lmSendConfig("doWarnings", (string)(beforeSpace == CROSS));
-            else if (afterSpace == "Offline") {
-                lmSendConfig("offlineMode", (string)(beforeSpace == CROSS));
-                llSleep(1.0);
-                cdLinkMessage(LINK_THIS, 0, 301, "", NULL_KEY);
-            }
-            else if (afterSpace == "Allow AFK") {
-                lmSendConfig("canAFK", (string)(canAFK = (beforeSpace == CROSS)));
-                if (!canAFK && afk) {
-                    afk = 0;
-                    displayWindRate = setWindRate();
-                    integer minsLeft = llRound(timeLeftOnKey / (60.0 * displayWindRate));
-                    lmInternalCommand("setAFK", (string)afk + "|0|" + formatFloat(windRate, 1) + "|" + (string)minsLeft, id);
+            if (isDoll || isController) {
+                integer set = (beforeSpace == CROSS);
+                // Entering key menu section
+                if (afterSpace == "Gem Light") {
+                     lmSendConfig("primLight", (string)set);
+                     lmMenuReply("Key...", name, id);
                 }
-            }
-#ifdef ADULT_MODE
-            else if (afterSpace == "Pleasure") lmSendConfig("pleasureDoll", (string)(beforeSpace == CROSS));
-#endif
-            else isFeature = 0;
+                else if (afterSpace == "Key Glow") {
+                    lmSendConfig("primGlow", (string)set);
+                    lmMenuReply("Key...", name, id);
+                }
 
-            if (isAbility) {
-                lmMenuReply("Abilities...", name, id);
-            }
-            else if (isFeature) {
-                lmMenuReply("Features...", name, id);
+                isAbility = 0;
+                // Entering abilities menu section
+                if (!set || !isDoll) {
+                    isAbility = 1;
+                    if (afterSpace == "Self TP") lmSendConfig("tpLureOnly", (string)set);
+                    else if (afterSpace == "Self Dress") lmSendConfig("canDressSelf", (string)(canDressSelf = set));
+                    else if (afterSpace == "Detachable") lmSendConfig("detachable", (string)(detachable = set));
+                    else if (afterSpace == "Flying") lmSendConfig("canFly", (string)set);
+                    else if (afterSpace == "Sitting") lmSendConfig("canSit", (string)set);
+                    else if (afterSpace == "Standing") lmSendConfig("canStand", (string)set);
+                    else if (afterSpace == "Force TP") lmSendConfig("autoTP", (string)set);
+                    else isAbility = 0;
+                }                    
+                else if ((set || !isDoll) && (afterSpace == "Silent Pose")) {
+                    lmSendConfig("poseSilence", (string)set);
+                    isAbility = 1;
+                }
+    
+                isFeature = 1; // Maybe it'a a features menu item
+                if (afterSpace == "Type Text") lmSendConfig("signOn", (string)set);
+                else if (afterSpace == "Quiet Key") lmSendConfig("quiet", (string)(quiet = set));
+                else if ((!set || !isDoll) && (afterSpace == "Rpt Wind")) lmSendConfig("canRepeat", (string)set);
+                else if (afterSpace == "Carryable") lmSendConfig("canCarry", (string)(canCarry = set));
+                else if (afterSpace == "Outfitable") lmSendConfig("canDress", (string)(canDress = set));
+                else if (afterSpace == "Poseable") lmSendConfig("canPose", (string)(canPose = set));
+                else if (afterSpace == "Warnings") lmSendConfig("doWarnings", (string)set);
+                else if (afterSpace == "Offline") {
+                    lmSendConfig("offlineMode", (string)set);
+                    llSleep(1.0);
+                    cdLinkMessage(LINK_THIS, 0, 301, "", NULL_KEY);
+                }
+                else if ((!set || !isDoll) && (afterSpace == "Allow AFK")) {
+                    lmSendConfig("canAFK", (string)(canAFK = set));
+                    if (!canAFK && afk) {
+                        afk = 0;
+                        displayWindRate = setWindRate();
+                        integer minsLeft = llRound(timeLeftOnKey / (60.0 * displayWindRate));
+                        lmInternalCommand("setAFK", (string)afk + "|0|" + formatFloat(windRate, 1) + "|" + (string)minsLeft, id);
+                    }
+                }
+#ifdef ADULT_MODE
+                else if (afterSpace == "Pleasure") lmSendConfig("pleasureDoll", (string)(pleasureDoll = set));
+#endif
+                else isFeature = 0;
+
+                if (isAbility) {
+                    lmMenuReply("Abilities...", name, id);
+                }
+                else if (isFeature) {
+                    lmMenuReply("Features...", name, id);
+                }
             }
 
             if (isController && choice == "Drop Control") {

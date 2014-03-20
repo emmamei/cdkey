@@ -75,7 +75,7 @@ integer canAFK = 1;
 //integer canSit = 1;
 //integer canStand = 1;
 //integer canRepeat = 1;
-//integer canWear;
+//integer canDressSelf;
 //integer canUnwear;
 integer clearAnim;
 integer collapsed;
@@ -83,7 +83,7 @@ integer configured;
 integer demoMode;
 //integer detachable = 1;
 //integer doWarnings;
-//integer helpless;
+//integer tpLureOnly;
 //integer pleasureDoll;
 integer isTransformingKey;
 //integer visible = 1;
@@ -619,7 +619,7 @@ default {
             else if (cmd == "wearLock") {
                 wearLockExpire = WEAR_LOCK_TIME;
                 if (llList2Integer(split, 0)) {
-                    lmSendConfig("wearLockExpire", (string)(wearLockExpire - WEAR_LOCK_TIME));
+                    lmSendConfig("wearLockExpire", (string)(wearLockExpire = llGetTime() + WEAR_LOCK_TIME));
                     displayWindRate = setWindRate();
                 }
                 else lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0.0));

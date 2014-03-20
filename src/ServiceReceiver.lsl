@@ -57,7 +57,7 @@ default {
             integer i = llListFindList(storedConfigs, [conf]);
             
             if ((conf == "MistressList") || (conf == "blacklist")) {
-                string prefix = "controller"; split = llList2List(llDeleteSubList(split,0,0),0,19);
+                string prefix = "controller"; split = llDeleteSubList(split,0,0);
                 if (conf == "blacklist") prefix = conf;
                 
                 if (llList2String(storedConfigs, i+1) == value) return;
@@ -67,18 +67,17 @@ default {
                     else storedConfigs = llListReplaceList(storedConfigs, [ conf, value ], i, i + 1);
                 }
                 
-                integer j;
-                llOwnerSay(conf + " " + llList2CSV(split));
-                while (j < 10) {
+                integer j; integer c;
+                while (j++ < 10) {
                     string uuid = llList2String(split,0);
                     string name = llList2String(split,1);
-                    lmSendConfig(prefix + (string)j + "ID", uuid);
-                    lmSendConfig(prefix + (string)j++ + "Name", llList2String(split,1));
+                    lmSendConfig(prefix + (string)j, uuid + "|" + name);
+
                     split = llDeleteSubList(split,0,1);
-                    
-                    i = llListFindList(storedConfigs, [prefix + (string)j + "ID"]);
-                    if (i == -1) storedConfigs += [ prefix + (string)j + "ID", uuid, prefix + (string)j + "Name", name ];
-                    else storedConfigs = llListReplaceList(storedConfigs, [ prefix + (string)j + "ID", uuid, prefix + (string)j + "Name", name ], i, i + 3);
+
+                    i = llListFindList(storedConfigs, [prefix + (string)j]);
+                    if (i == -1) storedConfigs += [ prefix + (string)j, uuid + "|" + name ];
+                    else storedConfigs = llListReplaceList(storedConfigs, [ prefix + (string)j, uuid + "|" + name ], i, i + 1);
                 }
                 
                 return;
@@ -230,6 +229,10 @@ default {
                 
                 list input = llParseStringKeepNulls(body,["\n"],[]); body = "";
 
+                // FIXME: Interim code to handle depreciation of old vars
+                // See bellow line 255 and onwards.
+                integer canDressSelf = -1;
+                
                 while(llGetListLength(input)) {
                     list splitLine = llParseStringKeepNulls(llList2String(input, 1),["="],[]);
                     
@@ -239,36 +242,34 @@ default {
                     
                     input = llDeleteSubList(input,0,0);
                     
-                    if (llGetSubString(name,0,9) == "controller") {
-                        if ((llGetSubString(name,-2,-1) == "ID") && (value != "")) uuid = value;
-                        else if (llGetSubString(name,-4,-1) == "Name") {
-                            if ((uuid != "") && (uuid != (string)NULL_KEY) && (name != "")) {
-                                lmInternalCommand("addMistress", uuid + "|" + value, llGetKey());
-                            }
-                            uuid = "";
-                        }
+                    if (llGetSubString(name,0,-2) == "controller") {
+                        lmInternalCommand("addMistress", value, llGetKey());
                     }
-                    else if (llGetSubString(name,0,8) == "blacklist") {
-                        if ((llGetSubString(name,-2,-1) == "ID") && (value != "")) {
-                            uuid = value;
-                            lmSendConfig("blacklistMode", (string)1);
-                        }
-                        else if (llGetSubString(name,-4,-1) == "Name") {
-                            if ((uuid != "") && (uuid != (string)NULL_KEY) && (name != "")) {
-                                lmInternalCommand("addRemBlacklist", uuid + "|" + value, llGetKey());
-                            }
-                            uuid = "";
-                        }
+                    else if (llGetSubString(name,0,-2) == "blacklist") {
+                        lmSendConfig("blacklistMode", (string)1);
+                        lmInternalCommand("addRemBlacklist", value, llGetKey());
                     }
                     else if (name == "MistressList") lmSendConfig(name, value);
                     else if (name == "blacklist") lmSendConfig(name, value);
+                    
+                    // FIXME: Interim code to handle depreciation of old vars these should
+                    // be eliminated when the depreciated forms move to obsolecence
+                    else if (llGetSubString(name,0,9) == "controller");                 // Ignore this
+                    else if (llGetSubString(name,0,8) == "blacklist");                  // Ignore this
                     else {
+                        if (name == "helpless") name == "tpLureOnly";                   // T is after H so this one convert to new form and let new override if needed
+                        else if (name == "canDressSelf") canDressSelf = (integer)value; // Set the temp variable so that we do not use canWear to set this later
+                        else if (name == "canWear") {                                   // W however is after D making this one trickier thus the temp canDressSelf = -1 var
+                            if (canDressSelf == -1) name = "canDressSelf";              // we do not want to use the old one to set it unless it is still unset.
+                            else return;                                                // Otherwise we just ignore the depreciated one.
+                        }
+                        
                         lmSendConfig(name, value);
                         integer i = llListFindList(storedConfigs, [name]);
                         if (i == -1) storedConfigs += [ name, value ];
-                    }
                     
-                    configCount++;
+                        configCount++;
+                    }
                 }
                 
                 if (llGetListLength(storedConfigs) / 2 > storedCount) {

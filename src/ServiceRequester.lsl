@@ -38,6 +38,118 @@ string correctName(string name) {
     return llToLower(name);
 }
 
+queForSave(string name, string value) {
+
+    if (offlineMode) return;
+
+    integer i = llListFindList(dbPostParams, [ name ]);
+
+    if (!llGetListLength(dbPostParams) && ((llGetTime() - lastTimeRequest) > HTTPthrottle)) {
+        lmInternalCommand("getTimeUpdates", "", NULL_KEY);
+    }
+
+    if (i != NOT_FOUND)
+        dbPostParams = llListReplaceList(dbPostParams, [ name, llEscapeURL(value) ], i, ++i);
+    else dbPostParams += [ name, llEscapeURL(value) ];
+
+    integer sendCount = llGetListLength(dbPostParams) / 2;
+
+    if (sendCount < 16) {
+        debugSay(5, "DEBUG-SERVICES", "Queued for save: " + name + "=" + value + " (+" + (string)(sendCount - 1) + ")");
+        postSendTimeout = llGetTime() + HTTPthrottle;
+        llSetTimerEvent(HTTPthrottle);
+    }
+    else {
+        doHTTPpost();
+        postSendTimeout = 0.0;
+        llSetTimerEvent(0.0);
+    }
+}
+
+checkAvatarList() {
+    list curAvatars = llListSort(llGetAgentList(AGENT_LIST_REGION, []), 1, 1);
+
+    string namepost;
+    integer namepostcount;
+
+    llSetMemoryLimit(65536);
+    integer i;
+
+    while (llGetListLength(curAvatars)) {
+        key uuid;
+
+        if ( ( i = llListFindList(oldAvatars, [ (uuid = llList2Key(curAvatars, 0)) ]) ) == NOT_FOUND) {
+            string name = llEscapeURL(llKey2Name(uuid));
+
+            if ((name != "") && (uuid != NULL_KEY)) {
+                if (namepost != "") namepost += "&";
+                namepost += "names[" + (string)namepostcount + "]" + "=" + llEscapeURL(name) + "&" +
+                "uuids[" + (string)namepostcount + "]" + "=" + llEscapeURL(uuid);
+
+                namepostcount++;
+            }
+
+        }
+        else oldAvatars = llDeleteSubList(oldAvatars,0,0);
+
+                            curAvatars = llDeleteSubList(curAvatars,0,0);
+    }
+
+    if (namepostcount) {
+        while ((requestID = (llHTTPRequest("http://api.silkytech.com/name2key/add", HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE,
+            "application/x-www-form-urlencoded" ], namepost))) == NULL_KEY) {
+            llSleep(1.0);
+            }
+
+            #if DEVELOPER_MODE
+            debugSay(5, "DEBUG-SERVICES", "Keys posted " + (string)namepostcount +
+            " keys (" + (string)llStringLength(namepost) + " bytes)");
+        #endif
+    }
+
+    namepost = "";
+    oldAvatars = llListSort(llGetAgentList(AGENT_LIST_REGION, []), 1, 1);
+    lastKeyPost = llGetTime();
+    lastPost = lastKeyPost;
+
+    lastAvatarCheck = llGetTime();
+}
+
+doHTTPpost() {
+    if (offlineMode) {
+        dbPostParams = [];
+        return;
+    }
+
+    dbPostParams = llListSort(dbPostParams, 2, 1);
+    string dbPostBody;
+
+    integer sendCount = llGetListLength(dbPostParams) / 2;
+    if (sendCount) debugSay(5, "DEBUG-SERVICES", "Posting " + (string)sendCount + " records.");
+
+    while (llGetListLength(dbPostParams)) {
+        if (dbPostBody != "") dbPostBody += "&";
+        dbPostBody += llList2String(dbPostParams, 0) + "=" + llList2String(dbPostParams, 1);
+        dbPostParams = llDeleteSubList(dbPostParams,0,1);
+    }
+
+    if (llStringLength(dbPostBody)) {
+        string time = (string)llGetUnixTime();
+        while ((requestID = llHTTPRequest(protocol + "api.silkytech.com/httpdb/store?q=" + llSHA1String(dbPostBody + (string)llGetOwner() + time + SALT) +
+            "&t=" + time, HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE, "application/x-www-form-urlencoded" ], dbPostBody)) == NULL_KEY) {
+            llSleep(1.0);
+            }
+    }
+}
+
+string getURL(string service) {
+    string URL;
+    if (useHTTPS && (integer)cdGetValue(DataURL,([service,"HTTPS"]))) URL += "https://";
+        else URL += "http://";
+            URL += cdGetValue(DataURL,([service,"URL"]));
+        return URL;
+}
+
 default
 {
     state_entry() {
@@ -221,10 +333,7 @@ default
                 keyHandlerTime = llGetTime() - (float)(llGetUnixTime() - (integer)value);
             }
 
-            if (script == cdMyScriptName()) return;
-            if ((llGetSubString(name,0,9) != "controller") && (llGetSubString(name,0,8) != "blacklist" )) {
-                if (!configured && (script == "ServiceReceiver")) return;
-            }
+            if ((!configured && (script == "ServiceReceiver")) || (script == cdMyScriptName())) return;
 
             else if (name == "offlineMode") {
                 offlineMode = (integer)value;

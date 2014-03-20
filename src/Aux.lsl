@@ -246,7 +246,7 @@ default {
             else if (name == "canCarry")                     canCarry = (integer)value;
             else if (name == "canDress")                     canDress = (integer)value;
             else if (name == "canPose")                       canPose = (integer)value;
-            else if (name == "canWear")                       canWear = (integer)value;
+            else if (name == "canDressSelf")                       canDressSelf = (integer)value;
             else if (name == "canFly")                         canFly = (integer)value;
             else if (name == "canSit")                         canSit = (integer)value;
             else if (name == "canStand")                     canStand = (integer)value;
@@ -255,7 +255,7 @@ default {
             else if (name == "doWarnings")                 doWarnings = (integer)value;
             else if (name == "poseSilence")               poseSilence = (integer)value;
             else if (name == "detachable")                 detachable = (integer)value;
-            else if (name == "helpless")                     helpless = (integer)value;
+            else if (name == "tpLureOnly")                     tpLureOnly = (integer)value;
             else if (name == "pleasureDoll")             pleasureDoll = (integer)value;
             else if (name == "signOn")                         signOn = (integer)value;
             else if (name == "offlineMode")               offlineMode = (integer)value;
@@ -294,11 +294,11 @@ default {
                 string msg;
                 if (value == "1") msg = "Other people can now outfit you, but you remain ";
                 else msg = "Other people can no longer outfit you, but you remain ";
-                if (wearLock || !canWear) msg += "un";
+                if (wearLock || !canDressSelf) msg += "un";
                 llOwnerSay(msg + "able to dress yourself.");
             }
             
-            if (name == "canWear")              dollMessageCode = SELF_DRESS;
+            if (name == "canDressSelf")              dollMessageCode = SELF_DRESS;
             else if (name == "canFly")          dollMessageCode = CAN_FLY;
             else if (name == "canRepeat")       dollMessageCode = CAN_REPEAT;
             else if (name == "canPose")         dollMessageCode = CAN_POSE;
@@ -396,11 +396,11 @@ default {
                     pluslist += cdGetButton("Flying", id, canFly, 1);
                     pluslist += cdGetButton("Sitting", id, canSit, 1);
                     pluslist += cdGetButton("Standing", id, canStand, 1);
-                    pluslist += cdGetButton("Self Dress", id, canWear, 1);
-                    pluslist += cdGetButton("Self TP", id, !helpless, 1);
+                    pluslist += cdGetButton("Self Dress", id, canDressSelf, 1);
+                    pluslist += cdGetButton("Self TP", id, !tpLureOnly, 1);
                     pluslist += cdGetButton("Force TP", id, autoTP, 1);
                     if (canPose) { // Option to silence the doll while posed this this option is a no-op when canPose == 0
-                        pluslist += cdGetButton("Pose Silence", id, poseSilence, 1);
+                        pluslist += cdGetButton("Silent Pose", id, poseSilence, 1);
                     }
                 }
                 else {

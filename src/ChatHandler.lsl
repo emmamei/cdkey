@@ -95,7 +95,7 @@ default
             else if (name == "canCarry")                     canCarry = (integer)value;
             else if (name == "canDress")                     canDress = (integer)value;
             else if (name == "canPose")                       canPose = (integer)value;
-            else if (name == "canWear")                       canWear = (integer)value;
+            else if (name == "canDressSelf")                       canDressSelf = (integer)value;
             else if (name == "poseSilence")               poseSilence = (integer)value;
             else if (name == "canFly")                         canFly = (integer)value;
             else if (name == "canSit")                         canSit = (integer)value;
@@ -103,7 +103,7 @@ default
             else if (name == "canRepeat")                   canRepeat = (integer)value;
             else if (name == "configured")                 configured = (integer)value;
             else if (name == "detachable")                 detachable = (integer)value;
-            else if (name == "helpless")                     helpless = (integer)value;
+            else if (name == "tpLureOnly")                     tpLureOnly = (integer)value;
             else if (name == "pleasureDoll")             pleasureDoll = (integer)value;
             else if (name == "isVisible")                     visible = (integer)value;
             else if (name == "busyIsAway")                 busyIsAway = (integer)value;
@@ -439,7 +439,7 @@ default
                     cdCapability(canSit,      "Doll can", "sit");
                     cdCapability(canStand,    "Doll can", "stand");
                     cdCapability(canRepeat,   "Doll can", "multiply wound");
-                    cdCapability(canWear,     "Doll can", "dress by " + p + "self");
+                    cdCapability(canDressSelf,     "Doll can", "dress by " + p + "self");
                     cdCapability(poseSilence, "Doll is",  "silenced while posing");
 #else
                     list items = [
@@ -450,7 +450,7 @@ default
                         canPose,            "Doll can? be posed by others",
                         canSit,             "Doll can? sit",
                         canStand,           "Doll can? stand",
-                        canWear,            "Doll can? dress by " + p + "self",
+                        canDressSelf,            "Doll can? dress by " + p + "self",
                         poseSilence,        "Doll is? silenced while posing"
                     ];
 

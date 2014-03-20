@@ -82,7 +82,7 @@ integer listen_id_2668;
 integer listen_id_2669;
 
 integer afk;
-integer canWear;
+integer canDressSelf;
 integer collapsed;
 integer fallbackFolder;
 
@@ -365,7 +365,7 @@ default {
             else if (name == "typeFolder")                    typeFolder = value;
             else if (name == "useTypeFolder")              useTypeFolder = (integer)value;
             else if (name == "afk")                                  afk = (integer)value;
-            else if (name == "canWear")                          canWear = (integer)value;
+            else if (name == "canDressSelf")                          canDressSelf = (integer)value;
             else if (name == "collapsed")                      collapsed = (integer)value;
             else if (name == "wearLock")                        wearLock = (integer)value;
 #ifdef DEVELOPER_MODE
@@ -931,7 +931,7 @@ default {
                 ++dressingFailures <= MAX_DRESS_FAILURES) {
                 llSleep(4.0);
                 if (RLVok) {
-                    if (!canWear || afk || collapsed || wearLock) lmRunRLV("attachallthis:=y,detachallthis:" + outfitsFolder + "=n,attachallover:" + xfolder + "=force,attachallthis:=n");
+                    if (!canDressSelf || afk || collapsed || wearLock) lmRunRLV("attachallthis:=y,detachallthis:" + outfitsFolder + "=n,attachallover:" + xfolder + "=force,attachallthis:=n");
                     else lmRunRLV("detachallthis:" + outfitsFolder + "=n,attachallover:" + xfolder + "=force");
                     rlvRequest("getinvworn:" + xfolder + "=", 2668);
                     candresstimeout++;
@@ -965,7 +965,7 @@ default {
                 ++dressingFailures <= MAX_DRESS_FAILURES) {
                 llSleep(4.0);
                 if (RLVok) {
-                    if (!canWear || afk || collapsed || wearLock) lmRunRLV("detachallthis:=y,attachallthis:" + outfitsFolder + "=n,detachallthis:" + yfolder + "=force,detachallthis:=n");
+                    if (!canDressSelf || afk || collapsed || wearLock) lmRunRLV("detachallthis:=y,attachallthis:" + outfitsFolder + "=n,detachallthis:" + yfolder + "=force,detachallthis:=n");
                     else lmRunRLV("attachallthis:" + outfitsFolder + "=n,detachall:" + yfolder + "=force");
                     rlvRequest("getinvworn:" + yfolder + "=", 2669);
                     candresstimeout++;
