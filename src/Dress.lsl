@@ -136,8 +136,9 @@ list outfitsPage(list outfitList) {
 
     list pageOutfits = llList2List(outfitsList, currentIndex, endIndex);
     integer n; string chat; list output;
+    string itemname;
     for (n = currentIndex; n <= endIndex; n++) {
-        string itemname = (string)(n + 1) + ". " + cdListElement(outfitsList, n);
+        itemname = (string)(n + 1) + ". " + cdListElement(outfitsList, n);
         chat += "\n" + itemname;
         output += [ llGetSubString(itemname, 0, 23) ];
     }
@@ -260,8 +261,8 @@ string folderStatus() {
 
     return "Outfits Folder: " + outfitsFolder +
            "\nCurrent Folder: " + activeFolder +
-           "\nType Folder: " + typeFolder + " (" + exists +
-           ")\nUse ~normalself: " + normalselfFolder +
+           "\nType Folder: " + typeFolder + " (" + exists + ")" +
+           "\nUse ~normalself: " + normalselfFolder +
            "\nUse ~nude: " + nudeFolder;
 }
 
@@ -862,8 +863,6 @@ default {
                     iStop--;
                 }
             }
-
-            llOwnerSay(llList2CSV(outfitsList));
 
             if (!llGetListLength(outfitsList) && clothingFolder != "") {
                 list pathParts = llParseString2List(clothingFolder, [ "/" ], []);
