@@ -476,6 +476,11 @@ default {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
             split = llDeleteSubList(split, 0, 0);
+            
+            if (value = RECORD_DELETE) {
+                value = "";
+                split = [];
+            }
 
                  if (name == "afk")                               afk = (integer)value;
             else if (name == "winderID")                     winderID = (key)value;
@@ -505,7 +510,10 @@ default {
             else if (name == "quiet")                           quiet = (integer)value;
             else if (name == "signOn")                         signOn = (integer)value;
             else if (name == "windamount")                 windamount = (float)value;
-            else if (name == "baseWindRate")             baseWindRate = (float)value;
+            else if (name == "baseWindRate") {
+                if ((float)value > 0.33) baseWindRate = (float)value;   // Minimum baseWindRate set at 0.33 any lower and reset to 1.0 this should
+                else baseWindRate = 1.0;                                // guarantee no more 0's causing math errors when SL has dropped a link.
+            }
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "dollType")                     dollType = value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;

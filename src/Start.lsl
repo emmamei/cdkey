@@ -75,7 +75,6 @@ integer offlineMode = NO;
 integer visible = YES;
 integer primGlow = YES;
 integer primLight = YES;
-integer prefsReread = NO;
 integer dbConfigCount;
 
 vector gemColour;
@@ -172,7 +171,7 @@ processConfiguration(string name, string value) {
         lmSendConfig(name, value);
     }
     else if (name == "initial time") {
-        if (!prefsReread) lmSendConfig("timeLeftOnKey", (string)((float)value * SEC_TO_MIN));
+        if (!databaseOnline || offlineMode) lmSendConfig("timeLeftOnKey", (string)((float)value * SEC_TO_MIN));
     }
     else if (name == "wind time") {
         lmInternalCommand("setWindTimes", value, NULL_KEY);
@@ -385,6 +384,11 @@ default {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
             
+            if (value = RECORD_DELETE) {
+                value = "";
+                split = [];
+            }
+            
             if (script == "ServiceReceiver") dbConfigCount++;
 
                  if (name == "ncPrefsLoadedUUID")    ncPrefsLoadedUUID = llDeleteSubList(split,0,0);
@@ -412,8 +416,7 @@ default {
                 doVisibility();
             }
 
-            else if (name == "dollyName") {
-
+            else if ((name == "dollyName") && (script != cdMyScriptName())) {
                 dollyName = value;
 
                 if (dollyName == "") {
@@ -581,13 +584,7 @@ default {
                 lmSendConfig("ncPrefsLoadedUUID", llDumpList2String(llList2List((string)llGetInventoryKey(NOTECARD_PREFERENCES) + ncPrefsLoadedUUID, 0, 9),"|"));
                 lmInternalCommand("getTimeUpdates","",NULL_KEY);
                 
-                if (prefsReread) {
-                    llOwnerSay("Preferences reread restarting in 60 seconds.");
-                    cdLinkMessage(LINK_THIS, 0, 301, "", llGetKey());
-                    llSleep(60.0);
-                    llResetScript();
-                }
-                else doneConfiguration(1);
+                doneConfiguration(1);
             }
             else {
                 integer index = llSubStringIndex(data, "#");
@@ -623,7 +620,6 @@ default {
             if (llGetInventoryType(NOTECARD_PREFERENCES) == INVENTORY_NOTECARD) {
                 key ncKey = llGetInventoryKey(NOTECARD_PREFERENCES);
                 if (llListFindList(ncPrefsLoadedUUID,[(string)llGetInventoryKey(NOTECARD_PREFERENCES)]) == -1) {
-                    prefsReread = YES;
                     reset = 1;
 
                     sendMsg(dollID, "Loading preferences notecard");

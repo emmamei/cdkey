@@ -282,6 +282,11 @@ default {
         else if (code == 300) {
             string value = name;
             string name = choice;
+            
+            if (value = RECORD_DELETE) {
+                value = "";
+                split = [];
+            }
 
             if (script != cdMyScriptName()) {
                      if (name == "quiet")                                          quiet = (integer)value;
