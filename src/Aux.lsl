@@ -231,6 +231,12 @@ default {
         else if (code == 300) {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
+            
+            if (value = RECORD_DELETE) {
+                value = "";
+                split = [];
+            }
+            
             split = llDeleteSubList(split, 0, 0);
 
                  if (name == "MistressList")             MistressList = split;

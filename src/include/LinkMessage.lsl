@@ -2,6 +2,7 @@
 #define LINK_MSG_LIB
 
 #include "Json.lsl"
+#define RECORD_DELETE ""
 
 string seqStatus;
 integer mySeqNum;

@@ -346,6 +346,11 @@ default {
         else if (code == 300) {
             string name = cdListElement(split, 0);
             string value = cdListElement(split, 1);
+            
+            if (value = RECORD_DELETE) {
+                value = "";
+                split = [];
+            }
 
             if (name == "dialogChannel") {
                 dialogChannel = (integer)value;

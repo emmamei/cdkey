@@ -162,6 +162,11 @@ default
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
             split = llDeleteSubList(split, 0, 0);
+            
+            if (value = RECORD_DELETE) {
+                value = "";
+                split = [];
+            }
 
                  if (name == "baseWindRate")             baseWindRate = (float)value;
             else if (name == "carrierID")                   carrierID = (key)value;
