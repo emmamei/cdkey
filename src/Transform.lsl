@@ -471,6 +471,12 @@ default {
     //----------------------------------------
     listen(integer channel, string name, key id, string choice) {
 
+        llOwnerSay("choice = " + choice); // DEBUG:
+        llOwnerSay("clothing prefix = " + clothingprefix); // DEBUG:
+        llOwnerSay("    substring = " + (string)llGetSubString(choice, -llStringLength(clothingprefix), STRING_END)); // DEBUG:
+        llOwnerSay("outfitsTest = " + outfitsTest); // DEBUG:
+        llOwnerSay("    substring = " + (string)llGetSubString(choice, -llStringLength(outfitsTest), STRING_END)); // DEBUG:
+
         if ((outfitsFolder == "") && (llGetSubString(choice, -llStringLength(outfitsTest), STRING_END) == outfitsTest)) {
             outfitsFolder = choice + "/";
             lmSendConfig("outfitsFolder", outfitsFolder);

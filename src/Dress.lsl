@@ -386,6 +386,7 @@ default {
             //
             // This is used on style change
             if (cmd == "randomDress") {
+                llOwnerSay("random dress chosen"); // DEBUG
                 if (candresstemp == FALSE)
                     llRegionSayTo(dresserID, 0, "Dolly cannot be dressed right now; she is already dressing");
                 else {
@@ -393,6 +394,8 @@ default {
                     else clothingFolder = "";
 
                     lmSendConfig("clothingFolder", clothingFolder);
+                    llOwnerSay("clothingFolder = " + clothingFolder); // DEBUG
+                    llOwnerSay("listing inventory..."); // DEBUG
                     listInventoryOn("2665");
                 }
             }
@@ -729,6 +732,7 @@ default {
         // Switched doll types: grab a new (appropriate) outfit at random and change to it
         //
         if (channel == (rlvBaseChannel + 2665)) { // list of inventory items from the current prefix
+            llOwnerSay("inventory listed on 2665..."); // DEBUG
             llListenRemove(listen_id_2665);
             outfitsList = llParseString2List(choice, [","], []); //what are brackets at end?
             integer iStop = llGetListLength(outfitsList);
