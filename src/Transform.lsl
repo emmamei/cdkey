@@ -16,15 +16,16 @@
 #define STRING_END -1
 #define NOT_FOUND -1
 #define DISCARD_CHANNEL 9999
+#define NO_FILTER ""
+#define YES 1
+#define NO 0
+
 #define cdGetFirstChar(a) llGetSubString(a, 0, 0)
 #define cdButFirstChar(a) llGetSubString(a, 1, STRING_END)
 #define cdChat(a) llSay(0, a)
 #define cdStopTimer() llSetTimerEvent(0.0)
-#define NO_FILTER ""
 #define cdListenAll(a) llListen(a, NO_FILTER, NO_FILTER, NO_FILTER)
 #define cdPause() llSleep(0.5)
-#define YES 1
-#define NO 0
 #define cdTransformLocked() (minMinutes > 0)
 
 //========================================
@@ -94,6 +95,7 @@ setDollType(string choice, integer automated) {
 
     if (llGetInventoryType(TYPE_FLAG + stateName) == INVENTORY_NOTECARD) kQuery = llGetNotecardLine(TYPE_FLAG + stateName,0);
 
+    // New State?
     if (stateName != currentState) {
         // Dont lock if transformation is automated
         if (automated) minMinutes = 0;
@@ -111,7 +113,7 @@ setDollType(string choice, integer automated) {
         
         if (!RLVok) { lmSendToAgentPlusDoll("Dolly does not have the capability to change outfit.",transformerId); };
 
-        typeFolder = "";
+        //typeFolder = "";
         retryOutfits = 0;
         tryOutfits = 1;
         llSetTimerEvent(15.0);
