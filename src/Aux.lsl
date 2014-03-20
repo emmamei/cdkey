@@ -232,7 +232,7 @@ default {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
             
-            if (value = RECORD_DELETE) {
+            if (value == RECORD_DELETE) {
                 value = "";
                 split = [];
             }

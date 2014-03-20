@@ -244,17 +244,11 @@ initConfiguration() {
     
     // Check to see if the file exists and is a notecard
     if (llGetInventoryType(NOTECARD_PREFERENCES) == INVENTORY_NOTECARD) {
-        if ((llListFindList(ncPrefsLoadedUUID,      [(string)llGetInventoryKey(NOTECARD_PREFERENCES)]) == -1)) {
-            llOwnerSay("Loading preferences notecard");
+        llOwnerSay("Loading preferences notecard");
 
-            // Start reading from first line (which is 0)
-            ncLine = 0;
-            ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ncLine);
-        }
-        else {
-            debugSay(2, "DEBUG", "Skipping preferences notecard as it is unchanged and settings were found in database.");
-            doneConfiguration(0);
-        }
+        // Start reading from first line (which is 0)
+        ncLine = 0;
+        ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ncLine);
     } else {
         // File missing - report for debugging only
         debugSay(1, "DEBUG", "No configuration found (" + NOTECARD_PREFERENCES + ")");
@@ -370,7 +364,13 @@ default {
         if (code == 102) {
             if (script != "ServiceReceiver") return;
             databaseFinished = 1;
-            initConfiguration();
+            if (!databaseOnline || (llListFindList(ncPrefsLoadedUUID,      [(string)llGetInventoryKey(NOTECARD_PREFERENCES)]) == -1)) {
+                initConfiguration();
+            }
+            else {
+                debugSay(2, "DEBUG", "Skipping preferences notecard as it is unchanged and settings were found in database.");
+                doneConfiguration(0);
+            }
         }
         else if (code == 135) {
             if (script == cdMyScriptName()) return;
@@ -384,7 +384,7 @@ default {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
             
-            if (value = RECORD_DELETE) {
+            if (value == RECORD_DELETE) {
                 value = "";
                 split = [];
             }
