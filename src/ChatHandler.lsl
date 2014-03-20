@@ -414,6 +414,7 @@ default
                 else if (choice == "xstats") {
                     string s = "Extended stats:\n";
 
+                    s += "Doll is a " + dollType + " Doll.\n";
                     s += "AFK time factor: " + formatFloat(RATE_AFK, 1) + "x\n";
                     s += "Configured wind times: " + llList2CSV(windTimes) + " mins\n";
 
