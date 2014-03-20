@@ -25,6 +25,7 @@
 #define cdPause() llSleep(0.5)
 #define YES 1
 #define NO 0
+#define cdTransformLocked() (minMinutes > 0)
 
 //========================================
 // VARIABLES
@@ -92,6 +93,7 @@ setDollType(string choice, integer automated) {
     if (llGetInventoryType(TYPE_FLAG + stateName) == INVENTORY_NOTECARD) kQuery = llGetNotecardLine(TYPE_FLAG + stateName,0);
 
     if (stateName != currentState) {
+        // Dont lock if transformation is automated
         if (automated) minMinutes = 0;
         else minMinutes = 5;
 
@@ -128,6 +130,7 @@ reloadTypeNames() {
 
 runTimedTriggers() {
     if (minMinutes > 0) minMinutes--;
+    else minMinutes = 0; // bulletproofing
 
     if (showPhrases) {
         integer phraseCount = (integer) llGetListLength(currentPhrases);
@@ -402,7 +405,7 @@ default {
             // Choose a Transformation
             else if (choice == "Types...") {
                 // Doll must remain in a type for a period of time
-                if (minMinutes > 0) {
+                if (cdTransformLocked()) {
                     if (cdIsDoll(id)) {
                         llDialog(id,"You cannot be transformed right now, as you were recently transformed. You can be transformed in " + (string)minMinutes + " minutes.",["OK"], DISCARD_CHANNEL);
                     } else {
@@ -430,26 +433,33 @@ default {
 
             // Transform
             else if (choice == "Transform") {
-                choice = transform;
-                menuChangeType = 1;
+                choice = transform; // Type name saved from Transform confirmation
+                menuChangeType = YES;
                 setDollType(choice, NOT_AUTOMATED);
             }
             else if (cdListElementP(types, choice) != NOT_FOUND) {
+                // "choice" is a valid Type: change to it as appropriate
                 if (cdIsDoll(id)) {
-                    menuChangeType = 1;
+                    // Doll chose a Type: just do it
+                    menuChangeType = YES;
                     setDollType(choice, NOT_AUTOMATED);
                 }
                 else {
+                    // Someone else chose a Type
                     if (mustAgreeToType) {
-                        transform = choice;
+                        transform = choice; // save transformation Type
                         list choices = ["Transform", "Dont Transform", MAIN ];
-
                         string msg = "Do you wish to be transformed to a " + choice + " Doll?";
 
                         llDialog(dollID, msg, choices, dialogChannel); // this starts a new choice on this channel
                     }
+                    else {
+                        menuChangeType = YES;
+                        setDollType(choice, NOT_AUTOMATED);
+                    }
                 }
             }
+
             if ((!showPhrases) && ((menuTime == 0.0) || ((menuTime + 60) < llGetTime()))) llSetScriptState(cdMyScriptName(), 0);
         }
     }
@@ -496,7 +506,7 @@ default {
 
             if (menuChangeType) {
                 lmInternalCommand("randomDress", "", NULL_KEY);
-                menuChangeType = 0;
+                menuChangeType = NO;
             }
             
             retryOutfits = 0;
