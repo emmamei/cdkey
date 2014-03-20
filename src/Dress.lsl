@@ -347,7 +347,7 @@ default {
             string name = cdListElement(split, 0);
             string value = cdListElement(split, 1);
             
-            if (value = RECORD_DELETE) {
+            if (value == RECORD_DELETE) {
                 value = "";
                 split = [];
             }

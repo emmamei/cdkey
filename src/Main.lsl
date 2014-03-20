@@ -477,7 +477,7 @@ default {
             string value = llList2String(split, 1);
             split = llDeleteSubList(split, 0, 0);
             
-            if (value = RECORD_DELETE) {
+            if (value == RECORD_DELETE) {
                 value = "";
                 split = [];
             }
@@ -550,7 +550,7 @@ default {
             }
             else if (name == "keyLimit") {
                 keyLimit = (float)value;
-                lmMenuReply("Wind", "", NULL_KEY);
+                if (script != cdMyScriptName()) lmMenuReply("Wind", "", NULL_KEY);
             }
             else if (name == "demoMode") {
                 demoMode = (integer)value;
@@ -718,7 +718,7 @@ default {
 
             if (llGetListLength(windTimes) == 0) {
                 windTimes = [30];
-                lmSendConfig("windTimes","30");
+                lmSendConfig("windTimes",llList2Json(JSON_ARRAY,windTimes));
             }
 
             if (id == NULL_KEY) return;
@@ -820,7 +820,7 @@ default {
                         // if WindTimes (split) is null then default to single 30m wind time
                         if (cdNullList(split)) {
                             split = [30];
-                            lmSendConfig("windTimes","30");
+                            lmSendConfig("windTimes",llList2Json(JSON_ARRAY,windTimes));
                         }
 
                         windamount = cdListMin(split) * SEC_TO_MIN;

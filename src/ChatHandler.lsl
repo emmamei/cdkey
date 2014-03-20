@@ -86,7 +86,7 @@ default
             string value = llList2String(split, 1);
             split = llDeleteSubList(split, 0, 0);
             
-            if (value = RECORD_DELETE) {
+            if (value == RECORD_DELETE) {
                 value = "";
                 split = [];
             }

@@ -287,7 +287,7 @@ default {
             string value = name;
             string name = choice;
             
-            if (value = RECORD_DELETE) {
+            if (value == RECORD_DELETE) {
                 value = "";
                 split = [];
             }
