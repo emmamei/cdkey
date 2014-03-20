@@ -84,6 +84,7 @@ setDollType(string choice, integer automated) {
     if (choice == "Transform") stateName = transform;
     else stateName = choice;
 
+    // Convert state name to Title case
     stateName = cdGetFirstChar(llToUpper(stateName)) + cdButFirstChar(llToLower(stateName));
 
     clothingprefix = TYPE_FLAG + stateName;
@@ -334,6 +335,7 @@ default {
 
                 else if (name == "dollType") {
                     stateName = value;
+                    // this only runs if some other script sets the Type, not this one
                     if (configured) setDollType(stateName, AUTOMATED);
                 }
 
