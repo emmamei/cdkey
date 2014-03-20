@@ -19,7 +19,7 @@
 key keyHandler              = NULL_KEY;
 key listID                  = NULL_KEY;
 
-list windTimes;
+list windTimes              = [30];
 
 float collapseTime          = 0.0;
 float currentLimit          = 10800.0;
@@ -156,13 +156,18 @@ default
             string cmd = llList2String(split, 0);
 
             split = llDeleteSubList(split, 0, 0);
+            
+            integer i;
 
             if (cmd == "addRemBlacklist") {
                 string uuid = llList2String(split, 0);
                 string name = llList2String(split, 1);
-                id = listID;
+                if (script != "MenuHandler") id = listID;
+                
+                list tmpList = blacklist;
+                while ( ( i = llListFindList(tmpList, [""]) ) != -1) tmpList = llDeleteSubList(tmpList,i,i);
 
-                integer index = llListFindList(blacklist, [ uuid ]);
+                integer index = llListFindList(tmpList, [ uuid ]);
 
                 if (llListFindList(MistressList, [ uuid ]) != -1) {
                     lmSendToAgentPlusDoll(name + " is listed on your controller list they must remove themselves before you can blacklist.", id);
@@ -172,8 +177,7 @@ default
                 if (blacklistMode != -1) {
                     if(index == -1) {
                         lmSendToAgentPlusDoll("Adding " + name + " to blacklist", id);
-                        if ((llGetListLength(blacklist) % 2) == 1) blacklist = llDeleteSubList(blacklist, 0, 0);
-                        blacklist = llListSort(blacklist + [ uuid, name ], 2, 1);
+                        tmpList = llListSort(tmpList + [ uuid, name ], 2, 1);
                     }
                     else {
                         lmSendToAgentPlusDoll(name + " is already blacklisted.", id);
@@ -182,52 +186,60 @@ default
                 else {
                     if (index != -1) {
                         lmSendToAgentPlusDoll("Removing " + name + " from blacklist.", id);
-                        if ((llGetListLength(blacklist) % 2) == 1) blacklist = llDeleteSubList(blacklist, 0, 0);
-                        blacklist = llDeleteSubList(blacklist, index, ++index);
+                        tmpList = llDeleteSubList(tmpList, index, ++index);
                     }
                     else {
                         lmSendToAgentPlusDoll(name + " is not blacklisted.", id);
                     }
                 }
                 
-                lmSendConfig("blacklist", llDumpList2String(blacklist,"|") );
+                if (blacklist != tmpList) {
+                    blacklist = tmpList;
+                    lmSendConfig("blacklist", llDumpList2String(blacklist,"|") );
+                }
                 
                 if ((blacklistMode == -1) && (name == blockedControlName)) {
                     lmInternalCommand("addMistress", uuid + "|" + name, dollID);
                 }
+                blacklistMode = 0;
             }
             else if ((cmd == "addMistress") || (cmd == "remMistress")) {
                 string uuid = llList2String(split, 0);
                 string name = llList2String(split, 1);
-                id = listID;
-
-                integer index = llListFindList(MistressList, [ uuid ]);
+                if (script != "MenuHandler") id = listID;
                 
-                if (llListFindList(blacklist, [ uuid ]) != -1) {
-                    lmSendToAgentPlusDoll(name + " is listed on your blacklist you cannot add them as a controller without first removing them.\n" +
-                               "Type /" + (string)chatChannel + "unblacklist " + name + "\n" +
-                               "To remove them from the blacklist and confirm adding them.", id);
-                    blockedControlName = name;
-                    blockedControlUUID = uuid;
-                    blockedControlTime = llGetUnixTime();
-                    return;
-                }
+                list tmpList = MistressList;
+                while ( ( i = llListFindList(tmpList, [""]) ) != -1) tmpList = llDeleteSubList(tmpList,i,i);
+
+                integer index = llListFindList(tmpList, [ uuid ]);
+                
+                llOwnerSay(cmd + "\t" + (string)cdIsBuiltinController(id));
 
                 if  ((cmd == "addMistress") && (index == -1)) {
+                    if (llListFindList(blacklist, [ uuid ]) != -1) {
+                        lmSendToAgentPlusDoll(name + " is listed on your blacklist you cannot add them as a controller without first removing them.\n" +
+                                   "Type /" + (string)chatChannel + "unblacklist " + name + "\n" +
+                                   "To remove them from the blacklist and confirm adding them.", id);
+                        blockedControlName = name;
+                        blockedControlUUID = uuid;
+                        blockedControlTime = llGetUnixTime();
+                        return;
+                    }
                     lmSendToAgentPlusDoll("Adding " + name + " to controller list.", id);
-                    if ((llGetListLength(MistressList) % 2) == 1) MistressList = llDeleteSubList(MistressList, 0, 0);
-                    MistressList = llListSort(MistressList + [ uuid, name ], 2, 1);
+                    tmpList = llListSort(tmpList + [ uuid, name ], 2, 1);
                 }
                 else if ((cmd == "remMistress") && cdIsBuiltinController(id)) {
                     lmSendToAgentPlusDoll("Removing " + name + " from controller list.", id);
-                    if ((llGetListLength(MistressList) % 2) == 1) MistressList = llDeleteSubList(MistressList, 0, 0);
-                    MistressList = llDeleteSubList(MistressList, index, ++index);
+                    tmpList = llDeleteSubList(tmpList, index, ++index);
                     
                     list exceptions = ["tplure","recvchat","recvemote","recvim","sendim","startim"]; integer i;
                     for (i = 0; i < 6; i++) lmRunRLVas("Base",llList2String(exceptions, i) + ":" + uuid + "=rem");
                 }
                 
-                lmSendConfig("MistressList", llDumpList2String(MistressList,"|") );
+                if (MistressList != tmpList) {
+                    MistressList = tmpList;
+                    lmSendConfig("MistressList", llDumpList2String(MistressList,"|") );
+                }
             }
         }
         else if (code == 350) {

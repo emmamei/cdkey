@@ -3,6 +3,7 @@
 #define YES 1
 #define NO 0
 #define NOT_FOUND -1
+#define RECORD_DELETE ""
 
 key keyHandler = NULL_KEY;
 key requestID;

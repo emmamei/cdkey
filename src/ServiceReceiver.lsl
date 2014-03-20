@@ -14,9 +14,16 @@ string DataURL;
 integer useHTTPS = 1;
 integer resolveType;
 integer storedCount;
+integer configCount;
+float HTTPdbProcessStart;
 list storedConfigs;
+list databaseInput;
 key resolveTestKey;
 key requestDataURL;
+
+// FIXME: Interim code to handle depreciation of old vars
+// See bellow line 255 and onwards.
+integer canDressSelf = -1;
 
 key requestDataName;
 
@@ -56,40 +63,51 @@ default {
             
             integer i = llListFindList(storedConfigs, [conf]);
             
-            if ((conf == "MistressList") || (conf == "blacklist")) {
-                string prefix = "controller"; split = llDeleteSubList(split,0,0);
-                if (conf == "blacklist") prefix = conf;
-                
-                if (llList2String(storedConfigs, i+1) == value) return;
-                else {
+            if (value == RECORD_DELETE) {
+                if (i != -1) storedConfigs = llDeleteSubList(storedConfigs, i, i + 1);
+            }
+            else {
+                if ((conf == "MistressList") || (conf == "blacklist")) {
+                    string prefix = "controller"; split = llParseString2List(value, ["|"], []);
+                    if (conf == "blacklist") prefix = conf;
+                    
                     // Store configuration information
                     if (i == -1) storedConfigs += [ conf, value ];
                     else storedConfigs = llListReplaceList(storedConfigs, [ conf, value ], i, i + 1);
+                    
+                    integer j = -1; integer c;
+                    while (j++ < 9) {
+                        string uuid = llList2String(split,0);
+                        string name = llList2String(split,1);
+                        
+                        string value = uuid + "|" + name;
+                        
+                        if ((uuid != (string)NULL_KEY) && (uuid != "") && (name != "") && (value != "|")) {
+                            c++;
+                            lmSendConfig(prefix + (string)j, value);
+                        }
+                        else lmSendConfig(prefix + (string)j, RECORD_DELETE);
+    
+                        split = llDeleteSubList(split,0,1);
+    
+                        i = llListFindList(storedConfigs, [prefix + (string)j]);
+                        if (i == -1) storedConfigs += [ prefix + (string)j, uuid + "|" + name ];
+                        else storedConfigs = llListReplaceList(storedConfigs, [ prefix + (string)j, uuid + "|" + name ], i, i + 1);
+                    }
+                    
+                    lmSendConfig(prefix + "sCount", (string)c);
+                    
+                    return;
                 }
                 
-                integer j; integer c;
-                while (j++ < 10) {
-                    string uuid = llList2String(split,0);
-                    string name = llList2String(split,1);
-                    lmSendConfig(prefix + (string)j, uuid + "|" + name);
-
-                    split = llDeleteSubList(split,0,1);
-
-                    i = llListFindList(storedConfigs, [prefix + (string)j]);
-                    if (i == -1) storedConfigs += [ prefix + (string)j, uuid + "|" + name ];
-                    else storedConfigs = llListReplaceList(storedConfigs, [ prefix + (string)j, uuid + "|" + name ], i, i + 1);
-                }
+                // Store configuration information
+                if (i == -1) storedConfigs += [ conf, value ];
+                else storedConfigs = llListReplaceList(storedConfigs, [ conf, value ], i, i + 1);
                 
-                return;
-            }
-            
-            // Store configuration information
-            if (i == -1) storedConfigs += [ conf, value ];
-            else storedConfigs = llListReplaceList(storedConfigs, [ conf, value ], i, i + 1);
-            
-            if (llGetListLength(storedConfigs) / 2 > storedCount) {
-                storedCount = llGetListLength(storedConfigs) / 2;
-                debugSay(3, "DEBUG-LOCALDB", "Local DB now contains " + (string)storedCount + " key=>value pairs and " + cdMyScriptName() + " is using " + formatFloat((float)llGetUsedMemory() / 1024.0, 2) + "kB of memory.");
+                if (llGetListLength(storedConfigs) / 2 > storedCount) {
+                    storedCount = llGetListLength(storedConfigs) / 2;
+                    debugSay(3, "DEBUG-LOCALDB", "Local DB now contains " + (string)storedCount + " key=>value pairs and " + cdMyScriptName() + " is using " + formatFloat((float)llGetUsedMemory() / 1024.0, 2) + "kB of memory.");
+                }
             }
 
 #ifdef DEVELOPER_MODE
@@ -216,79 +234,16 @@ default {
             llSetMemoryLimit(65536);
             string error = "HTTPdb - Database access ";
 
-            integer configCount;
-            string uuid;
-
             if (status == 200) {
                 lmSendConfig("databaseOnline", (string)(databaseOnline = 1));
 
-                float HTTPdbProcessStart;
-                string eventTime = formatFloat(((HTTPdbProcessStart = llGetTime()) - HTTPdbStart) * 1000, 2);
+                HTTPdbProcessStart = llGetTime();
 
                 llOwnerSay("Processing database reply..."); // FIXME: sometimes, this is not followed by any report - and is printed for all keys
                 
-                list input = llParseStringKeepNulls(body,["\n"],[]); body = "";
-
-                // FIXME: Interim code to handle depreciation of old vars
-                // See bellow line 255 and onwards.
-                integer canDressSelf = -1;
+                databaseInput = llParseStringKeepNulls(body,["\n"],[]); body = "";
                 
-                while(llGetListLength(input)) {
-                    list splitLine = llParseStringKeepNulls(llList2String(input, 1),["="],[]);
-                    
-                    string name = llList2String(splitLine, 0);
-                    splitLine = llDeleteSubList(splitLine,0,0);
-                    string value = llDumpList2String(splitLine,"=");
-                    
-                    input = llDeleteSubList(input,0,0);
-                    
-                    if (llGetSubString(name,0,-2) == "controller") {
-                        lmInternalCommand("addMistress", value, llGetKey());
-                    }
-                    else if (llGetSubString(name,0,-2) == "blacklist") {
-                        lmSendConfig("blacklistMode", (string)1);
-                        lmInternalCommand("addRemBlacklist", value, llGetKey());
-                    }
-                    else if (name == "MistressList") lmSendConfig(name, value);
-                    else if (name == "blacklist") lmSendConfig(name, value);
-                    
-                    // FIXME: Interim code to handle depreciation of old vars these should
-                    // be eliminated when the depreciated forms move to obsolecence
-                    else if (llGetSubString(name,0,9) == "controller");                 // Ignore this
-                    else if (llGetSubString(name,0,8) == "blacklist");                  // Ignore this
-                    else {
-                        if (name == "helpless") name == "tpLureOnly";                   // T is after H so this one convert to new form and let new override if needed
-                        else if (name == "canDressSelf") canDressSelf = (integer)value; // Set the temp variable so that we do not use canWear to set this later
-                        else if (name == "canWear") {                                   // W however is after D making this one trickier thus the temp canDressSelf = -1 var
-                            if (canDressSelf == -1) name = "canDressSelf";              // we do not want to use the old one to set it unless it is still unset.
-                            else return;                                                // Otherwise we just ignore the depreciated one.
-                        }
-                        
-                        lmSendConfig(name, value);
-                        integer i = llListFindList(storedConfigs, [name]);
-                        if (i == -1) storedConfigs += [ name, value ];
-                    
-                        configCount++;
-                    }
-                }
-                
-                if (llGetListLength(storedConfigs) / 2 > storedCount) {
-                    debugSay(3, "DEBUG-LOCALDB", "Local DB now contains " + (string)(storedCount = llGetListLength(storedConfigs) / 2) + " key=>value pairs and " + cdMyScriptName() + " is using " + formatFloat((float)llGetUsedMemory() / 1024.0, 2) + "kB of memory.");
-                }
-
-#ifdef DEVELOPER_MODE
-                debugSay(5, "DEBUG-SERVICES", "Service post interval setting " + formatFloat(HTTPinterval, 2) + "s throttle setting " + formatFloat(HTTPthrottle, 2) + "s");
-
-                string msg = "HTTPdb - Processed " + (string)configCount + " records ";
-                if (lastPostTimestamp) msg += "with updates since our last post " + (string)((llGetUnixTime() - lastPostTimestamp) / 60) + " minutes ago ";
-                msg += "event time " + eventTime + ", processing time " + formatFloat(((llGetTime() - HTTPdbProcessStart) * 1000), 2);
-                msg += "ms, total time for DB transaction " + formatFloat((llGetTime() - HTTPdbStart) * 1000, 2) + "ms";
-                debugSay(2, "DEBUG-SERVICES", msg);
-#else
-                llOwnerSay("Successfully processed database reply.");
-#endif
-
-                databaseReload = 600;
+                configCount = 0;
             }
             else {
                 databaseReload = llGetUnixTime() + 60 + llRound(llFrand(90));
@@ -299,7 +254,7 @@ default {
                 }
             }
             
-            lmConfigComplete(configCount);
+            llSetTimerEvent(0.5);
         }
         else if (location == "/name2key/lookup") {
             list split = llParseStringKeepNulls(body, ["=","\n"], []);
@@ -378,6 +333,98 @@ default {
     changed(integer change) {
         if (change & CHANGED_OWNER) {
             cdPermSanityCheck();
+        }
+    }
+    
+    timer() {
+        integer k = 16;
+        
+        while (k-- && llGetListLength(databaseInput)) {
+            list splitLine = llParseStringKeepNulls(llList2String(databaseInput, 0),["="],[]);
+            
+            string name = llList2String(splitLine, 0);
+            splitLine = llDeleteSubList(splitLine,0,0);
+            string value = llDumpList2String(splitLine,"=");
+            
+            databaseInput = llDeleteSubList(databaseInput,0,0);
+            
+            if ((name == "SAFEWORD") && (value == RECORD_DELETE)) {                 // These magic values only have meaning when sent key->DB they should not ever exist in a response
+                llOwnerSay("ERROR: Special value found in database response '" + name + "'='" + value + "' this should never happen, please report this.");
+            }
+            else {
+                // FIXME: Interim code to handle depreciation of old vars these should
+                // be eliminated when the depreciated forms move to obsolecence
+                
+                if (llGetSubString(name,0,9) == "controller") {
+                    if ((llGetSubString(name,-2,-1) == "ID") || (llGetSubString(name,-4,-1) == "Name")) {
+                        lmSendConfig(name, value = RECORD_DELETE);                  // Depreciated form, delete it
+                    }
+                    else if ((value == "") || (value == "|")) {
+                        lmSendConfig(name, value = RECORD_DELETE);                  // New form but no content deleted
+                    }
+                    else lmInternalCommand("addMistress", value, llGetKey());       // New form with content accepted
+                }
+                else if (llGetSubString(name,0,8) == "blacklist") {
+                    if ((llGetSubString(name,-2,-1) == "ID") || (llGetSubString(name,-4,-1) == "Name")) {
+                        lmSendConfig(name, value = RECORD_DELETE);                  // Depreciated form, delete it
+                    }
+                    else if ((value == "") || (value == "|")) {
+                        lmSendConfig(name, value = RECORD_DELETE);                  // New form but no content deleted
+                    }
+                    else {
+                        lmSendConfig("blacklistMode", (string)1);
+                        lmInternalCommand("addRemBlacklist", value, llGetKey());    // New form with content accepted
+                    }
+                }
+                else if (name == "MistressList") lmSendConfig(name, value);
+                else if (name == "blacklist") lmSendConfig(name, value);
+                else {
+                    if (name == "helpless") {
+                        lmSendConfig("tpLureOnly", value);                          // T is after H so this one convert to new form and let new override if needed
+                        value = RECORD_DELETE;                                      // Mark old record for delete
+                    }
+                    else if (name == "canDressSelf") canDressSelf = (integer)value; // Set the temp variable so that we do not use canWear to set this later
+                    else if (name == "canWear") {                                   // W however is after D making this one trickier thus the temp canDressSelf = -1 var
+                        if (canDressSelf == -1) {
+                            lmSendConfig("canDressSelf", value);                    // we do not want to use the old one to set it unless it is still unset.
+                            value = RECORD_DELETE;                                  // Mark old record for delete
+                        }
+                        else return;                                                // Otherwise we just ignore the depreciated one.
+                    }
+                    
+                    lmSendConfig(name, value);
+                    integer i = llListFindList(storedConfigs, [name]);
+                    if (i == -1) storedConfigs += [ name, value ];
+                
+                    configCount++;
+                }
+            }
+        }
+        
+        if (!llGetListLength(databaseInput)) {
+            if (llGetListLength(storedConfigs) / 2 > storedCount) {
+                debugSay(3, "DEBUG-LOCALDB", "Local DB now contains " + (string)(storedCount = llGetListLength(storedConfigs) / 2) + " key=>value pairs and " + cdMyScriptName() + " is using " + formatFloat((float)llGetUsedMemory() / 1024.0, 2) + "kB of memory.");
+            }
+        
+#ifdef DEVELOPER_MODE
+            string eventTime = formatFloat((HTTPdbProcessStart - HTTPdbStart) * 1000, 2);
+            
+            debugSay(5, "DEBUG-SERVICES", "Service post interval setting " + formatFloat(HTTPinterval, 2) + "s throttle setting " + formatFloat(HTTPthrottle, 2) + "s");
+        
+            string msg = "HTTPdb - Processed " + (string)configCount + " records ";
+            if (lastPostTimestamp) msg += "with updates since our last post " + (string)((llGetUnixTime() - lastPostTimestamp) / 60) + " minutes ago ";
+            msg += "event time " + eventTime + ", processing time " + formatFloat(((llGetTime() - HTTPdbProcessStart) * 1000), 2);
+            msg += "ms, total time for DB transaction " + formatFloat((llGetTime() - HTTPdbStart) * 1000, 2) + "ms";
+            debugSay(1, "DEBUG-SERVICES", msg);
+            if (!debugLevel) llOwnerSay("Successfully processed database reply in " + formatFloat(llGetTime() - HTTPdbStart, 2) + "s");
+#else
+            llOwnerSay("Successfully processed database reply in " + formatFloat(llGetTime() - HTTPdbStart, 2) + "s");
+#endif
+        
+            databaseReload = 600;
+            
+            llSetTimerEvent(0.0);
+            lmConfigComplete(configCount); 
         }
     }
 }

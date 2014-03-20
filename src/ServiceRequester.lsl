@@ -333,7 +333,8 @@ default
                 keyHandlerTime = llGetTime() - (float)(llGetUnixTime() - (integer)value);
             }
 
-            if ((!configured && (script == "ServiceReceiver")) || (script == cdMyScriptName())) return;
+            //if ((!configured && (script == "ServiceReceiver")) || (script == cdMyScriptName())) return;
+            if (script == cdMyScriptName()) return;
 
             else if (name == "offlineMode") {
                 offlineMode = (integer)value;
