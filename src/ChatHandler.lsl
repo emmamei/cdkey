@@ -556,7 +556,6 @@ default
                         avail += ["Wind Full"];
                         s += " (" + (string)timeLeft  + " of " + (string)maxTime + " minutes left " + (string)timesLimit + " from max)";
                     }
-#endif
                 }
                 if (cdIsDoll(id) || cdIsController(id)) {
                     if (choice == "xstats") {
