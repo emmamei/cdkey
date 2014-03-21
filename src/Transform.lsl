@@ -15,7 +15,6 @@
 #define TYPE_FLAG "*"
 #define STRING_END -1
 #define NOT_FOUND -1
-#define DISCARD_CHANNEL 9999
 #define NO_FILTER ""
 #define YES 1
 #define NO 0
@@ -26,7 +25,19 @@
 #define cdStopTimer() llSetTimerEvent(0.0)
 #define cdListenAll(a) llListen(a, NO_FILTER, NO_FILTER, NO_FILTER)
 #define cdPause() llSleep(0.5)
+
+// Channel to use to discard dialog output
+#define DISCARD_CHANNEL 9999
+
+// Transformation (locked) time in minutes
+#define TRANSFORM_LOCK_TIME 5
 #define cdTransformLocked() (minMinutes > 0)
+
+// Script Control
+#define RUNNING 1
+#define NOT_RUNNING 0
+#define cdRunScript(a) llSetScriptState(a, RUNNING);
+#define cdStopScript(a) llSetScriptState(a, NOT_RUNNING);
 
 //========================================
 // VARIABLES
@@ -93,13 +104,14 @@ setDollType(string choice, integer automated) {
     currentPhrases = [];
     lineno = 0;
 
+    // Look for Notecard for the Doll Type and start reading it
     if (llGetInventoryType(TYPE_FLAG + stateName) == INVENTORY_NOTECARD) kQuery = llGetNotecardLine(TYPE_FLAG + stateName,0);
 
     // New State?
     if (stateName != currentState) {
         // Dont lock if transformation is automated
         if (automated) minMinutes = 0;
-        else minMinutes = 5;
+        else minMinutes = TRANSFORM_LOCK_TIME;
 
         typeFolder = "";
 
@@ -140,6 +152,7 @@ runTimedTriggers() {
 
     if (showPhrases) {
         integer phraseCount = (integer) llGetListLength(currentPhrases);
+        string msg;
 
         if (phraseCount == 0) return;
 
@@ -152,18 +165,22 @@ runTimedTriggers() {
         if (cdGetFirstChar(phrase) == "*") {
 
             phrase = cdButFirstChar(phrase);
-            float r = llFrand(3);
+            float r = llFrand(5);
 
-            if (r < 1.0) phrase = "*** feel your need to " + phrase;
-            else if (r < 2.0) phrase = "*** feel your desire to " + phrase;
+                 if (r < 1.0) msg = "*** feel your need to ";
+            else if (r < 2.0) msg = "*** feel your desire to ";
+            else if (r < 3.0) msg = "*** it pleases you to ";
+            else if (r < 4.0) msg = "*** you want to ";
             else {
-                if (currentState  == "Domme") phrase = "*** You like to " + phrase;
-                else phrase = "*** feel how people like you to " + phrase;
+                if (currentState  == "Domme") msg = "*** You like to ";
+                else msg = "*** feel how people like you to ";
             }
-        } else phrase = "*** " + phrase;
+        } else msg = "*** ";
+
+        msg = msg + phrase;
 
         // Phrase has been chosen and put together; now say it
-        llOwnerSay(phrase);
+        llOwnerSay(msg);
     }
 }
 
@@ -178,7 +195,8 @@ default {
 
         cdInitializeSeq();
         
-        llSetScriptState(cdMyScriptName(),0);
+        // Stop myself: stop this script from running
+        cdStopScript(cdMyScriptName());
     }
 
     //----------------------------------------
@@ -206,9 +224,11 @@ default {
     timer() {
         list outfitsFolders = [ ">&&Outfits", "Outfits", ">&&Dressup", "Dressup" ];
 
+        // Reading Notecard: happens first
         if (readingNC) {
             kQuery = llGetNotecardLine(TYPE_FLAG + currentState,lineno);
         }
+        // Searching for Outfits folders (but only if RLV is ok)
         else if (tryOutfits && RLVok) {
             if (outfitsFolder == "") {
                 if ((outfitsTest == "") || (retryOutfits < 2)) {
@@ -235,9 +255,11 @@ default {
             lmRunRLV("findfolder:" + outfitsTest + "=" + (string)rlvChannel);
             retryOutfits++;
         }
+        // If no phrases are being shown, then stop script: no need to keep running
         else if (!showPhrases) {
-            if ((menuTime + 60.0) < llGetTime()) llSetScriptState(cdMyScriptName(), 0);
+            if ((menuTime + 60.0) < llGetTime()) cdStopScript(cdMyScriptName());
         }
+        // Scripts are being shown...
         else cdStopTimer();
     }
 
@@ -376,9 +398,11 @@ default {
             }
         }
         else if (code == 500) {
-            string name = cdListElement(split, 2);
+            // string name = cdListElement(split, 2);
             string optName = llGetSubString(choice, 2, STRING_END);
             string curState = cdGetFirstChar(choice);
+            
+            // llOwnerSay("DEBUG:500: ** name = " + name); // DEBUG
 
             // for timing out the Menu
             menuTime = llGetTime();
@@ -391,8 +415,8 @@ default {
 
                 if (optName == "Verify Type") {
                     lmSendConfig("mustAgreeToType", (string)(mustAgreeToType = (curState == CROSS)));
-                    if (mustAgreeToType) llOwnerSay("Changes in Doll Types will be verified.");
-                    else llOwnerSay("Changes in Doll Types will not be verified.");
+                    if (mustAgreeToType) llOwnerSay("Changes in Doll Types will be verified with you first.");
+                    else llOwnerSay("Changes in Doll Types will not be verified with you first.");
                 }
                 else if (optName == "Show Phrases") {
                     lmSendConfig("showPhrases", (string)(showPhrases = (curState == CROSS)));
@@ -401,8 +425,8 @@ default {
                 }
                 else if (optName == "Wear @ Login") {
                     lmSendConfig("wearAtLogin", (string)(wearAtLogin = (curState == CROSS)));
-                    if (wearAtLogin) llOwnerSay("If your type folder is set a new outfit will be chosen each login");
-                    else llOwnerSay("New outfits will no longer be chosen at login");
+                    if (wearAtLogin) llOwnerSay("If you are not a Regular Doll, a new outfit will be chosen each login.");
+                    else llOwnerSay("A new outfit will not be worn at each login.");
                 }
                 
                 list choices;
