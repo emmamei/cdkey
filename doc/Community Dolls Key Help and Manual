@@ -25,7 +25,11 @@ There many, many, many New Features - perhaps too many to list. Here are some of
 
 * Repeat windings are greatly simplified - and can be allowed, or not, as desired.
 
-* A posed Dolly can optionally be a silent Dolly.
+* Unwinding a Dolly is now possible.
+
+* Holding a Key is now possible.
+
+* A posed Dolly can optionally be a silent Dolly (using RLV).
 
 * Multiple Dolly Controllers are possible.
 
@@ -124,7 +128,7 @@ On the initial menu seen after a Key is touched are the following buttons:
 
     * Wind
 
-    Wind up the dolly a certain amount, typically 30 or 60 minutes. If there are multiple amounts that can be chosen, a new menu will appear with the choices available. If the winding amount is fixed (i.e., not multiple amounts to choose from) then there will be no menu, just a normal winding. If the doll is fully wound by a wind, then the winding will not return to the menu.
+    Wind up the dolly a certain amount, typically 30 or 60 minutes. If there are multiple amounts that can be chosen, a new menu will appear with the choices available. If the winding amount is fixed (i.e., not multiple amounts to choose from) then there will be no menu, just a normal winding. If the doll is fully wound by a wind, then the winding will not return to the menu. Another option will be present if a Dolly can be fully wound, "Wind Full", which will fully wind a dolly.
 
     Normally, the Dolly may be wound several times in a row by a winder.  If the Repeat Winding option is unset, then a Winder is not able to wind the Dolly repeatedly, but must be wound by different people in succession.
 
@@ -270,7 +274,7 @@ Options > Features
 
     * Outfitable
 
-    Can the Doll's outfits be chaned by the general public? This option selects this possibility.
+    Can the Doll's outfits be changed by the general public? This option selects this possibility.
 
     * Carryable
 
