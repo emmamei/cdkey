@@ -49,14 +49,14 @@ float menuTime;
 key transformerId;
 integer lineno;
 integer readingNC;
-integer tryOutfits;
-integer retryOutfits;
+integer outfitsFolderItem;
+integer outfitsFolderTestRetries;
 integer findTypeFolder;
 integer rlvHandle;
 integer useTypeFolder;
 integer menuChangeType;
 string transform;
-string outfitsTest;
+string outfitsFolderTest;
 string outfitsFolder;
 string typeFolder;
 
@@ -126,8 +126,8 @@ setDollType(string choice, integer automated) {
         if (!RLVok) { lmSendToAgentPlusDoll("Dolly does not have the capability to change outfit.",transformerId); };
 
         //typeFolder = "";
-        retryOutfits = 0;
-        tryOutfits = 1;
+        outfitsFolderTestRetries = 0;
+        outfitsFolderItem = 1;
         llSetTimerEvent(15.0);
     }
 }
@@ -222,38 +222,43 @@ default {
     // TIMER
     //----------------------------------------
     timer() {
-        list outfitsFolders = [ ">&&Outfits", "Outfits", ">&&Dressup", "Dressup" ];
+        list outfitsMasterFolders = [ ">&&Outfits", "Outfits", ">&&Dressup", "Dressup" ];
 
         // Reading Notecard: happens first
         if (readingNC) {
             kQuery = llGetNotecardLine(TYPE_FLAG + currentState,lineno);
         }
         // Searching for Outfits folders (but only if RLV is ok)
-        else if (tryOutfits && RLVok) {
-            if (outfitsFolder == "") {
-                if ((outfitsTest == "") || (retryOutfits < 2)) {
-                    outfitsTest = llList2String(outfitsFolders, tryOutfits - 1);
+        else if (RLVok) {
+            if (outfitsFolderItem > 0) {
+                if (outfitsFolder == "") {
+
+                    // Search for Outfits folder, using outfitsMasterFolders as guide
+                    if ((outfitsFolderTest == "") || (outfitsFolderTestRetries < 2)) {
+                        outfitsFolderTest = cdListElement(outfitsMasterFolders, outfitsFolderItem - 1);
+                    }
+                    else {
+                        if (outfitsFolderItem == llGetListLength(outfitsMasterFolders)) {
+                            outfitsFolderItem = 0;
+                            outfitsFolderTest = "";
+                        }
+                        outfitsFolderTest = cdListElement(outfitsMasterFolders, outfitsFolderItem++);
+                        outfitsFolderTestRetries = 0;
+                    }
+                }
+                else if ((clothingprefix != "") && (typeFolder == "") && (outfitsFolderTestRetries < 2)) {
+                    outfitsFolderTest = clothingprefix;
                 }
                 else {
-                    if (tryOutfits == llGetListLength(outfitsFolders)) {
-                        tryOutfits = 0;
-                        outfitsTest = "";
-                    }
-                    outfitsTest = llList2String(outfitsFolders, tryOutfits++);
-                    retryOutfits = 0;
+                    if (typeFolder == "") lmSendConfig("useTypeFolder", (string)(useTypeFolder = 0));
+                    outfitsFolderItem = 0;
                 }
-            }
-            else if ((clothingprefix != "") && (typeFolder == "") && (retryOutfits < 2)) {
-                outfitsTest = clothingprefix;
-            }
-            else {
-                if (typeFolder == "") lmSendConfig("useTypeFolder", (string)(useTypeFolder = 0));
-                tryOutfits = 0;
-            }
 
-            llListenControl(rlvHandle, 1);
-            lmRunRLV("findfolder:" + outfitsTest + "=" + (string)rlvChannel);
-            retryOutfits++;
+                // Try an actual folder - outfitsFolderTest - and see what comes back on listener channel
+                llListenControl(rlvHandle, 1);
+                lmRunRLV("findfolder:" + outfitsFolderTest + "=" + (string)rlvChannel);
+                outfitsFolderTestRetries++;
+            }
         }
         // If no phrases are being shown, then stop script: no need to keep running
         else if (!showPhrases) {
@@ -383,8 +388,8 @@ default {
 
             outfitsFolder = "";
             typeFolder = "";
-            tryOutfits = 1;
-            retryOutfits = 0;
+            outfitsFolderItem = 1;
+            outfitsFolderTestRetries = 0;
 
             if (RLVok) {
                 if (rlvChannel) {
@@ -459,7 +464,8 @@ default {
                     }
                     else {
                         msg += "What type of doll do you want the Doll to be?";
-                        llOwnerSay(name + " is looking at your doll types.");
+                        //llOwnerSay(name + " is looking at your doll types.");
+                        llOwnerSay("secondlife:///app/agent/" + (string)id + "/about is looking at your doll types.");
                     }
 
 
@@ -507,25 +513,25 @@ default {
     //----------------------------------------
     listen(integer channel, string name, key id, string choice) {
 
-        llOwnerSay("choice = " + choice); // DEBUG:
-        llOwnerSay("clothing prefix = " + clothingprefix); // DEBUG:
-        llOwnerSay("    substring = " + (string)llGetSubString(choice, -llStringLength(clothingprefix), STRING_END)); // DEBUG:
-        llOwnerSay("outfitsTest = " + outfitsTest); // DEBUG:
-        llOwnerSay("    substring = " + (string)llGetSubString(choice, -llStringLength(outfitsTest), STRING_END)); // DEBUG:
+        // llOwnerSay("choice = " + choice); // DEBUG:
+        // llOwnerSay("clothing prefix = " + clothingprefix); // DEBUG:
+        // llOwnerSay("    substring = " + (string)llGetSubString(choice, -llStringLength(clothingprefix), STRING_END)); // DEBUG:
+        // llOwnerSay("outfitsFolderTest = " + outfitsFolderTest); // DEBUG:
+        // llOwnerSay("    substring = " + (string)llGetSubString(choice, -llStringLength(outfitsFolderTest), STRING_END)); // DEBUG:
 
-        if ((outfitsFolder == "") && (llGetSubString(choice, -llStringLength(outfitsTest), STRING_END) == outfitsTest)) {
+        if ((outfitsFolder == "") && (llGetSubString(choice, -llStringLength(outfitsFolderTest), STRING_END) == outfitsFolderTest)) {
             outfitsFolder = choice + "/";
             lmSendConfig("outfitsFolder", outfitsFolder);
             if (typeFolder != "") {
-                tryOutfits = 0;
+                outfitsFolderItem = 0;
                 cdStopTimer();
             }
             llOwnerSay("Your outfits folder is '" + outfitsFolder + "'");
-            retryOutfits = 0;
+            outfitsFolderTestRetries = 0;
         }
         else if ((typeFolder == "") && (llGetSubString(choice, -llStringLength(clothingprefix), STRING_END) == clothingprefix)) {
             typeFolder = choice;
-            tryOutfits = 0;
+            outfitsFolderItem = 0;
 
             cdStopTimer();
 
@@ -553,7 +559,7 @@ default {
                 menuChangeType = NO;
             }
             
-            retryOutfits = 0;
+            outfitsFolderTestRetries = 0;
         }
     }
 
