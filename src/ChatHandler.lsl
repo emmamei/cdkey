@@ -518,15 +518,46 @@ default
 #endif
                         cdMenuInject("Wind", name, id);
 #ifndef TESTER_MODE
+					}
+#endif
+				}
+                else if (choice == "menu") cdMenuInject(MAIN, name, id);
+				else if (choice == "outfits") cdMenuInject("Outfits...", name, id);
+				else if (choice == "types") cdMenuInject("Types...", name, id);
+				else if (choice == "poses") cdMenuInject("Poses...", name, id);
+				else if (choice == "carry") cdMenuInject("Carry", name, id);
+				else if (choice == "uncarry") cdMenuInject("Uncarry", name, id);
+                else if (choice == "xstats") {
+                    string s = "Extended stats:\n";
+
+                    s += "Doll is a " + dollType + " Doll.\n";
+                    s += "AFK time factor: " + formatFloat(RATE_AFK, 1) + "x\n";
+                    s += "Configured wind times: " + llList2CSV(windTimes) + " mins\n";
+
+                    if (demoMode) {
+                        s += "Demo mode is enabled; times are: 1";
+                        if (llGetListLength(windTimes) > 1) s += ", 2";
+                        s += " mins.\n";
+                    }
+                    
+                    // Which is the upper bound on the wind times currently? Depeding on the values this could be keyLimit/2 or windLimit
+                    s += "Current wind menu: ";
+
+                    integer timeLeft = llFloor(timeLeftOnKey / 60.0);
+                    float windLimit = currentLimit - timeLeftOnKey;
+                    integer timesLimit = llFloor(windLimit / SEC_TO_MIN);
+                    integer time; list avail; integer i; integer n = llGetListLength(windTimes);
+                    integer maxTime = llRound(currentLimit / 60.0 / 2);
+
+                    while ((i <= n) && ( ( time = llList2Integer(windTimes, i++) ) < timesLimit) && (time <= maxTime)) {
+                        avail += ["Wind " + (string)time];
+                    } 
+                    if ((i <= n) && (timesLimit <= maxTime)) {
+                        avail += ["Wind Full"];
+                        s += " (" + (string)timeLeft  + " of " + (string)maxTime + " minutes left " + (string)timesLimit + " from max)";
                     }
 #endif
                 }
-                else if (choice == "menu") cdMenuInject(MAIN, name, id);
-                else if (choice == "outfits") cdMenuInject("Outfits...", name, id);
-                else if (choice == "types") cdMenuInject("Types...", name, id);
-                else if (choice == "poses") cdMenuInject("Poses...", name, id);
-                else if (choice == "carry") cdMenuInject("Carry", name, id);
-                else if (choice == "uncarry") cdMenuInject("Uncarry", name, id);
                 if (cdIsDoll(id) || cdIsController(id)) {
                     if (choice == "xstats") {
                         string s = "Extended stats:\n";

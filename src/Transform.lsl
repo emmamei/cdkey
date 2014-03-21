@@ -16,15 +16,16 @@
 #define STRING_END -1
 #define NOT_FOUND -1
 #define DISCARD_CHANNEL 9999
+#define NO_FILTER ""
+#define YES 1
+#define NO 0
+
 #define cdGetFirstChar(a) llGetSubString(a, 0, 0)
 #define cdButFirstChar(a) llGetSubString(a, 1, STRING_END)
 #define cdChat(a) llSay(0, a)
 #define cdStopTimer() llSetTimerEvent(0.0)
-#define NO_FILTER ""
 #define cdListenAll(a) llListen(a, NO_FILTER, NO_FILTER, NO_FILTER)
 #define cdPause() llSleep(0.5)
-#define YES 1
-#define NO 0
 #define cdTransformLocked() (minMinutes > 0)
 
 //========================================
@@ -34,6 +35,7 @@ string dollName;
 string stateName;
 list types;
 float menuTime;
+key transformerId;
 integer lineno;
 integer readingNC;
 integer tryOutfits;
@@ -84,6 +86,7 @@ setDollType(string choice, integer automated) {
     if (choice == "Transform") stateName = transform;
     else stateName = choice;
 
+    // Convert state name to Title case
     stateName = cdGetFirstChar(llToUpper(stateName)) + cdButFirstChar(llToLower(stateName));
 
     clothingprefix = TYPE_FLAG + stateName;
@@ -92,6 +95,7 @@ setDollType(string choice, integer automated) {
 
     if (llGetInventoryType(TYPE_FLAG + stateName) == INVENTORY_NOTECARD) kQuery = llGetNotecardLine(TYPE_FLAG + stateName,0);
 
+    // New State?
     if (stateName != currentState) {
         // Dont lock if transformation is automated
         if (automated) minMinutes = 0;
@@ -107,7 +111,9 @@ setDollType(string choice, integer automated) {
         if (!quiet) cdChat(dollName + " has become a " + stateName + " Doll.");
         else llOwnerSay("You have become a " + stateName + " Doll.");
         
-        typeFolder = "";
+        if (!RLVok) { lmSendToAgentPlusDoll("Dolly does not have the capability to change outfit.",transformerId); };
+
+        //typeFolder = "";
         retryOutfits = 0;
         tryOutfits = 1;
         llSetTimerEvent(15.0);
@@ -203,7 +209,7 @@ default {
         if (readingNC) {
             kQuery = llGetNotecardLine(TYPE_FLAG + currentState,lineno);
         }
-        else if (tryOutfits) {
+        else if (tryOutfits && RLVok) {
             if (outfitsFolder == "") {
                 if ((outfitsTest == "") || (retryOutfits < 2)) {
                     outfitsTest = llList2String(outfitsFolders, tryOutfits - 1);
@@ -250,6 +256,10 @@ default {
 
         string choice = cdListElement(split, 0);
         string name = cdListElement(split, 1);
+        transformerId = id;
+
+        //if (id != NULL_KEY) llOwnerSay("Transform Link Msg:" + (string)code + ":choice/name/id = " + choice + "/" + name + "/" + (string)id); //DEBUG
+        //else llOwnerSay("Transform Link Msg:" + (string)code + ":choice/name = " + choice + "/" + name); //DEBUG
 
         scaleMem();
 
@@ -334,6 +344,7 @@ default {
 
                 else if (name == "dollType") {
                     stateName = value;
+                    // this only runs if some other script sets the Type, not this one
                     if (configured) setDollType(stateName, AUTOMATED);
                 }
 
@@ -369,6 +380,7 @@ default {
             string optName = llGetSubString(choice, 2, STRING_END);
             string curState = cdGetFirstChar(choice);
 
+            // for timing out the Menu
             menuTime = llGetTime();
 
             // Transforming options
@@ -447,6 +459,8 @@ default {
                 else {
                     // Someone else chose a Type
                     if (mustAgreeToType) {
+                        if (!cdIsDoll(id)) lmSendToAgent("Getting confirmation from Doll...",id);
+
                         transform = choice; // save transformation Type
                         list choices = ["Transform", "Dont Transform", MAIN ];
                         string msg = "Do you wish to be transformed to a " + choice + " Doll?";
@@ -468,6 +482,12 @@ default {
     // LISTEN
     //----------------------------------------
     listen(integer channel, string name, key id, string choice) {
+
+        llOwnerSay("choice = " + choice); // DEBUG:
+        llOwnerSay("clothing prefix = " + clothingprefix); // DEBUG:
+        llOwnerSay("    substring = " + (string)llGetSubString(choice, -llStringLength(clothingprefix), STRING_END)); // DEBUG:
+        llOwnerSay("outfitsTest = " + outfitsTest); // DEBUG:
+        llOwnerSay("    substring = " + (string)llGetSubString(choice, -llStringLength(outfitsTest), STRING_END)); // DEBUG:
 
         if ((outfitsFolder == "") && (llGetSubString(choice, -llStringLength(outfitsTest), STRING_END) == outfitsTest)) {
             outfitsFolder = choice + "/";

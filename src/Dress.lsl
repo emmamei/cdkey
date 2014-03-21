@@ -386,6 +386,7 @@ default {
             //
             // This is used on style change
             if (cmd == "randomDress") {
+                llOwnerSay("random dress chosen"); // DEBUG
                 if (candresstemp == FALSE)
                     llRegionSayTo(dresserID, 0, "Dolly cannot be dressed right now; she is already dressing");
                 else {
@@ -393,6 +394,8 @@ default {
                     else clothingFolder = "";
 
                     lmSendConfig("clothingFolder", clothingFolder);
+                    llOwnerSay("clothingFolder = " + clothingFolder); // DEBUG
+                    llOwnerSay("listing inventory..."); // DEBUG
                     listInventoryOn("2665");
                 }
             }
@@ -468,6 +471,7 @@ default {
                     if (isParentFolder(choice)) {
                         if (clothingFolder == "") clothingFolder = choice;
                         else clothingFolder += "/" + choice;
+
                         lmSendConfig("clothingFolder", clothingFolder);
                         setActiveFolder();
                         listInventoryOn("2666"); // recursion
@@ -494,17 +498,16 @@ default {
                         lmSendConfig("oldoutfitpath", (oldoutfitpath = newoutfitpath));
                         lmSendConfig("oldoutfit", (oldoutfit = newoutfit));
 
+                        newoutfitname = choice;
+                        newoutfitfolder = outfitsFolder;
+
                         if (clothingFolder == "") {
-                            newoutfitname = choice;
-                            newoutfitfolder = outfitsFolder;
                             newoutfitpath = "";
                             newoutfit = newoutfitfolder + "/" + newoutfitname;
                         }
                         else {
-                            newoutfitname = choice;
-                            newoutfitfolder = outfitsFolder;
                             newoutfitpath = clothingFolder;
-                            newoutfit = newoutfitfolder + "/" + newoutfitpath + "/" + newoutfitname;
+                            newoutfit = newoutfitfolder + "/" + clothingFolder + "/" + newoutfitname;
                         }
 
                         lmSendConfig("newoutfitname", (newoutfitname));
@@ -549,11 +552,12 @@ default {
                     // one outfit using a miniskirt and one a long dress.
                     //
                     // This is unnessary we can do the same job with locking and @detachallthis
-                    /*if (RLVok) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|getpathnew:pants=2670," +
-                                                                 "getpathnew:shirt=2670," +
-                                                                 "getpathnew:jacket=2670," +
-                                                                 "getpathnew:skirt=2670," +
-                                                                 "getpathnew:underpants=2670," +                                                                                                                          "getpathnew:undershirt=2670", NULL_KEY);*/
+                    //if (RLVok) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|getpathnew:pants=2670," +
+                    //                                           "getpathnew:shirt=2670," +
+                    //                                           "getpathnew:jacket=2670," +
+                    //                                           "getpathnew:skirt=2670," +
+                    //                                           "getpathnew:underpants=2670," +
+                    //                                           "getpathnew:undershirt=2670", NULL_KEY);
 
                     // Original outfit was a complete avi reset....
                     // Restore our usual look from the ~normalself
@@ -584,6 +588,7 @@ default {
                         // Do this right off the bat and also lock it.  This makes more
                         // sense especially with multi layer wearables this makes sure
                         // that the underlayers go in first.
+
                         if (RLVok) lmRunRLV("attachallover:" + nudeFolder + "=force");
                         llSleep(1.0);
                     //}
@@ -729,6 +734,7 @@ default {
         // Switched doll types: grab a new (appropriate) outfit at random and change to it
         //
         if (channel == (rlvBaseChannel + 2665)) { // list of inventory items from the current prefix
+            llOwnerSay("inventory listed on 2665..."); // DEBUG
             llListenRemove(listen_id_2665);
             outfitsList = llParseString2List(choice, [","], []); //what are brackets at end?
             integer iStop = llGetListLength(outfitsList);
