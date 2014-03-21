@@ -35,7 +35,7 @@ key carrierID = NULL_KEY;
 key dollID = NULL_KEY;
 key poserID = NULL_KEY;
 list memWait;
-list MistressList;
+list controllers;
 float rezTime;
 float timerEvent;
 float listenTime;
@@ -69,8 +69,8 @@ integer textboxType;
 integer offlineMode;
 
 sendMsg(key id, string msg) {
-    if (id) {
-        if          cdIsDoll(id)                  llOwnerSay(msg);
+    if (id != NULL_KEY) {
+        if          cdIsDoll(id)                      llOwnerSay(msg);
         else if     (llGetAgentSize(id))    llRegionSayTo(id, 0, msg);
         else                                llInstantMessage(id, msg);
     }
@@ -113,16 +113,16 @@ default {
 
         if ((code == 11) || (code == 12)) {
             string msg = llList2String(split, 0);
-            debugSay(7, "DEBUG", "Send message to: " + (string)id + "\n" + msg);
+            debugSay(3, "DEBUG", "Send message to: " + (string)id + "\n" + msg);
             sendMsg(id, msg);
-            if (!cdIsDoll(id) && (code == 12)) sendMsg(id, msg);
+            if ((code == 12) && !cdIsDoll(id)) sendMsg(dollID, msg);
         }
         else if (code == 15) {
             string msg = llList2String(split, 0);
             integer i;
-            for (i = 0; i < llGetListLength(cdList2ListStrided(MistressList, 0, -1, 2)); i++) {
-                string targetName = llList2String(MistressList, i * 2 + 1);
-                key targetKey = llList2Key(MistressList, i * 2);
+            for (i = 0; i < llGetListLength(cdList2ListStrided(controllers, 0, -1, 2)); i++) {
+                string targetName = llList2String(controllers, i * 2 + 1);
+                key targetKey = llList2Key(controllers, i * 2);
                 debugSay(7, "DEBUG", "MistressMsg To: " + targetName + " (" + (string)targetKey + ")\n" + msg);
                 sendMsg(targetKey, msg);
             }
@@ -239,7 +239,7 @@ default {
             
             split = llDeleteSubList(split, 0, 0);
 
-                 if (name == "MistressList")             MistressList = split;
+                 if (name == "controllers")             controllers = split;
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
@@ -268,6 +268,7 @@ default {
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
             else if (name == "windTimes")                   windTimes = value;
+            else if (name == "blacklist")                   blacklist = llListSort(cdList2ListStrided(split,0,-1,2),1,1);   // Import the UUID entries only here, is all we need to blacklist test.
             else if (name == "primLight")                   primLight = (integer)value;
             else if (name == "primGlow") {
                 primGlow = (integer)value;
@@ -496,6 +497,12 @@ default {
     }
     
     listen(integer channel, string name, key id, string choice) {
+        // Deny access to the key when the command was recieved from blacklisted avatar
+        if (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND) {
+            lmSendToAgent("You are not permitted to access this key.", id);
+            return;
+        }
+        
         name = llGetDisplayName(id);
         
         //llOwnerSay((string)channel + "=" + (string)textboxChannel + "? " + (string)textboxType + " " + choice);

@@ -57,7 +57,7 @@ float ncStart;
 integer lastAttachPoint;
 key lastAttachAvatar;
 
-list MistressList;
+list controllers;
 list blacklist;
 list recentDilation;
 list windTimes;
@@ -191,8 +191,8 @@ processConfiguration(string name, string value) {
             lmSendConfig("blacklist", llDumpList2String((blacklist = llListSort(blacklist + [ value, llRequestAgentData((key)value, DATA_NAME) ], 2, 1)), "|"));
     }
     else if (name == "controller") {
-        if (llListFindList(MistressList, [ value ]) == NOT_FOUND)
-            lmSendConfig("MistressList", llDumpList2String((MistressList = llListSort(MistressList + [ value, llRequestAgentData((key)value, DATA_NAME) ], 2, 1)), "|"));
+        if (llListFindList(controllers, [ value ]) == NOT_FOUND)
+            lmSendConfig("controllers", llDumpList2String((controllers = llListSort(controllers + [ value, llRequestAgentData((key)value, DATA_NAME) ], 2, 1)), "|"));
     }
     else if (name == "blacklist name") {
         lmInternalCommand("getBlacklistName", value, NULL_KEY);

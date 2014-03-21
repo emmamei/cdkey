@@ -229,14 +229,14 @@ default
             else if (name == "dollType") {
                 dollType = llGetSubString(llToUpper(value), 0, 0) + llGetSubString(llToLower(value), 1, -1);
             }
-            else if ((name == "MistressList") || (name == "blacklist")) {
+            else if ((name == "controllers") || (name == "blacklist")) {
                 integer i;
                 for (i = 0; i < llGetListLength(split); i++) {
                     if (llList2String(split, i) == "") split = llDeleteSubList(split, i, i--);
                 }
 
-                if (name == "MistressList") {
-                    MistressList = split;
+                if (name == "controllers") {
+                    controllers = split;
                     if (!startup) lmInternalCommand("updateExceptions", "", NULL_KEY);
                 }
                 else blacklist = split;
@@ -295,7 +295,7 @@ default
 
                 // Exempt builtin or user specified controllers from TP restictions
 
-                list allow = BUILTIN_CONTROLLERS + cdList2ListStrided(MistressList, 0, -1, 2);
+                list allow = BUILTIN_CONTROLLERS + cdList2ListStrided(controllers, 0, -1, 2);
 
                 // Also exempt the carrier StatusRLV will ignore the duplicate if carrier is a controller so save work
 
@@ -314,194 +314,204 @@ default
             }
             else if (cmd == "mainMenu") {
                 string msg; list menu; string manpage; string windButton = llList2String(split, 0);
-
+                
                 if (startup) lmSendToAgent("Dolly's key is still establishing connections with " + llToLower(pronounHerDoll) + " systems please try again in a few minutes.", id);
-
-                // Cache access test results
-                integer hasCarrier      = cdCarried()  ;
-                integer isCarrier       = cdIsCarrier(id)       || cdIsBuiltinController(id);
-                integer isController    = cdIsController(id);
-                integer isDoll          = cdIsDoll(id);
-                integer numControllers  = cdControllerCount();
-
-                // Compute "time remaining" message for mainMenu/windMenu
-                string timeleft;
-
-                integer minsLeft = llRound(timeLeftOnKey / (60.0 * displayWindRate));
-
-                if (minsLeft > 0) {
-                    timeleft = "Dolly has " + (string)minsLeft + " minutes remaining.\n";
-
-                    timeleft += "Key is ";
-                    if (windRate == 0.0) timeleft += "not ";
-                    timeleft += "winding down";
-
-                    if (windRate == 0.0) timeleft += ".";
-                    else timeleft += " at " + formatFloat(displayWindRate, 1) + "x rate.";
-
-                    timeleft += ". ";
-                }
-                else timeleft = "Dolly has no time left.";
-                timeleft += "\n";
-
-                // Handle our "special" states first which significantly alter the menu
-
-                // When the doll is carried they have exclusive control
-                if (hasCarrier) {
-                    // Doll being carried clicked on key
-                    if (isDoll) {
-                        msg = "You are being carried by " + carrierName + ". ";
-                        menu = ["Help..."];
+                
+                if (llListFindList(blacklist, [ (string)id ]) == NOT_FOUND) {
+                    // Cache access test results
+                    integer hasCarrier      = cdCarried()  ;
+                    integer isCarrier       = cdIsCarrier(id)       || cdIsBuiltinController(id);
+                    integer isController    = cdIsController(id);
+                    integer isDoll          = cdIsDoll(id);
+                    integer numControllers  = cdControllerCount();
+    
+                    // Compute "time remaining" message for mainMenu/windMenu
+                    string timeleft;
+    
+                    integer minsLeft = llRound(timeLeftOnKey / (60.0 * displayWindRate));
+    
+                    if (minsLeft > 0) {
+                        timeleft = "Dolly has " + (string)minsLeft + " minutes remaining.\n";
+    
+                        timeleft += "Key is ";
+                        if (windRate == 0.0) timeleft += "not ";
+                        timeleft += "winding down";
+    
+                        if (windRate == 0.0) timeleft += ".";
+                        else timeleft += " at " + formatFloat(displayWindRate, 1) + "x rate.";
+    
+                        timeleft += ". ";
                     }
-
-                    else if (isCarrier) {
-                        msg = "Uncarry frees " + dollName + " when you are done with " + pronounHerDoll;
-
-                        menu += "Uncarry";
-                    }
-
-                    // Someone else clicked on key
-                    else {
-                        msg = dollName + " is currently being carried by " + carrierName + ". They have full control over this doll.\n";
-                        menu = ["Help..."];
-                    }
-                    if (!isCarrier) {
-                        llDialog(id, timeleft + msg, dialogSort(llListSort(menu, 1, 1)) , dialogChannel);
-                        return;
-                    }
-                }
-                // When the doll is collapsed they lose their access to most key functions with a few exceptions
-                else if (collapsed && isDoll) {
-                    msg = "You need winding. ";
-                    // Only present the TP home option for the doll if they have been collapsed
-                    // for at least 900 seconds (15 minutes) - Suggested by Christina
-                    if ((collapseTime != 0.0) && (llGetTime() - collapseTime) > 900.0) {
-                        if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK) {
-                            menu = ["TP Home"];
+                    else timeleft = "Dolly has no time left.";
+                    timeleft += "\n";
+    
+                    // Handle our "special" states first which significantly alter the menu
+    
+                    // When the doll is carried they have exclusive control
+                    if (hasCarrier) {
+                        // Doll being carried clicked on key
+                        if (isDoll) {
+                            msg = "You are being carried by " + carrierName + ". ";
+                            menu = ["Help..."];
                         }
-                        // If the doll is still down after 1800 seconds (30 minutes) and their emergency winder
-                        // is recharged add a button for it
-                        if ((collapseTime != 0.0) && ((llGetTime() - collapseTime) > 1800.0) && (winderRechargeTime <= llGetUnixTime())) {
-                            menu += ["Wind Emg"];
+    
+                        else if (isCarrier) {
+                            msg = "Uncarry frees " + dollName + " when you are done with " + pronounHerDoll;
+    
+                            menu += "Uncarry";
+                        }
+    
+                        // Someone else clicked on key
+                        else {
+                            msg = dollName + " is currently being carried by " + carrierName + ". They have full control over this doll.\n";
+                            menu = ["Help..."];
+                        }
+                        if (!isCarrier) {
+                            llDialog(id, timeleft + msg, dialogSort(llListSort(menu, 1, 1)) , dialogChannel);
+                            return;
                         }
                     }
-                }
-
-                if (!collapsed && (!hasCarrier || isCarrier)) {
-                    //not  being carried (or for carrier), not collapsed - normal in other words
-                    // Toucher could be...
-                    //   1. Doll
-                    //   2. Carrier
-                    //   3. Controller
-                    //   4. Someone else
-
-                    // Options only available to dolly
-                    if (isDoll) {
-                        if (!collapsed) {
-                            menu += "Options...";
-                            if (detachable) menu += "Detach";
-
-                            if (canAFK) menu += "AFK";
-
-                            menu += "Visible";
+                    // When the doll is collapsed they lose their access to most key functions with a few exceptions
+                    else if (collapsed && isDoll) {
+                        msg = "You need winding. ";
+                        // Only present the TP home option for the doll if they have been collapsed
+                        // for at least 900 seconds (15 minutes) - Suggested by Christina
+                        if ((collapseTime != 0.0) && (llGetTime() - collapseTime) > 900.0) {
+                            if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK) {
+                                menu = ["TP Home"];
+                            }
+                            // If the doll is still down after 1800 seconds (30 minutes) and their emergency winder
+                            // is recharged add a button for it
+                            if ((collapseTime != 0.0) && ((llGetTime() - collapseTime) > 1800.0) && (winderRechargeTime <= llGetUnixTime())) {
+                                menu += ["Wind Emg"];
+                            }
                         }
                     }
-                    else {
-                        manpage = "communitydoll.htm";
-
-                        // Toucher is not Doll.... could be anyone
-                        msg =  dollName + " is a doll and likes to be treated like " +
-                               "a doll. So feel free to use these options.\n";
-                    }
-
-                    // Can the doll be dressed? Add menu button
-                    if ((RLVok == 1) && !collapsed && ((!isDoll && canDress) || (isDoll && canDressSelf && !wearLock))) {
-                        menu += "Outfits...";
-                    }
-
-                    // Can the doll be transformed? Add menu button
-                    if (!collapsed && isTransformingKey) {
-                        menu += "Types...";
-                    }
-
-                    if (!collapsed) {
-                        if (keyAnimation != "") {
-                            msg += "Doll is currently posed.\n";
-
-                            if ((!isDoll && canPose) || (poserID == dollID)) {
-                                menu += ["Poses...","Unpose"];
+    
+                    if (!collapsed && (!hasCarrier || isCarrier)) {
+                        //not  being carried (or for carrier), not collapsed - normal in other words
+                        // Toucher could be...
+                        //   1. Doll
+                        //   2. Carrier
+                        //   3. Controller
+                        //   4. Someone else
+    
+                        // Options only available to dolly
+                        if (isDoll) {
+                            if (!collapsed) {
+                                menu += "Options...";
+                                if (detachable) menu += "Detach";
+    
+                                if (canAFK) menu += "AFK";
+    
+                                menu += "Visible";
                             }
                         }
                         else {
-                            if ((!isDoll && canPose) || isDoll)
-                                menu += "Poses...";
+                            manpage = "communitydoll.htm";
+    
+                            // Toucher is not Doll.... could be anyone
+                            msg =  dollName + " is a doll and likes to be treated like " +
+                                   "a doll. So feel free to use these options.\n";
                         }
-                    }
-
-                    if (!collapsed && ((numControllers == 0) || (isController && !isDoll))) {
-                        if (canCarry) {
-                            msg += "Carry option picks up " + dollName + " and temporarily" +
-                                   " makes the Dolly exclusively yours.\n";
-
-                            if (!hasCarrier) menu += "Carry";
+    
+                        // Can the doll be dressed? Add menu button
+                        if ((RLVok == 1) && !collapsed && ((!isDoll && canDress) || (isDoll && canDressSelf && !wearLock))) {
+                            menu += "Outfits...";
                         }
-                    }
-
-#ifdef ADULT_MODE
-                        // Is doll strippable?
-                        if ((RLVok == 1) && !collapsed && (pleasureDoll || dollType == "Slut")) {
-#ifdef TESTER_MODE
-                            if (isController || isCarrier || ((debugLevel != 0) && isDoll)) {
-#else
-                            if (isController || isCarrier) {
-#endif
-                                if (simRating == "MATURE" || simRating == "ADULT") menu += "Strip...";
+    
+                        // Can the doll be transformed? Add menu button
+                        if (!collapsed && isTransformingKey) {
+                            menu += "Types...";
+                        }
+    
+                        if (!collapsed) {
+                            if (keyAnimation != "") {
+                                msg += "Doll is currently posed.\n";
+    
+                                if ((!isDoll && canPose) || (poserID == dollID)) {
+                                    menu += ["Poses...","Unpose"];
+                                }
+                            }
+                            else {
+                                if ((!isDoll && canPose) || isDoll)
+                                    menu += "Poses...";
                             }
                         }
-#endif
-                }
-
+    
+                        if (!collapsed && ((numControllers == 0) || (isController && !isDoll))) {
+                            if (canCarry) {
+                                msg += "Carry option picks up " + dollName + " and temporarily" +
+                                       " makes the Dolly exclusively yours.\n";
+    
+                                if (!hasCarrier) menu += "Carry";
+                            }
+                        }
+    
+#ifdef ADULT_MODE
+                            // Is doll strippable?
+                            if ((RLVok == 1) && !collapsed && (pleasureDoll || dollType == "Slut")) {
 #ifdef TESTER_MODE
-                if ((debugLevel != 0) && isDoll) menu += windButton;
+                                if (isController || isCarrier || ((debugLevel != 0) && isDoll)) {
+#else
+                                if (isController || isCarrier) {
 #endif
-                if (!isDoll) menu += windButton;
-                menu += "Help...";
-
-                // Options only available if controller
-                if (isController) {
-                    if (!isDoll) menu += [ "Options..." ];
-                    if (!isDoll || !detachable) menu += [ "Detach" ];
-                }
-
-                if (!isDoll) {
-                    if (marketplaceURL != "") menu += "Get a Key";
-                }
-
-                cdListenerActivate(dialogHandle);
-                llSetTimerEvent(60.0);
-
-                if (RLVok == -1) msg += "Still checking for RLV support some features unavailable.\n";
-                if (RLVok == 0) {
-                    msg += "No RLV detected some features unavailable.\n";
-                    if (cdIsDoll(id) || cdIsController(id)) menu += "*RLV On*";
-                }
-
-                msg += "See " + WEB_DOMAIN + manpage + " for more information. " ;
-
+                                    if (simRating == "MATURE" || simRating == "ADULT") menu += "Strip...";
+                                }
+                            }
+#endif
+                    }
+    
+#ifdef TESTER_MODE
+                    if ((debugLevel != 0) && isDoll) menu += windButton;
+#endif
+                    if (!isDoll) menu += windButton;
+                    menu += "Help...";
+    
+                    // Options only available if controller
+                    if (isController) {
+                        if (!isDoll) menu += [ "Options..." ];
+                        if (!isDoll || !detachable) menu += [ "Detach" ];
+                    }
+    
+                    if (!isDoll) {
+                        if (marketplaceURL != "") menu += "Get a Key";
+                    }
+    
+                    cdListenerActivate(dialogHandle);
+                    llSetTimerEvent(60.0);
+    
+                    if (RLVok == -1) msg += "Still checking for RLV support some features unavailable.\n";
+                    if (RLVok == 0) {
+                        msg += "No RLV detected some features unavailable.\n";
+                        if (cdIsDoll(id) || cdIsController(id)) menu += "*RLV On*";
+                    }
+    
+                    msg += "See " + WEB_DOMAIN + manpage + " for more information. " ;
+    
 #ifdef DEVELOPER_MODE
-                msg += " (Key is in Developer Mode.)";
+                    msg += " (Key is in Developer Mode.)";
 #else
 #ifdef TESTER_MODE
-                msg += " (Key is in Tester Mode.)";
+                    msg += " (Key is in Tester Mode.)";
 #endif
 #endif
-                menu = llListSort(menu, 1, 1);
-
-                integer i;
-                if ( ( i = llListFindList(menu, ["AFK"]) ) != -1) menu = llListReplaceList(menu, cdGetButton("AFK", id, afk, 0), i, i);
-                if ( ( i = llListFindList(menu, ["Visible"]) ) != -1) menu = llListReplaceList(menu, cdGetButton("Visible", id, visible, 0), i, i);
-
-                llDialog(id, timeleft + msg, dialogSort(menu) , dialogChannel);
+                    menu = llListSort(menu, 1, 1);
+    
+                    integer i;
+                    if ( ( i = llListFindList(menu, ["AFK"]) ) != -1) menu = llListReplaceList(menu, cdGetButton("AFK", id, afk, 0), i, i);
+                    if ( ( i = llListFindList(menu, ["Visible"]) ) != -1) menu = llListReplaceList(menu, cdGetButton("Visible", id, visible, 0), i, i);
+                    
+                    msg = timeleft + msg;
+                    timeleft = "";
+                }
+                else {
+                    msg = "You are not permitted any access to this dolly's key.";
+                    
+                    menu = ["Leave Alone"];
+                }
+    
+                llDialog(id, msg, dialogSort(menu) , dialogChannel);
             }
         }
         else if (code == 350) {
@@ -538,7 +548,7 @@ default
         if (controlHandle) {
             channel = controlChannel;
             type = "controller list";
-            current = cdList2ListStrided(MistressList, 0, -1, 2);
+            current = cdList2ListStrided(controllers, 0, -1, 2);
         }
         while ((i < num) && (llGetListLength(dialogButtons) < 12)) {
             if (llListFindList(current, [(string)llDetectedKey(i)]) == -1) { // Don't list existing users
@@ -564,7 +574,8 @@ default
         //    name = filter by prim name
         //     key = filter by avatar key
         //  choice = filter by specific message
-        if (llListFindList(blacklist, [ (string)id ]) != -1) {
+        // Deny access to the menus when the command was recieved from blacklisted avatar
+        if (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND) {
             lmSendToAgent("You are not permitted to access this key.", id);
             return;
         }
@@ -663,8 +674,8 @@ default
                     }
                     activeChannel = controlChannel;
                     msg = "controller list";
-                    dialogKeys  = cdList2ListStrided(MistressList, 0, -1, 2);
-                    dialogNames = cdList2ListStrided(MistressList, 1, -1, 2);
+                    dialogKeys  = cdList2ListStrided(controllers, 0, -1, 2);
+                    dialogNames = cdList2ListStrided(controllers, 1, -1, 2);
                     controlHandle = cdListenUser(controlChannel, id);
                 }
 
@@ -771,10 +782,10 @@ default
             }
 
             if (isController && choice == "Drop Control") {
-                integer index = llListFindList(MistressList, [ (string)id ]);
+                integer index = llListFindList(controllers, [ (string)id ]);
                 if (index != -1) {
-                    MistressList = llDeleteSubList(MistressList, index, index + 1);
-                    lmSendConfig("MistressList", llDumpList2String(MistressList, "|"));
+                    controllers = llDeleteSubList(controllers, index, index + 1);
+                    lmSendConfig("controllers", llDumpList2String(controllers, "|"));
                 }
             }
         }
@@ -804,7 +815,7 @@ default
                     llListenRemove(controlHandle);
                     controlHandle = 0;
                 }
-                if (llListFindList(MistressList, [uuid,name]) == -1)    lmInternalCommand("addMistress", (string)uuid + "|" + name, id);
+                if (llListFindList(controllers, [uuid,name]) == -1)    lmInternalCommand("addMistress", (string)uuid + "|" + name, id);
                 else if (cdIsBuiltinController(id))                     lmInternalCommand("remMistress", (string)uuid + "|" + name, id);
             }
         }

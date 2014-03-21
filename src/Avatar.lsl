@@ -53,6 +53,7 @@ integer listenHandle;
 integer locked;
 integer lowScriptMode;
 integer poseSilence;
+integer refreshControls;
 integer RLVck = 0;
 integer RLVrecheck;
 integer RLVok;
@@ -252,13 +253,17 @@ ifPermissions() {
                     // suspect there may be a second life bug where taking controls and then trying to let
                     // go to do ACCEPT=FALSE, PASS_ON=TRUE may not allways work reliably release and regrab
                     
+                    refreshControls = 1;
+                    
                     if ((llGetParcelFlags(llGetPos()) & PARCEL_FLAG_ALLOW_SCRIPTS) != 0) {
                         // We do not want try and llReleaseControls if the land is no script it is not a safe op
                         llReleaseControls();
                         haveControls = 0;
+                        refreshControls = 0;
                         llRequestPermissions(dollID, PERMISSION_MASK);  // Releasing controls drops the permissions
                                                                         // get them baack.
                     }
+                    else llTakeControls(-1, 0, 1);
                 }
             }
 
@@ -399,7 +404,18 @@ default {
                 split = [];
             }
 
-                 if (name == "autoTP")                       autoTP = (integer)value;
+// CHANGED_OTHER bit used to indicate changes of RLV status that
+// would not normally be reflected as a doll state.
+#define CHANGED_OTHER 0x80000000
+
+            integer oldState = dollState;              // Used to determine if a refresh of RLV state is needed
+
+            if (name == "autoTP") {
+                if (autoTP != (integer)value) {
+                     autoTP = (integer)value;
+                     oldState = oldState | CHANGED_OTHER;
+                }
+            }
             else if (name == "carrierID") {
                 carrierID = (key)value;
                 cdSetDollStateIf(DOLL_CARRIED, (carrierID != NULL_KEY));
@@ -408,18 +424,48 @@ default {
                 afk = (integer)value;
                 cdSetDollStateIf(DOLL_AFK, afk);
             }
-            else if (name == "canFly")                       canFly = (integer)value;
-            else if (name == "canSit")                       canSit = (integer)value;
-            else if (name == "canStand")                   canStand = (integer)value;
-            else if (name == "canDressSelf")                     canDressSelf = (integer)value;
-            else if (name == "collapsed") {
-                collapsed = (integer)value;
-                cdSetDollStateIf(DOLL_COLLAPSED, collapsed);
-                if (collapsed) lmSendConfig("keyAnimation", (keyAnimation = ANIMATION_COLLAPSED));
-                else if (cdCollapsedAnim()) lmSendConfig("keyAnimation", (keyAnimation = ""));
+            else if (name == "canFly") {
+                if (canFly != (integer)value) {
+                    canFly = (integer)value;
+                    oldState = oldState | CHANGED_OTHER;
+                }
             }
-            else if (name == "tpLureOnly")                   tpLureOnly = (integer)value;
-            else if (name == "poseSilence")             poseSilence = (integer)value;
+            else if (name == "canSit") {
+                if (canSit != (integer)value) {
+                    canSit = (integer)value;
+                    oldState = oldState | CHANGED_OTHER;
+                }
+            }
+            else if (name == "canStand") {
+                if (canStand != (integer)value) {
+                    canStand = (integer)value;
+                    oldState = oldState | CHANGED_OTHER;
+                }
+            }
+            else if (name == "canDressSelf") {
+                if (canDressSelf != (integer)value) {
+                    canDressSelf = (integer)value;
+                    oldState = oldState | CHANGED_OTHER;
+                }
+            }
+            else if (name == "collapsed") {
+                    collapsed = (integer)value;
+                    cdSetDollStateIf(DOLL_COLLAPSED, collapsed);
+                    if (collapsed) lmSendConfig("keyAnimation", (keyAnimation = ANIMATION_COLLAPSED));
+                    else if (cdCollapsedAnim()) lmSendConfig("keyAnimation", (keyAnimation = ""));
+            }
+            else if (name == "tpLureOnly") {
+                if (tpLureOnly != (integer)value) {
+                    tpLureOnly = (integer)value;
+                    oldState = oldState | CHANGED_OTHER;
+                }
+            }
+            else if (name == "poseSilence") {
+                if (poseSilence != (integer)value) {
+                    poseSilence = (integer)value;
+                    oldState = oldState | CHANGED_OTHER;
+                }
+            }
             else if (name == "userBaseRLVcmd") {
                 if (userBaseRLVcmd == "") userBaseRLVcmd = value;
                 else userBaseRLVcmd += "," +value;
@@ -428,7 +474,6 @@ default {
                 keyAnimation = value;
                 if (cdCollapsedAnim() && ((dollState & DOLL_COLLAPSED) == 0)) {
                     lmSendConfig("keyAnimation", "");
-                    return;
                 }
                 
                 cdSetDollStateIf(DOLL_ANIMATED, (keyAnimation != ""));
@@ -450,9 +495,10 @@ default {
                 else if (name == "lowScriptMode")         lowScriptMode = (integer)value;
                 else if (name == "quiet")                         quiet = (integer)value;
                 else if (name == "chatChannel")             chatChannel = (integer)value;
+                else if (name == "canPose")                     canPose = (integer)value;
                 else if (name == "barefeet")                   barefeet = value;
                 else if (name == "dollType")                   dollType = value;
-                else if (name == "MistressList")           MistressList = split;
+                else if (name == "controllers")           controllers = split;
                 else if (name == "pronounHerDoll")       pronounHerDoll = value;
                 else if (name == "pronounSheDoll")       pronounSheDoll = value;
                 else if (name == "dialogChannel") {
@@ -469,8 +515,11 @@ default {
                 
                 return;
             }
-            ifPermissions();
-            if (RLVstarted) cdLoadData(RLV_NC, RLV_BASE_RESTRICTIONS);
+            
+            if (dollState != oldState) {
+                ifPermissions();
+                if (RLVstarted) cdLoadData(RLV_NC, RLV_BASE_RESTRICTIONS);
+            }
         }
         else if (code == 305) {
             string cmd = llList2String(split, 0);
@@ -528,33 +577,37 @@ default {
             }
 #endif
             else if (choice == "Carry") {
-                lmSendConfig("carrierID", (string)(carrierID = id));
-                lmSendConfig("carrierName", (carrierName = name));
-                if (!quiet) llSay(0, "The doll " + dollName + " has been picked up by " + carrierName);
-                else {
-                    llOwnerSay("You have been picked up by " + carrierName);
-                    llRegionSayTo(carrierID, 0, "You have picked up the doll " + dollName);
+                if (!collapsed && !cdIsDoll(id) && (cdControllerCount() || cdIsController(id))) {
+                    lmSendConfig("carrierID", (string)(carrierID = id));
+                    lmSendConfig("carrierName", (carrierName = name));
+                    if (!quiet) llSay(0, "The doll " + dollName + " has been picked up by " + carrierName);
+                    else {
+                        llOwnerSay("You have been picked up by " + carrierName);
+                        llRegionSayTo(carrierID, 0, "You have picked up the doll " + dollName);
+                    }
                 }
             }
             else if (choice == "Uncarry") {
-                if (quiet) lmSendToAgent("You were carrying " + dollName + " and have now placed them down.", carrierID);
-                else llSay(0, "Dolly " + dollName + " has been placed down by " + carrierName);
-                lmSendConfig("carrierID", (string)(carrierID = NULL_KEY));
-                lmSendConfig("carrierName", (carrierName = ""));
+                if (cdIsCarrier(id)) {
+                    if (quiet) lmSendToAgent("You were carrying " + dollName + " and have now placed them down.", carrierID);
+                    else llSay(0, "Dolly " + dollName + " has been placed down by " + carrierName);
+                    lmSendConfig("carrierID", (string)(carrierID = NULL_KEY));
+                    lmSendConfig("carrierName", (carrierName = ""));
+                }
             }
-            else if ((!cdIsDoll(id) || cdSelfPosed()) && choice == "Unpose") {
+            else if (((!cdIsDoll(id) && canPose) || cdSelfPosed()) && choice == "Unpose") {
                 lmSendConfig("keyAnimation", (string)(keyAnimation = ""));
                 lmSendConfig("poserID", (string)(poserID = NULL_KEY));
             }
-            else if ((keyAnimation == "" || (!cdIsDoll(id) || cdSelfPosed())) && llGetInventoryType(choice) == 20) {
+            else if ((keyAnimation == "" || ((!cdIsDoll(id) && canPose) || cdSelfPosed())) && llGetInventoryType(choice) == 20) {
                 lmSendConfig("keyAnimation", (string)(keyAnimation = choice));
                 lmSendConfig("poserID", (string)(poserID = id));
             }
-            else if ((keyAnimation == "" || (!cdIsDoll(id) || cdSelfPosed())) && llGetInventoryType(llGetSubString(choice, 2, -1)) == 20) {
+            else if ((keyAnimation == "" || ((!cdIsDoll(id) && canPose) || cdSelfPosed())) && llGetInventoryType(llGetSubString(choice, 2, -1)) == 20) {
                 lmSendConfig("keyAnimation", (string)(keyAnimation = llGetSubString(choice, 2, -1)));
                 lmSendConfig("poserID", (string)(poserID = id));
             }
-            else if (llGetSubString(choice, 0, 4) == "Poses" && (keyAnimation == ""  || (!cdIsDoll(id) || poserID == dollID))) {
+            else if (llGetSubString(choice, 0, 4) == "Poses" && (keyAnimation == ""  || ((!cdIsDoll(id) && canPose) || poserID == dollID))) {
                 poserID = id;
                 integer page = (integer)llStringTrim(llGetSubString(choice, 5, -1), STRING_TRIM);
                 if (!page) {
@@ -598,6 +651,7 @@ default {
         if ((nextRLVcheck != 0.0) && (nextRLVcheck < llGetTime())) {
             checkRLV();
         }
+        
         ifPermissions();
         
         list possibleEvents =       [60.0];

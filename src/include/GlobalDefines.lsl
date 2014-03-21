@@ -65,7 +65,8 @@
 #define AGENT_SILKY_MESMERISER        "2fff40f0-ea4a-4b52-abb8-d4bf6b1c98c9"
 
 #define BUILTIN_CONTROLLERS [ AGENT_SILKY_MESMERISER, AGENT_MAYSTONE_RESIDENT, AGENT_CHRISTINA_HALPIN, AGENT_ANDROMEDA_LAMPLIGHT ]
-#define USER_CONTROLLERS MistressList
+list BuiltinControllers = BUILTIN_CONTROLLERS;
+#define USER_CONTROLLERS controllers
 #include "CommonGlobals.lsl"
 
 // Once CommonGlobals is included redefine BUILTIN_CONTROLLERS to use the BuiltinControllers variable

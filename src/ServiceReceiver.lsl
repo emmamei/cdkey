@@ -67,7 +67,7 @@ default {
                 if (i != -1) storedConfigs = llDeleteSubList(storedConfigs, i, i + 1);
             }
             else {
-                if ((conf == "MistressList") || (conf == "blacklist")) {
+                if ((conf == "controllers") || (conf == "blacklist")) {
                     string prefix = "controller"; split = llParseString2List(value, ["|"], []);
                     if (conf == "blacklist") prefix = conf;
                     
@@ -131,7 +131,7 @@ default {
                 string value = llList2String(storedConfigs, i * 2 + 1);
                 if (type == 1) lmSendConfig(conf, value);
                 else {
-                    if ((conf != "MistressList") && (conf != "blacklist")) llOwnerSay("\n" + conf + "=" + value);
+                    if ((conf != "controllers") && (conf != "blacklist")) llOwnerSay("\n" + conf + "=" + value);
                     llSleep(0.1);
                 }
                 i++;
@@ -344,11 +344,13 @@ default {
         integer k = 16;
         
         list splitLine;
+        string line;
         string name;
         string value;
 
         while (k-- && llGetListLength(databaseInput)) {
-            splitLine = llParseStringKeepNulls(llList2String(databaseInput, 0),["="],[]);
+            line = llList2String(databaseInput, 0);
+            splitLine = llParseStringKeepNulls(line,["="],[]);
             
             name = llList2String(splitLine, 0);
             splitLine = llDeleteSubList(splitLine,0,0);
@@ -370,7 +372,10 @@ default {
                     else if ((value == "") || (value == "|")) {
                         lmSendConfig(name, value = RECORD_DELETE);                  // New form but no content deleted
                     }
-                    else lmInternalCommand("addMistress", value, llGetKey());       // New form with content accepted
+                    else {
+                        llOwnerSay(value);
+                        lmInternalCommand("addMistress", value, DATABASE_ID);       // New form with content accepted
+                    }
                 }
                 else if (llGetSubString(name,0,8) == "blacklist") {
                     if ((llGetSubString(name,-2,-1) == "ID") || (llGetSubString(name,-4,-1) == "Name")) {
@@ -381,26 +386,32 @@ default {
                     }
                     else {
                         lmSendConfig("blacklistMode", (string)1);
-                        lmInternalCommand("addRemBlacklist", value, llGetKey());    // New form with content accepted
+                        lmInternalCommand("addRemBlacklist", value, DATABASE_ID);   // New form with content accepted
                     }
                 }
-                else if (name == "MistressList") lmSendConfig(name, value);
+                else if ((name == "controllers") || (name == "MistressList")) {
+                    if (llListFindList(storedConfigs,["controllersCount"]) == -1) {
+                        lmSendConfig(name, value);                                  // This list variable has had occasional issues with durability and is rather tricky to validate the new type
+                                                                                    // controller records are available in the database for this user so we will use those to rebuild the internal
+                                                                                    // controllers from a clean slate instead.
+                    }
+                }
                 else if (name == "blacklist") lmSendConfig(name, value);
                 else {
                     if (name == "helpless") {
-                        lmSendConfig("tpLureOnly", value);                          // T is after H so this one convert to new form and let new override if needed
+                        lmDBdata("tpLureOnly", value);                              // T is after H so this one convert to new form and let new override if needed
                         value = RECORD_DELETE;                                      // Mark old record for delete
                     }
                     else if (name == "canDressSelf") canDressSelf = (integer)value; // Set the temp variable so that we do not use canWear to set this later
                     else if (name == "canWear") {                                   // W however is after D making this one trickier thus the temp canDressSelf = -1 var
                         if (canDressSelf == -1) {
-                            lmSendConfig("canDressSelf", value);                    // we do not want to use the old one to set it unless it is still unset.
+                            lmDBdata("canDressSelf", value);                        // we do not want to use the old one to set it unless it is still unset.
                             value = RECORD_DELETE;                                  // Mark old record for delete
                         }
                         else return;                                                // Otherwise we just ignore the depreciated one.
                     }
                     
-                    lmSendConfig(name, value);
+                    lmDBdata(name, value);
                     integer i = llListFindList(storedConfigs, [name]);
                     if (i == -1) storedConfigs += [ name, value ];
                 

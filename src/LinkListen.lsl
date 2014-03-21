@@ -10,7 +10,14 @@
 
 #include "include/GlobalDefines.lsl"
 
+key keyID               =   NULL_KEY;
+key carrierID           =   NULL_KEY;
+
+string carrierName;
+
 integer msgcount;
+
+list controllers;
 
 // Selector format
 // 1st Param, lowest link code value to match inclusive.
@@ -21,13 +28,31 @@ integer msgcount;
 // Selectors are sorted at script init by the first parameter knowing this with the fairly sparse
 // allocation of link numbers we have means that 
 list selectors = [
-     300, 301, "", ""
+     100, 100, "", ""
 ];
+
+string identifySrc(key sourceID) {
+    integer i;
+         if (sourceID == dollID)                                            return "Dolly";
+    else if (sourceID == keyID)                                             return "Internal";
+    else if (sourceID == DATABASE_ID)                                       return "RemoteMySQL";
+    else if (cdIsBuiltinController(sourceID))                               return "Builtin:"       + llGetDisplayName(sourceID);
+    else if ((i=llListFindList(controllers,[(string)sourceID])) != -1)     return "Controller:"    + llList2String(controllers, i+1);
+    else if (sourceID == carrierID)                                         return "Carrier:"       + carrierName;
+    else if (llGetOwnerKey(sourceID) == sourceID)                           return "PublicUser:"    + llGetDisplayName(sourceID);
+    else if (sourceID == NULL_KEY)                                          return "MissingID";
+    else                                                                    return "UnknownType";
+}
 
 default
 {
     state_entry() {
+        dollID = llGetOwner();
         selectors = llListSort(selectors, 4, 1);
+    }
+    
+    on_rez(integer start) {
+        keyID = llGetKey();
     }
     
     link_message(integer sender, integer i, string data, key id) {
@@ -48,16 +73,14 @@ default
                 if ((code <= llList2Integer(selectors, i*4+1)) &&
                     ((llList2String(selectors, i*4+2) == "") || (llSubStringIndex(script, llList2String(selectors, i*4+2)) != -1)) &&
                     ((llList2String(selectors, i*4+3) == "") || (llSubStringIndex(data, llList2String(selectors, i*4+3)) != -1))) {
-                        if (id != NULL_KEY) data +=  "; " + (string)id;
-                        output = (string)code + "; " + script + "; " + llList2CSV(split);
+                        output = (string)code + "; " + script + "; " + llList2CSV(split) +  " ~ {" + identifySrc(id) + "}";
                         ok = 1;
                 }
                 i++;
             }
         }
         else {
-            if (id != NULL_KEY) data +=  "; " + (string)id;
-            output = llList2String(split,0) + "; " + llList2CSV(llDeleteSubList(split,0,0));
+            output = llList2String(split,0) + "; " + llList2CSV(llDeleteSubList(split,0,0)) +  " ~ {" + identifySrc(id) + "}";
         }
         
         if (code == 135) {
@@ -69,7 +92,10 @@ default
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
             
-            if (name == "debugLevel") debugLevel = (integer)value;
+                 if (name == "debugLevel")          debugLevel = (integer)value;
+            else if (name == "controllers")      controllers = llDeleteSubList(split,0,0);
+            else if (name == "carrierID")            carrierID = (key)value;
+            else if (name == "carrierName")        carrierName = value;
         }
         
         if (output != "") llOwnerSay("[" + llGetSubString((string)llGetTime(),0,-2) + "] <#" + (string)(++msgcount) + "> " + output);

@@ -124,7 +124,6 @@ integer lastPostTimestamp;
 integer lastSendTimestamp;
 float collapseTime;
 list windTimes        = [ 30 ];
-list blacklist;
 
 string keyAnimation;
 string dollName;
@@ -518,7 +517,6 @@ default {
             else if (name == "dollType")                     dollType = value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
-            else if (name == "blacklist")                   blacklist = split;
             else if (name == "dialogChannel")           dialogChannel = (integer)value;
             else if (name == "debugLevel")                 debugLevel = (integer)value;
             if ((name == "wearLockExpire") || (name == "poseExpire") || (name == "timeToJamRepair") || (name == "carryExpire") || (name == "collapseTime")) {
@@ -708,18 +706,9 @@ default {
             if (demoMode) effectiveLimit = DEMO_LIMIT;
             if (timeLeftOnKey > effectiveLimit) timeLeftOnKey = effectiveLimit;
 
-            // Deny access to the menus when the command was recieved from blacklisted avatar
-            if (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND) {
-                lmSendToAgent("You are not permitted to access this key.", id);
-                return;
-            }
-
             float windLimit = effectiveLimit - timeLeftOnKey;
 
-            if (llGetListLength(windTimes) == 0) {
-                windTimes = [30];
-                lmSendConfig("windTimes",llList2Json(JSON_ARRAY,windTimes));
-            }
+            if (cdNullList(windTimes)) lmSendConfig("windTimes",llList2Json(JSON_ARRAY,(windTimes = [30])));
 
             if (id == NULL_KEY) return;
 
@@ -832,8 +821,6 @@ default {
 
                 if ((windamount + 60.0) > windLimit) { windamount = windLimit; }
 
-                if (collapsed == NO_TIME) collapse(NOT_COLLAPSED);
-
                 if (windLimit < 60.0) {
                     lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey += windLimit));
                     llDialog(id, "Dolly is already fully wound.", [MAIN], dialogChannel);
@@ -867,11 +854,11 @@ default {
                         lmSendConfig("winderID", (string)(winderID = id));
                     }
 
-                    // This shouldn't happen - but will fix if it does
-                    if ((collapsed == NO_TIME) && (timeLeftOnKey > 0.0)) {
-                        // debug message: "Dolly collapsed with time on Key"
-                        collapse(NOT_COLLAPSED);
-                    }
+                    // Uncollapse any non type 2 collapse that may be active after first confirming that we do definately have positive time left now.
+                    // This test calls the uncollapse function without reqard to the collapse state reported by this script and thus it can and will by
+                    // design be triggered when the doll is not collapsed at all.  This suffices both to uncollapse a doll when wound but furher serves
+                    // to make any valid wind (attempt) restoratative for an out of sync or false collapse state whether in this script or any other.
+                    if ((timeLeftOnKey > 0.0) && (collapsed != JAMMED)) collapse(NOT_COLLAPSED);
                 }
             }
             else if (choice == "Max Time...") {

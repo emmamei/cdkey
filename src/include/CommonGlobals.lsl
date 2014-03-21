@@ -8,12 +8,12 @@ key carrierID               = NULL_KEY;
 key dresserID               = NULL_KEY;
 key dollID                  = NULL_KEY;
 key poserID                 = NULL_KEY;
-key uniqueID		    = NULL_KEY;
+key uniqueID		    	= NULL_KEY;
 key keyAnimationID          = NULL_KEY;
 
 list BuiltinControllers     = BUILTIN_CONTROLLERS;
-list MistressList           = [];
-list blacklist		    = [];
+list controllers            = [];
+list blacklist		    	= [];
 
 string carrierName;
 string dresserName;

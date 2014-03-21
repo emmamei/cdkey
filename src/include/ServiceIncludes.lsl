@@ -16,7 +16,7 @@ key requestAddKey;
 
 list unresolvedMistressNames;
 list unresolvedBlacklistNames;
-list MistressList;
+list controllers;
 list blacklist;
 list checkNames;
 #define HTTP_HEADERS HTTP_CUSTOM_HEADER, "X-SilkyTech-Product", PACKAGE_NAME, HTTP_CUSTOM_HEADER, "X-SilkyTech-Product-Version", (string)PACKAGE_VERNUM, HTTP_CUSTOM_HEADER, "X-SilkyTech-Offline", (string)offlineMode
