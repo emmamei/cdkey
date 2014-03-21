@@ -373,7 +373,6 @@ default {
                         lmSendConfig(name, value = RECORD_DELETE);                  // New form but no content deleted
                     }
                     else {
-                        llOwnerSay(value);
                         lmInternalCommand("addMistress", value, DATABASE_ID);       // New form with content accepted
                     }
                 }
