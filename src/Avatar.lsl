@@ -471,6 +471,7 @@ default {
                 else userBaseRLVcmd += "," +value;
             }
             else if (name == "keyAnimation") {
+                string oldanim = keyAnimation;
                 keyAnimation = value;
                 if (cdCollapsedAnim() && ((dollState & DOLL_COLLAPSED) == 0)) {
                     lmSendConfig("keyAnimation", "");
@@ -480,8 +481,12 @@ default {
                 cdSetDollStateIf(DOLL_POSED, ((dollState & (DOLL_COLLAPSED | DOLL_ANIMATED)) == DOLL_ANIMATED));
                 cdSetDollStateIf(DOLL_POSER_IS_SELF, (((dollState & DOLL_POSED) == 1) && (poserID == dollID)));
 
-                if (keyAnimation == "") clearAnim = 1;
-                else lmSendConfig("keyAnimationID", (string)(keyAnimationID = animStart(keyAnimation)));
+                if          cdNoAnim()                                          clearAnim = 1;
+                else if     ((oldanim != "") && (keyAnimation != oldanim)) {    // Issue #139 Moving directly from one animation to another make certain keyAnimationID does not holdover to the new animation.
+                                                                                keyAnimationID = NULL_KEY;
+                                                                                lmSendConfig("keyAnimationID",      (string)(keyAnimationID = animStart(keyAnimation)));
+                }
+                else                                                            lmSendConfig("keyAnimationID",      (string)(keyAnimationID = animStart(keyAnimation)));
             }
             else if (name == "poserID") {
                 poserID = (key)value;
