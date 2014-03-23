@@ -11,6 +11,8 @@
 #define NOT_FOUND -1
 #define STRING_END -1
 #define cdMenuInject(a,b,c) lmMenuReply(a,b,c)
+#define NO_FILTER ""
+#define cdListenAll(a) llListen(a, NO_FILTER, NO_FILTER, NO_FILTER);
 
 #define TESTING
 // FIXME: Depends on a variable s
@@ -58,8 +60,8 @@ default
         
         // Beware listener is now available to users other than the doll
         // make sure to take this into account within all handlers.
-        chatHandle = llListen(chatChannel, "", "", "");
-        broadcastHandle = llListen(broadcastOn, "", "", "");
+        chatHandle = cdListenAll(chatChannel);
+        broadcastHandle = cdListenAll(broadcastOn);
         
         cdInitializeSeq();
     }
@@ -101,64 +103,73 @@ default
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
             split = llDeleteSubList(split, 0, 0);
+            string c = cdGetFirstChar(name); // for speedup
             
             if (value == RECORD_DELETE) {
                 value = "";
                 split = [];
             }
 
-                 if (name == "afk")                               afk = (integer)value;
-            else if (name == "listID")                         listID = (key)value;
-            else if (name == "blacklistMode")           blacklistMode = (integer)value;
-            else if (name == "autoAFK")                       autoAFK = (integer)value;
-            else if (name == "autoTP")                         autoTP = (integer)value;
-            else if (name == "canAFK")                         canAFK = (integer)value;
-            else if (name == "canCarry")                     canCarry = (integer)value;
-            else if (name == "canDress")                     canDress = (integer)value;
-            else if (name == "canPose")                       canPose = (integer)value;
-            else if (name == "canDressSelf")             canDressSelf = (integer)value;
-            else if (name == "poseSilence")               poseSilence = (integer)value;
-            else if (name == "canFly")                         canFly = (integer)value;
-            else if (name == "canSit")                         canSit = (integer)value;
-            else if (name == "canStand")                     canStand = (integer)value;
-            else if (name == "canRepeat")                   canRepeat = (integer)value;
-            else if (name == "configured")                 configured = (integer)value;
-            else if (name == "detachable")                 detachable = (integer)value;
-            else if (name == "tpLureOnly")                 tpLureOnly = (integer)value;
-            else if (name == "pleasureDoll")             pleasureDoll = (integer)value;
-            else if (name == "isVisible")                     visible = (integer)value;
-            else if (name == "busyIsAway")                 busyIsAway = (integer)value;
-            else if (name == "quiet")                           quiet = (integer)value;
-            else if (name == "offlineMode")               offlineMode = (integer)value;
-            else if (name == "wearLockExpire")         wearLockExpire = (float)value;
-            else if (name == "windRate")                     windRate = (float)value;
-            else if (name == "displayWindRate")       displayWindRate = (float)value;
-            else if (name == "keyLimit")                     keyLimit = (float)value;
-            else if (name == "collapsed")                   collapsed = (integer)value;
+                if (name == "timeLeftOnKey")            timeLeftOnKey = (float)value;
             else if (name == "collapseTime")             collapseTime = (float)value;
-            else if (name == "pronounHerDoll")         pronounHerDoll = value;
-            else if (name == "keyAnimation")             keyAnimation = value;
-            else if (name == "dollType")                     dollType = value;
-            else if (name == "dollGender")                 dollGender = value;
-            else if (name == "poserID")                       poserID = (key)value;
-            else if (name == "poserName")                   poserName = value;
+            else if (name == "collapsed")                   collapsed = (integer)value;
 #ifdef DEVELOPER_MODE
-            else if (name == "debugLevel")                 debugLevel = (integer)value;
             else if (name == "timeReporting")           timeReporting = (integer)value;
 #endif
+
+            else if (name == "afk")                               afk = (integer)value;
+            else if (name == "autoAFK")                       autoAFK = (integer)value;
+            else if (name == "autoTP")                         autoTP = (integer)value;
+            else if (name == "blacklistMode")           blacklistMode = (integer)value;
             else if (name == "blacklist")                   blacklist = llListSort(split, 2, 1);
-            else if (name == "controllers")             controllers = llListSort(split, 2, 1);
-            else if (name == "windTimes")                   windTimes = llJson2List(value);
-            else if (name == "chatChannel") {
-                chatChannel = (integer)value;
-                dollID = llGetOwner();
-                llListenRemove(chatHandle);
-                chatHandle = llListen(chatChannel, "", dollID, "");
+            else if (name == "busyIsAway")                 busyIsAway = (integer)value;
+            else if (c == "c") {
+                     if (name == "canAFK")                         canAFK = (integer)value;
+                else if (name == "canCarry")                     canCarry = (integer)value;
+                else if (name == "canDress")                     canDress = (integer)value;
+                else if (name == "canPose")                       canPose = (integer)value;
+                else if (name == "canDressSelf")             canDressSelf = (integer)value;
+                else if (name == "canFly")                         canFly = (integer)value;
+                else if (name == "canSit")                         canSit = (integer)value;
+                else if (name == "canStand")                     canStand = (integer)value;
+                else if (name == "canRepeat")                   canRepeat = (integer)value;
+                else if (name == "configured")                 configured = (integer)value;
+                else if (name == "controllers")               controllers = llListSort(split, 2, 1);
+                else if (name == "chatChannel") {
+                    chatChannel = (integer)value;
+                    dollID = llGetOwner();
+                    llListenRemove(chatHandle);
+                    chatHandle = llListen(chatChannel, "", dollID, "");
+                }
             }
-            else if ((name == "timeLeftOnKey") || (name == "collapsed")) {
-                if (name == "timeLeftOnKey")            timeLeftOnKey = (float)value;
-                if (name == "collapsed")                    collapsed = (integer)value;
+
+            else if (c == "d") {
+                     if (name == "detachable")                 detachable = (integer)value;
+                else if (name == "displayWindRate")       displayWindRate = (float)value;
+                else if (name == "dollType")                     dollType = value;
+                else if (name == "dollGender")                 dollGender = value;
+                else if (name == "demoMode") {
+                    demoMode = (integer)value;
+                    if (!demoMode) currentLimit = keyLimit;
+                    else currentLimit = DEMO_LIMIT;
+                }
+#ifdef DEVELOPER_MODE
+                else if (name == "debugLevel")                 debugLevel = (integer)value;
+#endif
             }
+            else if (name == "isVisible")                     visible = (integer)value;
+            else if (name == "listID")                         listID = (key)value;
+            else if (c == "p") {
+                     if (name == "poseSilence")               poseSilence = (integer)value;
+                else if (name == "pleasureDoll")             pleasureDoll = (integer)value;
+                else if (name == "poserID")                       poserID = (key)value;
+                else if (name == "poserName")                   poserName = value;
+                else if (name == "pronounHerDoll")         pronounHerDoll = value;
+            }
+            else if (name == "quiet")                           quiet = (integer)value;
+            else if (name == "offlineMode")               offlineMode = (integer)value;
+            else if (name == "keyAnimation")             keyAnimation = value;
+            else if (name == "keyLimit")                     keyLimit = (float)value;
             else if (name == "keyHandler") {
                 keyHandler = (key)value;
             }
@@ -166,11 +177,10 @@ default
                 keyLimit = (float)value;
                 if (!demoMode) currentLimit = keyLimit;
             }
-            else if (name == "demoMode") {
-                demoMode = (integer)value;
-                if (!demoMode) currentLimit = keyLimit;
-                else currentLimit = DEMO_LIMIT;
-            }
+            else if (name == "tpLureOnly")                 tpLureOnly = (integer)value;
+            else if (name == "windTimes")                   windTimes = llJson2List(value);
+            else if (name == "wearLockExpire")         wearLockExpire = (float)value;
+            else if (name == "windRate")                     windRate = (float)value;
         }
         
         else if (code == 305) {
@@ -179,6 +189,9 @@ default
             split = llDeleteSubList(split, 0, 0);
             
             integer i;
+
+#define CONTROLLER_LIST 1
+#define BLACKLIST_LIST 2
 
             if ((cmd == "addMistress") || (cmd == "addRemBlacklist") || (cmd == "remMistress")) {
                 string uuid = llList2String(split, 0);
@@ -192,13 +205,13 @@ default
                 // the event that a list does become corrupted also.
                 
                 if (llGetSubString(cmd, -8, -1) == "Mistress") {
-                    type = 1; typeString = "controller";
+                    type = CONTROLLER_LIST; typeString = "controller";
                     tmpList = controllers; barList = blacklist;
                     if (llGetSubString(cmd, 0, 2) == "add") mode = 1;
                     else mode = -1;
                 }
                 else {
-                    type = 2; typeString = "blacklist";
+                    type = BLACKLIST_LIST; typeString = "blacklist";
                     tmpList = blacklist; barList = controllers;
                     mode = blacklistMode;
                     blacklistMode = 0;
@@ -207,11 +220,11 @@ default
                 // First check, test suitability of name for adding send message if not acceptable
                 if (llListFindList(barList, [ uuid ]) != -1) {
                     string msg = name + " is listed on your ";
-                    if (type == 1) msg += "blacklist you must first remove them before adding as a ";
+                    if (type == CONTROLLER_LIST) msg += "blacklist you must first remove them before adding as a ";
                     else msg += "controller list they must first remove themselves before you can add them to the ";
                     msg += typeString + ".";
                     
-                    if (type == 1) {
+                    if (type == CONTROLLER_LIST) {
                         msg += "\nTo do so type /" + (string)chatChannel + "unblacklist " + name;
                         blockedControlName = name;
                         blockedControlUUID = uuid;
@@ -233,7 +246,7 @@ default
                     integer load;
                     if (id == DATABASE_ID) load = TRUE;
                     if (load) llOwnerSay("Restoring " + name + " as " + typeString + " from database settings.");
-                    if (i == -1) {
+                    if (i == NOT_FOUND) {
                         // Handle adding
                         if (!load) lmSendToAgentPlusDoll("Adding " + name + " as " + typeString, id);
                         tmpList += [ uuid, name ];
@@ -244,23 +257,23 @@ default
                     else if (!load) lmSendToAgentPlusDoll(name + " is already found listed as " + typeString, id);
                 }
                 else {
-                    if ((i != -1) || (j != -1)) {
+                    if ((i != NOT_FOUND) || (j != NOT_FOUND)) {
                         // This should be a simple uuid, name strided list but having seend SL corrupt others
                         // in various ways check uuid & name independently and make certain that neither part 
                         // of an entry for this user can remain after being ordered removed!
                         lmSendToAgentPlusDoll("Removing " + name + " from list as " + typeString + ".", id);
-                        if (i != -1) {
+                        if (i != NOT_FOUND) {
                             tmpList = llDeleteSubList(tmpList, i, i);
-                            if ((j != -1) && (j > i)) j--; // The previous operation may shift one position update if applicable
+                            if ((j != NOT_FOUND) && (j > i)) j--; // The previous operation may shift one position update if applicable
                         }
-                        if (j != -1) llDeleteSubList(tmpList, j, j);
+                        if (j != NOT_FOUND) llDeleteSubList(tmpList, j, j);
                     }
                     else {
                         lmSendToAgentPlusDoll(name + " is not listed as " + typeString, id);
                     }
                 }
                 
-                if (type == 1) {
+                if (type == CONTROLLER_LIST) {
                     if (controllers != tmpList) {
                         controllers = tmpList;
                         lmSendConfig("controllers", llDumpList2String(controllers, "|") );
@@ -273,7 +286,7 @@ default
                     }
                 }
                 
-                if ((type == 2) && (mode == -1) && (name == blockedControlName)) {
+                if ((type == BLACKLIST_LIST) && (mode == -1) && (name == blockedControlName)) {
                     lmInternalCommand("addMistress", uuid + "|" + name, dollID);
                 }
             }
@@ -313,17 +326,17 @@ default
 
         // Text commands
         if (channel == chatChannel) {
-            string prefix;
+            string prefix = cdGetFirstChar(msg);
             
             // Before we proceed first verfify the command is for us.
-            if (llGetSubString(msg,0,0) == "*") {
+            if (prefix == "*") {
                 // *prefix is global, strip from choice and continue
-                prefix = llGetSubString(msg,0,0);
+                //prefix = llGetSubString(msg,0,0);
                 msg = llDeleteSubString(msg,0,0);
             }
-            else if ((llGetSubString(msg,0,0) == "#") && !cdIsDoll(id)) {
+            else if ((prefix == "#") && !cdIsDoll(id)) {
                 // #prefix is an all others prefix like with OC etc
-                prefix = llGetSubString(msg,0,0);
+                //prefix = llGetSubString(msg,0,0);
                 msg = llDeleteSubString(msg,0,0);
             }
             else if (llToLower(llGetSubString(msg,0,1)) == chatPrefix) {
@@ -337,21 +350,22 @@ default
             
             debugSay(2, "CHAT-DEBUG", "On #" + (string)channel + " secondlife:///app/agent/" + (string)id + "/about: pre:" + prefix + "(ok) cmd:" + msg + " id:" + (string)id);
             
-            // This is a simpler proceedure with less tests and fiddling with the string
-            // Simply this method works favouring the match that requires the most restrictive accesss permission the requesting user possesses when one is not set explitly.
-            // When one is specified explicitly including it's prefix then only the animation with the matching prefix is accepted assuming it exists and the user has permissions.
-            string poseChoice = msg; integer poseSet = 1;
-            string firstChar = cdGetFirstChar(poseChoice);
-            if ((firstChar != "!") && (firstChar != ".")) firstChar == "";
-            else                                          poseChoice = llDeleteSubString(poseChoice,0,0);
-            
-                 if (cdIsDoll(id) && (firstChar != ".") && (llGetInventoryType("!"+poseChoice) == 20))                                      cdMenuInject("!"+poseChoice, name, id);
-            else if ((cdIsDoll(id) || cdIsController(id)) && (firstChar != "!") && (llGetInventoryType("."+firstChar+poseChoice) == 20))    cdMenuInject("."+poseChoice, name, id);
-            else if (llGetInventoryType(poseChoice) == 20)                                                                                  cdMenuInject(poseChoice, name, id);
-            else if (firstChar == "") poseSet = 0;          // In the event that firstChar was one of the prefixes and we didn't match we still know it is not a command
-            
-            // If we found a pose then the rest of the command handlers are a waste of processing
-            if (poseSet) return;    // Return we are finished here
+            // Is the "msg" an animation?
+            if (llGetInventoryType(msg)== 20) {
+                string firstChar = cdGetFirstChar(msg);
+
+                if (firstChar == ".") {
+                    if (cdIsDoll(id)) { cdMenuInject(msg, name, id); }
+                }
+                else if (firstChar == "!") {
+                    if (cdIsDoll(id) || cdIsController(id)) { cdMenuInject(msg, name, id); }
+                }
+                else {
+                    cdMenuInject(msg, name, id);
+                }
+
+                return;
+            }
 
 // The naming of this define in its current form is confusing parameters exists
 // when there is a space not when there is no space, inverting the sense of this
@@ -361,6 +375,7 @@ default
             // Choice is a command, not a pose
             integer space = llSubStringIndex(msg, " ");
             string choice = msg;
+
             if (!PARAMETERS_EXIST) { // Commands without parameters handled first
                 string choice = llToLower(choice);
                 if (cdIsDoll(id) || cdIsController(id)) {
@@ -392,12 +407,15 @@ default
     .dumpstate ...... dump all key state to chat history
     .build .......... list build configurations
     .listhelp ....... list controller/blacklist commands
-    .recoveryhelp ... some commands that may rescue a key having issues";
-                    lmSendToAgent(help, id);
-
+    .recoveryhelp ... some commands that may rescue a key having issues"
 #ifdef DEVELOPER_MODE
-                    lmSendToAgent("    devhelp ........ list of developer commands", id);
+    +
+"    .devhelp ........ list of developer commands"
+#endif
+    ;
+                    lmSendToAgent(help, id);
                     }
+#ifdef DEVELOPER_MODE
                     else if (choice == "devhelp") {
                     string help = "Developer Commands:
     .timereporting .. periodic reporting of script time usage
@@ -405,8 +423,8 @@ default
     .inject ......... inject an aribtary link message the format is
                      inte#str#key with all but the first optional.";
                      lmSendToAgent(help, id);
-#endif
                     }
+#endif
 
                     else if (choice == "listhelp") {
                     string help = "Access Commands:
@@ -648,12 +666,24 @@ default
                         float t2 = currentLimit / (SEC_TO_MIN * displayWindRate);
                         float p = t1 * 100.0 / t2;
     
-                        string s = "Time: " + (string)llRound(t1) + "/" +
+                        string msg = "Time: " + (string)llRound(t1) + "/" +
                                     (string)llRound(t2) + " min (" + formatFloat(p, 2) + "% capacity)";
-                        if (afk) {
-                            s += " (current wind rate " + formatFloat(displayWindRate, 1) + "x)";
+
+                        if (windRate == 0.0) msg = "and key is currently stopped.";
+                        else {
+                            msg = " unwinding at a ";
+    
+                            if (windRate == 1.0) msg += " normal rate.";
+                            else {
+                                if (windRate < 1.0) msg += " slowed rate of ";
+                                else if (windRate > 1.0) msg += " accelerated rate of ";
+    
+                                msg += " of " + formatFloat(windRate, 1) + "x.";
+                            }
+    
                         }
-                        lmSendToAgent(s, id);
+    
+                        lmSendToAgent(msg, id);
                     }
                     else if (choice == "stats") {
                         debugSay(6, "DEBUG", "timeLeftOnKey = " + (string)timeLeftOnKey);
