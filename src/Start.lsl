@@ -226,7 +226,6 @@ setGender(string gender) {
         lmSendConfig("dollGender",     (dollGender     = "Male"));
         lmSendConfig("pronounHerDoll", (pronounHerDoll = "His"));
         lmSendConfig("pronounSheDoll", (pronounSheDoll = "He"));
-        return;
     } else {
         if (gender == "sissy") {
             lmSendConfig("dollGender", (dollGender = "Sissy"));
@@ -258,7 +257,7 @@ initConfiguration() {
 
 doneConfiguration(integer read) {
     llOwnerSay("starting doneConfiguration..."); // DEBUG:
-    llOwnerSay("read = " + (string)read); // DEBUG:
+
     if (startup == 1 && read) {
 #ifdef DEVELOPER_MODE
         sendMsg(dollID, "Preferences read in " + formatFloat(llGetTime() - ncStart, 2) + "s");
@@ -269,13 +268,10 @@ doneConfiguration(integer read) {
         llResetScript();
     }
     reset = 0;
-    llOwnerSay("marking init state 102."); // DEBUG:
     lmInitState(102);
-    llOwnerSay("marking init state 105."); // DEBUG:
     lmInitState(105);
     startup = 2;
     
-    llOwnerSay("marking initialization completed."); // DEBUG:
     initializationCompleted();
     llOwnerSay("doneConfiguration completed."); // DEBUG:
 }
@@ -306,15 +302,13 @@ initializationCompleted() {
 
     startup = 0;
     
-    llOwnerSay("marking init state 110."); // DEBUG:
     lmInitState(110);
 
-    llOwnerSay("getting appearance NC."); // DEBUG:
     if (llGetInventoryType(APPEARANCE_NC) == INVENTORY_NOTECARD) {
         ncLine = 0;
         ncRequestAppearance = llGetNotecardLine(APPEARANCE_NC, ncLine++);
     }
-    llOwnerSay("set Timer (10)."); // DEBUG:
+
     llSetTimerEvent(10.0);
 }
 
