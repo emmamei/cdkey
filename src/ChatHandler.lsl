@@ -669,14 +669,14 @@ default
                         string msg = "Time: " + (string)llRound(t1) + "/" +
                                     (string)llRound(t2) + " min (" + formatFloat(p, 2) + "% capacity)";
 
-                        if (windRate == 0.0) msg = "and key is currently stopped.";
+                        if (windRate == 0.0) msg += " and key is currently stopped.";
                         else {
-                            msg = " unwinding at a ";
+                            msg += " unwinding at a ";
     
-                            if (windRate == 1.0) msg += " normal rate.";
+                            if (windRate == 1.0) msg += "normal rate.";
                             else {
-                                if (windRate < 1.0) msg += " slowed rate of ";
-                                else if (windRate > 1.0) msg += " accelerated rate of ";
+                                if (windRate < 1.0) msg += "slowed rate of ";
+                                else if (windRate > 1.0) msg += "accelerated rate of ";
     
                                 msg += " of " + formatFloat(windRate, 1) + "x.";
                             }
@@ -701,10 +701,10 @@ default
                         else {
                             msg = "Key is unwinding at a ";
     
-                            if (windRate == 1.0) msg += " normal rate.";
+                            if (windRate == 1.0) msg += "normal rate.";
                             else {
-                                if (windRate < 1.0) msg += " slowed rate of ";
-                                else if (windRate > 1.0) msg += " accelerated rate of ";
+                                if (windRate < 1.0) msg += "slowed rate of ";
+                                else if (windRate > 1.0) msg += "accelerated rate of ";
     
                                 msg += " of " + formatFloat(windRate, 1) + "x.";
                             }
