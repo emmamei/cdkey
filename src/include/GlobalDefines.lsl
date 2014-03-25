@@ -94,6 +94,12 @@ list BuiltinControllers = BUILTIN_CONTROLLERS;
 // The date of this code in this key, we should really look into a proper version numbering system sometime
 #define OPTION_DATE PACKAGE_VERSION
 
+#define STRING_END -1
+#define NOT_FOUND -1
+#define NO_FILTER ""
+#define YES 1
+#define NO 0
+
 // List definitions: makes things easier to comprehend
 
 // Note: ....P in names is a LISP convention: acts like a question mark
@@ -104,6 +110,12 @@ list BuiltinControllers = BUILTIN_CONTROLLERS;
 #define cdSplitArgs(a) llParseStringKeepNulls((a), [ "|" ], [])
 #define cdSplitString(a) llParseString2List(a, [ "," ], [])
 #define cdList2ListStrided(src,start,end,every) llList2ListStrided(llList2List(src, start, end), 0, -1, every)
+#define cdGetFirstChar(a) llGetSubString(a, 0, 0)
+#define cdButFirstChar(a) llGetSubString(a, 1, STRING_END)
+#define cdChat(a) llSay(0, a)
+#define cdStopTimer() llSetTimerEvent(0.0)
+#define cdListenAll(a) llListen(a, NO_FILTER, NO_FILTER, NO_FILTER)
+#define cdPause() llSleep(0.5)
 
 #define CHECK "✔"
 #define CROSS "✘"
