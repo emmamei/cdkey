@@ -92,7 +92,7 @@ string pronounHerDoll = "Her";
 string pronounSheDoll = "She";
 //string nameOverride;
 integer startup;
-integer initState = 104;
+//integer initState = 104;
 integer introLine;
 integer introLines;
 integer reset;
