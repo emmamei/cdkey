@@ -181,7 +181,7 @@ rlvRequest(string rlv, integer channel) {
 }
 
 listInventoryOn(string channel) {
-    integer level = 5 + ((startup != 0) * 2);
+    //integer level = 5 + ((startup != 0) * 2);
     doDebug(channel);
 
     if (outfitsFolder != "") {
@@ -236,22 +236,22 @@ changeComplete(integer success) {
 }
 
 doDebug(string src) {
-    integer level = 5;
-    if (startup != 0) level = 6;
+    //integer level = 5;
+    //if (startup != 0) level = 6;
 
     string exists = "not found";
     if (useTypeFolder) exists = "found";
 
-    debugSay(level, "DEBUG", ">  on " + src);
-    debugSay(level, "DEBUG", ">> outfitsFolder = " + outfitsFolder);
-    debugSay(level, "DEBUG", ">> clothingFolder = " + clothingFolder);
-    debugSay(level, "DEBUG", ">> typeFolder = " + typeFolder + " (" + exists + ")");
+    debugSay(5, "DEBUG", ">  on " + src);
+    debugSay(5, "DEBUG", ">> outfitsFolder = " + outfitsFolder);
+    debugSay(5, "DEBUG", ">> clothingFolder = " + clothingFolder);
+    debugSay(5, "DEBUG", ">> typeFolder = " + typeFolder + " (" + exists + ")");
 
     setActiveFolder();
 
-    debugSay(level, "DEBUG", ">> activeFolder = " + activeFolder);
-    debugSay(level, "DEBUG", ">> normalselfFolder = " + normalselfFolder);
-    debugSay(level, "DEBUG", ">> nudeFolder = " + nudeFolder);
+    debugSay(5, "DEBUG", ">> activeFolder = " + activeFolder);
+    debugSay(5, "DEBUG", ">> normalselfFolder = " + normalselfFolder);
+    debugSay(5, "DEBUG", ">> nudeFolder = " + nudeFolder);
 }
 
 string folderStatus() {
@@ -277,7 +277,7 @@ default {
     }
 
     on_rez(integer start) {
-        startup = 2;
+        ; //startup = 2;
     }
 
     timer() {
@@ -311,17 +311,19 @@ default {
         if (code == 102) {
             scaleMem();
         }
-        else if (code == 104) {
-            if (script != "Start") return;
-            startup = 1;
-        }
-        else if (code == 105) {
-            if (script != "Start") return;
-            startup = 2;
-        }
-        else if (code == 110) {
-            initState = 105;
-        }
+
+        // else if (code == 104) {
+        //     if (script != "Start") return;
+        //     startup = 1;
+        // }
+        // else if (code == 105) {
+        //     if (script != "Start") return;
+        //     startup = 2;
+        // }
+        // else if (code == 110) {
+        //     initState = 105;
+        // }
+
         else if (code == 135) {
             float delay = cdListFloatElement(split, 0);
             memReport(cdMyScriptName(),delay);
@@ -333,8 +335,10 @@ default {
             simRating = cdListElement(split, 0);
             integer cdOutfitRating = cdOutfitRating(newoutfitname);
             integer regionRating = cdRating2Integer(simRating);
+
             debugSay(3, "DEBUG", "Region rating " + llToLower(simRating) + " outfit " + newoutfitname + " cdOutfitRating: " + (string)cdOutfitRating +
                         " regionRating: " + (string)regionRating);
+
             if (RLVok) {
                 if (cdOutfitRating > regionRating) {
                     pushRandom = 1;
@@ -346,6 +350,7 @@ default {
         else if (code == 300) {
             string name = cdListElement(split, 0);
             string value = cdListElement(split, 1);
+            string c = cdFirstChar(name);
             
             if (value == RECORD_DELETE) {
                 value = "";
@@ -356,27 +361,36 @@ default {
                 dialogChannel = (integer)value;
                 rlvBaseChannel = dialogChannel ^ 0x80000000; // Xor with the sign bit forcing the positive channel needed by RLV spec.
             }
-            else if (name == "clothingFolder")            clothingFolder = value;
-            else if (name == "newoutfitname")              newoutfitname = value;
-            else if (name == "newoutfitfolder")          newoutfitfolder = value;
-            else if (name == "newoutfitpath")              newoutfitpath = value;
-            else if (name == "newoutfit")                      newoutfit = value;
-            else if (name == "oldoutfitfolder")          oldoutfitfolder = value;
-            else if (name == "oldoutfitpath")              oldoutfitpath = value;
-            else if (name == "oldoutfitname")              oldoutfitname = value;
-            else if (name == "oldoutfit")                      oldoutfit = value;
-            else if (name == "outfitsFolder")              outfitsFolder = value;
-            else if (name == "normalselfFolder")        normalselfFolder = value;
-            else if (name == "nudeFolder")                    nudeFolder = value;
+            else if (name == "afk")                                  afk = (integer)value;
+            else if (c == "c") {
+                     if (name == "canDressSelf")                canDressSelf = (integer)value;
+                else if (name == "collapsed")                      collapsed = (integer)value;
+                else if (name == "clothingFolder")            clothingFolder = value;
+            }
+
+#ifdef DEVELOPER_MODE
+            else if (name == "debugLevel")                        debugLevel = (integer)value;
+#endif
+            else if (c == "n") {
+                     if (name == "newoutfitname")              newoutfitname = value;
+                else if (name == "newoutfitfolder")          newoutfitfolder = value;
+                else if (name == "newoutfitpath")              newoutfitpath = value;
+                else if (name == "newoutfit")                      newoutfit = value;
+                else if (name == "normalselfFolder")        normalselfFolder = value;
+                else if (name == "nudeFolder")                    nudeFolder = value;
+            }
+
+            else if (c == "o") {
+                     if (name == "oldoutfitfolder")          oldoutfitfolder = value;
+                else if (name == "oldoutfitpath")              oldoutfitpath = value;
+                else if (name == "oldoutfitname")              oldoutfitname = value;
+                else if (name == "oldoutfit")                      oldoutfit = value;
+                else if (name == "outfitsFolder")              outfitsFolder = value;
+            }
+
             else if (name == "typeFolder")                    typeFolder = value;
             else if (name == "useTypeFolder")              useTypeFolder = (integer)value;
-            else if (name == "afk")                                  afk = (integer)value;
-            else if (name == "canDressSelf")                          canDressSelf = (integer)value;
-            else if (name == "collapsed")                      collapsed = (integer)value;
             else if (name == "wearLock")                        wearLock = (integer)value;
-#ifdef DEVELOPER_MODE
-            else if (name == "debugLevel")                    debugLevel = (integer)value;
-#endif
         }
         else if (code == 305) {
             string cmd = cdListElement(split, 0);
@@ -661,72 +675,6 @@ default {
         // 9000+
 
         llSetMemoryLimit(65536);
-
-        //----------------------------------------
-        // Channel: 2555
-        //
-        // Look for a usable outfits directory, or use the root: looks for
-        // "Outfits" or "outfits" - results are saved for use later to get
-        // at appropriate outfits in folders
-        //
-        /*if (channel == (rlvBaseChannel + 2555)) { // looks for one folder at start
-            llListenRemove(listen_id_2555);
-            list Outfits = llParseString2List(choice, [","], []); //what are brackets at end?
-            integer iStop = llGetListLength(Outfits);
-            string oldbigprefix = outfitsFolder;
-            string oldActiveFolder = activeFolder;
-            integer n;
-            string itemname;
-
-            debugSay(6, "DEBUG", "> RLV message type 2555");
-            debugSay(6, "DEBUG", ">> " + choice);
-
-            // Looks for a folder that may contain outfits - folders such
-            // as Dressup/, or outfits/, or Outfits/ ...
-            for (n = 0; n < iStop; n++) {
-                itemname = cdListElement(Outfits, n);
-
-                // If there are more than one of these folders in #RLV,
-                // then the last one read will be used...
-                if (llToLower(itemname) == bigsubfolder) {
-                    outfitsFolder = bigsubfolder;
-                }
-                else if (llGetSubString(llToLower(itemname), -7, -1) == "outfits" && llStringLength(itemname) <= 9) {
-                    outfitsFolder = itemname;
-                }
-
-                if (llGetSubString(itemname, 0, 0) == "*") {
-                    if (!isKnownTypeFolder(itemname)) typeFolders += itemname;
-                    debugSay(2, "DEBUG-DRESS", llList2CSV(typeFolders));
-                }
-
-                if (llToLower(itemname) == "~normalself") lmSendConfig("normalselfFolder", (normalselfFolder = "~normalself"));
-                if (llToLower(itemname) == "~nude") lmSendConfig("nudeFolder", (nudeFolder = "~nude"));
-            }
-
-            if (useTypeFolder) clothingFolder = typeFolder;
-            else clothingFolder = "";
-
-            if (outfitsFolder != oldbigprefix && outfitsFolder != "") {
-                lmSendConfig("outfitsFolder", outfitsFolder);
-                lmSendConfig("clothingFolder", clothingFolder);
-            }
-
-            if (outfitsFolder == "") {
-                llOwnerSay("WARNING: Unable to locate your outfits folder dress feature will not work.  Please see the manual for more information.");
-                if (dresserID != NULL_KEY) {
-                    msgx = "Dolly does not appear to have any outfits set up in her closet";
-                    llDialog(dresserID, msgx, ["OK", MAIN ], dialogChannel);
-                    return;
-                }
-            }
-
-            if (startup == 2) {
-                startup = 0;
-            }
-
-            doDebug("channel 2555");
-        }*/
 
         //----------------------------------------
         // Channel: 2665
