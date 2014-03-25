@@ -207,6 +207,7 @@ default {
     // not specific to owner
     state_entry() {
         dollID = llGetOwner();
+        dollName = llGetDisplayName(dollID);
         if (llGetAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
 
         cdInitializeSeq();
