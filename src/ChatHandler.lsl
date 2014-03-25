@@ -57,20 +57,20 @@ default
     state_entry() {
         dollID = llGetOwner();
         dollName = llGetDisplayName(dollID);
-        
+
         // Beware listener is now available to users other than the doll
         // make sure to take this into account within all handlers.
         chatHandle = cdListenAll(chatChannel);
         broadcastHandle = cdListenAll(broadcastOn);
-        
+
         cdInitializeSeq();
     }
-    
+
     //----------------------------------------
     // LINK MESSAGE
     //----------------------------------------
     link_message(integer source, integer i, string data, key id) {
-        
+
         // Parse link message header information
         list split        =     cdSplitArgs(data);
         string script     =     cdListElement(split, 0);
@@ -88,7 +88,7 @@ default
                 chatPrefix = llToLower(llGetSubString(key2Name,0,0) + llGetSubString(key2Name,i,i));
                 lmSendConfig("chatPrefix", chatPrefix);
             }
-            
+
             llOwnerSay("Setting up chat listener on channel " + (string)chatChannel + " with prefix " + llToUpper(chatPrefix));
         }
         else if (code == 135) {
@@ -96,21 +96,22 @@ default
             scaleMem();
             memReport(cdMyScriptName(),delay);
         }
-        
+
         cdConfigReport();
 
         else if (code == 300) {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
-            split = llDeleteSubList(split, 0, 0);
             string c = cdGetFirstChar(name); // for speedup
-            
+
             if (value == RECORD_DELETE) {
                 value = "";
                 split = [];
+            } else {
+                split = llDeleteSubList(split, 0, 0);
             }
 
-                if (name == "timeLeftOnKey")            timeLeftOnKey = (float)value;
+                 if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
             else if (name == "collapseTime")             collapseTime = (float)value;
             else if (name == "collapsed")                   collapsed = (integer)value;
 #ifdef DEVELOPER_MODE
@@ -123,87 +124,100 @@ default
             else if (name == "blacklistMode")           blacklistMode = (integer)value;
             else if (name == "blacklist")                   blacklist = llListSort(split, 2, 1);
             else if (name == "busyIsAway")                 busyIsAway = (integer)value;
+
+            // Shortcut: c
             else if (c == "c") {
-                     if (name == "canAFK")                         canAFK = (integer)value;
-                else if (name == "canCarry")                     canCarry = (integer)value;
-                else if (name == "canDress")                     canDress = (integer)value;
-                else if (name == "canPose")                       canPose = (integer)value;
-                else if (name == "canDressSelf")             canDressSelf = (integer)value;
-                else if (name == "canFly")                         canFly = (integer)value;
-                else if (name == "canSit")                         canSit = (integer)value;
-                else if (name == "canStand")                     canStand = (integer)value;
-                else if (name == "canRepeat")                   canRepeat = (integer)value;
-                else if (name == "configured")                 configured = (integer)value;
-                else if (name == "controllers")               controllers = llListSort(split, 2, 1);
+                     if (name == "canAFK")                     canAFK = (integer)value;
+                else if (name == "canCarry")                 canCarry = (integer)value;
+                else if (name == "canDress")                 canDress = (integer)value;
+                else if (name == "canPose")                   canPose = (integer)value;
+                else if (name == "canDressSelf")         canDressSelf = (integer)value;
+                else if (name == "canFly")                     canFly = (integer)value;
+                else if (name == "canSit")                     canSit = (integer)value;
+                else if (name == "canStand")                 canStand = (integer)value;
+                else if (name == "canRepeat")               canRepeat = (integer)value;
+                else if (name == "configured")             configured = (integer)value;
+                else if (name == "controllers")           controllers = llListSort(split, 2, 1);
                 else if (name == "chatChannel") {
                     chatChannel = (integer)value;
                     dollID = llGetOwner();
                     llListenRemove(chatHandle);
-                    chatHandle = llListen(chatChannel, "", dollID, "");
+                    chatHandle = llListen(chatChannel, NO_FILTER, dollID, NO_FILTER);
                 }
             }
 
+            // Shortcut: d
             else if (c == "d") {
-                     if (name == "detachable")                 detachable = (integer)value;
-                else if (name == "displayWindRate")       displayWindRate = (float)value;
-                else if (name == "dollType")                     dollType = value;
-                else if (name == "dollGender")                 dollGender = value;
+                     if (name == "detachable")             detachable = (integer)value;
+                else if (name == "displayWindRate")   displayWindRate = (float)value;
+                else if (name == "dollType")                 dollType = value;
+                else if (name == "dollGender")             dollGender = value;
                 else if (name == "demoMode") {
                     demoMode = (integer)value;
                     if (!demoMode) currentLimit = keyLimit;
                     else currentLimit = DEMO_LIMIT;
                 }
 #ifdef DEVELOPER_MODE
-                else if (name == "debugLevel")                 debugLevel = (integer)value;
+                else if (name == "debugLevel")             debugLevel = (integer)value;
 #endif
             }
             else if (name == "isVisible")                     visible = (integer)value;
             else if (name == "listID")                         listID = (key)value;
+
+            // Shortcut: p
             else if (c == "p") {
-                     if (name == "poseSilence")               poseSilence = (integer)value;
-                else if (name == "pleasureDoll")             pleasureDoll = (integer)value;
-                else if (name == "poserID")                       poserID = (key)value;
-                else if (name == "poserName")                   poserName = value;
-                else if (name == "pronounHerDoll")         pronounHerDoll = value;
+                     if (name == "poseSilence")           poseSilence = (integer)value;
+                else if (name == "pleasureDoll")         pleasureDoll = (integer)value;
+                else if (name == "poserID")                   poserID = (key)value;
+                else if (name == "poserName")               poserName = value;
+                else if (name == "pronounHerDoll")     pronounHerDoll = value;
             }
             else if (name == "quiet")                           quiet = (integer)value;
             else if (name == "offlineMode")               offlineMode = (integer)value;
-            else if (name == "keyAnimation")             keyAnimation = value;
-            else if (name == "keyLimit")                     keyLimit = (float)value;
-            else if (name == "keyHandler") {
-                keyHandler = (key)value;
-            }
-            else if (name == "keyLimit") {
-                keyLimit = (float)value;
-                if (!demoMode) currentLimit = keyLimit;
+
+            // Shortcut: k
+            else if (c == "k") {
+                     if (name == "keyAnimation")         keyAnimation = value;
+                else if (name == "keyLimit")                 keyLimit = (float)value;
+                else if (name == "keyHandler") {
+                    keyHandler = (key)value;
+                }
+                else if (name == "keyLimit") {
+                    keyLimit = (float)value;
+                    if (!demoMode) currentLimit = keyLimit;
+                }
             }
             else if (name == "tpLureOnly")                 tpLureOnly = (integer)value;
             else if (name == "windTimes")                   windTimes = llJson2List(value);
             else if (name == "wearLockExpire")         wearLockExpire = (float)value;
             else if (name == "windRate")                     windRate = (float)value;
         }
-        
+
         else if (code == 305) {
             string cmd = llList2String(split, 0);
 
             split = llDeleteSubList(split, 0, 0);
-            
+
             integer i;
 
 #define CONTROLLER_LIST 1
 #define BLACKLIST_LIST 2
 
-            if ((cmd == "addMistress") || (cmd == "addRemBlacklist") || (cmd == "remMistress")) {
+            if ((cmd == "addMistress") ||
+                (cmd == "addRemBlacklist") ||
+                (cmd == "remMistress")) {
+
                 string uuid = llList2String(split, 0);
                 string name = llList2String(split, 1);
                 integer type; string typeString; string barString; integer mode;
                 list tmpList; list barList; // Barlist represents the oppositite (blacklist or controller list) which bars adding.
+
                 if ((id != DATABASE_ID) && (script != "MenuHandler")) id = listID;
-                
+
                 // These lists become mangled sometimes for reasons unclear creating a new handler for both here
                 // with a more thorough validation process which should also be somewhat more fault tollerant in
                 // the event that a list does become corrupted also.
-                
+
                 if (llGetSubString(cmd, -8, -1) == "Mistress") {
                     type = CONTROLLER_LIST; typeString = "controller";
                     tmpList = controllers; barList = blacklist;
@@ -223,29 +237,32 @@ default
                     if (type == CONTROLLER_LIST) msg += "blacklist you must first remove them before adding as a ";
                     else msg += "controller list they must first remove themselves before you can add them to the ";
                     msg += typeString + ".";
-                    
+
                     if (type == CONTROLLER_LIST) {
                         msg += "\nTo do so type /" + (string)chatChannel + "unblacklist " + name;
                         blockedControlName = name;
                         blockedControlUUID = uuid;
                         blockedControlTime = llGetUnixTime();
                     }
-                    
+
                     lmSendToAgentPlusDoll(msg, id);
                     return;
                 }
-                
+
                 // First validation: Check for empty values there should be none so delete any that are found
                 while ( ( i = llListFindList(tmpList, [""]) ) != -1) tmpList = llDeleteSubList(tmpList,i,i);
-                
+
                 // Second validation: Test for the presence of the uuid in the existing list
                 i = llListFindList(tmpList, [ uuid ]);
                 integer j = llListFindList(tmpList, [ name ]);
 
                 if (mode == 1) {
                     integer load;
-                    if (id == DATABASE_ID) load = TRUE;
-                    if (load) llOwnerSay("Restoring " + name + " as " + typeString + " from database settings.");
+                    if (id == DATABASE_ID) {
+                        load = TRUE;
+                        llOwnerSay("Restoring " + name + " as " + typeString + " from database settings.");
+                    }
+
                     if (i == NOT_FOUND) {
                         // Handle adding
                         if (!load) lmSendToAgentPlusDoll("Adding " + name + " as " + typeString, id);
@@ -259,7 +276,7 @@ default
                 else {
                     if ((i != NOT_FOUND) || (j != NOT_FOUND)) {
                         // This should be a simple uuid, name strided list but having seend SL corrupt others
-                        // in various ways check uuid & name independently and make certain that neither part 
+                        // in various ways check uuid & name independently and make certain that neither part
                         // of an entry for this user can remain after being ordered removed!
                         lmSendToAgentPlusDoll("Removing " + name + " from list as " + typeString + ".", id);
                         if (i != NOT_FOUND) {
@@ -272,7 +289,7 @@ default
                         lmSendToAgentPlusDoll(name + " is not listed as " + typeString, id);
                     }
                 }
-                
+
                 if (type == CONTROLLER_LIST) {
                     if (controllers != tmpList) {
                         controllers = tmpList;
@@ -284,11 +301,12 @@ default
                         blacklist = tmpList;
                         lmSendConfig("blacklist", llDumpList2String(blacklist, "|") );
                     }
+
+                    if ((mode == -1) && (name == blockedControlName)) {
+                        lmInternalCommand("addMistress", uuid + "|" + name, dollID);
+                    }
                 }
-                
-                if ((type == BLACKLIST_LIST) && (mode == -1) && (name == blockedControlName)) {
-                    lmInternalCommand("addMistress", uuid + "|" + name, dollID);
-                }
+
             }
         }
         else if (code == 350) {
@@ -305,7 +323,7 @@ default
         //    name = filter by prim name
         //     key = filter by avatar key
         //  choice = filter by specific message
-        
+
         // This makes chat commands work correctly and be properly identified and tracked
         // back to an actual agent even if an intermediary is used. this prevents such as
         // blacklist circumvention and saves a more complex ifAvatar test being needed.
@@ -317,7 +335,7 @@ default
         //   for example (Makes a note to github that thought).
         id = llGetOwnerKey(id);
         name = llGetDisplayName(id);
-        
+
         // Deny access to the menus when the command was recieved from blacklisted avatar
         if (!cdIsDoll(id) && (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND)) {
             lmSendToAgent("You are not permitted to access this key.", id);
@@ -327,7 +345,7 @@ default
         // Text commands
         if (channel == chatChannel) {
             string prefix = cdGetFirstChar(msg);
-            
+
             // Before we proceed first verfify the command is for us.
             if (prefix == "*") {
                 // *prefix is global, strip from choice and continue
@@ -345,11 +363,11 @@ default
             }
             else if (cdIsDoll(id)) {
                 llOwnerSay("Use of chat commands without a prefix is depreciated and will be removed in a future release.");
-            } 
+            }
             else return; // For some other doll? noise? matters not it's someone elses problem.
-            
+
             debugSay(2, "CHAT-DEBUG", "On #" + (string)channel + " secondlife:///app/agent/" + (string)id + "/about: pre:" + prefix + "(ok) cmd:" + msg + " id:" + (string)id);
-            
+
             // Is the "msg" an animation?
             if (llGetInventoryType(msg)== 20) {
                 string firstChar = cdGetFirstChar(msg);
@@ -367,9 +385,6 @@ default
                 return;
             }
 
-// The naming of this define in its current form is confusing parameters exists
-// when there is a space not when there is no space, inverting the sense of this
-// to match with the wording.
 #define PARAMETERS_EXIST (space != NOT_FOUND)
 
             // Choice is a command, not a pose
@@ -378,6 +393,61 @@ default
 
             if (!PARAMETERS_EXIST) { // Commands without parameters handled first
                 string choice = llToLower(choice);
+
+                // Commands only for Doll
+                //    * build
+
+                if (cdIsDoll(id)) {
+                    if (choice == "build") {
+                        lmConfigReport();
+                    }
+                }
+
+                // Commands only for Doll or Built-in Controllers:
+                //    * refreshvars
+                //    * dumpstate
+                //    * httppreload
+                //    * rlvinit
+
+                if (cdIsDoll(id) || cdIsBuiltinController(id)) {
+                    // Do an internal resresh of all local variables from local db
+                    if (choice == "refreshvars") {
+                        cdLinkMessage(LINK_THIS, 0, 301, "", NULL_KEY);
+                    }
+                    // Request verbose full key state dump to chat
+                    else if (choice == "dumpstate") {
+                        cdLinkMessage(LINK_THIS, 0, 302, "", NULL_KEY);
+                    }
+                    // Service reinitialization and remote restore
+                    else if (choice == "httpreload") {
+                        if (!offlineMode) {
+                            llResetOtherScript("ServiceReceiver");
+                            llSleep(1.0);
+                            llResetOtherScript("ServiceRequester");
+                            llSleep(2.0);
+                        }
+                    }
+                    // Try a hard RLV reinitialzation
+                    else if (choice == "rlvinit") {
+                        llSetScriptState("StatusRLV", 1);
+                        llResetOtherScript("StatusRLV");
+                        llResetOtherScript("Avatar");
+                        llSleep(1.0);
+                        cdLinkMessage(LINK_THIS, 0, 301, "", NULL_KEY);
+                        llSleep(5.0);
+                        // Inject menu click
+                        cdMenuInject("*RLV On*",llGetDisplayName(dollID), id);
+                    }
+                }
+
+                // Commands only for Doll or Controllers
+                //   * detach
+                //   * help
+                //   * devhelp
+                //   * listhelp
+                //   * recoveryhelp
+                //   * xstats
+
                 if (cdIsDoll(id) || cdIsController(id)) {
                     // Normal user commands
                     if (choice == "detach") {
@@ -442,173 +512,44 @@ default
     .wakescript ..... followed by the name of a key script if the named script
                      is not running this will attempt to restart it.
     .refreshvars .... try to refresh all variables from the internal db
-    .httpreload ..... reinitialize the services scripts and fully reload all 
+    .httpreload ..... reinitialize the services scripts and fully reload all
                      data from the off world backup storage (OnlineMode only)
     .rlvinit ........ try RLV initialization again";
                     lmSendToAgent(help, id);
                     }
-                }
-                if (cdIsDoll(id) || cdIsBuiltinController(id)) {
-                    // Do an internal resresh of all local variables from local db
-                    if (choice == "refreshvars") {
-                        cdLinkMessage(LINK_THIS, 0, 301, "", NULL_KEY);
-                    }
-                    // Request verbose full key state dump to chat
-                    else if (choice == "dumpstate") {
-                        cdLinkMessage(LINK_THIS, 0, 302, "", NULL_KEY);
-                    }
-                    // Service reinitialization and remote restore
-                    else if (choice == "httpreload") {
-                        if (!offlineMode) {
-                            llResetOtherScript("ServiceReceiver");
-                            llSleep(1.0);
-                            llResetOtherScript("ServiceRequester");
-                            llSleep(2.0);
-                        }
-                    }
-                    // Try a hard RLV reinitialzation
-                    else if (choice == "rlvinit") {
-                        llSetScriptState("StatusRLV", 1);
-                        llResetOtherScript("StatusRLV");
-                        llResetOtherScript("Avatar");
-                        llSleep(1.0);
-                        cdLinkMessage(LINK_THIS, 0, 301, "", NULL_KEY);
-                        llSleep(5.0);
-                        // Inject menu click
-                        cdMenuInject("*RLV On*",llGetDisplayName(dollID), id);
-                    }
-                }
-                if (cdIsDoll(id) || cdIsController(id)) {
-                    // Demo: short time span
-                    if (choice == "demo") {
-                        // toggles demo mode
-                        lmSendConfig("demoMode", (string)(demoMode = !demoMode));
-    
-                        string s = "Key now ";
-                        if (demoMode) {
-                            if (timeLeftOnKey > DEMO_LIMIT) {
-                                lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = DEMO_LIMIT));
-                            }
-                            s += "in demo mode: " + (string)llRound(timeLeftOnKey / SEC_TO_MIN) + " of " + (string)llRound(DEMO_LIMIT / SEC_TO_MIN) + " minutes remaining.";
-                        }
-                        else {
-                            // FIXME: currentlimit not set until later; how do we tell user what it is?
-                            // They are not in demoMode after this so the limit is going to be restored to keyLimit
-                            // only execption would be if keyLimit was invalid however there will be a follow up message
-                            // from Main stating this and giving the new value so not something we need to do here.
-                            
-                            s += "running normally: " + (string)(timeLeftOnKey / SEC_TO_MIN) + " of " + (string)llFloor(keyLimit / SEC_TO_MIN) + " minutes remaining.";
-                        }
-                    }
-                    else if (choice == "listposes") {
-                        integer n = llGetInventoryNumber(INVENTORY_ANIMATION);
-                        integer isDoll = cdIsDoll(id); integer isController = cdIsController(id);
-    
-                        string thisPose; string thisPrefix;
-                        while(n) {
-                            thisPose = llGetInventoryName(INVENTORY_ANIMATION, --n);
-                            thisPrefix = cdGetFirstChar(thisPose);
-                            if ((thisPrefix != "!") && (thisPrefix != "."))     thisPrefix = "";
-    
-                            if (thisPose != ANIMATION_COLLAPSED) {
-                                if (isDoll ||
-                                    (isController && (thisPrefix == "!")) ||
-                                    (thisPrefix == "")) {
-                                        if (keyAnimation == thisPose) {
-                                            lmSendToAgent("\t*\t" + thisPose, id);
-                                        }
-                                        else {
-                                            lmSendToAgent("\t\t" + thisPose, id);
-                                        }
-                                }
-                                else if (keyAnimation == thisPose) {
-                                    lmSendToAgent("\t*\t{private}", id);
-                                }
-                            }
-                        }
-                    }
-                }
-                if (choice == "wind") {
-                    // inject a fake Menu click appropriate to the users access
-#ifndef TESTER_MODE
-                    if (cdIsDoll(id)) cdMenuInject("Wind Emg", dollName, dollID);
-                    else {
-#endif
-                        cdMenuInject("Wind", name, id);
-#ifndef TESTER_MODE
-					}
-#endif
-				}
-                else if (choice == "menu") cdMenuInject(MAIN, name, id);
-				else if (choice == "outfits") cdMenuInject("Outfits...", name, id);
-				else if (choice == "types") cdMenuInject("Types...", name, id);
-				else if (choice == "poses") cdMenuInject("Poses...", name, id);
-				else if (choice == "carry") cdMenuInject("Carry", name, id);
-				else if (choice == "uncarry") cdMenuInject("Uncarry", name, id);
-                else if (choice == "xstats") {
-                    string s = "Extended stats:\n";
-
-                    s += "Doll is a " + dollType + " Doll.\n";
-                    s += "AFK time factor: " + formatFloat(RATE_AFK, 1) + "x\n";
-                    s += "Configured wind times: " + llList2CSV(windTimes) + " mins\n";
-
-                    if (demoMode) {
-                        s += "Demo mode is enabled; times are: 1";
-                        if (llGetListLength(windTimes) > 1) s += ", 2";
-                        s += " mins.\n";
-                    }
-                    
-                    // Which is the upper bound on the wind times currently? Depeding on the values this could be keyLimit/2 or windLimit
-                    s += "Current wind menu: ";
-
-                    integer timeLeft = llFloor(timeLeftOnKey / 60.0);
-                    float windLimit = currentLimit - timeLeftOnKey;
-                    integer timesLimit = llFloor(windLimit / SEC_TO_MIN);
-                    integer time; list avail; integer i; integer n = llGetListLength(windTimes);
-                    integer maxTime = llRound(currentLimit / 60.0 / 2);
-
-                    while ((i <= n) && ( ( time = llList2Integer(windTimes, i++) ) < timesLimit) && (time <= maxTime)) {
-                        avail += ["Wind " + (string)time];
-                    } 
-                    if ((i <= n) && (timesLimit <= maxTime)) {
-                        avail += ["Wind Full"];
-                        s += " (" + (string)timeLeft  + " of " + (string)maxTime + " minutes left " + (string)timesLimit + " from max)";
-                    }
-                }
-                if (cdIsDoll(id) || cdIsController(id)) {
-                    if (choice == "xstats") {
+                    else if (choice == "xstats") {
                         string s = "Extended stats:\n";
-    
+
                         s += "AFK time factor: " + formatFloat(RATE_AFK, 1) + "x\n";
                         s += "Configured wind times: " + llList2CSV(windTimes) + " mins\n";
-    
+
                         if (demoMode) {
                             s += "Demo mode is enabled; times are: 1";
                             if (llGetListLength(windTimes) > 1) s += ", 2";
                             s += " mins.\n";
                         }
-                        
+
                         // Which is the upper bound on the wind times currently? Depeding on the values this could be keyLimit/2 or windLimit
                         s += "Current wind menu: ";
-    
+
                         integer timeLeft = llFloor(timeLeftOnKey / 60.0);
                         float windLimit = currentLimit - timeLeftOnKey;
                         integer timesLimit = llFloor(windLimit / SEC_TO_MIN);
                         integer time; list avail; integer i; integer n = llGetListLength(windTimes);
                         integer maxTime = llRound(currentLimit / 60.0 / 2);
-    
+
                         while ((i <= n) && ( ( time = llList2Integer(windTimes, i++) ) < timesLimit) && (time <= maxTime)) {
                             avail += ["Wind " + (string)time];
-                        } 
+                        }
                         if ((i <= n) && (timesLimit <= maxTime)) {
                             avail += ["Wind Full"];
                             s += " (" + (string)timeLeft  + " of " + (string)maxTime + " minutes left " + (string)timesLimit + " from max)";
                         }
-    
+
                         s += llList2CSV(avail);
                         if (windLimit < (keyLimit / 2)) s += " (Times limited to half max time)";
                         s += "\n";
-    
+
                         string p = llToLower(pronounHerDoll);
 #ifdef TESTING
                         cdCapability(autoTP,      "Doll can", "be force teleported");
@@ -635,13 +576,16 @@ default
                             canDressSelf,            "Doll can? dress by " + p + "self",
                             poseSilence,        "Doll is? silenced while posing"
                         ];
-    
+
                         i=0; n = llGetListLength(items);
-    
+
+                        string in;
+                        integer index;
+
                         while (i++ < n) {
-                            string in = llList2String(items, i--);
-                            integer index = llSubStringIndex(in, "?");
-    
+                            in = llList2String(items, i--);
+                            index = llSubStringIndex(in, "?");
+
                             in = llDeleteSubString(in, index, index);
                             if (!llList2Integer(items, i+=2)) in = llInsertString(in, index, " not");
                             s += in + "\n";
@@ -650,85 +594,176 @@ default
 #endif
                         if (windRate == 0.0) { s += "Key is not winding down.\n"; }
                         else { s += "Current wind rate is " + formatFloat(windRate,2) + ".\n"; }
-    
+
                         if (RLVok == -1) { s += "RLV status is unknown.\n"; }
-                        else if (RLVok == 1) { s += "RLV is active.\nRLV version: " + RLVver; } 
+                        else if (RLVok == 1) { s += "RLV is active.\nRLV version: " + RLVver; }
                         else s += "RLV is not active.\n";
-    
+
                         lmSendToAgent(s, id);
                     }
                     else if (choice == "stat") {
                         debugSay(6, "DEBUG", "timeLeftOnKey = " + (string)timeLeftOnKey);
                         debugSay(6, "DEBUG", "currentLimit = " + (string)currentLimit);
                         debugSay(6, "DEBUG", "displayWindRate = " + (string)displayWindRate);
-    
+
                         float t1 = timeLeftOnKey / (SEC_TO_MIN * displayWindRate);
                         float t2 = currentLimit / (SEC_TO_MIN * displayWindRate);
                         float p = t1 * 100.0 / t2;
-    
+
                         string msg = "Time: " + (string)llRound(t1) + "/" +
                                     (string)llRound(t2) + " min (" + formatFloat(p, 2) + "% capacity)";
 
                         if (windRate == 0.0) msg += " and key is currently stopped.";
                         else {
                             msg += " unwinding at a ";
-    
+
                             if (windRate == 1.0) msg += "normal rate.";
                             else {
                                 if (windRate < 1.0) msg += "slowed rate of ";
                                 else if (windRate > 1.0) msg += "accelerated rate of ";
-    
+
                                 msg += " of " + formatFloat(windRate, 1) + "x.";
                             }
-    
+
                         }
-    
+
                         lmSendToAgent(msg, id);
                     }
                     else if (choice == "stats") {
                         debugSay(6, "DEBUG", "timeLeftOnKey = " + (string)timeLeftOnKey);
                         debugSay(6, "DEBUG", "currentLimit = " + (string)currentLimit);
                         debugSay(6, "DEBUG", "displayWindRate = " + (string)displayWindRate);
-    
+
                         //displayWindRate;
-    
+
                         lmSendToAgent("Time remaining: " + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate)) + " minutes of " +
                                     (string)llRound(currentLimit / (SEC_TO_MIN * displayWindRate)) + " minutes.", id);
-    
+
                         string msg;
-    
+
                         if (windRate == 0.0) msg = "Key is stopped.";
                         else {
                             msg = "Key is unwinding at a ";
-    
+
                             if (windRate == 1.0) msg += "normal rate.";
                             else {
                                 if (windRate < 1.0) msg += "slowed rate of ";
                                 else if (windRate > 1.0) msg += "accelerated rate of ";
-    
+
                                 msg += " of " + formatFloat(windRate, 1) + "x.";
                             }
-    
+
                         }
-    
+
                         lmSendToAgent(msg, id);
-    
+
                         if (!cdCollapsedAnim() && !cdNoAnim()) {
                         //    llOwnerSay(dollID, "Current pose: " + currentAnimation);
                         //    llOwnerSay(dollID, "Pose time remaining: " + (string)(poseTime / SEC_TO_MIN) + " minutes.");
                             llOwnerSay("Doll is posed.");
                         }
-    
+
                         lmMemReport(1.0, 1);
-                    }
-                    if (cdIsDoll(id)) {
-                        if (choice == "build") {
-                            lmConfigReport();
-                        }
                     }
                     else if (choice == "release") {
                         if ((poserID != NULL_KEY) && (poserID != dollID)) llOwnerSay("Dolly tries to wrest control of her body from the pose but she is no longer in control of her form.");
                         else lmMenuReply("Unpose", dollName, dollID);
+                    }
+
+                    // Demo: short time span
+                    else if (choice == "demo") {
+                        // toggles demo mode
+                        lmSendConfig("demoMode", (string)(demoMode = !demoMode));
+
+                        string s = "Key now ";
+                        if (demoMode) {
+                            if (timeLeftOnKey > DEMO_LIMIT) {
+                                lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = DEMO_LIMIT));
+                            }
+                            s += "in demo mode: " + (string)llRound(timeLeftOnKey / SEC_TO_MIN) + " of " + (string)llRound(DEMO_LIMIT / SEC_TO_MIN) + " minutes remaining.";
+                        }
+                        else {
+                            // FIXME: currentlimit not set until later; how do we tell user what it is?
+                            // They are not in demoMode after this so the limit is going to be restored to keyLimit
+                            // only execption would be if keyLimit was invalid however there will be a follow up message
+                            // from Main stating this and giving the new value so not something we need to do here.
+
+                            s += "running normally: " + (string)(timeLeftOnKey / SEC_TO_MIN) + " of " + (string)llFloor(keyLimit / SEC_TO_MIN) + " minutes remaining.";
+                        }
+                    }
+                    else if (choice == "listposes") {
+                        integer n = llGetInventoryNumber(INVENTORY_ANIMATION);
+                        integer isDoll = cdIsDoll(id); integer isController = cdIsController(id);
+
+                        string thisPose; string thisPrefix;
+                        while(n) {
+                            thisPose = llGetInventoryName(INVENTORY_ANIMATION, --n);
+                            thisPrefix = cdGetFirstChar(thisPose);
+                            if ((thisPrefix != "!") && (thisPrefix != ".")) thisPrefix = "";
+
+                            if (thisPose != ANIMATION_COLLAPSED) {
+
+                                if (isDoll ||
+                                    (isController && (thisPrefix == "!")) ||
+                                    (thisPrefix == "")) {
+
+                                        if (keyAnimation == thisPose) {
+                                            lmSendToAgent("\t*\t" + thisPose, id);
+                                        }
+                                        else {
+                                            lmSendToAgent("\t\t" + thisPose, id);
+                                        }
+                                }
+                                else if (keyAnimation == thisPose) {
+                                    lmSendToAgent("\t*\t{private}", id);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (choice == "wind") {
+                    // inject a fake Menu click appropriate to the users access
+#ifndef TESTER_MODE
+                    if (cdIsDoll(id)) cdMenuInject("Wind Emg", dollName, dollID);
+                    else {
+#endif
+                        cdMenuInject("Wind", name, id);
+#ifndef TESTER_MODE
+                        }
+#endif
+                }
+                else if (choice == "menu")    cdMenuInject(MAIN, name, id);
+                else if (choice == "outfits") cdMenuInject("Outfits...", name, id);
+                else if (choice == "types")   cdMenuInject("Types...", name, id);
+                else if (choice == "poses")   cdMenuInject("Poses...", name, id);
+                else if (choice == "carry")   cdMenuInject("Carry", name, id);
+                else if (choice == "uncarry") cdMenuInject("Uncarry", name, id);
+                else if (choice == "xstats") {
+                    string s = "Extended stats:\nDoll is a " + dollType + " Doll.\nAFK time factor: " +
+                                   formatFloat(RATE_AFK, 1) + "x\nConfigured wind times: " + llList2CSV(windTimes) + " (mins)\n";
+
+                    if (demoMode) {
+                        s += "Demo mode is enabled; times are: 1";
+                        if (llGetListLength(windTimes) > 1) s += ", 2";
+                        s += " mins.\n";
+                    }
+
+                    // Which is the upper bound on the wind times currently? Depeding on the values this could be keyLimit/2 or windLimit
+                    s += "Current wind menu: ";
+
+                    integer timeLeft = llFloor(timeLeftOnKey / 60.0);
+                    float windLimit = currentLimit - timeLeftOnKey;
+                    integer timesLimit = llFloor(windLimit / SEC_TO_MIN);
+                    integer time; list avail; integer i; integer n = llGetListLength(windTimes);
+                    integer maxTime = llRound(currentLimit / 60.0 / 2);
+
+                    while ((i <= n) && ( ( time = llList2Integer(windTimes, i++) ) < timesLimit) && (time <= maxTime)) {
+                        avail += ["Wind " + (string)time];
+                    }
+                    if ((i <= n) && (timesLimit <= maxTime)) {
+                        avail += ["Wind Full"];
+                        s += " (" + (string)timeLeft  + " of " + (string)maxTime + " minutes left " + (string)timesLimit + " from max)";
                     }
                 }
             }
@@ -740,10 +775,10 @@ default
                 if (cdIsDoll(id) || cdIsBuiltinController(id)) {
                     if (choice == "channel") {
                         string c = param;
-    
+
                         if ((string) ((integer) c) == c) {
                             integer ch = (integer) c;
-    
+
                             if (ch != 0 && ch != DEBUG_CHANNEL) { // FIXME: Sanity checking should be extended
                                 chatChannel = ch;
                                 llListenRemove(chatHandle);
@@ -757,11 +792,11 @@ default
                         blockedControlTime = 0;
                         lmInternalCommand("getMistressKey", param, id);
                     }
-                    else if (choice == "blacklist") { 
+                    else if (choice == "blacklist") {
                         blacklistMode = 1;
                         lmInternalCommand("getBlacklistKey", param, id);
                     }
-                    else if (choice == "unblacklist") { 
+                    else if (choice == "unblacklist") {
                         if ((llToLower(blockedControlName) == llToLower(param)) && (llGetUnixTime() < (blockedControlTime + 300))) {
                             llOwnerSay("Adding previously blacklisted user " + blockedControlName + " as controller.");
                             blacklistMode = -1;
@@ -774,6 +809,7 @@ default
                         string newPrefix = param;
                         string c1 = llGetSubString(newPrefix,0,0);
                         string msg = "The prefix you entered is not valid, the prefix must ";
+
                         if (llStringLength(newPrefix) == 2) {
                             // Why? Two character user prefixes are standard and familiar too much false +ve with
                             // just 1 letter (~4%) with letter + letter/digit it's (~0.1%) excessive long prefixes
@@ -797,28 +833,33 @@ default
                     }
                     else if (choice == "wakescript") {
                         string script;
-    
+
+                        // if param is script; set var - else search for it?
+                        // FIXME: return if not a script at all
                         if (llGetInventoryType(param) == INVENTORY_SCRIPT) script = param;
                         else {
                             integer i; for (i = 0; i < llGetInventoryNumber(INVENTORY_SCRIPT); i++) {
                                 if (llToLower(llGetInventoryName(INVENTORY_SCRIPT, i)) == llToLower(param)) script = param;
                             }
                         }
+
                         if (llGetScriptState(script)) llOwnerSay("The '" + script + "' script is already in a running state");
-                        else if ((RLVok != 1) && (script == "StatusRLV")) 
+                        else if ((RLVok != 1) && (script == "StatusRLV"))
                             llOwnerSay("StatusRLV will not run until RLV is enabled, this is by design.  Try the rlvinit command instead.");
                         else {
                             string msg = "Trying to wake '" + script + "'";
-    
+
                             llOwnerSay(msg);
                             llResetOtherScript(script);
                             llSetScriptState(script, 1);
                             llSleep(5.0);
                             cdLinkMessage(LINK_THIS, 0, 301, "", NULL_KEY);
                             llSleep(5.0);
+
                             msg = "Script '" + script + "'";
                             if (llGetScriptState(script)) msg += " seems to be running now.";
                             else msg += " appears to have stopped running again after being restarted.  If you are not getting script errors this may be intentional.";
+
                             llOwnerSay(msg);
                         }
                     }
