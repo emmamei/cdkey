@@ -79,24 +79,26 @@ default {
                     string uuid;
                     string name;
                     string value;
+                    string confx;
 
                     while (j++ < 9) {
                         uuid = llList2String(split,0);
                         name = llList2String(split,1);
                         
                         value = uuid + "|" + name;
+                        confx = prefix + (string)j;
                         
                         if ((uuid != (string)NULL_KEY) && (uuid != "") && (name != "") && (value != "|")) {
                             c++;
-                            lmSendConfig(prefix + (string)j, value);
+                            lmSendConfig(confx, value);
                         }
-                        else lmSendConfig(prefix + (string)j, RECORD_DELETE);
+                        else lmSendConfig(confx, RECORD_DELETE);
     
                         split = llDeleteSubList(split,0,1);
     
-                        i = llListFindList(storedConfigs, [prefix + (string)j]);
-                        if (i == -1) storedConfigs += [ prefix + (string)j, uuid + "|" + name ];
-                        else storedConfigs = llListReplaceList(storedConfigs, [ prefix + (string)j, uuid + "|" + name ], i, i + 1);
+                        i = llListFindList(storedConfigs, [confx]);
+                        if (i == -1) storedConfigs += [ confx, value ];
+                        else storedConfigs = llListReplaceList(storedConfigs, [ confx, value ], i, i + 1);
                     }
                     
                     lmSendConfig(prefix + "sCount", (string)c);
@@ -116,34 +118,40 @@ default {
 
 #ifdef DEVELOPER_MODE
             if (conf == "debugLevel")                   debugLevel = (integer)value;
-            else if (script == cdMyScriptName()) return;
-#else
-            if (script == cdMyScriptName()) return;
+            else
 #endif
+            if (script == cdMyScriptName()) return;
             else if (conf == "offlineMode") offlineMode = (integer)value;
         }
         else if ((code == 301) || (code == 302)) {
             integer type = code - 300;
             integer i; integer n = llGetListLength(storedConfigs) / 2;
+
             storedConfigs = llListSort(storedConfigs, 2, 1);
+
             while (i < n) {
                 string conf = llList2String(storedConfigs, i * 2);
                 string value = llList2String(storedConfigs, i * 2 + 1);
+
                 if (type == 1) lmSendConfig(conf, value);
                 else {
                     if ((conf != "controllers") && (conf != "blacklist")) llOwnerSay("\n" + conf + "=" + value);
                     llSleep(0.1);
                 }
+
                 i++;
             }
+
             i = llListFindList(storedConfigs, ["dollyName"]);
             if (i != -1) lmSendConfig("dollyName", llList2String(storedConfigs, i + 1));
         }
         else if (code == 303) {
             storedConfigs = llListSort(storedConfigs, 2, 1);
+
             while(split != []) {
                 string conf = llList2String(split,0);
                 integer i = llListFindList(storedConfigs, [conf]);
+
                 if (i != -1) lmSendConfig(conf, llList2String(storedConfigs, i + 1));
                 
                 split = llDeleteSubList(split,0,0);
@@ -151,21 +159,17 @@ default {
         }
         else if (code == 305) {
             string cmd = llList2String(split, 0);
+
             split = llDeleteSubList(split, 0, 0);   // Always stick with llDeleteSubList it handles missing/null parameters eg:
                                                     // illDeleteSubList([ "Script", "cmd" ],0,1) == []
                                                     // llList2List([ "Script", "cmd" ],2,-1) == [ "Script" , "cmd" ]
                                                     // This has been the cause of bugs.
 
-            if (cmd == "getMistressKey") {
-                string name = llList2String(split, 0);
-                resolveName = name;
-                resolveType = 1;
-            }
-            else if (cmd == "getBlacklistKey") {
-                string name = llList2String(split, 0);
-                resolveName = name;
-                resolveType = 2;
-            }
+            string name = llList2String(split, 0);
+            resolveName = name;
+
+                 if (cmd == "getMistressKey")  { resolveType = 1; }
+            else if (cmd == "getBlacklistKey") { resolveType = 2; }
         }
         else if (code == 350) {
             lmSendConfig("RLVok", llList2String(split, 0));
@@ -187,7 +191,9 @@ default {
         integer locationIndex = llSubStringIndex(body,"\n");
         integer queryIndex = llSubStringIndex(body,"?");
         string location = llGetSubString(body, 10, queryIndex - 1);
+
         body = llStringTrim(llDeleteSubString(body, 0, locationIndex), STRING_TRIM);
+
 #ifdef UPDATE_METHOD_CDKEY
         if (request == requestUpdate) {
             if (llGetSubString(body, 0, 21) == "checkversion versionok") {
@@ -214,10 +220,10 @@ default {
                 lmSendConfig("nextRetry", (string)nextRetry);
             }
         }
-        else if (location == "/objdns/lookup") {
-#else
-        if (location == "/objdns/lookup") {
+        else
 #endif
+        if (location == "/objdns/lookup") {
+
             if (status == 200) {
                 serverURL = body;
                 gotURL = 1;
@@ -251,6 +257,7 @@ default {
             }
             else {
                 databaseReload = llGetUnixTime() + 60 + llRound(llFrand(90));
+
                 if (databaseOnline) {
                     error += "failed: Continuing init in offline mode and will contintiue trying.";
                     lmSendConfig("databaseOnline", (string)(databaseOnline = 0));
@@ -264,6 +271,7 @@ default {
             list split = llParseStringKeepNulls(body, ["=","\n"], []);
             string name = llList2String(split, 0);
             string uuid = llList2String(split, 1);
+
             if (uuid == "NOT FOUND") {
                 llOwnerSay("Despite much searching and checking none of our sources can identify the mysterious '" + name + "' " +
                            "not even after consulting the SL search oracle.  Are you sure that you typed the name correctly and are " +
@@ -283,9 +291,12 @@ default {
             if (status == 200) {
                 dbPostParams = [];
                 list split = llParseStringKeepNulls(body, [ "|" ], []);
+
                 lastPostTimestamp = llList2Integer(split, 1);
                 lmServiceMessage("lastPostTimestamp", (string)(lastPostTimestamp), NULL_KEY);
+
                 debugSay(5, "DEBUG-SERVICES", "HTTPdb update success " + llList2String(split, 2) + " updated records: " + llList2CSV(updateList));
+
                 if (!databaseOnline) {
                     llOwnerSay("HTTPdb - Database service has recovered.");
                     curInterval = stdInterval;
@@ -311,13 +322,16 @@ default {
         }
 
         if (location != "/httpdb/retreive") {
+#ifdef DEVELOPER_MODE
             integer debug;
             if (status == 200) debug = 7;
             else debug = 1;
 
             debugSay(debug, "DEBUG-SERVICES-RAW", "HTTP " + (string)status + "|" + body);
+#endif
 
             string lastPart;
+
             do {
                 string bodyCut = llGetSubString(body, 0, 755);
                 integer vIdxFnd =
@@ -325,10 +339,12 @@ default {
                     llStringLength("\n") -
                     llStringLength(llList2String(llParseStringKeepNulls(bodyCut, ["\n"], []), -1));
                 integer endIndex = (vIdxFnd | (vIdxFnd >> 31));
+
                 bodyCut = llGetSubString(body, 0, endIndex);
                 body = llDeleteSubString(body, 0, endIndex);
 
                 debugSay(debug, "DEBUG-SERVICES-RAW", bodyCut);
+
             } while (llStringLength(body));
         }
         scaleMem();
@@ -430,14 +446,17 @@ default {
             debugSay(5, "DEBUG-SERVICES", "Service post interval setting " + formatFloat(HTTPinterval, 2) + "s throttle setting " + formatFloat(HTTPthrottle, 2) + "s");
         
             string msg = "HTTPdb - Processed " + (string)configCount + " records ";
+
             if (lastPostTimestamp) msg += "with updates since our last post " + (string)((llGetUnixTime() - lastPostTimestamp) / 60) + " minutes ago ";
+
             msg += "event time " + eventTime + ", processing time " + formatFloat(((llGetTime() - HTTPdbProcessStart) * 1000), 2);
             msg += "ms, total time for DB transaction " + formatFloat((llGetTime() - HTTPdbStart) * 1000, 2) + "ms";
+
             debugSay(1, "DEBUG-SERVICES", msg);
-            if (!debugLevel) llOwnerSay("Successfully processed database reply in " + formatFloat(llGetTime() - HTTPdbStart, 2) + "s");
-#else
-            llOwnerSay("Successfully processed database reply in " + formatFloat(llGetTime() - HTTPdbStart, 2) + "s");
+
+            if (!debugLevel)
 #endif
+            llOwnerSay("Successfully processed database reply in " + formatFloat(llGetTime() - HTTPdbStart, 2) + "s");
         
             databaseReload = 600;
             
