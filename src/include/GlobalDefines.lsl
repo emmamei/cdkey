@@ -95,7 +95,6 @@ list BuiltinControllers = BUILTIN_CONTROLLERS;
 #define OPTION_DATE PACKAGE_VERSION
 
 #define STRING_END -1
-#define NOT_FOUND -1
 #define NO_FILTER ""
 #define YES 1
 #define NO 0
@@ -119,6 +118,9 @@ list BuiltinControllers = BUILTIN_CONTROLLERS;
 
 #define CHECK "✔"
 #define CROSS "✘"
+
+#define CIRCLE_PLUS "⊕"
+#define CIRCLE_MINUS "⊖"
 
 // Dress module prefix test defines
 #define isGroupItem(f)        (llGetSubString(f,0,0) == "#")
