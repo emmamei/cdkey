@@ -654,7 +654,7 @@ default
 
                 lmMenuReply(MAIN, name, id);
             }
-            if ((afterSpace == "Blacklist") || (afterSpace == "Controller")) {
+            else if ((afterSpace == "Blacklist") || (afterSpace == "Controller")) {
                 integer activeChannel; string msg;
                 if (afterSpace == "Blacklist") {
                     if (controlHandle) {
@@ -683,7 +683,7 @@ default
                 dialogButtons = []; integer i; integer n = llGetListLength(dialogKeys);
                 for (i = 0; i < n; i++) dialogButtons += llGetSubString((string)(i+1) + ". " + llList2String(dialogNames, i), 0, 23);
 
-                if (beforeSpace == "⊕") {
+                if (beforeSpace == CIRCLE_PLUS) {
                     if (llGetListLength(dialogKeys) < 11) {
                         llSensor("", "", AGENT, 20.0, PI);
                     }
@@ -693,7 +693,7 @@ default
                         llRegionSayTo(id, 0, msg);
                     }
                 }
-                else if (beforeSpace == "⊖") {
+                else if (beforeSpace == CIRCLE_MINUS) {
                     if (dialogKeys == []) {
                         msg = "You currently have nobody listed in your " + msg;
                         msg += " did you mean to select the add option instead?.";
@@ -789,8 +789,7 @@ default
                 }
             }
         }
-
-        if ((channel == blacklistChannel) || (channel == controlChannel)) {
+        else if ((channel == blacklistChannel) || (channel == controlChannel)) {
             if (choice == MAIN) {
                 lmMenuReply(MAIN, name, id);
                 return;
@@ -815,8 +814,9 @@ default
                     llListenRemove(controlHandle);
                     controlHandle = 0;
                 }
-                if (llListFindList(controllers, [uuid,name]) == -1)    lmInternalCommand("addMistress", (string)uuid + "|" + name, id);
-                else if (cdIsBuiltinController(id))                     lmInternalCommand("remMistress", (string)uuid + "|" + name, id);
+
+                if (llListFindList(controllers, [uuid,name]) == -1)  lmInternalCommand("addMistress", (string)uuid + "|" + name, id);
+                else if (cdIsBuiltinController(id))                  lmInternalCommand("remMistress", (string)uuid + "|" + name, id);
             }
         }
 
