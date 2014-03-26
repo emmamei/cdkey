@@ -7,12 +7,7 @@
 // DATE: 7 March 2014
 
 #include "include/GlobalDefines.lsl"
-#define cdGetFirstChar(a) llGetSubString(a,0,0)
-#define NOT_FOUND -1
-#define STRING_END -1
 #define cdMenuInject(a,b,c) lmMenuReply(a,b,c)
-#define NO_FILTER ""
-#define cdListenAll(a) llListen(a, NO_FILTER, NO_FILTER, NO_FILTER);
 
 #define TESTING
 // FIXME: Depends on a variable s
@@ -306,7 +301,6 @@ default
                         lmInternalCommand("addMistress", uuid + "|" + name, dollID);
                     }
                 }
-
             }
         }
         else if (code == 350) {
