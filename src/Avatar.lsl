@@ -534,16 +534,15 @@ default {
             if (cmd == "detach") {
                 if (RLVok || RLVstarted) llOwnerSay("@clear,detachme=force");
                 else llDetachFromAvatar();
-                return;
             }
             else if (cmd == "TP") {
                 string lm = llList2String(split, 0);
                 llRegionSayTo(id, 0, "Teleporting dolly " + dollName + " to  landmark " + lm + ".");
                 rlvTPrequest = llRequestInventoryData(lm);
-                return;
             }
             else if (cmd == "wearLock") lmSendConfig("wearLock", (string)(wearLock = llList2Integer(split, 0)));
-            else return;
+
+            return;
         }
         else if (code == 500) {
             string choice = llList2String(split, 0);
@@ -554,7 +553,7 @@ default {
                 checkRLV();
             }
 #ifdef ADULT_MODE
-            else if ((llGetSubString(choice,0,4) == "Strip") || (choice == "Strip ALL")) {
+            else if (llGetSubString(choice,0,4) == "Strip") {
                 if (choice == "Strip...") {
                     list buttons = llListSort(["Strip Top", "Strip Bra", "Strip Bottom", "Strip Panties", "Strip Shoes", "Strip ALL"], 1, 1);
                     llDialog(id, "Take off:", dialogSort(buttons + MAIN), dialogChannel); // Do strip menu
@@ -566,18 +565,24 @@ default {
                     "Top",      RLV_STRIP_TOP,
                     "Bra",      RLV_STRIP_BRA,
                     "Bottom",   RLV_STRIP_BOTTOM,
-                    "panties",  RLV_STRIP_PANTIES,
+                    "Panties",  RLV_STRIP_PANTIES,
                     "Shoes",    RLV_STRIP_SHOES
                 ];
                 integer i;
-                if ( ( i = llListFindList(parts, [part]) ) != -1) {
+
+                if ((i = llListFindList(parts, [part])) != NOT_FOUND) {
                     cdLoadData(RLV_NC, llList2Integer(parts, i));
-                } else if (part = "*ALL*") {
-                    for (i = 0; i < 10; i++) {
-                        cdLoadData(RLV_NC, llList2Integer(parts, i++));
-                    }
+                } else if (part = "ALL") {
+                    i = -llGetListLength(parts);
+
+                    do {
+                        cdLoadData(RLV_NC, llList2Integer(parts, i));
+                    } while (++i);
                 }
-                if ((part == "Shoes") || (choice == "Strip ALL")) {
+
+                // This allows an avi to have "barefeet" and "shoes" simultaneously:
+                // removing shoes puts on barefeet
+                if ((part == "Shoes") || (part == "ALL")) {
                     if (barefeet != "") lmRunRLVas("Dress","attachallover:" + barefeet + "=force");
                 }
             }
@@ -586,6 +591,7 @@ default {
                 if (!collapsed && !cdIsDoll(id) && (cdControllerCount() || cdIsController(id))) {
                     lmSendConfig("carrierID", (string)(carrierID = id));
                     lmSendConfig("carrierName", (carrierName = name));
+
                     if (!quiet) llSay(0, "The doll " + dollName + " has been picked up by " + carrierName);
                     else {
                         llOwnerSay("You have been picked up by " + carrierName);
@@ -601,17 +607,22 @@ default {
                     lmSendConfig("carrierName", (carrierName = ""));
                 }
             }
-            else if (((!cdIsDoll(id) && canPose) || cdSelfPosed()) && choice == "Unpose") {
-                lmSendConfig("keyAnimation", (string)(keyAnimation = ""));
-                lmSendConfig("poserID", (string)(poserID = NULL_KEY));
-            }
-            else if ((keyAnimation == "" || ((!cdIsDoll(id) && canPose) || cdSelfPosed())) && llGetInventoryType(choice) == 20) {
-                lmSendConfig("keyAnimation", (string)(keyAnimation = choice));
-                lmSendConfig("poserID", (string)(poserID = id));
-            }
-            else if ((keyAnimation == "" || ((!cdIsDoll(id) && canPose) || cdSelfPosed())) && llGetInventoryType(llGetSubString(choice, 2, -1)) == 20) {
-                lmSendConfig("keyAnimation", (string)(keyAnimation = llGetSubString(choice, 2, -1)));
-                lmSendConfig("poserID", (string)(poserID = id));
+            else if ((keyAnimation == "" || ((!cdIsDoll(id) && canPose) || cdSelfPosed())) {
+                if (((!cdIsDoll(id) && canPose) || cdSelfPosed()) && choice == "Unpose") {
+                    lmSendConfig("keyAnimation", (string)(keyAnimation = ""));
+                    lmSendConfig("poserID", (string)(poserID = NULL_KEY));
+                }
+                else {
+                    string anim = "";
+
+                    if llGetInventoryType(choice) == 20) anim = choice;
+                    else if (llGetInventoryType(llGetSubString(choice, 2, -1)) == 20) anim = llGetSubString(choice, 2, -1);
+
+                    if (anim != "") {
+                        lmSendConfig("keyAnimation", (string)(keyAnimation = anim));
+                        lmSendConfig("poserID", (string)(poserID = id));
+                    }
+                }
             }
             else if (llGetSubString(choice, 0, 4) == "Poses" && (keyAnimation == ""  || ((!cdIsDoll(id) && canPose) || poserID == dollID))) {
                 poserID = id;
@@ -648,7 +659,8 @@ default {
                 llDialog(id, "Select the pose to put the doll into", poseList, dialogChannel);
             }
         }
-        else return;
+        else
+            return;
         
         ifPermissions();
     }
@@ -752,7 +764,7 @@ default {
 
             lmRunRLVas("TP", "tpto:" + locx + "/" + locy + "/" + locz + "=force");
         }
-        if (request == requestLoadData) {
+        else if (request == requestLoadData) {
             integer dataType = (integer)cdGetValue(data, [0]);
 
             if (dataType == RLV_STRIP) {
