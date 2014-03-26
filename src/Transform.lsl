@@ -338,8 +338,14 @@ default {
                 else if (name == "showPhrases")                              showPhrases = (integer)value;
                 else if (name == "wearAtLogin")                              wearAtLogin = (integer)value;
                 else if (name == "stateName")                                  stateName = value;
-                else if (name == "RLVok") {
-                    RLVok = (integer)value;
+                else if ((name == "RLVok") || (name == "dialogChannel")) {
+
+                    if (name == "RLVok") RLVok = (integer)value;
+                    if (name == "dialogChannel") {
+                        dialogChannel = (integer)value;
+                        rlvChannel = ~dialogChannel + 1;
+                    }
+
                     if (RLVok) {
                         if (rlvChannel) {
                             if (!rlvHandle) rlvHandle = cdListenAll(rlvChannel);
@@ -349,18 +355,6 @@ default {
                             }
                             llSetTimerEvent(15.0);
                         }
-                    }
-                }
-                else if (name == "dialogChannel") {
-                    dialogChannel = (integer)value;
-                    rlvChannel = ~dialogChannel + 1;
-                    if (RLVok) {
-                        if (!rlvHandle) rlvHandle = cdListenAll(rlvChannel);
-                        else {
-                            llListenRemove(rlvHandle);
-                            rlvHandle = cdListenAll(rlvChannel);
-                        }
-                        llSetTimerEvent(15.0);
                     }
                 }
 #ifdef DEVELOPER_MODE
