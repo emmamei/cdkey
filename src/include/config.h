@@ -35,6 +35,10 @@
    normally inaccessible functions like strip and wind */
 #define TESTER_MODE 1
 
+/* enable off-sim database back-end, which allows all settings to be
+   stored and restored from off-sim - makes settings more persistent */
+#define DATABASE_MODE 1
+
 /* enable the start up introduction/hypno text provided that the required
    "Intro Text" notecard is also present */
 /* #undef INTRO_STARTUP */
