@@ -334,12 +334,14 @@ sleepMenu() {
 
 do_Restart() {
     integer loop; string me = cdMyScriptName();
+    string script;
     reset = 0;
 
     llOwnerSay("Resetting scripts");
 
     for (loop = 0; loop < llGetInventoryNumber(INVENTORY_SCRIPT); loop++) {
-        string script = llGetInventoryName(INVENTORY_SCRIPT, loop);
+
+        script = llGetInventoryName(INVENTORY_SCRIPT, loop);
         if (script != me) {
             cdRunScript(script);
             llResetOtherScript(script);
@@ -493,8 +495,8 @@ default {
 
     state_entry() {
         dollID = llGetOwner();
-        if(!cdAttached()) llSetObjectName(PACKAGE_NAME + " " + __DATE__);
         dollName = llGetDisplayName(dollID);
+        if(!cdAttached()) llSetObjectName(PACKAGE_NAME + " " + __DATE__);
 
         rlvWait = 1;
 
