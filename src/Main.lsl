@@ -6,7 +6,6 @@
 //
 // DATE: 28 February 2014
 
-#define MAIN_LSL 1
 #include "include/GlobalDefines.lsl"
 
 #define cdNullList(a) (llGetListLength(a)==0)
@@ -343,14 +342,14 @@ default {
         else if (signOn)    { cdSetHovertext(dollType + " Doll",       (<1.0,1.0,1.0>)); }
         else                { cdSetHovertext("",                       (<1.0,1.0,1.0>)); }
 
-      /*--------------------------------
-        WINDING DOWN.....
-        --------------------------------
-        A specific test for collapsed status is no longer required here
-        as being collapsed is one of several conditions which forces the
-        wind rate to be 0.
-        Others which cause this effect are not being attached to spine
-        and being doll type Builder or Key*/
+        //--------------------------------
+        // WINDING DOWN.....
+        //--------------------------------
+        // A specific test for collapsed status is no longer required here
+        // as being collapsed is one of several conditions which forces the
+        // wind rate to be 0.
+        // Others which cause this effect are not being attached to spine
+        // and being doll type Builder or Key
 
         if (windRate != 0.0) {
             minsLeft = llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate));
@@ -384,7 +383,7 @@ default {
 
         scaleMem();
 
-        // Determine Next Timer Event
+        // Determine next event to fire and set timer to match
         list possibleEvents;
         if (cdTimeSet(carryExpire)) {
                                             possibleEvents += carryExpire - thisTimerEvent;
@@ -395,19 +394,22 @@ default {
         if (cdTimeSet(wearLockExpire))      possibleEvents += wearLockExpire - thisTimerEvent;
         if (cdTimeSet(timeToJamRepair))     possibleEvents += timeToJamRepair - thisTimerEvent;
 
-        if (afk && autoAFK) {   // This lets us run a short cut timer event that only checks for the doll returning from AFK to keep the latency
-                                // low without having to accelerate everything else in addition
+        if (afk && autoAFK) {   // This lets us run a short cut timer event
+                                // that only checks for the doll returning
+                                // from AFK to keep the latency low without
+                                // having to accelerate everything else in addition
             nextExpiryTime = thisTimerEvent + cdListMin(possibleEvents);
             possibleEvents += 2.0;
         }
 
-        if ((possibleEvents != []) &&
-            (!lowScriptMode))               possibleEvents += 20.0;
+#ifdef SIM_FRIENDLY
+        if (possibleEvents != []) {
+            if (lowScriptMode)              possibleEvents += 300;
+            else                            possibleEvents += 60.0;
+        }
+#endif
 
         if (timeLeftOnKey != 0.0)           possibleEvents += timeLeftOnKey;
-
-        if (!lowScriptMode)                 possibleEvents += 60.0;
-        else                                possibleEvents += 300.0;
 
         // Set timer to the first of our predicted events.
         llSetTimerEvent(cdListMin(possibleEvents) + 0.022); // Minimum event delay is 0.022s pointless setting faster
@@ -438,30 +440,36 @@ default {
 
             configured = 1;
 
-            llSetTimerEvent(STD_RATE);
+#ifdef SIM_FRIENDLY
             if (lowScriptMode) llSetTimerEvent(LOW_RATE);
-            timerStarted = 1;
-
+            else
+#endif
             if (!cdAttached()) llSetTimerEvent(60.0);
+            else llSetTimerEvent(STD_RATE);
+            timerStarted = 1;
         }
 
         else if (code == 104) {
-            if (script != "Start") return;
-            dollID = llGetOwner();
-            dollName = llGetDisplayName(dollID);
+            if (script == "Start") {
+                dollID = llGetOwner();
+                dollName = llGetDisplayName(dollID);
 
-            clearAnim = 1;
+                clearAnim = 1;
+            }
         }
 
         else if (code == 105) {
-            if (script != "Start") return;
-            clearAnim = 1;
+            if (script == "Start") {
+                clearAnim = 1;
 
-            llSetTimerEvent(STD_RATE);
-            if (lowScriptMode) llSetTimerEvent(LOW_RATE);
-            timerStarted = 1;
-
-            if (!cdAttached()) llSetTimerEvent(60.0);
+#ifdef SIM_FRIENDLY
+                if (lowScriptMode) llSetTimerEvent(LOW_RATE);
+                else
+#endif
+                if (!cdAttached()) llSetTimerEvent(60.0);
+                else llSetTimerEvent(STD_RATE);
+                timerStarted = 1;
+            }
         }
 
         else if (code == 135) {
@@ -560,9 +568,10 @@ default {
 #ifdef SIM_FRIENDLY
             else if (name == "lowScriptMode") {
                 lowScriptMode = (integer)value;
+
                 if (timerStarted) {
-                    llSetTimerEvent(STD_RATE);
                     if (lowScriptMode) llSetTimerEvent(LOW_RATE);
+                    else llSetTimerEvent(STD_RATE);
                 }
             }
 #endif
@@ -572,64 +581,70 @@ default {
             string cmd = llList2String(split, 0);
             split = llDeleteSubList(split, 0, 0);
 
-            if (cmd == "setAFK") {
+            if (cmd == "getTimeUpdates") {
+                integer t = llGetTime();
+                if (cdTimeSet(timeLeftOnKey))       lmSendConfig("timeLeftOnKey",    (string) timeLeftOnKey);
+                if (cdTimeSet(wearLockExpire))      lmSendConfig("wearLockExpire",   (string)(wearLockExpire - t));
+                if (cdTimeSet(timeToJamRepair))     lmSendConfig("timeToJamRepair",  (string)(timeToJamRepair - t));
+                if (cdTimeSet(poseExpire))          lmSendConfig("poseExpire",       (string)(poseExpire - t));
+                if (cdTimeSet(carryExpire))         lmSendConfig("carryExpire",      (string)(carryExpire - t));
+                if (cdTimeSet(collapseTime))        lmSendConfig("collapseTime",     (string)(collapseTime - t));
+
+                lastSendTimestamp = llGetUnixTime();
+                // In offline mode we update the timer locally
+                if (offlineMode) lastPostTimestamp = lastSendTimestamp;
+            }
+            else if (cmd == "setAFK") {
                 lmSendConfig("afk", (string)(afk = llList2Integer(split, 0)));
 
                 integer autoSet = llList2Integer(split, 1);
 
                 if (!autoSet) {
                     integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0);
+
                     if (dollAway == afk) autoAFK = 1;
                     else autoAFK = 0;
                 }
 
                 debugSay(5,"DEBUG", "setAFK, afk=" + (string)afk + ", autoSet=" + (string)autoSet + ", autoAFK=" + (string)autoAFK);
 
-                lmSendConfig("afk", (string)afk);
+                //lmSendConfig("afk", (string)afk);
                 lmSendConfig("autoAFK", (string)autoAFK);
             }
             else if ((cmd == "collapse") && (script != llGetScriptName())) collapse(llList2Integer(split, 0));
-            else if (cmd == "getTimeUpdates") {
-                if (cdTimeSet(timeLeftOnKey))       lmSendConfig("timeLeftOnKey",       (string)timeLeftOnKey);
-                if (cdTimeSet(wearLockExpire))      lmSendConfig("wearLockExpire",      (string)(wearLockExpire - llGetTime()));
-                if (cdTimeSet(timeToJamRepair))     lmSendConfig("timeToJamRepair",     (string)(timeToJamRepair - llGetTime()));
-                if (cdTimeSet(poseExpire))          lmSendConfig("poseExpire",          (string)(poseExpire - llGetTime()));
-                if (cdTimeSet(carryExpire))         lmSendConfig("carryExpire",         (string)(carryExpire - llGetTime()));
-                if (cdTimeSet(collapseTime))        lmSendConfig("collapseTime",        (string)(collapseTime - llGetTime()));
-                lastSendTimestamp = llGetUnixTime();
-
-                // In offline mode we update the timer locally
-                if (offlineMode) lastPostTimestamp = lastSendTimestamp;
-            }
             else if (cmd == "setWindTimes") {
-                if (cdGetElementType(llList2String(split,0),[]) == JSON_ARRAY) {
-                    llSay(DEBUG_CHANNEL, "WARNING: Script '" + script + "' appears to be attempting to pass an already encoded JSON array to a setWindTimes handler which expects raw input.");
-                }
-                else split = llDeleteSubList(llParseString2List(data, [","," ","|"], []), 0, 1);
+                split = llDeleteSubList(llParseString2List(data, [","," ","|"], []), 0, 1);
                 integer i; integer start = llGetListLength(split);
 
                 windTimes = [];
 
                 for (i = 0; i < start; i++) {
                     integer value = (integer)llStringTrim(llList2String(split, i), STRING_TRIM);
-                    if ((value > 0) && (value <= 240) && (llListFindList(windTimes, [ value ]) == -1)) windTimes += value;
+
+                    // if the wind time is between 0 and 240, and is not in list, add it
+                    if ((value > 0) && (value <= 240) && (llListFindList(windTimes, [value]) == NOT_FOUND))
+                        windTimes += value;
                 }
 
-                integer l = llGetListLength(windTimes); i = l;
-                while (l > 11) windTimes = llDeleteSubList(llListSort(windTimes,1,--l&1),i-=2,i);
                 windTimes = llListSort(windTimes,1,1);
+                if (llGetListLength(windTimes) > 11) {
+                    windTimes = llList2List(windTimes, 0, 10);
+                    lmSendToAgent("One or more times were filtered, accepted list is " + llList2CSV(windTimes), id);
+                    }
 
-                if (start > l) lmSendToAgent("One or more times were filtered, accepted list is " + llList2CSV(windTimes), id);
                 lmSendConfig("windTimes", llList2Json(JSON_ARRAY, windTimes));
             }
 
             else if (cmd == "wearLock") {
-                wearLockExpire = WEAR_LOCK_TIME;
+                //wearLockExpire = WEAR_LOCK_TIME;
+
                 if (llList2Integer(split, 0)) {
-                    lmSendConfig("wearLockExpire", (string)(wearLockExpire = llGetTime() + WEAR_LOCK_TIME));
+                    wearLockExpire = llGetTime() + WEAR_LOCK_TIME));
                     displayWindRate = setWindRate();
                 }
-                else lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0.0));
+                else wearLockExpire = 0.0;
+
+                lmSendConfig("wearLockExpire", (string)wearLockExpire);
             }
             else if (cmd == "windMenu") {
                 // Compute "time remaining" message for windMenu
@@ -638,26 +653,36 @@ default {
                 string name = llList2String(split, 0);
                 float windLimit = llList2Float(split, 1);
 
-                integer n = llGetListLength(windTimes);
+                // Build up wind buttons into variable "split"
+                integer numWindTimes = llGetListLength(windTimes);
+                list windButtons;
 
                 if (demoMode) {
-                    if (windLimit <= 60.0) split = ["Wind Full"];
+                    if (windLimit <= 60.0) windButtons = ["Wind Full"];
                     else if (windLimit > 60.0) {
-                        if (n == 1) split = ["Wind 1"];
-                        else if (windLimit <= 120.0) split = ["Wind 1","Wind Full"];
-                        else split = ["Wind 1","Wind 2"];
+                        if (numWindTimes == 1) windButtons = ["Wind 1"];
+                        else if (windLimit <= 120.0) windButtons = ["Wind 1","Wind Full"];
+                        else windButtons = ["Wind 1","Wind 2"];
                     }
                 } else {
-                    integer i = 0; float time; split = [];
-                    while ((i <= n) && ( ( time = (llList2Float(windTimes, i++) * SEC_TO_MIN) ) < (windLimit - 60.0)) && (time <= (keyLimit / 2))) {
-                        split += ["Wind " + (string)llFloor(time / SEC_TO_MIN)];
+                    integer i = 0; float time; windButtons = [];
+
+                    // Not all wind times are valid all the time, depending on
+                    // how much time remains on the key...
+                    while ((i <= numWindTimes) &&
+                           ((time = (llList2Float(windTimes, i++) * SEC_TO_MIN)) < (windLimit - 60.0)) &&
+                            (time <= (keyLimit / 2))) {
+
+                        windButtons += ["Wind " + (string)llFloor(time / SEC_TO_MIN)];
                     }
-                    if ((i <= n) && (windLimit <= (keyLimit / 2))) split += ["Wind Full"];
+
+                    if ((i <= numWindTimes) && (windLimit <= (keyLimit / 2))) windButtons += ["Wind Full"];
                 }
 
-                if (cdIsController(id)) split += ["Hold","Unwind"];
-                else if (cdIsCarrier(id)) split += "Hold";
+                if (cdIsController(id)) windButtons += ["Hold","Unwind"];
+                else if (cdIsCarrier(id)) windButtons += "Hold";
 
+                // Now build dialog message
                 string timeleft;
 
                 displayWindRate = setWindRate();
@@ -674,7 +699,8 @@ default {
 
                 string msg = "How many minutes would you like to wind?";
 
-                llDialog(id, timeleft + msg, dialogSort(split + MAIN), dialogChannel);
+                // Finally, present dialog
+                llDialog(id, timeleft + msg, dialogSort(windButtons + MAIN), dialogChannel);
             }
         }
 
@@ -720,7 +746,9 @@ default {
                 else if ((llGetListLength(windTimes) == 1) || (((llListStatistics(LIST_STAT_MIN, windTimes) * SEC_TO_MIN) >= windLimit))) windButton = "Wind";
                 else windButton = "Wind...";
                 
+#ifdef WAKESCRIPT
                 cdWakeScript("Transform");
+#endif
                 
                 lmInternalCommand("mainMenu", windButton + "|" + name, id);
             }
@@ -864,7 +892,7 @@ default {
             }
             else if (choice == "Max Time...") {
                 // If the Max Times available are changed, be sure to change the next choice also
-                llDialog(id, "You can set the maximum wind time here.  Dolly cannot be wound beyond this amount of time.\nDolly currently has " + (string)llFloor(timeLeftOnKey / SEC_TO_MIN) + " mins left of " + (string)llFloor(keyLimit / SEC_TO_MIN) + ", if you choose a lower time than this they will lose time immidiately.", dialogSort(["45m", "60m", "75m", "90m", "120m", "150m", "180m", "240m", "300m", "360m", "480m", MAIN]), dialogChannel);
+                llDialog(id, "You can set the maximum available time here.  Dolly cannot be wound beyond this amount of time.\nDolly currently has " + (string)llFloor(timeLeftOnKey / SEC_TO_MIN) + " mins left of " + (string)llFloor(keyLimit / SEC_TO_MIN) + ". If you lower the maximum, Dolly will lose the extra time entirely.", dialogSort(["45m", "60m", "75m", "90m", "120m", "150m", "180m", "240m", "300m", "360m", "480m", MAIN]), dialogChannel);
             }
             // Could possibly use a substring, but that is too general: being specific avoids problems
             else if ((choice ==  "45m") ||
