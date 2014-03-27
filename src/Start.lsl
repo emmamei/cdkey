@@ -19,6 +19,14 @@
 #define cdRunScript(a) llSetScriptState(a, RUNNING);
 #define cdStopScript(a) llSetScriptState(a, NOT_RUNNING);
 
+// This isn't great - but at least it's up here where it can be maintained
+// Note, too, that Start is missing - because that's THIS script...
+list scriptList = [ "Aux", "Avatar", "ChatHandler", "Dress", "Main", "MenuHandler",
+#ifdef DEVELOPER_MODE
+                    "LinkListen",
+#endif
+                    "ServiceRequester", "ServiceReceiver", "StatusRLV", "Transform" ];
+
 //#define HYPNO_START   // Enable hypno messages on startup
 //
 // This is the initial hypnotic suggestion and RolePlay
@@ -28,6 +36,9 @@
 //
 // As of 30 October 2013, this script is unused.
 
+//=======================================
+// VARIABLES
+//=======================================
 float delayTime = 15.0; // in seconds
 float nextIntro;
 float initTimer;
@@ -53,7 +64,9 @@ float keyLimit;
 integer ncLine;
 integer demoMode;
 
+#ifdef DEVELOPER_MODE
 float ncStart;
+#endif
 integer lastAttachPoint;
 key lastAttachAvatar;
 
@@ -108,6 +121,9 @@ integer afk;
 integer lowScriptMode;
 #endif
 
+//=======================================
+// FUNCTIONS
+//=======================================
 doVisibility() {
     vector colour = gemColour;
     if (llGetInventoryType(APPEARANCE_NC) == INVENTORY_NOTECARD) {
@@ -143,8 +159,9 @@ doVisibility() {
 //---------------------------------------
 // Configuration Functions
 //---------------------------------------
-// This code assumes a human-generated config file
+
 processConfiguration(string name, string value) {
+
     //----------------------------------------
     // Assign values to program variables
 
@@ -156,16 +173,17 @@ processConfiguration(string name, string value) {
     list capSubsiquent = [ "busy is away", "can afk", "can fly", "can pose", "can sit", "can stand", "can wear", "detachable", "doll type", "pleasure doll", "pose silence" ];
     list rlv = [ "afk rlv", "base rlv ", "collapse rlv", "pose rlv" ];
 
-    if ( ( i = llListFindList(firstWord, [name]) ) != -1) {
-        lmSendConfig(llDeleteSubString(name, llSubStringIndex(name," "), -1), value);
+    if (( i = llListFindList(firstWord,[name])) != NOT_FOUND) {
+        //lmSendConfig(llDeleteSubString(name, llSubStringIndex(name," "), -1), value);
+        lmSendConfig(llGetSubString(name, 0, llSubStringIndex(name," ") - 1), value);
     }
-    else if ( ( i = llListFindList(rlv, [name]) ) != -1) {
-        name = "user" + name = llToUpper(llGetSubString(name, 0, 0)) + llGetSubString(name, 1, -5) + "RLVcmd";
+    else if (( i = llListFindList(rlv,[name])) != NOT_FOUND) {
+        name = "user" + (name = llToUpper(llGetSubString(name, 0, 0)) + llGetSubString(name, 1, -5)) + "RLVcmd";
         lmSendConfig(name, value);
     }
-    else if ( ( i = llListFindList(capSubsiquent, [name]) ) != -1) {
+    else if (( i = llListFindList(capSubsiquent,[name])) != NOT_FOUND) {
         integer j;
-        while( ( j = llSubStringIndex(name, " ") ) != -1) {
+        while(( j = llSubStringIndex(name, " ")) != -1) {
             name = llInsertString(llDeleteSubString(name, j, j + 1), j, llToUpper(llGetSubString(name, j + 1, j + 1)));
         }
         lmSendConfig(name, value);
@@ -185,7 +203,7 @@ processConfiguration(string name, string value) {
     else if (name == "auto tp")           { lmSendConfig("autoTP",             value); }
     else if (name == "outfitable")        { lmSendConfig("canDress",           value); }
 
-    
+
     else if (name == "blacklist") {
         if (llListFindList(blacklist, [ value ]) == NOT_FOUND)
             lmSendConfig("blacklist", llDumpList2String((blacklist = llListSort(blacklist + [ value, llRequestAgentData((key)value, DATA_NAME) ], 2, 1)), "|"));
@@ -210,14 +228,7 @@ processConfiguration(string name, string value) {
     //    llMessageLinked(LINK_SET, 101, name + param, NULL_KEY);
     //}
     else {
-        if (llGetSubString(name, -3, -1) == "rlv") {
-            
-            if (llListFindList(llJson2List("[\"base\",\"collapse\",\"pose\",\"afk\"]"),[name]) != -1) {
-                lmSendConfig("user" + name + "RLVcmd", value);
-                return;
-            }
-        }
-        llOwnerSay("Unknown configuration value: " + name + " on line " + (string)(ncLine + 1));
+        llOwnerSay("Unknown configuration value in preferences: " + name + " on line " + (string)(ncLine + 1));
     }
 }
 
@@ -239,8 +250,10 @@ setGender(string gender) {
 }
 
 initConfiguration() {
+#ifdef DEVELOPER_MODE
     ncStart = llGetTime();
-    
+#endif
+
     // Check to see if the file exists and is a notecard
     if (llGetInventoryType(NOTECARD_PREFERENCES) == INVENTORY_NOTECARD) {
         llOwnerSay("Loading preferences notecard");
@@ -251,12 +264,12 @@ initConfiguration() {
     } else {
         // File missing - report for debugging only
         debugSay(1, "DEBUG", "No configuration found (" + NOTECARD_PREFERENCES + ")");
+
         doneConfiguration(0);
     }
 }
 
 doneConfiguration(integer read) {
-    llOwnerSay("starting doneConfiguration..."); // DEBUG:
 
     if (startup == 1 && read) {
 #ifdef DEVELOPER_MODE
@@ -267,13 +280,14 @@ doneConfiguration(integer read) {
         llSleep(7.5);
         llResetScript();
     }
+
     reset = 0;
     lmInitState(102);
     lmInitState(105);
+
     startup = 2;
-    
+
     initializationCompleted();
-    llOwnerSay("doneConfiguration completed."); // DEBUG:
 }
 
 initializationCompleted() {
@@ -281,17 +295,18 @@ initializationCompleted() {
         llSay(0, llGetDisplayName(llGetOwner()) + " is now a dolly - anyone may play with their Key.");
 
     initTimer = llGetTime() * 1000;
-    
 
     if (dollyName == "") {
         string name = dollName;
         integer space = llSubStringIndex(name, " ");
 
-        if (space != NOT_FOUND) name = llGetSubString(name, 0, space -1);
+        if (space != NOT_FOUND) name = llGetSubString(name, 0, space - 1);
 
         lmSendConfig("dollyName", (dollyName = "Dolly " + name));
     }
+
     if (cdAttached()) llSetObjectName(dollyName + "'s Key");
+
     string msg = "Initialization completed";
 #ifdef DEVELOPER_MODE
     msg += " in " + formatFloat(initTimer, 2) + "ms";
@@ -301,7 +316,7 @@ initializationCompleted() {
     sendMsg(dollID, msg);
 
     startup = 0;
-    
+
     lmInitState(110);
 
     if (llGetInventoryType(APPEARANCE_NC) == INVENTORY_NOTECARD) {
@@ -357,7 +372,7 @@ do_Restart() {
 
 default {
     link_message(integer source, integer i, string data, key id) {
-        
+
         // Parse link message header information
         list split        =     cdSplitArgs(data);
         string script     =     cdListElement(split, 0);
@@ -365,7 +380,7 @@ default {
         integer optHeader =     (i & 0x00000C00) >> 10;
         integer code      =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
-        
+
         scaleMem();
 
         if (code == 102) {
@@ -384,18 +399,18 @@ default {
             float delay = llList2Float(split, 0);
             memReport(cdMyScriptName(),delay);
         }
-        
+
         cdConfigReport();
-        
+
         else if (code == 300) {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
-            
+
             if (value == RECORD_DELETE) {
                 value = "";
                 split = [];
             }
-            
+
             if (script == "ServiceReceiver") dbConfigCount++;
 
                  if (name == "ncPrefsLoadedUUID")    ncPrefsLoadedUUID = llDeleteSubList(split,0,0);
@@ -413,7 +428,7 @@ default {
             else if (name == "userCollapseRLVcmd")  userCollapseRLVcmd = value;
             else if (name == "userPoseRLVcmd")          userPoseRLVcmd = value;
             else if (name == "userAfkRLVcmd")            userAfkRLVcmd = value;
-            
+
             if ((name == "gemColour") || (name == "primGlow") || (name == "primLight") || (name == "isVisible") || (name == "collapsed")) {
                      if (name == "gemColour")       gemColour = (vector)value;
                 else if (name == "primGlow")         primGlow = (integer)value;
@@ -438,7 +453,7 @@ default {
                 //llOwnerSay("INIT:300: dollyName = " + dollyName + " (setting)");
                 if (cdAttached()) llSetObjectName(dollyName + "'s Key");
             }
-            
+
             if ((name == "collapsed") && (userCollapseRLVcmd != "")) {
                 if (collapsed) lmRunRLVas("UserCollapse", userCollapseRLVcmd);
                 else lmRunRLVas("UserCollapse", "clear");
@@ -463,13 +478,13 @@ default {
                 msg += " RLV at " + wwGetSLUrl();
                 lmSendToController(msg);
             }
-            
+
             if (collapsed) lmRunRLVas("UserCollapse", userCollapseRLVcmd);
             else lmRunRLVas("UserCollapse", "clear");
-            
+
             if (afk) lmRunRLVas("UserAfk", userAfkRLVcmd);
             else lmRunRLVas("UserAfk", "clear");
-            
+
             if (!cdNoAnim() && !cdCollapsedAnim()) lmRunRLVas("UserPose", userPoseRLVcmd);
             else lmRunRLVas("UserPose", "clear");
 
@@ -526,7 +541,7 @@ default {
     on_rez(integer start) {
         dollID = llGetOwner();
         if(!cdAttached()) llSetObjectName(PACKAGE_NAME + " " + __DATE__);
-        
+
         databaseOnline = 0;
         if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
         RLVok = UNSET;
@@ -556,7 +571,7 @@ default {
 
             if (llGetPermissionsKey() == llGetOwner() && (llGetPermissions() & PERMISSION_TAKE_CONTROLS) != 0) llTakeControls(CONTROL_MOVE, 1, 1);
             else llRequestPermissions(dollID, PERMISSION_MASK);
-            
+
             ncResetAttach = llGetNotecardLine(NC_ATTACHLIST, cdAttached() - 1);
 
             if (lastAttachAvatar == NULL_KEY) newAttach = 1;
@@ -571,7 +586,7 @@ default {
             data = llStringTrim(data,STRING_TRIM);
             if (cdAttached()) llSetPrimitiveParams([PRIM_POS_LOCAL, (vector)cdGetValue(saveAttachment,([data,0])), PRIM_ROT_LOCAL, (rotation)cdGetValue(saveAttachment,([data,1]))]);
             attachName = data;
-            
+
             llSetTimerEvent(10.0);
         }
         else if (query_id == ncRequestAppearance) {
@@ -594,7 +609,7 @@ default {
             if (data == EOF) {
                 lmSendConfig("ncPrefsLoadedUUID", llDumpList2String(llList2List((string)llGetInventoryKey(NOTECARD_PREFERENCES) + ncPrefsLoadedUUID, 0, 9),"|"));
                 lmInternalCommand("getTimeUpdates","",NULL_KEY);
-                
+
                 doneConfiguration(1);
             }
             else {
@@ -616,80 +631,97 @@ default {
 
     changed(integer change) {
         if(!cdAttached()) llSetObjectName(PACKAGE_NAME + " " + __DATE__);
+
         if (change & CHANGED_OWNER) {
+
             if (llGetInventoryType(NOTECARD_PREFERENCES) != INVENTORY_NONE) {
-                llOwnerSay("Deleting old preferences notecard on owner change.");
-                llOwnerSay("Look at PreferencesExample to see how to make yours.");
+                llOwnerSay("Deleting old preferences notecard on owner change.\n" +
+                    "Look at PreferencesExample to see how to make yours.");
                 llRemoveInventory(NOTECARD_PREFERENCES);
             }
 
             llSleep(5.0);
-
             llResetScript();
         }
+
         if (change & CHANGED_INVENTORY) {
             if (llGetInventoryType(NOTECARD_PREFERENCES) == INVENTORY_NOTECARD) {
-                key ncKey = llGetInventoryKey(NOTECARD_PREFERENCES);
-                if (llListFindList(ncPrefsLoadedUUID,[(string)llGetInventoryKey(NOTECARD_PREFERENCES)]) == -1) {
+                string ncKey = (string)llGetInventoryKey(NOTECARD_PREFERENCES);
+
+                // Did Notecard change? (that is, did its UUID change?)
+                if (llListFindList(ncPrefsLoadedUUID,[ncKey]) == NOT_FOUND) {
                     reset = 1;
 
                     sendMsg(dollID, "Loading preferences notecard");
+#ifdef DEVELOPER_MODE
                     ncStart = llGetTime();
+#endif
 
                     // Start reading from first line (which is 0)
                     ncLine = 0;
                     ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ncLine);
-                    
+
                     return;
                 }
             }
+
             llOwnerSay("Inventory modified restarting in 60 seconds.");
             cdLinkMessage(LINK_THIS, 0, 301, "", llGetKey());
             llSleep(60.0);
-            
+
             llResetScript();
         }
     }
 
     timer() {
         float t = llGetTime();
+
+        // If the script has been running longer than 5 minutes, then
+        // scale back to 60s cycles, otherwise, use 15s cycles
         if (t >= 300.0) llSetTimerEvent(60.0);
         else llSetTimerEvent(15.0);
 
-        if (!databaseOnline || 
+        // Check to see if database startup timed out
+        if (!databaseOnline ||
             (!databaseFinished && (
-            (llGetTime() > 60.0) || (
-            (llGetTime() > 10.0) && 
-            (llGetTime() > dbConfigCount))))) {
+            (t > 60.0) || (
+            (t > 10.0) &&
+            (t > dbConfigCount))))) {
                 databaseFinished = 1;
                 databaseOnline = 0;
                 initConfiguration();
         }
+
         if (startup != 0) {
-            integer i; integer n = llGetInventoryNumber(10);
+            // Check each script to see that they are running...
+            // Is this appropriate?
+
+            integer i; integer n = llGetListLength(scriptList);
+
             for (i = 0; i < n; i++) {
-                string script = llGetInventoryName(10, i);
+                string script = cdListElement(scriptList,i);
 
                 if (!llGetScriptState(script)) {
-                    if (llListFindList([ "Aux", "Avatar", "ChatHandler", "Dress", "Main", "MenuHandler", "ServiceRequester", "ServiceReceiver", "StatusRLV", "Transform" ], [ script ]) != -1) {
-                        // Core key script appears to have suffered a fatal error try restarting
-                        float delay = 30.0;
+                    // Core key script appears to have suffered a fatal error try restarting
+
 #ifdef DEVELOPER_MODE
-                        delay = delay * 6.0; // Increase delay for automatic restarts by a factor of 6;
-                                             // this prevents rapidly looping in the event of a developer
-                                             // accidently saving a script that fails to compile.
+                    float delay = 90.0   // Increase delay for automatic restarts;
+                                         // this prevents rapidly looping in the event of a developer
+                                         // accidently saving a script that fails to compile.
+#else
+                    float delay = 30.0;
 #endif
+                    llOwnerSay("Script " + script + " has failed; key subsystems restarting in " + (string)delay + " seconds.");
+                    llSleep(delay);
 
-                        llSleep(delay);
-
-                        cdRunScript(script);
-                        llResetScript();
-                    }
+                    cdRunScript(script);
+                    llResetScript();
                 }
             }
         }
         else {
             if (!cdAttached() || (attachName == "")) return;
+
             saveAttachment = cdSetValue(saveAttachment,([attachName,0]),(string)llGetLocalPos());
             saveAttachment = cdSetValue(saveAttachment,([attachName,1]),(string)llGetLocalRot());
         }
