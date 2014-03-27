@@ -21,10 +21,10 @@
 
 // This isn't great - but at least it's up here where it can be maintained
 // Note, too, that Start is missing - because that's THIS script...
+//
+// LinkListen *could* be added for developers, but that is an optional script -
+// still - so not necessarily good to add here.
 list scriptList = [ "Aux", "Avatar", "ChatHandler", "Dress", "Main", "MenuHandler",
-#ifdef DEVELOPER_MODE
-                    "LinkListen",
-#endif
                     "ServiceRequester", "ServiceReceiver", "StatusRLV", "Transform" ];
 
 //#define HYPNO_START   // Enable hypno messages on startup
@@ -169,41 +169,36 @@ processConfiguration(string name, string value) {
     else if (value == "no"  || value == "off") value = "0";
 
     integer i;
-    list firstWord = [ "barefeet path", "helpless dolly", "quiet key" ];
-    list capSubsiquent = [ "busy is away", "can afk", "can fly", "can pose", "can sit", "can stand", "can wear", "detachable", "doll type", "pleasure doll", "pose silence" ];
-    list rlv = [ "afk rlv", "base rlv ", "collapse rlv", "pose rlv" ];
+    //list firstWord = [ "barefeet path", "helpless dolly", "quiet key" ];
+    //list capSubsiquent = [ "busy is away", "can afk", "can fly", "can pose", "can sit", "can stand", "can wear", "detachable", "doll type", "pleasure doll", "pose silence" ];
+    //list rlv = [ "afk rlv", "base rlv", "collapse rlv", "pose rlv" ];
 
-    if (( i = llListFindList(firstWord,[name])) != NOT_FOUND) {
-        //lmSendConfig(llDeleteSubString(name, llSubStringIndex(name," "), -1), value);
-        lmSendConfig(llGetSubString(name, 0, llSubStringIndex(name," ") - 1), value);
-    }
-    else if (( i = llListFindList(rlv,[name])) != NOT_FOUND) {
-        name = "user" + (name = llToUpper(llGetSubString(name, 0, 0)) + llGetSubString(name, 1, -5)) + "RLVcmd";
-        lmSendConfig(name, value);
-    }
-    else if (( i = llListFindList(capSubsiquent,[name])) != NOT_FOUND) {
-        integer j;
-        while(( j = llSubStringIndex(name, " ")) != -1) {
-            name = llInsertString(llDeleteSubString(name, j, j + 1), j, llToUpper(llGetSubString(name, j + 1, j + 1)));
+    list configs = [ "barefeet path", "helpless dolly", "quiet key",
+                     "busy is away", "can afk", "can fly", "can pose", "can sit", "can stand", "can wear", "detachable", "doll type", "pleasure doll", "pose silence", "auto tp", "outfitable", "initial time", "max time",
+                     "afk rlv", "base rlv", "collapse rlv", "pose rlv" ];
+    list sendName = [ "barefeet", "helpless", "quiet",
+                     "busyIsAway", "canAfk", "canFly", "canPose", "canSit", "canStand", "canWear", "detachable", "dollType", "pleasureDoll", "poseSilence", "autoTP", "canDress", "timeLeftOnKey", "keyLimit",
+                     "userAfkRLVcmd", "baseRLVcmd", "collapseRLVcmd", "poseRLVcmd" ];
+    list internals = [ "wind time", "blacklist name", "controller name" ];
+    list cmdName = [ "setWindtimes", "getBlacklistName", "getMistressName" ];
+
+    name = llToLower(name);
+    if ((i = cdListElementP(configs,name)) != NOT_FOUND) {
+        if (name == "initial time") {
+            if (!databaseOnline || offlineMode)
+            value = (string)((float)value * SEC_TO_MIN);
+        } if (name == "max time") {
+            value = (string)((float)value * SEC_TO_MIN);
         }
-        lmSendConfig(name, value);
+
+        lmSendConfig(cdListElement(sendName,i), value);
     }
-    else if (name == "initial time") {
-        if (!databaseOnline || offlineMode) lmSendConfig("timeLeftOnKey", (string)((float)value * SEC_TO_MIN));
-    }
-    else if (name == "wind time") {
-        lmInternalCommand("setWindTimes", value, NULL_KEY);
-    }
-    else if (name == "max time") {
-        lmSendConfig("keyLimit", (string)((float)value * SEC_TO_MIN));
+    else if ((i = cdListElementP(internals,name)) != NOT_FOUND) {
+        lmInternalCommand(cdListElement(cmdName,i), value, NULL_KEY);
     }
     else if (name == "doll gender") {
         setGender(value);
     }
-    else if (name == "auto tp")           { lmSendConfig("autoTP",             value); }
-    else if (name == "outfitable")        { lmSendConfig("canDress",           value); }
-
-
     else if (name == "blacklist") {
         if (llListFindList(blacklist, [ value ]) == NOT_FOUND)
             lmSendConfig("blacklist", llDumpList2String((blacklist = llListSort(blacklist + [ value, llRequestAgentData((key)value, DATA_NAME) ], 2, 1)), "|"));
@@ -211,12 +206,6 @@ processConfiguration(string name, string value) {
     else if (name == "controller") {
         if (llListFindList(controllers, [ value ]) == NOT_FOUND)
             lmSendConfig("controllers", llDumpList2String((controllers = llListSort(controllers + [ value, llRequestAgentData((key)value, DATA_NAME) ], 2, 1)), "|"));
-    }
-    else if (name == "blacklist name") {
-        lmInternalCommand("getBlacklistName", value, NULL_KEY);
-    }
-    else if (name == "controller name") {
-        lmInternalCommand("getMistressName", value, NULL_KEY);
     }
     //--------------------------------------------------------------------------
     // Disabled for future use, allows for extention scripts to add support for
@@ -232,12 +221,15 @@ processConfiguration(string name, string value) {
     }
 }
 
+// Only place gender is currently set is in the preferences
 setGender(string gender) {
+
     if (gender == "male") {
         lmSendConfig("dollGender",     (dollGender     = "Male"));
         lmSendConfig("pronounHerDoll", (pronounHerDoll = "His"));
         lmSendConfig("pronounSheDoll", (pronounSheDoll = "He"));
-    } else {
+    }
+    else {
         if (gender == "sissy") {
             lmSendConfig("dollGender", (dollGender = "Sissy"));
         } else {
@@ -276,6 +268,7 @@ doneConfiguration(integer read) {
         sendMsg(dollID, "Preferences read in " + formatFloat(llGetTime() - ncStart, 2) + "s");
 #endif
     }
+
     if (reset) {
         llSleep(7.5);
         llResetScript();
