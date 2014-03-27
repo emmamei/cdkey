@@ -404,11 +404,12 @@ default {
 
 #ifdef SIM_FRIENDLY
         if (possibleEvents != []) {
-            if (lowScriptMode)              possibleEvents += 300;
+            if (lowScriptMode)              possibleEvents += 300.0;
             else                            possibleEvents += 60.0;
         }
+        else
 #endif
-
+        possibleEvents += 20.0;
         if (timeLeftOnKey != 0.0)           possibleEvents += timeLeftOnKey;
 
         // Set timer to the first of our predicted events.
@@ -477,6 +478,7 @@ default {
             scaleMem();
             memReport(cdMyScriptName(),delay);
         }
+        else
 
         cdConfigReport();
 
@@ -582,7 +584,7 @@ default {
             split = llDeleteSubList(split, 0, 0);
 
             if (cmd == "getTimeUpdates") {
-                integer t = llGetTime();
+                float t = llGetTime();
                 if (cdTimeSet(timeLeftOnKey))       lmSendConfig("timeLeftOnKey",    (string) timeLeftOnKey);
                 if (cdTimeSet(wearLockExpire))      lmSendConfig("wearLockExpire",   (string)(wearLockExpire - t));
                 if (cdTimeSet(timeToJamRepair))     lmSendConfig("timeToJamRepair",  (string)(timeToJamRepair - t));
@@ -639,7 +641,7 @@ default {
                 //wearLockExpire = WEAR_LOCK_TIME;
 
                 if (llList2Integer(split, 0)) {
-                    wearLockExpire = llGetTime() + WEAR_LOCK_TIME));
+                    wearLockExpire = llGetTime() + WEAR_LOCK_TIME;
                     displayWindRate = setWindRate();
                 }
                 else wearLockExpire = 0.0;

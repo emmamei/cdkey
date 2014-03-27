@@ -378,6 +378,7 @@ default {
 
         if (code == 102) {
             if (script != "ServiceReceiver") return;
+
             databaseFinished = 1;
             if (!databaseOnline || (llListFindList(ncPrefsLoadedUUID,      [(string)llGetInventoryKey(NOTECARD_PREFERENCES)]) == -1)) {
                 initConfiguration();
@@ -389,9 +390,11 @@ default {
         }
         else if (code == 135) {
             if (script == cdMyScriptName()) return;
+
             float delay = llList2Float(split, 0);
             memReport(cdMyScriptName(),delay);
         }
+        else
 
         cdConfigReport();
 
@@ -489,13 +492,13 @@ default {
 
             if (selection == "Reset Scripts") {
                 if (cdIsController(id)) llResetScript();
-                else if (id == dollID) {
-                    if (RLVok == YES)
-                        llOwnerSay("Unable to reset scripts while running with RLV enabled, please relog without RLV disabled or " +
-                                    "you can use login a Linden Lab viewer to perform a script reset.");
-                    else if (RLVok == UNSET && (llGetTime() < 300.0))
-                        llOwnerSay("Key is currently still checking your RLV status please wait until the check completes and then try again.");
-                    else llResetScript();
+//              else if (id == dollID) {
+//                  if (RLVok == YES)
+//                      llOwnerSay("Unable to reset scripts while running with RLV enabled, please relog without RLV disabled or " +
+//                                  "you can use login a Linden Lab viewer to perform a script reset.");
+//                  else if (RLVok == UNSET && (llGetTime() < 300.0))
+//                      llOwnerSay("Key is currently still checking your RLV status please wait until the check completes and then try again.");
+//                  else llResetScript();
                 }
             }
 
@@ -503,22 +506,26 @@ default {
         }
     }
 
+
+    //----------------------------------------
+    // STATE ENTRY
+    //----------------------------------------
     state_entry() {
         dollID = llGetOwner();
         dollName = llGetDisplayName(dollID);
+
         if(!cdAttached()) llSetObjectName(PACKAGE_NAME + " " + __DATE__);
 
         rlvWait = 1;
-
         cdInitializeSeq();
-
         reset = 2;
+
         if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
         else do_Restart();
     }
 
     //----------------------------------------
-    // TOUCHED
+    // TOUCH START
     //----------------------------------------
     touch_start(integer num) {
         if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
@@ -607,11 +614,15 @@ default {
             }
             else {
                 integer index = llSubStringIndex(data, "#");
+
                 if (index != -1) data = llDeleteSubString(data, index, -1);
+
                 if (data != "") {
                     index = llSubStringIndex(data, "=");
+
                     string name = llGetSubString(data, 0, index - 1);
                     string value = llGetSubString(data, index + 1, -1);
+
                     name = llStringTrim(llToLower(name), STRING_TRIM);
                     value = llStringTrim(value, STRING_TRIM);
 
@@ -698,7 +709,7 @@ default {
                     // Core key script appears to have suffered a fatal error try restarting
 
 #ifdef DEVELOPER_MODE
-                    float delay = 90.0   // Increase delay for automatic restarts;
+                    float delay = 90.0;  // Increase delay for automatic restarts;
                                          // this prevents rapidly looping in the event of a developer
                                          // accidently saving a script that fails to compile.
 #else
