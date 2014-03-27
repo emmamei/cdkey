@@ -607,7 +607,7 @@ default {
                     lmSendConfig("carrierName", (carrierName = ""));
                 }
             }
-            else if ((keyAnimation == "" || ((!cdIsDoll(id) && canPose) || cdSelfPosed())) {
+            else if (keyAnimation == "" || ((!cdIsDoll(id) && canPose) || cdSelfPosed())) {
                 if (((!cdIsDoll(id) && canPose) || cdSelfPosed()) && choice == "Unpose") {
                     lmSendConfig("keyAnimation", (string)(keyAnimation = ""));
                     lmSendConfig("poserID", (string)(poserID = NULL_KEY));
@@ -615,7 +615,7 @@ default {
                 else {
                     string anim = "";
 
-                    if llGetInventoryType(choice) == 20) anim = choice;
+                    if (llGetInventoryType(choice) == 20) anim = choice;
                     else if (llGetInventoryType(llGetSubString(choice, 2, -1)) == 20) anim = llGetSubString(choice, 2, -1);
 
                     if (anim != "") {
