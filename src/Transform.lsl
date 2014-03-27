@@ -281,12 +281,27 @@ default {
         integer code      =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
+        // First, dump those we don''t want...
+        if (code == 700) return;
+        else if (code == 136) return;
+        else if (code == 150) return;
+        else if (code == 303) return;
+        else if (code == 850) return;
+        else if (code == 315) return;
+        else if (code == 11) return;
+
         string choice = cdListElement(split, 0);
         string name = cdListElement(split, 1);
         transformerId = id;
 
-        //if (id != NULL_KEY) llOwnerSay("Transform Link Msg:" + (string)code + ":choice/name/id = " + choice + "/" + name + "/" + (string)id); //DEBUG
-        //else llOwnerSay("Transform Link Msg:" + (string)code + ":choice/name = " + choice + "/" + name); //DEBUG
+#ifdef DEVELOPER_MODE
+        {
+          string s = "Transform Link Msg:" + script + ":" + (string)code + ":choice/name";
+          string t = choice + "/" + name;
+          if (id != NULL_KEY) llOwnerSay(s + "/id = " + t + "/" + (string)id); //DEBUG
+          else llOwnerSay(s + " = " + t); //DEBUG
+        }
+#endif
 
         scaleMem();
 
@@ -333,7 +348,9 @@ default {
             }
 
             if (script != cdMyScriptName()) {
-                     if (name == "quiet")                                          quiet = (integer)value;
+                     if (name == "timeLeftOnKey") { if (script == "Main") runTimedTriggers(); }
+                else if (name == "keyHandler") return;
+                else if (name == "quiet")                                          quiet = (integer)value;
                 else if (name == "mustAgreeToType")                      mustAgreeToType = (integer)value;
                 else if (name == "showPhrases")                              showPhrases = (integer)value;
                 else if (name == "wearAtLogin")                              wearAtLogin = (integer)value;
@@ -368,15 +385,18 @@ default {
                     // this only runs if some other script sets the Type, not this one
                     if (configured) setDollType(stateName, AUTOMATED);
                 }
-
-                else if (script == "Main" && name == "timeLeftOnKey") runTimedTriggers();
             }
         }
+
         else if (code == 305) {
+#ifdef WAKESCRIPT
             if (choice == "wakeScript") {
                 if (name == cdMyScriptName()) cdLinkMessage(LINK_THIS, 0, 303, "debugLevel|dialogChannel|dollType|quiet|mustAgreeToType|RLVok|showPhrases|wearAtLogin", llGetKey());
             }
+#endif
+            ;
         }
+
         else if (code == 350) {
             RLVok = ((integer)choice == 1);
 
@@ -396,6 +416,7 @@ default {
                 }
             }
         }
+
         else if (code == 500) {
             // string name = cdListElement(split, 2);
             string optName = llGetSubString(choice, 2, STRING_END);
@@ -498,8 +519,13 @@ default {
                 }
             }
 
-            if ((!showPhrases) && ((menuTime == 0.0) || ((menuTime + 60) < llGetTime()))) llSetScriptState(cdMyScriptName(), 0);
+            //if ((!showPhrases) && ((menuTime == 0.0) || ((menuTime + 60) < llGetTime()))) llSetScriptState(cdMyScriptName(), 0);
         }
+#ifdef DEVELOPER_MODE
+        else {
+            llOwnerSay("Transform Link Message not handled: " + name + "/" + (string)code);
+        }
+#endif
     }
 
     //----------------------------------------
@@ -513,6 +539,7 @@ default {
         // llOwnerSay("outfitsFolderTest = " + outfitsFolderTest); // DEBUG:
         // llOwnerSay("    substring = " + (string)llGetSubString(choice, -llStringLength(outfitsFolderTest), STRING_END)); // DEBUG:
 
+        // Does choice end in outfits Folder test suffix?
         if ((outfitsFolder == "") && (llGetSubString(choice, -llStringLength(outfitsFolderTest), STRING_END) == outfitsFolderTest)) {
             outfitsFolder = choice + "/";
             lmSendConfig("outfitsFolder", outfitsFolder);
@@ -523,23 +550,28 @@ default {
             llOwnerSay("Your outfits folder is '" + outfitsFolder + "'");
             outfitsFolderTestRetries = 0;
         }
+
+        // Does choice end in clothing prefix?
         else if ((typeFolder == "") && (llGetSubString(choice, -llStringLength(clothingprefix), STRING_END) == clothingprefix)) {
             typeFolder = choice;
             outfitsFolderItem = 0;
 
             cdStopTimer();
+            //integer n = llStringLength(outfitsFolder);
 
+            //if (llGetSubString(typeFolder, 0, n - 1) != outfitsFolder)
             if (llGetSubString(typeFolder, 0, llStringLength(outfitsFolder) - 1) != outfitsFolder) {
                 llOwnerSay("Found a matching type folder in '" + typeFolder + "' but it is not located within your outfits folder '" + outfitsFolder + "'" +
                            "please make sure that the '" + TYPE_FLAG + stateName + "' folder is inside of '" + outfitsFolder + "'");
                 typeFolder = "";
-                useTypeFolder = 0;
+                useTypeFolder = NO;
             }
             else {
                 typeFolder = llDeleteSubString(typeFolder, 0, llStringLength(outfitsFolder));
+                //typeFolder = llGetSubString(typeFolder, n, STRING_END);
                 llOwnerSay("Your outfits folder is now " + outfitsFolder);
                 llOwnerSay("Your type folder is now " + outfitsFolder + "/" + typeFolder);
-                useTypeFolder = 1;
+                useTypeFolder = YES;
             }
 
             lmSendConfig("typeFolder", typeFolder);
