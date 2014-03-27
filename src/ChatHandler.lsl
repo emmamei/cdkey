@@ -503,12 +503,15 @@ default
                     string help = "Recovery Commandss:
                      These commnds may help to recover a key without a script
                      reset in some cases.
-    .wakescript ..... followed by the name of a key script if the named script
-                     is not running this will attempt to restart it.
     .refreshvars .... try to refresh all variables from the internal db
     .httpreload ..... reinitialize the services scripts and fully reload all
                      data from the off world backup storage (OnlineMode only)
-    .rlvinit ........ try RLV initialization again";
+    .rlvinit ........ try RLV initialization again"
+#ifdef WAKESCRIPT
+                     + "    .wakescript ..... followed by the name of a key script if the named script
+                     is not running this will attempt to restart it."
+#endif
+                     ;
                     lmSendToAgent(help, id);
                     }
                     else if (choice == "xstats") {
@@ -825,6 +828,7 @@ default
                             lmSendToAgentPlusDoll("Chat prefix has been changed to " + llToUpper(chatPrefix) + " the new prefix must now be used for all commands.", id);
                         }
                     }
+#ifdef WAKESCRIPT
                     else if (choice == "wakescript") {
                         string script;
 
@@ -857,6 +861,7 @@ default
                             llOwnerSay(msg);
                         }
                     }
+#endif
                 }
                 if (cdIsDoll(id)) {
 #ifdef DEVELOPER_MODE

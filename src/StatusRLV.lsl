@@ -55,7 +55,9 @@ default {
         cdInitializeSeq();
         scaleMem();
         
+#ifdef WAKESCRIPT
         llSetScriptState("StatusRLV",0);
+#endif
     }
     
     on_rez(integer start) {

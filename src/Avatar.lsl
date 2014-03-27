@@ -827,7 +827,9 @@ default {
     
                 if (!RLVstarted) {
                     if (RLVok) llOwnerSay("Enabling RLV mode");
+#ifdef WAKESCRIPT
                     else llSetScriptState("StatusRLV", 0);
+#endif
                     
                     llListenControl(listenHandle, 0);
                     lmRLVreport(RLVok, rlvAPIversion, 0);

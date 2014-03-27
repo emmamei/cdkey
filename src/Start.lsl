@@ -313,23 +313,25 @@ initializationCompleted() {
 }
 
 #ifdef SIM_FRIENDLY
+#ifdef WAKESCRIPT
 wakeMenu() {
 #ifdef DEVELOPER_MODE
     llOwnerSay("Waking menu scripts");
 #endif
-    cdRunScript("MenuHandler");
-    cdRunScript("Transform");
-    cdRunScript("Dress");
+    //cdRunScript("MenuHandler");
+    //cdRunScript("Transform");
+    //cdRunScript("Dress");
 }
 
 sleepMenu() {
 #ifdef DEVELOPER_MODE
     llOwnerSay("Sleeping menu scripts");
 #endif
-    cdStopScript("MenuHandler");
-    cdStopScript("Transform");
-    cdStopScript("Dress");
+    //cdStopScript("MenuHandler");
+    //cdStopScript("Transform");
+    //cdStopScript("Dress");
 }
+#endif
 #endif
 
 do_Restart() {
@@ -514,7 +516,9 @@ default {
         if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
         integer i;
 #ifdef SIM_FRIENDLY
+#ifdef WAKESCRIPT
         if (!llGetScriptState("MenuHandler")) wakeMenu();
+#endif
         nextLagCheck = llGetTime() + SEC_TO_MIN;
 #endif
     }
@@ -528,7 +532,9 @@ default {
         RLVok = UNSET;
         startup = 2;
 #ifdef SIM_FRIENDLY
+#ifdef WAKESCRIPT
         wakeMenu();
+#endif
 #endif
 
         databaseFinished = 0;
