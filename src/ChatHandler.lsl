@@ -90,7 +90,7 @@ default
             float delay = llList2Float(split, 0);
             scaleMem();
             memReport(cdMyScriptName(),delay);
-        }
+        } else
 
         cdConfigReport();
 
@@ -183,7 +183,10 @@ default
                 }
             }
             else if (name == "tpLureOnly")                 tpLureOnly = (integer)value;
-            else if (name == "windTimes")                   windTimes = llJson2List(value);
+
+            // careful to eliminate (for now) spurious sources of windTimes
+            // until bug is truly fixed.
+            else if (name == "windTimes") { if (script == "Main") windTimes = llJson2List(value); }
             else if (name == "wearLockExpire")         wearLockExpire = (float)value;
             else if (name == "windRate")                     windRate = (float)value;
         }
@@ -191,16 +194,14 @@ default
         else if (code == 305) {
             string cmd = llList2String(split, 0);
 
-            split = llDeleteSubList(split, 0, 0);
-
-            integer i;
-
 #define CONTROLLER_LIST 1
 #define BLACKLIST_LIST 2
 
             if ((cmd == "addMistress") ||
                 (cmd == "addRemBlacklist") ||
                 (cmd == "remMistress")) {
+
+                split = llDeleteSubList(split, 0, 0); // needs to be out of if statement if any more cmds added
 
                 string uuid = llList2String(split, 0);
                 string name = llList2String(split, 1);
@@ -340,20 +341,20 @@ default
         if (channel == chatChannel) {
             string prefix = cdGetFirstChar(msg);
 
-            // Before we proceed first verfify the command is for us.
+            // Before we proceed first verify that the command is for us.
             if (prefix == "*") {
                 // *prefix is global, strip from choice and continue
                 //prefix = llGetSubString(msg,0,0);
-                msg = llDeleteSubString(msg,0,0);
+                msg = llGetSubString(msg,1,-1);
             }
             else if ((prefix == "#") && !cdIsDoll(id)) {
                 // #prefix is an all others prefix like with OC etc
                 //prefix = llGetSubString(msg,0,0);
-                msg = llDeleteSubString(msg,0,0);
+                msg = llGetSubString(msg,1,-1);
             }
             else if (llToLower(llGetSubString(msg,0,1)) == chatPrefix) {
                 prefix = llGetSubString(msg,0,1);
-                msg = llDeleteSubString(msg,0,1);
+                msg = llGetSubString(msg,2,-1);
             }
             else if (cdIsDoll(id)) {
                 llOwnerSay("Use of chat commands without a prefix is depreciated and will be removed in a future release.");
@@ -363,12 +364,14 @@ default
             debugSay(2, "CHAT-DEBUG", "On #" + (string)channel + " secondlife:///app/agent/" + (string)id + "/about: pre:" + prefix + "(ok) cmd:" + msg + " id:" + (string)id);
 
             // Is the "msg" an animation?
-            if (llGetInventoryType(msg)== 20) {
+            if (llGetInventoryType(msg) == 20) {
                 string firstChar = cdGetFirstChar(msg);
 
+                // if animation starts with "." only Doll has access to it
                 if (firstChar == ".") {
                     if (cdIsDoll(id)) { cdMenuInject(msg, name, id); }
                 }
+                // if animation starts with "!" only Doll and Controllers have access to it
                 else if (firstChar == "!") {
                     if (cdIsDoll(id) || cdIsController(id)) { cdMenuInject(msg, name, id); }
                 }
@@ -386,7 +389,7 @@ default
             string choice = msg;
 
             if (!PARAMETERS_EXIST) { // Commands without parameters handled first
-                string choice = llToLower(choice);
+                choice = llToLower(choice);
 
                 // Commands only for Doll
                 //    * build
@@ -677,7 +680,7 @@ default
                             if (timeLeftOnKey > DEMO_LIMIT) {
                                 lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = DEMO_LIMIT));
                             }
-                            s += "in demo mode: " + (string)llRound(timeLeftOnKey / SEC_TO_MIN) + " of " + (string)llRound(DEMO_LIMIT / SEC_TO_MIN) + " minutes remaining.";
+                            s += "in demo mode: " + (string)llRound(timeLeftOnKey / SEC_TO_MIN) + " of " + (string)llFloor(DEMO_LIMIT / SEC_TO_MIN) + " minutes remaining.";
                         }
                         else {
                             // FIXME: currentlimit not set until later; how do we tell user what it is?
@@ -685,7 +688,7 @@ default
                             // only execption would be if keyLimit was invalid however there will be a follow up message
                             // from Main stating this and giving the new value so not something we need to do here.
 
-                            s += "running normally: " + (string)(timeLeftOnKey / SEC_TO_MIN) + " of " + (string)llFloor(keyLimit / SEC_TO_MIN) + " minutes remaining.";
+                            s += "running normally: " + (string)llRound(timeLeftOnKey / SEC_TO_MIN) + " of " + (string)llFloor(keyLimit / SEC_TO_MIN) + " minutes remaining.";
                         }
                     }
                     else if (choice == "listposes") {
@@ -693,9 +696,11 @@ default
                         integer isDoll = cdIsDoll(id); integer isController = cdIsController(id);
 
                         string thisPose; string thisPrefix;
+
                         while(n) {
                             thisPose = llGetInventoryName(INVENTORY_ANIMATION, --n);
                             thisPrefix = cdGetFirstChar(thisPose);
+
                             if ((thisPrefix != "!") && (thisPrefix != ".")) thisPrefix = "";
 
                             if (thisPose != ANIMATION_COLLAPSED) {
@@ -720,7 +725,8 @@ default
                 }
 
                 if (choice == "wind") {
-                    // inject a fake Menu click appropriate to the users access
+                    // if Dolly gives this command, its an Emergency Winder activation.
+                    // if someone else, it is a normal wind of the Doll.
 #ifndef TESTER_MODE
                     if (cdIsDoll(id)) cdMenuInject("Wind Emg", dollName, dollID);
                     else {
