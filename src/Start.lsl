@@ -116,8 +116,8 @@ integer databaseOnline;
 
 float keyLimit;
 
-#ifdef SIM_FRIENDLY
 integer afk;
+#ifdef SIM_FRIENDLY
 integer lowScriptMode;
 #endif
 
@@ -412,7 +412,9 @@ default {
                  if (name == "ncPrefsLoadedUUID")    ncPrefsLoadedUUID = llDeleteSubList(split,0,0);
             else if (name == "offlineMode")                offlineMode = (integer)value;
             else if (name == "databaseOnline")          databaseOnline = (integer)value;
+#ifdef SIM_FRIENDLY
             else if (name == "lowScriptMode")            lowScriptMode = (integer)value;
+#endif
             else if (name == "dialogChannel")            dialogChannel = (integer)value;
             else if (name == "demoMode")                      demoMode = (integer)value;
             else if (name == "quiet")                            quiet = (integer)value;
