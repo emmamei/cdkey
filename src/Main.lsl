@@ -354,33 +354,41 @@ default {
         // and being doll type Builder or Key
 
         if (windRate != 0.0) {
-            minsLeft = llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate));
-            
             timeLeftOnKey -= timerInterval * windRate;
 
-            if (doWarnings && !warned) {
-                if (minsLeft == 30 || minsLeft == 15 || minsLeft == 10 || minsLeft ==  5 || minsLeft ==  2) {
-                    // FIXME: This can be seen as a spammy message - especially if there are too many warnings
-                    // FIXME: What do we think about this being gated by the quiet key option?  Should we just leave it without as
-                    // it has it's own option, though quiet version still warns the doll so perhaps still of use to some?
-                    if (!quiet) llSay(0, dollName + " has " + (string)minsLeft + " minutes left before they run down!");
-                    else llOwnerSay("You have " + (string)minsLeft + " minutes left before winding down!");
-                    warned = 1; // have warned now: dont repeat same warning
-                }
-            }
-            else warned = 0;
+            if (timeLeftOnKey > 0.0) {
 
-            // Dolly is DONE! Go down... and yell for help.
-            if (collapsed == NOT_COLLAPSED && timeLeftOnKey <= 0.0) {
-                // This message is intentionally excluded from the quiet key setting as it is not good for
-                // dolls to simply go down silently.
-                llSay(0, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on their key.)");
-                collapse(NO_TIME);
+                minsLeft = llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate));
+
+                if (doWarnings && !warned) {
+                    if (minsLeft == 30 || minsLeft == 15 || minsLeft == 10 || minsLeft ==  5 || minsLeft ==  2) {
+                        // FIXME: This can be seen as a spammy message - especially if there are too many warnings
+                        // FIXME: What do we think about this being gated by the quiet key option?  Should we just leave it without as
+                        // it has it's own option, though quiet version still warns the doll so perhaps still of use to some?
+                        if (!quiet) llSay(0, dollName + " has " + (string)minsLeft + " minutes left before they run down!");
+                        else llOwnerSay("You have " + (string)minsLeft + " minutes left before winding down!");
+                        warned = 1; // have warned now: dont repeat same warning
+                    }
+                }
+                else warned = 0;
+
+            }
+            else {
+                // Dolly is DONE! Go down... and yell for help.
+                if (collapsed == NOT_COLLAPSED) {
+
+                    // This message is intentionally excluded from the quiet key setting as it is not good for
+                    // dolls to simply go down silently.
+
+                    llSay(0, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on their key.)");
+                    collapse(NO_TIME);
+                }
             }
         }
 
 #ifdef DEVELOPER_MODE
-        if (timeReporting) llOwnerSay("Script Time: " + formatFloat(llList2Float(llGetObjectDetails(llGetKey(), [ OBJECT_SCRIPT_TIME ]), 0) * 1000000, 2) + "µs");
+        if (timeReporting) llOwnerSay("Script Time (Running 30m Average): " +
+                              formatFloat(llList2Float(llGetObjectDetails(llGetKey(), [ OBJECT_SCRIPT_TIME ]), 0) * 1000000, 2) + "µs");
 #endif
 
         scaleMem();
