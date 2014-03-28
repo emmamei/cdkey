@@ -73,7 +73,7 @@ key lastAttachAvatar;
 list controllers;
 list blacklist;
 list recentDilation;
-list windTimes;
+//list windTimes;
 
 integer quiet = NO;
 integer newAttach = YES;

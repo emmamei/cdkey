@@ -24,7 +24,7 @@ key dollID = NULL_KEY;
 key menuID = NULL_KEY;
 key uniqueID = NULL_KEY;
 
-list windTimes = [ 30 ];
+//list windTimes = [ 30 ];
 
 float timeLeftOnKey;
 float windDefault = 1800.0;
@@ -634,8 +634,7 @@ default
 
                 llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
             }
-            else if (choice == "Detach")
-                lmInternalCommand("detach", "", id);
+            else if (choice == "Detach") { lmInternalCommand("detach", "", id); }
             else if (afterSpace == "Visible") lmSendConfig("isVisible", (string)(visible = (beforeSpace == CROSS)));
             else if (choice == "Reload Config") {
                 llResetOtherScript("Start");

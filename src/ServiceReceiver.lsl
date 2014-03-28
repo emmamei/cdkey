@@ -53,7 +53,7 @@ default {
         else if (code == 135) {
             float delay = llList2Float(split, 0);
             memReport(cdMyScriptName(),delay);
-        }
+        } else
         
         cdConfigReport();
         

@@ -295,12 +295,16 @@ default {
         transformerId = id;
 
 #ifdef DEVELOPER_MODE
-        {
+        //if (choice != "keyHandler" &&
+        //    choice != "getTimeUpdates" &&
+        //    choice != "timeLeftOnKey") {
+
           string s = "Transform Link Msg:" + script + ":" + (string)code + ":choice/name";
           string t = choice + "/" + name;
+
           if (id != NULL_KEY) llOwnerSay(s + "/id = " + t + "/" + (string)id); //DEBUG
           else llOwnerSay(s + " = " + t); //DEBUG
-        }
+        //}
 #endif
 
         scaleMem();
@@ -335,6 +339,7 @@ default {
             float delay = (float)choice;
             memReport(cdMyScriptName(),delay);
         }
+        else
 
         cdConfigReport(); // FIXME: this "code" is invalid
 
