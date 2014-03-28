@@ -293,6 +293,8 @@ default {
         float timerInterval;
         
         if (cdAttached()) timerInterval = ((thisTimerEvent = llGetTime()) - lastTimerEvent);
+
+        llOwnerSay("Main Timer fired, interval " + formatFloat(timerInterval,3) + "s.");
         
         if (cdTimeSet(nextExpiryTime) && (thisTimerEvent < nextExpiryTime) && (timerInterval < 10.0)) return;
 
@@ -344,7 +346,7 @@ default {
 
         //--------------------------------
         // WINDING DOWN.....
-        //--------------------------------
+        //
         // A specific test for collapsed status is no longer required here
         // as being collapsed is one of several conditions which forces the
         // wind rate to be 0.
@@ -383,6 +385,7 @@ default {
 
         scaleMem();
 
+#ifdef PREDICTIVE_TIMER
         // Determine next event to fire and set timer to match
         list possibleEvents;
         if (cdTimeSet(carryExpire)) {
@@ -414,10 +417,14 @@ default {
 
         // Set timer to the first of our predicted events.
         llSetTimerEvent(cdListMin(possibleEvents) + 0.022); // Minimum event delay is 0.022s pointless setting faster
+#else
+        // This takes the place of the predictive timer
+        llSetTimerEvent(30.0);
+#endif
     }
 
     //----------------------------------------
-    // RECEIVED A LINK MESSAGE
+    // LINK MESSAGE
     //----------------------------------------
     // For Transforming Key operations
     link_message(integer source, integer i, string data, key id) {
@@ -492,7 +499,8 @@ default {
                 split = [];
             }
 
-                 if (name == "afk")                               afk = (integer)value;
+                 if (name == "timeLeftOnKey")            timeLeftOnKey = (float)value;
+            else if (name == "afk")                               afk = (integer)value;
             else if (name == "winderID")                     winderID = (key)value;
             else if (name == "carrierID") {
                 carrierID = (key)value;
@@ -544,22 +552,29 @@ default {
             }
 
             else if (name == "windTimes") {
-                // If we see Wind Times sent as a config and not by this script then we pass the input through or
-                // setWindTimes handler to make sure that it has been properly processed and all invalids cleaned.
-                if (script != "Main") lmInternalCommand("setWindTimes", llDumpList2String(llJson2List(value),"|"), id);
+            // -- if we see windTimes sent not by this script - and reply with setWindTimes -
+            //    we set the stage for a loop where the other side sees the setWindTimes and replies
+            //    with windTimes again, setting the stage for a loop. This has been seen in-world
+            //    with the MenuHandler script.
+
+//              // If we see Wind Times sent as a config and not by this script then we pass the input through or
+//              // setWindTimes handler to make sure that it has been properly processed and all invalids cleaned.
+//              if (script != "Main") lmInternalCommand("setWindTimes", llDumpList2String(llJson2List(value),"|"), id);
+//              else windTimes = llJson2List(value);
+
+                if (script != "Main") llOwnerSay("windTimes LinkMessage sent by " + script + " with value " + value);
                 else windTimes = llJson2List(value);
             }
             else if (name == "displayWindRate") {
                 if ((float)value != 0) displayWindRate = (float)value;
             }
-            else if (name == "timeLeftOnKey")            timeLeftOnKey = (float)value;
             else if (name == "collapsed")                    collapsed = (integer)value;
             else if (name == "keyHandler") {
                 keyHandler = (key)value;
             }
             else if (name == "keyLimit") {
                 keyLimit = (float)value;
-                if (script != cdMyScriptName()) lmMenuReply("Wind", "", NULL_KEY);
+                if (script != "Main") lmMenuReply("Wind", "", NULL_KEY);
             }
             else if (name == "demoMode") {
                 demoMode = (integer)value;
@@ -613,8 +628,11 @@ default {
                 //lmSendConfig("afk", (string)afk);
                 lmSendConfig("autoAFK", (string)autoAFK);
             }
-            else if ((cmd == "collapse") && (script != llGetScriptName())) collapse(llList2Integer(split, 0));
+            else if ((cmd == "collapse") && (script != "Main")) collapse(llList2Integer(split, 0));
             else if (cmd == "setWindTimes") {
+                // Ignore setWindTimes from other scripts
+                if (script != "Main" && script != "Aux") return;
+
                 split = llDeleteSubList(llParseString2List(data, [","," ","|"], []), 0, 1);
                 integer i; integer start = llGetListLength(split);
 
