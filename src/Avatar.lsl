@@ -51,7 +51,9 @@ integer dialogChannel;
 integer haveControls;
 integer listenHandle;
 integer locked;
+#ifdef SIM_FRIENDLY
 integer lowScriptMode;
+#endif
 integer poseSilence;
 integer refreshControls;
 integer RLVck = 0;
@@ -498,7 +500,9 @@ default {
 #ifdef DEVELOPER_MODE
                 else if (name == "debugLevel")               debugLevel = (integer)value;
 #endif
+#ifdef SIM_FRIENDLY
                 else if (name == "lowScriptMode")         lowScriptMode = (integer)value;
+#endif
                 else if (name == "quiet")                         quiet = (integer)value;
                 else if (name == "chatChannel")             chatChannel = (integer)value;
                 else if (name == "canPose")                     canPose = (integer)value;
