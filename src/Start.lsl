@@ -501,7 +501,7 @@ default {
 //                  else if (RLVok == UNSET && (llGetTime() < 300.0))
 //                      llOwnerSay("Key is currently still checking your RLV status please wait until the check completes and then try again.");
 //                  else llResetScript();
-                }
+//              }
             }
 
             nextLagCheck = llGetTime() + SEC_TO_MIN;

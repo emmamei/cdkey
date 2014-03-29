@@ -645,11 +645,13 @@ default
             else if (afterSpace == "AFK") {
                 lmSendConfig("afk", (string)(afk = (beforeSpace == CROSS)));
                 float factor = 2.0;
+
                 if (afk) factor = 0.5;
+
                 displayWindRate *= factor;
                 windRate *= factor;
-                integer minsLeft = llRound(timeLeftOnKey / (60.0 * displayWindRate));
-                lmInternalCommand("setAFK", (string)afk + "|0|" + formatFloat(windRate, 1) + "|" + (string)minsLeft, id);
+
+                lmInternalCommand("setAFK", (string)afk + "|0|" + formatFloat(windRate, 1) + "|" + (string)llRound(timeLeftOnKey / (60.0 * displayWindRate)),id);
 
                 lmMenuReply(MAIN, name, id);
             }
@@ -687,15 +689,13 @@ default
                         llSensor("", "", AGENT, 20.0, PI);
                     }
                     else {
-                        msg = "You already have the maximum (11) entries in your " + msg;
-                        msg += " please remove one or more entries before attempting to add another.";
+                        msg = "You already have the maximum (11) entries in your " + msg + " please remove one or more entries before attempting to add another.";
                         llRegionSayTo(id, 0, msg);
                     }
                 }
                 else if (beforeSpace == CIRCLE_MINUS) {
                     if (dialogKeys == []) {
-                        msg = "You currently have nobody listed in your " + msg;
-                        msg += " did you mean to select the add option instead?.";
+                        msg = "You currently have nobody listed in your " + msg + " did you mean to select the add option instead?.";
                         llRegionSayTo(id, 0, msg);
                         return;
                     }
@@ -748,7 +748,6 @@ default
                 isFeature = 1; // Maybe it'a a features menu item
                 if (afterSpace == "Type Text") lmSendConfig("signOn", (string)set);
                 else if (afterSpace == "Quiet Key") lmSendConfig("quiet", (string)(quiet = set));
-                else if ((!set || !isDoll) && (afterSpace == "Rpt Wind")) lmSendConfig("canRepeat", (string)set);
                 else if (afterSpace == "Carryable") lmSendConfig("canCarry", (string)(canCarry = set));
                 else if (afterSpace == "Outfitable") lmSendConfig("canDress", (string)(canDress = set));
                 else if (afterSpace == "Poseable") lmSendConfig("canPose", (string)(canPose = set));
@@ -758,14 +757,15 @@ default
                     llSleep(1.0);
                     cdLinkMessage(LINK_THIS, 0, 301, "", NULL_KEY);
                 }
+                else if ((!set || !isDoll) && (afterSpace == "Rpt Wind")) lmSendConfig("canRepeat", (string)set);
                 else if ((!set || !isDoll) && (afterSpace == "Allow AFK")) {
                     lmSendConfig("canAFK", (string)(canAFK = set));
-                    if (!canAFK && afk) {
-                        afk = 0;
-                        displayWindRate = setWindRate();
-                        integer minsLeft = llRound(timeLeftOnKey / (60.0 * displayWindRate));
-                        lmInternalCommand("setAFK", (string)afk + "|0|" + formatFloat(windRate, 1) + "|" + (string)minsLeft, id);
-                    }
+                    //if (!canAFK && afk) {
+                    //    afk = 0;
+                    //    displayWindRate = setWindRate();
+                    //    integer minsLeft = llRound(timeLeftOnKey / (60.0 * displayWindRate));
+                    //    lmInternalCommand("setAFK", (string)afk + "|0|" + formatFloat(windRate, 1) + "|" + (string)minsLeft, id);
+                    //}
                 }
 #ifdef ADULT_MODE
                 else if (afterSpace == "Pleasure") lmSendConfig("pleasureDoll", (string)(pleasureDoll = set));

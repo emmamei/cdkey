@@ -17,8 +17,8 @@ integer timerStarted;
 
 float setWindRate() {
     float newWindRate;
-    vector agentPos = llList2Vector(llGetObjectDetails(dollID, [ OBJECT_POS ]), 0);
-    integer agentInfo = llGetAgentInfo(dollID);
+    //vector agentPos = llList2Vector(llGetObjectDetails(dollID, [ OBJECT_POS ]), 0);
+    //integer agentInfo = llGetAgentInfo(dollID);
     
     newWindRate = baseWindRate;
     if (afk) newWindRate *= 0.5;
@@ -26,6 +26,9 @@ float setWindRate() {
     if (windRate != newWindRate * cdWindDown()) {
         windRate = newWindRate * cdWindDown();
         
+        // baseWindRate is the starting point for all rates...
+        // displayWindRate is the currently "valid" rate...
+        // windRate is the actual rate, including full stop (or no unwinding)
         lmSendConfig("baseWindRate", (string)baseWindRate);
 	lmSendConfig("displayWindRate", (string)newWindRate);
         lmSendConfig("windRate", (string)windRate);

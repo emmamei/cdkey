@@ -4,7 +4,9 @@
 #define NO 0
 #define NOT_FOUND -1
 
+#ifdef KEY_HANDLER
 key keyHandler = NULL_KEY;
+#endif
 key requestID;
 key requestName;
 key requestUpdate;
@@ -21,9 +23,13 @@ list blacklist;
 list checkNames;
 #define HTTP_HEADERS HTTP_CUSTOM_HEADER, "X-SilkyTech-Product", PACKAGE_NAME, HTTP_CUSTOM_HEADER, "X-SilkyTech-Product-Version", (string)PACKAGE_VERNUM, HTTP_CUSTOM_HEADER, "X-SilkyTech-Offline", (string)offlineMode
 #define HTTP_OPTIONS [ HTTP_HEADERS, HTTP_BODY_MAXLENGTH, 16384, HTTP_VERBOSE_THROTTLE, FALSE, HTTP_METHOD ]
+#ifdef KEY_HANDLER
 list NO_STORE = [ "keyHandler", "keyHandlerTime" ];
+#endif
 
+#ifdef KEY_HANDLER
 float keyHandlerTime;
+#endif
 float lastAvatarCheck;
 float lastKeyPost;
 float lastPost;
@@ -32,7 +38,9 @@ float HTTPthrottle = 10.0;
 float HTTPinterval = 60.0;
 float postSendTimeout;
 
+#ifdef KEY_HANDLER
 integer broadcastOn = -1873418555;
+#endif
 integer expeditePost;
 integer MistressWaiting = -1;
 integer blacklistWaiting = -1;

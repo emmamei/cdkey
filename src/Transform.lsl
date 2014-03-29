@@ -354,7 +354,9 @@ default {
 
             if (script != cdMyScriptName()) {
                      if (name == "timeLeftOnKey") { if (script == "Main") runTimedTriggers(); }
+#ifdef KEY_HANDLER
                 else if (name == "keyHandler") return;
+#endif
                 else if (name == "quiet")                                          quiet = (integer)value;
                 else if (name == "mustAgreeToType")                      mustAgreeToType = (integer)value;
                 else if (name == "showPhrases")                              showPhrases = (integer)value;

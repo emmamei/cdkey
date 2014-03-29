@@ -206,6 +206,7 @@ default
     }
 
     attach(key id) {
+#ifdef KEY_HANDLER
         if (keyHandler == llGetKey() && id == NULL_KEY) {
             llRegionSay(broadcastOn, "keys released");
 #ifdef DEVELOPER_MODE
@@ -213,6 +214,7 @@ default
 #endif
             lmSendConfig("keyHandler", (string)(keyHandler = NULL_KEY));
         }
+#endif
     }
 
     changed(integer change) {
@@ -303,6 +305,7 @@ default
     
                     }
                 }
+#ifdef KEY_HANDLER
                 if ((keyHandler == NULL_KEY) || (keyHandlerTime < (llGetTime() - 60))) {
                     keyHandler = llGetKey();
                 }
@@ -317,6 +320,7 @@ default
                     }
                     checkAvatarList();
                 }
+#endif
                 scaleMem();
             }
 
@@ -325,6 +329,7 @@ default
             else if (name == "debugLevel") debugLevel = (integer)value;
 #endif
             else if (name == "nextRetry") nextRetry = (integer)value;
+#ifdef KEY_HANDLER
             else if (name == "keyHandler") {
                 keyHandler = (key)value;
                 keyHandlerTime = llGetTime();
@@ -332,6 +337,7 @@ default
             else if (name == "keyHandlerTime") {
                 keyHandlerTime = llGetTime() - (float)(llGetUnixTime() - (integer)value);
             }
+#endif
 
             //if ((!configured && (script == "ServiceReceiver")) || (script == cdMyScriptName())) return;
             if (script == cdMyScriptName()) return;

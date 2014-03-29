@@ -1,5 +1,23 @@
-/* src/include/config.h.  Generated from config.h.in by configure.  */
-/* src/include/config.h.in.  Generated from configure.ac by autoheader.  */
+/* FILE: config.h */
+
+/* adds processing for multiple keys on broadcast */
+//#define KEY_HANDLER
+
+/* adds update processing in ServiceReciever */
+#define UPDATE_METHOD_CDKEY
+
+/* enable Link Message 320 (RLV confirms?) in StatusRLV */
+//#define LINK_320
+
+/* The predictive timer predicts when the next event will occur, and
+   tries to set the timer to match. */
+//#define PREDICTIVE TIMER 1
+
+/* Manipulate Script running dynamically */
+//#define WAKESCRIPT 1
+
+/* enable database back-end processing */
+#define DATABASE_BACKEND 1
 
 /* enable the inclusion of adult features such as stripping and slut doll in
    the key */
@@ -67,4 +85,4 @@
 /* enable lag reduction mode when detecting sustained high time dilation in
    the local region. This slightly delays certain events and turns off non
    essential candy to produce a large drop in script time */
-#define SIM_FRIENDLY 1
+//#define SIM_FRIENDLY 1

@@ -54,7 +54,9 @@ string rlvAPIversion;
 key carrierID = NULL_KEY;
 key winderID = NULL_KEY;
 key dollID = NULL_KEY;
+#ifdef KEY_HANDLER
 key keyHandler = NULL_KEY;
+#endif
 
 integer dialogChannel;
 integer targetHandle;
@@ -248,7 +250,9 @@ default {
     changed(integer change) {
         if (change & CHANGED_REGION) {
             simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
+#ifdef KEY_HANDLER
             lmSendConfig("keyHandler", (string)(keyHandler = NULL_KEY));
+#endif
         }
         if (change & CHANGED_OWNER) {
             llSleep(60);
@@ -294,7 +298,7 @@ default {
         
         if (cdAttached()) timerInterval = ((thisTimerEvent = llGetTime()) - lastTimerEvent);
 
-        llOwnerSay("Main Timer fired, interval " + formatFloat(timerInterval,3) + "s.");
+        if (timeReporting) llOwnerSay("Main Timer fired, interval " + formatFloat(timerInterval,3) + "s.");
         
         if (cdTimeSet(nextExpiryTime) && (thisTimerEvent < nextExpiryTime) && (timerInterval < 10.0)) return;
 
@@ -387,7 +391,7 @@ default {
         }
 
 #ifdef DEVELOPER_MODE
-        if (timeReporting) llOwnerSay("Script Time (Running 30m Average): " +
+        if (timeReporting) llOwnerSay("Script Time (running 30m Average): " +
                               formatFloat(llList2Float(llGetObjectDetails(llGetKey(), [ OBJECT_SCRIPT_TIME ]), 0) * 1000000, 2) + "µs");
 #endif
 
@@ -570,16 +574,18 @@ default {
 //              if (script != "Main") lmInternalCommand("setWindTimes", llDumpList2String(llJson2List(value),"|"), id);
 //              else windTimes = llJson2List(value);
 
-                if (script != "Main") llOwnerSay("windTimes LinkMessage sent by " + script + " with value " + value);
+                if (script != "Main" && script != "ServiceReceiver") llOwnerSay("windTimes LinkMessage sent by " + script + " with value " + value);
                 else windTimes = llJson2List(value);
             }
             else if (name == "displayWindRate") {
                 if ((float)value != 0) displayWindRate = (float)value;
             }
             else if (name == "collapsed")                    collapsed = (integer)value;
+#ifdef KEY_HANDLER
             else if (name == "keyHandler") {
                 keyHandler = (key)value;
             }
+#endif
             else if (name == "keyLimit") {
                 keyLimit = (float)value;
                 if (script != "Main") lmMenuReply("Wind", "", NULL_KEY);
@@ -588,7 +594,7 @@ default {
                 demoMode = (integer)value;
             }
 #ifdef DEVELOPER_MODE
-            else if (llToLower(name) == "timereporting")           timeReporting = (integer)value;
+            else if (name == "timeReporting")           timeReporting = (integer)value;
 #endif
 #ifdef SIM_FRIENDLY
             else if (name == "lowScriptMode") {

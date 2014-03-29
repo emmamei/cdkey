@@ -9,6 +9,7 @@
 #include "include/GlobalDefines.lsl"
 #include "include/ServiceIncludes.lsl"
 
+//#define UPDATE_METHOD_CDKEY
 string resolveName;
 string DataURL;
 integer useHTTPS = 1;

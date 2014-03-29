@@ -9,11 +9,12 @@
 #include "include/GlobalDefines.lsl"
 #define cdMenuInject(a,b,c) lmMenuReply(a,b,c)
 
-#define TESTING
 // FIXME: Depends on a variable s
 #define cdCapability(c,p,u) { s += p; if (!(c)) { s += " not"; }; s += " " + u + ".\n"; }
 
+#ifdef KEY_HANDLER
 key keyHandler              = NULL_KEY;
+#endif
 key listID                  = NULL_KEY;
 
 list windTimes              = [30];
@@ -31,8 +32,10 @@ string blockedControlName   = "";
 string blockedControlUUID   = "";
 
 integer autoAFK             = 1;
+#ifdef KEY_HANDLER
 integer broadcastOn         = -1873418555;
 integer broadcastHandle     = 0;
+#endif
 integer busyIsAway          = 0;
 integer chatChannel         = 75;
 integer chatHandle          = 0;
@@ -56,7 +59,9 @@ default
         // Beware listener is now available to users other than the doll
         // make sure to take this into account within all handlers.
         chatHandle = cdListenAll(chatChannel);
+#ifdef KEY_HANDLER
         broadcastHandle = cdListenAll(broadcastOn);
+#endif
 
         cdInitializeSeq();
     }
@@ -206,7 +211,7 @@ default
                 string uuid = llList2String(split, 0);
                 string name = llList2String(split, 1);
                 integer type; string typeString; string barString; integer mode;
-                list tmpList; list barList; // Barlist represents the oppositite (blacklist or controller list) which bars adding.
+                list tmpList; list barList; // barList represents the opposite (of blacklist or controller list) which bars adding.
 
                 if ((id != DATABASE_ID) && (script != "MenuHandler")) id = listID;
 
@@ -227,7 +232,7 @@ default
                     blacklistMode = 0;
                 }
 
-                // First check, test suitability of name for adding send message if not acceptable
+                // First check: Test suitability of name for adding; send a message to user if not acceptable
                 if (llListFindList(barList, [ uuid ]) != -1) {
                     string msg = name + " is listed on your ";
                     if (type == CONTROLLER_LIST) msg += "blacklist you must first remove them before adding as a ";
@@ -248,7 +253,7 @@ default
                 // First validation: Check for empty values there should be none so delete any that are found
                 while ( ( i = llListFindList(tmpList, [""]) ) != -1) tmpList = llDeleteSubList(tmpList,i,i);
 
-                // Second validation: Test for the presence of the uuid in the existing list
+                // Second validation: Test for the presence of the UUID in the existing list
                 i = llListFindList(tmpList, [ uuid ]);
                 integer j = llListFindList(tmpList, [ name ]);
 
@@ -551,47 +556,20 @@ default
                         s += "\n";
 
                         string p = llToLower(pronounHerDoll);
-#ifdef TESTING
-                        cdCapability(autoTP,      "Doll can", "be force teleported");
-                        cdCapability(detachable,  "Doll can", "detach " + p + " key");
-                        cdCapability(canDress,    "Doll can", "be dressed by the public");
-                        cdCapability(canCarry,    "Doll can", "be carried by the public");
-                        cdCapability(canAFK,      "Doll can", "go AFK");
-                        cdCapability(canFly,      "Doll can", "fly");
-                        cdCapability(canPose,     "Doll can", "be posed by the public");
-                        cdCapability(canSit,      "Doll can", "sit");
-                        cdCapability(canStand,    "Doll can", "stand");
-                        cdCapability(canRepeat,   "Doll can", "multiply wound");
-                        cdCapability(canDressSelf,     "Doll can", "dress by " + p + "self");
-                        cdCapability(poseSilence, "Doll is",  "silenced while posing");
-#else
-                        list items = [
-                            autoTP,             "Doll can? be force teleported",
-                            detachable,         "Doll can? detach " + p + " key",
-                            canDress,           "Doll can? be dressed by others",
-                            canFly,             "Doll can? fly",
-                            canPose,            "Doll can? be posed by others",
-                            canSit,             "Doll can? sit",
-                            canStand,           "Doll can? stand",
-                            canDressSelf,            "Doll can? dress by " + p + "self",
-                            poseSilence,        "Doll is? silenced while posing"
-                        ];
 
-                        i=0; n = llGetListLength(items);
+                        cdCapability(autoTP,       "Doll can", "be force teleported");
+                        cdCapability(detachable,   "Doll can", "detach " + p + " key");
+                        cdCapability(canDress,     "Doll can", "be dressed by the public");
+                        cdCapability(canCarry,     "Doll can", "be carried by the public");
+                        cdCapability(canAFK,       "Doll can", "go AFK");
+                        cdCapability(canFly,       "Doll can", "fly");
+                        cdCapability(canPose,      "Doll can", "be posed by the public");
+                        cdCapability(canSit,       "Doll can", "sit");
+                        cdCapability(canStand,     "Doll can", "stand");
+                        cdCapability(canRepeat,    "Doll can", "multiply wound");
+                        cdCapability(canDressSelf, "Doll can", "dress by " + p + "self");
+                        cdCapability(poseSilence,  "Doll is",  "silenced while posing");
 
-                        string in;
-                        integer index;
-
-                        while (i++ < n) {
-                            in = llList2String(items, i--);
-                            index = llSubStringIndex(in, "?");
-
-                            in = llDeleteSubString(in, index, index);
-                            if (!llList2Integer(items, i+=2)) in = llInsertString(in, index, " not");
-                            s += in + "\n";
-                        }
-
-#endif
                         if (windRate == 0.0) { s += "Key is not winding down.\n"; }
                         else { s += "Current wind rate is " + formatFloat(windRate,2) + ".\n"; }
 
@@ -883,6 +861,11 @@ default
                         llMessageLinked(LINK_THIS, llList2Integer(params, 0), cdMyScriptName() + "|" + llList2String(params, 1), llList2Key(params, 2));
                     }
                     else if (choice == "timereporting") {
+                        string s = "Time reporting turned ";
+                        if (param == "0") s+= "off.";
+                        else s+= "on.";
+
+                        llOwnerSay(s);
                         lmSendConfig("timeReporting", (string)(timeReporting = (integer)param));
                     }
 #else
@@ -896,6 +879,7 @@ default
                 }
             }
         }
+#ifdef KEY_HANDLER
         else if (channel == broadcastOn) {
             if (llGetSubString(msg, 0, 4) == "keys ") {
                 string subcommand = llGetSubString(msg, 5, STRING_END);
@@ -912,5 +896,6 @@ default
                 }
             }
         }
+#endif
     }
 }
