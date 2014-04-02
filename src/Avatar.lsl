@@ -410,7 +410,9 @@ default {
             ifPermissions();
             RLVck = 0;
             rlvAPIversion = "";
+#ifdef DEVELOPER_MODE
             myPath = "";
+#endif
         }
 
         newAttach = (lastAttachedID != dollID);
