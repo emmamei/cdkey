@@ -164,6 +164,10 @@ ifPermissions() {
 #define JAMMED 2
 
 collapse(integer n) {
+
+    // n describes state being entered;
+    // collapsed describes current state
+
     if (n == NOT_COLLAPSED) {
         lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
     }
@@ -181,13 +185,16 @@ collapse(integer n) {
             llSleep(0.1);
         }
     }
+
     if (n != JAMMED) {
         lmSendConfig("timeToJamRepair", (string)(timeToJamRepair = 0.0));
     }
 
-    lmSendConfig("collapsed",     (string)(collapsed = n));
+    lmSendConfig("collapsed", (string)(collapsed = n));
+
     if (collapsed) lmSendConfig("collapseTime",  (string)(collapseTime - llGetTime()));
-    else lmSendConfig("collapseTime",  (string)(collapseTime = 0.0));
+    else           lmSendConfig("collapseTime",  (string)(collapseTime = 0.0));
+
     lmInternalCommand("collapse", (string)collapsed, llGetKey());
     
     llSetTimerEvent(0.022);
@@ -550,7 +557,7 @@ default {
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
             else if (name == "dialogChannel")           dialogChannel = (integer)value;
             else if (name == "debugLevel")                 debugLevel = (integer)value;
-            if ((name == "wearLockExpire") || (name == "poseExpire") || (name == "timeToJamRepair") || (name == "carryExpire") || (name == "collapseTime")) {
+            else if ((name == "wearLockExpire") || (name == "poseExpire") || (name == "timeToJamRepair") || (name == "carryExpire") || (name == "collapseTime")) {
                 if (script != "Main") {
                     float timeSet = 0.0;
                     if ((float)value != 0.0) timeSet = llGetTime() + (float)value;
@@ -884,25 +891,31 @@ default {
 
                 if ((windamount + 60.0) > windLimit) { windamount = windLimit; }
 
+                lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey += windLimit));
+
                 if (windLimit < 60.0) {
-                    lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey += windLimit));
                     llDialog(id, "Dolly is already fully wound.", [MAIN], dialogChannel);
                 }
                 else {
-                    lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey += windamount));
-
                     if (windamount > 0) {
                         integer winding = llFloor(windamount / SEC_TO_MIN);
+
                         if (winding > 0) lmSendToAgent("You have given " + dollName + " " + (string)winding + " more minutes of life.", id);
 
                         if (timeLeftOnKey == effectiveLimit) { // Fully wound
                             llOwnerSay("You have been fully wound - " + (string)llRound(effectiveLimit / (SEC_TO_MIN * displayWindRate)) + " minutes remaining.");
+
                             if (!quiet) llSay(0, dollName + " has been fully wound by " + name + ".");
                             else lmSendToAgent(dollName + " is now fully wound.", id);
+
                         } else {
+
                             lmSendToAgent("Doll is now at " + formatFloat((float)timeLeftOnKey * 100.0 / (float)effectiveLimit, 2) + "% of capacity.", id);
+
                             if (canRepeat || cdIsController(id)) {
+
                                 // No menu respawn if no repeat option is enabled!
+
                                 if ((llGetListLength(windTimes) > 1) || cdIsCarrier(id) || cdIsController(id))
                                     lmInternalCommand("windMenu", name + "|" + (string)(effectiveLimit - timeLeftOnKey), id);
                                 else lmInternalCommand("mainMenu", "Wind|" + name, id);
@@ -911,8 +924,8 @@ default {
 
                         llSleep(1.0); // Make sure that the uncollapse RLV runs before sending the message containing winder name.
 
-                        // As we are storing winderID for repeat wind how about this, give the reminder only when winder is new.
-                        if (winderID != id) llOwnerSay("Have you remembered to thank " + name + " for winding you?");
+                        // As we are storing winderID for repeat wind, only give the thankfulness reminder when winder is new.
+                        if ((winderID != id) && (id != dollID))llOwnerSay("Have you remembered to thank " + name + " for winding you?");
 
                         lmSendConfig("winderID", (string)(winderID = id));
                     }
@@ -928,22 +941,27 @@ default {
                 // If the Max Times available are changed, be sure to change the next choice also
                 llDialog(id, "You can set the maximum available time here.  Dolly cannot be wound beyond this amount of time.\nDolly currently has " + (string)llFloor(timeLeftOnKey / SEC_TO_MIN) + " mins left of " + (string)llFloor(keyLimit / SEC_TO_MIN) + ". If you lower the maximum, Dolly will lose the extra time entirely.", dialogSort(["45m", "60m", "75m", "90m", "120m", "150m", "180m", "240m", "300m", "360m", "480m", MAIN]), dialogChannel);
             }
-            // Could possibly use a substring, but that is too general: being specific avoids problems
-            else if ((choice ==  "45m") ||
-                     (choice ==  "60m") ||
-                     (choice ==  "60m") ||
-                     (choice ==  "75m") ||
-                     (choice ==  "90m") ||
-                     (choice == "120m") ||
-                     (choice == "150m") ||
-                     (choice == "180m") ||
-                     (choice == "240m") ||
-                     (choice == "300m") ||
-                     (choice == "360m") ||
-                     (choice == "480m")) {
-                //llOwnerSay("keyLimit being set to " + (string)keyLimit); // debugging code
-                //llOwnerSay("choice is " + (string)choice); // debugging code
-                lmSendConfig("keyLimit", (string)(keyLimit = ((float)choice * SEC_TO_MIN)));
+            // Shortcut only: last char = "m"
+            else if (llGetSubString(choice,-1,-1) == "m" && script == "Main") {
+
+                // specific values: rules out invalid values
+                if ((choice ==  "45m") ||
+                    (choice ==  "60m") ||
+                    (choice ==  "60m") ||
+                    (choice ==  "75m") ||
+                    (choice ==  "90m") ||
+                    (choice == "120m") ||
+                    (choice == "150m") ||
+                    (choice == "180m") ||
+                    (choice == "240m") ||
+                    (choice == "300m") ||
+                    (choice == "360m") ||
+                    (choice == "480m")) {
+
+                    //llOwnerSay("keyLimit being set to " + (string)keyLimit); // debugging code
+                    //llOwnerSay("choice is " + (string)choice); // debugging code
+                    lmSendConfig("keyLimit", (string)(keyLimit = ((float)choice * SEC_TO_MIN)));
+                }
             }
             else if (cdIsController(id) && (choice == "Hold")) {
                 collapse(JAMMED);

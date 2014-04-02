@@ -178,10 +178,11 @@ default
             // Shortcut: k
             else if (c == "k") {
                      if (name == "keyAnimation")         keyAnimation = value;
-                else if (name == "keyLimit")                 keyLimit = (float)value;
+#ifdef KEY_HANDLER
                 else if (name == "keyHandler") {
                     keyHandler = (key)value;
                 }
+#endif
                 else if (name == "keyLimit") {
                     keyLimit = (float)value;
                     if (!demoMode) currentLimit = keyLimit;

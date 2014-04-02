@@ -1,13 +1,16 @@
 /* FILE: config.h */
 
+/* adds slowed walking during AFK */
+#define SLOW_WALK 1
+
 /* adds processing for multiple keys on broadcast */
-//#define KEY_HANDLER
+//#define KEY_HANDLER 1
 
 /* adds update processing in ServiceReciever */
-#define UPDATE_METHOD_CDKEY
+#define UPDATE_METHOD_CDKEY 1
 
 /* enable Link Message 320 (RLV confirms?) in StatusRLV */
-//#define LINK_320
+//#define LINK_320 1
 
 /* The predictive timer predicts when the next event will occur, and
    tries to set the timer to match. */

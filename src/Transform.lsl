@@ -67,7 +67,7 @@ integer minMinutes = 0;
 integer configured;
 integer RLVok;
 
-integer startup = 1;
+//integer startup = 1;
 
 //integer menulimit = 9;     // 1.5 minute
 
@@ -140,6 +140,7 @@ reloadTypeNames() {
 
     while(n) {
         typeName = llGetInventoryName(INVENTORY_NOTECARD, --n);
+
         if (cdGetFirstChar(typeName) == TYPE_FLAG) {
             types += cdButFirstChar(typeName);
         }
@@ -195,8 +196,10 @@ default {
 
         cdInitializeSeq();
         
+#ifdef WAKESCRIPT
         // Stop myself: stop this script from running
         cdStopScript(cdMyScriptName());
+#endif
     }
 
     //----------------------------------------
@@ -204,7 +207,7 @@ default {
     //----------------------------------------
     on_rez(integer iParam) {
         dbConfig = 0;
-        startup = 2;
+        //startup = 2;
     }
 
     //----------------------------------------
@@ -260,12 +263,16 @@ default {
                 outfitsFolderTestRetries++;
             }
         }
-        // If no phrases are being shown, then stop script: no need to keep running
-        else if (!showPhrases) {
+        else if (showPhrases) {
+            // Scripts are being shown...
+            cdStopTimer();
+        }
+#ifdef WAKESCRIPT
+        else {
+            // If no phrases are being shown, then stop script: no need to keep running
             if ((menuTime + 60.0) < llGetTime()) cdStopScript(cdMyScriptName());
         }
-        // Scripts are being shown...
-        else cdStopTimer();
+#endif
     }
 
     //----------------------------------------
@@ -281,31 +288,36 @@ default {
         integer code      =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
-        // First, dump those we don''t want...
-        if (code == 700) return;
-        else if (code == 136) return;
-        else if (code == 150) return;
-        else if (code == 303) return;
-        else if (code == 850) return;
-        else if (code == 315) return;
-        else if (code == 11) return;
-
         string choice = cdListElement(split, 0);
         string name = cdListElement(split, 1);
         transformerId = id;
 
 #ifdef DEVELOPER_MODE
-        //if (choice != "keyHandler" &&
-        //    choice != "getTimeUpdates" &&
-        //    choice != "timeLeftOnKey") {
+        // If greater than 4, print Link Messages other than "heartbeat" Link Messages
+        // If greater than 6, print everything
 
-          string s = "Transform Link Msg:" + script + ":" + (string)code + ":choice/name";
-          string t = choice + "/" + name;
+        if (debugLevel > 4) {
+            if (debugLevel < 6) {
+                if (code == 700 || code == 850) return;
+                if (choice == "keyHandler" || choice == "getTimeUpdates" || choice == "timeLeftOnKey") return;
+            }
 
-          if (id != NULL_KEY) llOwnerSay(s + "/id = " + t + "/" + (string)id); //DEBUG
-          else llOwnerSay(s + " = " + t); //DEBUG
-        //}
+            string s = "Transform Link Msg:" + script + ":" + (string)code + ":choice/name";
+            string t = choice + "/" + name;
+
+            if (id != NULL_KEY) llOwnerSay(s + "/id = " + t + "/" + (string)id);
+            else llOwnerSay(s + " = " + t);
+        }
 #endif
+
+        // First, dump those we don''t want... (but occur frequently!)
+        if (code == 700) return;
+        else if (code == 850) return;
+        //else if (code == 136) return;
+        //else if (code == 150) return;
+        //else if (code == 303) return;
+        //else if (code == 315) return;
+        //else if (code == 11) return;
 
         scaleMem();
 
@@ -321,18 +333,18 @@ default {
         else if (code == 104) {
             if (script != "Start") return;
             reloadTypeNames();
-            startup = 1;
+            //startup = 1;
             llSetTimerEvent(60.0);   // every minute
         }
 
-        else if (code == 105) {
-            if (script != "Start") return;
-        }
+        //else if (code == 105) {
+        //    if (script != "Start") return;
+        //}
 
         else if (code == 110) {
-            initState = 105;
+            //initState = 105;
             setDollType(stateName, AUTOMATED);
-            startup = 0;
+            //startup = 0;
         }
 
         else if (code == 135) {
@@ -526,11 +538,14 @@ default {
                 }
             }
 
-            //if ((!showPhrases) && ((menuTime == 0.0) || ((menuTime + 60) < llGetTime()))) llSetScriptState(cdMyScriptName(), 0);
+#ifdef WAKESCRIPT
+            if ((!showPhrases) && ((menuTime == 0.0) || ((menuTime + 60) < llGetTime()))) llSetScriptState(cdMyScriptName(), 0);
+#endif
         }
 #ifdef DEVELOPER_MODE
         else {
-            llOwnerSay("Transform Link Message not handled: " + name + "/" + (string)code);
+            if (debugLevel > 6)
+                llOwnerSay("Transform Link Message not handled: " + name + "/" + (string)code);
         }
 #endif
     }

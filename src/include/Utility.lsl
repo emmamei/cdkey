@@ -23,24 +23,29 @@ string wwGetSLUrl() {
 
 list dialogSort(list srcButtons) {
     list outButtons;
+
     while (llGetListLength(srcButtons) != 0) {
         outButtons += llList2List(srcButtons, -3, -1);
         srcButtons = llDeleteSubList(srcButtons, -3, -1);
     }
+
     return outButtons;
 }
 
 memReport(string script, float delay) {
     if (delay != 0.0) llSleep(delay);
+
     float memory_limit = (float)llGetMemoryLimit();
     float free_memory = (float)llGetFreeMemory();
     float used_memory = (float)llGetUsedMemory();
     float max_memory = free_memory + (65536 - memory_limit);
+
     if (((used_memory + free_memory) > (memory_limit * 1.05)) && (memory_limit <= 16384)) { // LSL2 compiled script
        memory_limit = 16384;
        used_memory = 16384 - free_memory;
        max_memory = free_memory;
     }
+
     cdLinkMessage(LINK_THIS,0,136,llList2Json(JSON_ARRAY, [used_memory, memory_limit, free_memory, max_memory]),NULL_KEY);
 }
 
@@ -50,11 +55,10 @@ memReport(string script, float delay) {
  * is different then you're developing *A NEW KEY!!!!!
  */
 #ifdef DEVELOPER_MODE
-#define debugSay(level,prefix,msg) if (debugLevel >= level) cdLinkMessage(LINK_THIS,0,700,cdMyScriptName()+":"+(string)__LINE__+"|"+(string)level+"|"+prefix+"|"+msg,NULL_KEY)
-/* #define debugSay(level,prefix,msg) if (debugLevel >= level) { llOwnerSay(prefix+"("+((string)level)+"):"+((string)__LINE__)+": "+(msg)); } */
+#define debugSay(level,prefix,msg) if (debugLevel >= level) llOwnerSay(prefix+"("+((string)level)+"):"+((string)__LINE__)+": "+(msg))
 #else
 #define debugSay(level,prefix,msg)
-#endif //DEVELOPER_MODE
+#endif
 
 // debugPrint is for "one-off" quickie debugging...
 // not permanent system-wide configuration
@@ -71,6 +75,7 @@ memReport(string script, float delay) {
  */
 string formatFloat(float val, integer dp) {
     string out = "ERROR";
+
     if (dp == 0) {
         out = (string)llRound(val);
     } else if (dp > 0 && dp <= 6) {
@@ -82,13 +87,14 @@ string formatFloat(float val, integer dp) {
 
 string bits2nybbles(integer bits) {
     string nybbles = "";
-    do
-    {
+
+    do {
         integer lsn = bits & 0xF; // least significant nybble
         nybbles = llGetSubString("0123456789ABCDEF", lsn, lsn) + nybbles;
     } while (bits = (0xfffFFFF & (bits >> 4)));
     return nybbles;
 }
+
 /*
  * ----------------------------------------
  * DATE/TIME FUNCTIONS
@@ -234,6 +240,7 @@ scaleMem() {
    integer limit = llGetMemoryLimit();
    integer newlimit = limit;
    integer short = 1024;
+
    if ((free + used) <= (limit * 1.05)) {
       // If this fails it is probably an LSL2 compiled script not mono and the
       // rest can't apply.
@@ -244,7 +251,8 @@ scaleMem() {
 
       if (newlimit != limit) {
          llSetMemoryLimit(newlimit);
-         debugSay(5, "DEBUG", cdMyScriptName() + " Memory limit changed from " + formatFloat((float)limit / 1024.0, 2) + "kB to " + formatFloat((float)newlimit / 1024.0, 2) + "kB (" + formatFloat((float)(newlimit - limit) / 1024.0, 2) + "kB) " + formatFloat((float)llGetFreeMemory() / 1024.0, 2) + "kB free");
+         debugSay(5, "DEBUG", cdMyScriptName() + " memory limit changed");
+         //debugSay(5, "DEBUG", (cdMyScriptName() + " Memory limit changed from " + formatFloat((float)limit / 1024.0, 2) + "kB to " + formatFloat((float)newlimit / 1024.0, 2) + "kB (" + formatFloat((float)(newlimit - limit) / 1024.0, 2) + "kB) " + formatFloat((float)llGetFreeMemory() / 1024.0, 2) + "kB free"));
       }
    }
 }

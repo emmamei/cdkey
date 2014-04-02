@@ -52,7 +52,7 @@ integer nextRetry;
 integer rezzed;
 integer gotURL;
 integer ticks;
-integer offlineMode;
+integer offlineMode = TRUE;
 integer invMarker;
 integer myMod;
 integer lastPostTimestamp;

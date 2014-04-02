@@ -84,7 +84,7 @@ integer canStand = YES;
 integer canDress = YES;
 integer detachable = YES;
 integer busyIsAway = NO;
-integer offlineMode = NO;
+integer offlineMode = YES;
 integer visible = YES;
 integer primGlow = YES;
 integer primLight = YES;
@@ -104,7 +104,7 @@ string dollGender = "Female";
 string pronounHerDoll = "Her";
 string pronounSheDoll = "She";
 //string nameOverride;
-integer startup;
+//integer startup;
 //integer initState = 104;
 integer introLine;
 integer introLines;
@@ -216,9 +216,11 @@ processConfiguration(string name, string value) {
     //    string param = "|" + llDumpList2String(values, "|");
     //    llMessageLinked(LINK_SET, 101, name + param, NULL_KEY);
     //}
+#ifdef DEVELOPER_MODE
     else {
         llOwnerSay("Unknown configuration value in preferences: " + name + " on line " + (string)(ncLine + 1));
     }
+#endif
 }
 
 // Only place gender is currently set is in the preferences
@@ -248,7 +250,7 @@ initConfiguration() {
 
     // Check to see if the file exists and is a notecard
     if (llGetInventoryType(NOTECARD_PREFERENCES) == INVENTORY_NOTECARD) {
-        llOwnerSay("Loading preferences notecard");
+        llOwnerSay("Loading Key Preferences Notecard");
 
         // Start reading from first line (which is 0)
         ncLine = 0;
@@ -263,9 +265,12 @@ initConfiguration() {
 
 doneConfiguration(integer read) {
 
-    if (startup == 1 && read) {
+    //if (startup == 1 && read) {
+    if (read) {
 #ifdef DEVELOPER_MODE
         sendMsg(dollID, "Preferences read in " + formatFloat(llGetTime() - ncStart, 2) + "s");
+#else
+        ;
 #endif
     }
 
@@ -275,10 +280,11 @@ doneConfiguration(integer read) {
     }
 
     reset = 0;
+
     lmInitState(102);
     lmInitState(105);
 
-    startup = 2;
+    //startup = 2;
 
     initializationCompleted();
 }
@@ -300,15 +306,15 @@ initializationCompleted() {
 
     if (cdAttached()) llSetObjectName(dollyName + "'s Key");
 
-    string msg = "Initialization completed";
+    string msg = "Initialization completed" +
 #ifdef DEVELOPER_MODE
-    msg += " in " + formatFloat(initTimer, 2) + "ms";
+                 " in " + formatFloat(initTimer, 2) + "ms" +
 #endif
-    msg += " key ready";
+                 "; key ready";
 
     sendMsg(dollID, msg);
 
-    startup = 0;
+    //startup = 0;
 
     lmInitState(110);
 
@@ -342,14 +348,14 @@ sleepMenu() {
 #endif
 #endif
 
-do_Restart() {
+doRestart() {
     integer loop; string me = cdMyScriptName();
     string script;
     reset = 0;
 
     llOwnerSay("Resetting scripts");
 
-    for (loop = 0; loop < llGetInventoryNumber(INVENTORY_SCRIPT); loop++) {
+    for (; loop < llGetInventoryNumber(INVENTORY_SCRIPT); loop++) {
 
         script = llGetInventoryName(INVENTORY_SCRIPT, loop);
         if (script != me) {
@@ -363,7 +369,14 @@ do_Restart() {
     ncResetAttach = llGetNotecardLine(NC_ATTACHLIST, cdAttached() - 1);
 }
 
+//========================================
+// STATES
+//========================================
 default {
+
+    //----------------------------------------
+    // LINK MESSAGE
+    //----------------------------------------
     link_message(integer source, integer i, string data, key id) {
 
         // Parse link message header information
@@ -380,7 +393,12 @@ default {
             if (script != "ServiceReceiver") return;
 
             databaseFinished = 1;
-            if (!databaseOnline || (llListFindList(ncPrefsLoadedUUID,      [(string)llGetInventoryKey(NOTECARD_PREFERENCES)]) == -1)) {
+            if (!databaseOnline) {
+                llOwnerSay("Database not online...");
+                initConfiguration();
+            }
+            if (llListFindList(ncPrefsLoadedUUID,[(string)llGetInventoryKey(NOTECARD_PREFERENCES)]) == NOT_FOUND) {
+                llOwnerSay("Didn't find original prefs");
                 initConfiguration();
             }
             else {
@@ -523,7 +541,8 @@ default {
         reset = 2;
 
         if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
-        else do_Restart();
+        else llOwnerSay("Key not attached");
+        doRestart();
     }
 
     //----------------------------------------
@@ -531,7 +550,7 @@ default {
     //----------------------------------------
     touch_start(integer num) {
         if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
-        integer i;
+
 #ifdef SIM_FRIENDLY
 #ifdef WAKESCRIPT
         if (!llGetScriptState("MenuHandler")) wakeMenu();
@@ -540,29 +559,34 @@ default {
 #endif
     }
 
+    //----------------------------------------
+    // ON REZ
+    //----------------------------------------
     on_rez(integer start) {
         dollID = llGetOwner();
-        if(!cdAttached()) llSetObjectName(PACKAGE_NAME + " " + __DATE__);
+        dollName = llGetDisplayName(dollID);
+
+        if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
+        else llSetObjectName(PACKAGE_NAME + " " + __DATE__);
+
+        RLVok = UNSET;
+        //startup = 2;
 
         databaseOnline = 0;
-        if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
-        RLVok = UNSET;
-        startup = 2;
+        databaseFinished = 0;
+
 #ifdef SIM_FRIENDLY
 #ifdef WAKESCRIPT
         wakeMenu();
 #endif
 #endif
-
-        databaseFinished = 0;
-
         llResetTime();
-        string me = cdMyScriptName();
-        integer loop; string script;
-
         sendMsg(dollID, "Reattached, Initializing");
     }
 
+    //----------------------------------------
+    // ATTACH
+    //----------------------------------------
     attach(key id) {
         if (id == NULL_KEY) {
             if(!cdAttached()) llSetObjectName(PACKAGE_NAME + " " + __DATE__);
@@ -571,7 +595,7 @@ default {
         } else {
             llMessageLinked(LINK_SET, 106, cdMyScriptName() + "|" + "attached" + "|" + (string)llGetAttached(), id);
 
-            if (llGetPermissionsKey() == llGetOwner() && (llGetPermissions() & PERMISSION_TAKE_CONTROLS) != 0) llTakeControls(CONTROL_MOVE, 1, 1);
+            if (llGetPermissionsKey() == dollID && (llGetPermissions() & PERMISSION_TAKE_CONTROLS) != 0) llTakeControls(CONTROL_MOVE, 1, 1);
             else llRequestPermissions(dollID, PERMISSION_MASK);
 
             ncResetAttach = llGetNotecardLine(NC_ATTACHLIST, cdAttached() - 1);
@@ -583,6 +607,9 @@ default {
         lastAttachAvatar = id;
     }
 
+    //----------------------------------------
+    // DATASERVER
+    //----------------------------------------
     dataserver(key query_id, string data) {
         if (query_id == ncResetAttach) {
             data = llStringTrim(data,STRING_TRIM);
@@ -635,6 +662,9 @@ default {
         }
     }
 
+    //----------------------------------------
+    // CHANGED
+    //----------------------------------------
     changed(integer change) {
         if(!cdAttached()) llSetObjectName(PACKAGE_NAME + " " + __DATE__);
 
@@ -658,7 +688,7 @@ default {
                 if (llListFindList(ncPrefsLoadedUUID,[ncKey]) == NOT_FOUND) {
                     reset = 1;
 
-                    sendMsg(dollID, "Loading preferences notecard");
+                    sendMsg(dollID, "Reloading preferences card");
 #ifdef DEVELOPER_MODE
                     ncStart = llGetTime();
 #endif
@@ -679,6 +709,9 @@ default {
         }
     }
 
+    //----------------------------------------
+    // TIMER
+    //----------------------------------------
     timer() {
         float t = llGetTime();
 
@@ -698,6 +731,7 @@ default {
                 initConfiguration();
         }
 
+#ifdef NO_STARTUP
         if (startup != 0) {
             // Check each script to see that they are running...
             // Is this appropriate?
@@ -725,6 +759,7 @@ default {
                 }
             }
         }
+#endif
         else {
             if (!cdAttached() || (attachName == "")) return;
 
@@ -733,10 +768,18 @@ default {
         }
     }
 
+    //----------------------------------------
+    // RUN TIME PERMISSIONS
+    //----------------------------------------
     run_time_permissions(integer perm) {
         if (perm & PERMISSION_TAKE_CONTROLS) {
             llTakeControls(CONTROL_MOVE, 1, 1);
-            if (reset == 2) do_Restart();
+
+            // Is this the cause of a reset loop? reset never gets away from (2)
+            //if (reset == 2) {
+            //    llOwnerSay("Permissions resetting");
+            //    doRestart();
+            //}
         }
     }
 }

@@ -51,7 +51,7 @@ integer doWarnings;
 integer tpLureOnly;
 integer isTransformingKey   = 1;
 integer lowScriptMode;
-integer offlineMode;
+integer offlineMode         = TRUE;
 integer pleasureDoll;
 integer poseSilence;
 integer quiet;
@@ -60,7 +60,7 @@ integer signOn;
 integer takeoverAllowed;
 integer visible             = 1;
 
-integer initState	    = 104;
+//integer initState	    = 104;
 integer initCode;
 #ifdef DEVELOPER_MODE
 integer debugLevel          = DEBUG_LEVEL;

@@ -12,20 +12,6 @@
 // thus we keep this script lightweight with plenty of heap room
 // for it's runtime data needs.
 
-/* =================================
- * Bugfix: Preprocessor directives may not be redefined unless
- * first #undef.  The following are already defined by the main
- * GlobalDefines.lsl
- * =================================
- * #define cdListElement(a,b) llList2String(a, b)
- * #define cdListFloatElement(a,b) llList2Float(a, b)
- * #define cdListIntegerElement(a,b) llList2Integer(a, b)
- * #define cdListElementP(a,b) llListFindList(a, [ b ]);
- * #define cdSplitArgs(a) llParseStringKeepNulls((a), [ "|" ], [])
- * #define cdSplitString(a) llParseString2List(a, [ "," ], []);
- */
-#define NOT_FOUND -1
-
 #ifdef LINK_320
 #define RESTRICTION_NEW "+"
 #define RESTRICTION_ADDED "^"
@@ -44,10 +30,15 @@ list rlvStatus;
 string scriptName;
 
 integer RLVstarted;
+
 //========================================
 // STATES
 //========================================
 default {
+
+    //----------------------------------------
+    // STATE ENTRY
+    //----------------------------------------
     state_entry() {
         dollID = llGetOwner();
         scriptName = llGetScriptName();
@@ -60,14 +51,17 @@ default {
 #endif
     }
     
+    //----------------------------------------
+    // ON REZ
+    //----------------------------------------
     on_rez(integer start) {
+        // This essentially converts the "on_rez" event to a "state_entry" event
         llResetScript();
     }
 
     //----------------------------------------
-    // LINK_MESSAGE
+    // LINK MESSAGE
     //----------------------------------------
-
     link_message(integer sender, integer i, string data, key id) {
         
         // Parse link message header information
@@ -88,24 +82,30 @@ default {
         // 315: RLV Commands
         // 350: RLVok Yes/No Notification
 
-        if (code == 102) {
-            scaleMem();
+        scaleMem();
+
+        // quick return for often ignored codes
+        if (code == 305) return;
+
+        else if (code == 300) {
+#ifdef DEVELOPER_MODE
+            string name = cdListElement(split, 0);
+            if (name == "debugLevel") debugLevel = (integer)cdListElement(split, 1);
+#endif
+            return;
+        }
+
+        else if (code == 102) {
+            ;
         }
         else if (code == 135) {
             float delay = cdListFloatElement(split, 0);
-            scaleMem();
+
             memReport(cdMyScriptName(),delay);
-        }
+        } else
         
         cdConfigReport();
         
-        else if (code == 300) {
-            string name = cdListElement(split, 0);
-#ifdef DEVELOPER_MODE
-            if (name == "debugLevel") debugLevel = (integer)cdListElement(split, 1);
-#endif
-            if (script == "Main") scaleMem();
-        }
         else if (code == 315) {
             string realScript = script;
             string script = cdListElement(split, 0);
@@ -119,24 +119,37 @@ default {
 #ifdef LINK_320
                 string confCommands = "";
 #endif
-                //integer charLimit = 896;    // Secondlife supports chat messages up to 1024 chars
-                                            // here we avoid sending over 896 at a time for safety
-                                            // links will be longer due the the prefix.
+                string fullCmd;
+                list parts;
+                string param;
+                string cmd;
+                integer nextComma;
 
                 do {
-                    string fullCmd; list parts; string param; string cmd;
-
                     // Pull out the next RLV command into commandString
+                    fullCmd = "";
 
-                    integer nextComma = llSubStringIndex(commandString, ",");
-                    if (nextComma == NOT_FOUND) nextComma = llStringLength(commandString);
+                    if ((nextComma = llSubStringIndex(commandString, ",")) == NOT_FOUND) {
+                        //nextComma = llStringLength(commandString);
+                        fullCmd = commandString;
+                        commandString = "";
+                    }
+                    else {
+                        fullCmd = llStringTrim(llGetSubString(commandString, 0, nextComma - 1), STRING_TRIM);
+                        commandString = llDeleteSubString(commandString, 0, nextComma);
+                    }
 
-                    fullCmd = llStringTrim(llGetSubString(commandString, 0, nextComma - 1), STRING_TRIM);
-                    commandString = llDeleteSubString(commandString, 0, nextComma);
+                    if ((llSubStringIndex(fullCmd, "=")) == NOT_FOUND) {
+                        param = "";
+                        cmd = fullCmd;
+                    }
+                    else {
+                        parts = llParseString2List(fullCmd, [ "=" ], []);
+                        param = cdListElement(parts, 1);
+                        cmd = cdListElement(parts, 0);
+                    }
 
-                    parts = llParseString2List(fullCmd, [ "=" ], []);
-                    param = cdListElement(parts, 1);
-                    cmd = cdListElement(parts, 0);
+                    parts = []; // not needed, so clear it
 
                     // Send an RLV command if the string would be too long
                     if (llStringLength(sendCommands + fullCmd + ",?") > CHATMSG_MAXLEN) {
@@ -162,11 +175,11 @@ default {
                             if (cmdIndex == NOT_FOUND) { // New restriction add to list and send to viewer
                                 rlvStatus += [ cmd, script ];
                                 sendCommands += fullCmd + ",";
-
+#ifdef LINK_320
                                 // + symbol confirms that our restriction has been added and it was not in effect from another
                                 //   script.  The restriction has now been sent to the viewer and currently we have full control
                                 //   of it.
-#ifdef LINK_320
+
                                 confCommands += RESTRICTION_NEW + cmd + ",";
 #endif
                             }
@@ -179,10 +192,10 @@ default {
                                 integer myIndex = cdListElementP(scriptList, script);
 
                                 if (myIndex == NOT_FOUND) {
-
+#ifdef LINK_320
                                     // ^ symbol confirms our restriction has been added but was already set by another script
                                     //   both scripts must release this restriction before it will be removed.
-#ifdef LINK_320
+
                                     confCommands += RESTRICTION_ADDED + cmd + ",";
 #endif
                                     scriptList = llListSort(scriptList + [ script ], 1, 1);
@@ -206,17 +219,17 @@ default {
                                         rlvStatus = llDeleteSubList(rlvStatus, cmdIndex, cmdIndex + 1);
                                         sendCommands += fullCmd + ",";
 
+#ifdef LINK_320
                                         // - symbol means we were the only script holding this restriction it has been
                                         //   deleted from the viewer.
-#ifdef LINK_320
                                         confCommands += RESTRICTION_REMOVED + cmd + ",";
 #endif
                                     }
                                     else {
 
+#ifdef LINK_320
                                         // ~ symbol means we cleared our restriction but it is still enforced by at least
                                         //   one other script.
-#ifdef LINK_320
                                         confCommands += RESTRICTION_DROPPED + cmd + ",";
 #endif
                                         rlvStatus = llListReplaceList(rlvStatus, [ cmd, llDumpList2String(scriptList, ",") ],
@@ -239,18 +252,21 @@ default {
 #ifdef LINK_320
                         integer matches; integer reduced; integer cleared; integer held;
 #endif
+                        string scripts;
+                        list scriptList;
+                        integer myIndex;
+                        string thisCmd;
 
-                        for (i = 0; i < llGetListLength(rlvStatus); i = i + 2) {
-                            string thisCmd = cdListElement(rlvStatus, i);
+                        for (; i < llGetListLength(rlvStatus); i = i + 2) {
+                            thisCmd = cdListElement(rlvStatus, i);
 
                             if (llSubStringIndex(thisCmd, param) != NOT_FOUND) { // Restriction matches clear param
 #ifdef LINK_320
                                 matches++;
 #endif
-
-                                string scripts = cdListElement(rlvStatus, i + 1);
-                                list scriptList = cdSplitString(scripts);
-                                integer myIndex = cdListElementP(scriptList, script);
+                                scripts = cdListElement(rlvStatus, i + 1);
+                                scriptList = cdSplitString(scripts);
+                                myIndex = cdListElementP(scriptList, script);
 
                                 if (myIndex != NOT_FOUND) { // This script is one of the restriction issuers clear it
                                     scriptList = llDeleteSubList(scriptList, myIndex, myIndex);
@@ -271,7 +287,8 @@ default {
                                         }
 
                                         sendCommands += thisCmd + "=y,";
-                                    } else { // Restriction still holds due to other scripts but release for this one
+                                    }
+                                    else { // Restriction still holds due to other scripts but release for this one
 #ifdef LINK_320
                                         held++;
 #endif
@@ -282,13 +299,14 @@ default {
                             }
                         }
 
+#ifdef LINK_320
                         // Clear command confirmations are a little more complex as they can have many matches, the reply gives the
                         // records affected counts as follows clear=param/matches/reduced/cleared/held
                         //  * Matches: At least one restriction matching this param exists which may or may not be ours.
                         //  * Reduced: Matching restrictions of ours which have now been eliminated by the clear command they may be held by others.
                         //  * Cleared: Number of reduced restrictions which were completly cleared and removed from the viewer.
                         //  * Held: Number of reduced restrictions which were also held by others scripts and remain in effect.
-#ifdef LINK_320
+
                         if (reduced != 0 || cleared != 0 || held != 0) { // Send confirm link only for changes
                             string clrCmd = fullCmd + "/" + (string)matches + "/" + (string)reduced + "/" + (string)cleared + "/" + (string)held;
                             if (llStringLength(confCommands + clrCmd + ",") > CHATMSG_MAXLEN) {
@@ -308,11 +326,11 @@ default {
 #endif
 
 #ifdef DEVELOPER_MODE
-                debugSay(9, "DEBUG-RLV", "Active RLV: " + llDumpList2String(llList2ListStrided(rlvStatus, 0, -1, 2), "/"));
-                integer i;
-                for (i = 0; i < llGetListLength(rlvStatus); i += 2) {
-                    debugSay(9, "DEBUG-RLV", cdListElement(rlvStatus, i) + "\t" + cdListElement(rlvStatus, i + 1));
-                }
+                //debugSay(9, "DEBUG-RLV", "Active RLV: " + llDumpList2String(llList2ListStrided(rlvStatus, 0, -1, 2), "/"));
+                //integer i;
+                //for (; i < llGetListLength(rlvStatus); i += 2) {
+                //    debugSay(9, "DEBUG-RLV", cdListElement(rlvStatus, i) + "\t" + cdListElement(rlvStatus, i + 1));
+                //}
 #endif
             }
         }

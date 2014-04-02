@@ -16,14 +16,15 @@ string DataURL;
 key requestDataURL;
 
 string correctName(string name) {
-    // Many new SL users fail to undersand the meaning of "Legacy Name" the name format of the DB
-    // and many older SL residents confuse usernames and legasy names.  This function checks for
+    // Many new SL users fail to understand the meaning of "Legacy Name" the name format of the DB
+    // and many older SL residents confuse usernames and legacy names.  This function checks for
     // the presence of features inidcating we have been supplied with an invalid name which seems tp
     // be encoded in username format and makes the converstion to the valid legacy name.
     integer index;
 
     list split = llParseStringKeepNulls(name, [ "."," " ], []);
     integer n = llGetListLength(split);
+
     if (n == 0) {
         llOwnerSay("You must enter a username or legacy name.");
         return "INVALID";
@@ -152,6 +153,9 @@ string getURL(string service) {
 
 default
 {
+    //----------------------------------------
+    // STATE ENTRy
+    //----------------------------------------
     state_entry() {
         if (llGetInventoryType(".offline") != INVENTORY_NONE) {
             lmSendConfig("offlineMode", (string)(offlineMode = 1));
@@ -161,21 +165,24 @@ default
         myMod = llFloor(llFrand(5.999999));
         serverNames = llListRandomize(serverNames, 1);
         cdPermSanityCheck();
-        
+
         llSleep(1.0);
         requestDataURL = llGetNotecardLine("DataServices",0);
-        
+
         cdInitializeSeq();
     }
-    
+
+    //----------------------------------------
+    // DATASERVER
+    //----------------------------------------
     dataserver(key request, string data) {
         if (request == requestDataURL) {
             DataURL = data;
-        
+
             string time = (string)llGetUnixTime();
             HTTPdbStart = llGetTime();
             debugSay(3, "DEBUG-SERVICES", "Requesting data from HTTPdb");
-    
+
             string hashStr = (string)llGetOwner() + time + SALT;
             string requestURI = getURL("httpdb") + "retrieve?q=" + llSHA1String(hashStr) + "&p=cdkey&t=" + time + "&s=" + (string)lastGetTimestamp;
             while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
@@ -184,6 +191,9 @@ default
         }
     }
 
+    //----------------------------------------
+    // ON REZ
+    //----------------------------------------
     on_rez(integer start) {
         serverNames = llListRandomize(serverNames, 1);
         myMod = llFloor(llFrand(5.999999));
@@ -191,13 +201,13 @@ default
 
         rezzed = 1;
         configured = 0;
-        
+
         llSleep(3.0);
 
         string time = (string)llGetUnixTime();
         HTTPdbStart = llGetTime();
         debugSay(3, "DEBUG-SERVICES", "Requesting data from HTTPdb");
-    
+
         string hashStr = (string)llGetOwner() + time + SALT;
         string requestURI = getURL("httpdb") + "retrieve?q=" + llSHA1String(hashStr) + "&p=cdkey&t=" + time + "&s=" + (string)lastGetTimestamp;
         while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
@@ -205,6 +215,9 @@ default
         }
     }
 
+    //----------------------------------------
+    // ATTACH
+    //----------------------------------------
     attach(key id) {
 #ifdef KEY_HANDLER
         if (keyHandler == llGetKey() && id == NULL_KEY) {
@@ -217,6 +230,9 @@ default
 #endif
     }
 
+    //----------------------------------------
+    // CHANGED
+    //----------------------------------------
     changed(integer change) {
         if (change & CHANGED_INVENTORY) {
             if (llGetInventoryType(".offline") != INVENTORY_NONE) {
@@ -236,15 +252,21 @@ default
         }
     }
 
+    //----------------------------------------
+    // TOUCH START
+    //----------------------------------------
     touch_start(integer num) {
         // The old code stored names potentially indefinately not a good idea, better way
         lastKeyPost = llGetTime() - 30.0 * HTTPinterval; // Set the last post time to twice the max age limit
 
         integer i;
+        string name;
+        string uuid;
+
         for (i = 0; i < num; i++) { // Handle all touch_starts (can be up to 16 per event
                                     // and make sure the avatars are in the list
-            string name = llDetectedName(i);
-            string uuid = llDetectedKey(i);
+            name = llDetectedName(i);
+            uuid = llDetectedKey(i);
 
             while ((requestID = (llHTTPRequest("http://api.silkytech.com/name2key/add", HTTP_OPTIONS + [ "POST", HTTP_MIMETYPE,
                 "application/x-www-form-urlencoded" ], "names[0]" + "=" + llEscapeURL(name) + "&uuids[0]" + "=" + llEscapeURL(uuid)))) == NULL_KEY) {
@@ -255,8 +277,11 @@ default
         // having the avatar touch the key (or any cdkey for that matter).
     }
 
+    //----------------------------------------
+    // LINK MESSAGE
+    //----------------------------------------
     link_message(integer sender, integer i, string data, key id) {
-        
+
         // Parse link message header information
         list split        =     cdSplitArgs(data);
         string script     =     cdListElement(split, 0);
@@ -272,63 +297,77 @@ default
         else if (code == 135) {
             float delay = llList2Float(split, 0);
             memReport(cdMyScriptName(),delay);
-        }
-        
+        } else
+
         cdConfigReport();
-        
+
         else if (code == 300) {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
 
-            if (script == "Main" && name == "timeLeftOnKey") {
-                if (databaseReload && (databaseReload < llGetUnixTime())) {
-                    databaseReload = llGetUnixTime() + 120;
-                    string time = (string)llGetUnixTime();
-                    HTTPdbStart = llGetTime();
-                    
-                    debugSay(3, "DEBUG-SERVICES", "Requesting data from HTTPdb");
+            if (name == "timeLeftOnKey") {
+                if (script == "Main") {
+                    float t = llGetUnixTime();
 
-                    string hashStr = (string)llGetOwner() + time + SALT;
-                    string requestURI = getURL("httpdb") + "retrieve?q=" + llSHA1String(hashStr) + "&p=cdkey&t=" + time + "&s=" + (string)lastGetTimestamp;
-                    while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
-                        llSleep(1.0);
+                    if (databaseReload && (databaseReload < t)) {
+                        databaseReload = (integer)t + 120;
+                        string time = (string)t;
+                        HTTPdbStart = t;
+
+                        debugSay(3, "DEBUG-SERVICES", "Requesting data from HTTPdb");
+
+                        string hashStr = (string)llGetOwner() + time + SALT;
+                        string requestURI = getURL("httpdb") + "retrieve?q=" + llSHA1String(hashStr) + "&p=cdkey&t=" + time + "&s=" + (string)lastGetTimestamp;
+
+                        while((requestID = llHTTPRequest(requestURI, HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) {
+                            llSleep(1.0);
+                        }
                     }
-                }
-                if (llGetListLength(serverNames)) {
-                    if (!gotURL && nextRetry < llGetUnixTime())
-                    while ((requestName = llHTTPRequest(getURL("objdns") + "lookup?q=" + llEscapeURL(llList2String(serverNames, requestIndex)),
-                            HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY) llSleep(1.0);
-                    if (gotURL && (lastUpdateCheck < (llGetUnixTime() - updateCheck))) {
-                        lastUpdateCheck = llGetUnixTime();
-                        queForSave("lastUpdateCheck", (string)lastUpdateCheck);
-                        while ((requestID = llHTTPRequest(serverURL, HTTP_OPTIONS + [ "POST" ], "checkversion " + (string)PACKAGE_VERNUM)) == NULL_KEY) llSleep(1.0);
-    
+
+                    if (llGetListLength(serverNames)) {
+
+                        if (!gotURL && nextRetry < llGetUnixTime())
+                            while ((requestName = llHTTPRequest(getURL("objdns") + "lookup?q=" + llEscapeURL(llList2String(serverNames, requestIndex)),
+                                    HTTP_OPTIONS + [ "GET" ], "")) == NULL_KEY)
+                                llSleep(1.0);
+
+                        t = llGetUnixTime();
+
+                        if (gotURL && (lastUpdateCheck < (t - updateCheck))) {
+
+                            lastUpdateCheck = (integer)t;
+                            queForSave("lastUpdateCheck", (string)lastUpdateCheck);
+
+                            while ((requestID = llHTTPRequest(serverURL, HTTP_OPTIONS + [ "POST" ], "checkversion " + (string)PACKAGE_VERNUM)) == NULL_KEY)
+                                llSleep(1.0);
+                        }
                     }
-                }
 #ifdef KEY_HANDLER
-                if ((keyHandler == NULL_KEY) || (keyHandlerTime < (llGetTime() - 60))) {
-                    keyHandler = llGetKey();
-                }
-                if (keyHandler == llGetKey()) {
-                    llRegionSay(broadcastOn, "keys claimed");
-#ifdef DEVELOPER_MODE
-                    debugSay(5, "BROADCAST-DEBUG", "Broadcast Sent: keys claimed");
-#endif
-                    if ((keyHandlerTime + HTTPinterval) < llGetTime()) {
-                        lmSendConfig("keyHandler", (string)(keyHandler = llGetKey()));
-                        keyHandlerTime = llGetTime();
+                    if ((keyHandler == NULL_KEY) || (keyHandlerTime < (llGetTime() - 60))) {
+                        keyHandler = llGetKey();
                     }
-                    checkAvatarList();
-                }
+
+                    if (keyHandler == llGetKey()) {
+                        llRegionSay(broadcastOn, "keys claimed");
+#ifdef DEVELOPER_MODE
+                        debugSay(5, "BROADCAST-DEBUG", "Broadcast Sent: keys claimed");
 #endif
-                scaleMem();
+                        if ((keyHandlerTime + HTTPinterval) < llGetTime()) {
+                            lmSendConfig("keyHandler", (string)(keyHandler = llGetKey()));
+                            keyHandlerTime = llGetTime();
+                        }
+                        checkAvatarList();
+                    }
+#endif
+                    scaleMem();
+                }
             }
 
-            if (name == "lastUpdateCheck") lastUpdateCheck = (integer)value;
+            else if (name == "lastUpdateCheck") lastUpdateCheck = (integer)value;
+            else if (name == "nextRetry") nextRetry = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel") debugLevel = (integer)value;
 #endif
-            else if (name == "nextRetry") nextRetry = (integer)value;
 #ifdef KEY_HANDLER
             else if (name == "keyHandler") {
                 keyHandler = (key)value;
@@ -339,13 +378,13 @@ default
             }
 #endif
 
-            //if ((!configured && (script == "ServiceReceiver")) || (script == cdMyScriptName())) return;
-            if (script == cdMyScriptName()) return;
+            else if (script == cdMyScriptName()) return;
 
             else if (name == "offlineMode") {
                 offlineMode = (integer)value;
                 dbPostParams = [];
             }
+
             if (!offlineMode) {
                 value = llDumpList2String(llDeleteSubList(split, 0, 0), "|");
                 queForSave(name, value);
@@ -372,8 +411,8 @@ default
 
             if (selection == "Check Update") {
                 lastUpdateCheck = 0;
-                llOwnerSay("Error, failure to contact the update server you key will continue to try or see the help notecard.  " +
-                           "For alternative update options.");
+                llOwnerSay("Error: failure to contact the update server. Your key will continue to try, or see the help notecard " +
+                           "for alternative update options.");
             }
         }
         else if (code == 850) {
@@ -396,6 +435,9 @@ default
         }
     }
 
+    //----------------------------------------
+    // TIMER
+    //----------------------------------------
     timer() {
         if (llGetTime() > postSendTimeout) {
             doHTTPpost();

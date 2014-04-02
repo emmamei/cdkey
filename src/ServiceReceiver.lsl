@@ -11,16 +11,20 @@
 
 //#define UPDATE_METHOD_CDKEY
 string resolveName;
-string DataURL;
+//string DataURL;
 integer useHTTPS = 1;
+
 integer resolveType;
+#define MISTRESS_KEY 1
+#define BLACKLIST_KEY 2
+
 integer storedCount;
 integer configCount;
 float HTTPdbProcessStart;
 list storedConfigs;
 list databaseInput;
 key resolveTestKey;
-key requestDataURL;
+//key requestDataURL;
 
 // FIXME: Interim code to handle depreciation of old vars
 // See bellow line 255 and onwards.
@@ -29,17 +33,26 @@ integer canDressSelf = -1;
 key requestDataName;
 
 default {
+    //----------------------------------------
+    // STATE ENTRY
+    //----------------------------------------
     state_entry() {
         cdInitializeSeq();
-        requestDataURL = llGetNotecardLine("DataServices",0);
+        //requestDataURL = llGetNotecardLine("DataServices",0);
     }
 
+    //----------------------------------------
+    // ON REZ
+    //----------------------------------------
     on_rez(integer start) {
         rezzed = 1;
     }
 
+    //----------------------------------------
+    // LINK MESSAGE
+    //----------------------------------------
     link_message(integer sender, integer i, string data, key id) {
-        
+
         // Parse link message header information
         list split        =     cdSplitArgs(data);
         string script     =     cdListElement(split, 0);
@@ -48,22 +61,24 @@ default {
         integer code      =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
+        scaleMem();
+
         if (code == 102) {
-            scaleMem();
+            ;
         }
         else if (code == 135) {
             float delay = llList2Float(split, 0);
             memReport(cdMyScriptName(),delay);
         } else
-        
+
         cdConfigReport();
-        
+
         else if (code == 300) {
             string conf = llList2String(split, 0);
             string value = llDumpList2String(llDeleteSubList(split,0,0), "|");
-            
+
             integer i = llListFindList(storedConfigs, [conf]);
-            
+
             if (value == RECORD_DELETE) {
                 if (i != -1) storedConfigs = llDeleteSubList(storedConfigs, i, i + 1);
             }
@@ -71,11 +86,11 @@ default {
                 if ((conf == "controllers") || (conf == "blacklist")) {
                     string prefix = "controller"; split = llParseString2List(value, ["|"], []);
                     if (conf == "blacklist") prefix = conf;
-                    
+
                     // Store configuration information
                     if (i == -1) storedConfigs += [ conf, value ];
                     else storedConfigs = llListReplaceList(storedConfigs, [ conf, value ], i, i + 1);
-                    
+
                     integer j = -1; integer c;
                     string uuid;
                     string name;
@@ -85,32 +100,32 @@ default {
                     while (j++ < 9) {
                         uuid = llList2String(split,0);
                         name = llList2String(split,1);
-                        
+
                         value = uuid + "|" + name;
                         confx = prefix + (string)j;
-                        
+
                         if ((uuid != (string)NULL_KEY) && (uuid != "") && (name != "") && (value != "|")) {
                             c++;
                             lmSendConfig(confx, value);
                         }
                         else lmSendConfig(confx, RECORD_DELETE);
-    
+
                         split = llDeleteSubList(split,0,1);
-    
+
                         i = llListFindList(storedConfigs, [confx]);
                         if (i == -1) storedConfigs += [ confx, value ];
                         else storedConfigs = llListReplaceList(storedConfigs, [ confx, value ], i, i + 1);
                     }
-                    
+
                     lmSendConfig(prefix + "sCount", (string)c);
-                    
+
                     return;
                 }
-                
+
                 // Store configuration information
                 if (i == -1) storedConfigs += [ conf, value ];
                 else storedConfigs = llListReplaceList(storedConfigs, [ conf, value ], i, i + 1);
-                
+
                 if (llGetListLength(storedConfigs) / 2 > storedCount) {
                     storedCount = llGetListLength(storedConfigs) / 2;
                     debugSay(3, "DEBUG-LOCALDB", "Local DB now contains " + (string)storedCount + " key=>value pairs and " + cdMyScriptName() + " is using " + formatFloat((float)llGetUsedMemory() / 1024.0, 2) + "kB of memory.");
@@ -149,13 +164,17 @@ default {
         else if (code == 303) {
             storedConfigs = llListSort(storedConfigs, 2, 1);
 
-            while(split != []) {
-                string conf = llList2String(split,0);
-                integer i = llListFindList(storedConfigs, [conf]);
+            string conf;
+            integer i;
 
-                if (i != -1) lmSendConfig(conf, llList2String(storedConfigs, i + 1));
-                
+            while(split != []) {
+                conf = llList2String(split,0);
+                i = llListFindList(storedConfigs, [conf]);
+
+                if (i != NOT_FOUND) lmSendConfig(conf, llList2String(storedConfigs, i + 1));
+
                 split = llDeleteSubList(split,0,0);
+                llSleep(0.05); // avoid Link Message overload - sleep arbitrary amount
             }
         }
         else if (code == 305) {
@@ -169,8 +188,8 @@ default {
             string name = llList2String(split, 0);
             resolveName = name;
 
-                 if (cmd == "getMistressKey")  { resolveType = 1; }
-            else if (cmd == "getBlacklistKey") { resolveType = 2; }
+                 if (cmd == "getMistressKey")  { resolveType = MISTRESS_KEY; }
+            else if (cmd == "getBlacklistKey") { resolveType = BLACKLIST_KEY; }
         }
         else if (code == 350) {
             lmSendConfig("RLVok", llList2String(split, 0));
@@ -188,6 +207,9 @@ default {
         }
     }
 
+    //----------------------------------------
+    // HTTP RESPONSE
+    //----------------------------------------
     http_response(key request, integer status, list meta, string body) {
         integer locationIndex = llSubStringIndex(body,"\n");
         integer queryIndex = llSubStringIndex(body,"?");
@@ -250,10 +272,10 @@ default {
 
                 HTTPdbProcessStart = llGetTime();
 
-                llOwnerSay("Processing database reply..."); // FIXME: sometimes, this is not followed by any report - and is printed for all keys
-                
+                //llOwnerSay("Processing database reply..."); // FIXME: sometimes, this is not followed by any report - and is printed for all keys
+
                 databaseInput = llParseStringKeepNulls(body,["\n"],[]); body = "";
-                
+
                 configCount = 0;
             }
             else {
@@ -265,13 +287,14 @@ default {
                     llOwnerSay(error);
                 }
             }
-            
+
             llSetTimerEvent(0.5);
         }
         else if (location == "/name2key/lookup") {
             list split = llParseStringKeepNulls(body, ["=","\n"], []);
             string name = llList2String(split, 0);
             string uuid = llList2String(split, 1);
+            string data = uuid + "|" + name;
 
             if (uuid == "NOT FOUND") {
                 llOwnerSay("Despite much searching and checking none of our sources can identify the mysterious '" + name + "' " +
@@ -281,11 +304,11 @@ default {
                 llOwnerSay("Tip: If you are sure you are typing the correct username and are not trying to enter a display name you should have them " +
                            "touch the key then try again.");
             }
-            else if (resolveType == 1) {
-                lmInternalCommand("addMistress", uuid + "|" + name, NULL_KEY);
+            else if (resolveType == MISTRESS_KEY) {
+                lmInternalCommand("addMistress", data, NULL_KEY);
             }
-            else if (resolveType == 2) {
-                lmInternalCommand("addRemBlacklist", uuid + "|" + name, NULL_KEY);
+            else if (resolveType == BLACKLIST_KEY) {
+                lmInternalCommand("addRemBlacklist", data, NULL_KEY);
             }
         }
         else if (location == "/httpdb/store") {
@@ -301,14 +324,14 @@ default {
                 if (!databaseOnline) {
                     llOwnerSay("HTTPdb - Database service has recovered.");
                     curInterval = stdInterval;
-                    databaseOnline = 1;
+                    databaseOnline = YES;
                 }
                 lastPost = llGetTime();
             }
             else {
                 if (databaseOnline) {
                     llOwnerSay("HTTPdb - Unable to update the database, falling back to offline mode until service recovers.");
-                    databaseOnline = 0;
+                    databaseOnline = NO;
                     curInterval += curInterval;
                     myMod = llFloor(llFrand((float)curInterval - 0.000001));
                 }
@@ -348,41 +371,56 @@ default {
 
             } while (llStringLength(body));
         }
+
         scaleMem();
     }
 
+    //----------------------------------------
+    // CHANGED
+    //----------------------------------------
     changed(integer change) {
         if (change & CHANGED_OWNER) {
             cdPermSanityCheck();
         }
     }
-    
+
+    //----------------------------------------
+    // TIMER
+    //----------------------------------------
     timer() {
         integer k = 16;
-        
+
         list splitLine;
         string line;
         string name;
         string value;
+        integer i;
 
+        // Maximum length of databaseInput processed: 16
         while (k-- && llGetListLength(databaseInput)) {
             line = llList2String(databaseInput, 0);
             splitLine = llParseStringKeepNulls(line,["="],[]);
-            
+
             name = llList2String(splitLine, 0);
             splitLine = llDeleteSubList(splitLine,0,0);
             value = llDumpList2String(splitLine,"=");
-            
+
             databaseInput = llDeleteSubList(databaseInput,0,0);
-            
+
             if ((name == "SAFEWORD") && (value == RECORD_DELETE)) {                 // These magic values only have meaning when sent key->DB they should not ever exist in a response
                 llOwnerSay("ERROR: Special value found in database response '" + name + "'='" + value + "' this should never happen, please report this.");
             }
             else {
-                // FIXME: Interim code to handle depreciation of old vars these should
-                // be eliminated when the depreciated forms move to obsolecence
-                
-                if (llGetSubString(name,0,9) == "controller") {
+                // FIXME: Handle old variables: should be removed as soon as is practical
+
+                if ((name == "controllers") || (name == "MistressList")) {
+                    if (llListFindList(storedConfigs,["controllersCount"]) == -1) {
+                        lmSendConfig(name, value);                                  // This list variable has had occasional issues with durability and is rather tricky to validate the new type
+                                                                                    // controller records are available in the database for this user so we will use those to rebuild the internal
+                                                                                    // controllers from a clean slate instead.
+                    }
+                }
+                else if (llGetSubString(name,0,9) == "controller") {
                     if ((llGetSubString(name,-2,-1) == "ID") || (llGetSubString(name,-4,-1) == "Name")) {
                         lmSendConfig(name, value = RECORD_DELETE);                  // Depreciated form, delete it
                     }
@@ -405,13 +443,6 @@ default {
                         lmInternalCommand("addRemBlacklist", value, DATABASE_ID);   // New form with content accepted
                     }
                 }
-                else if ((name == "controllers") || (name == "MistressList")) {
-                    if (llListFindList(storedConfigs,["controllersCount"]) == -1) {
-                        lmSendConfig(name, value);                                  // This list variable has had occasional issues with durability and is rather tricky to validate the new type
-                                                                                    // controller records are available in the database for this user so we will use those to rebuild the internal
-                                                                                    // controllers from a clean slate instead.
-                    }
-                }
                 else if (name == "blacklist") lmSendConfig(name, value);
                 else {
                     if (name == "helpless") {
@@ -426,43 +457,47 @@ default {
                         }
                         else return;                                                // Otherwise we just ignore the depreciated one.
                     }
-                    
+
                     lmDBdata(name, value);
-                    integer i = llListFindList(storedConfigs, [name]);
-                    if (i == -1) storedConfigs += [ name, value ];
-                
+                    if (llListFindList(storedConfigs,[name]) == NOT_FOUND) storedConfigs += [ name, value ];
+
                     configCount++;
                 }
             }
         }
-        
+
         if (!llGetListLength(databaseInput)) {
-            if (llGetListLength(storedConfigs) / 2 > storedCount) {
-                debugSay(3, "DEBUG-LOCALDB", "Local DB now contains " + (string)(storedCount = llGetListLength(storedConfigs) / 2) + " key=>value pairs and " + cdMyScriptName() + " is using " + formatFloat((float)llGetUsedMemory() / 1024.0, 2) + "kB of memory.");
+            float t = llGetTime();
+            i = (llGetListLength(storedConfigs) / 2);
+
+            if (i > storedCount) {
+                storedCount = i;
+                debugSay(3, "DEBUG-LOCALDB", "Local DB now contains " + (string)storedCount + " key=>value pairs and " + cdMyScriptName() + " is using " + formatFloat((float)llGetUsedMemory() / 1024.0, 2) + "kB of memory.");
             }
-        
+
 #ifdef DEVELOPER_MODE
             string eventTime = formatFloat((HTTPdbProcessStart - HTTPdbStart) * 1000, 2);
-            
+
             debugSay(5, "DEBUG-SERVICES", "Service post interval setting " + formatFloat(HTTPinterval, 2) + "s throttle setting " + formatFloat(HTTPthrottle, 2) + "s");
-        
+
             string msg = "HTTPdb - Processed " + (string)configCount + " records ";
 
             if (lastPostTimestamp) msg += "with updates since our last post " + (string)((llGetUnixTime() - lastPostTimestamp) / 60) + " minutes ago ";
 
-            msg += "event time " + eventTime + ", processing time " + formatFloat(((llGetTime() - HTTPdbProcessStart) * 1000), 2);
-            msg += "ms, total time for DB transaction " + formatFloat((llGetTime() - HTTPdbStart) * 1000, 2) + "ms";
+            msg += "event time " + eventTime + ", processing time " + formatFloat(((t - HTTPdbProcessStart) * 1000), 2) +
+                   "ms, total time for DB transaction " + formatFloat((t - HTTPdbStart) * 1000, 2) + "ms";
 
             debugSay(1, "DEBUG-SERVICES", msg);
 
+            // If debugLevel is 0, then return to normal minimalist message
             if (!debugLevel)
 #endif
-            llOwnerSay("Successfully processed database reply in " + formatFloat(llGetTime() - HTTPdbStart, 2) + "s");
-        
+            llOwnerSay("Successfully processed database reply in " + formatFloat(t - HTTPdbStart * 1000, 2) + "ms");
+
             databaseReload = 600;
-            
+
             llSetTimerEvent(0.0);
-            lmConfigComplete(configCount); 
+            lmConfigComplete(configCount);
         }
     }
 }
