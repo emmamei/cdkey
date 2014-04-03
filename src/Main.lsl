@@ -112,7 +112,9 @@ float lastTimerEvent;
 float menuSleep;
 float lastTickTime;
 float timeToJamRepair;
+#ifdef PREDICTIVE_TIMER
 float nextExpiryTime;
+#endif
 float poseExpire;
 float windamount      = 1800.0; // 30 * SEC_TO_MIN;    // 30 minutes
 float keyLimit        = 10800.0;
@@ -163,19 +165,20 @@ ifPermissions() {
 #define NO_TIME 1
 #define JAMMED 2
 
-collapse(integer n) {
+collapse(integer newCollapseState) {
 
-    // n describes state being entered;
+    // newCollapseState describes state being entered;
     // collapsed describes current state
+    debugSay(3,"DEBUG-COLLAPSE","collapsed = " + (string)collapsed + " newCollapseState = " + (string)newCollapseState);
 
-    if (n == NOT_COLLAPSED) {
+    if (newCollapseState == NOT_COLLAPSED) {
         lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
     }
     else {
-        if (n == NO_TIME) {
+        if (newCollapseState == NO_TIME) {
             lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0.0));
         }
-        else if (n == JAMMED) {
+        else if (newCollapseState == JAMMED) {
             // Time span = 120.0 (two minutes) to 300.0 (five minutes)
             lmSendConfig("timeToJamRepair", (string)(timeToJamRepair = llGetTime() + (llFrand(180.0) + 120.0)));
         }
@@ -186,17 +189,17 @@ collapse(integer n) {
         }
     }
 
-    if (n != JAMMED) {
+    if (newCollapseState != JAMMED) {
         lmSendConfig("timeToJamRepair", (string)(timeToJamRepair = 0.0));
     }
 
-    lmSendConfig("collapsed", (string)(collapsed = n));
+    lmSendConfig("collapsed", (string)(collapsed = newCollapseState));
 
     if (collapsed) lmSendConfig("collapseTime",  (string)(collapseTime - llGetTime()));
     else           lmSendConfig("collapseTime",  (string)(collapseTime = 0.0));
 
     lmInternalCommand("collapse", (string)collapsed, llGetKey());
-    
+
     llSetTimerEvent(0.022);
 }
 
@@ -290,11 +293,14 @@ default {
         //    5. How far away is carrier? ("follow")
         if (canAFK) {
             integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0);
+
             // When Dolly is "away" - enter AFK
-            // Also set away when
+            // Also set away when busy
+
             if (autoAFK && (afk != dollAway)) {
-                afk = dollAway;
-                lmSendConfig("afk", (string)afk);
+
+                lmSendConfig("afk", (string)(afk = dollAway));
+
                 displayWindRate = setWindRate();
                 lmInternalCommand("setAFK", (string)afk + "|1|" + formatFloat(windRate, 1) + "|" + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate)), NULL_KEY);
             }
@@ -302,18 +308,20 @@ default {
 
         float thisTimerEvent = llGetTime();
         float timerInterval;
-        
-        if (cdAttached()) timerInterval = ((thisTimerEvent = llGetTime()) - lastTimerEvent);
+
+        if (cdAttached()) timerInterval = thisTimerEvent - lastTimerEvent;
 
         if (timeReporting) llOwnerSay("Main Timer fired, interval " + formatFloat(timerInterval,3) + "s.");
-        
-        if (cdTimeSet(nextExpiryTime) && (thisTimerEvent < nextExpiryTime) && (timerInterval < 10.0)) return;
 
-        if (carryExpire != 0.0) {
-            if (llGetAgentSize(carrierID) == ZERO_VECTOR)       lmSendConfig("carryExpire", (string)(carryExpire -= timerInterval));
-            else                                                lmSendConfig("carryExpire", (string)(carryExpire = CARRY_TIMEOUT));
-        }
-        
+#ifdef PREDICTIVE_TIMER
+        if (cdTimeSet(nextExpiryTime) && (thisTimerEvent < nextExpiryTime) && (timerInterval < 10.0)) return;
+#endif
+
+        //if (carryExpire > 0.0) {
+        //    if (llGetAgentSize(carrierID) == ZERO_VECTOR)       lmSendConfig("carryExpire", (string)(carryExpire -= timerInterval));
+        //    else                                                lmSendConfig("carryExpire", (string)(carryExpire = CARRY_TIMEOUT));
+        //}
+
         displayWindRate = setWindRate();
         //llOwnerSay((string)thisTimerEvent + " - " + (string)lastTimerEvent + " = " + (string)timerInterval + " @ " + (string)windRate);
         lastTimerEvent = thisTimerEvent;
@@ -339,7 +347,7 @@ default {
             lmInternalCommand("wearLock", "0", NULL_KEY);
             lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0.0));
         }
-        
+
         lmInternalCommand("getTimeUpdates", "", llGetKey());
 
 #ifndef DEVELOPER_MODE
@@ -361,6 +369,7 @@ default {
         // A specific test for collapsed status is no longer required here
         // as being collapsed is one of several conditions which forces the
         // wind rate to be 0.
+        //
         // Others which cause this effect are not being attached to spine
         // and being doll type Builder or Key
 
@@ -512,7 +521,7 @@ default {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
             split = llDeleteSubList(split, 0, 0);
-            
+
             if (value == RECORD_DELETE) {
                 value = "";
                 split = [];
@@ -523,6 +532,8 @@ default {
             else if (name == "winderID")                     winderID = (key)value;
             else if (name == "carrierID") {
                 carrierID = (key)value;
+
+                // If we get a carrierID, it means we need to start the carry timer
                 if (carrierID) {
                     lmSendConfig("carryExpire", (string)(carryExpire = CARRY_TIMEOUT));
                 }
@@ -618,9 +629,13 @@ default {
         else if (code == 305) {
             string cmd = llList2String(split, 0);
             split = llDeleteSubList(split, 0, 0);
+            integer isController = cdIsController(id);
 
             if (cmd == "getTimeUpdates") {
                 float t = llGetTime();
+
+                // Internal variables are based on absolute Script Time;
+                // Link Messages on relative time
                 if (cdTimeSet(timeLeftOnKey))       lmSendConfig("timeLeftOnKey",    (string) timeLeftOnKey);
                 if (cdTimeSet(wearLockExpire))      lmSendConfig("wearLockExpire",   (string)(wearLockExpire - t));
                 if (cdTimeSet(timeToJamRepair))     lmSendConfig("timeToJamRepair",  (string)(timeToJamRepair - t));
@@ -770,7 +785,9 @@ default {
                 llOwnerSay("Max time setting " + (string)llRound(keyLimit / SEC_TO_MIN) + " mins is invalid must be between 30 and 420 mins resetting to 180 min default.");
                 lmSendConfig("keyLimit", (string)(keyLimit = 10800.0));
             }
+
             float effectiveLimit = keyLimit;
+
             if (demoMode) effectiveLimit = DEMO_LIMIT;
             if (timeLeftOnKey > effectiveLimit) timeLeftOnKey = effectiveLimit;
 
@@ -786,11 +803,11 @@ default {
                 if ((cdIsCarrier(id)) || (cdIsController(id))) windButton = "Wind...";
                 else if ((llGetListLength(windTimes) == 1) || (((llListStatistics(LIST_STAT_MIN, windTimes) * SEC_TO_MIN) >= windLimit))) windButton = "Wind";
                 else windButton = "Wind...";
-                
+
 #ifdef WAKESCRIPT
                 cdWakeScript("Transform");
 #endif
-                
+
                 lmInternalCommand("mainMenu", windButton + "|" + name, id);
             }
 
@@ -929,13 +946,16 @@ default {
 
                         lmSendConfig("winderID", (string)(winderID = id));
                     }
-
-                    // Uncollapse any non type 2 collapse that may be active after first confirming that we do definately have positive time left now.
-                    // This test calls the uncollapse function without reqard to the collapse state reported by this script and thus it can and will by
-                    // design be triggered when the doll is not collapsed at all.  This suffices both to uncollapse a doll when wound but furher serves
-                    // to make any valid wind (attempt) restoratative for an out of sync or false collapse state whether in this script or any other.
-                    if ((timeLeftOnKey > 0.0) && (collapsed != JAMMED)) collapse(NOT_COLLAPSED);
                 }
+
+                // Uncollapse any non type 2 collapse that may be active after first confirming
+                // that we do definately have positive time left now. This test calls the uncollapse
+                // function without reqard to the collapse state reported by this script and thus
+                // it can and will by design be triggered when the doll is not collapsed at all.
+                // This suffices both to uncollapse a doll when wound but further serves to make
+                // any valid wind (attempt) restorative for an out of sync or false collapse
+                // state whether in this script or any other.
+                if ((timeLeftOnKey > 0.0) && (collapsed != JAMMED)) collapse(NOT_COLLAPSED);
             }
             else if (choice == "Max Time...") {
                 // If the Max Times available are changed, be sure to change the next choice also
