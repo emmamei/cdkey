@@ -205,12 +205,14 @@ integer isDresser(key id) {
         dresserID = id;
         dresserName = llGetDisplayName(dresserID);
 
-        if (!cdIsDoll(id)) {
+        debugSay(4, "DEBUG-DRESS", "looking at dress menu: " + (string)id);
+
+        if (!cdIsDoll(id) || id == llGetKey()) {
             llOwnerSay("secondlife:///app/agent/" + (string)id + "/about is looking at your dress menu");
         }
     }
     else if (dresserID != id) {
-        lmSendToAgent("You think to look in dolly's closet and noticed that " + dresserName + " is already there", id);
+        lmSendToAgent("You look in Dolly's closet for clothes, and notice that " + dresserName + " is already there looking", id);
         return FALSE;
     }
 
@@ -504,7 +506,7 @@ default {
                 } else if (cdListElementP(outfitsList, choice) != NOT_FOUND) {
                     if (!isDresser(id)) return;
 
-                    if (isParentFolder(choice)) {
+                    if (isParentFolder(cdGetFirstChar(choice))) {
                         if (clothingFolder == "") clothingFolder = choice;
                         else clothingFolder += "/" + choice;
 
@@ -662,14 +664,10 @@ default {
 
         // channels:
         //
-        // 2555: list of inventory
         // 2665: random outfit
         // 2666:
-        // 2667:
         // 2668:
         // 2669:
-        // 2670:
-        // 9000+
 
         llSetMemoryLimit(65536);
 
@@ -721,9 +719,10 @@ default {
 
                 string itemname;
                 string prefix;
-                integer total = 0;
+                integer total;
+                integer simrating = cdRating2Integer(simRating);
 
-                for (n = 0; n < iStop; n++) {
+                for (n = 0; n < iStop; ++n) {
                     itemname = cdListElement(outfitsList, n);
                     prefix = llGetSubString(itemname,0,0);
 
@@ -734,18 +733,22 @@ default {
                     // Doll Type (Transformation) folders...
                     //
                     // Note this skips *Regular too
+                    //
+                    // This (sort of) odd sequence imposes short-cut operations
 
-                    if (!isHiddenItem(itemname) &&
-                        !isTransformingItem(itemname) &&
-                        !isGroupItem(itemname) &&
-                        !(cdOutfitRating(itemname) > cdRating2Integer(simRating))) {
+                         if (llToLower(itemname) == "~normalself") lmSendConfig("normalselfFolder", (normalselfFolder = activeFolder + "/~normalself"));
+                    else if (llToLower(itemname) == "~nude")       lmSendConfig("nudeFolder",       (nudeFolder =       activeFolder + "/~nude"));
+                    else if (!isHiddenItem(prefix)) {
+                             if (!isTransformingItem(prefix)) {
+                                 if (!isGroupItem(prefix)) {
+                                     if (!(cdOutfitRating(itemname) > simrating)) {
 
-                        total += 1;
-                        outfitsList += itemname;
+                                         ++total;
+                                         outfitsList += itemname;
+                                }
+                            }
+                        }
                     }
-
-                    if (llToLower(itemname) == "~normalself") lmSendConfig("normalselfFolder", (normalselfFolder = activeFolder + "/" + itemname));
-                    if (llToLower(itemname) == "~nude")       lmSendConfig("nudeFolder",       (nudeFolder =       activeFolder + "/" + itemname));
                 }
 
                 if (!total) {
@@ -773,10 +776,6 @@ default {
                 if (llGetSubString(nextoutfitname, 0, 0) != ">") {
 
                     debugSay(6, "DEBUG", ">nextoutfitname = " + nextoutfitname);
-
-                    // the dialog not only OKs things - but fires off the dressing process
-                    //llDialog(dollID, "You are being dressed in this outfit.",[nextoutfitname], dialogChannel);
-                    //llSay(cd2667, nextoutfitname);
 
                     lmMenuReply(nextoutfitname, llGetObjectName(), llGetKey());
                     llOwnerSay("You are being dressed in this outfit: " + nextoutfitname);
@@ -817,13 +816,14 @@ default {
 
             for (n = 0; n < iStop; n++) {
                 itemname = cdListElement(outfitsList, n);
+                prefix = cdGetFirstChar(itemname);
 
-                if (llToLower(itemname) == "~normalself") lmSendConfig("normalselfFolder", (normalselfFolder = activeFolder + "/" + itemname));
-                if (llToLower(itemname) == "~nude")       lmSendConfig("nudeFolder",       (nudeFolder       = activeFolder + "/" + itemname));
+                     if (llToLower(itemname) == "~normalself") lmSendConfig("normalselfFolder", (normalselfFolder = activeFolder + "/normalself"));
+                else if (llToLower(itemname) == "~nude")       lmSendConfig("nudeFolder",       (nudeFolder       = activeFolder + "/nude"));
 
-                if (isHiddenItem(itemname) ||
-                    isGroupItem(itemname) ||
-                    isTransformingItem(itemname) ||
+                if (isHiddenItem(prefix) ||
+                    isGroupItem(prefix) ||
+                    isTransformingItem(prefix) ||
                     (cdOutfitRating(itemname) > cdRating2Integer(simRating)) ||
                     itemname == newoutfitname) {
 
