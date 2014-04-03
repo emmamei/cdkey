@@ -255,8 +255,8 @@ ifPermissions() {
                 if (!haveControls && ((dollState & (DOLL_AFK | DOLL_COLLAPSED | DOLL_POSED)) == 0)) {
                     // No reason for us to be locking the controls and we do not allready have them
                     // This just serves to get us treated as a vehicle to run on no script land
-                    llTakeControls(-1, 0, 1);   // Controls is a bitmask not a comparison so -1 is a quick shortcut for all
-                                                // on a big endian host.
+                    llTakeControls(-1, 0, 1);   // Controls is a bitmask not a comparison so -1 is a quick
+                                                // shortcut for all on a big endian host.
                 }
                 else if ((dollState & DOLL_ANIMATED) != 0) {
                     // When collapsed or posed the doll should not be able to move at all so the key will
@@ -603,12 +603,23 @@ default {
             string choice = llList2String(split, 0);
             string name = llList2String(split, 1);
 
-            if (choice == "*RLV On*") {
+            string subchoice = llGetSubString(choice,0,4);
+            integer dollIsPoseable = ((!cdIsDoll(id) && canPose) || cdSelfPosed());
+            integer dollNotPosed = (keyAnimation == "");
+            //debugSay(5,"500","dollIsPoseable = " + (string)dollIsPoseable);
+            //debugSay(5,"500","dollNotPosed = " + (string)dollNotPosed);
+            //debugSay(5,"500","choice = " + choice);
+
+            // First: Quick ignores
+            if (llGetSubString(choice,0,3) == "Wind") return;
+            else if (choice == MAIN) return;
+
+            else if (choice == "*RLV On*") {
                 llOwnerSay("Trying to enable RLV, you must have a compatible viewer and the RLV setting enabled for this to work.");
                 checkRLV();
             }
 #ifdef ADULT_MODE
-            else if (llGetSubString(choice,0,4) == "Strip") {
+            else if (subchoice == "Strip") {
                 if (choice == "Strip...") {
                     list buttons = llListSort(["Strip Top", "Strip Bra", "Strip Bottom", "Strip Panties", "Strip Shoes", "Strip ALL"], 1, 1);
                     llDialog(id, "Take off:", dialogSort(buttons + MAIN), dialogChannel); // Do strip menu
@@ -662,24 +673,40 @@ default {
                     lmSendConfig("carrierName", (carrierName = ""));
                 }
             }
-            else if (keyAnimation == "" || ((!cdIsDoll(id) && canPose) || cdSelfPosed())) {
-                if (((!cdIsDoll(id) && canPose) || cdSelfPosed()) && choice == "Unpose") {
-                    lmSendConfig("keyAnimation", (string)(keyAnimation = ""));
-                    lmSendConfig("poserID", (string)(poserID = NULL_KEY));
-                }
-                else {
-                    string anim = "";
-
-                    if (llGetInventoryType(choice) == 20) anim = choice;
-                    else if (llGetInventoryType(llGetSubString(choice, 2, -1)) == 20) anim = llGetSubString(choice, 2, -1);
-
-                    if (anim != "") {
-                        lmSendConfig("keyAnimation", (string)(keyAnimation = anim));
-                        lmSendConfig("poserID", (string)(poserID = id));
-                    }
-                }
+            else if (dollIsPoseable && choice == "Unpose") {
+                lmSendConfig("keyAnimation", (string)(keyAnimation = ""));
+                lmSendConfig("poserID", (string)(poserID = NULL_KEY));
             }
-            else if (llGetSubString(choice, 0, 4) == "Poses" && (keyAnimation == ""  || ((!cdIsDoll(id) && canPose) || poserID == dollID))) {
+
+            else if ((keyAnimation == "" || dollIsPoseable) && llGetInventoryType(choice) == 20) {
+                lmSendConfig("keyAnimation", (string)(keyAnimation = choice));
+                lmSendConfig("poserID", (string)(poserID = id));
+            }
+
+            else if ((keyAnimation == "" || dollIsPoseable) && llGetInventoryType(llGetSubString(choice, 2, -1)) == 20) {
+                lmSendConfig("keyAnimation", (string)(keyAnimation = llGetSubString(choice, 2, -1)));
+                lmSendConfig("poserID", (string)(poserID = id));
+            }
+
+//            else if (keyAnimation == "" || ((!cdIsDoll(id) && canPose) || cdSelfPosed())) {
+//                if (((!cdIsDoll(id) && canPose) || cdSelfPosed()) && choice == "Unpose") {
+//                    lmSendConfig("keyAnimation", (string)(keyAnimation = ""));
+//                    lmSendConfig("poserID", (string)(poserID = NULL_KEY));
+//                }
+//                else {
+//                    string anim = "";
+//
+//                    if (llGetInventoryType(choice) == 20) anim = choice;
+//                    else if (llGetInventoryType(llGetSubString(choice, 2, -1)) == 20) anim = llGetSubString(choice, 2, -1);
+//
+//                    if (anim != "") {
+//                        lmSendConfig("keyAnimation", (string)(keyAnimation = anim));
+//                        lmSendConfig("poserID", (string)(poserID = id));
+//                    }
+//                }
+//            }
+
+            else if ((keyAnimation == "" || dollIsPoseable) && subchoice == "Poses") {
                 poserID = id;
 
                 integer page = (integer)llStringTrim(llGetSubString(choice, 5, -1), STRING_TRIM);
@@ -728,7 +755,11 @@ default {
                 llDialog(id, "Select the pose to put the doll into", poseList, dialogChannel);
 
             }
-
+#ifdef DEVELOPER_MODE
+            else {
+                llSay(DEBUG_CHANNEL, "Choice ignored in Avatar: " + choice + "/" + name);
+            }
+#endif
             ifPermissions();
         }
     }
