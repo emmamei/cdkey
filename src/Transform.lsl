@@ -561,8 +561,10 @@ default {
         // llOwnerSay("outfitsFolderTest = " + outfitsFolderTest); // DEBUG:
         // llOwnerSay("    substring = " + (string)llGetSubString(choice, -llStringLength(outfitsFolderTest), STRING_END)); // DEBUG:
 
+        debugSay(6,"DEBUG-TRANSFORM","Listen processing...");
         // Does choice end in outfits Folder test suffix?
         if ((outfitsFolder == "") && (llGetSubString(choice, -llStringLength(outfitsFolderTest), STRING_END) == outfitsFolderTest)) {
+            debugSay(6,"DEBUG-TRANSFORM","Outfits folder?");
             outfitsFolder = choice + "/";
             lmSendConfig("outfitsFolder", outfitsFolder);
             if (typeFolder != "") {
@@ -575,12 +577,14 @@ default {
 
         // Does choice end in clothing prefix?
         else if ((typeFolder == "") && (llGetSubString(choice, -llStringLength(clothingprefix), STRING_END) == clothingprefix)) {
+            debugSay(6,"DEBUG-TRANSFORM","Clothing prefix found");
             typeFolder = choice;
             outfitsFolderItem = 0;
 
             cdStopTimer();
             //integer n = llStringLength(outfitsFolder);
 
+            debugSay(6,"DEBUG-TRANSFORM","Checking against outfits folder...");
             //if (llGetSubString(typeFolder, 0, n - 1) != outfitsFolder)
             if (llGetSubString(typeFolder, 0, llStringLength(outfitsFolder) - 1) != outfitsFolder) {
                 llOwnerSay("Found a matching type folder in '" + typeFolder + "' but it is not located within your outfits folder '" + outfitsFolder + "'" +
@@ -596,13 +600,17 @@ default {
                 useTypeFolder = YES;
             }
 
+            debugSay(6,"DEBUG-TRANSFORM","Sending configs...");
             lmSendConfig("typeFolder", typeFolder);
             lmSendConfig("outfitsFolder", outfitsFolder);
             lmSendConfig("useTypeFolder", (string)useTypeFolder);
 
+            debugSay(6,"DEBUG-TRANSFORM","Pausing...");
             cdPause();
 
+            debugSay(6,"DEBUG-TRANSFORM","Testing for change by Menu...");
             if (menuChangeType) {
+                debugSay(6,"DEBUG-TRANSFORM","Activating random dress...");
                 lmInternalCommand("randomDress", "", NULL_KEY);
                 menuChangeType = NO;
             }
