@@ -445,12 +445,18 @@ default {
             else if (name == "userPoseRLVcmd")          userPoseRLVcmd = value;
             else if (name == "userAfkRLVcmd")            userAfkRLVcmd = value;
 
-            if ((name == "gemColour") || (name == "primGlow") || (name == "primLight") || (name == "isVisible") || (name == "collapsed")) {
+            else if ((name == "gemColour") ||
+                     (name == "primGlow")  ||
+                     (name == "primLight") ||
+                     (name == "isVisible") ||
+                     (name == "collapsed")) {
+
                      if (name == "gemColour")       gemColour = (vector)value;
                 else if (name == "primGlow")         primGlow = (integer)value;
                 else if (name == "primLight")       primLight = (integer)value;
                 else if (name == "isVisible")         visible = (integer)value;
                 else if (name == "collapsed")       collapsed = (integer)value;
+                
                 doVisibility();
             }
 
@@ -470,6 +476,7 @@ default {
                 if (cdAttached()) llSetObjectName(dollyName + "'s Key");
             }
 
+            // Run user RLV settings in appropriate situations
             if ((name == "collapsed") && (userCollapseRLVcmd != "")) {
                 if (collapsed) lmRunRLVas("UserCollapse", userCollapseRLVcmd);
                 else lmRunRLVas("UserCollapse", "clear");
