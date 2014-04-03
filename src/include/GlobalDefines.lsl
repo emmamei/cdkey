@@ -123,12 +123,12 @@ list BuiltinControllers = BUILTIN_CONTROLLERS;
 #define CIRCLE_MINUS "⊖"
 
 // Dress module prefix test defines
-#define isGroupItem(f)        (llGetSubString(f,0,0) == "#")
-#define isHiddenItem(f)       (llGetSubString(f,0,0) == "~")
-#define isPlusItem(f)         (llGetSubString(f,0,0) == "+")
-#define isStandAloneItem(f)   (llGetSubString(f,0,0) == "=")
-#define isTransformingItem(f) (llGetSubString(f,0,0) == "*")
-#define isParentFolder(f)     (llGetSubString(f,0,0) == ">")
+#define isGroupItem(c)        (c == "#")
+#define isHiddenItem(c)       (c == "~")
+#define isPlusItem(c)         (c == "+")
+#define isStandAloneItem(c)   (c == "=")
+#define isTransformingItem(c) (c == "*")
+#define isParentFolder(c)     (c == ">")
 #define isChrootFolder(f)     (llGetSubString(f,0,1) == "!>")
 
 #define CORE_SCRIPTS [ "Aux", "Avatar", "ChatHandler", "Dress", "Main", "MenuHandler", "ServiceRequester", "ServiceReceiver", "Start", "StatusRLV", "Transform" ]
