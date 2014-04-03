@@ -79,22 +79,23 @@ default
         integer code      =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
+        scaleMem();
+
         if (code == 110) {
             if (chatPrefix == "") {
                 // If chat prefix is not configured by DB or prefs we initialize the default prefix
                 // using the initials of the dolly's name in legacy name format.
                 string key2Name = llKey2Name(dollID);
                 integer i = llSubStringIndex(key2Name, " ") + 1;
+
                 chatPrefix = llToLower(llGetSubString(key2Name,0,0) + llGetSubString(key2Name,i,i));
                 lmSendConfig("chatPrefix", chatPrefix);
             }
 
-            llOwnerSay("Setting up chat listener on channel " + (string)chatChannel + " with prefix " + llToUpper(chatPrefix));
+            llOwnerSay("Setting up chat commands on channel " + (string)chatChannel + " with prefix \"" + llToLower(chatPrefix) + "\"");
         }
         else if (code == 135) {
-            float delay = llList2Float(split, 0);
-            scaleMem();
-            memReport(cdMyScriptName(),delay);
+            memReport(cdMyScriptName(),llList2Float(split, 0));
         } else
 
         cdConfigReport();
@@ -189,10 +190,7 @@ default
                 }
             }
             else if (name == "tpLureOnly")                 tpLureOnly = (integer)value;
-
-            // careful to eliminate (for now) spurious sources of windTimes
-            // until bug is truly fixed.
-            else if (name == "windTimes") { if (script == "Main") windTimes = llJson2List(value); }
+            else if (name == "windTimes")                   windTimes = llJson2List(value);
             else if (name == "wearLockExpire")         wearLockExpire = (float)value;
             else if (name == "windRate")                     windRate = (float)value;
         }
@@ -235,9 +233,10 @@ default
 
                 // First check: Test suitability of name for adding; send a message to user if not acceptable
                 if (llListFindList(barList, [ uuid ]) != -1) {
-                    string msg = name + " is listed on your ";
-                    if (type == CONTROLLER_LIST) msg += "blacklist you must first remove them before adding as a ";
-                    else msg += "controller list they must first remove themselves before you can add them to the ";
+                    string msg = name;
+
+                    if (type == CONTROLLER_LIST) msg += " is listed on your blacklist you must first remove them before adding as a ";
+                    else msg += " is listed on your controller list they must first remove themselves before you can add them to the ";
                     msg += typeString + ".";
 
                     if (type == CONTROLLER_LIST) {
@@ -252,7 +251,7 @@ default
                 }
 
                 // First validation: Check for empty values there should be none so delete any that are found
-                while ( ( i = llListFindList(tmpList, [""]) ) != -1) tmpList = llDeleteSubList(tmpList,i,i);
+                while ((i = llListFindList(tmpList, [""])) != -1) tmpList = llDeleteSubList(tmpList,i,i);
 
                 // Second validation: Test for the presence of the UUID in the existing list
                 i = llListFindList(tmpList, [ uuid ]);
@@ -336,9 +335,11 @@ default
         //   for example (Makes a note to github that thought).
         id = llGetOwnerKey(id);
         name = llGetDisplayName(id);
+        integer isDoll = cdIsDoll(id);
+        integer isController = cdIsController(id);
 
         // Deny access to the menus when the command was recieved from blacklisted avatar
-        if (!cdIsDoll(id) && (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND)) {
+        if (!isDoll && (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND)) {
             lmSendToAgent("You are not permitted to access this key.", id);
             return;
         }
@@ -353,7 +354,7 @@ default
                 //prefix = llGetSubString(msg,0,0);
                 msg = llGetSubString(msg,1,-1);
             }
-            else if ((prefix == "#") && !cdIsDoll(id)) {
+            else if ((prefix == "#") && !isDoll) {
                 // #prefix is an all others prefix like with OC etc
                 //prefix = llGetSubString(msg,0,0);
                 msg = llGetSubString(msg,1,-1);
@@ -362,7 +363,7 @@ default
                 prefix = llGetSubString(msg,0,1);
                 msg = llGetSubString(msg,2,-1);
             }
-            else if (cdIsDoll(id)) {
+            else if (isDoll) {
                 llOwnerSay("Use of chat commands without a prefix is depreciated and will be removed in a future release.");
             }
             else return; // For some other doll? noise? matters not it's someone elses problem.
@@ -375,11 +376,11 @@ default
 
                 // if animation starts with "." only Doll has access to it
                 if (firstChar == ".") {
-                    if (cdIsDoll(id)) { cdMenuInject(msg, name, id); }
+                    if (isDoll) { cdMenuInject(msg, name, id); }
                 }
                 // if animation starts with "!" only Doll and Controllers have access to it
                 else if (firstChar == "!") {
-                    if (cdIsDoll(id) || cdIsController(id)) { cdMenuInject(msg, name, id); }
+                    if (isDoll || isController) { cdMenuInject(msg, name, id); }
                 }
                 else {
                     cdMenuInject(msg, name, id);
@@ -400,7 +401,7 @@ default
                 // Commands only for Doll
                 //    * build
 
-                if (cdIsDoll(id)) {
+                if (isDoll) {
                     if (choice == "build") {
                         lmConfigReport();
                     }
@@ -412,7 +413,7 @@ default
                 //    * httppreload
                 //    * rlvinit
 
-                if (cdIsDoll(id) || cdIsBuiltinController(id)) {
+                if (isDoll || cdIsBuiltinController(id)) {
                     // Do an internal resresh of all local variables from local db
                     if (choice == "refreshvars") {
                         cdLinkMessage(LINK_THIS, 0, 301, "", NULL_KEY);
@@ -451,10 +452,10 @@ default
                 //   * recoveryhelp
                 //   * xstats
 
-                if (cdIsDoll(id) || cdIsController(id)) {
+                if (isDoll || isController) {
                     // Normal user commands
                     if (choice == "detach") {
-                        if (detachable || cdIsController(id)) {
+                        if (detachable || isController) {
                             lmInternalCommand("detach", "", NULL_KEY);
                         }
                         else {
@@ -672,7 +673,6 @@ default
                     }
                     else if (choice == "listposes") {
                         integer n = llGetInventoryNumber(INVENTORY_ANIMATION);
-                        integer isDoll = cdIsDoll(id); integer isController = cdIsController(id);
 
                         string thisPose; string thisPrefix;
 
@@ -707,7 +707,7 @@ default
                     // if Dolly gives this command, its an Emergency Winder activation.
                     // if someone else, it is a normal wind of the Doll.
 #ifndef TESTER_MODE
-                    if (cdIsDoll(id)) cdMenuInject("Wind Emg", dollName, dollID);
+                    if (isDoll) cdMenuInject("Wind Emg", dollName, dollID);
                     else {
 #endif
                         cdMenuInject("Wind", name, id);
@@ -754,7 +754,7 @@ default
                 string param =           llStringTrim(llGetSubString(choice, space + 1, STRING_END), STRING_TRIM);
                 choice       = llToLower(llStringTrim(llGetSubString(   msg,         0,  space - 1), STRING_TRIM));
 
-                if (cdIsDoll(id) || cdIsBuiltinController(id)) {
+                if (isDoll || cdIsBuiltinController(id)) {
                     if (choice == "channel") {
                         string c = param;
 
@@ -848,7 +848,7 @@ default
                     }
 #endif
                 }
-                if (cdIsDoll(id)) {
+                if (isDoll) {
 #ifdef DEVELOPER_MODE
                     if (choice == "debug") {
                         lmSendConfig("debugLevel", (string)(debugLevel = (integer)param));
