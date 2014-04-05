@@ -104,8 +104,15 @@ setDollType(string choice, integer automated) {
     currentPhrases = [];
     lineno = 0;
 
-    // Look for Notecard for the Doll Type and start reading it
-    if (llGetInventoryType(TYPE_FLAG + stateName) == INVENTORY_NOTECARD) kQuery = llGetNotecardLine(TYPE_FLAG + stateName,0);
+    // Look for Notecard for the Doll Type and start reading it if showPhrases is enabled
+    //
+    if (showPhrases) {
+        if (llGetInventoryType(TYPE_FLAG + stateName) == INVENTORY_NOTECARD) {
+            do {
+                kQuery = llGetNotecardLine(TYPE_FLAG + stateName,++lineno);
+            } while (readingNC);
+        }
+    }
 
     // New State?
     if (stateName != currentState) {
@@ -122,7 +129,7 @@ setDollType(string choice, integer automated) {
 
         if (!quiet) cdChat(dollName + " has become a " + stateName + " Doll.");
         else llOwnerSay("You have become a " + stateName + " Doll.");
-        
+
         if (!RLVok) { lmSendToAgentPlusDoll("Dolly does not have the capability to change outfit.",transformerId); };
 
         //typeFolder = "";
@@ -151,11 +158,12 @@ runTimedTriggers() {
     if (minMinutes > 0) minMinutes--;
     else minMinutes = 0; // bulletproofing
 
-    if (showPhrases) {
-        integer phraseCount = (integer) llGetListLength(currentPhrases);
-        string msg;
+    // No phrases to choose from
+    integer phraseCount = llGetListLength(currentPhrases);
+    if (phraseCount == 0) return;
 
-        if (phraseCount == 0) return;
+    if (showPhrases) {
+        string msg;
 
         // select a phrase from the notecard at random
         string phrase  = llList2String(currentPhrases, llFloor(llFrand(phraseCount)));
@@ -178,7 +186,7 @@ runTimedTriggers() {
             }
         } else msg = "*** ";
 
-        msg = msg + phrase;
+        msg += phrase;
 
         // Phrase has been chosen and put together; now say it
         llOwnerSay(msg);
@@ -195,7 +203,7 @@ default {
         stateName = "Regular";
 
         cdInitializeSeq();
-        
+
 #ifdef WAKESCRIPT
         // Stop myself: stop this script from running
         cdStopScript(cdMyScriptName());
@@ -228,13 +236,18 @@ default {
         list outfitsMasterFolders = [ ">&&Outfits", "Outfits", ">&&Dressup", "Dressup" ];
 
         // Reading Notecard: happens first
-        if (readingNC) {
-            kQuery = llGetNotecardLine(TYPE_FLAG + currentState,lineno);
-        }
+        //if (readingNC) {
+        //    debugSay(5,"DEBUG-TRANSFORM","Reading notecard " + TYPE_FLAG + currentState + " line number " + (string)lineno);
+        //    kQuery = llGetNotecardLine(TYPE_FLAG + currentState,lineno);
+        //}
         // Searching for Outfits folders (but only if RLV is ok)
-        else if (RLVok) {
+        //else
+        if (RLVok) {
+            debugSay(5,"DEBUG-TRANSFORM","Searching for outfits folders...");
             if (outfitsFolderItem > 0) {
+                debugSay(5,"DEBUG-TRANSFORM","outfitsFolderItem = " + (string)outfitsFolderItem);
                 if (outfitsFolder == "") {
+                    debugSay(5,"DEBUG-TRANSFORM","outfitsFolder = " + (string)outfitsFolder);
 
                     // Search for Outfits folder, using outfitsMasterFolders as guide
                     if ((outfitsFolderTest == "") || (outfitsFolderTestRetries < 2)) {
@@ -250,10 +263,13 @@ default {
                     }
                 }
                 else if ((clothingprefix != "") && (typeFolder == "") && (outfitsFolderTestRetries < 2)) {
+                    debugSay(5,"DEBUG-TRANSFORM","clothingprefix = " + (string)clothingprefix);
+                    debugSay(5,"DEBUG-TRANSFORM","typeFolder = " + (string)typeFolder);
                     outfitsFolderTest = clothingprefix;
                 }
                 else {
                     if (typeFolder == "") lmSendConfig("useTypeFolder", (string)(useTypeFolder = 0));
+                    debugSay(5,"DEBUG-TRANSFORM","typeFolder = " + (string)typeFolder);
                     outfitsFolderItem = 0;
                 }
 
@@ -264,6 +280,7 @@ default {
             }
         }
         else if (showPhrases) {
+            debugSay(5,"DEBUG-TRANSFORM","Stopping timer");
             // Scripts are being shown...
             cdStopTimer();
         }
@@ -358,20 +375,33 @@ default {
         else if (code == 300) {
             string value = name;
             string name = choice;
-            
+
             if (value == RECORD_DELETE) {
                 value = "";
                 split = [];
             }
 
             if (script != cdMyScriptName()) {
-                     if (name == "timeLeftOnKey") { if (script == "Main") runTimedTriggers(); }
+                     if (name == "timeLeftOnKey") runTimedTriggers();
 #ifdef KEY_HANDLER
                 else if (name == "keyHandler") return;
 #endif
                 else if (name == "quiet")                                          quiet = (integer)value;
                 else if (name == "mustAgreeToType")                      mustAgreeToType = (integer)value;
-                else if (name == "showPhrases")                              showPhrases = (integer)value;
+                else if (name == "showPhrases") {
+                    showPhrases = (integer)value;
+                    currentPhrases = [];
+
+                    if (showPhrases) {
+                        integer lineno;
+
+                        if (llGetInventoryType(TYPE_FLAG + stateName) == INVENTORY_NOTECARD) {
+                            do {
+                                kQuery = llGetNotecardLine(TYPE_FLAG + stateName,++lineno);
+                            } while (readingNC);
+                        }
+                    }
+                }
                 else if (name == "wearAtLogin")                              wearAtLogin = (integer)value;
                 else if (name == "stateName")                                  stateName = value;
                 else if ((name == "RLVok") || (name == "dialogChannel")) {
@@ -440,7 +470,7 @@ default {
             // string name = cdListElement(split, 2);
             string optName = llGetSubString(choice, 2, STRING_END);
             string curState = cdGetFirstChar(choice);
-            
+
             // llOwnerSay("DEBUG:500: ** name = " + name); // DEBUG
 
             // for timing out the Menu
@@ -467,7 +497,7 @@ default {
                     if (wearAtLogin) llOwnerSay("If you are not a Regular Doll, a new outfit will be chosen each login.");
                     else llOwnerSay("A new outfit will not be worn at each login.");
                 }
-                
+
                 list choices;
 
                 choices += cdGetButton("Verify Type", id, mustAgreeToType, 0);
@@ -489,7 +519,7 @@ default {
                 }
                 else {
                     reloadTypeNames();
-                    
+
                     string msg = "These change the personality of " + dollName + "; Dolly is currently a " + stateName + " Doll. ";
                     list choices = types;
 
@@ -614,7 +644,7 @@ default {
                 lmInternalCommand("randomDress", "", NULL_KEY);
                 menuChangeType = NO;
             }
-            
+
             outfitsFolderTestRetries = 0;
         }
     }
@@ -625,11 +655,12 @@ default {
     dataserver(key query_id, string data)  {
         if (query_id == kQuery) {
             if (data != EOF) {
+                // This is the real meat: currentPhrases is built up
                 if (llStringLength(data) > 1) currentPhrases += data;
 
-                lineno++;
+                //lineno++; (change where used)
                 readingNC = YES;
-                llSetTimerEvent(5.0);
+                //llSetTimerEvent(5.0);
             }
             else readingNC = NO;
         }
