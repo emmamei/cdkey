@@ -166,12 +166,11 @@ ifPermissions() {
 #define JAMMED 2
 
 collapse(integer newCollapseState) {
+    //if (collapsed == newCollapseState) return; // Make repeated calls fast and unnecessary
 
     // newCollapseState describes state being entered;
     // collapsed describes current state
     debugSay(3,"DEBUG-COLLAPSE","collapsed = " + (string)collapsed + " newCollapseState = " + (string)newCollapseState);
-
-    float t;
 
     if (newCollapseState == NOT_COLLAPSED) {
         lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
@@ -197,8 +196,7 @@ collapse(integer newCollapseState) {
 
     lmSendConfig("collapsed", (string)(collapsed = newCollapseState));
 
-    t = llGetTime();
-    if (collapsed) lmSendConfig("collapseTime",  (string)(collapseTime - t));
+    if (collapsed) lmSendConfig("collapseTime",  (string)(collapseTime - llGetTime()));
     else           lmSendConfig("collapseTime",  (string)(collapseTime = 0.0));
 
     lmInternalCommand("collapse", (string)collapsed, llGetKey());
@@ -530,7 +528,10 @@ default {
                 split = [];
             }
 
-                 if (name == "timeLeftOnKey")            timeLeftOnKey = (float)value;
+                 if (name == "timeLeftOnKey") {
+                     timeLeftOnKey = (float)value;
+                     //if (collapsed == NO_TIME && timeLeftOnKey > 0.0) collapse(NOT_COLLAPSED);
+                 }
             else if (name == "afk")                               afk = (integer)value;
             else if (name == "winderID")                     winderID = (key)value;
             else if (name == "carrierID") {
@@ -915,7 +916,7 @@ default {
 
                 if ((windamount + 60.0) > windLimit) { windamount = windLimit; }
 
-                lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey += windLimit));
+                lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey += windamount));
 
                 if (windLimit < 60.0) {
                     llDialog(id, "Dolly is already fully wound.", [MAIN], dialogChannel);
