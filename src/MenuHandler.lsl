@@ -191,7 +191,7 @@ default
 
                  if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
             else if (name == "collapseTime") {
-                // collapseTime is the amount of time the Dolly has been down (in s)
+                // value is the amount of time the Dolly has been down (in negative s)
                 if ((float)value != 0.0)                 collapseTime = (llGetTime() + (float)value);
                 else                                     collapseTime = 0.0;
             }
