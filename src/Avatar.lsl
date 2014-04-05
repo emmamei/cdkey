@@ -10,6 +10,8 @@
 #include "include/Json.lsl"
 
 //#define DEBUG_BADRLV
+#define cdSayQuietly(x) { string z = x; if (quiet) llOwnerSay(z); else llSay(0,z); }
+#define NOT_IN_REGION ZERO_VECTOR
 
 key carrierID = NULL_KEY;
 
@@ -44,6 +46,11 @@ string redirchan;
 string userBaseRLVcmd;
 
 integer afk;
+integer isAnimated;
+integer hasCarrier;
+//integer isPosed; (use cdPosed)
+//integer isSelfPosed; (use cdSelfPosed)
+
 integer carryMoved;
 integer rlvChannel;
 integer clearAnim = 1;
@@ -71,18 +78,18 @@ integer newAttach = 1;
 integer creatorNoteDone;
 integer chatChannel = 75;
 
-integer dollState;
-#define cdXorSet(a,b,c)         a = ((a ^ (a & b)) | (c))
-#define cdXorSetDollState(a,b)  cdXorSet(dollState,a,b)
-#define cdSetDollState(a)       cdXorSetDollState(a,a)
-#define cdUnsetDollState(a)     cdXorSetDollState(a,0)
-#define cdSetDollStateIf(a,b)   cdXorSet(dollState,a,a*((b)!=0))
-#define DOLL_AFK                0x01
-#define DOLL_ANIMATED           0x02
-#define DOLL_CARRIED            0x04
-#define DOLL_COLLAPSED          0x08
-#define DOLL_POSED              0x10
-#define DOLL_POSER_IS_SELF      0x20
+//integer dollState;
+//#define cdXorSet(a,b,c)         a = ((a ^ (a & b)) | (c))
+//#define cdXorSetDollState(a,b)  cdXorSet(dollState,a,b)
+//#define cdSetDollState(a)       cdXorSetDollState(a,a)
+//#define cdUnsetDollState(a)     cdXorSetDollState(a,0)
+//#define cdSetDollStateIf(a,b)   cdXorSet(dollState,a,a*((b)!=0))
+//#define DOLL_AFK                0x01
+//#define DOLL_ANIMATED           0x02
+//#define DOLL_CARRIED            0x04
+//#define DOLL_COLLAPSED          0x08
+//#define DOLL_POSED              0x10
+//#define DOLL_POSER_IS_SELF      0x20
 
 //========================================
 // FUNCTIONS
@@ -209,8 +216,10 @@ ifPermissions() {
                     if (animKey) {
                         while ((animList = llGetAnimationList(dollID)) != [ animKey ]) {
                             animCount = llGetListLength(animList);
+                            key animKeyI;
                             for (i = 0; i < animCount; i++) {
-                                if (llList2Key(animList, i) != animKey) llStopAnimation(llList2Key(animList, i));
+                                animKeyI = llList2Key(animList, i);
+                                if (animKeyI != animKey) llStopAnimation(animKeyI);
                             }
                             llStartAnimation(keyAnimation);
                         }
@@ -227,7 +236,7 @@ ifPermissions() {
                             animRefreshRate += (1.0/llGetRegionFPS());                  // +1 Frame
                             if (animRefreshRate > 30.0) animRefreshRate = 30.0;             // 30 Second limit
                         }
-                        else if (curAnim != keyAnimationID) {
+                        else {
                             animRefreshRate /= 2.0;                                     // -50%
                             if (animRefreshRate < 0.022) animRefreshRate = 0.022;           // Limit once per frame
                         }
@@ -236,12 +245,15 @@ ifPermissions() {
                 } else if (clearAnim) {
                     list animList = llGetAnimationList(dollID);
                     integer i; integer animCount = llGetListLength(animList);
+
                     keyAnimation = "";
                     lmSendConfig("keyAnimationID", (string)(keyAnimationID = NULL_KEY));
+
                     for (i = 0; i < animCount; i++) {
                         key animKey = llList2Key(animList, i);
                         if (animKey != NULL_KEY) llStopAnimation(animKey);
                     }
+
                     llStartAnimation("Stand");
                     animRefreshRate = 0.0;
                     clearAnim = 0;
@@ -252,50 +264,52 @@ ifPermissions() {
             }
 
             if (permMask & PERMISSION_TAKE_CONTROLS) {
-                if (!haveControls && ((dollState & (DOLL_AFK | DOLL_COLLAPSED | DOLL_POSED)) == 0)) {
-                    // No reason for us to be locking the controls and we do not allready have them
-                    // This just serves to get us treated as a vehicle to run on no script land
+                if (!haveControls && (afk || collapsed || cdSelfPosed())) {
+                    // No reason for us to be locking the controls and we do not already have them
+                    // This just serves to get us treated as a vehicle to run on NoScript land
                     llTakeControls(-1, 0, 1);   // Controls is a bitmask not a comparison so -1 is a quick
                                                 // shortcut for all on a big endian host.
                 }
-                else if ((dollState & DOLL_ANIMATED) != 0) {
-                    // When collapsed or posed the doll should not be able to move at all so the key will
-                    // accept their controls instead no need to pass on.
+                else if (isAnimated) {
+                    // When collapsed or posed the doll should not be able to move at all; so the key will
+                    // accept their controls, but no need to pass on: ignore all input.
                     llTakeControls(-1, 1, 0);
                     haveControls = 1;
                 }
-                else if ((dollState & DOLL_AFK) != 0) {
-                    // To slow movement during AFK we do not want to lock the dolls controlls completely we
-                    // want to instead instead respond the input so we need ACCEPT=TRUE, PASS_ON=TRUE
+                else if (afk) {
+                    // To slow movement during AFK, we do not want to lock the doll's controls completely; we
+                    // want to instead respond to the input, so we need ACCEPT=TRUE, PASS_ON=TRUE
                     llTakeControls(-1, 1, 1);
                     haveControls = 1;
                 }
                 else if (haveControls) {
-                    // We don't need to grab the dolls controls but we already have them I have grounds to
-                    // suspect there may be a second life bug where taking controls and then trying to let
-                    // go to do ACCEPT=FALSE, PASS_ON=TRUE may not allways work reliably release and regrab
+                    // We don't need to grab the dolls controls, we already have them.
+                    //
+                    // I (Silky) have grounds to suspect there may be a Second Life bug where taking controls
+                    // and then trying to let go to do ACCEPT=FALSE, PASS_ON=TRUE may not always
+                    // work reliably to release and regrab
 
                     refreshControls = 1;
 
                     if ((llGetParcelFlags(llGetPos()) & PARCEL_FLAG_ALLOW_SCRIPTS) != 0) {
-                        // We do not want try and llReleaseControls if the land is no script it is not a safe op
+                        // We do not want to llReleaseControls if the land is NoScript; it is not a safe op
                         llReleaseControls();
                         haveControls = 0;
                         refreshControls = 0;
                         llRequestPermissions(dollID, PERMISSION_MASK);  // Releasing controls drops the permissions
-                                                                        // get them baack.
+                                                                        // get them back.
                     }
                     else llTakeControls(-1, 0, 1);
                 }
             }
 
-            if ((dollState & DOLL_ANIMATED) != 0) {
+            if (isAnimated) {
                 if (lockPos == ZERO_VECTOR) lmSendConfig("lockPos", (string)(lockPos = llGetPos()));
                 llTargetRemove(targetHandle);
                 targetHandle = llTarget(lockPos, 1.0);
                 llMoveToTarget(lockPos, 0.7);
             }
-            else if ((dollState & DOLL_CARRIED) != 0) {
+            else if (hasCarrier) {
                 if (lockPos != ZERO_VECTOR) lmSendConfig("lockPos", (string)(lockPos = ZERO_VECTOR));
                 llTargetRemove(targetHandle);
                 llStopMoveToTarget();
@@ -459,64 +473,65 @@ default {
 
 // CHANGED_OTHER bit used to indicate changes of RLV status that
 // would not normally be reflected as a doll state.
-#define CHANGED_OTHER 0x80000000
+//#define CHANGED_OTHER 0x80000000
 
-            integer oldState = dollState;              // Used to determine if a refresh of RLV state is needed
+            //integer oldState = dollState;              // Used to determine if a refresh of RLV state is needed
 
             if (name == "autoTP") {
                 if (autoTP != (integer)value) {
                      autoTP = (integer)value;
-                     oldState = oldState | CHANGED_OTHER;
+                     //oldState = oldState | CHANGED_OTHER;  // FIXME: XOR State
                 }
             }
             else if (name == "carrierID") {
                 carrierID = (key)value;
-                cdSetDollStateIf(DOLL_CARRIED, (carrierID != NULL_KEY));
+                hasCarrier = cdCarried();
+                //cdSetDollStateIf(DOLL_CARRIED, (carrierID != NULL_KEY));  // FIXME: XOR State
             }
             else if (name == "afk") {
                 afk = (integer)value;
-                cdSetDollStateIf(DOLL_AFK, afk);
+                //cdSetDollStateIf(DOLL_AFK, afk);
             }
             else if (name == "canFly") {
                 if (canFly != (integer)value) {
                     canFly = (integer)value;
-                    oldState = oldState | CHANGED_OTHER;
+                    //oldState = oldState | CHANGED_OTHER;  // FIXME: XOR State
                 }
             }
             else if (name == "canSit") {
                 if (canSit != (integer)value) {
                     canSit = (integer)value;
-                    oldState = oldState | CHANGED_OTHER;
+                    //oldState = oldState | CHANGED_OTHER;  // FIXME: XOR State
                 }
             }
             else if (name == "canStand") {
                 if (canStand != (integer)value) {
                     canStand = (integer)value;
-                    oldState = oldState | CHANGED_OTHER;
+                    //oldState = oldState | CHANGED_OTHER;  // FIXME: XOR State
                 }
             }
             else if (name == "canDressSelf") {
                 if (canDressSelf != (integer)value) {
                     canDressSelf = (integer)value;
-                    oldState = oldState | CHANGED_OTHER;
+                    //oldState = oldState | CHANGED_OTHER;  // FIXME: XOR State
                 }
             }
             else if (name == "collapsed") {
                     collapsed = (integer)value;
-                    cdSetDollStateIf(DOLL_COLLAPSED, collapsed);
+                    //cdSetDollStateIf(DOLL_COLLAPSED, collapsed);  // FIXME: XOR State
                     if (collapsed) lmSendConfig("keyAnimation", (keyAnimation = ANIMATION_COLLAPSED));
                     else if (cdCollapsedAnim()) lmSendConfig("keyAnimation", (keyAnimation = ""));
             }
             else if (name == "tpLureOnly") {
                 if (tpLureOnly != (integer)value) {
                     tpLureOnly = (integer)value;
-                    oldState = oldState | CHANGED_OTHER;
+                    //oldState = oldState | CHANGED_OTHER;  // FIXME: XOR State
                 }
             }
             else if (name == "poseSilence") {
                 if (poseSilence != (integer)value) {
                     poseSilence = (integer)value;
-                    oldState = oldState | CHANGED_OTHER;
+                    //oldState = oldState | CHANGED_OTHER;  // FIXME: XOR State
                 }
             }
             else if (name == "userBaseRLVcmd") {
@@ -526,13 +541,16 @@ default {
             else if (name == "keyAnimation") {
                 string oldanim = keyAnimation;
                 keyAnimation = value;
-                if (cdCollapsedAnim() && ((dollState & DOLL_COLLAPSED) == 0)) {
+
+                if (cdCollapsedAnim() && collapsed) {
                     lmSendConfig("keyAnimation", "");
                 }
 
-                cdSetDollStateIf(DOLL_ANIMATED, (keyAnimation != ""));
-                cdSetDollStateIf(DOLL_POSED, ((dollState & (DOLL_COLLAPSED | DOLL_ANIMATED)) == DOLL_ANIMATED));
-                cdSetDollStateIf(DOLL_POSER_IS_SELF, (((dollState & DOLL_POSED) == 1) && (poserID == dollID)));
+                isAnimated = (keyAnimation != "");
+
+                //cdSetDollStateIf(DOLL_ANIMATED, (keyAnimation != ""));  // FIXME: XOR State
+                //cdSetDollStateIf(DOLL_POSED, ((dollState & (DOLL_COLLAPSED | DOLL_ANIMATED)) == DOLL_ANIMATED));  // FIXME: XOR State
+                //cdSetDollStateIf(DOLL_POSER_IS_SELF, (((dollState & DOLL_POSED) == 1) && (poserID == dollID)));  // FIXME: XOR State
 
                 if cdNoAnim() clearAnim = 1;
                 else {
@@ -544,7 +562,7 @@ default {
             }
             else if (name == "poserID") {
                 poserID = (key)value;
-                cdSetDollStateIf(DOLL_POSER_IS_SELF, (((dollState & DOLL_POSED) == 1) && (poserID == dollID)));
+                //cdSetDollStateIf(DOLL_POSER_IS_SELF, (((dollState & DOLL_POSED) == 1) && (poserID == dollID)));  // FIXME: XOR State
             }
             else {
                      if (name == "detachable")               detachable = (integer)value;
@@ -577,11 +595,7 @@ default {
                 return;
             }
 
-            if (dollState != oldState) {
-                ifPermissions();
-                if (RLVstarted) cdLoadData(RLV_NC, RLV_BASE_RESTRICTIONS);
-            }
-
+            if (RLVstarted) cdLoadData(RLV_NC, RLV_BASE_RESTRICTIONS);
             ifPermissions();
         }
         else if (code == 305) {
@@ -673,16 +687,20 @@ default {
                     lmSendConfig("carrierName", (carrierName = ""));
                 }
             }
+
+            // Unpose: remove animation and poser
             else if (dollIsPoseable && choice == "Unpose") {
                 lmSendConfig("keyAnimation", (string)(keyAnimation = ""));
                 lmSendConfig("poserID", (string)(poserID = NULL_KEY));
             }
 
+            // choice is Inventory Animation Item
             else if ((keyAnimation == "" || dollIsPoseable) && llGetInventoryType(choice) == 20) {
                 lmSendConfig("keyAnimation", (string)(keyAnimation = choice));
                 lmSendConfig("poserID", (string)(poserID = id));
             }
 
+            // choice is Inventory Animation Item with prefix
             else if ((keyAnimation == "" || dollIsPoseable) && llGetInventoryType(llGetSubString(choice, 2, -1)) == 20) {
                 lmSendConfig("keyAnimation", (string)(keyAnimation = llGetSubString(choice, 2, -1)));
                 lmSendConfig("poserID", (string)(poserID = id));
@@ -706,14 +724,20 @@ default {
 //                }
 //            }
 
+            // choice is menu of Poses
             else if ((keyAnimation == "" || dollIsPoseable) && subchoice == "Poses") {
                 poserID = id;
 
                 integer page = (integer)llStringTrim(llGetSubString(choice, 5, -1), STRING_TRIM);
+                integer isController;
+                integer isDoll;
+
+                isController = cdIsController(id);
+                isDoll = cdIsDoll(id);
 
                 if (!page) {
                     page = 1;
-                    if (!cdIsDoll(id)) llOwnerSay("secondlife:///app/agent/" + (string)id + "/about is looking at your poses menu.");
+                    if (!isDoll) llOwnerSay(cdUserProfile(id) + " is looking at your poses menu.");
                 }
 
                 integer poseCount = llGetInventoryNumber(20);
@@ -726,12 +750,18 @@ default {
                     prefix = cdGetFirstChar(poseName);
 
                     // Is the pose a pose we can show in the menu?
-                    if (poseName != ANIMATION_COLLAPSED &&
-                        ((cdIsDoll(id) || cdIsController(id)) && prefix != "!") &&
-                         (cdIsDoll(id) && prefix != ".")) {
+                    //
+                    // (Note the multi-step if statement enforces a short-circuit type of evaluation)
+                    //
+                    if (poseName != ANIMATION_COLLAPSED) {
+                        if (isDoll && prefix != ".") {
+                            if ((isDoll || isController) && prefix != "!") {
 
-                        if (poseName != keyAnimation) poseList += poseName;
-                        else poseList += [ "* " + poseName ];
+                                // add a star to active animation
+                                if (poseName != keyAnimation) poseList += poseName;
+                                else poseList += [ "* " + poseName ];
+                            }
+                        }
                     }
                 }
 
@@ -793,7 +823,7 @@ default {
         llTargetRemove(targetHandle);
         llStopMoveToTarget();
 
-        if (cdCarried()) {
+        if (hasCarrier) {
             if (keyAnimation == "") {
                 // Get updated position and set target
                 carrierPos = llList2Vector(llGetObjectDetails(carrierID, [OBJECT_POS]), 0);
@@ -904,14 +934,14 @@ default {
 
                 list states = [
                     autoTP,
-                    ((dollState & (DOLL_AFK | DOLL_COLLAPSED)) != 0) || !canFly || posed,
-                    ((dollState & DOLL_COLLAPSED) != 0),
-                    ((dollState & DOLL_COLLAPSED) != 0) || !canSit || posed,
-                    ((dollState & DOLL_COLLAPSED) != 0) || !canStand || posed,
-                    ((dollState & DOLL_COLLAPSED) != 0) || (posed && poseSilence),
-                    ((dollState & (DOLL_AFK | DOLL_CARRIED | DOLL_COLLAPSED)) != 0) || tpLureOnly || posed,
-                    ((dollState & (DOLL_AFK | DOLL_CARRIED | DOLL_COLLAPSED)) != 0) || posed,
-                    (((dollState & (DOLL_AFK | DOLL_COLLAPSED)) != 0) || !canDressSelf || wearLock) * (~(llGetInventoryCreator("Main") == dollID) + 1)
+                    afk || collapsed || !canFly || posed,
+                    collapsed,
+                    collapsed || !canSit || posed,
+                    collapsed || !canStand || posed,
+                    collapsed || (posed && poseSilence),
+                    afk || hasCarrier || collapsed || tpLureOnly || posed,
+                    afk || hasCarrier || collapsed || posed,
+                    (afk || collapsed || !canDressSelf || wearLock) * (~(llGetInventoryCreator("Main") == dollID) + 1)
                 ];
                 integer index;
 
@@ -929,8 +959,7 @@ default {
                 // prevents inadvertent lock-in during development
 
                 if (RLVok && !RLVstarted) {
-                    if (!quiet) llSay(0, "Developer Key not locked.");
-                    else llOwnerSay("Developer key not locked.");
+                    cdSayQuietly("Developer Key not locked");
 
                     baseRLV += "attachallthis_except:" + myPath + "=add,detachallthis_except:" + myPath + "=add,";
                 }
