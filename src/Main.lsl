@@ -171,6 +171,8 @@ collapse(integer newCollapseState) {
     // collapsed describes current state
     debugSay(3,"DEBUG-COLLAPSE","collapsed = " + (string)collapsed + " newCollapseState = " + (string)newCollapseState);
 
+    float t;
+
     if (newCollapseState == NOT_COLLAPSED) {
         lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
     }
@@ -195,7 +197,8 @@ collapse(integer newCollapseState) {
 
     lmSendConfig("collapsed", (string)(collapsed = newCollapseState));
 
-    if (collapsed) lmSendConfig("collapseTime",  (string)(collapseTime - llGetTime()));
+    t = llGetTime();
+    if (collapsed) lmSendConfig("collapseTime",  (string)(collapseTime - t));
     else           lmSendConfig("collapseTime",  (string)(collapseTime = 0.0));
 
     lmInternalCommand("collapse", (string)collapsed, llGetKey());
@@ -573,6 +576,8 @@ default {
                     float timeSet = 0.0;
                     if ((float)value != 0.0) timeSet = llGetTime() + (float)value;
 
+                    // These values are supposed to be positive, except collapseTime
+                    // which should be negative
                          if (name == "wearLockExpire")    wearLockExpire = timeSet;
                     else if (name == "poseExpire")            poseExpire = timeSet;
                     else if (name == "timeToJamRepair")  timeToJamRepair = timeSet;
@@ -636,6 +641,8 @@ default {
 
                 // Internal variables are based on absolute Script Time;
                 // Link Messages on relative time
+                //
+                // All values are positive except collapseTime which is negative
                 if (cdTimeSet(timeLeftOnKey))       lmSendConfig("timeLeftOnKey",    (string) timeLeftOnKey);
                 if (cdTimeSet(wearLockExpire))      lmSendConfig("wearLockExpire",   (string)(wearLockExpire - t));
                 if (cdTimeSet(timeToJamRepair))     lmSendConfig("timeToJamRepair",  (string)(timeToJamRepair - t));
