@@ -67,8 +67,7 @@ default {
             ;
         }
         else if (code == 135) {
-            float delay = llList2Float(split, 0);
-            memReport(cdMyScriptName(),delay);
+            memReport(cdMyScriptName(),llList2Float(split, 0));
         } else
 
         cdConfigReport();
@@ -174,7 +173,7 @@ default {
                 if (i != NOT_FOUND) lmSendConfig(conf, llList2String(storedConfigs, i + 1));
 
                 split = llDeleteSubList(split,0,0);
-                llSleep(0.05); // avoid Link Message overload - sleep arbitrary amount
+                llSleep((1/llGetRegionFPS())*3); // avoid Link Message overload - sleep arbitrary num of frames
             }
         }
         else if (code == 305) {
@@ -214,19 +213,21 @@ default {
         integer locationIndex = llSubStringIndex(body,"\n");
         integer queryIndex = llSubStringIndex(body,"?");
         string location = llGetSubString(body, 10, queryIndex - 1);
+        integer t;
 
         body = llStringTrim(llDeleteSubString(body, 0, locationIndex), STRING_TRIM);
+        t = llGetUnixTime();
 
 #ifdef UPDATE_METHOD_CDKEY
         if (request == requestUpdate) {
             if (llGetSubString(body, 0, 21) == "checkversion versionok") {
                 if (llStringLength(body) > 22) updateCheck = (integer)llGetSubString(body, 23, -1);
-                lastUpdateCheck = llGetUnixTime();
+                lastUpdateCheck = t;
                 debugSay(5, "DEBUG-SERVICES", "Next check in " + (string)updateCheck + " seconds");
                 llOwnerSay("Version check completed you have the latest version.");
             }
             else if (body == "checkversion updatesent") {
-                lastUpdateCheck = llGetUnixTime();
+                lastUpdateCheck = t;
                 llOwnerSay("Version check completed your updated key is on it's way to you now.");
             }
             else if (status != 200) {
@@ -234,17 +235,20 @@ default {
                            "For alternative update options.");
                 gotURL = 0;
                 if (++requestIndex < llGetListLength(serverNames)) {
-                    nextRetry = llGetUnixTime() + llRound(30.0 + llFrand(30.0));
+                    nextRetry = t + llRound(30.0 + llFrand(30.0));
                 }
                 else {
                     requestIndex = 0;
-                    nextRetry = llGetUnixTime() + llRound(900.0 + llFrand(900.0));
+                    nextRetry = t + llRound(900.0 + llFrand(900.0));
                 }
                 lmSendConfig("nextRetry", (string)nextRetry);
             }
         }
         else
 #endif
+        //----------------------------------------
+        // URL: /objdns/lookup
+
         if (location == "/objdns/lookup") {
 
             if (status == 200) {
@@ -254,15 +258,19 @@ default {
             }
             else {
                 if (++requestIndex < llGetListLength(serverNames)) {
-                    nextRetry = llGetUnixTime() + llRound(30.0 + llFrand(30.0));
+                    nextRetry = t + llRound(30.0 + llFrand(30.0));
                 }
                 else {
                     requestIndex = 0;
-                    nextRetry = llGetUnixTime() + llRound(900.0 + llFrand(900.0));
+                    nextRetry = t + llRound(900.0 + llFrand(900.0));
                 }
                 lmSendConfig("nextRetry", (string)nextRetry);
             }
         }
+
+        //----------------------------------------
+        // URL: /httpdb/retrieve
+
         else if (location == "/httpdb/retrieve") {
             llSetMemoryLimit(65536);
             string error = "HTTPdb - Database access ";
@@ -270,7 +278,7 @@ default {
             if (status == 200) {
                 lmSendConfig("databaseOnline", (string)(databaseOnline = 1));
 
-                HTTPdbProcessStart = llGetTime();
+                HTTPdbProcessStart = t;
 
                 //llOwnerSay("Processing database reply..."); // FIXME: sometimes, this is not followed by any report - and is printed for all keys
 
@@ -279,7 +287,7 @@ default {
                 configCount = 0;
             }
             else {
-                databaseReload = llGetUnixTime() + 60 + llRound(llFrand(90));
+                databaseReload = t + 60 + llRound(llFrand(90));
 
                 if (databaseOnline) {
                     error += "failed: Continuing init in offline mode and will contintiue trying.";
@@ -290,6 +298,10 @@ default {
 
             llSetTimerEvent(0.5);
         }
+
+        //----------------------------------------
+        // URL: /name2key/lookup
+
         else if (location == "/name2key/lookup") {
             list split = llParseStringKeepNulls(body, ["=","\n"], []);
             string name = llList2String(split, 0);
@@ -311,6 +323,10 @@ default {
                 lmInternalCommand("addRemBlacklist", data, NULL_KEY);
             }
         }
+
+        //----------------------------------------
+        // URL: /httpdb/store
+
         else if (location == "/httpdb/store") {
             if (status == 200) {
                 dbPostParams = [];
@@ -337,6 +353,10 @@ default {
                 }
             }
         }
+
+        //----------------------------------------
+        // URL: /name2key/add
+
         else if (location == "/name2key/add") {
             list split = llParseStringKeepNulls(body, [ "|" ], []);
             integer new = llList2Integer(split, 1);
@@ -345,7 +365,10 @@ default {
             debugSay(5, "DEBUG-SERVICES", "Posted " + (string)(old + new) + " keys: " + (string)new + " new, " + (string)old + " old");
         }
 
-        if (location != "/httpdb/retreive") {
+        //----------------------------------------
+        // URL: /httpdb/retreive
+
+        else if (location != "/httpdb/retreive") {
 #ifdef DEVELOPER_MODE
             integer debug;
             if (status == 200) debug = 7;
