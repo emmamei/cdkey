@@ -57,7 +57,7 @@ integer demoMode;
 //integer doWarnings;
 //integer tpLureOnly;
 //integer pleasureDoll;
-integer isTransformingKey;
+//integer isTransformingKey;
 integer visible = 1;
 //integer quiet;
 integer RLVok = -1;
@@ -157,7 +157,7 @@ default
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
         if (code == 102) {
-            if (script == "ServiceReceiver") { dbConfig = 1; }
+            if (script == "ServiceReceiver") dbConfig = 1;
             else if (data == "Start") configured = 1;
 
             doDialogChannel();
@@ -271,7 +271,7 @@ default
                 else if (name == "pronounSheDoll")         pronounSheDoll = value;
             }
             //else if (name == "tpLureOnly")               tpLureOnly = (integer)value;
-            else if (name == "isTransformingKey")   isTransformingKey = (integer)value;
+            //else if (name == "isTransformingKey")   isTransformingKey = (integer)value;
             else if (name == "quiet")                           quiet = (integer)value;
             //else if (name == "signOn")                         signOn = (integer)value;
             else if (name == "uniqueID") {
@@ -435,7 +435,8 @@ default
                     }
 
                     if (!collapsed && (!hasCarrier || isCarrier)) {
-                        //not  being carried (or for carrier), not collapsed - normal in other words
+                        // State: not collapsed; and either: a) toucher is carrier; or b) doll has no carrier...
+                        //
                         // Toucher could be...
                         //   1. Doll
                         //   2. Carrier
@@ -444,14 +445,12 @@ default
 
                         // Options only available to dolly
                         if (isDoll) {
-                            if (!collapsed) {
-                                menu += "Options...";
-                                if (detachable) menu += "Detach";
+                            menu += "Options...";
+                            if (detachable) menu += "Detach";
 
-                                if (canAFK) menu += "AFK";
+                            if (canAFK) menu += "AFK";
 
-                                menu += "Visible";
-                            }
+                            menu += "Visible";
                         }
                         else {
                             manpage = "communitydoll.htm";
@@ -462,33 +461,32 @@ default
                         }
 
                         // Can the doll be dressed? Add menu button
-                        if ((RLVok == 1) && !collapsed && ((!isDoll && canDress) || (isDoll && canDressSelf && !wearLock))) {
+                        if ((RLVok == 1) && ((!isDoll && canDress) || (isDoll && canDressSelf && !wearLock))) {
                             menu += "Outfits...";
                         }
 
                         // Can the doll be transformed? Add menu button
-                        if (!collapsed && isTransformingKey) {
-                            menu += "Types...";
-                        }
+                        //if (isTransformingKey) menu += "Types...";
+                        menu += "Types...";
 
-                        if (!collapsed) {
-                            if (keyAnimation != "") {
-                                msg += "Doll is currently posed.\n";
+                        if (keyAnimation != "") {
+                            msg += "Doll is currently posed.\n";
 
-                                if ((!isDoll && canPose) || (poserID == dollID)) {
-                                    menu += ["Poses...","Unpose"];
-                                }
-                            }
-                            else {
-                                if ((!isDoll && canPose) || isDoll)
-                                    menu += "Poses...";
+                            if ((!isDoll && canPose) || (poserID == dollID)) {
+                                menu += ["Poses...","Unpose"];
                             }
                         }
+                        else {
+                            if ((!isDoll && canPose) || isDoll)
+                                menu += "Poses...";
+                        }
 
-                        if (!collapsed && ((numControllers == 0) || (isController && !isDoll))) {
+                        //if (!collapsed && ((numControllers == 0) || (isController && !isDoll))) {
+                        //
+                        // Fix for issue #157
+                        if (!isDoll) {
                             if (canCarry) {
-                                msg += "Carry option picks up " + dollName + " and temporarily" +
-                                       " makes the Dolly exclusively yours.\n";
+                                msg += "Carry option picks up " + dollName + " and temporarily makes the Dolly exclusively yours.\n";
 
                                 if (!hasCarrier) menu += "Carry";
                             }
@@ -496,12 +494,12 @@ default
 
 #ifdef ADULT_MODE
                         // Is doll strippable?
-                        if ((RLVok == 1) && !collapsed && (pleasureDoll || dollType == "Slut")) {
-                                if (isController || isCarrier
+                        if ((RLVok == 1) && (pleasureDoll || dollType == "Slut")) {
+                            if (isController || isCarrier
 #ifdef TESTER_MODE
                                     || ((debugLevel != 0) && isDoll)
 #endif
-                                ) {
+                            ) {
                                     if (simRating == "MATURE" || simRating == "ADULT") menu += "Strip...";
                             }
                         }
@@ -516,8 +514,8 @@ default
 
                     // Options only available if controller
                     if (isController) {
-                        if (!isDoll) menu += [ "Options..." ];
-                        if (!isDoll || !detachable) menu += [ "Detach" ];
+                        if (!isDoll) menu += [ "Options...","Detach" ];
+                        else if (!detachable) menu += [ "Detach" ];
                     }
 
 #ifdef MARKETPLACE
@@ -535,7 +533,7 @@ default
                         if (cdIsDoll(id) || cdIsController(id)) menu += "*RLV On*";
                     }
 
-                    msg += "See " + WEB_DOMAIN + manpage + " for more information. "
+                    msg += "See " + WEB_DOMAIN + manpage + " for more information."
 
 #ifdef DEVELOPER_MODE
                     + " (Key is in Developer Mode.)"

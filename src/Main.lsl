@@ -86,7 +86,7 @@ integer demoMode;
 //integer doWarnings;
 //integer tpLureOnly;
 //integer pleasureDoll;
-integer isTransformingKey;
+//integer isTransformingKey;
 //integer visible = 1;
 integer quiet;
 integer RLVok;
@@ -312,16 +312,20 @@ default {
 
         if (cdAttached()) timerInterval = thisTimerEvent - lastTimerEvent;
 
+#ifdef DEVELOPER_MODE
         if (timeReporting) llOwnerSay("Main Timer fired, interval " + formatFloat(timerInterval,3) + "s.");
+#endif
 
 #ifdef PREDICTIVE_TIMER
         if (cdTimeSet(nextExpiryTime) && (thisTimerEvent < nextExpiryTime) && (timerInterval < 10.0)) return;
 #endif
 
-        //if (carryExpire > 0.0) {
-        //    if (llGetAgentSize(carrierID) == ZERO_VECTOR)       lmSendConfig("carryExpire", (string)(carryExpire -= timerInterval));
-        //    else                                                lmSendConfig("carryExpire", (string)(carryExpire = CARRY_TIMEOUT));
-        //}
+        // If carried, the carry times out (expires) if the carrier is
+        // not in range for the duration
+        if (carryExpire > 0.0) {
+            if (llGetAgentSize(carrierID) == ZERO_VECTOR)       lmSendConfig("carryExpire", (string)(carryExpire -= timerInterval));
+            else                                                lmSendConfig("carryExpire", (string)(carryExpire = CARRY_TIMEOUT));
+        }
 
         displayWindRate = setWindRate();
         //llOwnerSay((string)thisTimerEvent + " - " + (string)lastTimerEvent + " = " + (string)timerInterval + " @ " + (string)windRate);
@@ -334,16 +338,19 @@ default {
         if ((collapsed == NO_TIME) && (timeLeftOnKey > 0.0)) collapse(NOT_COLLAPSED);
         else if ((collapsed == JAMMED) && (timeToJamRepair <= thisTimerEvent)) collapse(NOT_COLLAPSED);
 
+        // Did the pose expire? If so, unpose Dolly
         if (cdTimeSet(poseExpire) && (poseExpire <= thisTimerEvent)) {
             lmMenuReply("Unpose", "", llGetKey());
             lmSendConfig("poseExpire", (string)(poseExpire = 0.0));
         }
 
+        // Has the carry timed out? If so, drop the Dolly
         if (cdTimeSet(carryExpire) && (carryExpire <= thisTimerEvent)) {
             lmMenuReply("Uncarry", carrierName, carrierID);
             lmSendConfig("carryExpire", (string)(carryExpire = 0.0));
         }
 
+        // Has the clothing lock - wear lock - run its course? If so, reset lock
         if (cdTimeSet(wearLockExpire) && (wearLockExpire <= thisTimerEvent)) {
             lmInternalCommand("wearLock", "0", NULL_KEY);
             lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0.0));
@@ -835,9 +842,10 @@ default {
             }
             else if (choice == "Wind...") {
                 if (!cdIsController(id) && !canRepeat && (id == winderID)) {
-                    lmSendToAgent("Dolly needs to be wound by someone else before you can wind her again.", id);
+                    lmSendToAgent("Dolly needs to be wound by someone else before you can wind " + llToLower(pronounHerDoll) + " again.", id);
                     return;
                 }
+
                 lmInternalCommand("windMenu", name + "|" + (string)windLimit, id);
             }
             else if (choice == "Wind Emg") {
@@ -887,10 +895,10 @@ default {
             //    * Wind Full - wind to limit
             else if (llGetSubString(choice,0,3) == "Wind") {
 
-                if (collapsed == JAMMED) llDialog(id, "The dolly cannot be wound while her key is being held.", ["Help..."], dialogChannel);
+                if (collapsed == JAMMED) llDialog(id, "The Dolly cannot be wound while " + llToLower(pronounHerDoll) + " key is being held.", ["Help..."], dialogChannel);
 
                 if (!canRepeat && (id == winderID)) {
-                    lmSendToAgent("Dolly needs to be wound by someone else before you can wind her again.", id);
+                    lmSendToAgent("Dolly needs to be wound by someone else before you can wind " + llToLower(pronounHerDoll) + " again.", id);
                     return;
                 }
 

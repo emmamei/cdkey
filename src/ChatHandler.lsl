@@ -27,6 +27,7 @@ string dollGender           = "Female";
 string chatPrefix           = "";
 string RLVver               = "";
 string pronounHerDoll       = "Her";
+string pronounSheDoll       = "She";
 string dollName             = "";
 string blockedControlName   = "";
 string blockedControlUUID   = "";
@@ -172,6 +173,7 @@ default
                 else if (name == "poserID")                   poserID = (key)value;
                 else if (name == "poserName")               poserName = value;
                 else if (name == "pronounHerDoll")     pronounHerDoll = value;
+                else if (name == "pronounSheDoll")     pronounSheDoll = value;
             }
             else if (name == "quiet")                           quiet = (integer)value;
             else if (name == "offlineMode")               offlineMode = (integer)value;
@@ -646,7 +648,10 @@ default
                         lmMemReport(1.0, 1);
                     }
                     else if (choice == "release") {
-                        if ((poserID != NULL_KEY) && (poserID != dollID)) llOwnerSay("Dolly tries to wrest control of her body from the pose but she is no longer in control of her form.");
+                        string p = llToLower(pronounHerDoll);
+                        string s = llToLower(pronounSheDoll);
+
+                        if ((poserID != NULL_KEY) && (poserID != dollID)) llOwnerSay("Dolly tries to wrest control of " + p + " body from the pose but " + s + " is no longer in control of " + p + " form.");
                         else lmMenuReply("Unpose", dollName, dollID);
                     }
 
@@ -663,9 +668,9 @@ default
                             s += "in demo mode: " + (string)llRound(timeLeftOnKey / SEC_TO_MIN) + " of " + (string)llFloor(DEMO_LIMIT / SEC_TO_MIN) + " minutes remaining.";
                         }
                         else {
-                            // FIXME: currentlimit not set until later; how do we tell user what it is?
-                            // They are not in demoMode after this so the limit is going to be restored to keyLimit
-                            // only execption would be if keyLimit was invalid however there will be a follow up message
+                            // Q: currentlimit not set until later; how do we tell user what it is?
+                            // A: They are not in demoMode after this so the limit is going to be restored to keyLimit
+                            // only exception would be if keyLimit was invalid however there will be a follow up message
                             // from Main stating this and giving the new value so not something we need to do here.
 
                             s += "running normally: " + (string)llRound(timeLeftOnKey / SEC_TO_MIN) + " of " + (string)llFloor(keyLimit / SEC_TO_MIN) + " minutes remaining.";

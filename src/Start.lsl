@@ -126,33 +126,51 @@ integer lowScriptMode;
 //=======================================
 doVisibility() {
     vector colour = gemColour;
+
     if (llGetInventoryType(APPEARANCE_NC) == INVENTORY_NOTECARD) {
+
         if (!visible || !primGlow || collapsed) {
             llSetLinkPrimitiveParamsFast(LINK_SET, [ PRIM_GLOW, ALL_SIDES, 0.0 ]);
-            return;
         }
-        integer i; integer type; list params;
-        list types = [ "Light", 23, "Glow", 25 ];
-        for (type = 0; type < (llGetListLength(types)/2); type++) {
-            for (i = 1; i < llGetNumberOfPrims(); i++) {
-                string name = llGetLinkName(i); string typeName = llList2String(types, type * 2);
-                params += [ PRIM_LINK_TARGET, i ];
-                if (cdGetElementType(appearanceData,([name,typeName])) != JSON_INVALID) {
-                    integer j; integer typeval = llList2Integer(types, llListFindList(types, [typeName]) + 1);
-                    if (typeName == "Light") {
-                        if (colour == ZERO_VECTOR) colour = (vector)llList2String(llGetLinkPrimitiveParams(i,[PRIM_DESC]),0);
-                        if (colour == ZERO_VECTOR) colour = (vector)llList2String(params,1);
-                        params += [ typeval, (primLight & !collapsed), colour, 0.5, 2.5, 2.0 ];
-                    }
-                    while(cdGetElementType(appearanceData,([name,typeName,j])) != JSON_INVALID) {
-                        if (typeName == "Glow") {
-                            params += [ 25 ] + llJson2List(cdGetValue(appearanceData,([name,typeName,j++])));
+        else {
+
+            integer i;
+            integer j;
+            integer type;
+            integer typeval;
+            list params;
+            list types = [ "Light", 23, "Glow", 25 ];
+            string name;
+            string typeName;
+            integer typeLen = llGetListLength(types)/2;
+
+            for (; type < typeLen; ++type) {
+                typeName = llList2String(types, type * 2);
+
+                for (i = 1; i < llGetNumberOfPrims(); i++) {
+
+                    name = llGetLinkName(i);
+                    params += [ PRIM_LINK_TARGET, i ];
+
+                    if (cdGetElementType(appearanceData,([name,typeName])) != JSON_INVALID) {
+
+                        typeval = llList2Integer(types, llListFindList(types, [typeName]) + 1);
+
+                        if (typeName == "Light") {
+                            //if (colour == ZERO_VECTOR) colour = (vector)llList2String(llGetLinkPrimitiveParams(i,[PRIM_DESC]),0);
+                            if (colour == ZERO_VECTOR) colour = (vector)llList2String(params,1);
+                            params += [ typeval, (primLight & !collapsed), colour, 0.5, 2.5, 2.0 ];
+                        }
+
+                        while(cdGetElementType(appearanceData,([name,typeName,j])) != JSON_INVALID) {
+                            if (typeName == "Glow")
+                                params += [ 25 ] + llJson2List(cdGetValue(appearanceData,([name,typeName,j++])));
                         }
                     }
                 }
             }
+            llSetLinkPrimitiveParamsFast(0, params);
         }
-        llSetLinkPrimitiveParamsFast(0, params);
     }
 }
 
@@ -178,9 +196,13 @@ processConfiguration(string name, string value) {
                      "afk rlv", "base rlv", "collapse rlv", "pose rlv" ];
     list sendName = [ "barefeet", "helpless", "quiet",
                      "busyIsAway", "canAfk", "canFly", "canPose", "canSit", "canStand", "canWear", "detachable", "dollType", "pleasureDoll", "poseSilence", "autoTP", "canDress", "timeLeftOnKey", "keyLimit",
-                     "userAfkRLVcmd", "baseRLVcmd", "collapseRLVcmd", "poseRLVcmd" ];
+                     "userAfkRLVcmd", "userBaseRLVcmd", "userCollapseRLVcmd", "userPoseRLVcmd" ];
+
     list internals = [ "wind time", "blacklist name", "controller name" ];
     list cmdName = [ "setWindtimes", "getBlacklistName", "getMistressName" ];
+
+    // This processes a single line from the preferences notecard...
+    // processing done a single time during the read of the nc belong elsewhere
 
     name = llToLower(name);
     if ((i = cdListElementP(configs,name)) != NOT_FOUND) {
@@ -403,7 +425,7 @@ default {
             }
             else {
                 debugSay(2, "DEBUG", "Skipping preferences notecard as it is unchanged and settings were found in database.");
-                doneConfiguration(0);
+                doneConfiguration(0); // this calls "code = 102"
             }
         }
         else if (code == 135) {
@@ -497,8 +519,10 @@ default {
 
             if (!newAttach && cdAttached()) {
                 string msg = dollName + " has logged in with";
+
                 if (!RLVok) msg += "out";
                 msg += " RLV at " + wwGetSLUrl();
+
                 lmSendToController(msg);
             }
 
@@ -541,14 +565,16 @@ default {
         dollID = llGetOwner();
         dollName = llGetDisplayName(dollID);
 
-        if(!cdAttached()) llSetObjectName(PACKAGE_NAME + " " + __DATE__);
-
         rlvWait = 1;
         cdInitializeSeq();
         reset = 2;
 
         if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
-        else llOwnerSay("Key not attached");
+        else {
+            llOwnerSay("Key not attached");
+            llSetObjectName(PACKAGE_NAME + " " + __DATE__);
+        }
+
         doRestart();
     }
 
@@ -620,7 +646,13 @@ default {
     dataserver(key query_id, string data) {
         if (query_id == ncResetAttach) {
             data = llStringTrim(data,STRING_TRIM);
-            if (cdAttached()) llSetPrimitiveParams([PRIM_POS_LOCAL, (vector)cdGetValue(saveAttachment,([data,0])), PRIM_ROT_LOCAL, (rotation)cdGetValue(saveAttachment,([data,1]))]);
+
+            if (cdAttached())
+                llSetPrimitiveParams([PRIM_POS_LOCAL,
+                    (vector)cdGetValue(saveAttachment,([data,0])),
+                    PRIM_ROT_LOCAL,
+                    (rotation)cdGetValue(saveAttachment,([data,1]))]);
+
             attachName = data;
 
             llSetTimerEvent(10.0);
@@ -633,10 +665,14 @@ default {
             }
             else {
                 data = llStringTrim(data,STRING_TRIM);
+
+                // Search for "ALL" (with quotes) in data and replace
+                // with "-1" (without quotes) - is this necessary?
                 string find = "\"ALL\""; integer index;
-                while ( ( index = llSubStringIndex(data, find) ) != -1) {
+                while ((index = llSubStringIndex(data, find)) != NOT_FOUND) {
                     data = llInsertString(llDeleteSubString(data, index, index + llStringLength(find) - 1), index, "-1");
                 }
+
                 appearanceData += data;
                 ncRequestAppearance = llGetNotecardLine(APPEARANCE_NC, ncLine++);
             }
@@ -651,19 +687,20 @@ default {
             else {
                 integer index = llSubStringIndex(data, "#");
 
-                if (index != -1) data = llDeleteSubString(data, index, -1);
+                if (index != NOT_FOUND) data = llDeleteSubString(data, index, -1);
 
                 if (data != "") {
                     index = llSubStringIndex(data, "=");
 
-                    string name = llGetSubString(data, 0, index - 1);
-                    string value = llGetSubString(data, index + 1, -1);
+                    // name is "lval" and value is "rval" split by equals
+                    string name = llToLower(llStringTrim(llGetSubString(data,  0, index - 1),STRING_TRIM));
+                    string value =          llStringTrim(llGetSubString(data, index + 1, -1),STRING_TRIM) ;
 
-                    name = llStringTrim(llToLower(name), STRING_TRIM);
-                    value = llStringTrim(value, STRING_TRIM);
-
+                    // this is the heart of preferences processing
                     processConfiguration(name, value);
                 }
+
+                // get next Notecard Line
                 ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ++ncLine);
             }
         }

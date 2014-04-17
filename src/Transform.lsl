@@ -76,7 +76,7 @@ integer dbConfig;
 integer mustAgreeToType;
 integer showPhrases;
 integer wearAtLogin;
-integer isTransformingKey;
+//integer isTransformingKey;
 key dollID;
 string clothingprefix;
 
@@ -130,7 +130,7 @@ setDollType(string choice, integer automated) {
         if (!quiet) cdChat(dollName + " has become a " + stateName + " Doll.");
         else llOwnerSay("You have become a " + stateName + " Doll.");
 
-        if (!RLVok) { lmSendToAgentPlusDoll("Dolly does not have the capability to change outfit.",transformerId); };
+        if (!RLVok) { lmSendToAgentPlusDoll("Because RLV is disabled, Dolly does not have the capability to change outfit.",transformerId); };
 
         //typeFolder = "";
         outfitsFolderTestRetries = 0;
@@ -274,7 +274,7 @@ default {
                 }
 
                 // Try an actual folder - outfitsFolderTest - and see what comes back on listener channel
-                llListenControl(rlvHandle, 1);
+                //llListenControl(rlvHandle, 1); -- never turned off apparently
                 lmRunRLV("findfolder:" + outfitsFolderTest + "=" + (string)rlvChannel);
                 outfitsFolderTestRetries++;
             }
@@ -318,12 +318,14 @@ default {
                 if (code == 700 || code == 850) return;
                 if (choice == "keyHandler" || choice == "getTimeUpdates" || choice == "timeLeftOnKey") return;
             }
+#endif
 
             string s = "Transform Link Msg:" + script + ":" + (string)code + ":choice/name";
             string t = choice + "/" + name;
 
             if (id != NULL_KEY) llOwnerSay(s + "/id = " + t + "/" + (string)id);
             else llOwnerSay(s + " = " + t);
+#ifdef DEVELOPER_MODE
         }
 #endif
 
@@ -341,7 +343,8 @@ default {
         if (code == 102) {
             // FIXME: Is this relevant?
             // Trigger Transforming Key setting
-            if (!isTransformingKey) lmSendConfig("isTransformingKey", (string)(isTransformingKey = 1));
+            // if (!isTransformingKey) lmSendConfig("isTransformingKey", (string)(isTransformingKey = 1));
+            // lmSendConfig("isTransformingKey", (string)(isTransformingKey = 1));
 
             configured = 1;
             if(stateName != currentState) setDollType(stateName, AUTOMATED);
@@ -381,6 +384,9 @@ default {
                 split = [];
             }
 
+            llOwnerSay("==== got 300 Link Message:" + script + ":" + name + "/" + value);
+            if (name == "RLVok") llOwnerSay("---- got RLVok");
+            if (name == "dialogChannel") llOwnerSay("---- got dialogChannel");
             if (script != cdMyScriptName()) {
                      if (name == "timeLeftOnKey") runTimedTriggers();
 #ifdef KEY_HANDLER
@@ -407,19 +413,21 @@ default {
                 else if ((name == "RLVok") || (name == "dialogChannel")) {
 
                     if (name == "RLVok") RLVok = (integer)value;
-                    if (name == "dialogChannel") {
+                    else if (name == "dialogChannel") {
                         dialogChannel = (integer)value;
                         rlvChannel = ~dialogChannel + 1;
                     }
 
+                    if (name == "RLVok") llOwnerSay("got RLVok");
+                    else if (name == "dialogChannel") llOwnerSay("got dialogChannel");
+
                     if (RLVok) {
                         if (rlvChannel) {
-                            if (!rlvHandle) rlvHandle = cdListenAll(rlvChannel);
-                            else {
-                                llListenRemove(rlvHandle);
-                                rlvHandle = cdListenAll(rlvChannel);
-                            }
+                            llOwnerSay("rlvChannel reset...");
+                            if (!rlvHandle) llListenRemove(rlvHandle);
+                            rlvHandle = cdListenAll(rlvChannel);
                             llSetTimerEvent(15.0);
+                            llOwnerSay("rlvChannel reset done...");
                         }
                     }
                 }
@@ -456,11 +464,8 @@ default {
 
             if (RLVok) {
                 if (rlvChannel) {
-                    if (!rlvHandle) rlvHandle = cdListenAll(rlvChannel);
-                    else {
-                        llListenRemove(rlvHandle);
-                        rlvHandle = cdListenAll(rlvChannel);
-                    }
+                    if (rlvHandle) llListenRemove(rlvHandle);
+                    rlvHandle = cdListenAll(rlvChannel);
                     llSetTimerEvent(15.0);
                 }
             }
@@ -509,8 +514,10 @@ default {
 
             // Choose a Transformation
             else if (choice == "Types...") {
+                llOwnerSay("Types selected");
                 // Doll must remain in a type for a period of time
                 if (cdTransformLocked()) {
+                    llOwnerSay("Transform locked");
                     if (cdIsDoll(id)) {
                         llDialog(id,"You cannot be transformed right now, as you were recently transformed. You can be transformed in " + (string)minMinutes + " minutes.",["OK"], DISCARD_CHANNEL);
                     } else {
@@ -518,6 +525,8 @@ default {
                     }
                 }
                 else {
+                    llOwnerSay("Transform not locked");
+                    // not Transform locked
                     reloadTypeNames();
 
                     string msg = "These change the personality of " + dollName + "; Dolly is currently a " + stateName + " Doll. ";
@@ -533,8 +542,10 @@ default {
                     }
 
 
+                    llOwnerSay("Generating unlocked dialog");
                     llDialog(id, msg, dialogSort(llListSort(choices, 1, 1) + MAIN), dialogChannel);
                 }
+                llOwnerSay("Transform complete");
             }
 
             // Transform
@@ -566,6 +577,9 @@ default {
                         setDollType(choice, NOT_AUTOMATED);
                     }
                 }
+            }
+            else {
+                llOwnerSay("500/Choice not handled: " + choice);
             }
 
 #ifdef WAKESCRIPT

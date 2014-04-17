@@ -48,6 +48,7 @@ string dollyName;
 string carrierName;
 string pronounHerDoll = "Her";
 string pronounSheDoll = "She";
+string dollGender = "Female";
 string curGemColour;
 integer maxMins;
 integer configured;
@@ -67,6 +68,26 @@ integer textboxChannel;
 integer textboxHandle;
 integer textboxType;
 integer offlineMode;
+
+// Only place gender is currently set is in the preferences
+setGender(string gender) {
+
+    if (gender == "male") {
+        lmSendConfig("dollGender",     (dollGender     = "Male"));
+        lmSendConfig("pronounHerDoll", (pronounHerDoll = "His"));
+        lmSendConfig("pronounSheDoll", (pronounSheDoll = "He"));
+    }
+    else {
+        if (gender == "sissy") {
+            lmSendConfig("dollGender", (dollGender = "Sissy"));
+        } else {
+            lmSendConfig("dollGender", (dollGender = "Female"));
+        }
+
+        lmSendConfig("pronounHerDoll", (pronounHerDoll = "Her"));
+        lmSendConfig("pronounSheDoll", (pronounSheDoll = "She"));
+    }
+}
 
 sendMsg(key id, string msg) {
     if (id != NULL_KEY) {
@@ -265,6 +286,7 @@ default {
             else if (name == "pleasureDoll")             pleasureDoll = (integer)value;
             else if (name == "signOn")                         signOn = (integer)value;
             else if (name == "offlineMode")               offlineMode = (integer)value;
+            else if (name == "dollGender")                 dollGender = value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
             else if (name == "windTimes")                   windTimes = value;
@@ -406,12 +428,17 @@ default {
                     pluslist += cdGetButton("Self Dress", id, canDressSelf, 1);
                     pluslist += cdGetButton("Self TP", id, !tpLureOnly, 1);
                     pluslist += cdGetButton("Force TP", id, autoTP, 1);
+
                     if (canPose) { // Option to silence the doll while posed this this option is a no-op when canPose == 0
                         pluslist += cdGetButton("Silent Pose", id, poseSilence, 1);
                     }
                 }
                 else {
-                    msg += "\n\nDolly does not have an RLV capable viewer of has RLV turned off in her viewer settings.  There are no usable options available.";
+                    string p = llToLower(pronounHerDoll);
+                    string s = llToLower(pronounSheDoll);
+
+                    msg += "\n\nEither Dolly does not have an RLV capable viewer, or " + s + " has RLV turned off in " + p + " viewer settings.  There are no usable options available.";
+
                     pluslist = [ "OK" ];
                 }
 
@@ -426,9 +453,14 @@ default {
 #ifdef ADULT_MODE
                 pluslist += cdGetButton("Pleasure", id, pleasureDoll, 0);
 #endif
-                if (dollType != "Display") pluslist += cdGetButton("Poseable", id, canPose, 0);
+                if (dollType != "Display")
+                    pluslist += cdGetButton("Poseable", id, canPose, 0);
+
                 pluslist += cdGetButton("Quiet Key", id, quiet, 0);
-                if (isTransformingKey) pluslist += cdGetButton("Type Text", id, signOn, 0);
+
+                //if (isTransformingKey) pluslist += cdGetButton("Type Text", id, signOn, 0);
+
+                pluslist += cdGetButton("Type Text", id, signOn, 0);
                 pluslist += cdGetButton("Warnings", id, doWarnings, 0);
                 pluslist += cdGetButton("Offline", id, offlineMode, 0);
                 // One-way options
@@ -440,10 +472,19 @@ default {
             // Key menu is only shown for Controllers and for the Doll themselves
             else if (choice == "Key..." && (cdIsController(id) || cdIsDoll(id))) {
 
-                list pluslist = [ "Dolly Name...", "Gem Colour..." ];
+                list pluslist = ["Dolly Name...","Gem Colour...","Gender:" + dollGender];
                 
                 if (cdIsController(id)) pluslist += [ "Max Time...", "Wind Times..." ];
                 llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(pluslist, 1, 1) + cdGetButton("Key Glow", id, primGlow, 0) + cdGetButton("Gem Light", id, primLight, 0) + MAIN), dialogChannel);
+            }
+            else if (llGetSubString(choice,0,6) == "Gender:") {
+                string s = llGetSubString(choice,7,-1);
+
+                // Whatever the current element is - set gender
+                // to the next in a circular loop
+                if (s == "Male") setGender("female");
+                else if (s == "Female") setGender("sissy");
+                else if (s == "Sissy") setGender("male");
             }
             else if (choice == "Gem Colour...") {
                 string msg = "Here you can choose your own gem colour.";

@@ -96,6 +96,8 @@ string oldattachmentpoints;
 string oldclothespoints;
 integer newoutfitwordend;
 integer outfitPageSize = 9;
+string pronounSheDoll = "She";
+string pronounHerDoll = "Her";
 
 //========================================
 // FUNCTIONS
@@ -375,6 +377,8 @@ default {
                 rlvBaseChannel = dialogChannel ^ 0x80000000; // Xor with the sign bit forcing the positive channel needed by RLV spec.
             }
             else if (name == "afk")                                  afk = (integer)value;
+            else if (name == "pronounHerDoll")            pronounHerDoll = value;
+            else if (name == "pronounSheDoll")            pronounSheDoll = value;
             else if (c == "c") {
                      if (name == "canDressSelf")                canDressSelf = (integer)value;
                 else if (name == "collapsed")                      collapsed = (integer)value;
@@ -428,7 +432,8 @@ default {
                     listInventoryOn("2665");
                 }
                 else {
-                    llRegionSayTo(dresserID, 0, "Dolly cannot be dressed right now; she is already dressing");
+                    string s = llToLower(pronounSheDoll);
+                    llRegionSayTo(dresserID, 0, "Dolly cannot be dressed right now; " + s + " is already dressing");
                 }
             }
         }
@@ -453,13 +458,13 @@ default {
                     listInventoryOn("2666");
                 }
                 else {
-                    string msgx = "Dolly does not appear to have any outfits set up in her closet";
+                    string msgx = "You look in " + llToLower(pronounHerDoll) + " closet, and see no outfits for Dolly to wear.";
                     llDialog(dresserID, msgx, ["OK"], dialogChannel);
                     return;
                 }
             }
             else {
-                msgx = "You may choose any outfit.\n\n";
+                msgx = "You may choose any outfit for " + llToLower(pronounHerDoll) + " to wear.\n\n";
                 if (dresserID == dollID) msgx = "See " + outfits_url + " for more information on outfits.\n\n";
                 msgx += folderStatus();
 

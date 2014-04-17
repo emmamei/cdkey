@@ -535,8 +535,9 @@ default {
                 }
             }
             else if (name == "userBaseRLVcmd") {
-                if (userBaseRLVcmd == "") userBaseRLVcmd = value;
-                else userBaseRLVcmd += "," +value;
+                userBaseRLVcmd = value;
+                //if (userBaseRLVcmd == "") userBaseRLVcmd = value;
+                //else userBaseRLVcmd += "," +value;
             }
             else if (name == "keyAnimation") {
                 string oldanim = keyAnimation;
@@ -988,10 +989,11 @@ default {
                     else llSetScriptState("StatusRLV", 0);
 #endif
                     llListenControl(listenHandle, 0);
+                    lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
                     lmRLVreport(RLVok, rlvAPIversion, 0);
                 }
 
-                if (userBaseRLVcmd != "") lmRunRLVas("User:Base", userBaseRLVcmd);
+                if (userBaseRLVcmd != "") lmRunRLVas("UserBase", userBaseRLVcmd);
 
                 //cdRlvSay("@clear=redir");
                 string restrictionList;
