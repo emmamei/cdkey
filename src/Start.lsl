@@ -19,6 +19,9 @@
 #define cdRunScript(a) llSetScriptState(a, RUNNING);
 #define cdStopScript(a) llSetScriptState(a, NOT_RUNNING);
 
+#define PREFS_READ 1
+#define PREFS_NOT_READ 0
+
 // This isn't great - but at least it's up here where it can be maintained
 // Note, too, that Start is missing - because that's THIS script...
 //
@@ -40,8 +43,10 @@ list scriptList = [ "Aux", "Avatar", "ChatHandler", "Dress", "Main", "MenuHandle
 // VARIABLES
 //=======================================
 float delayTime = 15.0; // in seconds
-float nextIntro;
+//float nextIntro;
+#ifdef DEVELOPER_MODE
 float initTimer;
+#endif
 float nextLagCheck;
 
 key dollID = NULL_KEY;
@@ -208,7 +213,7 @@ processConfiguration(string name, string value) {
     if ((i = cdListElementP(configs,name)) != NOT_FOUND) {
         if (name == "initial time") {
             if (!databaseOnline || offlineMode)
-            value = (string)((float)value * SEC_TO_MIN);
+                value = (string)((float)value * SEC_TO_MIN);
         } if (name == "max time") {
             value = (string)((float)value * SEC_TO_MIN);
         }
@@ -249,21 +254,25 @@ processConfiguration(string name, string value) {
 setGender(string gender) {
 
     if (gender == "male") {
-        lmSendConfig("dollGender",     (dollGender     = "Male"));
-        lmSendConfig("pronounHerDoll", (pronounHerDoll = "His"));
-        lmSendConfig("pronounSheDoll", (pronounSheDoll = "He"));
+        dollGender     = "Male";
+        pronounHerDoll = "His";
+        pronounSheDoll = "He";
     }
     else {
-        if (gender == "sissy") {
-            lmSendConfig("dollGender", (dollGender = "Sissy"));
-        } else {
-            lmSendConfig("dollGender", (dollGender = "Female"));
-        }
+        if (gender == "sissy") dollGender = "Sissy";
+        else dollGender = "Female";
 
-        lmSendConfig("pronounHerDoll", (pronounHerDoll = "Her"));
-        lmSendConfig("pronounSheDoll", (pronounSheDoll = "She"));
+        pronounHerDoll = "Her";
+        pronounSheDoll = "She";
     }
+
+    lmSendConfig("dollGender",     dollGender);
+    lmSendConfig("pronounHerDoll", pronounHerDoll);
+    lmSendConfig("pronounSheDoll", pronounSheDoll);
 }
+
+// PURPOSE: initConfiguration reads the Preferences notecard, if any -
+//          and runs doneConfiguration if no notecard is found
 
 initConfiguration() {
 #ifdef DEVELOPER_MODE
@@ -281,9 +290,12 @@ initConfiguration() {
         // File missing - report for debugging only
         debugSay(1, "DEBUG", "No configuration found (" + NOTECARD_PREFERENCES + ")");
 
-        doneConfiguration(0);
+        doneConfiguration(PREFS_NOT_READ);
     }
 }
+
+// PURPOSE: doneConfiguration is called from various places,
+//          and its real purpose is as yet unknown.
 
 doneConfiguration(integer read) {
 
@@ -315,7 +327,9 @@ initializationCompleted() {
     if (newAttach && !quiet && cdAttached())
         llSay(0, llGetDisplayName(llGetOwner()) + " is now a dolly - anyone may play with their Key.");
 
+#ifdef DEVELOPER_MODE
     initTimer = llGetTime() * 1000;
+#endif
 
     if (dollyName == "") {
         string name = dollName;
@@ -342,6 +356,7 @@ initializationCompleted() {
 
     if (llGetInventoryType(APPEARANCE_NC) == INVENTORY_NOTECARD) {
         ncLine = 0;
+        appearanceData = "";
         ncRequestAppearance = llGetNotecardLine(APPEARANCE_NC, ncLine++);
     }
 
@@ -377,6 +392,7 @@ doRestart() {
 
     llOwnerSay("Resetting scripts");
 
+    // Set all other scripts to run state and reset them
     for (; loop < llGetInventoryNumber(INVENTORY_SCRIPT); loop++) {
 
         script = llGetInventoryName(INVENTORY_SCRIPT, loop);
@@ -425,7 +441,7 @@ default {
             }
             else {
                 debugSay(2, "DEBUG", "Skipping preferences notecard as it is unchanged and settings were found in database.");
-                doneConfiguration(0); // this calls "code = 102"
+                doneConfiguration(PREFS_NOT_READ); // this calls "code = 102"
             }
         }
         else if (code == 135) {
@@ -682,7 +698,7 @@ default {
                 lmSendConfig("ncPrefsLoadedUUID", llDumpList2String(llList2List((string)llGetInventoryKey(NOTECARD_PREFERENCES) + ncPrefsLoadedUUID, 0, 9),"|"));
                 lmInternalCommand("getTimeUpdates","",NULL_KEY);
 
-                doneConfiguration(1);
+                doneConfiguration(PREFS_READ);
             }
             else {
                 integer index = llSubStringIndex(data, "#");
