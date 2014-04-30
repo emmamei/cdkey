@@ -340,6 +340,7 @@ default
         integer isDoll = cdIsDoll(id);
         integer isController = cdIsController(id);
 
+        debugSay(5,"CHAT-DEBUG",("Got a message: " + name + "/" + (string)id + "/" + msg));
         // Deny access to the menus when the command was recieved from blacklisted avatar
         if (!isDoll && (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND)) {
             lmSendToAgent("You are not permitted to access this key.", id);
@@ -348,6 +349,7 @@ default
 
         // Text commands
         if (channel == chatChannel) {
+            debugSay(5,"CHAT-DEBUG",("Got a chat channel message: " + name + "/" + (string)id + "/" + msg));
             string prefix = cdGetFirstChar(msg);
 
             // Before we proceed first verify that the command is for us.
@@ -527,10 +529,8 @@ default
                     lmSendToAgent(help, id);
                     }
                     else if (choice == "xstats") {
-                        string s = "Extended stats:\n";
-
-                        s += "AFK time factor: " + formatFloat(RATE_AFK, 1) + "x\n";
-                        s += "Configured wind times: " + llList2CSV(windTimes) + " mins\n";
+                        string s = "Extended stats:\nDoll is a " + dollType + " Doll.\nAFK time factor: " +
+                                   formatFloat(RATE_AFK, 1) + "x\nConfigured wind times: " + llList2CSV(windTimes) + " (mins)\n";
 
                         if (demoMode) {
                             s += "Demo mode is enabled; times are: 1";
@@ -646,6 +646,7 @@ default
                         }
 
                         lmMemReport(1.0, 1);
+                        llOwnerSay("stats complete"); //DEBUG
                     }
                     else if (choice == "release") {
                         string p = llToLower(pronounHerDoll);
@@ -726,33 +727,33 @@ default
                 else if (choice == "poses")   cdMenuInject("Poses...", name, id);
                 else if (choice == "carry")   cdMenuInject("Carry", name, id);
                 else if (choice == "uncarry") cdMenuInject("Uncarry", name, id);
-                else if (choice == "xstats") {
-                    string s = "Extended stats:\nDoll is a " + dollType + " Doll.\nAFK time factor: " +
-                                   formatFloat(RATE_AFK, 1) + "x\nConfigured wind times: " + llList2CSV(windTimes) + " (mins)\n";
-
-                    if (demoMode) {
-                        s += "Demo mode is enabled; times are: 1";
-                        if (llGetListLength(windTimes) > 1) s += ", 2";
-                        s += " mins.\n";
-                    }
-
-                    // Which is the upper bound on the wind times currently? Depeding on the values this could be keyLimit/2 or windLimit
-                    s += "Current wind menu: ";
-
-                    integer timeLeft = llFloor(timeLeftOnKey / 60.0);
-                    float windLimit = currentLimit - timeLeftOnKey;
-                    integer timesLimit = llFloor(windLimit / SEC_TO_MIN);
-                    integer time; list avail; integer i; integer n = llGetListLength(windTimes);
-                    integer maxTime = llRound(currentLimit / 60.0 / 2);
-
-                    while ((i <= n) && ( ( time = llList2Integer(windTimes, i++) ) < timesLimit) && (time <= maxTime)) {
-                        avail += ["Wind " + (string)time];
-                    }
-                    if ((i <= n) && (timesLimit <= maxTime)) {
-                        avail += ["Wind Full"];
-                        s += " (" + (string)timeLeft  + " of " + (string)maxTime + " minutes left " + (string)timesLimit + " from max)";
-                    }
-                }
+//              else if (choice == "xstats") {
+//                  string s = "Extended stats:\nDoll is a " + dollType + " Doll.\nAFK time factor: " +
+//                                 formatFloat(RATE_AFK, 1) + "x\nConfigured wind times: " + llList2CSV(windTimes) + " (mins)\n";
+//
+//                  if (demoMode) {
+//                      s += "Demo mode is enabled; times are: 1";
+//                      if (llGetListLength(windTimes) > 1) s += ", 2";
+//                      s += " mins.\n";
+//                  }
+//
+//                  // Which is the upper bound on the wind times currently? Depeding on the values this could be keyLimit/2 or windLimit
+//                  s += "Current wind menu: ";
+//
+//                  integer timeLeft = llFloor(timeLeftOnKey / 60.0);
+//                  float windLimit = currentLimit - timeLeftOnKey;
+//                  integer timesLimit = llFloor(windLimit / SEC_TO_MIN);
+//                  integer time; list avail; integer i; integer n = llGetListLength(windTimes);
+//                  integer maxTime = llRound(currentLimit / 60.0 / 2);
+//
+//                  while ((i <= n) && ( ( time = llList2Integer(windTimes, i++) ) < timesLimit) && (time <= maxTime)) {
+//                      avail += ["Wind " + (string)time];
+//                  }
+//                  if ((i <= n) && (timesLimit <= maxTime)) {
+//                      avail += ["Wind Full"];
+//                      s += " (" + (string)timeLeft  + " of " + (string)maxTime + " minutes left " + (string)timesLimit + " from max)";
+//                  }
+//              }
             }
             else {
                 // Command has secondary parameter
