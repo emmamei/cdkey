@@ -102,7 +102,7 @@ default {
         //lmSendXonfig("debugLevel", (string)debugLevel);
         dollID = llGetOwner();
         dollName = llGetDisplayName(dollID);
-        
+
         cdInitializeSeq();
     }
 
@@ -112,7 +112,7 @@ default {
         configured = 0;
         rezzed = 1;
     }
-    
+
     changed(integer change) {
         if (change & CHANGED_TELEPORT) {
             visitDollhouse = 0;
@@ -121,7 +121,7 @@ default {
     }
 
     link_message(integer source, integer i, string data, key id) {
-        
+
         // Parse link message header information
         list split        =     cdSplitArgs(data);
         string script     =     cdListElement(split, 0);
@@ -129,14 +129,18 @@ default {
         integer optHeader =     (i & 0x00000C00) >> 10;
         integer code      =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
-        
+
         integer dollMessageCode; integer dollMessageVariant;
 
         if ((code == 11) || (code == 12)) {
             string msg = llList2String(split, 0);
-            debugSay(3, "DEBUG", "Send message to: " + (string)id + "\n" + msg);
+            debugSay(5, "DEBUG", "Code #" + (string)code + ": message = " + msg);
+
             sendMsg(id, msg);
-            if ((code == 12) && !cdIsDoll(id)) sendMsg(dollID, msg);
+
+            if (code == 12)
+                if (!cdIsDoll(id))
+                    sendMsg(dollID, msg);
         }
         else if (code == 15) {
             string msg = llList2String(split, 0);
@@ -182,82 +186,101 @@ default {
             }
             else if ((code == 136) || ((memTime < llGetTime()) && (code == 135))) {
                 string json = llList2String(split, 0);
-                if ((json != "") && (json != JSON_INVALID));
-    
-                memData = cdSetValue(memData, [script], json);
-                
-                integer i = llListFindList(memWait, [script]);
-                if ((i != -1) || ((memTime < llGetTime()) && (code == 135))) {
-                    memWait = llDeleteSubList(memWait, i, i);
-                    if (!llGetListLength(memWait) || ((memTime < llGetTime()) && (code == 135))) {
-                        llSetTimerEvent(0.0);
-                        float memory_limit = (float)llGetMemoryLimit();
-                        float free_memory = (float)llGetFreeMemory();
-                        float used_memory = (float)llGetUsedMemory();
-                        float available_memory = free_memory + (65536 - memory_limit);
-                        if (((used_memory + free_memory) > (memory_limit * 1.05)) && (memory_limit <= 16384)) { // LSL2 compiled script
-                           memory_limit = 16384;
-                           used_memory = 16384 - free_memory;
-                           available_memory = free_memory;
-                        }
-                        memData = cdSetValue(memData,[cdMyScriptName()],llList2Json(JSON_ARRAY, [used_memory, memory_limit, free_memory, available_memory]));
-        
-                        float totUsed; float totLimit; float totFree; float totAvail; integer warnFlag;
-                        integer i; string scriptName; list statList;
-                        string output = "Script Memory Status:";
-                        for (i = 0; i < llGetInventoryNumber(10); i++) {
-                            scriptName = llGetInventoryName(10, i);
-                            if (scriptName != "UpdateScript") {
-                                string type;
-                                if ( ( type = cdGetElementType(memData, ([scriptName])) ) != JSON_INVALID) {
-                                    totUsed     += used_memory          = (float)cdGetValue(memData, ([scriptName,0]));
-                                    totLimit    += memory_limit         = (float)cdGetValue(memData, ([scriptName,1]));
-                                    totFree     += free_memory          = (float)cdGetValue(memData, ([scriptName,2]));
-                                    totAvail    += available_memory     = (float)cdGetValue(memData, ([scriptName,3]));
-                                    if (memRequested || (available_memory < 6144)) {
-                                        if (!memRequested && !warnFlag) {
-                                            output += "\nOnly showing individual scripts with less than 6kB available.";
-                                            warnFlag = 1;
+
+                if ((json != "") && (json != JSON_INVALID)) {
+
+                    memData = cdSetValue(memData, [script], json);
+                    //debugSay(5, "DEBUG-CHAT", "memData: " + memData);
+
+                    integer i = llListFindList(memWait, [script]);
+
+                    if ((i != -1) || ((memTime < llGetTime()) && (code == 135))) {
+                        memWait = llDeleteSubList(memWait, i, i);
+
+                        if (!llGetListLength(memWait) || ((memTime < llGetTime()) && (code == 135))) {
+                            llSetTimerEvent(0.0);
+
+                            float memory_limit = (float)llGetMemoryLimit();
+                            float free_memory = (float)llGetFreeMemory();
+                            float used_memory = (float)llGetUsedMemory();
+                            float available_memory = free_memory + (65536 - memory_limit);
+
+                            if (((used_memory + free_memory) > (memory_limit * 1.05)) && (memory_limit <= 16384)) { // LSL2 compiled script
+                               memory_limit = 16384;
+                               used_memory = 16384 - free_memory;
+                               available_memory = free_memory;
+                            }
+
+                            memData = cdSetValue(memData,[cdMyScriptName()],llList2Json(JSON_ARRAY, [used_memory, memory_limit, free_memory, available_memory]));
+
+                            float totUsed; float totLimit; float totFree; float totAvail; integer warnFlag;
+                            integer i; string scriptName; list statList;
+                            string output = "Script Memory Status:";
+                            string type;
+
+                            for (i = 0; i < llGetInventoryNumber(10); i++) {
+
+                                scriptName = llGetInventoryName(10, i);
+
+                                if (scriptName != "UpdateScript") {
+                                    if (( type = cdGetElementType(memData, ([scriptName]))) != JSON_INVALID) {
+
+                                        totUsed  += used_memory      = (float)cdGetValue(memData, ([scriptName,0]));
+                                        totLimit += memory_limit     = (float)cdGetValue(memData, ([scriptName,1]));
+                                        totFree  += free_memory      = (float)cdGetValue(memData, ([scriptName,2]));
+                                        totAvail += available_memory = (float)cdGetValue(memData, ([scriptName,3]));
+
+                                        if (memRequested || (available_memory < 6144)) {
+                                            if (!memRequested && !warnFlag) {
+                                                output += "\nOnly showing individual scripts with less than 6kB available.";
+                                                warnFlag = 1;
+                                            }
+                                            output += "\n" + scriptName + ":\t" + formatFloat(used_memory / 1024.0, 2) + "/" + (string)llRound(memory_limit / 1024.0) + "kB (" +
+                                                      formatFloat(free_memory / 1024.0, 2) + "kB free, " + formatFloat(available_memory / 1024.0, 2) + "kB available)";
                                         }
-                                        output += "\n" + scriptName + ":\t" + formatFloat(used_memory / 1024.0, 2) + "/" + (string)llRound(memory_limit / 1024.0) + "kB (" +
-                                                  formatFloat(free_memory / 1024.0, 2) + "kB free, " + formatFloat(available_memory / 1024.0, 2) + "kB available)";
+                                    }
+                                    else {
+                                        if (memRequested) {
+                                            output += "\n" + scriptName + ":\tNo report available";
+
+                                            if (!llGetScriptState(scriptName)) {
+                                                output += " (seems to have stopped)";
+                                            }
+                                        }
                                     }
                                 }
-                                else {
-                                    if (memRequested) output += "\n" + scriptName + ":\tNo report available, may be sleeping";
-                                }
                             }
+
+                            output += "\nTotals:\t" + formatFloat(totUsed / 1024.0, 2) + "/" + (string)llRound(totLimit / 1024.0) + "kB (" +
+                                       formatFloat(totFree / 1024.0, 2) + "kB free, " + formatFloat(totAvail / 1024.0, 2) + "kB available)";
+
+                            if (warnFlag) output += "\nYou have some scripts with very low memory, you may begin to suffer script crashes if memory runs out.  ";
+                                                    "Please see the manual for tips how to keep memory usage low.";
+
+                            llOwnerSay(output);
+                            memCollecting = 0;
+                            memRequested = 0;
+                            memTime = 0.0;
                         }
-                        
-                        output += "\nTotals:\t" + formatFloat(totUsed / 1024.0, 2) + "/" + (string)llRound(totLimit / 1024.0) + "kB (" +
-                                   formatFloat(totFree / 1024.0, 2) + "kB free, " + formatFloat(totAvail / 1024.0, 2) + "kB available)";
-        
-                        if (warnFlag) output += "\nYou have some scripts with very low memory, you may begin to suffer script crashes if memory runs out.  ";
-                                                "Please see the manual for tips how to keep memory usage low.";
-        
-                        llOwnerSay(output);
-                        memCollecting = 0;
-                        memRequested = 0;
-                        memTime = 0.0;
                     }
                 }
             }
         }
-        
+
         cdConfigReport();
-        
+
         else if (code == 150) {
             simRating = llList2String(split, 0);
         }
         else if (code == 300) {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
-            
+
             if (value == RECORD_DELETE) {
                 value = "";
                 split = [];
             }
-            
+
             split = llDeleteSubList(split, 0, 0);
 
                  if (name == "controllers")             controllers = split;
@@ -326,7 +349,7 @@ default {
                 if (wearLock || !canDressSelf) msg += "un";
                 llOwnerSay(msg + "able to dress yourself.");
             }
-            
+
             if (name == "canDressSelf")              dollMessageCode = SELF_DRESS;
             else if (name == "canFly")          dollMessageCode = CAN_FLY;
             else if (name == "canRepeat")       dollMessageCode = CAN_REPEAT;
@@ -473,7 +496,7 @@ default {
             else if (choice == "Key..." && (cdIsController(id) || cdIsDoll(id))) {
 
                 list pluslist = ["Dolly Name...","Gem Colour...","Gender:" + dollGender];
-                
+
                 if (cdIsController(id)) pluslist += [ "Max Time...", "Wind Times..." ];
                 llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(pluslist, 1, 1) + cdGetButton("Key Glow", id, primGlow, 0) + cdGetButton("Gem Light", id, primLight, 0) + MAIN), dialogChannel);
             }
@@ -489,9 +512,9 @@ default {
             else if (choice == "Gem Colour...") {
                 string msg = "Here you can choose your own gem colour.";
                     list pluslist;
-    
+
                     pluslist = COLOR_NAMES;
-    
+
                     llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
             }
             else if ((llListFindList(COLOR_NAMES, [ choice ]) != -1) && (choice != "Custom..")) {
@@ -500,7 +523,7 @@ default {
 
                 lmInternalCommand("setGemColour", choice, id);
             }
-            
+
             // Textbox generating menus
             if (choice == "Custom..." || choice == "Dolly Name..." || choice == "Wind Times..." || choice == "Factory Reset") {
                 if (choice == "Custom...") {
@@ -521,7 +544,7 @@ default {
                     if(llGetSubString(choice,14,14) == "2") msg = "You must type the words FACTORY RESET exactly and in capitals to confirm.";
                     llTextBox(dollID, msg, textboxChannel);
                 }
-                
+
                 if (textboxHandle) llListenRemove(textboxHandle);
                 textboxHandle = cdListenUser(textboxChannel, id);
                 listenTime = llGetTime() + 60.0;
@@ -533,26 +556,26 @@ default {
         else if (code == -2948813) {
             if (data == "VERSION") llOwnerSay("Your key is already up to date");
         }
-        
+
         if (dollMessageCode) ncRequestDollMessage = llGetNotecardLine(MESSAGE_NC, dollMessageCode + (integer)dollMessageVariant);
     }
-    
+
     listen(integer channel, string name, key id, string choice) {
         // Deny access to the key when the command was recieved from blacklisted avatar
         if (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND) {
             lmSendToAgent("You are not permitted to access this key.", id);
             return;
         }
-        
+
         name = llGetDisplayName(id);
-        
+
         //llOwnerSay((string)channel + "=" + (string)textboxChannel + "? " + (string)textboxType + " " + choice);
-        
+
         if (channel == textboxChannel) {
             llListenRemove(textboxHandle);
             textboxHandle = 0;
             listenTime = 0.0;
-            
+
             // Text box input - 4 types
             //   1: Gem Color
             //   2: Dolly Name
@@ -568,7 +591,7 @@ default {
                 }
                 else {
                     vector tmp;
-                    if (first == "#") tmp = 
+                    if (first == "#") tmp =
                         (vector)("<0x" + llGetSubString(choice, 1, 2) +
                                  ",0x" + llGetSubString(choice, 3, 4) +
                                  ",0x" + llGetSubString(choice, 5, 6) + ">");   // User entry is in hex
@@ -586,7 +609,7 @@ default {
             // Type 3 = Wind Times
             // -- send the raw list Main.lsl processes (which handles setting those up anyway)
             else if (textboxType == 3) lmInternalCommand("setWindTimes", choice, NULL_KEY);
-            
+
             // Type 4 = Safeword Confirm
             else if (textboxType == 4) {
                 if (choice == "FACTORY RESET") {
@@ -601,8 +624,8 @@ default {
                 }
                 return;
             }
-            
-            if (textboxType == 1) lmMenuReply("Gem Colour", name, id); 
+
+            if (textboxType == 1) lmMenuReply("Gem Colour", name, id);
             else lmMenuReply("Key...", name, id);
         }
     }
@@ -630,7 +653,7 @@ default {
             }
         }
     }
-    
+
     at_target(integer target, vector targetPos, vector ourPos) {
         llTargetRemove(target);
         llStopMoveToTarget();
