@@ -50,11 +50,6 @@ memReport(string script, float delay) {
     cdLinkMessage(LINK_THIS,0,136,llList2Json(JSON_ARRAY, [used_memory, memory_limit, free_memory, max_memory]),NULL_KEY);
 }
 
-/*
- * This version of debugSay() makes LinkListen.lsl a *required* part of a debug key - a COMPLETE script which is
- * not at all part of a normal key. Differences between dev keys and normal keys MUST be minimal - if a devel key
- * is different then you're developing *A NEW KEY!!!!!
- */
 #ifdef DEVELOPER_MODE
 #define debugSay(level,prefix,msg) if (debugLevel >= level) llOwnerSay(prefix+"("+((string)level)+"):"+((string)__LINE__)+": "+(msg))
 #else
@@ -230,6 +225,11 @@ integer dateTime2Unix(integer year, integer month, integer day, integer hour, in
 
     return time;
 }
+
+#define MAX_LIMIT 65536
+#define MIN_LIMIT 16384
+#define MEM_BUFFER_SIZE 6144
+
 /*
  * ----------------------------------------
  * MEMORY SCALING
@@ -239,21 +239,49 @@ scaleMem() {
    integer free = llGetFreeMemory();
    integer used = llGetUsedMemory();
    integer limit = llGetMemoryLimit();
-   integer newlimit = limit;
-   integer short = 1024;
+   integer newlimit;
+   //integer short = 1024;
 
    if ((free + used) <= (limit * 1.05)) {
       // If this fails it is probably an LSL2 compiled script not mono and the
       // rest can't apply.
       newlimit = llCeil((float)(limit - (free - 6144)) / 1024.0) * 1024;
 
-      if (newlimit < 16384) newlimit=16384;
-      else if (newlimit > 65536) newlimit=65536;
-
       if (newlimit != limit) {
-         llSetMemoryLimit(newlimit);
-         debugSay(5, "DEBUG", cdMyScriptName() + " memory limit changed");
-         //debugSay(5, "DEBUG", (cdMyScriptName() + " Memory limit changed from " + formatFloat((float)limit / 1024.0, 2) + "kB to " + formatFloat((float)newlimit / 1024.0, 2) + "kB (" + formatFloat((float)(newlimit - limit) / 1024.0, 2) + "kB) " + formatFloat((float)llGetFreeMemory() / 1024.0, 2) + "kB free"));
+
+          // Bump up a minimum of 4k
+          if (newlimit > limit && newlimit < limit + 4096) newlimit = limit + 4096;
+
+          // clip newlimit inside reasonable limits
+          if (newlimit < MIN_LIMIT) newlimit = MIN_LIMIT;
+          else if (newlimit > MAX_LIMIT) newlimit = MAX_LIMIT;
+
+         // if more memory appears necessary, do it
+         // if reducing... stall until 4k can be freed up
+         // This reduces the number of memory changes for speed
+
+         if (newlimit > limit)
+            llSetMemoryLimit(newlimit);
+         else if (limit - newlimit > 4096)
+            llSetMemoryLimit(newlimit);
+
+#ifdef DEVELOPER_MODE
+         if (newlimit > limit || (limit - newlimit > 4096)) {
+             //debugSay(5, "DEBUG", cdMyScriptName() + " memory limit changed");
+             //debugSay(5, "DEBUG", (cdMyScriptName() + " Memory limit changed from " + formatFloat((float)limit / 1024.0, 2) + "kB to " + formatFloat((float)newlimit / 1024.0, 2) + "kB (" + formatFloat((float)(newlimit - limit) / 1024.0, 2) + "kB) " + formatFloat((float)llGetFreeMemory() / 1024.0, 2) + "kB free"));
+
+             string s = cdMyScriptName() + " Memory limit has been ";
+
+             if (newlimit > limit) {
+                 s += "increased ";
+             }
+             else {
+                 s += "decreased ";
+             }
+
+             debugSay(5, "DEBUG", (s + formatFloat((float)(newlimit - limit) / 1024.0, 2) + "kB to " + formatFloat((float)newlimit / 1024.0, 2) + "kB"));
+         }
+#endif
       }
    }
 }
