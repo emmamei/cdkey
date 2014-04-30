@@ -208,6 +208,7 @@ default {
         // Stop myself: stop this script from running
         cdStopScript(cdMyScriptName());
 #endif
+        debugSay(2,"DEBUG-STARTUP","Done with state_entry...");
     }
 
     //----------------------------------------
@@ -216,6 +217,7 @@ default {
     on_rez(integer iParam) {
         dbConfig = 0;
         //startup = 2;
+        debugSay(2,"DEBUG-STARTUP","Done with on_rez...");
     }
 
     //----------------------------------------
@@ -227,6 +229,7 @@ default {
 
             reloadTypeNames();
         }
+        debugSay(2,"DEBUG-STARTUP","Done with changed...");
     }
 
     //----------------------------------------
@@ -235,6 +238,7 @@ default {
     timer() {
         list outfitsMasterFolders = [ ">&&Outfits", "Outfits", ">&&Dressup", "Dressup" ];
 
+        debugSay(2,"DEBUG-STARTUP","Timer struck...");
         // Reading Notecard: happens first
         //if (readingNC) {
         //    debugSay(5,"DEBUG-TRANSFORM","Reading notecard " + TYPE_FLAG + currentState + " line number " + (string)lineno);
@@ -297,6 +301,7 @@ default {
     //----------------------------------------
     link_message(integer source, integer i, string data, key id) {
 
+        //debugSay(2,"DEBUG-STARTUP","Link Message...");
         // Parse link message header information
         list split        =     cdSplitArgs(data);
         string script     =     cdListElement(split, 0);
@@ -316,18 +321,18 @@ default {
         if (debugLevel > 4) {
             if (debugLevel < 6) {
                 if (code == 700 || code == 850) return;
-                if (choice == "keyHandler" || choice == "getTimeUpdates" || choice == "timeLeftOnKey") return;
+                //if (choice == "keyHandler" || choice == "getTimeUpdates" || choice == "timeLeftOnKey") return;
             }
-#endif
 
             string s = "Transform Link Msg:" + script + ":" + (string)code + ":choice/name";
             string t = choice + "/" + name;
 
-            if (id != NULL_KEY) llOwnerSay(s + "/id = " + t + "/" + (string)id);
-            else llOwnerSay(s + " = " + t);
-#ifdef DEVELOPER_MODE
+            if (id != NULL_KEY) debugSay(7,"DEBUG-LINK",s + "/id = " + t + "/" + (string)id);
+            else debugSay(7,"DEBUG-LINK",s + " = " + t);
         }
 #endif
+
+        scaleMem();
 
         // First, dump those we don''t want... (but occur frequently!)
         if (code == 700) return;
@@ -338,9 +343,7 @@ default {
         //else if (code == 315) return;
         //else if (code == 11) return;
 
-        scaleMem();
-
-        if (code == 102) {
+        else if (code == 102) {
             // FIXME: Is this relevant?
             // Trigger Transforming Key setting
             // if (!isTransformingKey) lmSendConfig("isTransformingKey", (string)(isTransformingKey = 1));
@@ -384,9 +387,12 @@ default {
                 split = [];
             }
 
-            llOwnerSay("==== got 300 Link Message:" + script + ":" + name + "/" + value);
-            if (name == "RLVok") llOwnerSay("---- got RLVok");
-            if (name == "dialogChannel") llOwnerSay("---- got dialogChannel");
+#if DEVELOPER_MODE
+            //llOwnerSay("==== got 300 Link Message:" + script + ":" + name + "/" + value);
+            //if (name == "RLVok") llOwnerSay("---- got RLVok");
+            //if (name == "dialogChannel") llOwnerSay("---- got dialogChannel");
+#endif
+
             if (script != cdMyScriptName()) {
                      if (name == "timeLeftOnKey") runTimedTriggers();
 #ifdef KEY_HANDLER
@@ -599,6 +605,7 @@ default {
     //----------------------------------------
     listen(integer channel, string name, key id, string choice) {
 
+        debugSay(2,"DEBUG-STARTUP","Listener tickled: " + choice + "/" + (string)id + "/" + (string)name);
         // llOwnerSay("choice = " + choice); // DEBUG:
         // llOwnerSay("clothing prefix = " + clothingprefix); // DEBUG:
         // llOwnerSay("    substring = " + (string)llGetSubString(choice, -llStringLength(clothingprefix), STRING_END)); // DEBUG:
