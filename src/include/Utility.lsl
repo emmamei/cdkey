@@ -247,41 +247,34 @@ scaleMem() {
       // rest can't apply.
       newlimit = llCeil((float)(limit - (free - 6144)) / 1024.0) * 1024;
 
+      // Bump up a minimum of 4k
+      if (newlimit > limit && newlimit < limit + 4096) newlimit = limit + 4096;
+
+      // clip newlimit inside reasonable limits
+      if (newlimit < MIN_LIMIT) newlimit = MIN_LIMIT;
+      else if (newlimit > MAX_LIMIT) newlimit = MAX_LIMIT;
+
+      // This uses adjusted newlimit, not the unmodified one:
+      // saves having to clip the value to Max and setting it to Max
+      // repeatedly, for instance
+
       if (newlimit != limit) {
 
-          // Bump up a minimum of 4k
-          if (newlimit > limit && newlimit < limit + 4096) newlimit = limit + 4096;
-
-          // clip newlimit inside reasonable limits
-          if (newlimit < MIN_LIMIT) newlimit = MIN_LIMIT;
-          else if (newlimit > MAX_LIMIT) newlimit = MAX_LIMIT;
-
+#ifdef DEVELOPER_MODE
+         string s = cdMyScriptName() + " Memory limit has been ";
+#endif
          // if more memory appears necessary, do it
          // if reducing... stall until 4k can be freed up
          // This reduces the number of memory changes for speed
 
-         if (newlimit > limit)
+         if (newlimit > limit) {
             llSetMemoryLimit(newlimit);
-         else if (limit - newlimit > 4096)
-            llSetMemoryLimit(newlimit);
-
-#ifdef DEVELOPER_MODE
-         if (newlimit > limit || (limit - newlimit > 4096)) {
-             //debugSay(5, "DEBUG", cdMyScriptName() + " memory limit changed");
-             //debugSay(5, "DEBUG", (cdMyScriptName() + " Memory limit changed from " + formatFloat((float)limit / 1024.0, 2) + "kB to " + formatFloat((float)newlimit / 1024.0, 2) + "kB (" + formatFloat((float)(newlimit - limit) / 1024.0, 2) + "kB) " + formatFloat((float)llGetFreeMemory() / 1024.0, 2) + "kB free"));
-
-             string s = cdMyScriptName() + " Memory limit has been ";
-
-             if (newlimit > limit) {
-                 s += "increased ";
-             }
-             else {
-                 s += "decreased ";
-             }
-
-             debugSay(5, "DEBUG", (s + formatFloat((float)(newlimit - limit) / 1024.0, 2) + "kB to " + formatFloat((float)newlimit / 1024.0, 2) + "kB"));
+            debugSay(5, "DEBUG", (s + "increased " + formatFloat((float)(newlimit - limit) / 1024.0, 2) + "kB to " + formatFloat((float)newlimit / 1024.0, 2) + "kB"));
          }
-#endif
+         else if (limit - newlimit > 4096) {
+            llSetMemoryLimit(newlimit);
+            debugSay(5, "DEBUG", (s + "decreased " + formatFloat((float)(newlimit - limit) / 1024.0, 2) + "kB to " + formatFloat((float)newlimit / 1024.0, 2) + "kB"));
+         }
       }
    }
 }
