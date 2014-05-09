@@ -129,10 +129,13 @@ checkRLV()
     }
 
 #ifdef DEVELOPER_MODE
+    // RLV is marked ok if we get a response from an RLV command *AND* we have the Key's path
     RLVok = ((rlvAPIversion != "") && (myPath != ""));
 #else
+    // RLV is marked ok if we get a response from an RLV command
     RLVok = (rlvAPIversion != "");
 #endif
+    debugSay(5,"DEBUG-RLV","RLVok = " + (string)RLVok + " and myPath = " + (string)myPath + " and rlvAPIversion = " + rlvAPIversion);
 
     if ((RLVok != 1) && (RLVck < 5)) {
 
@@ -787,9 +790,9 @@ default {
 
             }
 #ifdef DEVELOPER_MODE
-            else {
-                llSay(DEBUG_CHANNEL, "Choice ignored in Avatar: " + choice + "/" + name);
-            }
+//          else {
+//              llSay(DEBUG_CHANNEL, "Choice ignored in Avatar: " + choice + "/" + name);
+//          }
 #endif
             ifPermissions();
         }
@@ -922,9 +925,10 @@ default {
             if (dataType == RLV_STRIP) {
                 string part = cdGetValue(data, [1]);
                 string value; integer i;
-                while ( ( value = cdGetValue(data, ([2,"attachments",i++])) ) != JSON_INVALID ) lmRunRLV("remattach:" + value + "=force");
+
+                while ((value = cdGetValue(data, ([2,"attachments",i++]))) != JSON_INVALID) lmRunRLV("remattach:" + value + "=force");
                 i = 0;
-                while ( ( value = cdGetValue(data, ([2,"layers",i++])) ) != JSON_INVALID ) lmRunRLV("remoutfit:" + value + "=force");
+                while ((value = cdGetValue(data, ([2,"layers",     i++]))) != JSON_INVALID) lmRunRLV("remoutfit:" + value + "=force");
 
                 if (RLVstarted) cdLoadData(RLV_NC, RLV_BASE_RESTRICTIONS);
             }
@@ -946,26 +950,28 @@ default {
                 ];
                 integer index;
 
-                while ( ( index = llSubStringIndex(data, "$C") ) != -1) {
+                while ((index = llSubStringIndex(data, "$C")) != NOT_FOUND) {
                     if (redirchan == "") redirchan = (string)llRound(llFrand(0x7fffffff));
                     data = llInsertString(llDeleteSubString(data, index, index + 1), index, redirchan);
                 }
 
-                if (!RLVstarted && RLVok) llOwnerSay("@clear");
-
                 string baseRLV;
 
-#ifdef DEVELOPER_MODE
-                // if Doll is one of the developers... dont lock:
-                // prevents inadvertent lock-in during development
-
                 if (RLVok && !RLVstarted) {
+                    llOwnerSay("@clear");
+
+#ifdef DEVELOPER_MODE
+                    // if Doll is one of the developers... dont lock:
+                    // prevents inadvertent lock-in during development
+
                     cdSayQuietly("Developer Key not locked");
 
                     baseRLV += "attachallthis_except:" + myPath + "=add,detachallthis_except:" + myPath + "=add,";
+#endif
                 }
 
-#else
+#ifndef DEVELOPER_MODE
+
                 // We lock the key on here - but in the menu system, it appears
                 // unlocked and detachable: this is because it can be detached
                 // via the menu. To make the key truly "undetachable", we get
@@ -1008,7 +1014,7 @@ default {
                 RLVstarted = (RLVstarted | RLVok);
 
 #ifndef DEVELOPER_MODE
-                if (llGetInventoryCreator("Main") == dollID) lmRunRLVas("Base", "clear=unshared,clear=achallthis");
+                if (llGetInventoryCreator("Main") == dollID) lmRunRLVas("Base", "clear=unshared,clear=attachallthis");
 #endif
             }
         }
