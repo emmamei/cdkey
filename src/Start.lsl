@@ -16,8 +16,9 @@
 #define NO 0
 #define NOT_FOUND -1
 #define UNSET -1
-#define cdRunScript(a) llSetScriptState(a, RUNNING);
-#define cdStopScript(a) llSetScriptState(a, NOT_RUNNING);
+#define cdRunScript(a) llSetScriptState(a, RUNNING)
+#define cdStopScript(a) llSetScriptState(a, NOT_RUNNING)
+#define cdIsScriptRunning(a) llGetScriptState(a)
 
 #define PREFS_READ 1
 #define PREFS_NOT_READ 0
@@ -68,6 +69,7 @@ float timeLeftOnKey;
 float keyLimit;
 integer ncLine;
 integer demoMode;
+integer failedReset;
 
 #ifdef DEVELOPER_MODE
 float ncStart;
@@ -113,7 +115,12 @@ string pronounSheDoll = "She";
 //integer initState = 104;
 integer introLine;
 integer introLines;
-integer reset;
+
+integer resetState;
+#define RESET_NONE 0
+#define RESET_NORMAL 1
+#define RESET_STARTUP 2
+
 integer rlvWait;
 integer RLVok = UNSET;
 integer databaseFinished;
@@ -308,12 +315,12 @@ doneConfiguration(integer read) {
 #endif
     }
 
-    if (reset) {
+    if (resetState) {
         llSleep(7.5);
         llResetScript();
     }
 
-    reset = 0;
+    resetState = RESET_NONE;
 
     lmInitState(102);
     lmInitState(105);
@@ -388,22 +395,40 @@ sleepMenu() {
 doRestart() {
     integer loop; string me = cdMyScriptName();
     string script;
-    reset = 0;
+    resetState = RESET_NONE;
 
     llOwnerSay("Resetting scripts");
+    if (failedReset == NO) {
 
-    // Set all other scripts to run state and reset them
-    for (; loop < llGetInventoryNumber(INVENTORY_SCRIPT); loop++) {
+        // Set all other scripts to run state and reset them
+        for (; loop < llGetInventoryNumber(INVENTORY_SCRIPT); loop++) {
 
-        script = llGetInventoryName(INVENTORY_SCRIPT, loop);
-        if (script != me) {
-            cdRunScript(script);
-            llResetOtherScript(script);
+            script = llGetInventoryName(INVENTORY_SCRIPT, loop);
+            if (script != me) {
+
+                cdRunScript(script);
+                llResetOtherScript(script);
+
+                sleep(5.0);
+
+                debugSay(5,"DEBUG-RESET","Resetting " + script);
+
+                if (!cdIsScriptRunning("MenuHandler")) {
+                    failedReset = YES;
+                    llOwnerSay("Failed to reset " + script);
+                }
+            }
+        }
+
+        if (failedReset != NO) {
+            llOwnerSay("Tried to reset key and failed.");
         }
     }
+    else {
+        llOwnerSay("A past reset has failed; not retrying.");
+    }
 
-    reset = 0;
-
+    resetState = RESET_NONE;
     ncResetAttach = llGetNotecardLine(NC_ATTACHLIST, cdAttached() - 1);
 }
 
@@ -533,13 +558,15 @@ default {
             RLVok = (llList2Integer(split, 0) == 1);
             rlvWait = 0;
 
-            if (!newAttach && cdAttached()) {
-                string msg = dollName + " has logged in with";
+            if (!newAttach) {
+                if (cdAttached()) {
+                    string msg = dollName + " has logged in with";
 
-                if (!RLVok) msg += "out";
-                msg += " RLV at " + wwGetSLUrl();
+                    if (!RLVok) msg += "out";
+                    msg += " RLV at " + wwGetSLUrl();
 
-                lmSendToController(msg);
+                    lmSendToController(msg);
+                }
             }
 
             if (collapsed) lmRunRLVas("UserCollapse", userCollapseRLVcmd);
@@ -583,7 +610,7 @@ default {
 
         rlvWait = 1;
         cdInitializeSeq();
-        reset = 2;
+        resetState = RESET_STARTUP;
 
         if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
         else {
@@ -602,7 +629,7 @@ default {
 
 #ifdef SIM_FRIENDLY
 #ifdef WAKESCRIPT
-        if (!llGetScriptState("MenuHandler")) wakeMenu();
+        if (!cdIsScriptRunning("MenuHandler")) wakeMenu();
 #endif
         nextLagCheck = llGetTime() + SEC_TO_MIN;
 #endif
@@ -746,7 +773,7 @@ default {
 
                 // Did Notecard change? (that is, did its UUID change?)
                 if (llListFindList(ncPrefsLoadedUUID,[ncKey]) == NOT_FOUND) {
-                    reset = 1;
+                    resetState = RESET_NORMAL;
 
                     sendMsg(dollID, "Reloading preferences card");
 #ifdef DEVELOPER_MODE
@@ -761,6 +788,7 @@ default {
                 }
             }
 
+            // What if inventory changes several times in a row?
             llOwnerSay("Inventory modified restarting in 60 seconds.");
             cdLinkMessage(LINK_THIS, 0, 301, "", llGetKey());
             llSleep(60.0);
@@ -801,7 +829,7 @@ default {
             for (i = 0; i < n; i++) {
                 string script = cdListElement(scriptList,i);
 
-                if (!llGetScriptState(script)) {
+                if (!cdIsScriptRunning(script)) {
                     // Core key script appears to have suffered a fatal error try restarting
 
 #ifdef DEVELOPER_MODE
@@ -835,8 +863,8 @@ default {
         if (perm & PERMISSION_TAKE_CONTROLS) {
             llTakeControls(CONTROL_MOVE, 1, 1);
 
-            // Is this the cause of a reset loop? reset never gets away from (2)
-            //if (reset == 2) {
+            // Is this the cause of a reset loop? resetState never gets away from (2)
+            //if (resetState == RESET_STARTUP) {
             //    llOwnerSay("Permissions resetting");
             //    doRestart();
             //}
