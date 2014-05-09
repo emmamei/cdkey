@@ -207,24 +207,27 @@ default
                 (cmd == "addRemBlacklist") ||
                 (cmd == "remMistress")) {
 
-                split = llDeleteSubList(split, 0, 0); // needs to be out of if statement if any more cmds added
+                string uuid = llList2String(split, 1);
+                string name = llList2String(split, 2);
 
-                string uuid = llList2String(split, 0);
-                string name = llList2String(split, 1);
                 integer type; string typeString; string barString; integer mode;
                 list tmpList; list barList; // barList represents the opposite (of blacklist or controller list) which bars adding.
 
                 if ((id != DATABASE_ID) && (script != "MenuHandler")) id = listID;
+                if (name == "") return; // fix for issue #141
 
                 // These lists become mangled sometimes for reasons unclear creating a new handler for both here
                 // with a more thorough validation process which should also be somewhat more fault tollerant in
                 // the event that a list does become corrupted also.
 
-                if (llGetSubString(cmd, -8, -1) == "Mistress") {
+ #define ADD_MODE 1
+ #define REM_MODE -1
+
+                if (llGetSubString(cmd, -8, STRING_END) == "Mistress") {
                     type = CONTROLLER_LIST; typeString = "controller";
                     tmpList = controllers; barList = blacklist;
-                    if (llGetSubString(cmd, 0, 2) == "add") mode = 1;
-                    else mode = -1;
+                    if (llGetSubString(cmd, 0, 2) == "add") mode = ADD_MODE;
+                    else mode = REM_MODE;
                 }
                 else {
                     type = BLACKLIST_LIST; typeString = "blacklist";
@@ -234,19 +237,17 @@ default
                 }
 
                 // First check: Test suitability of name for adding; send a message to user if not acceptable
-                if (llListFindList(barList, [ uuid ]) != -1) {
-                    string msg = name;
-
-                    if (type == CONTROLLER_LIST) msg += " is listed on your blacklist you must first remove them before adding as a ";
-                    else msg += " is listed on your controller list they must first remove themselves before you can add them to the ";
-                    msg += typeString + ".";
+                if (llListFindList(barList, [ uuid ]) != NOT_FOUND) {
+                    string msg;
 
                     if (type == CONTROLLER_LIST) {
-                        msg += "\nTo do so type /" + (string)chatChannel + "unblacklist " + name;
+                        msg = name + " is blacklisted; you must first remove them from the blacklist before adding them as a controller.\nTo do so type /" +
+                                  (string)chatChannel + " unblacklist " + name;
                         blockedControlName = name;
                         blockedControlUUID = uuid;
                         blockedControlTime = llGetUnixTime();
                     }
+                    else msg = name + " is one of your controllers; until they remove themselves from being your controller, you cannot add them to the blacklist.";
 
                     lmSendToAgentPlusDoll(msg, id);
                     return;
@@ -259,8 +260,10 @@ default
                 i = llListFindList(tmpList, [ uuid ]);
                 integer j = llListFindList(tmpList, [ name ]);
 
-                if (mode == 1) {
+                if (mode == ADD_MODE) {
+
                     integer load;
+
                     if (id == DATABASE_ID) {
                         load = TRUE;
                         llOwnerSay("Restoring " + name + " as " + typeString + " from database settings.");
