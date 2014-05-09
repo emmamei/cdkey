@@ -4,7 +4,7 @@
 //
 // vim:sw=4 et nowrap filetype=lsl
 //
-// DATE: 25 February 2014
+// DATE: 2 May 2014
 
 #define DEBUG_HANDLER 1
 #include "include/GlobalDefines.lsl"
@@ -98,6 +98,9 @@ sendMsg(key id, string msg) {
 }
 
 default {
+    //----------------------------------------
+    // STATE ENTRY
+    //----------------------------------------
     state_entry() {
         //lmSendXonfig("debugLevel", (string)debugLevel);
         dollID = llGetOwner();
@@ -106,6 +109,9 @@ default {
         cdInitializeSeq();
     }
 
+    //----------------------------------------
+    // ON REZ
+    //----------------------------------------
     on_rez(integer start) {
         //lmSendXonfig("debugLevel", (string)debugLevel);
         rezTime = llGetTime();
@@ -113,6 +119,9 @@ default {
         rezzed = 1;
     }
 
+    //----------------------------------------
+    // CHANGED
+    //----------------------------------------
     changed(integer change) {
         if (change & CHANGED_TELEPORT) {
             visitDollhouse = 0;
@@ -120,6 +129,9 @@ default {
         }
     }
 
+    //----------------------------------------
+    // LINK MESSAGE
+    //----------------------------------------
     link_message(integer source, integer i, string data, key id) {
 
         // Parse link message header information
@@ -505,9 +517,19 @@ default {
 
                 // Whatever the current element is - set gender
                 // to the next in a circular loop
-                if (s == "Male") setGender("female");
-                else if (s == "Female") setGender("sissy");
-                else if (s == "Sissy") setGender("male");
+                //
+                // Note support for Sissy removed: unexpected behavior
+                // (menu option isn't the best as it is)
+
+                if (s == "Male")
+                    setGender("female");
+                else if (s == "Female")
+                    //setGender("sissy");
+                    setGender("male");
+                else if (s == "Sissy")
+                    setGender("male");
+
+                llOwnerSay("Gender is now set to " + dollGender);
             }
             else if (choice == "Gem Colour...") {
                 string msg = "Here you can choose your own gem colour.";
@@ -560,6 +582,9 @@ default {
         if (dollMessageCode) ncRequestDollMessage = llGetNotecardLine(MESSAGE_NC, dollMessageCode + (integer)dollMessageVariant);
     }
 
+    //----------------------------------------
+    // LISTEN
+    //----------------------------------------
     listen(integer channel, string name, key id, string choice) {
         // Deny access to the key when the command was recieved from blacklisted avatar
         if (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND) {
@@ -630,6 +655,9 @@ default {
         }
     }
 
+    //----------------------------------------
+    // DATASERVER
+    //----------------------------------------
     dataserver(key request, string data) {
         integer index;
         if (request == ncRequestDollMessage) {
@@ -654,11 +682,17 @@ default {
         }
     }
 
+    //----------------------------------------
+    // AT TARGET
+    //----------------------------------------
     at_target(integer target, vector targetPos, vector ourPos) {
         llTargetRemove(target);
         llStopMoveToTarget();
     }
 
+    //----------------------------------------
+    // TIMER
+    //----------------------------------------
     timer() {
         if (memCollecting) {
             lmMemReport(0.0, memRequested);
