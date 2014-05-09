@@ -30,7 +30,7 @@ key uniqueID = NULL_KEY;
 //list windTimes = [ 30 ];
 
 float timeLeftOnKey;
-float windDefault = 1800.0;
+float windDefault = WIND_DEFAULT;
 float collapseTime;
 
 integer afk;
