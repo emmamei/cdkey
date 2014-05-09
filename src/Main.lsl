@@ -116,7 +116,7 @@ float timeToJamRepair;
 float nextExpiryTime;
 #endif
 float poseExpire;
-float windamount      = 1800.0; // 30 * SEC_TO_MIN;    // 30 minutes
+float windamount      = WIND_DEFAULT;
 float keyLimit        = 10800.0;
 float timeLeftOnKey   = windamount;
 float baseWindRate    = windRate;
