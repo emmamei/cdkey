@@ -25,6 +25,8 @@
 #define cdStopTimer() llSetTimerEvent(0.0)
 #define cdListenAll(a) llListen(a, NO_FILTER, NO_FILTER, NO_FILTER)
 #define cdPause() llSleep(0.5)
+#define cdProfileURL(i) "secondlife:///app/agent/"+(string)(i)+"/about"
+#define cdStringEndMatch(a,b) llGetSubString(a,-llStringLength(b),STRING_END)==b
 
 // Channel to use to discard dialog output
 #define DISCARD_CHANNEL 9999
@@ -47,14 +49,15 @@ string stateName;
 list types;
 float menuTime;
 key transformerId;
-integer lineno;
+integer readLine;
 integer readingNC;
+string typeNotecard;
 integer outfitsFolderItem;
 integer outfitsFolderTestRetries;
 integer findTypeFolder;
 integer rlvHandle;
 integer useTypeFolder;
-integer menuChangeType;
+integer transformedViaMenu;
 string transform;
 string outfitsFolderTest;
 string outfitsFolder;
@@ -63,7 +66,7 @@ string typeFolder;
 integer dialogChannel;
 integer rlvChannel;
 
-integer minMinutes = 0;
+integer minMinutes;
 integer configured;
 integer RLVok;
 
@@ -75,7 +78,9 @@ string currentState;
 integer dbConfig;
 integer mustAgreeToType;
 integer showPhrases;
+#ifdef WEAR_AT_LOGIN
 integer wearAtLogin;
+#endif
 //integer isTransformingKey;
 key dollID;
 string clothingprefix;
@@ -102,19 +107,20 @@ setDollType(string choice, integer automated) {
 
     clothingprefix = TYPE_FLAG + stateName;
     currentPhrases = [];
-    lineno = 0;
+    readLine = 0;
+    typeNotecard = TYPE_FLAG + stateName;
 
     // Look for Notecard for the Doll Type and start reading it if showPhrases is enabled
     //
     if (showPhrases) {
-        if (llGetInventoryType(TYPE_FLAG + stateName) == INVENTORY_NOTECARD) {
-            do {
-                kQuery = llGetNotecardLine(TYPE_FLAG + stateName,++lineno);
-            } while (readingNC);
+        if (llGetInventoryType(typeNotecard) == INVENTORY_NOTECARD) {
+            // FIXME: This is an infinite loop!!
+            kQuery = llGetNotecardLine(typeNotecard,++readLine);
+            debugSay(2,"DEBUG-DOLLTYPE","Found notecard: " + typeNotecard);
         }
     }
 
-    // New State?
+    // Are we changing types?
     if (stateName != currentState) {
         // Dont lock if transformation is automated
         if (automated) minMinutes = 0;
@@ -155,6 +161,7 @@ reloadTypeNames() {
 }
 
 runTimedTriggers() {
+    // transform lock: decrease count
     if (minMinutes > 0) minMinutes--;
     else minMinutes = 0; // bulletproofing
 
@@ -208,7 +215,7 @@ default {
         // Stop myself: stop this script from running
         cdStopScript(cdMyScriptName());
 #endif
-        debugSay(2,"DEBUG-STARTUP","Done with state_entry...");
+        debugSay(2,"DEBUG-TRANSFORM","Done with state_entry...");
     }
 
     //----------------------------------------
@@ -217,7 +224,7 @@ default {
     on_rez(integer iParam) {
         dbConfig = 0;
         //startup = 2;
-        debugSay(2,"DEBUG-STARTUP","Done with on_rez...");
+        debugSay(2,"DEBUG-TRANSFORM","Done with on_rez...");
     }
 
     //----------------------------------------
@@ -229,7 +236,7 @@ default {
 
             reloadTypeNames();
         }
-        debugSay(2,"DEBUG-STARTUP","Done with changed...");
+        debugSay(2,"DEBUG-TRANSFORM","Done with changed...");
     }
 
     //----------------------------------------
@@ -238,16 +245,19 @@ default {
     timer() {
         list outfitsMasterFolders = [ ">&&Outfits", "Outfits", ">&&Dressup", "Dressup" ];
 
-        debugSay(2,"DEBUG-STARTUP","Timer struck...");
         // Reading Notecard: happens first
         //if (readingNC) {
-        //    debugSay(5,"DEBUG-TRANSFORM","Reading notecard " + TYPE_FLAG + currentState + " line number " + (string)lineno);
-        //    kQuery = llGetNotecardLine(TYPE_FLAG + currentState,lineno);
+        //    debugSay(5,"DEBUG-TRANSFORM","Reading notecard " + TYPE_FLAG + currentState + " line number " + (string)readLine);
+        //    kQuery = llGetNotecardLine(TYPE_FLAG + currentState,readLine);
         //}
         // Searching for Outfits folders (but only if RLV is ok)
         //else
         if (RLVok) {
-            debugSay(5,"DEBUG-TRANSFORM","Searching for outfits folders...");
+            debugSay(5,"DEBUG-TRANSFORM","Searching for outfits folders... ");
+            //debugSay(5,"DEBUG-TRANSFORM",">>outfitsFolderItem = " + (string)outfitsFolderItem);
+            //debugSay(5,"DEBUG-TRANSFORM",">>outfitsFolder = " + (string)outfitsFolder);
+            //debugSay(5,"DEBUG-TRANSFORM",">>outfitsFolderTest = " + (string)outfitsFolderTest);
+
             if (outfitsFolderItem > 0) {
                 debugSay(5,"DEBUG-TRANSFORM","outfitsFolderItem = " + (string)outfitsFolderItem);
                 if (outfitsFolder == "") {
@@ -301,7 +311,6 @@ default {
     //----------------------------------------
     link_message(integer source, integer i, string data, key id) {
 
-        //debugSay(2,"DEBUG-STARTUP","Link Message...");
         // Parse link message header information
         list split        =     cdSplitArgs(data);
         string script     =     cdListElement(split, 0);
@@ -327,16 +336,16 @@ default {
             string s = "Transform Link Msg:" + script + ":" + (string)code + ":choice/name";
             string t = choice + "/" + name;
 
-            if (id != NULL_KEY) debugSay(7,"DEBUG-LINK",s + "/id = " + t + "/" + (string)id);
-            else debugSay(7,"DEBUG-LINK",s + " = " + t);
+            if (id != NULL_KEY) debugSay(5,"DEBUG-LINK",s + "/id = " + t + "/" + (string)id);
+            else debugSay(5,"DEBUG-LINK",s + " = " + t);
         }
 #endif
-
         scaleMem();
 
         // First, dump those we don''t want... (but occur frequently!)
         if (code == 700) return;
         else if (code == 850) return;
+
         //else if (code == 136) return;
         //else if (code == 150) return;
         //else if (code == 303) return;
@@ -354,10 +363,11 @@ default {
         }
 
         else if (code == 104) {
-            if (script != "Start") return;
-            reloadTypeNames();
-            //startup = 1;
-            llSetTimerEvent(60.0);   // every minute
+            if (script == "Start") {
+                reloadTypeNames();
+                //-- startup = 1;
+                llSetTimerEvent(60.0);   // every minute
+            }
         }
 
         //else if (code == 105) {
@@ -366,8 +376,9 @@ default {
 
         else if (code == 110) {
             //initState = 105;
-            setDollType(stateName, AUTOMATED);
+            //setDollType(stateName, AUTOMATED);
             //startup = 0;
+            ;
         }
 
         else if (code == 135) {
@@ -404,17 +415,16 @@ default {
                     showPhrases = (integer)value;
                     currentPhrases = [];
 
+                    // if showPhrases is turned on, read hypno phrases from notecard
                     if (showPhrases) {
-                        integer lineno;
-
-                        if (llGetInventoryType(TYPE_FLAG + stateName) == INVENTORY_NOTECARD) {
-                            do {
-                                kQuery = llGetNotecardLine(TYPE_FLAG + stateName,++lineno);
-                            } while (readingNC);
+                        if (llGetInventoryType(typeNotecard) == INVENTORY_NOTECARD) {
+                            kQuery = llGetNotecardLine(typeNotecard,readLine);
                         }
                     }
                 }
+#ifdef WEAR_AT_LOGIN
                 else if (name == "wearAtLogin")                              wearAtLogin = (integer)value;
+#endif
                 else if (name == "stateName")                                  stateName = value;
                 else if ((name == "RLVok") || (name == "dialogChannel")) {
 
@@ -424,16 +434,16 @@ default {
                         rlvChannel = ~dialogChannel + 1;
                     }
 
-                    if (name == "RLVok") llOwnerSay("got RLVok");
-                    else if (name == "dialogChannel") llOwnerSay("got dialogChannel");
+                    //if (name == "RLVok") llOwnerSay("got RLVok");
+                    //else if (name == "dialogChannel") llOwnerSay("got dialogChannel");
 
                     if (RLVok) {
                         if (rlvChannel) {
-                            llOwnerSay("rlvChannel reset...");
+                            //llOwnerSay("rlvChannel reset...");
                             if (!rlvHandle) llListenRemove(rlvHandle);
                             rlvHandle = cdListenAll(rlvChannel);
                             llSetTimerEvent(15.0);
-                            llOwnerSay("rlvChannel reset done...");
+                            //llOwnerSay("rlvChannel reset done...");
                         }
                     }
                 }
@@ -490,8 +500,11 @@ default {
             // Transforming options
             if ((choice == "Type...")        ||
                 (optName == "Verify Type")   ||
-                (optName == "Show Phrases")  ||
-                (optName == "Wear @ Login")) {
+                (optName == "Show Phrases")
+#ifdef WEAR_AT_LOGIN
+                || (optName == "Wear @ Login")
+#endif
+                ) {
 
                 if (optName == "Verify Type") {
                     lmSendConfig("mustAgreeToType", (string)(mustAgreeToType = (curState == CROSS)));
@@ -503,27 +516,30 @@ default {
                     if (showPhrases) llOwnerSay("Hypnotic phrases will be displayed.");
                     else llOwnerSay("No hypnotic phrases will be displayed.");
                 }
+#ifdef WEAR_AT_LOGIN
                 else if (optName == "Wear @ Login") {
                     lmSendConfig("wearAtLogin", (string)(wearAtLogin = (curState == CROSS)));
                     if (wearAtLogin) llOwnerSay("If you are not a Regular Doll, a new outfit will be chosen each login.");
                     else llOwnerSay("A new outfit will not be worn at each login.");
                 }
-
+#endif
                 list choices;
 
                 choices += cdGetButton("Verify Type", id, mustAgreeToType, 0);
                 choices += cdGetButton("Show Phrases", id, showPhrases, 0);
+#ifdef WEAR_AT_LOGIN
                 choices += cdGetButton("Wear @ Login", id, wearAtLogin, 0);
+#endif
 
                 llDialog(dollID, "Options", dialogSort(choices + MAIN), dialogChannel);
             }
 
             // Choose a Transformation
             else if (choice == "Types...") {
-                llOwnerSay("Types selected");
+                debugSay(5,"DEBUG-TYPES","Types selected");
                 // Doll must remain in a type for a period of time
                 if (cdTransformLocked()) {
-                    llOwnerSay("Transform locked");
+                    debugSay(5,"DEBUG-TYPES","Transform locked");
                     if (cdIsDoll(id)) {
                         llDialog(id,"You cannot be transformed right now, as you were recently transformed. You can be transformed in " + (string)minMinutes + " minutes.",["OK"], DISCARD_CHANNEL);
                     } else {
@@ -531,8 +547,7 @@ default {
                     }
                 }
                 else {
-                    llOwnerSay("Transform not locked");
-                    // not Transform locked
+                    // Transformation lock time has expired: transformations (type changes) now allowed
                     reloadTypeNames();
 
                     string msg = "These change the personality of " + dollName + "; Dolly is currently a " + stateName + " Doll. ";
@@ -543,28 +558,27 @@ default {
                     }
                     else {
                         msg += "What type of doll do you want the Doll to be?";
-                        //llOwnerSay(name + " is looking at your doll types.");
-                        llOwnerSay("secondlife:///app/agent/" + (string)id + "/about is looking at your doll types.");
+                        llOwnerSay(cdProfileURL(id) + " is looking at your doll types.");
                     }
 
 
-                    llOwnerSay("Generating unlocked dialog");
+                    debugSay(5,"DEBUG-TYPES","Generating unlocked dialog");
                     llDialog(id, msg, dialogSort(llListSort(choices, 1, 1) + MAIN), dialogChannel);
                 }
-                llOwnerSay("Transform complete");
+                debugSay(5,"DEBUG-TYPES","Transform complete");
             }
 
             // Transform
             else if (choice == "Transform") {
                 choice = transform; // Type name saved from Transform confirmation
-                menuChangeType = YES;
+                transformedViaMenu = YES;
                 setDollType(choice, NOT_AUTOMATED);
             }
             else if (cdListElementP(types, choice) != NOT_FOUND) {
                 // "choice" is a valid Type: change to it as appropriate
                 if (cdIsDoll(id)) {
                     // Doll chose a Type: just do it
-                    menuChangeType = YES;
+                    transformedViaMenu = YES;
                     setDollType(choice, NOT_AUTOMATED);
                 }
                 else {
@@ -579,14 +593,16 @@ default {
                         llDialog(dollID, msg, choices, dialogChannel); // this starts a new choice on this channel
                     }
                     else {
-                        menuChangeType = YES;
+                        transformedViaMenu = YES;
                         setDollType(choice, NOT_AUTOMATED);
                     }
                 }
             }
+#ifdef DEVELOPER_MODE
             else {
-                llOwnerSay("500/Choice not handled: " + choice);
+                debugSay(5,"DEBUG-TRANSFORM","500/Choice not handled: " + choice);
             }
+#endif
 
 #ifdef WAKESCRIPT
             if ((!showPhrases) && ((menuTime == 0.0) || ((menuTime + 60) < llGetTime()))) llSetScriptState(cdMyScriptName(), 0);
@@ -594,8 +610,7 @@ default {
         }
 #ifdef DEVELOPER_MODE
         else {
-            if (debugLevel > 6)
-                llOwnerSay("Transform Link Message not handled: " + name + "/" + (string)code);
+            debugSay(6,"DEBUG-TRANSFORM","Transform Link Message not handled: " + name + "/" + (string)code);
         }
 #endif
     }
@@ -605,7 +620,7 @@ default {
     //----------------------------------------
     listen(integer channel, string name, key id, string choice) {
 
-        debugSay(2,"DEBUG-STARTUP","Listener tickled: " + choice + "/" + (string)id + "/" + (string)name);
+        debugSay(2,"DEBUG-TRANSFORM","Listener tickled: " + choice + "/" + (string)id + "/" + (string)name);
         // llOwnerSay("choice = " + choice); // DEBUG:
         // llOwnerSay("clothing prefix = " + clothingprefix); // DEBUG:
         // llOwnerSay("    substring = " + (string)llGetSubString(choice, -llStringLength(clothingprefix), STRING_END)); // DEBUG:
@@ -613,8 +628,8 @@ default {
         // llOwnerSay("    substring = " + (string)llGetSubString(choice, -llStringLength(outfitsFolderTest), STRING_END)); // DEBUG:
 
         debugSay(6,"DEBUG-TRANSFORM","Listen processing...");
-        // Does choice end in outfits Folder test suffix?
-        if ((outfitsFolder == "") && (llGetSubString(choice, -llStringLength(outfitsFolderTest), STRING_END) == outfitsFolderTest)) {
+        // Does choice end in outfitsFolderTest path?
+        if ((outfitsFolder == "") && (cdStringEndMatch(choice,outfitsFolderTest))) {
             debugSay(6,"DEBUG-TRANSFORM","Outfits folder?");
             outfitsFolder = choice + "/";
             lmSendConfig("outfitsFolder", outfitsFolder);
@@ -627,7 +642,7 @@ default {
         }
 
         // Does choice end in clothing prefix?
-        else if ((typeFolder == "") && (llGetSubString(choice, -llStringLength(clothingprefix), STRING_END) == clothingprefix)) {
+        else if ((typeFolder == "") && (cdStringEndMatch(choice,clothingprefix))) {
             debugSay(6,"DEBUG-TRANSFORM","Clothing prefix found");
             typeFolder = choice;
             outfitsFolderItem = 0;
@@ -635,7 +650,6 @@ default {
             cdStopTimer();
             //integer n = llStringLength(outfitsFolder);
 
-            debugSay(6,"DEBUG-TRANSFORM","Checking against outfits folder...");
             //if (llGetSubString(typeFolder, 0, n - 1) != outfitsFolder)
             if (llGetSubString(typeFolder, 0, llStringLength(outfitsFolder) - 1) != outfitsFolder) {
                 llOwnerSay("Found a matching type folder in '" + typeFolder + "' but it is not located within your outfits folder '" + outfitsFolder + "'" +
@@ -651,19 +665,16 @@ default {
                 useTypeFolder = YES;
             }
 
-            debugSay(6,"DEBUG-TRANSFORM","Sending configs...");
             lmSendConfig("typeFolder", typeFolder);
             lmSendConfig("outfitsFolder", outfitsFolder);
             lmSendConfig("useTypeFolder", (string)useTypeFolder);
 
-            debugSay(6,"DEBUG-TRANSFORM","Pausing...");
             cdPause();
 
-            debugSay(6,"DEBUG-TRANSFORM","Testing for change by Menu...");
-            if (menuChangeType) {
+            if (transformedViaMenu) {
                 debugSay(6,"DEBUG-TRANSFORM","Activating random dress...");
                 lmInternalCommand("randomDress", "", NULL_KEY);
-                menuChangeType = NO;
+                transformedViaMenu = NO; // default setting
             }
 
             outfitsFolderTestRetries = 0;
@@ -674,16 +685,20 @@ default {
     // DATASERVER
     //----------------------------------------
     dataserver(key query_id, string data)  {
+
         if (query_id == kQuery) {
-            if (data != EOF) {
+            if (data == EOF) {
+                llOwnerSay("Read " + (string)readLine + " lines from " + typeNotecard);
+                kQuery = NULL_KEY;
+                readLine = 0;
+            }
+            else {
                 // This is the real meat: currentPhrases is built up
                 if (llStringLength(data) > 1) currentPhrases += data;
 
-                //lineno++; (change where used)
-                readingNC = YES;
                 //llSetTimerEvent(5.0);
+                kQuery = llGetNotecardLine(typeNotecard,readLine++);
             }
-            else readingNC = NO;
         }
     }
 }

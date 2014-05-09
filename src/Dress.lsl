@@ -54,7 +54,9 @@ integer change;
 integer pushRandom;
 
 integer wearLock;
+#ifdef WEAR_AT_LOGIN
 integer wearAtLogin;
+#endif
 
 // These are the paths of the outfits relative to #RLV
 string lastfolder;
@@ -173,10 +175,10 @@ setActiveFolder() {
 rlvRequest(string rlv, integer channel) {
     candresstimeout = 1;
 
-    if (channel == 2665) listen_id_2665 = cdListenMine(rlvBaseChannel + 2665);
-    if (channel == 2666) listen_id_2666 = cdListenMine(rlvBaseChannel + 2666);
-    if (channel == 2668) listen_id_2668 = cdListenMine(rlvBaseChannel + 2668);
-    if (channel == 2669) listen_id_2669 = cdListenMine(rlvBaseChannel + 2669);
+         if (channel == 2665) listen_id_2665 = cdListenMine(rlvBaseChannel + 2665);
+    else if (channel == 2666) listen_id_2666 = cdListenMine(rlvBaseChannel + 2666);
+    else if (channel == 2668) listen_id_2668 = cdListenMine(rlvBaseChannel + 2668);
+    else if (channel == 2669) listen_id_2669 = cdListenMine(rlvBaseChannel + 2669);
 
     if (RLVok) {
         debugSay(6, "DEBUG", "cmd = " + rlv + (string)(rlvBaseChannel + channel));
