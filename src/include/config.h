@@ -1,5 +1,11 @@
 /* FILE: config.h */
 
+/* Defines the Default wind amount */
+#define WIND_DEFAULT 1800.0
+
+/* adds wear at login feature: choose new outfit every login */
+//#define WEAR_AT_LOGIN 1
+
 /* adds slowed walking during AFK */
 #define SLOW_WALK 1
 
@@ -54,7 +60,7 @@
 
 /* enable testing and debugging features and allows the doll to access
    normally inaccessible functions like strip and wind */
-#define TESTER_MODE 1
+/* #define TESTER_MODE 1 */
 
 /* enable off-sim database back-end, which allows all settings to be
    stored and restored from off-sim - makes settings more persistent */
@@ -71,7 +77,7 @@
 #define PACKAGE_NAME "Community Doll Key"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Community Doll Key (Beta) 19-Mar-14"
+#define PACKAGE_STRING "Community Doll Key (Beta) 5-Apr-14"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "cdkey-beta"
@@ -80,10 +86,10 @@
 #define PACKAGE_URL "https://github.com/emmamei/cdkey"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "19-Mar-14"
+#define PACKAGE_VERSION "5-Apr-14"
 
 /* Define to the numeric version of this package. */
-#define PACKAGE_VERNUM 140319
+#define PACKAGE_VERNUM 140405
 
 /* enable lag reduction mode when detecting sustained high time dilation in
    the local region. This slightly delays certain events and turns off non
