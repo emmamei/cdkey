@@ -62,6 +62,10 @@ default {
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
         scaleMem();
+#ifdef DEVELOPER_MODE
+        integer siz = llGetListLength(storedConfigs);
+        debugSay(5,"DEBUG-SERVICES","storedConfigs size is " + (string)siz + " (or " + (siz / 2) " elements)");
+#endif
 
         if (code == 102) {
             ;
@@ -79,7 +83,7 @@ default {
             integer i = llListFindList(storedConfigs, [conf]);
 
             if (value == RECORD_DELETE) {
-                if (i != -1) storedConfigs = llDeleteSubList(storedConfigs, i, i + 1);
+                if (i != NOT_FOUND) storedConfigs = llDeleteSubList(storedConfigs, i, i + 1);
             }
             else {
                 if ((conf == "controllers") || (conf == "blacklist")) {
@@ -87,7 +91,7 @@ default {
                     if (conf == "blacklist") prefix = conf;
 
                     // Store configuration information
-                    if (i == -1) storedConfigs += [ conf, value ];
+                    if (i == NOT_FOUND) storedConfigs += [ conf, value ];
                     else storedConfigs = llListReplaceList(storedConfigs, [ conf, value ], i, i + 1);
 
                     integer j = -1; integer c;
@@ -112,7 +116,7 @@ default {
                         split = llDeleteSubList(split,0,1);
 
                         i = llListFindList(storedConfigs, [confx]);
-                        if (i == -1) storedConfigs += [ confx, value ];
+                        if (i == NOT_FOUND) storedConfigs += [ confx, value ];
                         else storedConfigs = llListReplaceList(storedConfigs, [ confx, value ], i, i + 1);
                     }
 
@@ -122,7 +126,7 @@ default {
                 }
 
                 // Store configuration information
-                if (i == -1) storedConfigs += [ conf, value ];
+                if (i == NOT_FOUND) storedConfigs += [ conf, value ];
                 else storedConfigs = llListReplaceList(storedConfigs, [ conf, value ], i, i + 1);
 
                 if (llGetListLength(storedConfigs) / 2 > storedCount) {
@@ -158,7 +162,7 @@ default {
             }
 
             i = llListFindList(storedConfigs, ["dollyName"]);
-            if (i != -1) lmSendConfig("dollyName", llList2String(storedConfigs, i + 1));
+            if (i != NOT_FOUND) lmSendConfig("dollyName", llList2String(storedConfigs, i + 1));
         }
         else if (code == 303) {
             storedConfigs = llListSort(storedConfigs, 2, 1);
@@ -221,7 +225,7 @@ default {
 #ifdef UPDATE_METHOD_CDKEY
         if (request == requestUpdate) {
             if (llGetSubString(body, 0, 21) == "checkversion versionok") {
-                if (llStringLength(body) > 22) updateCheck = (integer)llGetSubString(body, 23, -1);
+                if (llStringLength(body) > 22) updateCheck = (integer)llGetSubString(body, 23, STRING_END);
                 lastUpdateCheck = t;
                 debugSay(5, "DEBUG-SERVICES", "Next check in " + (string)updateCheck + " seconds");
                 llOwnerSay("Version check completed you have the latest version.");
@@ -437,14 +441,14 @@ default {
                 // FIXME: Handle old variables: should be removed as soon as is practical
 
                 if ((name == "controllers") || (name == "MistressList")) {
-                    if (llListFindList(storedConfigs,["controllersCount"]) == -1) {
+                    if (llListFindList(storedConfigs,["controllersCount"]) == NOT_FOUND) {
                         lmSendConfig(name, value);                                  // This list variable has had occasional issues with durability and is rather tricky to validate the new type
                                                                                     // controller records are available in the database for this user so we will use those to rebuild the internal
                                                                                     // controllers from a clean slate instead.
                     }
                 }
                 else if (llGetSubString(name,0,9) == "controller") {
-                    if ((llGetSubString(name,-2,-1) == "ID") || (llGetSubString(name,-4,-1) == "Name")) {
+                    if ((llGetSubString(name,-2,STRING_END) == "ID") || (llGetSubString(name,-4,STRING_END) == "Name")) {
                         lmSendConfig(name, value = RECORD_DELETE);                  // Depreciated form, delete it
                     }
                     else if ((value == "") || (value == "|")) {
@@ -455,7 +459,7 @@ default {
                     }
                 }
                 else if (llGetSubString(name,0,8) == "blacklist") {
-                    if ((llGetSubString(name,-2,-1) == "ID") || (llGetSubString(name,-4,-1) == "Name")) {
+                    if ((llGetSubString(name,-2,STRING_END) == "ID") || (llGetSubString(name,-4,STRING_END) == "Name")) {
                         lmSendConfig(name, value = RECORD_DELETE);                  // Depreciated form, delete it
                     }
                     else if ((value == "") || (value == "|")) {
