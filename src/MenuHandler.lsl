@@ -673,7 +673,7 @@ default
         string beforeSpace = llStringTrim(llGetSubString(choice, 0, space),STRING_TRIM);
         string afterSpace = llDeleteSubString(choice, 0, space);
 
-        debugSay(3, "DEBUG-MENU", "Button clicked: " + choice + ", afterSpace=\"" + afterSpace + "\", beforeSpace=\"" + beforeSpace + "\"");
+        //debugSay(3, "DEBUG-MENU", "Button clicked: " + choice + ", afterSpace=\"" + afterSpace + "\", beforeSpace=\"" + beforeSpace + "\"");
 
         lmMenuReply(choice, name, id);
 
@@ -818,9 +818,9 @@ default
                     if (isDoll || isController) {
                         integer isX = (beforeSpace == CROSS);
 
-                        debugSay(4, "DEBUG-MENU", "Option setting is " + (string)isX);
-                        debugSay(5, "DEBUG-MENU", "Option 'beforeSpace' is " + beforeSpace);
-                        debugSay(5, "DEBUG-MENU", "Option 'afterSpace' is " + afterSpace);
+                        //debugSay(4, "DEBUG-MENU", "Option setting is " + (string)isX);
+                        //debugSay(5, "DEBUG-MENU", "Option 'beforeSpace' is " + beforeSpace);
+                        //debugSay(5, "DEBUG-MENU", "Option 'afterSpace' is " + afterSpace);
 
                         // Entering key menu section
                         if (afterSpace == "Gem Light") {
