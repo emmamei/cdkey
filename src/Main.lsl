@@ -170,12 +170,13 @@ collapse(integer newCollapseState) {
 
     // newCollapseState describes state being entered;
     // collapsed describes current state
-    debugSay(3,"DEBUG-COLLAPSE","collapsed = " + (string)collapsed + " newCollapseState = " + (string)newCollapseState);
+    debugSay(3,"DEBUG-COLLAPSE","Entering new collapse state (" + (string)newCollapseState + ") with time left of " + (string)timeLeftOnKey);
 
     if (newCollapseState == NOT_COLLAPSED) {
         lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
     }
     else {
+        // Entering a collapsed state
         if (newCollapseState == NO_TIME) {
             lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0.0));
         }
@@ -184,14 +185,18 @@ collapse(integer newCollapseState) {
             lmSendConfig("timeToJamRepair", (string)(timeToJamRepair = llGetTime() + (llFrand(180.0) + 120.0)));
         }
 
+        // If not already collapsed, mark the start time
         if (collapsed == NOT_COLLAPSED) {
             collapseTime = llGetTime();
             llSleep(0.1);
         }
     }
 
-    if (newCollapseState != JAMMED) {
-        lmSendConfig("timeToJamRepair", (string)(timeToJamRepair = 0.0));
+    // If not jammed, reset time to Jam Repair
+    if (timeToJamRepair != 0.0) {
+        if (newCollapseState != JAMMED) {
+            lmSendConfig("timeToJamRepair", (string)(timeToJamRepair = 0.0));
+        }
     }
 
     lmSendConfig("collapsed", (string)(collapsed = newCollapseState));
