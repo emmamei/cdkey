@@ -28,6 +28,8 @@
 #define SET_AFK 22
 #define JOIN_GROUP 25
 
+#define HIPPO_UPDATE -2948813
+
 key ncRequestDollMessage;
 key ncRequestDollDialog;
 key lmRequest;
@@ -575,7 +577,7 @@ default {
         }
 
         // HippoUPDATE reply
-        else if (code == -2948813) {
+        else if (code == HIPPO_UPDATE) {
             if (data == "VERSION") llOwnerSay("Your key is already up to date");
         }
 
