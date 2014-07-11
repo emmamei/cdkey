@@ -16,6 +16,7 @@
 #define cdListenMine(a)   llListen(a, NO_FILTER,    dollID, NO_FILTER)
 #define cdListenerDeactivate(a) llListenControl(a, 0)
 #define cdListenerActivate(a) llListenControl(a, 1)
+#define cdMenuInject(a) lmMenuReply((a),name,id);
 
 //========================================
 // VARIABLES
@@ -833,9 +834,9 @@ default
                         }
                         else {
                             integer isAbility; // Temporary variables used to determine if an option
-                            integer isFeature; // from the features or abilities menu was clicked that
-                                               // way we can restore it making setting several choices
-                                               // much more user friendly.
+                            integer isFeature; // from the features or abilities menu was clicked; that
+                                               // way we can restore the menu - making setting several
+                                               // choices a much easier and much more user friendly process.
 
                             //----------------------------------------
                             // Abilities
@@ -876,7 +877,7 @@ default
                             }
 
                             if (isAbility) {
-                                lmMenuReply("Abilities...", name, id);
+                                cdMenuInject("Abilities...");
                             }
                             else {
                                 //----------------------------------------
@@ -916,7 +917,7 @@ default
 #endif
                                 else isFeature = 0;
 
-                                if (isFeature) lmMenuReply("Features...", name, id);
+                                if (isFeature) cdMenuInject("Features...");
                             }
                         }
                     }
