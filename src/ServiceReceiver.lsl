@@ -21,7 +21,11 @@ integer resolveType;
 integer storedCount;
 integer configCount;
 float HTTPdbProcessStart;
+
+#ifdef STORED_CONFIG
 list storedConfigs;
+#endif
+
 list databaseInput;
 key resolveTestKey;
 //key requestDataURL;
@@ -63,8 +67,10 @@ default {
 
         scaleMem();
 #ifdef DEVELOPER_MODE
+#ifdef STORED_CONFIG
         integer siz = llGetListLength(storedConfigs);
         debugSay(5,"DEBUG-SERVICES","storedConfigs size is " + (string)siz + " (or " + (siz / 2) " elements)");
+#endif
 #endif
 
         if (code == 102) {
@@ -80,19 +86,25 @@ default {
             string conf = llList2String(split, 0);
             string value = llDumpList2String(llDeleteSubList(split,0,0), "|");
 
+#ifdef STORED_CONFIG
             integer i = llListFindList(storedConfigs, [conf]);
+#endif
 
             if (value == RECORD_DELETE) {
+#ifdef STORED_CONFIG
                 if (i != NOT_FOUND) storedConfigs = llDeleteSubList(storedConfigs, i, i + 1);
+#endif
             }
             else {
                 if ((conf == "controllers") || (conf == "blacklist")) {
                     string prefix = "controller"; split = llParseString2List(value, ["|"], []);
                     if (conf == "blacklist") prefix = conf;
 
+#ifdef STORED_CONFIG
                     // Store configuration information
                     if (i == NOT_FOUND) storedConfigs += [ conf, value ];
                     else storedConfigs = llListReplaceList(storedConfigs, [ conf, value ], i, i + 1);
+#endif
 
                     integer j = -1; integer c;
                     string uuid;
@@ -115,9 +127,11 @@ default {
 
                         split = llDeleteSubList(split,0,1);
 
+#ifdef STORED_CONFIG
                         i = llListFindList(storedConfigs, [confx]);
                         if (i == NOT_FOUND) storedConfigs += [ confx, value ];
                         else storedConfigs = llListReplaceList(storedConfigs, [ confx, value ], i, i + 1);
+#endif
                     }
 
                     lmSendConfig(prefix + "sCount", (string)c);
@@ -125,14 +139,19 @@ default {
                     return;
                 }
 
+#ifdef STORED_CONFIG
                 // Store configuration information
                 if (i == NOT_FOUND) storedConfigs += [ conf, value ];
                 else storedConfigs = llListReplaceList(storedConfigs, [ conf, value ], i, i + 1);
 
-                if (llGetListLength(storedConfigs) / 2 > storedCount) {
-                    storedCount = llGetListLength(storedConfigs) / 2;
+#ifdef DEVELOPER_MODE
+                integer x = llGetListLength(storedConfigs) / 2;
+                if (x > storedCount) {
+                    storedCount = x;
                     debugSay(3, "DEBUG-LOCALDB", "Local DB now contains " + (string)storedCount + " key=>value pairs and " + cdMyScriptName() + " is using " + formatFloat((float)llGetUsedMemory() / 1024.0, 2) + "kB of memory.");
                 }
+#endif
+#endif
             }
 
 #ifdef DEVELOPER_MODE
@@ -142,9 +161,11 @@ default {
             if (script == cdMyScriptName()) return;
             else if (conf == "offlineMode") offlineMode = (integer)value;
         }
+#ifdef STORED_CONFIG
         else if ((code == 301) || (code == 302)) {
             integer type = code - 300;
-            integer i; integer n = llGetListLength(storedConfigs) / 2;
+            integer i;
+            integer n = llGetListLength(storedConfigs) / 2;
 
             storedConfigs = llListSort(storedConfigs, 2, 1);
 
@@ -162,7 +183,8 @@ default {
             }
 
             i = llListFindList(storedConfigs, ["dollyName"]);
-            if (i != NOT_FOUND) lmSendConfig("dollyName", llList2String(storedConfigs, i + 1));
+            if (i != NOT_FOUND)
+                lmSendConfig("dollyName", llList2String(storedConfigs, i + 1));
         }
         else if (code == 303) {
             storedConfigs = llListSort(storedConfigs, 2, 1);
@@ -180,6 +202,7 @@ default {
                 llSleep((1/llGetRegionFPS())*3); // avoid Link Message overload - sleep arbitrary num of frames
             }
         }
+#endif
         else if (code == 305) {
             string cmd = llList2String(split, 0);
 
@@ -495,12 +518,16 @@ default {
 
         if (!llGetListLength(databaseInput)) {
             float t = llGetTime();
+#ifdef STORED_CONFIG
+#ifdef DEVELOPER_MODE
             i = (llGetListLength(storedConfigs) / 2);
 
             if (i > storedCount) {
                 storedCount = i;
                 debugSay(3, "DEBUG-LOCALDB", "Local DB now contains " + (string)storedCount + " key=>value pairs and " + cdMyScriptName() + " is using " + formatFloat((float)llGetUsedMemory() / 1024.0, 2) + "kB of memory.");
             }
+#endif
+#endif
 
 #ifdef DEVELOPER_MODE
             string eventTime = formatFloat((HTTPdbProcessStart - HTTPdbStart) * 1000, 2);
@@ -517,10 +544,10 @@ default {
             debugSay(1, "DEBUG-SERVICES", msg);
 
             // If debugLevel is 0, then return to normal minimalist message
-            if (!debugLevel)
+            if (!debugLevel) {
+                debugSay(3,"DEBUG-SERVICES","Successfully processed database reply in " + formatFloat(t - HTTPdbStart * 1000, 2) + "ms");
+            }
 #endif
-            llOwnerSay("Successfully processed database reply in " + formatFloat(t - HTTPdbStart * 1000, 2) + "ms");
-
             databaseReload = 600;
 
             llSetTimerEvent(0.0);
