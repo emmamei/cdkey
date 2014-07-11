@@ -18,8 +18,10 @@ Your key fades from view...
 Your key appears magically.
 You will now be completely silent whenever you are posed and will stay that way until your pose ends.
 You can now talk while you are posed, at least for the time being.
-You are now a pleasure doll and can be stripped by carriers or controllers.
 You are no longer a pleasure doll.
+You are now a pleasure doll and can be stripped by carriers or controllers.
 Automatically entering AFK mode. Wind down rate has slowed to %windRate%x however and movements and abilities are restricted.  You have %minsLeft% minutes of life remaning.
 You are now away from keyboard (AFK). Wind down rate has slowed to %windRate%x however and movements and abilities are restricted.  You have %minsLeft% minutes of life remaning.
 You are now no longer away from keyboard (AFK). Movements are unrestricted and winding down proceeds at normal rate.  You have %minsLeft% minutes of life remaning.
+Here is your link to the community dolls group profile secondlife:///app/group/0f0c0dd5-a611-2529-d5c7-1284fb719003/about
+To join the community dolls group open your chat history (CTRL+H) and click the group link there.  Just click the Join Group button when the group profile opens.
