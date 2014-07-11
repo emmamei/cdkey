@@ -12,8 +12,15 @@
 //#define DEBUG_BADRLV
 #define cdSayQuietly(x) { string z = x; if (quiet) llOwnerSay(z); else llSay(0,z); }
 #define NOT_IN_REGION ZERO_VECTOR
+#define cdLockMeisterCmd(a) llWhisper(LOCKMEISTER_CHANNEL,(string)dollID+a)
 
 key carrierID = NULL_KEY;
+
+// Could set allControls to -1 for quick full bit set - 
+// but that would set fields with undefined values: this is more
+// accurate
+#define ALL_CONTROLS (CONTROL_FWD|CONTROL_BACK|CONTROL_LEFT|CONTROL_RIGHT|CONTROL_ROT_LEFT|CONTROL_ROT_RIGHT|CONTROL_UP|CONTROL_DOWN|CONTROL_LBUTTON|CONTROL_ML_LBUTTON)
+integer allControls = ALL_CONTROLS;
 
 key rlvTPrequest;
 key requestLoadData;
@@ -200,16 +207,20 @@ ifPermissions() {
             llSleep(10.0);
         }
 
-        // Permissions event runs this function; possible loop?
         if ((permMask & PERMISSION_MASK) != PERMISSION_MASK)
-            llRequestPermissions(dollID, PERMISSION_MASK);
+            llRequestPermissions(dollID, PERMISSION_MASK); // FIXME: llRequestPermissions runs this function: loop?
 
+        // only way to get here is grantorID is dollID or NULL_KEY
         if (grantorID == dollID) {
+
+            //----------------------------------------
+            // PERMISSION_TRIGGER_ANIMATION
+
             if ((permMask & PERMISSION_TRIGGER_ANIMATION) != 0) {
                 key curAnim = llList2Key(llGetAnimationList(dollID), 0);
 
                 if (!clearAnim && !cdNoAnim()) {
-                    llWhisper(LOCKMEISTER_CHANNEL, (string)dollID + "bootoff");
+                    cdLockMeisterCmd("bootoff");
 
                     list animList; integer i; integer animCount;
                     key animKey = keyAnimationID;
@@ -248,41 +259,45 @@ ifPermissions() {
                 } else if (clearAnim) {
                     list animList = llGetAnimationList(dollID);
                     integer i; integer animCount = llGetListLength(animList);
+                    key animKey;
 
                     keyAnimation = "";
                     lmSendConfig("keyAnimationID", (string)(keyAnimationID = NULL_KEY));
 
                     for (i = 0; i < animCount; i++) {
-                        key animKey = llList2Key(animList, i);
+                        animKey = llList2Key(animList, i);
                         if (animKey != NULL_KEY) llStopAnimation(animKey);
                     }
 
                     llStartAnimation("Stand");
                     animRefreshRate = 0.0;
                     clearAnim = 0;
-                    llWhisper(LOCKMEISTER_CHANNEL, (string)dollID + "booton");
+                    cdLockMeisterCmd("booton");
                 }
 
                 if (animRefreshRate) nextAnimRefresh = llGetTime() + animRefreshRate;
             }
 
+            //----------------------------------------
+            // PERMISSION_TAKE_CONTROLS
+
             if (permMask & PERMISSION_TAKE_CONTROLS) {
                 if (!haveControls && (afk || collapsed || cdSelfPosed())) {
                     // No reason for us to be locking the controls and we do not already have them
                     // This just serves to get us treated as a vehicle to run on NoScript land
-                    llTakeControls(-1, 0, 1);   // Controls is a bitmask not a comparison so -1 is a quick
+                    llTakeControls(ALL_CONTROLS, FALSE, TRUE);   // Controls is a bitmask not a comparison so -1 is a quick
                                                 // shortcut for all on a big endian host.
                 }
-                else if (isAnimated) {
+                else if (collapsed || cdPosed()) {
                     // When collapsed or posed the doll should not be able to move at all; so the key will
                     // accept their controls, but no need to pass on: ignore all input.
-                    llTakeControls(-1, 1, 0);
+                    llTakeControls(ALL_CONTROLS, TRUE, FALSE);
                     haveControls = 1;
                 }
                 else if (afk) {
                     // To slow movement during AFK, we do not want to lock the doll's controls completely; we
                     // want to instead respond to the input, so we need ACCEPT=TRUE, PASS_ON=TRUE
-                    llTakeControls(-1, 1, 1);
+                    llTakeControls(ALL_CONTROLS, TRUE, TRUE);
                     haveControls = 1;
                 }
                 else if (haveControls) {
@@ -302,24 +317,36 @@ ifPermissions() {
                         llRequestPermissions(dollID, PERMISSION_MASK);  // Releasing controls drops the permissions
                                                                         // get them back.
                     }
-                    else llTakeControls(-1, 0, 1);
+                    else llTakeControls(ALL_CONTROLS, FALSE, TRUE);
                 }
             }
 
-            if (isAnimated) {
+            //----------------------------------------
+            // Moving to Target
+
+            if (collapsed || cdPosed()) {
+
                 if (lockPos == ZERO_VECTOR) lmSendConfig("lockPos", (string)(lockPos = llGetPos()));
+
                 llTargetRemove(targetHandle);
                 targetHandle = llTarget(lockPos, 1.0);
                 llMoveToTarget(lockPos, 0.7);
             }
             else if (hasCarrier) {
+
                 if (lockPos != ZERO_VECTOR) lmSendConfig("lockPos", (string)(lockPos = ZERO_VECTOR));
+
+                // Stop moving to Target
                 llTargetRemove(targetHandle);
                 llStopMoveToTarget();
+
+                // Re-enable with new target
                 vector carrierPos = llList2Vector(llGetObjectDetails(carrierID, [ OBJECT_POS ]), 0);
+
                 if (carrierPos != ZERO_VECTOR) targetHandle = llTarget(carrierPos, CARRY_RANGE);
             }
             else {
+                // Stop moving to Target
                 llTargetRemove(targetHandle);
                 llStopMoveToTarget();
             }
@@ -372,6 +399,7 @@ default {
 
             ifPermissions();
         }
+
         if (change & CHANGED_OWNER) {
             llStopMoveToTarget();
             llTargetRemove(targetHandle);
@@ -386,16 +414,18 @@ default {
     listen(integer chan, string name, key id, string msg) {
 
         if (chan == rlvChannel) {
-#ifdef DEVELOPER_MODE
-            llOwnerSay("RLV Message received: " + msg);
-#endif
-            if (llGetSubString(msg, 0, 13) == "RestrainedLove") {
-                if (rlvAPIversion == "") debugSay(2, "DEBUG-RLV", "RLV Version: " + msg);
+            debugSay(2, "DEBUG-RLV", "RLV Message received: " + msg);
+
+            if ((llGetSubString(msg, 0, 13) == "RestrainedLove") ||
+                (llGetSubString(msg, 0, 13) == "RestrainedLife")) {
+
+                debugSay(2, "DEBUG-RLV", "RLV Version: " + msg);
+
                 rlvAPIversion = msg;
             }
 #ifdef DEVELOPER_MODE
             else {
-                if (myPath == "") debugSay(2, "DEBUG-RLV", "RLV Key Path: " + msg);
+                debugSay(2, "DEBUG-RLV", "RLV Key Path: " + msg);
                 myPath = msg;
             }
 #endif
