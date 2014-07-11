@@ -409,7 +409,7 @@ doRestart() {
                 cdRunScript(script);
                 llResetOtherScript(script);
 
-                sleep(5.0);
+                llSleep(5.0);
 
                 debugSay(5,"DEBUG-RESET","Resetting " + script);
 
