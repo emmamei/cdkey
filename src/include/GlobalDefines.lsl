@@ -26,7 +26,7 @@
 // Name of the help notecard
 #define NOTECARD_HELP "Community Dolls Key Help and Manual"
 // Name of the preferences notecard
-#define NOTECARD_PREFERENCES "Preferences" //Test
+#define NOTECARD_PREFERENCES "Preferences"
 // Name of the intro text notecard
 #define NOTECARD_INTRO "IntroText"
 // Permissions scripts should request
@@ -64,7 +64,7 @@
 #define AGENT_SILKY_MESMERISER_RAW    2fff40f0-ea4a-4b52-abb8-d4bf6b1c98c9
 #define AGENT_SILKY_MESMERISER        "2fff40f0-ea4a-4b52-abb8-d4bf6b1c98c9"
 
-#define BUILTIN_CONTROLLERS [ AGENT_SILKY_MESMERISER, AGENT_MAYSTONE_RESIDENT, AGENT_CHRISTINA_HALPIN, AGENT_ANDROMEDA_LAMPLIGHT ]
+#define BUILTIN_CONTROLLERS [AGENT_SILKY_MESMERISER,AGENT_MAYSTONE_RESIDENT,AGENT_CHRISTINA_HALPIN,AGENT_ANDROMEDA_LAMPLIGHT]
 list BuiltinControllers = BUILTIN_CONTROLLERS;
 #define USER_CONTROLLERS controllers
 #include "CommonGlobals.lsl"
@@ -81,6 +81,7 @@ list BuiltinControllers = BUILTIN_CONTROLLERS;
 #define cdIsBuiltinController(id)       (llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1)
 #define cdIsUserController(id)          (llListFindList(USER_CONTROLLERS, [ (string)id ]) != -1)
 #define cdIsController(id)              cdGetControllerStatus(id)
+
 
 // Used by this file below for OPTION_DATE
 //#define PACKAGE_VERSION "26 February 2014"
@@ -179,9 +180,10 @@ list BuiltinControllers = BUILTIN_CONTROLLERS;
 #define uncollapse(old) lmInternalCommand("uncollapse", "0", NULL_KEY)
 
 #define NORMAL_TIMER_RATE 0.5 * mainTimerEnable
+
 #ifdef SIM_FRIENDLY
 #define REDUCED_TIMER_RATE 5.0 * mainTimerEnable
-#endif
+#endif // SIM_FRIENDLY
 
 #include "KeySharedFuncs.lsl"
 #include "RestrainedLoveAPI.lsl"
@@ -190,7 +192,16 @@ list BuiltinControllers = BUILTIN_CONTROLLERS;
 #include "LinkMessage.lsl"
 
 integer cdGetControllerStatus(key id) {
-    return (cdIsBuiltinController(id) || (cdIsDoll(id) && !cdControllerCount()) || (!cdIsDoll(id) && cdIsUserController(id)));
+    if (cdIsBuiltinController(id)) {
+        return TRUE;
+    }
+    else {
+        if (cdIsDoll(id)) return (!cdControllerCount());
+        else return (cdIsUserController(id));
+    }
+    return FALSE;
 }
 
-#endif // GLOBAL_DEFINES
+// GLOBAL_DEFINES
+#endif
+

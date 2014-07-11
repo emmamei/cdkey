@@ -269,11 +269,15 @@ scaleMem() {
 
          if (newlimit > limit) {
             llSetMemoryLimit(newlimit);
+#ifdef DEVELOPER_MODE
             debugSay(5, "DEBUG", (s + "increased " + formatFloat((float)(newlimit - limit) / 1024.0, 2) + "kB to " + formatFloat((float)newlimit / 1024.0, 2) + "kB"));
+#endif
          }
          else if (limit - newlimit > 4096) {
             llSetMemoryLimit(newlimit);
+#ifdef DEVELOPER_MODE
             debugSay(5, "DEBUG", (s + "decreased " + formatFloat((float)(newlimit - limit) / 1024.0, 2) + "kB to " + formatFloat((float)newlimit / 1024.0, 2) + "kB"));
+#endif
          }
       }
    }

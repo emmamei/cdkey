@@ -1,29 +1,32 @@
 /* FILE: config.h */
 
+/* store configuration vars in a list in ServiceReceiver.lsl */
+#define STORED_CONFIG 1
+
 /* Defines the Default wind amount */
 #define WIND_DEFAULT 1800.0
 
 /* adds wear at login feature: choose new outfit every login */
-//#define WEAR_AT_LOGIN 1
+/* #define WEAR_AT_LOGIN 1 */
 
 /* adds slowed walking during AFK */
 #define SLOW_WALK 1
 
 /* adds processing for multiple keys on broadcast */
-//#define KEY_HANDLER 1
+/* #define KEY_HANDLER 1 */
 
 /* adds update processing in ServiceReciever */
 #define UPDATE_METHOD_CDKEY 1
 
 /* enable Link Message 320 (RLV confirms?) in StatusRLV */
-//#define LINK_320 1
+/* #define LINK_320 1 */
 
 /* The predictive timer predicts when the next event will occur, and
    tries to set the timer to match. */
-//#define PREDICTIVE TIMER 1
+/* #define PREDICTIVE TIMER 1 */
 
 /* Manipulate Script running dynamically */
-//#define WAKESCRIPT 1
+/* #define WAKESCRIPT 1 */
 
 /* enable database back-end processing */
 #define DATABASE_BACKEND 1
@@ -56,7 +59,7 @@
 /* enable developer support features such as not using RLV locks which would
    prevent editing the scripts or notecards, collection and reporting of
    performance statistics etc */
-#define DEVELOPER_MODE 1
+/* #define DEVELOPER_MODE 1 */
 
 /* enable testing and debugging features and allows the doll to access
    normally inaccessible functions like strip and wind */
@@ -94,4 +97,4 @@
 /* enable lag reduction mode when detecting sustained high time dilation in
    the local region. This slightly delays certain events and turns off non
    essential candy to produce a large drop in script time */
-//#define SIM_FRIENDLY 1
+/* #define SIM_FRIENDLY 1 */
