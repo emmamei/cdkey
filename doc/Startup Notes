@@ -1,0 +1,63 @@
+LINK MESSAGES DURING INIT
+-------------------------
+
+aka: lmInitState(num)
+Starts initialization at a particular level
+
+aka: lmConfigComplete(count)
+fmt: count
+
+    Aux.lsl: 102
+    Dress.lsl: 102
+    Main.lsl: 102
+    MenuHandler.lsl: 102
+    ServiceReceiver.lsl: 102
+    ServiceRequester.lsl: 102
+   *Start.lsl: 102
+    StatusRLV.lsl: 102
+    Transform.lsl: 102
+
+    Main.lsl: 104
+    Transform.lsl: 104
+
+    Main.lsl: 105
+   *Start.lsl:
+
+    Aux.lsl: 110
+    Avatar.lsl: 110
+    ChatHandler.lsl: 110
+    MenuHandler.lsl: 110
+    Transform.lsl: 110
+   *Start.lsl:
+
+aka: lmMemReport(delay,user)
+fmt: delay + "|" + user
+
+    Aux.lsl: 135
+    Aux.lsl: 135
+    Aux.lsl: 135
+    Aux.lsl: 135
+    Avatar.lsl: 135
+    ChatHandler.lsl: 135
+    Dress.lsl: 135
+    LinkListen.lsl: 135
+    Main.lsl: 135
+    MenuHandler.lsl: 135
+    ServiceReceiver.lsl: 135
+    ServiceRequester.lsl: 135
+    Start.lsl: 135
+    StatusRLV.lsl: 135
+    Transform.lsl: 135
+
+aka: lmMemReply(json)
+fmt: json
+
+    Aux.lsl: 136
+
+aka: lmRating(simrating)
+fmt: simrating
+
+    Aux.lsl: 150
+    Dress.lsl: 150
+    MenuHandler.lsl: 150
+

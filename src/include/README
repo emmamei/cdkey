@@ -1,0 +1,27 @@
+INCLUDE FILES
+-------------
+
+There are a number of includes that are processed for each LSL script.
+
+GlobalDefines.lsl
+-----------------
+
+    CommonGlobals.lsl
+    config.h
+    Config.lsl
+    KeySharedFuncs.lsl
+    LinkMessage.lsl
+    RestrainedLoveAPI.lsl
+    Utility.lsl
+
+Json.lsl
+--------
+
+Secure.lsl
+----------
+
+ServiceIncludes.lsl
+-------------------
+
+    Json.lsl
+

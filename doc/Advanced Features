@@ -1,0 +1,44 @@
+The key contains several optional features for advanced users which are not available through the menu interface.
+
+Selective access poses
+You can choose to make some poses available only to the doll themselves or only to the doll and controllers by adding a prefix symbol to the animation name.
+
+. Prefix - Makes the pose private and only available to the doll themselves for example .private
+! Prefix - Makes the pose only available to the doll and those listed as controllers for example !kneel
+
+Both types of prefixed pose can be started by the doll by typing the name on channel 75 with or without the prefix itself, ie you can simply type /75kneel instead of /75!kneel if you wish.  However do not specify two poses with names that differ only by the prefix ie you should not have .pose and !pose in the key.
+
+Rating restricted outfits
+You can make an outfit rating restricted such that it will not show in lower rated sims by prefixing the start of the outfit name with either {A} for Adult which will be hidden whenever you are in a Moderate or General sim, or {M} for Moderate rating which will not be visible while in a General sim.
+
+User specified additional RLV restrictions
+This is a feature for those who may wish to add additional RLV restrictions that are not currently supported by the key, extra restrictions can be set for base which apply all the time or only when the doll is collapsed, posed or afk, the restrictions can be different for each.  Only include the restrictions the key will automatically reverse them the collapsed, posed or afk states end.
+
+To use this feature you need to set up a notecard named Preferences inside the key if you do not already have one, the entries in the notecard are of the form bellow:
+
+base rlv = <rlvcommandlist>
+collapse rlv = <rlvcommandlist>
+pose rlv = <rlvcommandlist>
+afk rlv = <rlvcommandlist>
+
+Where <rlvcommandlist> is the list of RLV commands you would like to be triggered when the state is entered (or at RLV initialization for base restrictions). A detailed discussion of individual RLV commands and/or options are beyond the scope of this documentation however there is excellent documentation for the RLV API which the key uses available on the SL wiki http://wiki.secondlife.com/wiki/LSL_Protocol/RestrainedLoveAPI it is strongly recommended that you familiarize yourself both with the commands and restrictions you intend to use and have a good grasp of how the RLV API works before attempting this, see the caution bellow.
+
+Caveats for user specified RLV restrictions specific to the key
+You should note there are several key specific caveats that apply above and beyond those already noted in the RLV API documentation linked above.  This is because the key segregates all persistent RLV restrictions both between each of the four sets of user restrictions and also between the scripts of the key core and any add on scripts which have been installed.  The following are some examples of what this means which should help clarify:
+
+1. User RLV commands are additive with the RLV commands issued by the key itself and by any addon modules and cannot be used to release other types of restrictions.
+2. User RLV commands from one type cannot be used to release restrictions that are set by another type.  As such you cannot set a restriction in collapse rlv and have it cleared in pose RLV (This is independent of the fact that a collapsed doll cannot be posed the two types cannot interfere with each other).
+3. Setting RLV restrictions that are also set by another user command or otherwise by the key or addons causes the restriction to stack it will not be released until it is released by *all* that set it.
+4. One shot restrictions ie those ending in =force can always be used though note the caveats that apply from the workings of the RLV API, it will not work to issue @detach:chest=force if the key, an addon or any other RLV item on the avatar or though a relay is locking it.
+5.  Requests for data from the viewer ie =#### type commands should not be used the key will not set up listeners or relay responses fo such.  If you need to use such features then you need an add on script.
+
+User RLV restrictions a word of caution
+With the exception of caveats noted above be aware that the key will allow you to use the full range of restrictions, it is quite possible to lock yourself out of editing, sending/receiving or even starting IM's be sure before loading a notecard using these commands.
+
+6. Due to second life technical limitations it is not possible for a script to read beyond the first 255 characters on a single line from a notecard, if your commands would be longer than this you can specify the same type twice, just remember the include the seperator at the end of one line or at the start of the next as they will be joined internally as if you had written them as a single long line. eg:
+pose rlv = touchall=n,detach:pelvis=force,addoutfit=n,
+pose rlv = addattach=n
+
+Internally will become:
+touchall=n,detach:pelvis=force,addoutfit=n,addattach=n
+If the comma on the end of the first line were ommited this would be invalid be aware of this.
