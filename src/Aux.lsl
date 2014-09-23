@@ -69,7 +69,7 @@ integer factoryReset;
 integer textboxChannel;
 integer textboxHandle;
 integer textboxType;
-integer offlineMode;
+integer offlineMode = YES;
 
 // Only place gender is currently set is in the preferences
 setGender(string gender) {

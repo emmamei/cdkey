@@ -13,18 +13,7 @@
 #include "include/GlobalDefines.lsl"
 
 #define TYPE_FLAG "*"
-#define STRING_END -1
-#define NOT_FOUND -1
-#define NO_FILTER ""
-#define YES 1
-#define NO 0
 
-#define cdGetFirstChar(a) llGetSubString(a,0,0)
-#define cdButFirstChar(a) llGetSubString(a,1,STRING_END)
-#define cdChat(a) llSay(0,a)
-#define cdStopTimer() llSetTimerEvent(0.0)
-#define cdListenAll(a) llListen(a,NO_FILTER,NO_FILTER,NO_FILTER)
-#define cdPause() llSleep(0.5)
 #define cdProfileURL(i) "secondlife:///app/agent/"+(string)(i)+"/about"
 #define cdStringEndMatch(a,b) llGetSubString(a,-llStringLength(b),STRING_END)==b
 

@@ -19,6 +19,12 @@
 #define cdRunScript(a) llSetScriptState(a, RUNNING)
 #define cdStopScript(a) llSetScriptState(a, NOT_RUNNING)
 #define cdIsScriptRunning(a) llGetScriptState(a)
+#define cdNotecardNotExist(a) (llGetInventoryType(a) != INVENTORY_NONE)
+#define cdNotecardExists(a) (llGetInventoryType(a) == INVENTORY_NOTECARD)
+
+// This action is different in different scripts;
+// they do the same thing (reset Start.lsl)
+#define cdResetKey() llResetScript()
 
 #define PREFS_READ 1
 #define PREFS_NOT_READ 0
@@ -139,7 +145,7 @@ integer lowScriptMode;
 doVisibility() {
     vector colour = gemColour;
 
-    if (llGetInventoryType(APPEARANCE_NC) == INVENTORY_NOTECARD) {
+    if (cdNotecardExists(APPEARANCE_NC)) {
 
         if (!visible || !primGlow || collapsed) {
             llSetLinkPrimitiveParamsFast(LINK_SET, [ PRIM_GLOW, ALL_SIDES, 0.0 ]);
@@ -287,7 +293,7 @@ initConfiguration() {
 #endif
 
     // Check to see if the file exists and is a notecard
-    if (llGetInventoryType(NOTECARD_PREFERENCES) == INVENTORY_NOTECARD) {
+    if (cdNotecardExists(NOTECARD_PREFERENCES)) {
         llOwnerSay("Loading Key Preferences Notecard");
 
         // Start reading from first line (which is 0)
@@ -317,7 +323,7 @@ doneConfiguration(integer read) {
 
     if (resetState) {
         llSleep(7.5);
-        llResetScript();
+        cdResetKey();
     }
 
     resetState = RESET_NONE;
@@ -361,7 +367,7 @@ initializationCompleted() {
 
     lmInitState(110);
 
-    if (llGetInventoryType(APPEARANCE_NC) == INVENTORY_NOTECARD) {
+    if (cdNotecardExists(APPEARANCE_NC)) {
         ncLine = 0;
         appearanceData = "";
         ncRequestAppearance = llGetNotecardLine(APPEARANCE_NC, ncLine++);
@@ -393,43 +399,47 @@ sleepMenu() {
 #endif
 
 doRestart() {
-    integer loop; string me = cdMyScriptName();
-    string script;
     resetState = RESET_NONE;
+    llOwnerSay("Ignoring Reset");
+    return;
 
-    llOwnerSay("Resetting scripts");
-    if (failedReset == NO) {
+//    integer loop; string me = cdMyScriptName();
+//    string script;
+//    resetState = RESET_NONE;
+
+//    llOwnerSay("Resetting scripts");
+//    if (failedReset == NO) {
 
         // Set all other scripts to run state and reset them
-        for (; loop < llGetInventoryNumber(INVENTORY_SCRIPT); loop++) {
+//        for (; loop < llGetInventoryNumber(INVENTORY_SCRIPT); loop++) {
 
-            script = llGetInventoryName(INVENTORY_SCRIPT, loop);
-            if (script != me) {
+//            script = llGetInventoryName(INVENTORY_SCRIPT, loop);
+//            if (script != me) {
 
-                cdRunScript(script);
-                llResetOtherScript(script);
+//                cdRunScript(script);
+//                llResetOtherScript(script);
 
-                llSleep(5.0);
+//                llSleep(5.0);
 
-                debugSay(5,"DEBUG-RESET","Resetting " + script);
+//                debugSay(5,"DEBUG-RESET","Resetting " + script);
 
-                if (!cdIsScriptRunning("MenuHandler")) {
-                    failedReset = YES;
-                    llOwnerSay("Failed to reset " + script);
-                }
-            }
-        }
+//                if (!cdIsScriptRunning("MenuHandler")) {
+//                    failedReset = YES;
+//                    llOwnerSay("Failed to reset " + script);
+//                }
+//            }
+//        }
 
-        if (failedReset != NO) {
-            llOwnerSay("Tried to reset key and failed.");
-        }
-    }
-    else {
-        llOwnerSay("A past reset has failed; not retrying.");
-    }
+//        if (failedReset != NO) {
+//            llOwnerSay("Tried to reset key and failed.");
+//        }
+//    }
+//    else {
+//        llOwnerSay("A past reset has failed; not retrying.");
+//    }
 
-    resetState = RESET_NONE;
-    ncResetAttach = llGetNotecardLine(NC_ATTACHLIST, cdAttached() - 1);
+//    resetState = RESET_NONE;
+//    ncResetAttach = llGetNotecardLine(NC_ATTACHLIST, cdAttached() - 1);
 }
 
 //========================================
@@ -585,14 +595,14 @@ default {
             string name = llList2String(split, 1);
 
             if (selection == "Reset Scripts") {
-                if (cdIsController(id)) llResetScript();
+                if (cdIsController(id)) cdResetKey();
 //              else if (id == dollID) {
 //                  if (RLVok == YES)
 //                      llOwnerSay("Unable to reset scripts while running with RLV enabled, please relog without RLV disabled or " +
 //                                  "you can use login a Linden Lab viewer to perform a script reset.");
 //                  else if (RLVok == UNSET && (llGetTime() < 300.0))
 //                      llOwnerSay("Key is currently still checking your RLV status please wait until the check completes and then try again.");
-//                  else llResetScript();
+//                  else cdResetKey();
 //              }
             }
 
@@ -757,18 +767,18 @@ default {
 
         if (change & CHANGED_OWNER) {
 
-            if (llGetInventoryType(NOTECARD_PREFERENCES) != INVENTORY_NONE) {
-                llOwnerSay("Deleting old preferences notecard on owner change.\n" +
-                    "Look at PreferencesExample to see how to make yours.");
+            if (cdNotecardNotExist(NOTECARD_PREFERENCES)) {
+                llOwnerSay("You have a new key! Congratulations!\n" +
+                    "Look at PreferencesExample to see how to set the preferences for your new key.");
                 llRemoveInventory(NOTECARD_PREFERENCES);
             }
 
             llSleep(5.0);
-            llResetScript();
+            cdResetKey(); // start over with no preferences
         }
 
         if (change & CHANGED_INVENTORY) {
-            if (llGetInventoryType(NOTECARD_PREFERENCES) == INVENTORY_NOTECARD) {
+            if (cdNotecardExists(NOTECARD_PREFERENCES)) {
                 string ncKey = (string)llGetInventoryKey(NOTECARD_PREFERENCES);
 
                 // Did Notecard change? (that is, did its UUID change?)
@@ -793,7 +803,7 @@ default {
             cdLinkMessage(LINK_THIS, 0, 301, "", llGetKey());
             llSleep(60.0);
 
-            llResetScript();
+            cdResetKey();
         }
     }
 
@@ -808,6 +818,7 @@ default {
         if (t >= 300.0) llSetTimerEvent(60.0);
         else llSetTimerEvent(15.0);
 
+#ifdef DATABASE_BACKEND
         // Check to see if database startup timed out
         if (!databaseOnline ||
             (!databaseFinished && (
@@ -818,9 +829,18 @@ default {
                 databaseOnline = 0;
                 initConfiguration();
         }
+#endif
 
+        if (startup == 0) {
+            // return if not attached
+            if (!cdAttached() || (attachName == "")) return;
+
+            // save position and rotation to JSON var
+            saveAttachment = cdSetValue(saveAttachment,([attachName,0]),(string)llGetLocalPos());
+            saveAttachment = cdSetValue(saveAttachment,([attachName,1]),(string)llGetLocalRot());
+        }
 #ifdef NO_STARTUP
-        if (startup != 0) {
+        else {
             // Check each script to see that they are running...
             // Is this appropriate?
 
@@ -843,18 +863,12 @@ default {
                     llSleep(delay);
 
                     cdRunScript(script);
-                    llResetScript();
-                }
-            }
-        }
+                    cdResetKey();
+                } // if
+            } // for
+        } // if
 #endif
-        else {
-            if (!cdAttached() || (attachName == "")) return;
-
-            saveAttachment = cdSetValue(saveAttachment,([attachName,0]),(string)llGetLocalPos());
-            saveAttachment = cdSetValue(saveAttachment,([attachName,1]),(string)llGetLocalRot());
-        }
-    }
+    } // timer
 
     //----------------------------------------
     // RUN TIME PERMISSIONS
@@ -862,12 +876,6 @@ default {
     run_time_permissions(integer perm) {
         if (perm & PERMISSION_TAKE_CONTROLS) {
             llTakeControls(CONTROL_MOVE, 1, 1);
-
-            // Is this the cause of a reset loop? resetState never gets away from (2)
-            //if (resetState == RESET_STARTUP) {
-            //    llOwnerSay("Permissions resetting");
-            //    doRestart();
-            //}
         }
     }
 }

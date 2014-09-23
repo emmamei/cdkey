@@ -9,6 +9,8 @@
 
 #define VSTR  + "\nScript Date: " + PACKAGE_VERSION
 #define MAIN "~Main Menu~"
+// Remove elements of Startup code
+// #define NO_STARTUP 1
 // Collapse animation - and documentation
 #define ANIMATION_COLLAPSED "collapse"
 // Carry distance for the new carry code
