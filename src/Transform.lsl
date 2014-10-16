@@ -337,7 +337,6 @@ default {
 
         //else if (code == 136) return;
         //else if (code == 150) return;
-        //else if (code == 303) return;
         //else if (code == 315) return;
         //else if (code == 11) return;
 
@@ -453,6 +452,7 @@ default {
         else if (code == 305) {
 #ifdef WAKESCRIPT
             if (choice == "wakeScript") {
+                // This is a call to ServiceReceiver.lsl
                 if (name == cdMyScriptName()) cdLinkMessage(LINK_THIS, 0, 303, "debugLevel|dialogChannel|dollType|quiet|mustAgreeToType|RLVok|showPhrases|wearAtLogin", llGetKey());
             }
 #endif
