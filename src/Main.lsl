@@ -479,13 +479,11 @@ default {
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
         if (code == 102) {
-            if (script == "ServiceReceiver") {
-                lmMenuReply("Wind", "", NULL_KEY);
+            lmMenuReply("Wind", "", NULL_KEY);
 
-                float displayRate = setWindRate();
-                llOwnerSay("You have " + (string)llRound(timeLeftOnKey / (60.0 * displayRate)) + " minutes of life remaining.");
-                lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
-            }
+            float displayRate = setWindRate();
+            lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
+            llOwnerSay("You have " + (string)llRound(timeLeftOnKey / (60.0 * displayRate)) + " minutes of life remaining.");
 
             configured = 1;
 
@@ -665,7 +663,8 @@ default {
 
                 lastSendTimestamp = llGetUnixTime();
                 // In offline mode we update the timer locally
-                if (offlineMode) lastPostTimestamp = lastSendTimestamp;
+                //if (offlineMode)
+                    lastPostTimestamp = lastSendTimestamp;
             }
             else if (cmd == "setAFK") {
                 lmSendConfig("afk", (string)(afk = llList2Integer(split, 0)));
@@ -900,7 +899,10 @@ default {
             //    * Wind Full - wind to limit
             else if (llGetSubString(choice,0,3) == "Wind") {
 
-                if (collapsed == JAMMED) llDialog(id, "The Dolly cannot be wound while " + llToLower(pronounHerDoll) + " key is being held.", ["Help..."], dialogChannel);
+                if (collapsed == JAMMED) {
+                    llDialog(id, "The Dolly cannot be wound while " + llToLower(pronounHerDoll) + " key is being held.", ["Help..."], dialogChannel);
+                    return;
+                }
 
                 if (!canRepeat && (id == winderID)) {
                     lmSendToAgent("Dolly needs to be wound by someone else before you can wind " + llToLower(pronounHerDoll) + " again.", id);
@@ -963,7 +965,8 @@ default {
                         llSleep(1.0); // Make sure that the uncollapse RLV runs before sending the message containing winder name.
 
                         // As we are storing winderID for repeat wind, only give the thankfulness reminder when winder is new.
-                        if ((winderID != id) && (id != dollID))llOwnerSay("Have you remembered to thank " + name + " for winding you?");
+                        if ((winderID != id) && (id != dollID))
+                            llOwnerSay("Have you remembered to thank " + name + " for winding you?");
 
                         lmSendConfig("winderID", (string)(winderID = id));
                     }
