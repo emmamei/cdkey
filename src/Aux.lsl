@@ -322,7 +322,7 @@ default {
             else if (name == "tpLureOnly")                     tpLureOnly = (integer)value;
             else if (name == "pleasureDoll")             pleasureDoll = (integer)value;
             else if (name == "signOn")                         signOn = (integer)value;
-            else if (name == "offlineMode")               offlineMode = (integer)value;
+//          else if (name == "offlineMode")               offlineMode = (integer)value;
             else if (name == "dollGender")                 dollGender = value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
