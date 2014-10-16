@@ -130,10 +130,18 @@ checkRLV()
 { // Run RLV viewer check
     locked = 0;
 
-    if (!dialogChannel) {
+    // Do we want to return if dialogChannel is unset? What happens
+    // if we reset the dialogChannel and go on?
+    if (dialogChannel == 0) {
+        // This is a call to ServiceReceiver.lsl
         cdLinkMessage(LINK_THIS, 0, 303, "dialogChannel", llGetKey());
         return;
     }
+#ifdef DEVELOPER_MODE
+    else {
+        debugSay(2,"DEBUG-DIALOGCHAN","Dialog channel set and non-zero");
+    }
+#endif
 
 #ifdef DEVELOPER_MODE
     // RLV is marked ok if we get a response from an RLV command *AND* we have the Key's path
