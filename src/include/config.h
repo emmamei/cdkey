@@ -1,5 +1,8 @@
 /* FILE: config.h */
 
+/* announce deprecation of prefix? or be quiet... */
+// #define PREFIX_NEEDED 1
+
 /* store configuration vars in a list in ServiceReceiver.lsl */
 #define STORED_CONFIG 1
 
@@ -29,7 +32,7 @@
 /* #define WAKESCRIPT 1 */
 
 /* enable database back-end processing */
-#define DATABASE_BACKEND 1
+// #define DATABASE_BACKEND 1
 
 /* enable the inclusion of adult features such as stripping and slut doll in
    the key */
@@ -48,7 +51,7 @@
 //#define DEBUG_LEVEL 5
 //#define DEBUG_LEVEL 4
 //#define DEBUG_LEVEL 3
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 3
 //#define DEBUG_LEVEL 0
 #endif
 
@@ -59,7 +62,7 @@
 /* enable developer support features such as not using RLV locks which would
    prevent editing the scripts or notecards, collection and reporting of
    performance statistics etc */
-/* #define DEVELOPER_MODE 1 */
+#define DEVELOPER_MODE 1
 
 /* enable testing and debugging features and allows the doll to access
    normally inaccessible functions like strip and wind */
@@ -67,7 +70,7 @@
 
 /* enable off-sim database back-end, which allows all settings to be
    stored and restored from off-sim - makes settings more persistent */
-#define DATABASE_MODE 1
+//#define DATABASE_MODE 0
 
 /* enable the start up introduction/hypno text provided that the required
    "Intro Text" notecard is also present */
