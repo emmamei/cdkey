@@ -9,6 +9,9 @@
 #include "include/GlobalDefines.lsl"
 #define cdMenuInject(a,b,c) lmMenuReply(a,b,c)
 
+#define cdRefreshVars() cdLinkMessage(LINK_THIS, 0, 301, "", NULL_KEY)
+#define cdDumpState()   cdLinkMessage(LINK_THIS, 0, 302, "", NULL_KEY);
+
 // FIXME: Depends on a variable s
 #define cdCapability(c,p,u) { s += p; if (!(c)) { s += " not"; }; s += " " + u + ".\n"; }
 
@@ -176,7 +179,7 @@ default
                 else if (name == "pronounSheDoll")     pronounSheDoll = value;
             }
             else if (name == "quiet")                           quiet = (integer)value;
-            else if (name == "offlineMode")               offlineMode = (integer)value;
+//          else if (name == "offlineMode")               offlineMode = (integer)value;
 
             // Shortcut: k
             else if (c == "k") {
@@ -371,7 +374,11 @@ default
                 msg = llGetSubString(msg,2,-1);
             }
             else if (isDoll) {
+#ifdef PREFIX_NEEDED
                 llOwnerSay("Use of chat commands without a prefix is depreciated and will be removed in a future release.");
+#else
+                ;
+#endif
             }
             else return; // For some other doll? noise? matters not it's someone elses problem.
 
@@ -421,13 +428,14 @@ default
                 //    * rlvinit
 
                 if (isDoll || cdIsBuiltinController(id)) {
+#ifdef DATABASE_BACKEND
                     // Do an internal resresh of all local variables from local db
                     if (choice == "refreshvars") {
-                        cdLinkMessage(LINK_THIS, 0, 301, "", NULL_KEY);
+                        cdRefreshVars();
                     }
                     // Request verbose full key state dump to chat
                     else if (choice == "dumpstate") {
-                        cdLinkMessage(LINK_THIS, 0, 302, "", NULL_KEY);
+                        cdDumpState();
                     }
                     // Service reinitialization and remote restore
                     else if (choice == "httpreload") {
@@ -437,16 +445,19 @@ default
                             llResetOtherScript("ServiceRequester");
                             llSleep(2.0);
                         }
-                    }
+                    } else 
+#endif
                     // Try a hard RLV reinitialzation
-                    else if (choice == "rlvinit") {
+                    if (choice == "rlvinit") {
                         llSetScriptState("StatusRLV", 1);
                         llResetOtherScript("StatusRLV");
                         llResetOtherScript("Avatar");
+
                         llSleep(1.0);
-                        cdLinkMessage(LINK_THIS, 0, 301, "", NULL_KEY);
-                        llSleep(5.0);
+                        //cdRefreshVars();
+                        //llSleep(5.0);
                         // Inject menu click
+
                         cdMenuInject("*RLV On*",llGetDisplayName(dollID), id);
                     }
                 }
@@ -456,7 +467,6 @@ default
                 //   * help
                 //   * devhelp
                 //   * listhelp
-                //   * recoveryhelp
                 //   * xstats
 
                 if (isDoll || isController) {
@@ -471,38 +481,37 @@ default
                     }
                     else if (choice == "help") {
                     string help = "Commands:
-    Replace the first . with the chat prefix, your personal prefix is
-    currently set to " + llToUpper(chatPrefix) + "\n
-    .detach ......... detach key if possible
-    .stat ........... concise current status
-    .stats .......... selected statistics and settings
-    .xstats ......... extended statistics and settings
-    .poses .......... list all poses
-    .wind ........... trigger emergency autowind
-    .demo ........... toggle demo mode
-    .[posename] ..... activate the named pose if possible
-    .release ........ stop the current pose if possible
-    .channel ## ..... change channel
-    .prefix XX ...... change chat command prefix
-    .help ........... this list of commands
-    .dumpstate ...... dump all key state to chat history
-    .build .......... list build configurations
-    .listhelp ....... list controller/blacklist commands
-    .recoveryhelp ... some commands that may rescue a key having issues"
+    Commands can be prefixed with your prefix, which is currently " + llToUpper(chatPrefix) + "\n
+    detach ......... detach key if possible
+    stat ........... concise current status
+    stats .......... selected statistics and settings
+    xstats ......... extended statistics and settings
+    poses .......... list all poses
+    wind ........... trigger emergency autowind
+    demo ........... toggle demo mode
+    [posename] ..... activate the named pose if possible
+    release ........ stop the current pose if possible
+    channel ## ..... change channel
+    prefix XX ...... change chat command prefix
+    help ........... this list of commands
+    dumpstate ...... dump all key state to chat history
+    build .......... list build configurations
+    listhelp ....... list controller/blacklist commands"
 #ifdef DEVELOPER_MODE
     +
-"    .devhelp ........ list of developer commands"
+"
+    devhelp ........ list of developer commands"
 #endif
     ;
                     lmSendToAgent(help, id);
                     }
 #ifdef DEVELOPER_MODE
                     else if (choice == "devhelp") {
-                    string help = "Developer Commands:
-    .timereporting .. periodic reporting of script time usage
-    .debug # ........ set the debugging message verbosity 0-9
-    .inject ......... inject an aribtary link message the format is
-                     inte#str#key with all but the first optional.";
+                    string help = "Developer Commands:\n
+    timereporting .. periodic reporting of script time usage
+    debug # ........ set the debugging message verbosity 0-9
+    inject ......... inject an aribtary link message the format is
+                     int#str#key with all but the first optional.";
                      lmSendToAgent(help, id);
                     }
 #endif
@@ -510,25 +519,10 @@ default
                     else if (choice == "listhelp") {
                     string help = "Access Commands:
                      The following commands must be followed by the desired
-                     user's username, not display name.
-    .controller ..... add the username to the controller list
-    .blacklist ...... blacklist the username if not blacklisted
-    .unblacklist .... unblacklist the username if they are blacklisted";
-                    lmSendToAgent(help, id);
-                    }
-                    else if (choice == "recoveryhelp") {
-                    string help = "Recovery Commandss:
-                     These commnds may help to recover a key without a script
-                     reset in some cases.
-    .refreshvars .... try to refresh all variables from the internal db
-    .httpreload ..... reinitialize the services scripts and fully reload all
-                     data from the off world backup storage (OnlineMode only)
-    .rlvinit ........ try RLV initialization again"
-#ifdef WAKESCRIPT
-                     + "    .wakescript ..... followed by the name of a key script if the named script
-                     is not running this will attempt to restart it."
-#endif
-                     ;
+                     user's username (not display name!).\n
+    controller ..... add the username to the controller list
+    blacklist ...... blacklist the username if not blacklisted
+    unblacklist .... unblacklist the username if they are blacklisted";
                     lmSendToAgent(help, id);
                     }
                     else if (choice == "xstats") {
@@ -544,15 +538,26 @@ default
                         // Which is the upper bound on the wind times currently? Depeding on the values this could be keyLimit/2 or windLimit
                         s += "Current wind menu: ";
 
-                        integer timeLeft = llFloor(timeLeftOnKey / 60.0);
-                        float windLimit = currentLimit - timeLeftOnKey;
-                        integer timesLimit = llFloor(windLimit / SEC_TO_MIN);
+                        integer timeLeft = llFloor(timeLeftOnKey / 60.0);     // mins left on key
+                        float windLimit = currentLimit - timeLeftOnKey;       // maximum wind possible
+                        integer timesLimit = llFloor(windLimit / SEC_TO_MIN); // maximum wind in minutes
                         integer time; list avail; integer i; integer n = llGetListLength(windTimes);
-                        integer maxTime = llRound(currentLimit / 60.0 / 2);
+                        integer maxTime = llRound(currentLimit / 60.0 / 2);   // maximum wind: no more than half current limit
 
+                        // Loop through all windTimes as long as:
+                        //
+                        //   * The wind time is less than the max wind in minutes
+                        //   * The wind time is less than or equal to the max wind (half current limit)
+                        //
                         while ((i <= n) && ( ( time = llList2Integer(windTimes, i++) ) < timesLimit) && (time <= maxTime)) {
                             avail += ["Wind " + (string)time];
                         }
+
+                        // We'e either come to the end of the list - or the max
+                        //
+                        // timesLimit = minutes remaining on key
+                        //    maxTime = half of current limnit in minutes
+                        //
                         if ((i <= n) && (timesLimit <= maxTime)) {
                             avail += ["Wind Full"];
                             s += " (" + (string)timeLeft  + " of " + (string)maxTime + " minutes left " + (string)timesLimit + " from max)";
@@ -691,8 +696,25 @@ default
 
                             if ((thisPrefix != "!") && (thisPrefix != ".")) thisPrefix = "";
 
+                            // Collapsed animation is special: skip it
                             if (thisPose != ANIMATION_COLLAPSED) {
 
+                                // Doll sees all animations
+                                // Controller sees only animations with a "!" prefix
+                                // Animations with no prefix are seen by all
+                                //
+                                // -- or --
+                                //
+                                // Doll sees all animations regardless of prefix
+                                // Controller sees animations with no prefix and a "!" prefix
+                                // General public sees only those animations with no prefix
+                                //
+                                // -- or --
+                                //
+                                // "!" prefix is seen by Doll and Controller
+                                // "." prefix is seen by Doll
+                                // Other animations with no prefix are seen by all
+                                //
                                 if (isDoll ||
                                     (isController && (thisPrefix == "!")) ||
                                     (thisPrefix == "")) {
@@ -730,33 +752,6 @@ default
                 else if (choice == "poses")   cdMenuInject("Poses...", name, id);
                 else if (choice == "carry")   cdMenuInject("Carry", name, id);
                 else if (choice == "uncarry") cdMenuInject("Uncarry", name, id);
-//              else if (choice == "xstats") {
-//                  string s = "Extended stats:\nDoll is a " + dollType + " Doll.\nAFK time factor: " +
-//                                 formatFloat(RATE_AFK, 1) + "x\nConfigured wind times: " + llList2CSV(windTimes) + " (mins)\n";
-//
-//                  if (demoMode) {
-//                      s += "Demo mode is enabled; times are: 1";
-//                      if (llGetListLength(windTimes) > 1) s += ", 2";
-//                      s += " mins.\n";
-//                  }
-//
-//                  // Which is the upper bound on the wind times currently? Depeding on the values this could be keyLimit/2 or windLimit
-//                  s += "Current wind menu: ";
-//
-//                  integer timeLeft = llFloor(timeLeftOnKey / 60.0);
-//                  float windLimit = currentLimit - timeLeftOnKey;
-//                  integer timesLimit = llFloor(windLimit / SEC_TO_MIN);
-//                  integer time; list avail; integer i; integer n = llGetListLength(windTimes);
-//                  integer maxTime = llRound(currentLimit / 60.0 / 2);
-//
-//                  while ((i <= n) && ( ( time = llList2Integer(windTimes, i++) ) < timesLimit) && (time <= maxTime)) {
-//                      avail += ["Wind " + (string)time];
-//                  }
-//                  if ((i <= n) && (timesLimit <= maxTime)) {
-//                      avail += ["Wind Full"];
-//                      s += " (" + (string)timeLeft  + " of " + (string)maxTime + " minutes left " + (string)timesLimit + " from max)";
-//                  }
-//              }
             }
             else {
                 // Command has secondary parameter
@@ -801,25 +796,36 @@ default
                         string c1 = llGetSubString(newPrefix,0,0);
                         string msg = "The prefix you entered is not valid, the prefix must ";
 
+                        // * must be greater than two characters
+
                         if (llStringLength(newPrefix) == 2) {
-                            // Why? Two character user prefixes are standard and familiar too much false +ve with
-                            // just 1 letter (~4%) with letter + letter/digit it's (~0.1%) excessive long prefixes
+                            // Why? Two character user prefixes are standard and familiar; too much false positives with
+                            // just 1 letter (~4%) with letter + letter/digit it's (~0.1%) - excessively long prefixes
                             // are bad for useability.
-                            lmSendToAgent(msg + "be two characters long.", id);
+                            lmSendToAgent(msg + "be at least two characters long.", id);
                         }
+
+                        // * contain numbers and letters only
+
                         else if (newPrefix != llEscapeURL(newPrefix)) {
                             // Why? Stick to simple ascii compatible alphanumerics that are compatible with
                             // all keyboards and with mobile devices with limited input capabilities etc.
                             lmSendToAgent(msg + "only contain letters and numbers.", id);
                         }
+
+                        // * start with a letter
+
                         else if (((integer)c1) || (c1 == "0")) {
                             // Why? This one is needed to prevent the first char of prefix being merged into
                             // the channel # when commands are typed without the use of the optional space.
                             lmSendToAgent(msg + "start with a letter.", id);
                         }
+
+                        // All is good
+
                         else {
                             chatPrefix = newPrefix;
-                            lmSendToAgentPlusDoll("Chat prefix has been changed to " + llToUpper(chatPrefix) + " the new prefix must now be used for all commands.", id);
+                            lmSendToAgentPlusDoll("Chat prefix has been changed to " + llToUpper(chatPrefix) + " the new prefix should now be used for all commands.", id);
                         }
                     }
 #ifdef WAKESCRIPT
@@ -844,9 +850,9 @@ default
                             llOwnerSay(msg);
                             llResetOtherScript(script);
                             llSetScriptState(script, 1);
-                            llSleep(5.0);
-                            cdLinkMessage(LINK_THIS, 0, 301, "", NULL_KEY);
-                            llSleep(5.0);
+                            //llSleep(5.0);
+                            //cdRefreshVars();
+                            //llSleep(5.0);
 
                             msg = "Script '" + script + "'";
                             if (llGetScriptState(script)) msg += " seems to be running now.";
