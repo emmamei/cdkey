@@ -108,11 +108,13 @@ list dialogButtons;
 doDialogChannel() {
     // If no uniqueID has been generated for dolly generate a new one now
     if (uniqueID == NULL_KEY) lmSendConfig("uniqueID", (string)(uniqueID = llGenerateKey()));
+    debugSay(2, "DEBUG-MENU", "Your unique key is " + (string)uniqueID);
 
     integer generateChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)uniqueID, -7, -1));
-    if (dialogChannel != generateChannel) lmSendConfig("dialogChannel", (string)(dialogChannel = generateChannel));
 
-    debugSay(2, "DEBUG-MENU", "Your unique key is " + (string)uniqueID + " primary dialogChannel is " + (string)dialogChannel);
+    //if (dialogChannel != generateChannel)
+    lmSendConfig("dialogChannel", (string)(dialogChannel = generateChannel));
+    debugSay(2, "DEBUG-MENU", "Dialog channel is set to " + (string)dialogChannel);
 
     blacklistChannel = dialogChannel - 666;
     controlChannel = dialogChannel - 888;
@@ -120,6 +122,7 @@ doDialogChannel() {
     llListenRemove(dialogHandle);
     dialogHandle = cdListenAll(dialogChannel);
     cdListenerDeactivate(dialogHandle);
+    debugSay(2, "DEBUG-MENU", "Dialog Handle is set....");
 }
 
 //========================================
@@ -158,9 +161,11 @@ default
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
         if (code == 102) {
-            if (script == "ServiceReceiver") dbConfig = 1;
-            else if (data == "Start") configured = 1;
+            //if (script == "ServiceReceiver") dbConfig = 1;
+            //else
+            if (data == "Start") configured = 1;
 
+            debugSay(4, "DEBUG-MENU", "Setting dialog channel...");
             doDialogChannel();
             scaleMem();
         }
@@ -889,11 +894,11 @@ default
                                 else if (afterSpace == "Outfitable") lmSendConfig("canDress", (string)(canDress = isX));
                                 else if (afterSpace == "Poseable") lmSendConfig("canPose", (string)(canPose = isX));
                                 else if (afterSpace == "Warnings") lmSendConfig("doWarnings", (string)isX);
-                                else if (afterSpace == "Offline") {
-                                    lmSendConfig("offlineMode", (string)isX);
-                                    llSleep(1.0);
-                                    cdLinkMessage(LINK_THIS, 0, 301, "", NULL_KEY);
-                                }
+//                              else if (afterSpace == "Offline") {
+//                                  lmSendConfig("offlineMode", (string)isX);
+//                                  llSleep(1.0);
+//                                  cdLinkMessage(LINK_THIS, 0, 301, "", NULL_KEY);
+//                              }
                                 // if is not Doll, they can set and unset these options...
                                 // if is Doll, these abilities can only be removed (X)
                                 else if (afterSpace == "Rpt Wind") {
