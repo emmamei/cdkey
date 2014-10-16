@@ -17,6 +17,16 @@
 #define cdListenerDeactivate(a) llListenControl(a, 0)
 #define cdListenerActivate(a) llListenControl(a, 1)
 #define cdMenuInject(a) lmMenuReply((a),name,id);
+#define cdResetKey() llResetOtherScript("Start")
+
+// Wait for the user for 5 minutes - but for a program, only
+// wait 60s. The request for a dialog menu should happen before then -
+// and change the timeout to wait for a user.
+#define MENU_TIMEOUT 600.0
+#define SYS_MENU_TIMEOUT 60.0
+
+#define BLACKLIST_CHANNEL_OFFSET 666
+#define CONTROL_CHANNEL_OFFSET 888
 
 //========================================
 // VARIABLES
@@ -26,6 +36,8 @@
 key poserID = NULL_KEY;
 key dollID = NULL_KEY;
 key menuID = NULL_KEY;
+
+// does this need to be a global?
 key uniqueID = NULL_KEY;
 
 //list windTimes = [ 30 ];
@@ -92,7 +104,6 @@ string carrierName;
 string mistressName;
 string keyAnimation;
 //string dollyName;
-string nextMenu;
 string menuName;
 
 integer winderRechargeTime;
@@ -105,23 +116,30 @@ list dialogButtons;
 //========================================
 // FUNCTIONS
 //========================================
+
+// This function generates a new dialogChannel and opens it -
+// EVERY time it is called... possibly for a security feature
+// using a dialogChannel periodic change setup
+
 doDialogChannel() {
-    // If no uniqueID has been generated for dolly generate a new one now
-    if (uniqueID == NULL_KEY) lmSendConfig("uniqueID", (string)(uniqueID = llGenerateKey()));
+    // generate a uniqueID for dolly to use
+    lmSendConfig("uniqueID", (string)(uniqueID = llGenerateKey()));
     debugSay(2, "DEBUG-MENU", "Your unique key is " + (string)uniqueID);
 
     integer generateChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)uniqueID, -7, -1));
 
-    //if (dialogChannel != generateChannel)
     lmSendConfig("dialogChannel", (string)(dialogChannel = generateChannel));
     debugSay(2, "DEBUG-MENU", "Dialog channel is set to " + (string)dialogChannel);
+    llSleep(2); // Make sure dialogChannel setting has time to propogate
 
-    blacklistChannel = dialogChannel - 666;
-    controlChannel = dialogChannel - 888;
+    blacklistChannel = dialogChannel - BLACKLIST_CHANNEL_OFFSET;
+    controlChannel = dialogChannel - CONTROL_CHANNEL_OFFSET;
 
     llListenRemove(dialogHandle);
     dialogHandle = cdListenAll(dialogChannel);
-    cdListenerDeactivate(dialogHandle);
+
+    // Deactivate listener for finer control - but this is not yet ready
+    //cdListenerDeactivate(dialogHandle);
     debugSay(2, "DEBUG-MENU", "Dialog Handle is set....");
 }
 
@@ -280,10 +298,10 @@ default
             //else if (name == "isTransformingKey")   isTransformingKey = (integer)value;
             else if (name == "quiet")                           quiet = (integer)value;
             //else if (name == "signOn")                         signOn = (integer)value;
-            else if (name == "uniqueID") {
-                if (script != "ServiceReceiver") return;
-                uniqueID = (key)value;
-            }
+            //else if (name == "uniqueID") {
+            //    if (script != "ServiceReceiver") return;
+            //    uniqueID = (key)value;
+            //}
             else if (name == "isVisible") {
                 visible = (integer)value;
                 llSetLinkAlpha(LINK_SET, (float)visible, ALL_SIDES);
@@ -301,8 +319,17 @@ default
             }
 
             if (cmd == "dialogListen") {
+                doDialogChannel();
                 cdListenerActivate(dialogHandle);
-                llSetTimerEvent(60.0);
+                llSetTimerEvent(MENU_TIMEOUT);
+            }
+            else if (cmd == "dialogClose") {
+                cdListenerDeactivate(dialogHandle);
+                llSetTimerEvent(0.0);
+                dialogKeys = []; dialogButtons = []; dialogNames = [];
+
+                menuName = "";
+                menuID = NULL_KEY;
             }
             else if (cmd == "setGemColour") {
                 vector newColour = (vector)llList2String(split, 0);
@@ -467,8 +494,12 @@ default
                         }
 
                         // Can the doll be dressed? Add menu button
-                        if ((RLVok == 1) && ((!isDoll && canDress) || (isDoll && canDressSelf && !wearLock))) {
-                            menu += "Outfits...";
+                        if (RLVok == 1) {
+                            if (isDoll) {
+                                if (canDressSelf && !wearLock) menu += "Outfits...";
+                            } else {
+                                if (canDress) menu += "Outfits...";
+                            }
                         }
 
                         // Can the doll be transformed? Add menu button
@@ -487,8 +518,6 @@ default
                                 menu += "Poses...";
                         }
 
-                        //if (!collapsed && ((numControllers == 0) || (isController && !isDoll))) {
-                        //
                         // Fix for issue #157
                         if (!isDoll) {
                             if (canCarry) {
@@ -530,9 +559,6 @@ default
                     }
 #endif
 
-                    cdListenerActivate(dialogHandle);
-                    llSetTimerEvent(60.0);
-
                     if (RLVok == -1) msg += "Still checking for RLV support some features unavailable.\n";
                     else if (RLVok == 0) {
                         msg += "No RLV detected some features unavailable.\n";
@@ -565,6 +591,9 @@ default
                     menu = ["Leave Alone"];
                 }
 
+                cdListenerActivate(dialogHandle);
+                llSetTimerEvent(MENU_TIMEOUT);
+
                 llDialog(id, msg, dialogSort(menu), dialogChannel);
             }
         }
@@ -580,20 +609,16 @@ default
     // TIMER
     //----------------------------------------
     timer() {
-        if (nextMenu != "") {
-            lmInternalCommand(nextMenu, menuName, menuID);
-            llSetTimerEvent(30.0);
-        }
-        else {
-            if (blacklistHandle) { llListenRemove(blacklistHandle); blacklistHandle = 0; }
-            if (controlHandle)   { llListenRemove(controlHandle);     controlHandle = 0; }
+        llSetTimerEvent(0.0);
 
-            cdListenerDeactivate(dialogHandle);
-            dialogKeys = []; dialogButtons = []; dialogNames = [];
-            llSetTimerEvent(0.0);
-        }
+        if (blacklistHandle) { llListenRemove(blacklistHandle); blacklistHandle = 0; }
+        if (controlHandle)   { llListenRemove(controlHandle);     controlHandle = 0; }
 
-        nextMenu = "";
+        //cdListenerDeactivate(dialogHandle);
+        dialogKeys = [];
+        dialogButtons = [];
+        dialogNames = [];
+
         menuName = "";
         menuID = NULL_KEY;
     }
@@ -721,7 +746,7 @@ default
 #endif
                 else if (choice == "Detach") { lmInternalCommand("detach", "", id); }
                 else if (choice == "Reload Config") {
-                    llResetOtherScript("Start");
+                    cdResetKey();
                 }
                 else if (choice == "TP Home") {
                     lmInternalCommand("TP", LANDMARK_HOME, id);
@@ -793,7 +818,7 @@ default
                         else msg = "Choose a person to remove from your " + msg;
 
                         llDialog(id, msg, dialogSort(llListSort(dialogButtons, 1, 1) + MAIN), activeChannel);
-                        llSetTimerEvent(60.0);
+                        llSetTimerEvent(MENU_TIMEOUT);
                     }
                     else if (beforeSpace == "List") {
                         if (dialogNames == []) msg = "Your " + msg + " is empty.";
@@ -931,6 +956,7 @@ default
         }
         else if ((channel == blacklistChannel) || (channel == controlChannel)) {
             if (choice == MAIN) {
+                llSetTimerEvent(MENU_TIMEOUT);
                 lmMenuReply(MAIN, name, id);
                 return;
             }
@@ -964,8 +990,8 @@ default
         // Other scripts also use the dialog listener created in this script.  Until they are written to send
         // a dialogListen command whenever they respawn a dialog, we have to keep the listener open
         // at any sign of usage.
-        llListenControl(dialogHandle, 1);
-        llSetTimerEvent(60.0);
+        cdListenerActivate(dialogHandle);
+        llSetTimerEvent(MENU_TIMEOUT);
     }
 }
 

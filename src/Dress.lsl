@@ -287,16 +287,28 @@ string folderStatus() {
 // STATES
 //========================================
 default {
+
+    //----------------------------------------
+    // STATE_ENTRY
+    //----------------------------------------
     state_entry() {
         dollID = llGetOwner();
 
         cdInitializeSeq();
     }
 
+
+    //----------------------------------------
+    // ON_REZ
+    //----------------------------------------
     on_rez(integer start) {
         ; //startup = 2;
     }
 
+
+    //----------------------------------------
+    // TIMER
+    //----------------------------------------
     timer() {
         if (candresstimeout) {
             candresstimeout = 0;
@@ -461,6 +473,7 @@ default {
                 }
                 else {
                     string msgx = "You look in " + llToLower(pronounHerDoll) + " closet, and see no outfits for Dolly to wear.";
+                    cdDialogListen();
                     llDialog(dresserID, msgx, ["OK"], dialogChannel);
                     return;
                 }
@@ -507,6 +520,7 @@ default {
                     string UpMain = "Outfits Parent";
                     if (outfitsFolder == "") UpMain = MAIN;
 
+                    cdDialogListen();
                     llDialog(dresserID, msgx, ["Prev Outfits", "Next Outfits", UpMain ] + outfitsPage(outfitsList), dialogChannel);
                     llSetTimerEvent(60.0);
 
@@ -870,6 +884,7 @@ default {
             msgx += "Numbers match outfit names in chat, using chat history (CTRL+H) may help.\n\n" + folderStatus();
 
             // Provide a dialog to user to choose new outfit
+            cdDialogListen();
             llDialog(dresserID, msgx, newoutfits2, dialogChannel);
             candresstimeout = 1;
             llSetTimerEvent(60.0);

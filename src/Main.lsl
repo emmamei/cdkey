@@ -12,6 +12,7 @@
 #define cdListMin(a) llListStatistics(LIST_STAT_MIN,a)
 #define cdKeyStopped() (windRate==0.0)
 #define cdTimeSet(a) (a!=0.0)
+#define cdResetKey() llResetOtherScript("Start")
 
 //#define debugPrint(a) llSay(DEBUG_CHANNEL,(a))
 
@@ -146,7 +147,7 @@ ifPermissions() {
     integer perm = llGetPermissions();
 
     if (grantor != NULL_KEY && grantor != dollID) {
-        llResetOtherScript("Start");
+        cdResetKey();
         llSleep(10);
     }
 
@@ -775,6 +776,7 @@ default {
                 string msg = "How many minutes would you like to wind?";
 
                 // Finally, present dialog
+                cdDialogListen();
                 llDialog(id, timeleft + msg, dialogSort(windButtons + MAIN), dialogChannel);
             }
         }
@@ -900,6 +902,7 @@ default {
             else if (llGetSubString(choice,0,3) == "Wind") {
 
                 if (collapsed == JAMMED) {
+                    cdDialogListen();
                     llDialog(id, "The Dolly cannot be wound while " + llToLower(pronounHerDoll) + " key is being held.", ["Help..."], dialogChannel);
                     return;
                 }
@@ -934,6 +937,7 @@ default {
                 lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey += windamount));
 
                 if (windLimit < 60.0) {
+                    cdDialogListen();
                     llDialog(id, "Dolly is already fully wound.", [MAIN], dialogChannel);
                 }
                 else {
@@ -983,6 +987,7 @@ default {
             }
             else if (choice == "Max Time...") {
                 // If the Max Times available are changed, be sure to change the next choice also
+                cdDialogListen();
                 llDialog(id, "You can set the maximum available time here.  Dolly cannot be wound beyond this amount of time.\nDolly currently has " + (string)llFloor(timeLeftOnKey / SEC_TO_MIN) + " mins left of " + (string)llFloor(keyLimit / SEC_TO_MIN) + ". If you lower the maximum, Dolly will lose the extra time entirely.", dialogSort(["45m", "60m", "75m", "90m", "120m", "150m", "180m", "240m", "300m", "360m", "480m", MAIN]), dialogChannel);
             }
             // Shortcut only: last char = "m"

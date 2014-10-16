@@ -520,6 +520,7 @@ default {
                 choices += cdGetButton("Wear @ Login", id, wearAtLogin, 0);
 #endif
 
+                cdDialogListen();
                 llDialog(dollID, "Options", dialogSort(choices + MAIN), dialogChannel);
             }
 
@@ -552,6 +553,7 @@ default {
 
 
                     debugSay(5,"DEBUG-TYPES","Generating unlocked dialog");
+                    cdDialogListen();
                     llDialog(id, msg, dialogSort(llListSort(choices, 1, 1) + MAIN), dialogChannel);
                 }
                 debugSay(5,"DEBUG-TYPES","Transform complete");
@@ -579,6 +581,7 @@ default {
                         list choices = ["Transform", "Dont Transform", MAIN ];
                         string msg = "Do you wish to be transformed to a " + choice + " Doll?";
 
+                        cdDialogListen();
                         llDialog(dollID, msg, choices, dialogChannel); // this starts a new choice on this channel
                     }
                     else {

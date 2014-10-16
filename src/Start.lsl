@@ -29,13 +29,16 @@
 #define PREFS_READ 1
 #define PREFS_NOT_READ 0
 
+#define cdSetKeyName(a) llSetObjectName(a)
+#define cdResetKeyName() llSetObjectName(PACKAGE_NAME + " " + __DATE__)
+
 // This isn't great - but at least it's up here where it can be maintained
 // Note, too, that Start is missing - because that's THIS script...
 //
 // LinkListen *could* be added for developers, but that is an optional script -
 // still - so not necessarily good to add here.
 list scriptList = [ "Aux", "Avatar", "ChatHandler", "Dress", "Main", "MenuHandler",
-                    "ServiceRequester", "ServiceReceiver", "StatusRLV", "Transform" ];
+                    "StatusRLV", "Transform" ];
 
 //#define HYPNO_START   // Enable hypno messages on startup
 //
@@ -225,7 +228,9 @@ processConfiguration(string name, string value) {
     name = llToLower(name);
     if ((i = cdListElementP(configs,name)) != NOT_FOUND) {
         if (name == "initial time") {
+#ifdef DATABASE_BACKEND
             if (!databaseOnline || offlineMode)
+#endif
                 value = (string)((float)value * SEC_TO_MIN);
         } if (name == "max time") {
             value = (string)((float)value * SEC_TO_MIN);
@@ -310,10 +315,9 @@ initConfiguration() {
 // PURPOSE: doneConfiguration is called from various places,
 //          and its real purpose is as yet unknown.
 
-doneConfiguration(integer read) {
+doneConfiguration(integer prefsRead) {
 
-    //if (startup == 1 && read) {
-    if (read) {
+    if (prefsRead) {
 #ifdef DEVELOPER_MODE
         sendMsg(dollID, "Preferences read in " + formatFloat(llGetTime() - ncStart, 2) + "s");
 #else
@@ -321,23 +325,33 @@ doneConfiguration(integer read) {
 #endif
     }
 
-    if (resetState) {
-        llSleep(7.5);
-        cdResetKey();
-    }
+    debugSay(3,"DEBUG-START","Configuration done - resetState = " + (string)resetState);
 
+    // Are we resetting? resetState will be either RESET_NORMAL or RESET_STARTUP - nonzero.
+    // If so, then reset the key.
+    //
+    //if (resetState) {
+    //    debugSay(3,"DEBUG-START","Configuration done - resetting Key");
+    //    llSleep(7.5);
+    //    cdResetKey();
+    //}
+
+    // This is actually redundant, given the if statement above
     resetState = RESET_NONE;
 
+    debugSay(3,"DEBUG-START","Configuration done - starting init code 102 and 105");
     lmInitState(102);
     lmInitState(105);
 
     //startup = 2;
 
-    initializationCompleted();
-}
+//    initializationCompleted();
+//}
 
-initializationCompleted() {
-    if (newAttach && !quiet && cdAttached())
+//initializationCompleted() {
+    integer attached = cdAttached();
+
+    if (newAttach && !quiet && attached)
         llSay(0, llGetDisplayName(llGetOwner()) + " is now a dolly - anyone may play with their Key.");
 
 #ifdef DEVELOPER_MODE
@@ -353,7 +367,7 @@ initializationCompleted() {
         lmSendConfig("dollyName", (dollyName = "Dolly " + name));
     }
 
-    if (cdAttached()) llSetObjectName(dollyName + "'s Key");
+    if (attached) cdSetKeyName(dollyName + "'s Key");
 
     string msg = "Initialization completed" +
 #ifdef DEVELOPER_MODE
@@ -365,6 +379,7 @@ initializationCompleted() {
 
     //startup = 0;
 
+    debugSay(3,"DEBUG-START","Configuration done - starting init code 110");
     lmInitState(110);
 
     if (cdNotecardExists(APPEARANCE_NC)) {
@@ -373,7 +388,7 @@ initializationCompleted() {
         ncRequestAppearance = llGetNotecardLine(APPEARANCE_NC, ncLine++);
     }
 
-    llSetTimerEvent(10.0);
+    //llSetTimerEvent(10.0);
 }
 
 #ifdef SIM_FRIENDLY
@@ -399,47 +414,32 @@ sleepMenu() {
 #endif
 
 doRestart() {
+
+    integer loop;
+    string me = cdMyScriptName();
+    string script;
+
+    llOwnerSay("Resetting scripts");
+
+    // Set all other scripts to run state and reset them
+    for (; loop < llGetInventoryNumber(INVENTORY_SCRIPT); loop++) {
+
+        script = llGetInventoryName(INVENTORY_SCRIPT, loop);
+        if (script != me) {
+
+            debugSay(4,"DEBUG-RESET","Resetting " + script);
+
+            cdRunScript(script);
+            llResetOtherScript(script);
+
+            llSleep(5.0);
+        }
+    }
+
     resetState = RESET_NONE;
-    llOwnerSay("Ignoring Reset");
-    return;
 
-//    integer loop; string me = cdMyScriptName();
-//    string script;
-//    resetState = RESET_NONE;
-
-//    llOwnerSay("Resetting scripts");
-//    if (failedReset == NO) {
-
-        // Set all other scripts to run state and reset them
-//        for (; loop < llGetInventoryNumber(INVENTORY_SCRIPT); loop++) {
-
-//            script = llGetInventoryName(INVENTORY_SCRIPT, loop);
-//            if (script != me) {
-
-//                cdRunScript(script);
-//                llResetOtherScript(script);
-
-//                llSleep(5.0);
-
-//                debugSay(5,"DEBUG-RESET","Resetting " + script);
-
-//                if (!cdIsScriptRunning("MenuHandler")) {
-//                    failedReset = YES;
-//                    llOwnerSay("Failed to reset " + script);
-//                }
-//            }
-//        }
-
-//        if (failedReset != NO) {
-//            llOwnerSay("Tried to reset key and failed.");
-//        }
-//    }
-//    else {
-//        llOwnerSay("A past reset has failed; not retrying.");
-//    }
-
-//    resetState = RESET_NONE;
-//    ncResetAttach = llGetNotecardLine(NC_ATTACHLIST, cdAttached() - 1);
+    // read list of attach points in DataAttachments (in numeric order)
+    ncResetAttach = llGetNotecardLine(NC_ATTACHLIST, cdAttached() - 1);
 }
 
 //========================================
@@ -463,6 +463,7 @@ default {
         scaleMem();
 
         if (code == 102) {
+#ifdef DATABASE_BACKEND
             if (script != "ServiceReceiver") return;
 
             databaseFinished = 1;
@@ -470,14 +471,18 @@ default {
                 llOwnerSay("Database not online...");
                 initConfiguration();
             }
+#endif
+
             if (llListFindList(ncPrefsLoadedUUID,[(string)llGetInventoryKey(NOTECARD_PREFERENCES)]) == NOT_FOUND) {
                 llOwnerSay("Didn't find original prefs");
                 initConfiguration();
             }
+#ifdef DATABASE_BACKEND
             else {
                 debugSay(2, "DEBUG", "Skipping preferences notecard as it is unchanged and settings were found in database.");
                 doneConfiguration(PREFS_NOT_READ); // this calls "code = 102"
             }
+#endif
         }
         else if (code == 135) {
             if (script == cdMyScriptName()) return;
@@ -498,11 +503,13 @@ default {
                 split = [];
             }
 
+#ifdef DATABASE_BACKEND
             if (script == "ServiceReceiver") dbConfigCount++;
+#endif
 
                  if (name == "ncPrefsLoadedUUID")    ncPrefsLoadedUUID = llDeleteSubList(split,0,0);
-            else if (name == "offlineMode")                offlineMode = (integer)value;
-            else if (name == "databaseOnline")          databaseOnline = (integer)value;
+//          else if (name == "offlineMode")                offlineMode = (integer)value;
+//          else if (name == "databaseOnline")          databaseOnline = (integer)value;
 #ifdef SIM_FRIENDLY
             else if (name == "lowScriptMode")            lowScriptMode = (integer)value;
 #endif
@@ -546,7 +553,7 @@ default {
                     lmSendConfig("dollyName", (dollyName = "Dolly " + name));
                 }
                 //llOwnerSay("INIT:300: dollyName = " + dollyName + " (setting)");
-                if (cdAttached()) llSetObjectName(dollyName + "'s Key");
+                if (cdAttached()) cdSetKeyName(dollyName + "'s Key");
             }
 
             // Run user RLV settings in appropriate situations
@@ -610,7 +617,6 @@ default {
         }
     }
 
-
     //----------------------------------------
     // STATE ENTRY
     //----------------------------------------
@@ -625,9 +631,10 @@ default {
         if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
         else {
             llOwnerSay("Key not attached");
-            llSetObjectName(PACKAGE_NAME + " " + __DATE__);
+            cdResetKeyName();
         }
 
+        // WHen the start script resets... EVERYONE resets...
         doRestart();
     }
 
@@ -653,13 +660,13 @@ default {
         dollName = llGetDisplayName(dollID);
 
         if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
-        else llSetObjectName(PACKAGE_NAME + " " + __DATE__);
+        else cdResetKeyName();
 
         RLVok = UNSET;
         //startup = 2;
 
-        databaseOnline = 0;
-        databaseFinished = 0;
+        //databaseOnline = 0;
+        //databaseFinished = 0;
 
 #ifdef SIM_FRIENDLY
 #ifdef WAKESCRIPT
@@ -674,11 +681,15 @@ default {
     // ATTACH
     //----------------------------------------
     attach(key id) {
+
         if (id == NULL_KEY) {
-            if(!cdAttached()) llSetObjectName(PACKAGE_NAME + " " + __DATE__);
+
+            if(!cdAttached()) cdResetKeyName();
             llMessageLinked(LINK_SET, 106,  cdMyScriptName() + "|" + "detached" + "|" + (string)lastAttachPoint, lastAttachAvatar);
             llOwnerSay("The key is wrenched from your back, and you double over at the unexpected pain as the tendrils are ripped out. You feel an emptiness, as if some beautiful presence has been removed.");
+
         } else {
+
             llMessageLinked(LINK_SET, 106, cdMyScriptName() + "|" + "attached" + "|" + (string)llGetAttached(), id);
 
             if (llGetPermissionsKey() == dollID && (llGetPermissions() & PERMISSION_TAKE_CONTROLS) != 0) llTakeControls(CONTROL_MOVE, 1, 1);
@@ -697,19 +708,23 @@ default {
     // DATASERVER
     //----------------------------------------
     dataserver(key query_id, string data) {
+
+        // Reading notecard DataAttachments (names of attach points)
         if (query_id == ncResetAttach) {
             data = llStringTrim(data,STRING_TRIM);
 
             if (cdAttached())
-                llSetPrimitiveParams([PRIM_POS_LOCAL,
-                    (vector)cdGetValue(saveAttachment,([data,0])),
-                    PRIM_ROT_LOCAL,
-                    (rotation)cdGetValue(saveAttachment,([data,1]))]);
+                llSetPrimitiveParams( [
+                    PRIM_POS_LOCAL,   (vector) cdGetValue(saveAttachment, ( [ data, 0 ] )),
+                    PRIM_ROT_LOCAL, (rotation) cdGetValue(saveAttachment, ( [ data, 1 ] ))
+                    ] );
 
             attachName = data;
 
-            llSetTimerEvent(10.0);
+            //llSetTimerEvent(10.0);
         }
+
+        // Reading notecard DataAppearance (JSON list of appearance settings)
         else if (query_id == ncRequestAppearance) {
             if (data == EOF) {
                 doVisibility();
@@ -730,6 +745,8 @@ default {
                 ncRequestAppearance = llGetNotecardLine(APPEARANCE_NC, ncLine++);
             }
         }
+
+        // Read notecard: Preferences
         else if (query_id == ncPrefsKey) {
             if (data == EOF) {
                 lmSendConfig("ncPrefsLoadedUUID", llDumpList2String(llList2List((string)llGetInventoryKey(NOTECARD_PREFERENCES) + ncPrefsLoadedUUID, 0, 9),"|"));
@@ -738,8 +755,8 @@ default {
                 doneConfiguration(PREFS_READ);
             }
             else {
+                // Strip comments (prefs)
                 integer index = llSubStringIndex(data, "#");
-
                 if (index != NOT_FOUND) data = llDeleteSubString(data, index, -1);
 
                 if (data != "") {
@@ -763,11 +780,11 @@ default {
     // CHANGED
     //----------------------------------------
     changed(integer change) {
-        if(!cdAttached()) llSetObjectName(PACKAGE_NAME + " " + __DATE__);
+        if(!cdAttached()) cdResetKeyName();
 
         if (change & CHANGED_OWNER) {
 
-            if (cdNotecardNotExist(NOTECARD_PREFERENCES)) {
+            if (cdNotecardExists(NOTECARD_PREFERENCES)) {
                 llOwnerSay("You have a new key! Congratulations!\n" +
                     "Look at PreferencesExample to see how to set the preferences for your new key.");
                 llRemoveInventory(NOTECARD_PREFERENCES);
@@ -807,6 +824,7 @@ default {
         }
     }
 
+#ifdef START_TIMER
     //----------------------------------------
     // TIMER
     //----------------------------------------
@@ -827,8 +845,12 @@ default {
             (t > dbConfigCount))))) {
                 databaseFinished = 1;
                 databaseOnline = 0;
+
+                llOwnerSay("No database in backend?");
                 initConfiguration();
         }
+#else
+        //initConfiguration();
 #endif
 
         if (startup == 0) {
@@ -836,8 +858,8 @@ default {
             if (!cdAttached() || (attachName == "")) return;
 
             // save position and rotation to JSON var
-            saveAttachment = cdSetValue(saveAttachment,([attachName,0]),(string)llGetLocalPos());
-            saveAttachment = cdSetValue(saveAttachment,([attachName,1]),(string)llGetLocalRot());
+            saveAttachment = cdSetValue( saveAttachment, ( [ attachName, 0 ] ), (string)llGetLocalPos() );
+            saveAttachment = cdSetValue( saveAttachment, ( [ attachName, 1 ] ), (string)llGetLocalRot() );
         }
 #ifdef NO_STARTUP
         else {
@@ -869,6 +891,7 @@ default {
         } // if
 #endif
     } // timer
+#endif
 
     //----------------------------------------
     // RUN TIME PERMISSIONS

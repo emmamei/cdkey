@@ -12,6 +12,7 @@
 
 #define NO_FILTER ""
 #define cdListenUser(a,b) llListen(a, NO_FILTER,         b, NO_FILTER)
+#define cdResetKey() llResetOtherScript("Start")
 
 #define MESSAGE_NC "DataMessages"
 #define DISPLAY_DOLL 0
@@ -408,7 +409,7 @@ default {
             }
         }
         else if (code == 350) {
-            RLVok = (llList2Integer(split, 1) == 0);
+            RLVok = (llList2Integer(split, 1) == 1);
         }
         else if (code == 500) {
             string choice = llList2String(split, 0);
@@ -422,6 +423,7 @@ default {
                 if (cdIsController(id) || cdIsDoll(id)) pluslist += "Reset Scripts";
                 if (cdIsDoll(id)) pluslist += ["Check Update", "Factory Reset"];
 
+                cdDialogListen();
                 llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
             }
             else if (choice == "Help Notecard") {
@@ -447,6 +449,7 @@ default {
 
                 pluslist += [ "⊕ Blacklist", "List Blacklist", "⊖ Blacklist", "⊕ Controller", "List Controller" ];
 
+                cdDialogListen();
                 llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
             }
             else if (choice == "Visit Dollhouse") {
@@ -479,6 +482,7 @@ default {
                     pluslist = [ "OK" ];
                 }
 
+                cdDialogListen();
                 llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
             }
             else if (choice == "Features...") {
@@ -499,11 +503,12 @@ default {
 
                 pluslist += cdGetButton("Type Text", id, signOn, 0);
                 pluslist += cdGetButton("Warnings", id, doWarnings, 0);
-                pluslist += cdGetButton("Offline", id, offlineMode, 0);
+                //pluslist += cdGetButton("Offline", id, offlineMode, 0);
                 // One-way options
                 pluslist = llListInsertList(pluslist, cdGetButton("Allow AFK", id, canAFK, 1), 0);
                 pluslist = llListInsertList(pluslist, cdGetButton("Rpt Wind", id, canRepeat, 1), 6);
 
+                cdDialogListen();
                 llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
             }
             // Key menu is only shown for Controllers and for the Doll themselves
@@ -512,6 +517,7 @@ default {
                 list pluslist = ["Dolly Name...","Gem Colour...","Gender:" + dollGender];
 
                 if (cdIsController(id)) pluslist += [ "Max Time...", "Wind Times..." ];
+                cdDialogListen();
                 llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(pluslist, 1, 1) + cdGetButton("Key Glow", id, primGlow, 0) + cdGetButton("Gem Light", id, primLight, 0) + MAIN), dialogChannel);
             }
             else if (llGetSubString(choice,0,6) == "Gender:") {
@@ -539,6 +545,7 @@ default {
 
                     pluslist = COLOR_NAMES;
 
+                    cdDialogListen();
                     llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
             }
             else if ((llListFindList(COLOR_NAMES, [ choice ]) != -1) && (choice != "Custom..")) {
@@ -699,7 +706,7 @@ default {
         if (memCollecting) {
             lmMemReport(0.0, memRequested);
         }
-        else if (factoryReset) llResetOtherScript("Start");
+        else if (factoryReset) cdResetKey();
         else if (textboxHandle && (listenTime < llGetTime())) {
             llListenRemove(textboxHandle);
             textboxHandle = 0;

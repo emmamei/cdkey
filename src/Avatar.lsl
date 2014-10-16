@@ -14,6 +14,10 @@
 #define NOT_IN_REGION ZERO_VECTOR
 #define cdLockMeisterCmd(a) llWhisper(LOCKMEISTER_CHANNEL,(string)dollID+a)
 
+#define cdListenerDeactivate(a) llListenControl(a, 0)
+#define cdListenerActivate(a) llListenControl(a, 1)
+#define cdResetKey() llResetOtherScript("Start")
+
 key carrierID = NULL_KEY;
 
 // Could set allControls to -1 for quick full bit set - 
@@ -43,9 +47,11 @@ vector lockPos;
 string barefeet;
 string carrierName;
 string keyAnimation;
+
 #ifdef DEVELOPER_MODE
 string myPath;
 #endif
+
 string pronounHerDoll = "Her";
 string pronounSheDoll = "She";
 string rlvAPIversion;
@@ -65,7 +71,7 @@ integer collapsed;
 integer confgured;
 integer dialogChannel;
 integer haveControls;
-integer listenHandle;
+integer rlvHandle;
 integer locked;
 #ifdef SIM_FRIENDLY
 integer lowScriptMode;
@@ -158,11 +164,6 @@ checkRLV()
         // This makes the viewer appear to have no RLV support as no reply will be heard
         // from the check; all other code works normally.
 
-#ifdef DEBUG_BADRLV
-#define LISTEN_OPEN 0
-#else
-#define LISTEN_OPEN 1
-#endif
         if (RLVck <= 0) {
             RLVck = 1;
 #ifdef WAKESCRIPT
@@ -172,7 +173,11 @@ checkRLV()
         }
         else RLVck++;
 
-        llListenControl(listenHandle, LISTEN_OPEN);
+#ifdef DEBUG_BADRLV
+        cdListenerDeactivate(rlvHandle);
+#else
+        cdListenerActivate(rlvHandle);
+#endif
         if (rlvAPIversion == "") {
             if (RLVck > 2) llOwnerSay("@version=" + (string)rlvChannel);
             else llOwnerSay("@versionnew=" + (string)rlvChannel);
@@ -186,7 +191,7 @@ checkRLV()
     else {
         if (!RLVstarted && !RLVrecheck) {
             if (RLVok) llOwnerSay("Reattached Community Doll Key with " + rlvAPIversion + " active...");
-            else if (cdAttached() && !RLVok) llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
+            else if (cdAttached()) llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
             nextRLVcheck = 0.0;
         }
 
@@ -211,7 +216,7 @@ ifPermissions() {
         // If permissions granted to someone other than Dolly,
         // start over...
         if (grantorID != NULL_KEY && grantorID != dollID) {
-            llResetOtherScript("Start");
+            cdResetKey();
             llSleep(10.0);
         }
 
@@ -227,7 +232,24 @@ ifPermissions() {
             if ((permMask & PERMISSION_TRIGGER_ANIMATION) != 0) {
                 key curAnim = llList2Key(llGetAnimationList(dollID), 0);
 
-                if (!clearAnim && !cdNoAnim()) {
+                if (clearAnim) {
+                    list animList = llGetAnimationList(dollID);
+                    integer i; integer animCount = llGetListLength(animList);
+                    key animKey;
+
+                    keyAnimation = "";
+                    lmSendConfig("keyAnimationID", (string)(keyAnimationID = NULL_KEY));
+
+                    for (i = 0; i < animCount; i++) {
+                        animKey = llList2Key(animList, i);
+                        if (animKey != NULL_KEY) llStopAnimation(animKey);
+                    }
+
+                    llStartAnimation("Stand");
+                    animRefreshRate = 0.0;
+                    clearAnim = 0;
+                    cdLockMeisterCmd("booton");
+                } else if (!cdNoAnim()) {
                     cdLockMeisterCmd("bootoff");
 
                     list animList; integer i; integer animCount;
@@ -264,23 +286,6 @@ ifPermissions() {
                         }
                     }
                     else if (keyAnimation != "") animRefreshRate = 4.0;
-                } else if (clearAnim) {
-                    list animList = llGetAnimationList(dollID);
-                    integer i; integer animCount = llGetListLength(animList);
-                    key animKey;
-
-                    keyAnimation = "";
-                    lmSendConfig("keyAnimationID", (string)(keyAnimationID = NULL_KEY));
-
-                    for (i = 0; i < animCount; i++) {
-                        animKey = llList2Key(animList, i);
-                        if (animKey != NULL_KEY) llStopAnimation(animKey);
-                    }
-
-                    llStartAnimation("Stand");
-                    animRefreshRate = 0.0;
-                    clearAnim = 0;
-                    cdLockMeisterCmd("booton");
                 }
 
                 if (animRefreshRate) nextAnimRefresh = llGetTime() + animRefreshRate;
@@ -624,11 +629,11 @@ default {
                 else if (name == "pronounSheDoll")       pronounSheDoll = value;
                 else if (name == "dialogChannel") {
                     dialogChannel = (integer)value;
-                    llListenRemove(listenHandle);
+                    llListenRemove(rlvHandle);
                     // Calculate positive (RLV compatible) rlvChannel
                     rlvChannel = ~dialogChannel + 1;
-                    listenHandle = llListen(rlvChannel, "", "", "");
-                    llListenControl(listenHandle, 0);
+                    rlvHandle = llListen(rlvChannel, "", "", "");
+                    cdListenerDeactivate(rlvHandle);
                 }
                 else if (name == "keyAnimationID") {
                     keyAnimationID = (key)value;
@@ -678,6 +683,7 @@ default {
             else if (subchoice == "Strip") {
                 if (choice == "Strip...") {
                     list buttons = llListSort(["Strip Top", "Strip Bra", "Strip Bottom", "Strip Panties", "Strip Shoes", "Strip ALL"], 1, 1);
+                    cdDialogListen();
                     llDialog(id, "Take off:", dialogSort(buttons + MAIN), dialogChannel); // Do strip menu
                     return;
                 }
@@ -824,6 +830,7 @@ default {
                 }
                 else poseList = dialogSort(poseList + [ MAIN ]);
 
+                cdDialogListen();
                 llDialog(id, "Select the pose to put the doll into", poseList, dialogChannel);
 
             }
@@ -840,6 +847,8 @@ default {
     // TIMER
     //----------------------------------------
     timer() {
+        // this makes sure that enough time has elapsed - and prevents
+        // the check from being missed...
         if ((nextRLVcheck != 0.0) && (nextRLVcheck < llGetTime())) {
             checkRLV();
         }
@@ -847,6 +856,11 @@ default {
         ifPermissions();
 
 #ifdef PREDICTIVE_TIMER
+        // This takes the next possible RLV check and animation refresh,
+        // computes the time until that happens, then calculates the miniumum...
+        // This is the amount of time until the next thing happens - and adds one
+        // frame's worth of time.
+
         list possibleEvents =       [60.0];
         float t = llGetTime();
         if (nextRLVcheck > 0.0)     possibleEvents += nextRLVcheck - t;
@@ -1032,7 +1046,7 @@ default {
 #ifdef WAKESCRIPT
                     else llSetScriptState("StatusRLV", 0);
 #endif
-                    llListenControl(listenHandle, 0);
+                    cdListenerDeactivate(rlvHandle);
                     lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
                     lmRLVreport(RLVok, rlvAPIversion, 0);
                 }

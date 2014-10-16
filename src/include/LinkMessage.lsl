@@ -60,6 +60,7 @@ cdLinkMessage(integer target, integer opt, integer code, string data, key id) {
 // Virtual function style new link commands
 #define cdCarry(id)             lmInternalCommand("carry", (carrierName = llGetDisplayName(id)), (carrierID = id))
 #define cdUncarry()             lmInternalCommand("uncarry", carrierName, carrierID)
+#define cdDialogListen()        lmInternalCommand("dialogListen", "", NULL_KEY)
 
 
 #endif
