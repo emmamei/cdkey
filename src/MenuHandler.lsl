@@ -321,7 +321,7 @@ default
             if (cmd == "dialogListen") {
 
                 // 20% of the time, reset the dialog channel
-                if (llAbs(llFrand(100)) < 20)
+                if (llAbs(llFloor(llFrand(100.0))) < 20)
                     doDialogChannel();
 
                 cdListenerActivate(dialogHandle);
