@@ -521,7 +521,7 @@ default {
                     if (outfitsFolder == "") UpMain = MAIN;
 
                     cdDialogListen();
-                    llDialog(dresserID, msgx, ["Prev Outfits", "Next Outfits", UpMain ] + outfitsPage(outfitsList), dialogChannel);
+                    llDialog(dresserID, msgx, ["Outfits Prev", "Outfits Next", UpMain ] + outfitsPage(outfitsList), dialogChannel);
                     llSetTimerEvent(60.0);
 
                 } else if (cdListElementP(outfitsList, choice) != NOT_FOUND) {
@@ -877,7 +877,7 @@ default {
             list newoutfits2 = [ MAIN ] + outfitsPage(outfitsList);
 
             if (llGetListLength(outfitsList) < 10) newoutfits2 = [ "-", "-" ] + newoutfits2;
-            else newoutfits2 = [ "Prev Outfits", "Next Outfits" ] + newoutfits2;
+            else newoutfits2 = [ "Outfits Prev", "Outfits Next" ] + newoutfits2;
 
             msgx = "You may choose any outfit.\n";
             if (dresserID == dollID) msgx = "See " + outfits_url + " for more information on outfits.\n";
