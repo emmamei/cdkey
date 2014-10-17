@@ -313,13 +313,17 @@ default
 
 
             // Deny access to the menus when the command was recieved from blacklisted avatar
-            if (llListFindList(blacklist, [ (string)id ]) != -1) {
+            if (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND) {
                 lmSendToAgent("You are not permitted to access this key.", id);
                 return;
             }
 
             if (cmd == "dialogListen") {
-                doDialogChannel();
+
+                // 20% of the time, reset the dialog channel
+                if (llAbs(llFrand(100)) < 20)
+                    doDialogChannel();
+
                 cdListenerActivate(dialogHandle);
                 llSetTimerEvent(MENU_TIMEOUT);
             }
@@ -434,6 +438,7 @@ default
                             menu = ["Help..."];
                         }
                         if (!isCarrier) {
+                            cdDialogListen();
                             llDialog(id, timeleft + msg, dialogSort(llListSort(menu, 1, 1)) , dialogChannel);
                             return;
                         }
@@ -594,6 +599,7 @@ default
                 cdListenerActivate(dialogHandle);
                 llSetTimerEvent(MENU_TIMEOUT);
 
+                cdDialogListen();
                 llDialog(id, msg, dialogSort(menu), dialogChannel);
             }
         }
@@ -663,6 +669,7 @@ default
             i++;
         }
 
+        cdDialogListen();
         llDialog(dollID, "Select the avatar to be added to the " + type + ".", dialogSort(dialogButtons + MAIN), channel);
     }
 
@@ -670,6 +677,7 @@ default
     // NO SENSOR
     //----------------------------------------
     no_sensor() {
+        cdDialogListen();
         llDialog(dollID, "No avatars detected within chat range", [MAIN], dialogChannel);
     }
 
@@ -739,6 +747,7 @@ default
 
                     pluslist += [ "Features...", "Key..." ];
 
+                    cdDialogListen();
                     llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
                 }
 #ifdef MARKETPLACE
@@ -817,6 +826,7 @@ default
                         }
                         else msg = "Choose a person to remove from your " + msg;
 
+                        cdDialogListen();
                         llDialog(id, msg, dialogSort(llListSort(dialogButtons, 1, 1) + MAIN), activeChannel);
                         llSetTimerEvent(MENU_TIMEOUT);
                     }
@@ -837,9 +847,9 @@ default
                         lmSendConfig("controllers", llDumpList2String(controllers, "|"));
                         lmSendToAgent("You are no longer controller of this key.", id);
                     }
-                    else {
-                        llSay(DEBUG_CHANNEL, "Drop Control option triggered by non-controller!");
-                    }
+                    //else {
+                    //    llSay(DEBUG_CHANNEL, "Drop Control option triggered by non-controller!");
+                    //}
                 }
                 else if (beforeSpace == CROSS || beforeSpace == CHECK) {
                     // Could be Option or Ability:
