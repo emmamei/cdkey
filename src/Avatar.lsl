@@ -13,6 +13,7 @@
 #define cdSayQuietly(x) { string z = x; if (quiet) llOwnerSay(z); else llSay(0,z); }
 #define NOT_IN_REGION ZERO_VECTOR
 #define cdLockMeisterCmd(a) llWhisper(LOCKMEISTER_CHANNEL,(string)dollID+a)
+#define MAX_RLVCHECK_TRIES 5
 
 #define cdListenerDeactivate(a) llListenControl(a, 0)
 #define cdListenerActivate(a) llListenControl(a, 1)
@@ -24,7 +25,7 @@ key carrierID = NULL_KEY;
 // but that would set fields with undefined values: this is more
 // accurate
 #define ALL_CONTROLS (CONTROL_FWD|CONTROL_BACK|CONTROL_LEFT|CONTROL_RIGHT|CONTROL_ROT_LEFT|CONTROL_ROT_RIGHT|CONTROL_UP|CONTROL_DOWN|CONTROL_LBUTTON|CONTROL_ML_LBUTTON)
-integer allControls = ALL_CONTROLS;
+integer allControls;
 
 key rlvTPrequest;
 key requestLoadData;
@@ -132,38 +133,30 @@ key animStart(string animation) {
 //----------------------------------------
 // RLV Initialization Functions
 
-checkRLV()
-{ // Run RLV viewer check
+// Check for RLV support from user's viewer
+//
+// THis is run multiple times to check
+
+checkRLV() {
+    if (RLVok) return;
+
     locked = 0;
 
-    // Do we want to return if dialogChannel is unset? What happens
-    // if we reset the dialogChannel and go on?
-    if (dialogChannel == 0) {
-        // This is a call to ServiceReceiver.lsl
-        cdLinkMessage(LINK_THIS, 0, 303, "dialogChannel", llGetKey());
-        return;
-    }
-#ifdef DEVELOPER_MODE
-    else {
-        debugSay(2,"DEBUG-DIALOGCHAN","Dialog channel set and non-zero");
-    }
-#endif
+    // We use dialog channel to check for RLV support
+    //cdDialogListen();
 
-#ifdef DEVELOPER_MODE
-    // RLV is marked ok if we get a response from an RLV command *AND* we have the Key's path
-    RLVok = ((rlvAPIversion != "") && (myPath != ""));
-#else
-    // RLV is marked ok if we get a response from an RLV command
-    RLVok = (rlvAPIversion != "");
-#endif
-    debugSay(5,"DEBUG-RLV","RLVok = " + (string)RLVok + " and myPath = " + (string)myPath + " and rlvAPIversion = " + rlvAPIversion);
+    // rlvAPIversion is set by the listener when a message is received
+    // myPath is set by the listener if a message is received that is not
+    // a RestrainedLove or RestrainedLife message
 
-    if ((RLVok != 1) && (RLVck < 5)) {
+    if (RLVck < MAX_RLVCHECK_TRIES) {
+        // Check RLV again: give it several tries
 
         // Setting the DEBUG_BADRLV flag causes the listener to not be open for the check
         // This makes the viewer appear to have no RLV support as no reply will be heard
         // from the check; all other code works normally.
 
+        // Increase number of check - RLVck is check number
         if (RLVck <= 0) {
             RLVck = 1;
 #ifdef WAKESCRIPT
@@ -174,24 +167,36 @@ checkRLV()
         else RLVck++;
 
 #ifdef DEBUG_BADRLV
+        // Make viewer act is if there is no RLV support
         cdListenerDeactivate(rlvHandle);
 #else
         cdListenerActivate(rlvHandle);
 #endif
+
+        // Get RLV API version if we don't have it already
         if (rlvAPIversion == "") {
             if (RLVck > 2) llOwnerSay("@version=" + (string)rlvChannel);
             else llOwnerSay("@versionnew=" + (string)rlvChannel);
         }
 #ifdef DEVELOPER_MODE
-        else if (myPath == "") llOwnerSay("@getpathnew=" + (string)rlvChannel);
+        else {
+            // We got a positive RLV response - so try the path
+            llOwnerSay("@getpathnew=" + (string)rlvChannel);
+        }
 #endif
+        // Set next RLV check in 20s
         llSetTimerEvent(20.0);
         nextRLVcheck = llGetTime() + 20.0;
-    }
-    else {
-        if (!RLVstarted && !RLVrecheck) {
+    } else {
+        // RLVck reached max
+
+        // RLVstarted implies RLVok: if RLV has been activated in
+        // the key code, then RLVstarted is set
+
+        if (!RLVstarted) {
             if (RLVok) llOwnerSay("Reattached Community Doll Key with " + rlvAPIversion + " active...");
             else if (cdAttached()) llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
+            debugSay(5,"DEBUG-RLV","myPath = " + (string)myPath + " and rlvAPIversion = " + rlvAPIversion);
             nextRLVcheck = 0.0;
         }
 
@@ -202,7 +207,9 @@ checkRLV()
         }
 #endif
 
-        if (cdAttached()) cdLoadData(RLV_NC, RLV_BASE_RESTRICTIONS);
+        //if (cdAttached())
+            // This starts a read of DataRLV - and other things
+            //cdLoadData(RLV_NC, RLV_BASE_RESTRICTIONS);
     }
 }
 
@@ -221,7 +228,8 @@ ifPermissions() {
         }
 
         if ((permMask & PERMISSION_MASK) != PERMISSION_MASK)
-            llRequestPermissions(dollID, PERMISSION_MASK); // FIXME: llRequestPermissions runs this function: loop?
+            // FIXME: llRequestPermissions runs this function: means a double run if PERMISSION_MASK is off
+            llRequestPermissions(dollID, PERMISSION_MASK);
 
         // only way to get here is grantorID is dollID or NULL_KEY
         if (grantorID == dollID) {
@@ -376,8 +384,7 @@ default {
     // STATE ENTRY
     //----------------------------------------
     state_entry() {
-        dollID = llGetOwner();
-        dollName = llGetDisplayName(dollID);
+        dollName = llGetDisplayName(dollID = llGetOwner());
 
         cdInitializeSeq();
 
@@ -435,14 +442,31 @@ default {
                 debugSay(2, "DEBUG-RLV", "RLV Version: " + msg);
 
                 rlvAPIversion = msg;
+
+#ifdef DEVELOPER_MODE
+                // We got a positive RLV response - so try the path
+                llOwnerSay("@getpathnew=" + (string)rlvChannel);
+
+                llSetTimerEvent(20.0);
+                nextRLVcheck = llGetTime() + 20.0;
+#else
+                nextRLVcheck = 0.0;
+                RLVok = TRUE;
+                lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
+                lmRLVreport(RLVok, rlvAPIversion, 0);
+#endif
             }
 #ifdef DEVELOPER_MODE
             else {
                 debugSay(2, "DEBUG-RLV", "RLV Key Path: " + msg);
                 myPath = msg;
+
+                nextRLVcheck = 0.0;
+                RLVok = TRUE;
+                lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
+                lmRLVreport(RLVok, rlvAPIversion, 0);
             }
 #endif
-            checkRLV();
         }
     }
 
@@ -866,8 +890,6 @@ default {
         if (nextRLVcheck > 0.0)     possibleEvents += nextRLVcheck - t;
         if (nextAnimRefresh > 0.0)  possibleEvents += nextAnimRefresh - t;
         llSetTimerEvent(llListStatistics(LIST_STAT_MIN,possibleEvents) + 0.022); // Not 0
-#else
-        llSetTimerEvent(60.0);
 #endif
     }
 
@@ -1023,13 +1045,15 @@ default {
                 }
 
 #ifndef DEVELOPER_MODE
+                key mainCreator;
+                mainCreator = llGetInventoryCreator("Main");
 
                 // We lock the key on here - but in the menu system, it appears
                 // unlocked and detachable: this is because it can be detached
                 // via the menu. To make the key truly "undetachable", we get
                 // rid of the menu item to unlock it
 
-                if (llGetInventoryCreator("Main") != dollID) {
+                if (mainCreator != dollID) {
                     lmRunRLVas("Base", "detach=n,permissive=n");  //locks key
 
                     locked = 1; // Note the locked variable also remains false for developer mode keys
@@ -1066,12 +1090,15 @@ default {
                 RLVstarted = (RLVstarted | RLVok);
 
 #ifndef DEVELOPER_MODE
-                if (llGetInventoryCreator("Main") == dollID) lmRunRLVas("Base", "clear=unshared,clear=attachallthis");
+                if (mainCreator == dollID) lmRunRLVas("Base", "clear=unshared,clear=attachallthis");
 #endif
             }
         }
     }
 
+    //----------------------------------------
+    // RUN TIME PERMISSIONS
+    //----------------------------------------
     run_time_permissions(integer perm) {
         ifPermissions();
     }
