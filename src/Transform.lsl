@@ -225,7 +225,6 @@ default {
 
             reloadTypeNames();
         }
-        debugSay(2,"DEBUG-TRANSFORM","Done with changed...");
     }
 
     //----------------------------------------
