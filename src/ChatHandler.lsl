@@ -355,6 +355,8 @@ default
 
         // Text commands
         if (channel == chatChannel) {
+            lmInternalCommand("getTimeUpdates","",NULL_KEY);
+            llSleep(2);
             debugSay(5,"CHAT-DEBUG",("Got a chat channel message: " + name + "/" + (string)id + "/" + msg));
             string prefix = cdGetFirstChar(msg);
 
