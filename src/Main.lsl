@@ -245,19 +245,21 @@ default {
             mistressName = data;
             llOwnerSay("Your Mistress is " + mistressName);
         }
-
-        if (query_id == simRatingQuery) {
+        else if (query_id == simRatingQuery) {
             simRating = data;
             lmRating(simRating);
 
-            string msg = "Entered " + llGetRegionName() + " rating is " + llToLower(simRating);
 #ifdef ADULT_MODE
+            string msg = "Entered " + llGetRegionName() + " rating is " + llToLower(simRating);
+
             if (pleasureDoll || (dollType == "Slut")) {
-                if (cdRating2Integer(simRating) < 2) msg += " stripping disabled.";
-                else msg += " stripping enabled.";
+
+                if (cdRating2Integer(simRating) < 2) {
+                    msg += " stripping disabled.";
+                    llOwnerSay(msg);
+                }
             }
 #endif
-            llOwnerSay(msg);
         }
     }
 
