@@ -421,8 +421,10 @@ default {
         }
 
 #ifdef DEVELOPER_MODE
-        if (timeReporting) llOwnerSay("Script Time (running 30m Average): " +
-                              formatFloat(llList2Float(llGetObjectDetails(llGetKey(), [ OBJECT_SCRIPT_TIME ]), 0) * 1000000, 2) + "µs");
+        // Doesn't seem very useful
+        //
+        //if (timeReporting) llOwnerSay("Script Time (running 30m Average): " +
+        //                      formatFloat(llList2Float(llGetObjectDetails(llGetKey(), [ OBJECT_SCRIPT_TIME ]), 0) * 1000000, 2) + "µs");
 #endif
 
         scaleMem();
