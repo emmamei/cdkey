@@ -121,22 +121,41 @@ list dialogButtons;
 // EVERY time it is called... possibly for a security feature
 // using a dialogChannel periodic change setup
 
+doDialogChannelWithReset() {
+    uniqueID = 0;
+    dialogChannel = 0;
+    llListenRemove(dialogHandle);
+    doDialogChannel();
+}
+
+// This function ONLY activates the dialogChannel - no
+// reset is done unless necessary
+
 doDialogChannel() {
+    if (dialogChannel != 0) {
+        // This assumes that if dialogChannel is set, it is open
+        cdListenerActivate(dialogChannel);
+        lmSendConfig("dialogChannel", (string)(dialogChannel));
+        return;
+    }
+
     // generate a uniqueID for dolly to use
     lmSendConfig("uniqueID", (string)(uniqueID = llGenerateKey()));
     debugSay(2, "DEBUG-MENU", "Your unique key is " + (string)uniqueID);
 
     integer generateChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)uniqueID, -7, -1));
 
-    lmSendConfig("dialogChannel", (string)(dialogChannel = generateChannel));
-    debugSay(2, "DEBUG-MENU", "Dialog channel is set to " + (string)dialogChannel);
-    llSleep(2); // Make sure dialogChannel setting has time to propogate
-
+    dialogChannel = generateChannel;
     blacklistChannel = dialogChannel - BLACKLIST_CHANNEL_OFFSET;
     controlChannel = dialogChannel - CONTROL_CHANNEL_OFFSET;
 
-    llListenRemove(dialogHandle);
     dialogHandle = cdListenAll(dialogChannel);
+    //llSleep(1); // settling time?
+
+    // Dont announce the channel until its open
+    lmSendConfig("dialogChannel", (string)(dialogChannel));
+    debugSay(2, "DEBUG-MENU", "Dialog channel is set to " + (string)dialogChannel);
+    //llSleep(2); // Make sure dialogChannel setting has time to propogate
 
     // Deactivate listener for finer control - but this is not yet ready
     //cdListenerDeactivate(dialogHandle);
@@ -320,10 +339,7 @@ default
 
             if (cmd == "dialogListen") {
 
-                // 20% of the time, reset the dialog channel
-                if (llAbs(llFloor(llFrand(100.0))) < 20)
-                    doDialogChannel();
-
+                doDialogChannel();
                 cdListenerActivate(dialogHandle);
                 llSetTimerEvent(MENU_TIMEOUT);
             }
