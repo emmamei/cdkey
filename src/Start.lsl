@@ -209,14 +209,20 @@ processConfiguration(string name, string value) {
 
     integer i;
     //list firstWord = [ "barefeet path", "helpless dolly", "quiet key" ];
-    //list capSubsiquent = [ "busy is away", "can afk", "can fly", "can pose", "can sit", "can stand", "can wear", "detachable", "doll type", "pleasure doll", "pose silence" ];
+    //list capSubsiquent = [ "busy is away", "can afk", "can fly", "can pose", "can sit",
+    //                       "can stand", "can wear", "detachable", "doll type",
+    //                       "pleasure doll", "pose silence" ];
     //list rlv = [ "afk rlv", "base rlv", "collapse rlv", "pose rlv" ];
 
     list configs = [ "barefeet path", "helpless dolly", "quiet key",
-                     "busy is away", "can afk", "can fly", "can pose", "can sit", "can stand", "can wear", "detachable", "doll type", "pleasure doll", "pose silence", "auto tp", "outfitable", "initial time", "max time",
+                     "busy is away", "can afk", "can fly", "can pose", "can sit", "can stand",
+                     "can wear", "detachable", "doll type", "pleasure doll", "pose silence",
+                     "auto tp", "outfitable", "initial time", "max time",
                      "afk rlv", "base rlv", "collapse rlv", "pose rlv" ];
     list sendName = [ "barefeet", "helpless", "quiet",
-                     "busyIsAway", "canAfk", "canFly", "canPose", "canSit", "canStand", "canWear", "detachable", "dollType", "pleasureDoll", "poseSilence", "autoTP", "canDress", "timeLeftOnKey", "keyLimit",
+                     "busyIsAway", "canAfk", "canFly", "canPose", "canSit", "canStand",
+                     "canWear", "detachable", "dollType", "pleasureDoll", "poseSilence",
+                     "autoTP", "canDress", "timeLeftOnKey", "keyLimit",
                      "userAfkRLVcmd", "userBaseRLVcmd", "userCollapseRLVcmd", "userPoseRLVcmd" ];
 
     list internals = [ "wind time", "blacklist name", "controller name" ];
@@ -228,11 +234,8 @@ processConfiguration(string name, string value) {
     name = llToLower(name);
     if ((i = cdListElementP(configs,name)) != NOT_FOUND) {
         if (name == "initial time") {
-#ifdef DATABASE_BACKEND
-            if (!databaseOnline || offlineMode)
-#endif
-                value = (string)((float)value * SEC_TO_MIN);
-        } if (name == "max time") {
+            value = (string)((float)value * SEC_TO_MIN);
+        } else if (name == "max time") {
             value = (string)((float)value * SEC_TO_MIN);
         }
 
@@ -289,10 +292,10 @@ setGender(string gender) {
     lmSendConfig("pronounSheDoll", pronounSheDoll);
 }
 
-// PURPOSE: initConfiguration reads the Preferences notecard, if any -
+// PURPOSE: readPreferences reads the Preferences notecard, if any -
 //          and runs doneConfiguration if no notecard is found
 
-initConfiguration() {
+readPreferences() {
 #ifdef DEVELOPER_MODE
     ncStart = llGetTime();
 #endif
@@ -312,20 +315,13 @@ initConfiguration() {
     }
 }
 
-// PURPOSE: doneConfiguration is called from various places,
-//          and its real purpose is as yet unknown.
+// PURPOSE: doneConfiguration is called after preferences are done:
+//          that is, preferences have been read if they exist
 
 doneConfiguration(integer prefsRead) {
+    // prefsRead appears to be superfluous.... or IS it? Left in for now
 
-    if (prefsRead) {
-#ifdef DEVELOPER_MODE
-        sendMsg(dollID, "Preferences read in " + formatFloat(llGetTime() - ncStart, 2) + "s");
-#else
-        ;
-#endif
-    }
-
-    debugSay(3,"DEBUG-START","Configuration done - resetState = " + (string)resetState);
+    //debugSay(3,"DEBUG-START","Configuration done - resetState = " + (string)resetState);
 
     // Are we resetting? resetState will be either RESET_NORMAL or RESET_STARTUP - nonzero.
     // If so, then reset the key.
@@ -336,27 +332,15 @@ doneConfiguration(integer prefsRead) {
     //    cdResetKey();
     //}
 
-    // This is actually redundant, given the if statement above
     resetState = RESET_NONE;
 
-    debugSay(3,"DEBUG-START","Configuration done - starting init code 102 and 105");
+    debugSay(3,"DEBUG-START","Configuration done - starting init code 102 and 104 and 105");
     lmInitState(102);
+    lmInitState(104);
     lmInitState(105);
 
-    //startup = 2;
-
-//    initializationCompleted();
-//}
-
-//initializationCompleted() {
+    //initializationCompleted
     integer attached = cdAttached();
-
-    if (newAttach && !quiet && attached)
-        llSay(0, llGetDisplayName(llGetOwner()) + " is now a dolly - anyone may play with their Key.");
-
-#ifdef DEVELOPER_MODE
-    initTimer = llGetTime() * 1000;
-#endif
 
     if (dollyName == "") {
         string name = dollName;
@@ -369,17 +353,7 @@ doneConfiguration(integer prefsRead) {
 
     if (attached) cdSetKeyName(dollyName + "'s Key");
 
-    string msg = "Initialization completed" +
-#ifdef DEVELOPER_MODE
-                 " in " + formatFloat(initTimer, 2) + "ms" +
-#endif
-                 "; key ready";
-
-    sendMsg(dollID, msg);
-
-    //startup = 0;
-
-    debugSay(3,"DEBUG-START","Configuration done - starting init code 110");
+    debugSay(3,"DEBUG-START","doneConfiguration done - starting init code 110");
     lmInitState(110);
 
     if (cdNotecardExists(APPEARANCE_NC)) {
@@ -389,6 +363,18 @@ doneConfiguration(integer prefsRead) {
     }
 
     //llSetTimerEvent(10.0);
+    debugSay(3,"DEBUG-START","doneConfiguration done - exiting");
+
+    string msg = "Initialization completed" +
+#ifdef DEVELOPER_MODE
+                 " in " + formatFloat((llGetTime() - initTimer), 1) + "s" +
+#endif
+                 "; key ready";
+
+    sendMsg(dollID, msg);
+
+    if (newAttach && !quiet && attached)
+        llSay(0, llGetDisplayName(llGetOwner()) + " is now a dolly - anyone may play with their Key.");
 }
 
 #ifdef SIM_FRIENDLY
@@ -415,31 +401,27 @@ sleepMenu() {
 
 doRestart() {
 
-    integer loop;
+    integer n;
     string me = cdMyScriptName();
     string script;
 
-    llOwnerSay("Resetting scripts");
+    debugSay(2,"DEBUG-RESET","Resetting Key scripts");
 
     // Set all other scripts to run state and reset them
-    for (; loop < llGetInventoryNumber(INVENTORY_SCRIPT); loop++) {
-
-        script = llGetInventoryName(INVENTORY_SCRIPT, loop);
+    n = llGetInventoryNumber(INVENTORY_SCRIPT) - 1;
+    while(n >= 0) {
+        script = llGetInventoryName(INVENTORY_SCRIPT, n--);
         if (script != me) {
 
-            debugSay(4,"DEBUG-RESET","Resetting " + script);
+            debugSay(5,"DEBUG-RESET","Resetting " + script);
 
             cdRunScript(script);
             llResetOtherScript(script);
-
-            llSleep(5.0);
+            //llSleep(1.0);
         }
     }
 
     resetState = RESET_NONE;
-
-    // read list of attach points in DataAttachments (in numeric order)
-    ncResetAttach = llGetNotecardLine(NC_ATTACHLIST, cdAttached() - 1);
 }
 
 //========================================
@@ -469,14 +451,14 @@ default {
             databaseFinished = 1;
             if (!databaseOnline) {
                 llOwnerSay("Database not online...");
-                initConfiguration();
+                readPreferences();
             }
 #endif
 
-            if (llListFindList(ncPrefsLoadedUUID,[(string)llGetInventoryKey(NOTECARD_PREFERENCES)]) == NOT_FOUND) {
-                llOwnerSay("Didn't find original prefs");
-                initConfiguration();
-            }
+//          if (llListFindList(ncPrefsLoadedUUID,[(string)llGetInventoryKey(NOTECARD_PREFERENCES)]) == NOT_FOUND) {
+//              llOwnerSay("Didn't find original prefs");
+//              readPreferences();
+//          }
 #ifdef DATABASE_BACKEND
             else {
                 debugSay(2, "DEBUG", "Skipping preferences notecard as it is unchanged and settings were found in database.");
@@ -621,6 +603,11 @@ default {
     // STATE ENTRY
     //----------------------------------------
     state_entry() {
+
+#ifdef DEVELOPER_MODE
+        initTimer = llGetTime();
+#endif
+
         dollID = llGetOwner();
         dollName = llGetDisplayName(dollID);
 
@@ -634,8 +621,13 @@ default {
             cdResetKeyName();
         }
 
-        // WHen the start script resets... EVERYONE resets...
+        // WHen this script (Start.lsl) resets... EVERYONE resets...
         doRestart();
+
+        // read list of attach points in DataAttachments (in numeric order)
+        ncResetAttach = llGetNotecardLine(NC_ATTACHLIST, cdAttached() - 1);
+
+        readPreferences();
     }
 
     //----------------------------------------
@@ -674,7 +666,7 @@ default {
 #endif
 #endif
         llResetTime();
-        sendMsg(dollID, "Reattached, Initializing");
+        //sendMsg(dollID, "Reattached, Initializing");
     }
 
     //----------------------------------------
@@ -752,6 +744,9 @@ default {
                 lmSendConfig("ncPrefsLoadedUUID", llDumpList2String(llList2List((string)llGetInventoryKey(NOTECARD_PREFERENCES) + ncPrefsLoadedUUID, 0, 9),"|"));
                 lmInternalCommand("getTimeUpdates","",NULL_KEY);
 
+#ifdef DEVELOPER_MODE
+                sendMsg(dollID, "Preferences read in " + formatFloat(llGetTime() - ncStart, 2) + "s");
+#endif
                 doneConfiguration(PREFS_READ);
             }
             else {
@@ -808,16 +803,17 @@ default {
 #endif
 
                     // Start reading from first line (which is 0)
-                    ncLine = 0;
-                    ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ncLine);
-
+                    ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, (ncLine = 0));
                     return;
                 }
             }
 
+            // If it was the Preferences Notecard that changed, we don't
+            // reset...
+            //
             // What if inventory changes several times in a row?
-            llOwnerSay("Inventory modified restarting in 60 seconds.");
-            cdLinkMessage(LINK_THIS, 0, 301, "", llGetKey());
+            llOwnerSay("Key contents modified; restarting in 60 seconds.");
+            //cdLinkMessage(LINK_THIS, 0, 301, "", llGetKey());
             llSleep(60.0);
 
             cdResetKey();
@@ -847,10 +843,10 @@ default {
                 databaseOnline = 0;
 
                 llOwnerSay("No database in backend?");
-                initConfiguration();
+                readPreferences();
         }
 #else
-        //initConfiguration();
+        //readPreferences();
 #endif
 
         if (startup == 0) {
