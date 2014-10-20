@@ -155,8 +155,11 @@ list outfitsPage(list outfitList) {
     //return (llList2List(outfitsList, currentIndex, endIndex));
 }
 
+// Set the folder to use for clothing attach and detach
+// Should be current clothing folder
+
 setActiveFolder() {
-    string oldActive = activeFolder;
+    //string oldActive = activeFolder;
 
     // outfitsFolder defaults to "> Outfits" (no searches)
     if (outfitsFolder == "") {
@@ -169,7 +172,8 @@ setActiveFolder() {
     else activeFolder = outfitsFolder + "/" + clothingFolder;
 
     // if activeFolder changed, update configuration
-    if (activeFolder != oldActive) lmSendConfig("activeFolder", activeFolder);
+    //if (activeFolder != oldActive) lmSendConfig("activeFolder", activeFolder);
+    lmSendConfig("activeFolder", activeFolder);
 }
 
 rlvRequest(string rlv, integer channel) {
@@ -381,10 +385,10 @@ default {
             string value = cdListElement(split, 1);
             string c = cdGetFirstChar(name);
 
-            if (value == RECORD_DELETE) {
-                value = "";
-                split = [];
-            }
+            //if (value == RECORD_DELETE) {
+            //    value = "";
+            //    split = [];
+            //}
 
             if (name == "dialogChannel") {
                 dialogChannel = (integer)value;
