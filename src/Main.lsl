@@ -90,7 +90,7 @@ integer demoMode;
 //integer isTransformingKey;
 //integer visible = 1;
 integer quiet;
-integer RLVok;
+integer RLVok = -1;
 integer RLVck = 1;
 integer signOn;
 //integer takeoverAllowed;
@@ -282,6 +282,12 @@ default {
     // TOUCH START
     //----------------------------------------
     touch_start(integer num) {
+        if (RLVok == -1) {
+            llSay(PUBLIC_CHANNEL, dollName + "'s key clanks and clinks.... it doesn't seem to be ready yet.");
+            llOwnerSay("The state of RLV is not yet determined.");
+            return;
+        }
+
         integer i;
         for (i = 0; i < num; i++) {
             key id = llDetectedKey(i);
