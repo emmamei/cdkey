@@ -214,12 +214,12 @@ processConfiguration(string name, string value) {
     //                       "pleasure doll", "pose silence" ];
     //list rlv = [ "afk rlv", "base rlv", "collapse rlv", "pose rlv" ];
 
-    list configs = [ "barefeet path", "helpless dolly", "quiet key",
+    list configs = [ "barefeet path", "helpless dolly", "quiet key", "outfits path",
                      "busy is away", "can afk", "can fly", "can pose", "can sit", "can stand",
                      "can wear", "detachable", "doll type", "pleasure doll", "pose silence",
                      "auto tp", "outfitable", "initial time", "max time",
                      "afk rlv", "base rlv", "collapse rlv", "pose rlv" ];
-    list sendName = [ "barefeet", "helpless", "quiet",
+    list sendName = [ "barefeet", "helpless", "quiet", "outfitsFolder",
                      "busyIsAway", "canAfk", "canFly", "canPose", "canSit", "canStand",
                      "canWear", "detachable", "dollType", "pleasureDoll", "poseSilence",
                      "autoTP", "canDress", "timeLeftOnKey", "keyLimit",
