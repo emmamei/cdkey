@@ -41,15 +41,19 @@ key transformerId;
 integer readLine;
 integer readingNC;
 string typeNotecard;
+
+float outfitsSearchTimer;
 integer outfitsFolderItem;
 integer outfitsFolderTestRetries;
+string outfitsFolderTest;
+string outfitsFolder;
+
 integer findTypeFolder;
+
 integer rlvHandle;
 integer useTypeFolder;
 integer transformedViaMenu;
 string transform;
-string outfitsFolderTest;
-string outfitsFolder;
 string typeFolder;
 
 integer dialogChannel;
@@ -93,45 +97,53 @@ setDollType(string choice, integer automated) {
 
     // Convert state name to Title case
     stateName = cdGetFirstChar(llToUpper(stateName)) + cdButFirstChar(llToLower(stateName));
+    if (stateName == currentState)
+        return;
 
-    clothingprefix = TYPE_FLAG + stateName;
     currentPhrases = [];
     readLine = 0;
     typeNotecard = TYPE_FLAG + stateName;
+    clothingprefix = TYPE_FLAG + stateName;
 
     // Look for Notecard for the Doll Type and start reading it if showPhrases is enabled
     //
     if (showPhrases) {
         if (llGetInventoryType(typeNotecard) == INVENTORY_NOTECARD) {
-            // FIXME: This is an infinite loop!!
-            kQuery = llGetNotecardLine(typeNotecard,++readLine);
+
+            kQuery = llGetNotecardLine(typeNotecard,readLine++);
+
             debugSay(2,"DEBUG-DOLLTYPE","Found notecard: " + typeNotecard);
         }
+#ifdef DEVELOPER_MODE
+        else {
+            debugSay(2,"DEBUG-DOLLTYPE","Found no notecard - looked for " + typeNotecard);
+        }
+#endif
     }
 
-    // Are we changing types?
-    if (stateName != currentState) {
-        // Dont lock if transformation is automated
-        if (automated) minMinutes = 0;
-        else minMinutes = TRANSFORM_LOCK_TIME;
+    // Dont lock if transformation is automated
+    if (automated) minMinutes = 0;
+    else minMinutes = TRANSFORM_LOCK_TIME;
 
-        typeFolder = "";
+    typeFolder = "";
 
-        currentState = stateName;
-        lmSendConfig("dollType", stateName);
+    currentState = stateName;
+    lmSendConfig("dollType", stateName);
 
-        cdPause();
+    cdPause();
 
-        if (!quiet) cdChat(dollName + " has become a " + stateName + " Doll.");
-        else llOwnerSay("You have become a " + stateName + " Doll.");
+    if (!quiet) cdChat(dollName + " has become a " + stateName + " Doll.");
+    else llOwnerSay("You have become a " + stateName + " Doll.");
 
-        if (!RLVok) { lmSendToAgentPlusDoll("Because RLV is disabled, Dolly does not have the capability to change outfit.",transformerId); };
+    // This is being done too early...
+    //if (!RLVok) { lmSendToAgentPlusDoll("Because RLV is disabled, Dolly does not have the capability to change outfit.",transformerId); };
 
-        //typeFolder = "";
-        outfitsFolderTestRetries = 0;
-        outfitsFolderItem = 1;
-        llSetTimerEvent(15.0);
-    }
+    //typeFolder = "";
+    outfitsFolderTestRetries = 0;
+    outfitsFolderItem = 1;
+
+    outfitsSearchTimer = llGetTime();
+    llSetTimerEvent(15.0);
 }
 
 reloadTypeNames() {
@@ -211,7 +223,7 @@ default {
     // ON REZ
     //----------------------------------------
     on_rez(integer iParam) {
-        dbConfig = 0;
+        //dbConfig = 0;
         //startup = 2;
         debugSay(2,"DEBUG-TRANSFORM","Done with on_rez...");
     }
@@ -220,27 +232,34 @@ default {
     // CHANGED
     //----------------------------------------
     changed(integer change) {
-        if ((change & CHANGED_INVENTORY)     ||
-            (change & CHANGED_ALLOWED_DROP)) {
-
+        if (change & CHANGED_ALLOWED_DROP)
             reloadTypeNames();
-        }
+
+        // if CHANGED_INVENTORY
+        //    then Start.lsl will be Resetting the Key
+        //    thus: ignore and wait for reset
+        //
+        //if (change & CHANGED_INVENTORY)
+        //    reloadTypeNames();
     }
 
     //----------------------------------------
     // TIMER
     //----------------------------------------
     timer() {
-        list outfitsMasterFolders = [ ">&&Outfits", "Outfits", ">&&Dressup", "Dressup" ];
 
-        // Reading Notecard: happens first
-        //if (readingNC) {
-        //    debugSay(5,"DEBUG-TRANSFORM","Reading notecard " + TYPE_FLAG + currentState + " line number " + (string)readLine);
-        //    kQuery = llGetNotecardLine(TYPE_FLAG + currentState,readLine);
-        //}
-        // Searching for Outfits folders (but only if RLV is ok)
-        //else
+        // Nothing happens unless RLV is ok...
+        //
+        // Checks happen when:
+        //    1. rlvChannel is good and RLV is ok...
+        //    2. Doll Type changes
+        //    3. Link message 350: RLVok and/or Reset
+        //
+        // Everything related to Outfits Changes happens here (and in the listener)
+
         if (RLVok) {
+            list outfitsMasterFolders = [ ">&&Outfits", "Outfits", ">&&Dressup", "Dressup" ];
+
             debugSay(5,"DEBUG-TRANSFORM","Searching for outfits folders... ");
             //debugSay(5,"DEBUG-TRANSFORM",">>outfitsFolderItem = " + (string)outfitsFolderItem);
             //debugSay(5,"DEBUG-TRANSFORM",">>outfitsFolder = " + (string)outfitsFolder);
@@ -346,7 +365,7 @@ default {
             // lmSendConfig("isTransformingKey", (string)(isTransformingKey = 1));
 
             configured = 1;
-            if(stateName != currentState) setDollType(stateName, AUTOMATED);
+            if (stateName != currentState) setDollType(stateName, AUTOMATED);
         }
 
         else if (code == 104) {
@@ -421,16 +440,21 @@ default {
                         rlvChannel = ~dialogChannel + 1;
                     }
 
-                    //if (name == "RLVok") llOwnerSay("got RLVok");
-                    //else if (name == "dialogChannel") llOwnerSay("got dialogChannel");
+
+                    // If RLV is ok AND rlvChannel is set... then reset
+                    // the rlvChannel and search for OutfitsFolder
 
                     if (RLVok) {
                         if (rlvChannel) {
-                            //llOwnerSay("rlvChannel reset...");
+                            //
+                            // Now we have a result of RLV checks - and if it is Ok,
+                            // startup the RLV channel and search for folders
+                            //
                             if (!rlvHandle) llListenRemove(rlvHandle);
                             rlvHandle = cdListenAll(rlvChannel);
+
+                            outfitsSearchTimer = llGetTime();
                             llSetTimerEvent(15.0);
-                            //llOwnerSay("rlvChannel reset done...");
                         }
                     }
                 }
@@ -470,6 +494,8 @@ default {
                 if (rlvChannel) {
                     if (rlvHandle) llListenRemove(rlvHandle);
                     rlvHandle = cdListenAll(rlvChannel);
+
+                    outfitsSearchTimer = llGetTime();
                     llSetTimerEvent(15.0);
                 }
             }
@@ -611,64 +637,82 @@ default {
     //----------------------------------------
     listen(integer channel, string name, key id, string choice) {
 
-        debugSay(2,"DEBUG-TRANSFORM","Listener tickled: " + choice + "/" + (string)id + "/" + (string)name);
-        // llOwnerSay("choice = " + choice); // DEBUG:
-        // llOwnerSay("clothing prefix = " + clothingprefix); // DEBUG:
-        // llOwnerSay("    substring = " + (string)llGetSubString(choice, -llStringLength(clothingprefix), STRING_END)); // DEBUG:
-        // llOwnerSay("outfitsFolderTest = " + outfitsFolderTest); // DEBUG:
-        // llOwnerSay("    substring = " + (string)llGetSubString(choice, -llStringLength(outfitsFolderTest), STRING_END)); // DEBUG:
+        // this will always result in true........... CURRENTLY
+        if (channel == rlvChannel) {
+            // This is the output from a @findfolder RLV command...
+            //
+            // All that is known is the data we are receiving - we can ensure that
+            // only @findfolder is being run - but WHY was it run? For the outfits folder?
+            // For the clothing folder? We are testing for the existance of... what?
 
-        debugSay(6,"DEBUG-TRANSFORM","Listen processing...");
-        // Does choice end in outfitsFolderTest path?
-        if ((outfitsFolder == "") && (cdStringEndMatch(choice,outfitsFolderTest))) {
-            debugSay(6,"DEBUG-TRANSFORM","Outfits folder?");
-            outfitsFolder = choice + "/";
-            lmSendConfig("outfitsFolder", outfitsFolder);
-            if (typeFolder != "") {
-                outfitsFolderItem = 0;
-                cdStopTimer();
-            }
-            llOwnerSay("Your outfits folder is '" + outfitsFolder + "'");
-            outfitsFolderTestRetries = 0;
-        }
+            //debugXay(2,"DEBUG-TRANSFORM","Listener tickled -- " + choice + ":" + (string)id + ":" + (string)name);
+            // llOwnerSay("choice = " + choice); // DEBUG:
+            // llOwnerSay("clothing prefix = " + clothingprefix); // DEBUG:
+            // llOwnerSay("    substring = " + (string)llGetSubString(choice, -llStringLength(clothingprefix), STRING_END)); // DEBUG:
+            // llOwnerSay("outfitsFolderTest = " + outfitsFolderTest); // DEBUG:
+            // llOwnerSay("    substring = " + (string)llGetSubString(choice, -llStringLength(outfitsFolderTest), STRING_END)); // DEBUG:
 
-        // Does choice end in clothing prefix?
-        else if ((typeFolder == "") && (cdStringEndMatch(choice,clothingprefix))) {
-            debugSay(6,"DEBUG-TRANSFORM","Clothing prefix found");
-            typeFolder = choice;
-            outfitsFolderItem = 0;
+            debugSay(6,"DEBUG-TRANSFORM","Checking (findfolder) search results: " + choice);
+            // Does the result contain the outfitsFolder - that is, are we trying to find
+            // the outfitsFolder?
+            if (outfitsFolder == "") {
+                if (cdStringEndMatch(choice,outfitsFolderTest)) {
+                    outfitsFolder = choice + "/";
+                    lmSendConfig("outfitsFolder", outfitsFolder);
+                    debugSay(6,"DEBUG-TRANSFORM","Outfits folder found: " + choice);
 
-            cdStopTimer();
-            //integer n = llStringLength(outfitsFolder);
+                    if (typeFolder != "") {
+                        outfitsFolderItem = 0;
+                        cdStopTimer();
+                    }
 
-            //if (llGetSubString(typeFolder, 0, n - 1) != outfitsFolder)
-            if (llGetSubString(typeFolder, 0, llStringLength(outfitsFolder) - 1) != outfitsFolder) {
-                llOwnerSay("Found a matching type folder in '" + typeFolder + "' but it is not located within your outfits folder '" + outfitsFolder + "'" +
-                           "please make sure that the '" + TYPE_FLAG + stateName + "' folder is inside of '" + outfitsFolder + "'");
-                typeFolder = "";
-                useTypeFolder = NO;
-            }
-            else {
-                typeFolder = llDeleteSubString(typeFolder, 0, llStringLength(outfitsFolder));
-                //typeFolder = llGetSubString(typeFolder, n, STRING_END);
-                llOwnerSay("Your outfits folder is now " + outfitsFolder);
-                llOwnerSay("Your type folder is now " + outfitsFolder + "/" + typeFolder);
-                useTypeFolder = YES;
+                    llOwnerSay("Your outfits folder is '" + outfitsFolder + "'");
+                    outfitsFolderTestRetries = 0;
+                }
             }
 
-            lmSendConfig("typeFolder", typeFolder);
-            lmSendConfig("outfitsFolder", outfitsFolder);
-            lmSendConfig("useTypeFolder", (string)useTypeFolder);
+            // Does result contain the clothingprefix -- that is, are we trying to find
+            // the outfitsFolder?
+            else if (typeFolder == "") {
+                if (cdStringEndMatch(choice,clothingprefix)) {
+                    debugSay(6,"DEBUG-TRANSFORM","Clothing prefix folder found: " + choice);
+                    typeFolder = choice;
+                    outfitsFolderItem = 0;
 
-            cdPause();
+                    cdStopTimer();
+                    //integer n = llStringLength(outfitsFolder);
 
-            if (transformedViaMenu) {
-                debugSay(6,"DEBUG-TRANSFORM","Activating random dress...");
-                lmInternalCommand("randomDress", "", NULL_KEY);
-                transformedViaMenu = NO; // default setting
+                    // Is the clothing prefix IN the outfitsFolder? Has to be or.... no good
+                    if (llGetSubString(typeFolder, 0, llStringLength(outfitsFolder) - 1) != outfitsFolder) {
+                        llOwnerSay("Found a matching type folder in '" + typeFolder + "' but it is not located within your outfits folder '" + outfitsFolder + "'" +
+                                   "please make sure that the '" + TYPE_FLAG + stateName + "' folder is inside of '" + outfitsFolder + "'");
+                        typeFolder = "";
+                        useTypeFolder = NO;
+                    }
+                    else {
+                        typeFolder = llDeleteSubString(typeFolder, 0, llStringLength(outfitsFolder));
+                        //typeFolder = llGetSubString(typeFolder, n, STRING_END);
+                        llOwnerSay("Your outfits folder is now " + outfitsFolder);
+                        llOwnerSay("Your type folder is now " + outfitsFolder + "/" + typeFolder);
+                        useTypeFolder = YES;
+                    }
+
+                    lmSendConfig("typeFolder", typeFolder);
+                    lmSendConfig("outfitsFolder", outfitsFolder);
+                    lmSendConfig("useTypeFolder", (string)useTypeFolder);
+
+                    debugSay(2,"DEBUG-OUTFITS","Outfits folder search took " + formatFloat((llGetTime() - outfitsSearchTimer),2) + "s");
+                    cdPause();
+
+                    if (transformedViaMenu) {
+                        debugSay(6,"DEBUG-TRANSFORM","Activating random dress...");
+                        lmInternalCommand("randomDress", "", NULL_KEY);
+                        transformedViaMenu = NO; // default setting
+                    }
+
+                    outfitsFolderTestRetries = 0;
+                }
             }
-
-            outfitsFolderTestRetries = 0;
         }
     }
 
@@ -679,7 +723,7 @@ default {
 
         if (query_id == kQuery) {
             if (data == EOF) {
-                llOwnerSay("Read " + (string)readLine + " lines from " + typeNotecard);
+                debugSay(2,"DEBUG-TRANSFORM","Read " + (string)readLine + " lines from " + typeNotecard);
                 kQuery = NULL_KEY;
                 readLine = 0;
             }
