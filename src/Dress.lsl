@@ -761,9 +761,10 @@ default {
                     //
                     // This (sort of) odd sequence imposes short-cut operations
 
-                         if (llToLower(itemname) == "~normalself") lmSendConfig("normalselfFolder", (normalselfFolder = activeFolder + "/~normalself"));
-                    else if (llToLower(itemname) == "~nude")       lmSendConfig("nudeFolder",       (nudeFolder =       activeFolder + "/~nude"));
-                    else if (!isHiddenItem(prefix)) {
+                    //     if (llToLower(itemname) == "~normalself") lmSendConfig("normalselfFolder", (normalselfFolder = activeFolder + "/~normalself"));
+                    //else if (llToLower(itemname) == "~nude")       lmSendConfig("nudeFolder",       (nudeFolder =       activeFolder + "/~nude"));
+                    //else
+                    if (!isHiddenItem(prefix)) {
                              if (!isTransformingItem(prefix)) {
                                  if (!isGroupItem(prefix)) {
                                      if (!(cdOutfitRating(itemname) > simrating)) {
