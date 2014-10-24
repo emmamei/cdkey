@@ -514,13 +514,21 @@ default
                                    "a doll. So feel free to use these options.\n";
                         }
 
-                        // Can the doll be dressed? Add menu button
                         if (RLVok == 1) {
+                            // Can the doll be dressed? Add menu button
+
                             if (isDoll) {
                                 if (canDressSelf && !wearLock) menu += "Outfits...";
                             } else {
                                 if (canDress) menu += "Outfits...";
                             }
+
+                            if (isController) {
+                                menu += "RLV Off";
+                            }
+                        } else {
+                            if (isDoll || isController)
+                                menu += "RLV On";
                         }
 
                         // Can the doll be transformed? Add menu button
