@@ -74,8 +74,8 @@ string clothingFolder; // This contains clothing to be worn
 string outfitsFolder;  // This contains folders of clothing to be worn
 string activeFolder; // This is the lookup folder to search
 string typeFolder; // This is the folder we want for our doll type
-string normalselfFolder; // This is the ~normalself we are using
-string nudeFolder; // This is the ~nude we are using
+string normalselfFolder = "~normalself"; // This is the ~normalself we are using
+string nudeFolder = "~nude"; // This is the ~nude we are using
 
 //integer listen_id_2555;
 integer listen_id_2665;
@@ -844,8 +844,8 @@ default {
                 itemname = cdListElement(outfitsList, n);
                 prefix = cdGetFirstChar(itemname);
 
-                     if (llToLower(itemname) == "~normalself") lmSendConfig("normalselfFolder", (normalselfFolder = activeFolder + "/normalself"));
-                else if (llToLower(itemname) == "~nude")       lmSendConfig("nudeFolder",       (nudeFolder       = activeFolder + "/nude"));
+                //     if (llToLower(itemname) == "~normalself") lmSendConfig("normalselfFolder", (normalselfFolder = activeFolder + "/normalself"));
+                //else if (llToLower(itemname) == "~nude")       lmSendConfig("nudeFolder",       (nudeFolder       = activeFolder + "/nude"));
 
                 if (isHiddenItem(prefix) ||
                     isGroupItem(prefix) ||
