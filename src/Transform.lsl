@@ -57,6 +57,7 @@ integer findTypeFolder;
 
 integer rlvHandle;
 integer rlvHandle2;
+integer rlvHandle3;
 integer useTypeFolder;
 integer transformedViaMenu;
 string transform;
@@ -65,6 +66,7 @@ string typeFolder;
 integer dialogChannel;
 integer rlvChannel;
 integer rlvChannel2;
+integer rlvChannel3;
 
 integer minMinutes;
 integer configured;
@@ -213,7 +215,7 @@ runTimedTriggers() {
 
 folderSearch(string folder, integer channel) {
 
-    debugSay(2,"DEBUG-FOLDERSEARCH","folderSearch: Searching within " + folder);
+    debugSay(2,"DEBUG-FOLDERSEARCH","folderSearch: Searching within \"" + folder + "\"");
 
     // The folder search starts as a RLV @getinv call...
     //
@@ -296,17 +298,18 @@ default {
         // typeFolderExpected = Computed but untested typeFolder
 
         if (RLVok) {
+            debugSay(2,"DEBUG-SEARCHING","Timer tripped at " + formatFloat(llGetTime() - outfitsSearchTimer,1) + "s");
             if (outfitSearching == 0)
                 llSetTimerEvent(0.0);
             else {
                 if (outfitsFolder == "") {
                     if (outfitSearchTries++ < MAX_SEARCH_RETRIES)
-                        folderSearch("",rlvChannel);
-                }
-
-                if (typeFolder == "") {
-                    if (typeSearchTries++ < MAX_SEARCH_RETRIES)
-                        folderSearch(outfitsFolder,rlvChannel2);
+                        folderSearch("",rlvChannel3);
+                } else {
+                    if (typeFolder == "" && typeFolderExpected != "") {
+                        if (typeSearchTries++ < MAX_SEARCH_RETRIES)
+                            folderSearch(outfitsFolder,rlvChannel2);
+                    }
                 }
             }
         }
@@ -438,6 +441,7 @@ default {
                         dialogChannel = (integer)value;
                         rlvChannel = ~dialogChannel + 1;
                         rlvChannel2 = rlvChannel + 1;
+                        rlvChannel3 = rlvChannel + 2;
                     }
 
 
@@ -454,6 +458,8 @@ default {
                             rlvHandle = cdListenAll(rlvChannel);
                             if (!rlvHandle2) llListenRemove(rlvHandle2);
                             rlvHandle2 = cdListenAll(rlvChannel2);
+                            if (!rlvHandle3) llListenRemove(rlvHandle3);
+                            rlvHandle3 = cdListenAll(rlvChannel3);
 
                             if (outfitsFolder == "" && !outfitSearching) {
                                 outfitSearching++;
@@ -467,7 +473,7 @@ default {
                                     outfitSearchTries = 0;
 
                                     outfitsSearchTimer = llGetTime();
-                                    folderSearch(outfitsFolder,rlvChannel);
+                                    folderSearch(outfitsFolder,rlvChannel3);
                                 }
                             }
                         }
@@ -511,6 +517,8 @@ default {
                     rlvHandle = cdListenAll(rlvChannel);
                     if (rlvHandle2) llListenRemove(rlvHandle2);
                     rlvHandle2 = cdListenAll(rlvChannel2);
+                    if (!rlvHandle3) llListenRemove(rlvHandle3);
+                    rlvHandle3 = cdListenAll(rlvChannel3);
 
                     if (outfitsFolder == "" && !outfitSearching) {
                         outfitSearching++;
@@ -524,7 +532,7 @@ default {
                             outfitSearchTries = 0;
 
                             outfitsSearchTimer = llGetTime();
-                            folderSearch(outfitsFolder,rlvChannel);
+                            folderSearch(outfitsFolder,rlvChannel3);
                         }
                     }
                 }
@@ -670,7 +678,7 @@ default {
         // if a @getinv call succeeds, then we are here - looking for the
         // folders we want...
         //
-        if (channel == rlvChannel) {
+        if (channel == rlvChannel3) {
             debugSay(2,"DEBUG-LISTEN","Channel #1 received (outfitsFolder = \"" + outfitsFolder + "\"): " + choice);
 
             list folderList = llCSV2List(choice);
@@ -690,19 +698,24 @@ default {
                     lmSendConfig("typeFolder", typeFolder);
                     lmSendConfig("useTypeFolder", (string)useTypeFolder);
 
-                    // did the typeFolder search finish before we did? Then we're done...'
-                    if (typeFolder != "") {
-                        debugSay(2,"DEBUG-SEARCHING","Outfits search completed in " + formatFloat(llGetTime() - outfitsSearchTimer,1) + "s");
-                        llSetTimerEvent(0.0);
-                        outfitSearching = 0;
+                    debugSay(2,"DEBUG-SEARCHING","typeFolder = \"" + typeFolder + "\" and typeFolderExpected = \"" + typeFolderExpected + "\"");
+                    // Search for a typeFolder...
+                    if (typeFolder == "" && typeFolderExpected != "") {
+                        debugSay(2,"DEBUG-SEARCHING","Outfit folder found at " + formatFloat(llGetTime() - outfitsSearchTimer,1) + "s; searching for typeFolder");
+                        // outfitsFolder search is done: search for typeFolder
+                        folderSearch(outfitsFolder,rlvChannel2);
                     }
                 }
             }
 
-            if (~llListFindList(folderList, (list)"~nude"))        lmSendConfig("nudeFolder",outfitsFolder + "/~nude");
-            else llOwnerSay("WARN: No nude (~nude) folder found in your outfits folder...");
-            if (~llListFindList(folderList, (list)"~normalself"))  lmSendConfig("normalselfFolder",outfitsFolder + "/~normalself");
-            else llOwnerSay("ERROR: No normal self (~normalself) folder found in your outfits folder...");
+            if (~llListFindList(folderList, (list)"~nude"))        lmSendConfig("nudeFolder","~nude");
+#ifdef DEVELOPER_MODE
+            else llOwnerSay("WARN: No nude (~nude) folder found with your outfits folder...");
+#endif
+            if (~llListFindList(folderList, (list)"~normalself"))  lmSendConfig("normalselfFolder","~normalself");
+#ifdef DEVELOPER_MODE
+            else llOwnerSay("WARN: No normal self (~normalself) folder found with your outfits folder...");
+#endif
         }
         else if (channel == rlvChannel2) {
             debugSay(2,"DEBUG-LISTEN","Channel #2 received (\"" + typeFolder + "\"): " + choice);
@@ -730,8 +743,18 @@ default {
 
                     outfitSearching = 0;
                     llSetTimerEvent(0.0);
+                    llListenRemove(rlvHandle3);
                     debugSay(2,"DEBUG-SEARCHING","Outfits search completed in " + formatFloat(llGetTime() - outfitsSearchTimer,1) + "s");
                     // We're done at this stage
+
+                    // is this redundant or prudent?
+                    lmSendConfig("nudeFolder","");
+                    lmSendConfig("normalselfFolder","");
+
+                    if (~llListFindList(folderList, (list)"~nude"))        lmSendConfig("nudeFolder",outfitsFolder + "/~nude");
+                    else llOwnerSay("WARN: No nude (~nude) folder found in your outfits folder...");
+                    if (~llListFindList(folderList, (list)"~normalself"))  lmSendConfig("normalselfFolder",outfitsFolder + "/~normalself");
+                    else llOwnerSay("WARN: No normal self (~normalself) folder found in your outfits folder...");
                 }
             }
         }
