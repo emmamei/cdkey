@@ -313,12 +313,13 @@ ifPermissions() {
         // start over...
         if (grantorID != NULL_KEY && grantorID != dollID) {
             cdResetKey();
-            llSleep(10.0);
         }
 
-        if ((permMask & PERMISSION_MASK) != PERMISSION_MASK)
-            // FIXME: llRequestPermissions runs this function: means a double run if PERMISSION_MASK is off
+        if ((permMask & PERMISSION_MASK) != PERMISSION_MASK) {
+            // FIXME: llRequestPermissions runs this function: means a double run if PERMISSION_MASK is off-kilter
             llRequestPermissions(dollID, PERMISSION_MASK);
+            return;
+            }
 
         // only way to get here is grantorID is dollID or NULL_KEY
         if (grantorID == dollID) {
@@ -780,6 +781,7 @@ default {
             }
             else if (cmd == "doCheckRLV") {
                 doCheckRLV();
+                lmSendConfig("RLVok",(string)RLVok);
             }
             else if (cmd == "TP") {
                 string lm = llList2String(split, 0);
@@ -803,9 +805,20 @@ default {
             if (llGetSubString(choice,0,3) == "Wind") return;
             else if (choice == MAIN) return;
 
-            else if (choice == "*RLV On*") {
-                llOwnerSay("Trying to enable RLV, you must have a compatible viewer and the RLV setting enabled for this to work.");
-                checkRLV();
+            else if (choice == "RLV Off") {
+                RLVck = 0;
+                RLVok = 0;
+                rlvAPIversion = "";
+                RLVstarted = 0;
+
+#ifdef DEVELOPER_MODE
+                myPath = "";
+#endif
+                lmSendConfig("RLVok",(string)RLVok);
+            }
+            else if (choice == "RLV On") {
+                doCheckRLV();
+                lmSendConfig("RLVok",(string)RLVok);
             }
 #ifdef ADULT_MODE
             else if (subchoice == "Strip") {
@@ -826,15 +839,15 @@ default {
                 ];
                 integer i;
 
-                if ((i = llListFindList(parts, [part])) != NOT_FOUND) {
-                    cdLoadData(RLV_NC, llList2Integer(parts, i));
-                } else if (part = "ALL") {
-                    i = -llGetListLength(parts);
-
-                    do {
-                        cdLoadData(RLV_NC, llList2Integer(parts, i));
-                    } while (++i);
-                }
+//              if ((i = llListFindList(parts, [part])) != NOT_FOUND) {
+//                  cdLoadData(RLV_NC, llList2Integer(parts, i));
+//              } else if (part = "ALL") {
+//                  i = -llGetListLength(parts);
+//
+//                  do {
+//                      cdLoadData(RLV_NC, llList2Integer(parts, i));
+//                  } while (++i);
+//              }
 
                 // This allows an avi to have "barefeet" and "shoes" simultaneously:
                 // removing shoes puts on barefeet
