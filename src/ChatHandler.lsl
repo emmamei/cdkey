@@ -450,18 +450,18 @@ default
                     } else 
 #endif
                     // Try a hard RLV reinitialzation
-                    if (choice == "rlvinit") {
-                        llSetScriptState("StatusRLV", 1);
-                        llResetOtherScript("StatusRLV");
-                        llResetOtherScript("Avatar");
-
-                        llSleep(1.0);
+//                  if (choice == "rlvinit") {
+//                      llSetScriptState("StatusRLV", 1);
+//                      llResetOtherScript("StatusRLV");
+//                      llResetOtherScript("Avatar");
+//
+//                      llSleep(1.0);
                         //cdRefreshVars();
                         //llSleep(5.0);
                         // Inject menu click
 
-                        cdMenuInject("*RLV On*",llGetDisplayName(dollID), id);
-                    }
+//                      cdMenuInject("*RLV On*",llGetDisplayName(dollID), id);
+//                  }
                 }
 
                 // Commands only for Doll or Controllers
@@ -671,7 +671,7 @@ default
                         // toggles demo mode
                         lmSendConfig("demoMode", (string)(demoMode = !demoMode));
 
-                        string s = "Key now ";
+                        string s = "Dolly's Key is now ";
                         if (demoMode) {
                             if (timeLeftOnKey > DEMO_LIMIT) {
                                 lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = DEMO_LIMIT));
@@ -686,6 +686,7 @@ default
 
                             s += "running normally: " + (string)llRound(timeLeftOnKey / SEC_TO_MIN) + " of " + (string)llFloor(keyLimit / SEC_TO_MIN) + " minutes remaining.";
                         }
+                        llOwnerSay(s);
                     }
                     else if (choice == "listposes") {
                         integer n = llGetInventoryNumber(INVENTORY_ANIMATION);
