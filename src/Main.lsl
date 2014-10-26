@@ -167,10 +167,16 @@ ifPermissions() {
 #define JAMMED 2
 
 collapse(integer newCollapseState) {
-    //if (collapsed == newCollapseState) return; // Make repeated calls fast and unnecessary
 
     // newCollapseState describes state being entered;
     // collapsed describes current state
+    //
+    // We should be able to reject calls that change nothing - but
+    // processing can be repeated and nothing bad should happen - and
+    // that is how things acted before. Leave this code commented for now.
+    //
+    //if (collapsed == newCollapseState) return; // Make repeated calls fast and unnecessary
+
     debugSay(3,"DEBUG-COLLAPSE","Entering new collapse state (" + (string)newCollapseState + ") with time left of " + (string)timeLeftOnKey);
 
     if (newCollapseState == NOT_COLLAPSED) {
@@ -182,7 +188,7 @@ collapse(integer newCollapseState) {
             lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0.0));
         }
         else if (newCollapseState == JAMMED) {
-            // Time span = 120.0 (two minutes) to 300.0 (five minutes)
+            // Time span (random) = 120.0 (two minutes) to 300.0 (five minutes)
             lmSendConfig("timeToJamRepair", (string)(timeToJamRepair = llGetTime() + (llFrand(180.0) + 120.0)));
         }
 
@@ -194,11 +200,17 @@ collapse(integer newCollapseState) {
     }
 
     // If not jammed, reset time to Jam Repair
-    if (timeToJamRepair != 0.0) {
-        if (newCollapseState != JAMMED) {
+    if (newCollapseState != JAMMED) {
+        if (timeToJamRepair != 0.0) {
             lmSendConfig("timeToJamRepair", (string)(timeToJamRepair = 0.0));
         }
     }
+
+    // The three (four) pillars of being collapsed:
+    //     1. collapsed != 0
+    //     2. collapseTime is non-zero
+    //     3. internalCommand "collapse" generated
+    //    (4. timeLeftOnKey == 0 .... normally)
 
     lmSendConfig("collapsed", (string)(collapsed = newCollapseState));
 
@@ -207,7 +219,12 @@ collapse(integer newCollapseState) {
 
     lmInternalCommand("collapse", (string)collapsed, llGetKey());
 
-    llSetTimerEvent(0.022);
+    // Note that this sets the Timer Event to the lowest possible
+    // practical value - and the proper value is set during the timer
+    // event: so we want to finish the timer event before it triggers
+    // a second time...
+    //
+    llSetTimerEvent(1);
 }
 
 //========================================
@@ -232,9 +249,9 @@ default {
     }
 
     on_rez(integer start) {
-        llSetTimerEvent(0.0);
-        timerStarted = 0;
-        configured = 0;
+        timerStarted = 1;
+        configured = 1;
+        llSetTimerEvent(30.0);
     }
 
     //----------------------------------------
@@ -299,7 +316,8 @@ default {
     //----------------------------------------
     // TIMER
     //----------------------------------------
-    timer() {   // called every timeinterval (tick)
+    timer() {
+
         // Doing the following every tick:
         //    1. Are we checking for RLV? Reset...
         //    2. Carrier still present (in region)?
@@ -380,10 +398,14 @@ default {
 
 #define cdSetHovertext(x,c) if(primText!=x)llSetText(x,c,1.0)
 
-             if (collapsed) { cdSetHovertext("Disabled Dolly!",        (<1.0,0.0,0.0>)); }
-        else if (afk)       { cdSetHovertext(dollType + " Doll (AFK)", (<1.0,1.0,0.0>)); }
-        else if (signOn)    { cdSetHovertext(dollType + " Doll",       (<1.0,1.0,1.0>)); }
-        else                { cdSetHovertext("",                       (<1.0,1.0,1.0>)); }
+#define RED    <1.0,0.0,0.0>
+#define YELLOW <1.0,1.0,0.0>
+#define WHITE  <1.0,1.0,1.0>
+
+             if (collapsed) { cdSetHovertext("Disabled Dolly!",        ( RED    )); }
+        else if (afk)       { cdSetHovertext(dollType + " Doll (AFK)", ( YELLOW )); }
+        else if (signOn)    { cdSetHovertext(dollType + " Doll",       ( WHITE  )); }
+        else                { cdSetHovertext("",                       ( WHITE  )); }
 
         //--------------------------------
         // WINDING DOWN.....
