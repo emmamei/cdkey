@@ -47,7 +47,7 @@ cdLinkMessage(integer target, integer opt, integer code, string data, key id) {
 #define lmDBdata(name,value)				cdLinkMessage(LINK_THIS,0,300,name+"|"+value,DATABASE_ID)
 #define lmInternalCommand(command,parameter,id)         cdLinkMessage(LINK_THIS,0,305,command+"|"+parameter,id)
 #define lmStrip(part)                                   cdLinkMessage(LINK_THIS,0,305,"strip"+"|"+part,id)
-#define lmRunRLV(command)                               cdLinkMessage(LINK_THIS,0,315,"|"+command,llGetKey())
+#define lmRunRLV(command)                               cdLinkMessage(LINK_THIS,0,315,__SHORTFILE__+"|"+command,llGetKey())
 #define lmRunRLVas(vmodule,command)                     cdLinkMessage(LINK_THIS,0,315,vmodule+"|"+command,llGetKey())
 #define lmConfirmRLV(forscript,command)                 cdLinkMessage(LINK_THIS,0,320,forscript+"|"+command,llGetKey())
 #define lmRLVreport(active,apistring,apiversion)        cdLinkMessage(LINK_THIS,0,350,(string)active+"|"+apistring+"|"+(string)apiversion,llGetKey())
