@@ -32,6 +32,7 @@
 #define cdSetKeyName(a) llSetObjectName(a)
 #define cdResetKeyName() llSetObjectName(PACKAGE_NAME + " " + __DATE__)
 
+#ifdef NO_STARTUP
 // This isn't great - but at least it's up here where it can be maintained
 // Note, too, that Start is missing - because that's THIS script...
 //
@@ -39,6 +40,7 @@
 // still - so not necessarily good to add here.
 list scriptList = [ "Aux", "Avatar", "ChatHandler", "Dress", "Main", "MenuHandler",
                     "StatusRLV", "Transform" ];
+#endif
 
 //#define HYPNO_START   // Enable hypno messages on startup
 //
@@ -112,10 +114,19 @@ string barefeet;
 string dollType;
 string attachName;
 string saveAttachment = "{\"chest\":[\"<0.000000, 0.184040, -0.279770>\",\"<1.000000, 0.000000, 0.000000, 0.000000>\"],\"spine\":[\"<0.000000, -0.200000, 0.000000>\",\"<0.000000, 0.000000, 0.000000, 1.000000>\"]}";
+
+// These RLV commands are set by the user
 string userAfkRLVcmd;
 string userBaseRLVcmd;
 string userCollapseRLVcmd;
 string userPoseRLVcmd;
+
+// These are hardcoded and should never change during normal operation
+string defaultAfkRLVcmd = "";
+string defaultBaseRLVcmd = "";
+string defaultCollapseRLVcmd = "fly=n,sendchat=n,tplm=n,tplure=n,tploc=n,showinv=n,edit=n,sit=n,sittp=n,fartouch=n,showworldmap=n,showminimap=n,showloc=n,shownames=n,showhovertextall=n";
+string defaultPoseRLVcmd = "";
+
 string dollGender = "Female";
 string pronounHerDoll = "Her";
 string pronounSheDoll = "She";
@@ -480,11 +491,6 @@ default {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
 
-            if (value == RECORD_DELETE) {
-                value = "";
-                split = [];
-            }
-
 #ifdef DATABASE_BACKEND
             if (script == "ServiceReceiver") dbConfigCount++;
 #endif
@@ -502,57 +508,82 @@ default {
             else if (name == "debugLevel")                  debugLevel = (integer)value;
 #endif
             else if (name == "keyLimit")                      keyLimit = (float)value;
+            else if (name == "keyAnimation") {
+                keyAnimation = value;
+
+                if (!collapsed) {
+                    if (!cdNoAnim() && !cdCollapsedAnim()) {
+                        lmRunRLV(defaultPoseRLVcmd);
+                        if (userPoseRLVcmd != "") lmRunRLVas("UserPose", userPoseRLVcmd);
+                    }
+                    else {
+                        lmRunRLV("clear");
+                        if (userPoseRLVcmd != "") lmRunRLVas("UserPose", "clear");
+                    }
+                }
+            }
+            else if (name == "afk") {
+                afk = (integer)value;
+
+                if (!collapsed) {
+                    if (afk) {
+                        lmRunRLV(defaultAfkRLVcmd);
+                        if (userAfkRLVcmd != "") lmRunRLVas("UserAfk", userAfkRLVcmd);
+                    }
+                    else {
+                        lmRunRLV("clear");
+                        if (userAfkRLVcmd != "") lmRunRLVas("UserAfk", "clear");
+                    }
+                }
+            }
             else if (name == "userBaseRLVcmd")          userBaseRLVcmd = value;
             else if (name == "userCollapseRLVcmd")  userCollapseRLVcmd = value;
             else if (name == "userPoseRLVcmd")          userPoseRLVcmd = value;
             else if (name == "userAfkRLVcmd")            userAfkRLVcmd = value;
 
-            else if ((name == "gemColour") ||
-                     (name == "primGlow")  ||
-                     (name == "primLight") ||
-                     (name == "isVisible") ||
-                     (name == "collapsed")) {
+            else if (name == "gemColour") {      gemColour = (vector)value; doVisibility(); }
+            else if (name == "primGlow")  {      primGlow = (integer)value; doVisibility(); }
+            else if (name == "primLight") {     primLight = (integer)value; doVisibility(); }
+            else if (name == "isVisible") {       visible = (integer)value; doVisibility(); }
 
-                     if (name == "gemColour")       gemColour = (vector)value;
-                else if (name == "primGlow")         primGlow = (integer)value;
-                else if (name == "primLight")       primLight = (integer)value;
-                else if (name == "isVisible")         visible = (integer)value;
-                else if (name == "collapsed")       collapsed = (integer)value;
-                
+            else if (name == "collapsed") {
+                integer wasCollapsed = collapsed;
+                collapsed = (integer)value;
                 doVisibility();
-            }
 
-            else if ((name == "dollyName") && (script != cdMyScriptName())) {
-                dollyName = value;
+                debugSay(2, "DEBUG-START", "Collapsed = " + (string)collapsed);
+                debugSay(2, "DEBUG-START", "defaultCollapseRLVcmd = " + defaultCollapseRLVcmd);
+                debugSay(2, "DEBUG-START", "userCollapseRLVcmd = " + userCollapseRLVcmd);
 
-                if (dollyName == "") {
-                    string name = dollName;
-                    integer space = llSubStringIndex(name, " ");
-
-                    if (space != NOT_FOUND) name = llGetSubString(name, 0, space -1);
-                    //llOwnerSay("INIT:300: dollyName = " + dollyName + " (send to 300)");
-
-                    lmSendConfig("dollyName", (dollyName = "Dolly " + name));
+                if (collapsed) {
+                    lmRunRLV(defaultCollapseRLVcmd);
+                    if (userCollapseRLVcmd != "") lmRunRLVas("UserCollapse", userCollapseRLVcmd);
                 }
-                //llOwnerSay("INIT:300: dollyName = " + dollyName + " (setting)");
-                if (cdAttached()) cdSetKeyName(dollyName + "'s Key");
+                else {
+                    if (wasCollapsed) {
+                        lmRunRLV("clear");
+                        if (userCollapseRLVcmd != "") lmRunRLVas("UserCollapse", "clear");
+                    }
+                }
             }
+            else if (name == "dollyName") {
+                if (script != cdMyScriptName()) {
+                    dollyName = value;
 
-            // Run user RLV settings in appropriate situations
-            if ((name == "collapsed") && (userCollapseRLVcmd != "")) {
-                if (collapsed) lmRunRLVas("UserCollapse", userCollapseRLVcmd);
-                else lmRunRLVas("UserCollapse", "clear");
-            }
-            else if ((name == "afk") && (userAfkRLVcmd != "")) {
-                if (afk) lmRunRLVas("UserAfk", userAfkRLVcmd);
-                else lmRunRLVas("UserAfk", "clear");
-            }
-            else if ((name == "keyAnimation") && (userPoseRLVcmd != "")) {
-                if (!cdNoAnim() && !cdCollapsedAnim()) lmRunRLVas("UserPose", userPoseRLVcmd);
-                else lmRunRLVas("UserPose", "clear");
+                    if (dollyName == "") {
+                        string name = dollName;
+                        integer space = llSubStringIndex(name, " ");
+
+                        if (space != NOT_FOUND) name = llGetSubString(name, 0, space -1);
+                        //llOwnerSay("INIT:300: dollyName = " + dollyName + " (send to 300)");
+
+                        lmSendConfig("dollyName", (dollyName = "Dolly " + name));
+                    }
+                    //llOwnerSay("INIT:300: dollyName = " + dollyName + " (setting)");
+                    if (cdAttached()) cdSetKeyName(dollyName + "'s Key");
+                }
             }
         }
-
         else if (code == 350) {
             RLVok = (llList2Integer(split, 0) == 1);
             rlvWait = 0;
@@ -568,16 +599,36 @@ default {
                 }
             }
 
-            if (collapsed) lmRunRLVas("UserCollapse", userCollapseRLVcmd);
-            else lmRunRLVas("UserCollapse", "clear");
+            if (RLVok) {
+                if (collapsed) {
+                    lmRunRLV(defaultCollapseRLVcmd);
+                    if (userCollapseRLVcmd != "") lmRunRLVas("UserCollapse", userCollapseRLVcmd);
+                }
+                else {
+                    lmRunRLV("clear");
+                    if (userCollapseRLVcmd != "") lmRunRLVas("UserCollapse", "clear");
 
-            if (afk) lmRunRLVas("UserAfk", userAfkRLVcmd);
-            else lmRunRLVas("UserAfk", "clear");
+                    if (afk) {
+                        lmRunRLV(defaultAfkRLVcmd);
+                        if (userAfkRLVcmd != "") lmRunRLVas("UserAfk", userAfkRLVcmd);
+                    }
+                    else {
+                        lmRunRLV("clear");
+                        if (userAfkRLVcmd != "") lmRunRLVas("UserAfk", "clear");
+                    }
 
-            if (!cdNoAnim() && !cdCollapsedAnim()) lmRunRLVas("UserPose", userPoseRLVcmd);
-            else lmRunRLVas("UserPose", "clear");
+                    if (!cdNoAnim() && !cdCollapsedAnim()) {
+                        lmRunRLV(defaultPoseRLVcmd);
+                        if (userPoseRLVcmd != "") lmRunRLVas("UserPose", userPoseRLVcmd);
+                    }
+                    else {
+                        lmRunRLV("clear");
+                        if (userPoseRLVcmd != "") lmRunRLVas("UserPose", "clear");
+                    }
+                }
 
-            newAttach = 0;
+                newAttach = 0;
+            }
         }
         else if (code == 500) {
             string selection = llList2String(split, 0);
@@ -585,14 +636,6 @@ default {
 
             if (selection == "Reset Scripts") {
                 if (cdIsController(id)) cdResetKey();
-//              else if (id == dollID) {
-//                  if (RLVok == YES)
-//                      llOwnerSay("Unable to reset scripts while running with RLV enabled, please relog without RLV disabled or " +
-//                                  "you can use login a Linden Lab viewer to perform a script reset.");
-//                  else if (RLVok == UNSET && (llGetTime() < 300.0))
-//                      llOwnerSay("Key is currently still checking your RLV status please wait until the check completes and then try again.");
-//                  else cdResetKey();
-//              }
             }
 
             nextLagCheck = llGetTime() + SEC_TO_MIN;
