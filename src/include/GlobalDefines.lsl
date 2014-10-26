@@ -7,6 +7,18 @@
 
 #include "config.h"
 
+// Link message codes
+// #define A 102
+// #define B 104
+// #define C 105
+// #define D 110
+#define MEM_REPORT 135
+#define SET_CONFIG 300
+#define INTERNAL_CMD 305
+#define RLV_CMD 315
+// #define E 350
+#define MENU_SELECTION 500
+
 #define VSTR  + "\nScript Date: " + PACKAGE_VERSION
 #define MAIN "~Main Menu~"
 // Remove elements of Startup code
