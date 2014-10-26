@@ -11,6 +11,17 @@
 // core RLV command generators are now part of the Avatar script
 // thus we keep this script lightweight with plenty of heap room
 // for it's runtime data needs.
+//
+// Why is this so complex? Because......
+//
+// Because if a script sends a restriction, we want to have that
+// restriction remain, even if another script tries to clear it.
+// For each restriction, the scripts that triggered it will be tracked
+// and each reset checked.
+//
+// This is useful for when unknown scripts are setting and clearing
+// restrictions. If we assume that the scripts are known... then
+// things are simpler.
 
 #ifdef LINK_320
 #define RESTRICTION_NEW "+"
@@ -42,20 +53,21 @@ default {
     state_entry() {
         dollID = llGetOwner();
         scriptName = llGetScriptName();
-        
+
         cdInitializeSeq();
         scaleMem();
-        
+
 #ifdef WAKESCRIPT
         llSetScriptState("StatusRLV",0);
 #endif
     }
-    
+
     //----------------------------------------
     // ON REZ
     //----------------------------------------
     on_rez(integer start) {
-        // This essentially converts the "on_rez" event to a "state_entry" event
+        // This converts the "on_rez" event to a "state_entry" event
+        debugSay(1,"DEBUG-STATUSRLV","Resetting (on_rez complete)");
         llResetScript();
     }
 
@@ -63,7 +75,7 @@ default {
     // LINK MESSAGE
     //----------------------------------------
     link_message(integer sender, integer i, string data, key id) {
-        
+
         // Parse link message header information
         list split        =     cdSplitArgs(data);
         string script     =     cdListElement(split, 0);
@@ -85,33 +97,37 @@ default {
         scaleMem();
 
         // quick return for often ignored codes
-        if (code == 305) return;
+             if (code == 305) return;
+        else if (code == 136) return;
 
         else if (code == 300) {
-#ifdef DEVELOPER_MODE
             string name = cdListElement(split, 0);
+            string value = cdListElement(split, 1);
+
+            if (name == "RLVok")    RLVok = (integer)value;
+#ifdef DEVELOPER_MODE
+            else
             if (name == "debugLevel") debugLevel = (integer)cdListElement(split, 1);
 #endif
             return;
         }
 
-        else if (code == 102) {
-            ;
-        }
         else if (code == 135) {
             float delay = cdListFloatElement(split, 0);
 
             memReport(cdMyScriptName(),delay);
         } else
-        
+
         cdConfigReport();
-        
+
         else if (code == 315) {
-            string realScript = script;
-            string script = cdListElement(split, 0);
+            //string realScript = script;
+            //string script = cdListElement(split, 0);
             string commandString = cdListElement(split, 1);
 
-            if (script == "") script = realScript;
+            debugSay(1,"DEBUG-STATUSRLV","Got Link Message 315 from script " + script + ": " + commandString);
+
+            //if (script == "") script = realScript;
 
             if (RLVok) {
                 if (cdAttached()) {
@@ -172,6 +188,7 @@ default {
                         //confCommands += fullCmd + ",";
 #endif
 
+                        //debugSay(5,"DEBUG-RLV","fullCmd = \"" + fullCmd + "\"");
                         if (cmd != "clear") {
                             if (param == "n" || param == "add") {
                                 integer cmdIndex = cdListElementP(rlvStatus, cmd);
@@ -326,14 +343,6 @@ default {
                     if ((sendCommands != "") && (sendCommands != ",")) llOwnerSay(llGetSubString("@" + sendCommands, 0, -2));
 #ifdef LINK_320
                     if ((confCommands != "") && (confCommands != ",")) lmConfirmRLV(script, llGetSubString(confCommands, 0, -2));
-#endif
-
-#ifdef DEVELOPER_MODE
-                    //debugSay(9, "DEBUG-RLV", "Active RLV: " + llDumpList2String(llList2ListStrided(rlvStatus, 0, -1, 2), "/"));
-                    //integer i;
-                    //for (; i < llGetListLength(rlvStatus); i += 2) {
-                    //    debugSay(9, "DEBUG-RLV", cdListElement(rlvStatus, i) + "\t" + cdListElement(rlvStatus, i + 1));
-                    //}
 #endif
                 }
             }
