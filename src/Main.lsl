@@ -1061,15 +1061,6 @@ default {
                 lmInternalCommand("setWindTimes", llDumpList2String(split, "|"), id);
             }
         }
-
-        else if (code == 850) {
-            string type = llList2String(split, 0);
-            string value = llList2String(split, 1);
-
-                 if (type == "HTTPinterval")            HTTPinterval = (integer)value;
-            else if (type == "HTTPthrottle")            HTTPthrottle = (integer)value;
-            else if (type == "lastPostTimestamp")       lastPostTimestamp = (integer)value;
-        }
     }
 
 #ifndef DEVELOPER_MODE

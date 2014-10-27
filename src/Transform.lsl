@@ -349,7 +349,7 @@ default {
 
         if (debugLevel > 4) {
             if (debugLevel < 6) {
-                if (code == 700 || code == 850) return;
+                if (code == 700) return;
                 //if (choice == "keyHandler" || choice == "getTimeUpdates" || choice == "timeLeftOnKey") return;
             }
 
@@ -364,7 +364,6 @@ default {
 
         // First, dump those we don''t want... (but occur frequently!)
         if (code == 700) return;
-        else if (code == 850) return;
 
         //else if (code == 136) return;
         //else if (code == 150) return;

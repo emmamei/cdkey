@@ -55,7 +55,7 @@ cdLinkMessage(integer target, integer opt, integer code, string data, key id) {
 #define lmMenuReply(choice,name,id)                     cdLinkMessage(LINK_THIS,0,500,choice+"|"+name,id)
 #define lmTextboxReply(type,name,choice,id)             cdLinkMessage(LINK_THIS,0,501,(string)type+"|"+name+"|"+choice,id)
 #define lmBroadcastReceived(name,msg,id)                cdLinkMessage(LINK_THIS,0,800,name+"|"+llGetOwnerKey(id)+"|"+msg,id)
-#define lmServiceMessage(type,data,id)			cdLinkMessage(LINK_THIS,0,850,type+"|"+data,id)
+//#define lmServiceMessage(type,data,id)			cdLinkMessage(LINK_THIS,0,850,type+"|"+data,id)
 
 // Virtual function style new link commands
 #define cdCarry(id)             lmInternalCommand("carry", (carrierName = llGetDisplayName(id)), (carrierID = id))
