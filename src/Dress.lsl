@@ -4,7 +4,7 @@
 //
 // vim:sw=4 et nowrap filetype=lsl
 //
-// DATE: 25 February 2014
+// DATE: 27 October 2014
 
 // HISTORY:
 //   Oct. 1   Adds everything in ~normalself folder, if oldoutfit begins with a +.

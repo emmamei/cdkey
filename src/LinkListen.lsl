@@ -2,7 +2,7 @@
 //
 // vim:sw=4 et nowrap:
 //
-// DATE: 8 December 2013
+// DATE: 27 October 2014
 //
 // Optional debug script to monitor link message activity
 // between the scripts while being compatible with the new

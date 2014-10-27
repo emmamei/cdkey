@@ -4,7 +4,7 @@
 //
 // vim:sw=4 et nowrap filetype=lsl
 //
-// DATE: 2 May 2014
+// DATE: 27 October 2014
 
 #define DEBUG_HANDLER 1
 #include "include/GlobalDefines.lsl"

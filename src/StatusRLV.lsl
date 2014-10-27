@@ -4,7 +4,7 @@
 //
 // vim:sw=4 et nowrap:
 //
-// DATE: 8 December 2013
+// DATE: 27 October 2014
 #include "include/GlobalDefines.lsl"
 //
 // As of 23 January 2014 this script is now state tracking only
@@ -338,12 +338,23 @@ default {
 #endif
                     }
                 } while (llStringLength(commandString));
+                
+                debugSay(2,"DEBUG-STATUSRLV","Ready to send: " + sendCommands);
 
                 if ((sendCommands != "") && (sendCommands != ",")) llOwnerSay(llGetSubString("@" + sendCommands, 0, -2));
 #ifdef LINK_320
                 if ((confCommands != "") && (confCommands != ",")) lmConfirmRLV(script, llGetSubString(confCommands, 0, -2));
 #endif
             }
+#ifdef DEVELOPER_MODE
+
+            // There is a case to be made that this is a run-time program error,
+            // and needs to be sent to the user as an error to be reported.
+
+            else {
+                debugSay(2,"DEBUG-STATUSRLV","Received RLV with no RLV active: " + commandString);
+            }
+#endif
         }
         else if (code == 350) {
             RLVok = (cdListIntegerElement(split, 0) == 1);

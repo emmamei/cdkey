@@ -4,7 +4,7 @@
 //
 // vim:sw=4 et nowrap filetype=lsl
 //
-// DATE: 28 February 2014
+// DATE: 27 October 2014
 
 #include "include/GlobalDefines.lsl"
 #include "include/Json.lsl"
