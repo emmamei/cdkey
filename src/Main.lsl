@@ -243,7 +243,7 @@ default {
     state_entry() {
         dollID = llGetOwner();
         dollName = llGetDisplayName(dollID);
-        if (llGetAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
+        if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
 
         cdInitializeSeq();
     }
@@ -1074,7 +1074,7 @@ default {
 
 #ifndef DEVELOPER_MODE
     run_time_permissions(integer perm) {
-        if (!llGetAttached()) llOwnerSay("@acceptpermission=rem");
+        if (!cdAttached()) llOwnerSay("@acceptpermission=rem");
         ifPermissions();
     }
 #endif

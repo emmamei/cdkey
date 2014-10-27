@@ -114,6 +114,7 @@ string barefeet;
 string dollType;
 string attachName;
 string saveAttachment = "{\"chest\":[\"<0.000000, 0.184040, -0.279770>\",\"<1.000000, 0.000000, 0.000000, 0.000000>\"],\"spine\":[\"<0.000000, -0.200000, 0.000000>\",\"<0.000000, 0.000000, 0.000000, 1.000000>\"]}";
+integer isAttached;
 
 // These RLV commands are set by the user
 string userAfkRLVcmd;
@@ -351,7 +352,7 @@ doneConfiguration(integer prefsRead) {
     lmInitState(105);
 
     //initializationCompleted
-    integer attached = cdAttached();
+    isAttached = cdAttached();
 
     if (dollyName == "") {
         string name = dollName;
@@ -362,7 +363,7 @@ doneConfiguration(integer prefsRead) {
         lmSendConfig("dollyName", (dollyName = "Dolly " + name));
     }
 
-    if (attached) cdSetKeyName(dollyName + "'s Key");
+    if (isAttached) cdSetKeyName(dollyName + "'s Key");
 
     debugSay(3,"DEBUG-START","doneConfiguration done - starting init code 110");
     lmInitState(110);
@@ -384,7 +385,7 @@ doneConfiguration(integer prefsRead) {
 
     sendMsg(dollID, msg);
 
-    if (newAttach && !quiet && attached)
+    if (newAttach && !quiet && isAttached)
         llSay(0, llGetDisplayName(llGetOwner()) + " is now a dolly - anyone may play with their Key.");
 }
 
@@ -719,18 +720,23 @@ default {
 
         if (id == NULL_KEY) {
 
-            if(!cdAttached()) cdResetKeyName();
+            if(!llGetAttached()) cdResetKeyName();
+
+            // At this point, we know that we have a REAL detach:
+            // key id is NULL_KEY and llGetAttached() == 0
+
             llMessageLinked(LINK_SET, 106,  cdMyScriptName() + "|" + "detached" + "|" + (string)lastAttachPoint, lastAttachAvatar);
             llOwnerSay("The key is wrenched from your back, and you double over at the unexpected pain as the tendrils are ripped out. You feel an emptiness, as if some beautiful presence has been removed.");
 
         } else {
 
-            llMessageLinked(LINK_SET, 106, cdMyScriptName() + "|" + "attached" + "|" + (string)llGetAttached(), id);
+            isAttached = 1;
+            llMessageLinked(LINK_SET, 106, cdMyScriptName() + "|" + "attached" + "|" + (string)cdAttached(), id);
 
             if (llGetPermissionsKey() == dollID && (llGetPermissions() & PERMISSION_TAKE_CONTROLS) != 0) llTakeControls(CONTROL_MOVE, 1, 1);
             else llRequestPermissions(dollID, PERMISSION_MASK);
 
-            ncResetAttach = llGetNotecardLine(NC_ATTACHLIST, cdAttached() - 1);
+            ncResetAttach = llGetNotecardLine(NC_ATTACHLIST, 0);
 
             if (lastAttachAvatar == NULL_KEY) newAttach = 1;
         }

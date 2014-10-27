@@ -67,6 +67,7 @@ integer isAnimated;
 integer hasCarrier;
 //integer isPosed; (use cdPosed)
 //integer isSelfPosed; (use cdSelfPosed)
+integer isAttached;
 
 integer carryMoved;
 integer rlvChannel;
@@ -139,6 +140,7 @@ key animStart(string animation) {
 // This is the starter function
 
 doCheckRLV() {
+    if (!isAttached) return; // if not attached, no sense checking for RLV
 
     rlvTimer = llGetTime();
     RLVck = 0;
@@ -160,6 +162,8 @@ doCheckRLV() {
 // Currently runs on init 110 - button press - and timer
 
 checkRLV() {
+    if (!isAttached) return; // if not attached, no sense checking for RLV
+
     if (RLVok == 1) {
         RLVck = 0;
         llSetTimerEvent(60.0);
@@ -219,7 +223,7 @@ checkRLV() {
 
         if (!RLVstarted) {
             if (RLVok) llOwnerSay("Reattached Community Doll Key with " + rlvAPIversion + " active...");
-            else if (cdAttached()) llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
+            else llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
             debugSay(5,"DEBUG-RLV","myPath = " + (string)myPath + " and rlvAPIversion = " + rlvAPIversion);
             nextRLVcheck = 0.0;
         }
@@ -231,7 +235,7 @@ checkRLV() {
         }
 #endif
 
-        //if (cdAttached())
+        //if (isAttached)
             // This starts a read of DataRLV - and other things
             //cdLoadData(RLV_NC, RLV_BASE_RESTRICTIONS);
     }
@@ -305,7 +309,7 @@ activateRLV() {
 ifPermissions() {
 
     // Don't do anything unless attached
-    if (cdAttached()) {
+    if (isAttached) {
         key grantorID = llGetPermissionsKey();
         integer permMask = llGetPermissions();
 
@@ -594,13 +598,15 @@ default {
 
         locked = 0;
 
-
         llStopMoveToTarget();
         llTargetRemove(targetHandle);
 
         if (id) {
+            isAttached = 1;
             ifPermissions();
             doCheckRLV();
+        } else {
+            isAttached = 0;
         }
 
         newAttach = (lastAttachedID != dollID);
@@ -646,81 +652,31 @@ default {
 
             //integer oldState = dollState;              // Used to determine if a refresh of RLV state is needed
 
-            if (name == "autoTP") {
-                if (autoTP != (integer)value) {
-                     autoTP = (integer)value;
-                     //oldState = oldState | CHANGED_OTHER;  // FIXME: XOR State
-                }
-            }
+            if (name == "autoTP")                        autoTP = (integer)value;
             else if (name == "carrierID") {
                 carrierID = (key)value;
                 hasCarrier = cdCarried();
-                //cdSetDollStateIf(DOLL_CARRIED, (carrierID != NULL_KEY));  // FIXME: XOR State
             }
-            else if (name == "afk") {
-                afk = (integer)value;
-                //cdSetDollStateIf(DOLL_AFK, afk);
-            }
-            else if (name == "canFly") {
-                if (canFly != (integer)value) {
-                    canFly = (integer)value;
-                    //oldState = oldState | CHANGED_OTHER;  // FIXME: XOR State
-                }
-            }
-            else if (name == "canSit") {
-                if (canSit != (integer)value) {
-                    canSit = (integer)value;
-                    //oldState = oldState | CHANGED_OTHER;  // FIXME: XOR State
-                }
-            }
-            else if (name == "canStand") {
-                if (canStand != (integer)value) {
-                    canStand = (integer)value;
-                    //oldState = oldState | CHANGED_OTHER;  // FIXME: XOR State
-                }
-            }
-            else if (name == "canDressSelf") {
-                if (canDressSelf != (integer)value) {
-                    canDressSelf = (integer)value;
-                    //oldState = oldState | CHANGED_OTHER;  // FIXME: XOR State
-                }
-            }
+            else if (name == "afk")                         afk = (integer)value;
+            else if (name == "canFly")                   canFly = (integer)value;
+            else if (name == "canSit")                   canSit = (integer)value;
+            else if (name == "canStand")               canStand = (integer)value;
+            else if (name == "canDressSelf")       canDressSelf = (integer)value;
             else if (name == "collapsed") {
                     collapsed = (integer)value;
-                    //cdSetDollStateIf(DOLL_COLLAPSED, collapsed);  // FIXME: XOR State
                     if (collapsed) lmSendConfig("keyAnimation", (keyAnimation = ANIMATION_COLLAPSED));
                     else if (cdCollapsedAnim()) lmSendConfig("keyAnimation", (keyAnimation = ""));
             }
-            else if (name == "tpLureOnly") {
-                if (tpLureOnly != (integer)value) {
-                    tpLureOnly = (integer)value;
-                    //oldState = oldState | CHANGED_OTHER;  // FIXME: XOR State
-                }
-            }
-            else if (name == "poseSilence") {
-                if (poseSilence != (integer)value) {
-                    poseSilence = (integer)value;
-                    //oldState = oldState | CHANGED_OTHER;  // FIXME: XOR State
-                }
-            }
-            else if (name == "userBaseRLVcmd") {
-                userBaseRLVcmd = value;
-                //if (userBaseRLVcmd == "") userBaseRLVcmd = value;
-                //else userBaseRLVcmd += "," +value;
-            }
+            else if (name == "tpLureOnly")           tpLureOnly = (integer)value;
+            else if (name == "poseSilence")         poseSilence = (integer)value;
+            else if (name == "userBaseRLVcmd")   userBaseRLVcmd = value;
             else if (name == "keyAnimation") {
                 string oldanim = keyAnimation;
                 keyAnimation = value;
 
-                if (cdCollapsedAnim() && collapsed) {
-                    lmSendConfig("keyAnimation", "");
-                }
+                if (cdCollapsedAnim() && collapsed) lmSendConfig("keyAnimation", "");
 
                 isAnimated = (keyAnimation != "");
-
-                //cdSetDollStateIf(DOLL_ANIMATED, (keyAnimation != ""));  // FIXME: XOR State
-                //cdSetDollStateIf(DOLL_POSED, ((dollState & (DOLL_COLLAPSED | DOLL_ANIMATED)) == DOLL_ANIMATED));  // FIXME: XOR State
-                //cdSetDollStateIf(DOLL_POSER_IS_SELF, (((dollState & DOLL_POSED) == 1) && (poserID == dollID)));  // FIXME: XOR State
 
                 if cdNoAnim() clearAnim = 1;
                 else {
@@ -730,11 +686,11 @@ default {
                     lmSendConfig("keyAnimationID", (string)(keyAnimationID = animStart(keyAnimation)));
                 }
             }
-            else if (name == "poserID") {
-                poserID = (key)value;
-                //cdSetDollStateIf(DOLL_POSER_IS_SELF, (((dollState & DOLL_POSED) == 1) && (poserID == dollID)));  // FIXME: XOR State
-            }
+            else if (name == "poserID")                 poserID = (key)value;
             else {
+                // These are segregated so they won't execute the ifPermissions() at the
+                // end... why is that?
+
                      if (name == "detachable")               detachable = (integer)value;
 #ifdef DEVELOPER_MODE
                 else if (name == "debugLevel")               debugLevel = (integer)value;
@@ -746,12 +702,14 @@ default {
                 else if (name == "chatChannel")             chatChannel = (integer)value;
                 else if (name == "canPose")                     canPose = (integer)value;
                 else if (name == "barefeet")                   barefeet = value;
+                else if (name == "wearLock")                   wearLock = (integer)value;
                 else if (name == "dollType")                   dollType = value;
-                else if (name == "controllers")           controllers = split;
+                else if (name == "controllers")             controllers = split;
                 else if (name == "pronounHerDoll")       pronounHerDoll = value;
                 else if (name == "pronounSheDoll")       pronounSheDoll = value;
                 else if (name == "dialogChannel") {
                     dialogChannel = (integer)value;
+
                     llListenRemove(rlvHandle);
                     // Calculate positive (RLV compatible) rlvChannel
                     rlvChannel = ~dialogChannel + 1;
