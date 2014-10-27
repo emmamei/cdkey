@@ -328,6 +328,7 @@ default {
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
             else if (name == "windTimes")                   windTimes = value;
+            else if (name == "wearLock")                     wearLock = (integer)value;
             else if (name == "blacklist")                   blacklist = llListSort(cdList2ListStrided(split,0,-1,2),1,1);   // Import the UUID entries only here, is all we need to blacklist test.
             else if (name == "primLight")                   primLight = (integer)value;
             else if (name == "primGlow") {
