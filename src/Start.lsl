@@ -838,6 +838,11 @@ default {
             cdResetKey(); // start over with no preferences
         }
 
+        // THis section of code has a danger in it for RLV locked keys:
+        // if the user can modify the key - and change its inventory -
+        // it may be possible to override values at the least and to
+        // reset the key at the worst.
+
         if (change & CHANGED_INVENTORY) {
             if (cdNotecardExists(NOTECARD_PREFERENCES)) {
                 string ncKey = (string)llGetInventoryKey(NOTECARD_PREFERENCES);
@@ -857,14 +862,12 @@ default {
                 }
             }
 
-            // If it was the Preferences Notecard that changed, we don't
-            // reset...
-            //
+            // if we get here, it was NOT the Preferences Notecard that
+            // changed - it was something else...
+
             // What if inventory changes several times in a row?
             llOwnerSay("Key contents modified; restarting in 60 seconds.");
-            //cdLinkMessage(LINK_THIS, 0, 301, "", llGetKey());
             llSleep(60.0);
-
             cdResetKey();
         }
     }
