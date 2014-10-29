@@ -2,6 +2,10 @@
 #
 # Items that support a yes/no response can use "yes" "on" or "1" for
 # a positive answer, and "no" "off" or "0" for a negative answer
+#
+# To speed up processing up considerably, strip out ALL comments
+# and blank lines before using this file as an active preferences
+# file
 
 # Suppress public chat messages
 quiet key = no
@@ -51,10 +55,12 @@ doll gender = female
 # Attach this folder when shoes stripped
 #barefeet path = 
 
-# Custom RLV commands on startup (separated by commas)
+# Additional custom RLV commands to use on startup
+# (must be correct RLV syntax)
 #user startup rlv = 
 
-# Custom RLV commands on collapse (separated by commas)
+# Additional custom RLV commands to use on collapse
+# (must be correct RLV syntax)
 #user collapse rlv = touchall=n,fartouch=n
 
 # Doll's Controller (or Mistress): value is user key value
