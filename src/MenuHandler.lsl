@@ -28,6 +28,8 @@
 #define BLACKLIST_CHANNEL_OFFSET 666
 #define CONTROL_CHANNEL_OFFSET 888
 
+#define UNSET -1
+
 //========================================
 // VARIABLES
 //========================================
@@ -73,7 +75,7 @@ integer demoMode;
 //integer isTransformingKey;
 integer visible = 1;
 //integer quiet;
-integer RLVok = -1;
+integer RLVok = UNSET;
 //integer signOn;
 //integer takeoverAllowed;
 //integer warned;
@@ -181,7 +183,7 @@ default
     // ON REZ
     //----------------------------------------
     on_rez(integer start) {
-        RLVok = -1;
+        RLVok = UNSET;
     }
 
     //----------------------------------------
@@ -527,6 +529,8 @@ default
                                 menu += "RLV Off";
                             }
                         } else {
+                            // Note this section is valid if RLV == 0 (no RLV)
+                            // but ALSO if RLVok == -1 (unset)
                             if (isDoll || isController)
                                 menu += "RLV On";
                         }
@@ -591,7 +595,7 @@ default
                     if (RLVok == -1) msg += "Still checking for RLV support some features unavailable.\n";
                     else if (RLVok == 0) {
                         msg += "No RLV detected some features unavailable.\n";
-                        if (cdIsDoll(id) || cdIsController(id)) menu += "*RLV On*";
+                        if (cdIsDoll(id) || cdIsController(id)) menu += "RLV On";
                     }
 
                     msg += "See " + WEB_DOMAIN + manpage + " for more information."
