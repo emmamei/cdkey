@@ -12,6 +12,8 @@
 #define cdRefreshVars() cdLinkMessage(LINK_THIS, 0, 301, "", NULL_KEY)
 #define cdDumpState()   cdLinkMessage(LINK_THIS, 0, 302, "", NULL_KEY);
 
+#define UNSET -1
+
 // FIXME: Depends on a variable s
 #define cdCapability(c,p,u) { s += p; if (!(c)) { s += " not"; }; s += " " + u + ".\n"; }
 
@@ -47,7 +49,7 @@ integer chatHandle          = 0;
 integer timeReporting       = 0;
 integer debugLevel          = DEBUG_LEVEL;
 #endif
-integer RLVok               = -1;
+integer RLVok               = UNSET;
 integer blockedControlTime  = 0;
 integer blacklistMode       = 0;
 
@@ -531,43 +533,7 @@ default
                         string s = "Extended stats:\nDoll is a " + dollType + " Doll.\nAFK time factor: " +
                                    formatFloat(RATE_AFK, 1) + "x\nConfigured wind times: " + llList2CSV(windTimes) + " (mins)\n";
 
-                        if (demoMode) {
-                            s += "Demo mode is enabled; times are: 1";
-                            if (llGetListLength(windTimes) > 1) s += ", 2";
-                            s += " mins.\n";
-                        }
-
-                        // Which is the upper bound on the wind times currently? Depeding on the values this could be keyLimit/2 or windLimit
-                        s += "Current wind menu: ";
-
-                        integer timeLeft = llFloor(timeLeftOnKey / 60.0);     // mins left on key
-                        float windLimit = currentLimit - timeLeftOnKey;       // maximum wind possible
-                        integer timesLimit = llFloor(windLimit / SEC_TO_MIN); // maximum wind in minutes
-                        integer time; list avail; integer i; integer n = llGetListLength(windTimes);
-                        integer maxTime = llRound(currentLimit / 60.0 / 2);   // maximum wind: no more than half current limit
-
-                        // Loop through all windTimes as long as:
-                        //
-                        //   * The wind time is less than the max wind in minutes
-                        //   * The wind time is less than or equal to the max wind (half current limit)
-                        //
-                        while ((i <= n) && ( ( time = llList2Integer(windTimes, i++) ) < timesLimit) && (time <= maxTime)) {
-                            avail += ["Wind " + (string)time];
-                        }
-
-                        // We'e either come to the end of the list - or the max
-                        //
-                        // timesLimit = minutes remaining on key
-                        //    maxTime = half of current limnit in minutes
-                        //
-                        if ((i <= n) && (timesLimit <= maxTime)) {
-                            avail += ["Wind Full"];
-                            s += " (" + (string)timeLeft  + " of " + (string)maxTime + " minutes left " + (string)timesLimit + " from max)";
-                        }
-
-                        s += llList2CSV(avail);
-                        if (windLimit < (keyLimit / 2)) s += " (Times limited to half max time)";
-                        s += "\n";
+                        if (demoMode) s += "Demo mode is enabled";
 
                         string p = llToLower(pronounHerDoll);
 
@@ -587,7 +553,7 @@ default
                         if (windRate == 0.0) { s += "Key is not winding down.\n"; }
                         else { s += "Current wind rate is " + formatFloat(windRate,2) + ".\n"; }
 
-                        if (RLVok == -1) { s += "RLV status is unknown.\n"; }
+                        if (RLVok == UNSET) { s += "RLV status is unknown.\n"; }
                         else if (RLVok == 1) { s += "RLV is active.\nRLV version: " + RLVver; }
                         else s += "RLV is not active.\n";
 
@@ -656,7 +622,6 @@ default
                         }
 
                         lmMemReport(1.0, 1);
-                        llOwnerSay("stats complete"); //DEBUG
                     }
                     else if (choice == "release") {
                         string p = llToLower(pronounHerDoll);
@@ -668,7 +633,11 @@ default
 
                     // Demo: short time span
                     else if (choice == "demo") {
-                        // toggles demo mode
+                        // Note that, unlike in the original key, demo mode is not
+                        // just a 5-minute limit - but rather a TEMPORARY 5-minute limit,
+                        // with previous settings saved...
+
+                        // Toggles demo mode
                         lmSendConfig("demoMode", (string)(demoMode = !demoMode));
 
                         string s = "Dolly's Key is now ";
@@ -681,8 +650,8 @@ default
                         else {
                             // Q: currentlimit not set until later; how do we tell user what it is?
                             // A: They are not in demoMode after this so the limit is going to be restored to keyLimit
-                            // only exception would be if keyLimit was invalid however there will be a follow up message
-                            // from Main stating this and giving the new value so not something we need to do here.
+                            //    only exception would be if keyLimit was invalid however there will be a follow up message
+                            //    from Main stating this and giving the new value so not something we need to do here.
 
                             s += "running normally: " + (string)llRound(timeLeftOnKey / SEC_TO_MIN) + " of " + (string)llFloor(keyLimit / SEC_TO_MIN) + " minutes remaining.";
                         }
