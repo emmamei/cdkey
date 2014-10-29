@@ -28,11 +28,12 @@
 #define PLEASURE_DOLL 20
 #define SET_AFK 22
 #define JOIN_GROUP 25
+#define UNSET -1
 
 #define HIPPO_UPDATE -2948813
 
-key ncRequestDollMessage;
-key ncRequestDollDialog;
+integer dollMessageCode;
+
 key lmRequest;
 key carrierID = NULL_KEY;
 key dollID = NULL_KEY;
@@ -81,22 +82,17 @@ setGender(string gender) {
         lmSendConfig("pronounSheDoll", (pronounSheDoll = "He"));
     }
     else {
-        if (gender == "sissy") {
-            lmSendConfig("dollGender", (dollGender = "Sissy"));
-        } else {
-            lmSendConfig("dollGender", (dollGender = "Female"));
-        }
-
+        lmSendConfig("dollGender", (dollGender = "Female"));
         lmSendConfig("pronounHerDoll", (pronounHerDoll = "Her"));
         lmSendConfig("pronounSheDoll", (pronounSheDoll = "She"));
     }
 }
 
 sendMsg(key id, string msg) {
-    if (id != NULL_KEY) {
-        if          cdIsDoll(id)                      llOwnerSay(msg);
-        else if     (llGetAgentSize(id))    llRegionSayTo(id, 0, msg);
-        else                                llInstantMessage(id, msg);
+    if (id) {
+        if cdIsDoll(id) llOwnerSay(msg);
+        else if (llGetAgentSize(id)) llRegionSayTo(id, 0, msg);
+        else llInstantMessage(id, msg);
     }
 }
 
@@ -145,8 +141,6 @@ default {
         integer code      =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
-        integer dollMessageCode; integer dollMessageVariant;
-
         if ((code == 11) || (code == 12)) {
             string msg = llList2String(split, 0);
             debugSay(5, "DEBUG", "Code #" + (string)code + ": message = " + msg);
@@ -177,6 +171,9 @@ default {
             lmMemReport(0.5, 0);
         }
         else if ((code == 135) || (code == 136)) {
+
+            // This is the bulk of 136/135 message processing
+            //
             if ((code == 135) && (!memCollecting)) {
                 integer i;
                 for (i = 0; i < llGetInventoryNumber(10); i++) {
@@ -291,14 +288,9 @@ default {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
 
-            if (value == RECORD_DELETE) {
-                value = "";
-                split = [];
-            }
-
             split = llDeleteSubList(split, 0, 0);
 
-                 if (name == "controllers")             controllers = split;
+                 if (name == "controllers")               controllers = split;
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
@@ -311,7 +303,7 @@ default {
             else if (name == "canCarry")                     canCarry = (integer)value;
             else if (name == "canDress")                     canDress = (integer)value;
             else if (name == "canPose")                       canPose = (integer)value;
-            else if (name == "canDressSelf")                       canDressSelf = (integer)value;
+            else if (name == "canDressSelf")             canDressSelf = (integer)value;
             else if (name == "canFly")                         canFly = (integer)value;
             else if (name == "canSit")                         canSit = (integer)value;
             else if (name == "canStand")                     canStand = (integer)value;
@@ -320,10 +312,9 @@ default {
             else if (name == "doWarnings")                 doWarnings = (integer)value;
             else if (name == "poseSilence")               poseSilence = (integer)value;
             else if (name == "detachable")                 detachable = (integer)value;
-            else if (name == "tpLureOnly")                     tpLureOnly = (integer)value;
+            else if (name == "tpLureOnly")                 tpLureOnly = (integer)value;
             else if (name == "pleasureDoll")             pleasureDoll = (integer)value;
             else if (name == "signOn")                         signOn = (integer)value;
-//          else if (name == "offlineMode")               offlineMode = (integer)value;
             else if (name == "dollGender")                 dollGender = value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
@@ -331,21 +322,16 @@ default {
             else if (name == "wearLock")                     wearLock = (integer)value;
             else if (name == "blacklist")                   blacklist = llListSort(cdList2ListStrided(split,0,-1,2),1,1);   // Import the UUID entries only here, is all we need to blacklist test.
             else if (name == "primLight")                   primLight = (integer)value;
-            else if (name == "primGlow") {
-                primGlow = (integer)value;
-            }
-            else if (name == "isVisible") {
-                visible = (integer)value;
-            }
-            else if (name == "gemColour") {
-                curGemColour = value;
-            }
+            else if (name == "primGlow")                     primGlow = (integer)value;
+            else if (name == "isVisible")                     visible = (integer)value;
+            else if (name == "gemColour")                curGemColour = value;
             else if (name == "dollType") {
                 if (configured && (keyAnimation != "") && (keyAnimation != ANIMATION_COLLAPSED) && (poserID != dollID)) {
                     if (value == "Display")
-                        ncRequestDollMessage = llGetNotecardLine(MESSAGE_NC, DISPLAY_DOLL + 1);
+                        llOwnerSay("You feel yourself transform and know you will soon be free of your pose when the timer ends.");
                     else if (dollType == "Display")
-                        ncRequestDollMessage = llGetNotecardLine(MESSAGE_NC, DISPLAY_DOLL);
+                        llOwnerSay("As you feel yourself become a display doll you feel a sense of helplessness knowing you will remain posed until released.");
+
                     dollType = value;
                     lmInternalCommand("setPose", keyAnimation, NULL_KEY);
                 }
@@ -355,6 +341,13 @@ default {
                 textboxChannel = dialogChannel - 1111;
             }
 
+            //----------------------------------------
+            // OUTPUT MESSAGES FROM MENU SELECTIONS
+
+            // Before this point, it is all about setting values and options;
+            // this section is all about outputting messages chosen from MenuHandler's
+            // menus....
+            //
             // Only MenuHandler script can activate these selections...
             if (script != "MenuHandler") return;
 
@@ -366,19 +359,21 @@ default {
                 llOwnerSay(msg + "able to dress yourself.");
             }
 
-            if (name == "canDressSelf")              dollMessageCode = SELF_DRESS;
-            else if (name == "canFly")          dollMessageCode = CAN_FLY;
-            else if (name == "canRepeat")       dollMessageCode = CAN_REPEAT;
-            else if (name == "canPose")         dollMessageCode = CAN_POSE;
-            else if (name == "canCarry")        dollMessageCode = CAN_CARRY;
-            else if (name == "doWarnings")      dollMessageCode = DO_WARNINGS;
-            else if (name == "offlineMode")     dollMessageCode = OFFLINE;
-            else if (name == "isVisible")       dollMessageCode = VISIBLE;
-            else if (name == "poseSilence")     dollMessageCode = POSE_SILENCE;
+            dollMessageCode = -1;
+
+                 if (name == "canDressSelf")    dollMessageCode = SELF_DRESS + (integer)value;
+            else if (name == "canFly")          dollMessageCode = CAN_FLY + (integer)value;
+            else if (name == "canRepeat")       dollMessageCode = CAN_REPEAT + (integer)value;
+            else if (name == "canPose")         dollMessageCode = CAN_POSE + (integer)value;
+            else if (name == "canCarry")        dollMessageCode = CAN_CARRY + (integer)value;
+            else if (name == "doWarnings")      dollMessageCode = DO_WARNINGS + (integer)value;
+            else if (name == "offlineMode")     dollMessageCode = OFFLINE + (integer)value;
+            else if (name == "isVisible")       dollMessageCode = VISIBLE + (integer)value;
+            else if (name == "poseSilence")     dollMessageCode = POSE_SILENCE + (integer)value;
 #ifdef ADULT_MODE
-            else if (name == "pleasureDoll")    dollMessageCode = PLEASURE_DOLL;
+            else if (name == "pleasureDoll")    dollMessageCode = PLEASURE_DOLL + (integer)value;
 #endif
-            dollMessageVariant = (integer)value;
+            if (dollMessageCode >= 0) llOwnerSay("Doll message code #" + (string)dollMessageCode);
         }
         else if (code == 305) {
             string cmd = llList2String(split, 0);
@@ -389,16 +384,17 @@ default {
                 integer auto = llList2Integer(split, 1);
                 windRate = llList2String(split, 2);
                 minsLeft = llList2String(split, 3);
-
-                dollMessageCode = SET_AFK;
+                string msg;
 
                 if (afk) {
-                    if (auto) dollMessageVariant = 0;
-                    else dollMessageVariant = 1;
+                    if (auto) msg = "Automatically entering AFK mode.";
+                    else msg = "You are now away from keyboard (AFK).";
+                    msg += " Key unwinding has slowed to " + (string)windRate + "x and movements and abilities are restricted.";
                 }
-                else dollMessageVariant = 2;
-                llOwnerSay("");
+                else msg = "You are now no longer away from keyboard (AFK). Movements are unrestricted and winding down proceeds at normal rate. ";
+                llOwnerSay(msg + " You have " + (string)minsLeft + " minutes of life remaining.");
             }
+#ifdef ADULT_MODE
             else if (cmd == "strip") {
                 string part = llList2String(split, 0);
                 if (id != dollID) {
@@ -408,6 +404,7 @@ default {
                 }
                 else llOwnerSay("You have stripped off your own " + llToLower(part) + ".");
             }
+#endif
         }
         else if (code == 350) {
             RLVok = (llList2Integer(split, 1) == 1);
@@ -421,8 +418,10 @@ default {
                             "key and to connect with the community.";
                 list pluslist = [ "Join Group", "Visit Dollhouse" ];
                 if (llGetInventoryType(NOTECARD_HELP) == INVENTORY_NOTECARD) pluslist += [ "Help Notecard" ];
-                if (cdIsController(id) || cdIsDoll(id)) pluslist += "Reset Scripts";
-                if (cdIsDoll(id)) pluslist += ["Check Update", "Factory Reset"];
+
+                // This assumes a Doll cannot be her own controller...
+                if (cdIsController(id)) pluslist += "Reset Scripts";
+                if (cdIsDoll(id)) pluslist += ["Reset Scripts","Check Update", "Factory Reset"];
 
                 cdDialogListen();
                 llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
@@ -435,8 +434,7 @@ default {
                 else llGiveInventory(id, LANDMARK_CDROOM);
             }
             else if (choice == "Join Group") {
-                dollMessageCode = JOIN_GROUP;
-                ncRequestDollDialog = llGetNotecardLine(MESSAGE_NC, dollMessageCode + 1);
+                lmSendToAgent("Here is your link to the community dolls group profile secondlife:///app/group/0f0c0dd5-a611-2529-d5c7-1284fb719003/about",id);
             }
             else if (choice == "Access...") {
                 debugSay(5, "DEBUG-AUX", "Dialog channel: " + (string)dialogChannel);
@@ -526,16 +524,10 @@ default {
 
                 // Whatever the current element is - set gender
                 // to the next in a circular loop
-                //
-                // Note support for Sissy removed: unexpected behavior
-                // (menu option isn't the best as it is)
 
                 if (s == "Male")
                     setGender("female");
                 else if (s == "Female")
-                    //setGender("sissy");
-                    setGender("male");
-                else if (s == "Sissy")
                     setGender("male");
 
                 llOwnerSay("Gender is now set to " + dollGender);
@@ -588,8 +580,6 @@ default {
         else if (code == HIPPO_UPDATE) {
             if (data == "VERSION") llOwnerSay("Your key is already up to date");
         }
-
-        if (dollMessageCode) ncRequestDollMessage = llGetNotecardLine(MESSAGE_NC, dollMessageCode + (integer)dollMessageVariant);
     }
 
     //----------------------------------------
@@ -660,6 +650,11 @@ default {
                 return;
             }
 
+            // After processing the choice, what menu do we give back?
+            //
+            // For all types except #1 (Gem Color) give back the "Key..."
+            // Menu...
+            //
             if (textboxType == 1) lmMenuReply("Gem Colour", name, id);
             else lmMenuReply("Key...", name, id);
         }
@@ -670,21 +665,30 @@ default {
     //----------------------------------------
     dataserver(key request, string data) {
         integer index;
+
+#ifdef NO_DOLLMSG
         if (request == ncRequestDollMessage) {
-            integer i;
+            integer i = 2;
             list findList = [ "windRate", "minsLeft" ];
             list replaceList = [ windRate, minsLeft ];
-            for (i = 0; i < 2; i++) {
-                string find = "%" + llList2String(findList, i) + "%";
-                string replace = llList2String(replaceList, i);
+            string find;
+            string replace;
+
+            for (; i; i--) {
+                find = "%" + llList2String(findList, i) + "%";
+                replace = llList2String(replaceList, i);
+
                 while ( ( index = llSubStringIndex(data, find) ) != -1) {
                     data = llInsertString(llDeleteSubString(data, index, index + llStringLength(find) - 1), index, replace);
                 }
             }
             llOwnerSay(data);
         }
-        else if (request == lmRequest) {
+        else
+#endif
+        if (request == lmRequest) {
             vector lmData = (vector)data;
+
             if ((lmData.x < 256) && (lmData.y < 256)) {
                 targetHandle = llTarget(lmData, 1.0);
                 llMoveToTarget(lmData, 0.000001);
