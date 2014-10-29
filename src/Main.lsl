@@ -299,18 +299,25 @@ default {
     // TOUCH START
     //----------------------------------------
     touch_start(integer num) {
-        if (RLVok == -1) {
+        key id = llDetectedKey(0);
+
+        if (RLVok == -1 && dollID != id) {
             llSay(PUBLIC_CHANNEL, dollName + "'s key clanks and clinks.... it doesn't seem to be ready yet.");
             llOwnerSay("The state of RLV is not yet determined.");
             return;
         }
 
-        integer i;
-        for (i = 0; i < num; i++) {
-            key id = llDetectedKey(i);
+        lmMenuReply(MAIN, llGetDisplayName(id), id);
 
-            lmMenuReply(MAIN, llGetDisplayName(id), id);
-        }
+        // The possibility of this happening is very low -
+        // *NOT* impossible... but low
+        //
+        //integer i;
+        //for (i = 0; i < num; i++) {
+        //    key id = llDetectedKey(i);
+        //
+        //    lmMenuReply(MAIN, llGetDisplayName(id), id);
+        //}
     }
 
     //----------------------------------------
@@ -722,23 +729,32 @@ default {
                 if (script != "Main" && script != "Aux") return;
 
                 split = llDeleteSubList(llParseString2List(data, [","," ","|"], []), 0, 1);
-                integer i; integer start = llGetListLength(split);
+                integer i;
+                integer start = llGetListLength(split);
 
                 windTimes = [];
+                integer value;
+
+                // Scan wind time values given: must be between 0 and 240, with
+                // no duplicates
 
                 for (i = 0; i < start; i++) {
-                    integer value = (integer)llStringTrim(llList2String(split, i), STRING_TRIM);
+                    value = (integer)llStringTrim(llList2String(split, i), STRING_TRIM);
 
                     // if the wind time is between 0 and 240, and is not in list, add it
                     if ((value > 0) && (value <= 240) && (llListFindList(windTimes, [value]) == NOT_FOUND))
                         windTimes += value;
                 }
 
+                // No more than 11 wind times allowed
+
                 windTimes = llListSort(windTimes,1,1);
                 if (llGetListLength(windTimes) > 11) {
                     windTimes = llList2List(windTimes, 0, 10);
                     lmSendToAgent("One or more times were filtered, accepted list is " + llList2CSV(windTimes), id);
-                    }
+                }
+
+                // Send validated configuration
 
                 lmSendConfig("windTimes", llList2Json(JSON_ARRAY, windTimes));
             }
