@@ -397,10 +397,16 @@ default {
 #ifdef ADULT_MODE
             else if (cmd == "strip") {
                 string part = llList2String(split, 0);
+
                 if (id != dollID) {
+
+                    // if Dolly is stripped by someone else, Dolly cannot
+                    // dress for a time: wearLock is activated
+
                     lmInternalCommand("wearLock", (string)(wearLock = 1), NULL_KEY);
-                    if (!quiet) llSay(0, "The dolly " + dollName + " has " + llToLower(pronounHerDoll) + " " + llToLower(part) + " stripped off " + llToLower(pronounHerDoll) + " and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes.  (Timer will start over for dolly if " + llToLower(pronounSheDoll) + " is stripped again)");
-                    else llOwnerSay("You have had your " + llToLower(part) + " stripped off you and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes, your time will restart if you are stripped again.");
+
+                    if (!quiet) llSay(0, "The dolly " + dollName + " has " + llToLower(pronounHerDoll) + " " + llToLower(part) + " stripped off " + llToLower(pronounHerDoll) + " and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes.");
+                    else llOwnerSay("You have had your " + llToLower(part) + " stripped off you and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes");
                 }
                 else llOwnerSay("You have stripped off your own " + llToLower(part) + ".");
             }

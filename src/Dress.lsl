@@ -232,19 +232,14 @@ changeComplete(integer success) {
     // RLV.lsl knows which are ours and that is all this clears
 #ifdef DEVELOPER_MODE
     llOwnerSay("Your key is now unlocked again as you are a developer.");
-#endif
     lmRunRLV("clear");
+#endif
 
     if (change) llOwnerSay("Change to new outfit " + newoutfitname + " complete.");
 
-
+    // Note: if wearLock is already set, it STAYS set with this setting
     lmInternalCommand("wearLock", (string)(wearLock = (wearLock ||
                                                       ((dresserID != NULL_KEY) && (dresserID != dollID)))), NULL_KEY);
-
-    //else {
-    //    llOwnerSay("Something seems to be preventing all outfit items being added or removed correctly, dressing cancelled");
-    //}
-
     candresstimeout = 0;
     change = 0;
 

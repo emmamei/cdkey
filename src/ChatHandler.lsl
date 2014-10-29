@@ -26,7 +26,8 @@ list windTimes              = [30];
 
 float collapseTime          = 0.0;
 float currentLimit          = 10800.0;
-float wearLockExpire        = 0.0;
+float wearLockExpire;
+integer wearLock;
 
 string dollGender           = "Female";
 string chatPrefix           = "";
@@ -199,6 +200,7 @@ default
             else if (name == "tpLureOnly")                 tpLureOnly = (integer)value;
             else if (name == "windTimes")                   windTimes = llJson2List(value);
             else if (name == "wearLockExpire")         wearLockExpire = (float)value;
+            else if (name == "wearLock")                     wearLock = (integer)value;
             else if (name == "windRate")                     windRate = (float)value;
         }
 
@@ -549,6 +551,7 @@ default
                         cdCapability(canRepeat,    "Doll can", "multiply wound");
                         cdCapability(canDressSelf, "Doll can", "dress by " + p + "self");
                         cdCapability(poseSilence,  "Doll is",  "silenced while posing");
+                        cdCapability(wearLock,     "Doll's clothing' is",  "currently locked on");
 
                         if (windRate == 0.0) { s += "Key is not winding down.\n"; }
                         else { s += "Current wind rate is " + formatFloat(windRate,2) + ".\n"; }

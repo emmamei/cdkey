@@ -748,7 +748,11 @@ default {
                 llRegionSayTo(id, 0, "Teleporting dolly " + dollName + " to  landmark " + lm + ".");
                 rlvTPrequest = llRequestInventoryData(lm);
             }
-            else if (cmd == "wearLock") lmSendConfig("wearLock", (string)(wearLock = llList2Integer(split, 0)));
+            else if (cmd == "wearLock") {
+                // WearLockExpire is set by Main.lsl...
+
+                lmSendConfig("wearLock", (string)(wearLock = llList2Integer(split, 0)));
+            }
         }
         else if (code == 500) {
             string choice = llList2String(split, 0);

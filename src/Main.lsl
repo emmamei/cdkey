@@ -629,6 +629,11 @@ default {
 
                     // These values are supposed to be positive, except collapseTime
                     // which should be negative
+                    //
+                    // Note that the Link Message contents were an offset from
+                    // the current time, but here the variables are being set
+                    // as a specific time in the future...
+
                          if (name == "wearLockExpire")    wearLockExpire = timeSet;
                     else if (name == "poseExpire")            poseExpire = timeSet;
                     else if (name == "timeToJamRepair")  timeToJamRepair = timeSet;
@@ -690,10 +695,11 @@ default {
             if (cmd == "getTimeUpdates") {
                 float t = llGetTime();
 
-                // Internal variables are based on absolute Script Time;
-                // Link Messages on relative time
+                // Internal variables are based on absolute Script Time (except timeLeftOnKey);
+                // Link Messages are based on an offset time
                 //
                 // All values are positive except collapseTime which is negative
+
                 if (cdTimeSet(timeLeftOnKey))       lmSendConfig("timeLeftOnKey",    (string) timeLeftOnKey);
                 if (cdTimeSet(wearLockExpire))      lmSendConfig("wearLockExpire",   (string)(wearLockExpire - t));
                 if (cdTimeSet(timeToJamRepair))     lmSendConfig("timeToJamRepair",  (string)(timeToJamRepair - t));
@@ -760,6 +766,9 @@ default {
             }
 
             else if (cmd == "wearLock") {
+
+                // WearLock is set by Avatar.lsl...
+
                 //wearLockExpire = WEAR_LOCK_TIME;
 
                 if (llList2Integer(split, 0)) {
