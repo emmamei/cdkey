@@ -178,7 +178,13 @@ default {
                 integer i;
                 for (i = 0; i < llGetInventoryNumber(10); i++) {
                     string script = llGetInventoryName(10, i);
-                    if ((script != "UpdateScript") && (script != cdMyScriptName())) {
+
+                    if (
+#ifdef UPDATE_SCRIPT
+                        (script != "UpdateScript") &&
+#endif
+                        (script != cdMyScriptName())) {
+
                         if (llGetScriptState(script)) memWait += script;
                     }
                 }
@@ -234,7 +240,9 @@ default {
 
                                 scriptName = llGetInventoryName(10, i);
 
+#ifdef UPDATE_SCRIPT
                                 if (scriptName != "UpdateScript") {
+#endif
                                     if (( type = cdGetElementType(memData, ([scriptName]))) != JSON_INVALID) {
 
                                         totUsed  += used_memory      = (float)cdGetValue(memData, ([scriptName,0]));
@@ -260,7 +268,9 @@ default {
                                             }
                                         }
                                     }
+#ifdef UPDATE_SCRIPT
                                 }
+#endif
                             }
 
                             output += "\nTotals:\t" + formatFloat(totUsed / 1024.0, 2) + "/" + (string)llRound(totLimit / 1024.0) + "kB (" +
@@ -427,7 +437,11 @@ default {
 
                 // This assumes a Doll cannot be her own controller...
                 if (cdIsController(id)) pluslist += "Reset Scripts";
-                if (cdIsDoll(id)) pluslist += ["Reset Scripts","Check Update", "Factory Reset"];
+#ifdef UPDATE_SCRIPT
+                if (cdIsDoll(id)) pluslist += ["Reset Scripts","Check Update","Factory Reset"];
+#else
+                if (cdIsDoll(id)) pluslist += ["Reset Scripts","Factory Reset"];
+#endif
 
                 cdDialogListen();
                 llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
