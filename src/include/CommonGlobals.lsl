@@ -55,7 +55,7 @@ integer offlineMode         = TRUE;
 integer pleasureDoll;
 integer poseSilence;
 integer quiet;
-integer RLVok;
+integer RLVok               = -1;
 integer signOn;
 integer takeoverAllowed;
 integer visible             = 1;
