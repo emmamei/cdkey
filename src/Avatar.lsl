@@ -15,6 +15,7 @@
 #define cdLockMeisterCmd(a) llWhisper(LOCKMEISTER_CHANNEL,(string)dollID+a)
 #define MAX_RLVCHECK_TRIES 5
 #define RLV_TIMEOUT 20.0
+#define UNSET -1
 
 #define cdListenerDeactivate(a) llListenControl(a, 0)
 #define cdListenerActivate(a) llListenControl(a, 1)
@@ -84,7 +85,7 @@ integer lowScriptMode;
 integer poseSilence;
 integer refreshControls;
 integer RLVck = 0;
-integer RLVok = -1;
+integer RLVok = UNSET;
 integer RLVstarted;
 integer startup = 1;
 integer targetHandle;
@@ -140,11 +141,11 @@ key animStart(string animation) {
 // This is the starter function
 
 doCheckRLV() {
-    if (!isAttached) return; // if not attached, no sense checking for RLV
+    //if (!isAttached) return; // if not attached, no sense checking for RLV
 
     rlvTimer = llGetTime();
     RLVck = 0;
-    RLVok = -1;
+    RLVok = UNSET;
     rlvAPIversion = "";
     RLVstarted = 0;
 
@@ -162,7 +163,7 @@ doCheckRLV() {
 // Currently runs on init 110 - button press - and timer
 
 checkRLV() {
-    if (!isAttached) return; // if not attached, no sense checking for RLV
+    //if (!isAttached) return; // if not attached, no sense checking for RLV
 
     if (RLVok == 1) {
         RLVck = 0;
@@ -187,8 +188,8 @@ checkRLV() {
         if (RLVck <= 0) {
             RLVck = 1;
 #ifdef WAKESCRIPT
-        cdWakeScript("StatusRLV");
-        cdWakeScript("Transform");
+            cdWakeScript("StatusRLV");
+            cdWakeScript("Transform");
 #endif
         }
         else RLVck++;
@@ -214,12 +215,13 @@ checkRLV() {
         // Set next RLV check in 20s
         llSetTimerEvent(RLV_TIMEOUT);
         nextRLVcheck = llGetTime() + RLV_TIMEOUT;
-    } else {
+    }
+    else {
         // RLVck reached max
         debugSay(2,"DEBUG-RLV","RLV check failed...");
 
         // RLVstarted implies RLVok: if RLV has been activated in
-        // the key code, then RLVstarted is set
+        // the key code, then RLVstarted is set - or does it?
 
         if (!RLVstarted) {
             if (RLVok) llOwnerSay("Reattached Community Doll Key with " + rlvAPIversion + " active...");
@@ -234,10 +236,6 @@ checkRLV() {
             return;
         }
 #endif
-
-        //if (isAttached)
-            // This starts a read of DataRLV - and other things
-            //cdLoadData(RLV_NC, RLV_BASE_RESTRICTIONS);
     }
 }
 
@@ -332,17 +330,17 @@ ifPermissions() {
             // PERMISSION_TRIGGER_ANIMATION
 
             if ((permMask & PERMISSION_TRIGGER_ANIMATION) != 0) {
-                key curAnim = llList2Key(llGetAnimationList(dollID), 0);
+                list animList = llGetAnimationList(dollID);
+                key curAnim = llList2Key(animList, 0);
+                integer animCount = llGetListLength(animList);
+                integer i = animCount;
+                key animKey;
 
                 if (clearAnim) {
-                    list animList = llGetAnimationList(dollID);
-                    integer i; integer animCount = llGetListLength(animList);
-                    key animKey;
-
                     keyAnimation = "";
                     lmSendConfig("keyAnimationID", (string)(keyAnimationID = NULL_KEY));
 
-                    for (i = 0; i < animCount; i++) {
+                    for (; i; i--) {
                         animKey = llList2Key(animList, i);
                         if (animKey != NULL_KEY) llStopAnimation(animKey);
                     }
@@ -354,31 +352,34 @@ ifPermissions() {
                 } else if (!cdNoAnim()) {
                     cdLockMeisterCmd("bootoff");
 
-                    list animList; integer i; integer animCount;
-                    key animKey = keyAnimationID;
+                    animKey = keyAnimationID;
 
                     if (animKey == NULL_KEY) animKey = llGetInventoryKey(keyAnimation);
 
                     if (animKey) {
+                        key animKeyI;
+
                         while ((animList = llGetAnimationList(dollID)) != [ animKey ]) {
                             animCount = llGetListLength(animList);
-                            key animKeyI;
-                            for (i = 0; i < animCount; i++) {
+
+                            for (i = animCount; i; i--) {
                                 animKeyI = llList2Key(animList, i);
                                 if (animKeyI != animKey) llStopAnimation(animKeyI);
                             }
+
                             llStartAnimation(keyAnimation);
                         }
                     }
                     else animKey = animStart(keyAnimation);
 
-                    if ((keyAnimationID == NULL_KEY) && (animKey != NULL_KEY)) lmSendConfig("keyAnimationID", (string)(keyAnimationID = animKey));
-
-                    if (keyAnimationID) {
+                    if (keyAnimationID == NULL_KEY) {
+                        if (animKey != NULL_KEY) lmSendConfig("keyAnimationID", (string)(keyAnimationID = animKey));
+                        animRefreshRate = 4.0;
+                    }
+                    else {
                         debugSay(7, "DEBUG", "animID=" + (string)keyAnimationID + " curAnim=" + (string)curAnim + " animRefreshRate=" + (string)animRefreshRate);
 
-                        if (keyAnimationID == NULL_KEY) animRefreshRate = 4.0;          // In case anim is no mod use default 4 sec
-                        else if (curAnim == keyAnimationID) {
+                        if (curAnim == keyAnimationID) {
                             animRefreshRate += (1.0/llGetRegionFPS());                  // +1 Frame
                             if (animRefreshRate > 30.0) animRefreshRate = 30.0;             // 30 Second limit
                         }
@@ -387,10 +388,10 @@ ifPermissions() {
                             if (animRefreshRate < 0.022) animRefreshRate = 0.022;           // Limit once per frame
                         }
                     }
-                    else if (keyAnimation != "") animRefreshRate = 4.0;
                 }
 
                 if (animRefreshRate) nextAnimRefresh = llGetTime() + animRefreshRate;
+                llSetTimerEvent(nextAnimRefresh);
             }
 
             //----------------------------------------
@@ -449,7 +450,7 @@ ifPermissions() {
             }
             else if (hasCarrier) {
 
-                if (lockPos != ZERO_VECTOR) lmSendConfig("lockPos", (string)(lockPos = ZERO_VECTOR));
+                if (lockPos) lmSendConfig("lockPos", (string)(lockPos = ZERO_VECTOR));
 
                 // Stop moving to Target
                 llTargetRemove(targetHandle);
@@ -458,7 +459,7 @@ ifPermissions() {
                 // Re-enable with new target
                 vector carrierPos = llList2Vector(llGetObjectDetails(carrierID, [ OBJECT_POS ]), 0);
 
-                if (carrierPos != ZERO_VECTOR) targetHandle = llTarget(carrierPos, CARRY_RANGE);
+                if (carrierPos) targetHandle = llTarget(carrierPos, CARRY_RANGE);
             }
             else {
                 // Stop moving to Target
@@ -482,7 +483,7 @@ default {
 
         rlvTimer = llGetTime();
         RLVck = 0;
-        RLVok = -1;
+        RLVok = UNSET;
         rlvAPIversion = "";
         RLVstarted = 0;
 
@@ -717,7 +718,8 @@ default {
                     cdListenerDeactivate(rlvHandle);
 
                     // as soon as rlvHandle is valid - we can check for RLV
-                    if (RLVok == -1) checkRLV();
+                    //if (RLVok == -1) checkRLV();
+                    doCheckRLV();
                 }
                 else if (name == "keyAnimationID") {
                     keyAnimationID = (key)value;
@@ -888,26 +890,26 @@ default {
                 }
 
                 integer poseCount = llGetInventoryNumber(20);
-                list poseList; integer i;
+                list poseList; integer i = poseCount;
                 string poseName;
                 string prefix;
 
-                for (i = 0; i < poseCount; i++) {
+                for (; i; i--) {
                     poseName = llGetInventoryName(20, i);
                     prefix = cdGetFirstChar(poseName);
 
                     // Is the pose a pose we can show in the menu?
                     //
-                    // (Note the multi-step if statement enforces a short-circuit type of evaluation)
-                    //
                     if (poseName != ANIMATION_COLLAPSED) {
-                        if (isDoll && prefix != ".") {
-                            if ((isDoll || isController) && prefix != "!") {
+                        if (prefix != "!" && prefix != ".") prefix = "";
 
-                                // add a star to active animation
-                                if (poseName != keyAnimation) poseList += poseName;
-                                else poseList += [ "* " + poseName ];
-                            }
+                        if (isDoll ||
+                           (isController && prefix == "!") ||
+                           (prefix == "")) {
+
+                            // add a star to active animation
+                            if (poseName != keyAnimation) poseList += poseName;
+                            else poseList += [ "* " + poseName ];
                         }
                     }
                 }
@@ -930,14 +932,8 @@ default {
                 else poseList = dialogSort(poseList + [ MAIN ]);
 
                 cdDialogListen();
-                llDialog(id, "Select the pose to put the doll into", poseList, dialogChannel);
-
+                llDialog(id, "Select the pose to put Dolly into", poseList, dialogChannel);
             }
-#ifdef DEVELOPER_MODE
-//          else {
-//              llSay(DEBUG_CHANNEL, "Choice ignored in Avatar: " + choice + "/" + name);
-//          }
-#endif
             ifPermissions();
         }
     }
@@ -958,7 +954,7 @@ default {
         // IF RLV is ok we don't have to check it do we?
 
         //debugSay(2,"DEBUG-AVATAR","timer tripped...");
-        if (RLVok == -1) {
+        if (RLVok == UNSET) {
             // this makes sure that enough time has elapsed - and prevents
             // the check from being missed...
 
@@ -1002,7 +998,7 @@ default {
                 targetHandle = llTarget(carrierPos, CARRY_RANGE);
             }
             else {
-                if (lockPos != ZERO_VECTOR) lockPos = llGetPos();
+                if (lockPos) lockPos = llGetPos();
                 targetHandle = llTarget(lockPos, 0.5);
             }
         }
@@ -1030,7 +1026,7 @@ default {
                 carrierPos = newCarrierPos;
                 targetHandle = llTarget(carrierPos, CARRY_RANGE);
             }
-            if (carrierPos != ZERO_VECTOR) {
+            if (carrierPos) {
                 llMoveToTarget(carrierPos, 0.7);
                 carryMoved = 1;
             }
