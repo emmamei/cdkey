@@ -113,7 +113,10 @@ vector gemColour;
 string barefeet;
 string dollType;
 string attachName;
-string saveAttachment = "{\"chest\":[\"<0.000000, 0.184040, -0.279770>\",\"<1.000000, 0.000000, 0.000000, 0.000000>\"],\"spine\":[\"<0.000000, -0.200000, 0.000000>\",\"<0.000000, 0.000000, 0.000000, 1.000000>\"]}";
+#ifdef NO_SAVEATTACH
+string saveDefault = "{\"chest\":[\"<0.000000, 0.184040, -0.279770>\",\"<1.000000, 0.000000, 0.000000, 0.000000>\"],\"spine\":[\"<0.000000, -0.200000, 0.000000>\",\"<0.000000, 0.000000, 0.000000, 1.000000>\"]}";
+string saveAttachment = saveDefault;
+#endif
 integer isAttached;
 
 // These RLV commands are set by the user
@@ -668,8 +671,10 @@ default {
         // WHen this script (Start.lsl) resets... EVERYONE resets...
         doRestart();
 
+#ifdef NO_SAVEATTACH
         // read list of attach points in DataAttachments (in numeric order)
         ncResetAttach = llGetNotecardLine(NC_ATTACHLIST, cdAttached() - 1);
+#endif
 
         readPreferences();
     }
@@ -736,7 +741,9 @@ default {
             if (llGetPermissionsKey() == dollID && (llGetPermissions() & PERMISSION_TAKE_CONTROLS) != 0) llTakeControls(CONTROL_MOVE, 1, 1);
             else llRequestPermissions(dollID, PERMISSION_MASK);
 
+#ifdef NO_SAVEATTACH
             ncResetAttach = llGetNotecardLine(NC_ATTACHLIST, 0);
+#endif
 
             if (lastAttachAvatar == NULL_KEY) newAttach = 1;
         }
@@ -750,6 +757,7 @@ default {
     //----------------------------------------
     dataserver(key query_id, string data) {
 
+#ifdef NO_SAVEATTACH
         // Reading notecard DataAttachments (names of attach points)
         if (query_id == ncResetAttach) {
             data = llStringTrim(data,STRING_TRIM);
@@ -764,9 +772,11 @@ default {
 
             //llSetTimerEvent(10.0);
         }
+        else
+#endif
 
         // Reading notecard DataAppearance (JSON list of appearance settings)
-        else if (query_id == ncRequestAppearance) {
+        if (query_id == ncRequestAppearance) {
             if (data == EOF) {
                 doVisibility();
                 configured = 1;
@@ -786,9 +796,10 @@ default {
                 ncRequestAppearance = llGetNotecardLine(APPEARANCE_NC, ncLine++);
             }
         }
+        else
 
         // Read notecard: Preferences
-        else if (query_id == ncPrefsKey) {
+        if (query_id == ncPrefsKey) {
             if (data == EOF) {
                 lmSendConfig("ncPrefsLoadedUUID", llDumpList2String(llList2List((string)llGetInventoryKey(NOTECARD_PREFERENCES) + ncPrefsLoadedUUID, 0, 9),"|"));
                 lmInternalCommand("getTimeUpdates","",NULL_KEY);
@@ -905,9 +916,11 @@ default {
             // return if not attached
             if (!cdAttached() || (attachName == "")) return;
 
+#ifdef NO_SAVEATTACH
             // save position and rotation to JSON var
             saveAttachment = cdSetValue( saveAttachment, ( [ attachName, 0 ] ), (string)llGetLocalPos() );
             saveAttachment = cdSetValue( saveAttachment, ( [ attachName, 1 ] ), (string)llGetLocalRot() );
+#endif
         }
 #ifdef NO_STARTUP
         else {
