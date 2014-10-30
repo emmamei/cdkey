@@ -267,15 +267,13 @@ default {
             lmRating(simRating);
 
 #ifdef ADULT_MODE
-            string msg = "Entered " + llGetRegionName() + " rating is " + llToLower(simRating);
 
-            if (pleasureDoll || (dollType == "Slut")) {
+            //if (pleasureDoll || (dollType == "Slut")) {
 
-                if (cdRating2Integer(simRating) < 2) {
-                    msg += " stripping disabled.";
-                    llOwnerSay(msg);
-                }
-            }
+            //    if (cdRating2Integer(simRating) < 2) {
+            //        llOwnerSay("Entered " + llGetRegionName() + "; rating is " + llToLower(simRating) + " - so stripping disabled.");
+            //    }
+            //}
 #endif
         }
     }
@@ -308,16 +306,6 @@ default {
         }
 
         lmMenuReply(MAIN, llGetDisplayName(id), id);
-
-        // The possibility of this happening is very low -
-        // *NOT* impossible... but low
-        //
-        //integer i;
-        //for (i = 0; i < num; i++) {
-        //    key id = llDetectedKey(i);
-        //
-        //    lmMenuReply(MAIN, llGetDisplayName(id), id);
-        //}
     }
 
     //----------------------------------------
@@ -374,25 +362,33 @@ default {
         ticks++;
 
         // False collapse? Collapsed = 1 while timeLeftOnKey is positive is an invalid condition
-        if ((collapsed == NO_TIME) && (timeLeftOnKey > 0.0)) collapse(NOT_COLLAPSED);
-        else if ((collapsed == JAMMED) && (timeToJamRepair <= thisTimerEvent)) collapse(NOT_COLLAPSED);
+        if (collapsed == NO_TIME)
+            if (timeLeftOnKey > 0.0) collapse(NOT_COLLAPSED);
+        else if (collapsed == JAMMED)
+            if (timeToJamRepair <= thisTimerEvent) collapse(NOT_COLLAPSED);
 
         // Did the pose expire? If so, unpose Dolly
-        if (cdTimeSet(poseExpire) && (poseExpire <= thisTimerEvent)) {
-            lmMenuReply("Unpose", "", llGetKey());
-            lmSendConfig("poseExpire", (string)(poseExpire = 0.0));
+        if (poseExpire) {
+            if (poseExpire <= thisTimerEvent) {
+                lmMenuReply("Unpose", "", llGetKey());
+                lmSendConfig("poseExpire", (string)(poseExpire = 0.0));
+            }
         }
 
         // Has the carry timed out? If so, drop the Dolly
-        if (cdTimeSet(carryExpire) && (carryExpire <= thisTimerEvent)) {
-            lmMenuReply("Uncarry", carrierName, carrierID);
-            lmSendConfig("carryExpire", (string)(carryExpire = 0.0));
+        if (carryExpire) {
+            if (carryExpire <= thisTimerEvent) {
+                lmMenuReply("Uncarry", carrierName, carrierID);
+                lmSendConfig("carryExpire", (string)(carryExpire = 0.0));
+            }
         }
 
         // Has the clothing lock - wear lock - run its course? If so, reset lock
-        if (cdTimeSet(wearLockExpire) && (wearLockExpire <= thisTimerEvent)) {
-            lmInternalCommand("wearLock", "0", NULL_KEY);
-            lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0.0));
+        if (wearLockExpire) {
+            if (wearLockExpire <= thisTimerEvent) {
+                lmInternalCommand("wearLock", "0", NULL_KEY);
+                lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0.0));
+            }
         }
 
         lmInternalCommand("getTimeUpdates", "", llGetKey());
@@ -424,7 +420,7 @@ default {
         // Others which cause this effect are not being attached to spine
         // and being doll type Builder or Key
 
-        if (windRate != 0.0) {
+        if (windRate) {
             timeLeftOnKey -= timerInterval * windRate;
 
             if (timeLeftOnKey > 0.0) {
@@ -457,26 +453,19 @@ default {
             }
         }
 
-#ifdef DEVELOPER_MODE
-        // Doesn't seem very useful
-        //
-        //if (timeReporting) llOwnerSay("Script Time (running 30m Average): " +
-        //                      formatFloat(llList2Float(llGetObjectDetails(llGetKey(), [ OBJECT_SCRIPT_TIME ]), 0) * 1000000, 2) + "µs");
-#endif
-
         scaleMem();
 
 #ifdef PREDICTIVE_TIMER
         // Determine next event to fire and set timer to match
         list possibleEvents;
-        if (cdTimeSet(carryExpire)) {
-                                            possibleEvents += carryExpire - thisTimerEvent;
-                                            possibleEvents += 10.0;
+        if (carryExpire) {
+                                 possibleEvents += carryExpire - thisTimerEvent;
+                                 possibleEvents += 10.0;
         }
 
-        if (cdTimeSet(poseExpire))          possibleEvents += poseExpire - thisTimerEvent;
-        if (cdTimeSet(wearLockExpire))      possibleEvents += wearLockExpire - thisTimerEvent;
-        if (cdTimeSet(timeToJamRepair))     possibleEvents += timeToJamRepair - thisTimerEvent;
+        if (poseExpire)          possibleEvents += poseExpire - thisTimerEvent;
+        if (wearLockExpire)      possibleEvents += wearLockExpire - thisTimerEvent;
+        if (timeToJamRepair)     possibleEvents += timeToJamRepair - thisTimerEvent;
 
         if (afk && autoAFK) {   // This lets us run a short cut timer event
                                 // that only checks for the doll returning
@@ -573,11 +562,6 @@ default {
             string value = llList2String(split, 1);
             split = llDeleteSubList(split, 0, 0);
 
-            if (value == RECORD_DELETE) {
-                value = "";
-                split = [];
-            }
-
                  if (name == "timeLeftOnKey") {
                      timeLeftOnKey = (float)value;
                      //if (collapsed == NO_TIME && timeLeftOnKey > 0.0) collapse(NOT_COLLAPSED);
@@ -625,7 +609,7 @@ default {
             else if ((name == "wearLockExpire") || (name == "poseExpire") || (name == "timeToJamRepair") || (name == "carryExpire") || (name == "collapseTime")) {
                 if (script != "Main") {
                     float timeSet = 0.0;
-                    if ((float)value != 0.0) timeSet = llGetTime() + (float)value;
+                    if ((float)value) timeSet = llGetTime() + (float)value;
 
                     // These values are supposed to be positive, except collapseTime
                     // which should be negative
@@ -653,11 +637,11 @@ default {
 //              if (script != "Main") lmInternalCommand("setWindTimes", llDumpList2String(llJson2List(value),"|"), id);
 //              else windTimes = llJson2List(value);
 
-                if (script != "Main" && script != "ServiceReceiver") llOwnerSay("windTimes LinkMessage sent by " + script + " with value " + value);
+                if (script != "Main") llOwnerSay("windTimes LinkMessage sent by " + script + " with value " + value);
                 else windTimes = llJson2List(value);
             }
             else if (name == "displayWindRate") {
-                if ((float)value != 0) displayWindRate = (float)value;
+                if ((float)value) displayWindRate = (float)value;
             }
             else if (name == "collapsed")                    collapsed = (integer)value;
 #ifdef KEY_HANDLER
@@ -1064,23 +1048,22 @@ default {
                     (choice == "360m") ||
                     (choice == "480m")) {
 
-                    //llOwnerSay("keyLimit being set to " + (string)keyLimit); // debugging code
-                    //llOwnerSay("choice is " + (string)choice); // debugging code
                     lmSendConfig("keyLimit", (string)(keyLimit = ((float)choice * SEC_TO_MIN)));
                 }
             }
-            else if (cdIsController(id) && (choice == "Hold")) {
-                collapse(JAMMED);
+            else if (choice == "Hold") {
+                if (cdIsController(id)) collapse(JAMMED);
             }
-            else if ((cdIsCarrier(id) || cdIsController(id)) && (choice == "Unwind")) {
-                collapse(NO_TIME);
+            else if (choice == "Unwind") {
+                if (cdIsCarrier(id) || cdIsController(id)) collapse(NO_TIME);
             }
         }
 
         else if (code == 501) {
             integer textboxType = llList2Integer(split, 0);
-            split = llDeleteSubList(split, 0, 0);
+
             if (textboxType == 3) {
+                split = llDeleteSubList(split, 0, 0);
                 split = llParseString2List(llDumpList2String(split, "|"), [" ",",","|"], []);
 
                 lmInternalCommand("setWindTimes", llDumpList2String(split, "|"), id);
