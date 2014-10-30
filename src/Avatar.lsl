@@ -27,7 +27,7 @@ key carrierID = NULL_KEY;
 // but that would set fields with undefined values: this is more
 // accurate
 #define ALL_CONTROLS (CONTROL_FWD|CONTROL_BACK|CONTROL_LEFT|CONTROL_RIGHT|CONTROL_ROT_LEFT|CONTROL_ROT_RIGHT|CONTROL_UP|CONTROL_DOWN|CONTROL_LBUTTON|CONTROL_ML_LBUTTON)
-integer allControls;
+integer allControls = ALL_CONTROLS;
 
 key rlvTPrequest;
 key requestLoadData;
@@ -297,6 +297,7 @@ activateRLV() {
     lmRunRLVas("Core", baseRLV + "sendchannel:" + (string)chatChannel + "=rem");
 
     // If we get here - RLVok is already set
+    //RLVstarted = (RLVstarted | RLVok);
     RLVstarted = 1;
 
 #ifndef DEVELOPER_MODE
@@ -340,7 +341,7 @@ ifPermissions() {
                     keyAnimation = "";
                     lmSendConfig("keyAnimationID", (string)(keyAnimationID = NULL_KEY));
 
-                    for (; i; i--) {
+                    for (i++; i; i--) {
                         animKey = llList2Key(animList, i);
                         if (animKey != NULL_KEY) llStopAnimation(animKey);
                     }
@@ -401,8 +402,7 @@ ifPermissions() {
                 if (!haveControls && (afk || collapsed || cdSelfPosed())) {
                     // No reason for us to be locking the controls and we do not already have them
                     // This just serves to get us treated as a vehicle to run on NoScript land
-                    llTakeControls(ALL_CONTROLS, FALSE, TRUE);   // Controls is a bitmask not a comparison so -1 is a quick
-                                                // shortcut for all on a big endian host.
+                    llTakeControls(ALL_CONTROLS, FALSE, TRUE);
                 }
                 else if (collapsed || cdPosed()) {
                     // When collapsed or posed the doll should not be able to move at all; so the key will
@@ -667,6 +667,7 @@ default {
                     collapsed = (integer)value;
                     if (collapsed) lmSendConfig("keyAnimation", (keyAnimation = ANIMATION_COLLAPSED));
                     else if (cdCollapsedAnim()) lmSendConfig("keyAnimation", (keyAnimation = ""));
+                    ifPermissions();
             }
             else if (name == "tpLureOnly")           tpLureOnly = (integer)value;
             else if (name == "poseSilence")         poseSilence = (integer)value;
@@ -675,7 +676,10 @@ default {
                 string oldanim = keyAnimation;
                 keyAnimation = value;
 
-                if (cdCollapsedAnim() && collapsed) lmSendConfig("keyAnimation", "");
+                if (cdCollapsedAnim() && collapsed) {
+                    lmSendConfig("keyAnimation", "");
+                    ifPermissions();
+                }
 
                 isAnimated = (keyAnimation != "");
 
@@ -718,8 +722,7 @@ default {
                     cdListenerDeactivate(rlvHandle);
 
                     // as soon as rlvHandle is valid - we can check for RLV
-                    //if (RLVok == -1) checkRLV();
-                    doCheckRLV();
+                    if (RLVok == UNSET) checkRLV();
                 }
                 else if (name == "keyAnimationID") {
                     keyAnimationID = (key)value;
@@ -967,9 +970,9 @@ default {
                 debugSay(2,"DEBUG-RLV","performing next try of RLVcheck...");
                 checkRLV();
             }
-        }
 
-        lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
+            lmSendConfig("RLVok",(string)RLVok);
+        }
 
         ifPermissions();
 
