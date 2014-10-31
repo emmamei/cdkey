@@ -43,8 +43,6 @@
 #define NOTECARD_PREFERENCES "Preferences"
 // Name of the intro text notecard
 #define NOTECARD_INTRO "IntroText"
-// Permissions scripts should request
-#define PERMISSION_MASK 0x8434
 // Wind down rate factor in AFK mode
 #define RATE_AFK 0.5
 // Wind down rate factor in standard mode
@@ -69,6 +67,18 @@
 #define POSE_LIMIT 300.0
 #define CARRY_TIMEOUT 300.0
 #define JAM_DEFAULT_TIME 90.0
+
+// Permissions scripts should request
+//
+//     * 0x0004 - PERMISSION_TAKE_CONTROLS
+//     * 0x0010 - PERMISSION_TRIGGER_ANIMATION
+//     * 0x0020 - PERMISSION_ATTACH
+//     * 0x0400 - PERMISSION_TRACK_CAMERA
+//     * 0x8000 - PERMISSION_OVERRIDE_ANIMATIONS
+//
+// Starred items are automatic on attach...
+//
+#define PERMISSION_MASK 0x8434
 
 // Keys of important people in life of the Key:
 #define AGENT_CHRISTINA_HALPIN        "42c7aaec-38bc-4b0c-94dd-ae562eb67e6d"
