@@ -68,7 +68,6 @@ integer isAnimated;
 integer hasCarrier;
 //integer isPosed; (use cdPosed)
 //integer isSelfPosed; (use cdSelfPosed)
-integer isAttached;
 
 integer carryMoved;
 integer rlvChannel;
@@ -141,8 +140,6 @@ key animStart(string animation) {
 // This is the starter function
 
 doCheckRLV() {
-    //if (!isAttached) return; // if not attached, no sense checking for RLV
-
     rlvTimer = llGetTime();
     RLVck = 0;
     RLVok = UNSET;
@@ -163,8 +160,6 @@ doCheckRLV() {
 // Currently runs on init 110 - button press - and timer
 
 checkRLV() {
-    //if (!isAttached) return; // if not attached, no sense checking for RLV
-
     if (RLVok == 1) {
         RLVck = 0;
         llSetTimerEvent(60.0);
@@ -307,10 +302,14 @@ activateRLV() {
 
 ifPermissions() {
 
+    debugSay(2,"DEBUG-COLLAPSE","Looking at permissions");
+
     // Don't do anything unless attached
-    if (isAttached) {
+    if (llGetAttached()) {
         key grantorID = llGetPermissionsKey();
         integer permMask = llGetPermissions();
+
+        debugSay(2,"DEBUG-COLLAPSE","Permission processing begun");
 
         // If permissions granted to someone other than Dolly,
         // start over...
@@ -331,6 +330,9 @@ ifPermissions() {
             // PERMISSION_TRIGGER_ANIMATION
 
             if ((permMask & PERMISSION_TRIGGER_ANIMATION) != 0) {
+
+                debugSay(2,"DEBUG-COLLAPSE","Animation trigger being processed");
+
                 list animList = llGetAnimationList(dollID);
                 key curAnim = llList2Key(animList, 0);
                 integer animCount = llGetListLength(animList);
@@ -399,6 +401,14 @@ ifPermissions() {
             // PERMISSION_TAKE_CONTROLS
 
             if (permMask & PERMISSION_TAKE_CONTROLS) {
+
+                debugSay(2,"DEBUG-COLLAPSE","Take Controls being processed");
+                debugSay(2,"DEBUG-COLLAPSE","haveControls = " + (string)haveControls);
+                debugSay(2,"DEBUG-COLLAPSE","afk = " + (string)afk);
+                debugSay(2,"DEBUG-COLLAPSE","collapsed = " + (string)collapsed);
+                debugSay(2,"DEBUG-COLLAPSE","cdSelfPosed() = " + (string)cdSelfPosed());
+                debugSay(2,"DEBUG-COLLAPSE","cdPosed() = " + (string)cdPosed());
+
                 if (!haveControls && (afk || collapsed || cdSelfPosed())) {
                     // No reason for us to be locking the controls and we do not already have them
                     // This just serves to get us treated as a vehicle to run on NoScript land
@@ -426,10 +436,18 @@ ifPermissions() {
                     refreshControls = 1;
 
                     if ((llGetParcelFlags(llGetPos()) & PARCEL_FLAG_ALLOW_SCRIPTS) != 0) {
-                        // We do not want to llReleaseControls if the land is NoScript; it is not a safe op
+
+                        // We do not want to release the controls if the land is noScript; doing so
+                        // would effectively shut down the key until one entered Script-enabled
+                        // land again
+
                         llReleaseControls();
+
                         haveControls = 0;
                         refreshControls = 0;
+
+                        // This code is contained in the run_event - so this function
+                        // repeats the function we are in.
                         llRequestPermissions(dollID, PERMISSION_MASK);  // Releasing controls drops the permissions
                                                                         // get them back.
                     }
@@ -603,11 +621,8 @@ default {
         llTargetRemove(targetHandle);
 
         if (id) {
-            isAttached = 1;
             ifPermissions();
             doCheckRLV();
-        } else {
-            isAttached = 0;
         }
 
         newAttach = (lastAttachedID != dollID);
@@ -665,8 +680,11 @@ default {
             else if (name == "canDressSelf")       canDressSelf = (integer)value;
             else if (name == "collapsed") {
                     collapsed = (integer)value;
+
                     if (collapsed) lmSendConfig("keyAnimation", (keyAnimation = ANIMATION_COLLAPSED));
                     else if (cdCollapsedAnim()) lmSendConfig("keyAnimation", (keyAnimation = ""));
+
+                    debugSay(2,"DEBUG-COLLAPSE","Asking for permissions");
                     ifPermissions();
             }
             else if (name == "tpLureOnly")           tpLureOnly = (integer)value;
@@ -1088,6 +1106,7 @@ default {
 
             llOwnerSay("Dolly is now teleporting.");
 
+            // Note this will be rejected if @unsit=n or @tploc=n are active
             lmRunRLVas("TP", "tpto:" + locx + "/" + locy + "/" + locz + "=force");
         }
 #ifdef WITHOUT_LOAD_DATA
