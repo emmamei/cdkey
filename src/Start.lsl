@@ -32,25 +32,6 @@
 #define cdSetKeyName(a) llSetObjectName(a)
 #define cdResetKeyName() llSetObjectName(PACKAGE_NAME + " " + __DATE__)
 
-#ifdef NO_STARTUP
-// This isn't great - but at least it's up here where it can be maintained
-// Note, too, that Start is missing - because that's THIS script...
-//
-// LinkListen *could* be added for developers, but that is an optional script -
-// still - so not necessarily good to add here.
-list scriptList = [ "Aux", "Avatar", "ChatHandler", "Dress", "Main", "MenuHandler",
-                    "StatusRLV", "Transform" ];
-#endif
-
-//#define HYPNO_START   // Enable hypno messages on startup
-//
-// This is the initial hypnotic suggestion and RolePlay
-// called from Main.lsl.  The text is sent to the Key
-// owner over the space of about three minutes when the
-// Key is first used.
-//
-// As of 30 October 2013, this script is unused.
-
 //=======================================
 // VARIABLES
 //=======================================
@@ -113,10 +94,6 @@ vector gemColour;
 string barefeet;
 string dollType;
 string attachName;
-#ifdef NO_SAVEATTACH
-string saveDefault = "{\"chest\":[\"<0.000000, 0.184040, -0.279770>\",\"<1.000000, 0.000000, 0.000000, 0.000000>\"],\"spine\":[\"<0.000000, -0.200000, 0.000000>\",\"<0.000000, 0.000000, 0.000000, 1.000000>\"]}";
-string saveAttachment = saveDefault;
-#endif
 integer isAttached;
 
 // These RLV commands are set by the user
@@ -392,28 +369,6 @@ doneConfiguration(integer prefsRead) {
         llSay(0, llGetDisplayName(llGetOwner()) + " is now a dolly - anyone may play with their Key.");
 }
 
-#ifdef SIM_FRIENDLY
-#ifdef WAKESCRIPT
-wakeMenu() {
-#ifdef DEVELOPER_MODE
-    llOwnerSay("Waking menu scripts");
-#endif
-    //cdRunScript("MenuHandler");
-    //cdRunScript("Transform");
-    //cdRunScript("Dress");
-}
-
-sleepMenu() {
-#ifdef DEVELOPER_MODE
-    llOwnerSay("Sleeping menu scripts");
-#endif
-    //cdStopScript("MenuHandler");
-    //cdStopScript("Transform");
-    //cdStopScript("Dress");
-}
-#endif
-#endif
-
 doRestart() {
 
     integer n;
@@ -460,26 +415,7 @@ default {
         scaleMem();
 
         if (code == 102) {
-#ifdef DATABASE_BACKEND
-            if (script != "ServiceReceiver") return;
-
-            databaseFinished = 1;
-            if (!databaseOnline) {
-                llOwnerSay("Database not online...");
-                readPreferences();
-            }
-#endif
-
-//          if (llListFindList(ncPrefsLoadedUUID,[(string)llGetInventoryKey(NOTECARD_PREFERENCES)]) == NOT_FOUND) {
-//              llOwnerSay("Didn't find original prefs");
-//              readPreferences();
-//          }
-#ifdef DATABASE_BACKEND
-            else {
-                debugSay(2, "DEBUG", "Skipping preferences notecard as it is unchanged and settings were found in database.");
-                doneConfiguration(PREFS_NOT_READ); // this calls "code = 102"
-            }
-#endif
+            ;
         }
         else if (code == 135) {
             if (script == cdMyScriptName()) return;
@@ -494,10 +430,6 @@ default {
         else if (code == 300) {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
-
-#ifdef DATABASE_BACKEND
-            if (script == "ServiceReceiver") dbConfigCount++;
-#endif
 
                  if (name == "ncPrefsLoadedUUID")    ncPrefsLoadedUUID = llDeleteSubList(split,0,0);
 //          else if (name == "offlineMode")                offlineMode = (integer)value;
@@ -671,11 +603,6 @@ default {
         // WHen this script (Start.lsl) resets... EVERYONE resets...
         doRestart();
 
-#ifdef NO_SAVEATTACH
-        // read list of attach points in DataAttachments (in numeric order)
-        ncResetAttach = llGetNotecardLine(NC_ATTACHLIST, cdAttached() - 1);
-#endif
-
         readPreferences();
     }
 
@@ -686,9 +613,6 @@ default {
         if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
 
 #ifdef SIM_FRIENDLY
-#ifdef WAKESCRIPT
-        if (!cdIsScriptRunning("MenuHandler")) wakeMenu();
-#endif
         nextLagCheck = llGetTime() + SEC_TO_MIN;
 #endif
     }
@@ -709,11 +633,6 @@ default {
         //databaseOnline = 0;
         //databaseFinished = 0;
 
-#ifdef SIM_FRIENDLY
-#ifdef WAKESCRIPT
-        wakeMenu();
-#endif
-#endif
         llResetTime();
         //sendMsg(dollID, "Reattached, Initializing");
     }
@@ -741,12 +660,21 @@ default {
             if (llGetPermissionsKey() == dollID && (llGetPermissions() & PERMISSION_TAKE_CONTROLS) != 0) llTakeControls(CONTROL_MOVE, 1, 1);
             else llRequestPermissions(dollID, PERMISSION_MASK);
 
-#ifdef NO_SAVEATTACH
-            ncResetAttach = llGetNotecardLine(NC_ATTACHLIST, 0);
-#endif
-
             if (lastAttachAvatar == NULL_KEY) newAttach = 1;
         }
+
+        // when attaching key, user is NOT AFK...
+        afk = 0;
+        lmSendConfig("afk", "0");
+
+#ifdef SIM_FRIENDLY
+        // when attaching we're not in lowScriptMode
+        lowScriptMode = 0;
+        lmSendConfig("lowScriptMode", "0");
+#endif
+
+        // reset collapse environment if needed
+        lmInternalCommand("collapse", (string)collapsed, llGetKey());
 
         lastAttachPoint = cdAttached();
         lastAttachAvatar = id;
@@ -756,24 +684,6 @@ default {
     // DATASERVER
     //----------------------------------------
     dataserver(key query_id, string data) {
-
-#ifdef NO_SAVEATTACH
-        // Reading notecard DataAttachments (names of attach points)
-        if (query_id == ncResetAttach) {
-            data = llStringTrim(data,STRING_TRIM);
-
-            if (cdAttached())
-                llSetPrimitiveParams( [
-                    PRIM_POS_LOCAL,   (vector) cdGetValue(saveAttachment, ( [ data, 0 ] )),
-                    PRIM_ROT_LOCAL, (rotation) cdGetValue(saveAttachment, ( [ data, 1 ] ))
-                    ] );
-
-            attachName = data;
-
-            //llSetTimerEvent(10.0);
-        }
-        else
-#endif
 
         // Reading notecard DataAppearance (JSON list of appearance settings)
         if (query_id == ncRequestAppearance) {
@@ -888,70 +798,10 @@ default {
     // TIMER
     //----------------------------------------
     timer() {
-        float t = llGetTime();
 
-        // If the script has been running longer than 5 minutes, then
-        // scale back to 60s cycles, otherwise, use 15s cycles
-        if (t >= 300.0) llSetTimerEvent(60.0);
-        else llSetTimerEvent(15.0);
+        // No purpose to a timer here?
 
-#ifdef DATABASE_BACKEND
-        // Check to see if database startup timed out
-        if (!databaseOnline ||
-            (!databaseFinished && (
-            (t > 60.0) || (
-            (t > 10.0) &&
-            (t > dbConfigCount))))) {
-                databaseFinished = 1;
-                databaseOnline = 0;
-
-                llOwnerSay("No database in backend?");
-                readPreferences();
-        }
-#else
-        //readPreferences();
-#endif
-
-        if (startup == 0) {
-            // return if not attached
-            if (!cdAttached() || (attachName == "")) return;
-
-#ifdef NO_SAVEATTACH
-            // save position and rotation to JSON var
-            saveAttachment = cdSetValue( saveAttachment, ( [ attachName, 0 ] ), (string)llGetLocalPos() );
-            saveAttachment = cdSetValue( saveAttachment, ( [ attachName, 1 ] ), (string)llGetLocalRot() );
-#endif
-        }
-#ifdef NO_STARTUP
-        else {
-            // Check each script to see that they are running...
-            // Is this appropriate?
-
-            integer i; integer n = llGetListLength(scriptList);
-
-            for (i = 0; i < n; i++) {
-                string script = cdListElement(scriptList,i);
-
-                if (!cdIsScriptRunning(script)) {
-                    // Core key script appears to have suffered a fatal error try restarting
-
-#ifdef DEVELOPER_MODE
-                    float delay = 90.0;  // Increase delay for automatic restarts;
-                                         // this prevents rapidly looping in the event of a developer
-                                         // accidently saving a script that fails to compile.
-#else
-                    float delay = 30.0;
-#endif
-                    llOwnerSay("Script " + script + " has failed; key subsystems restarting in " + (string)delay + " seconds.");
-                    llSleep(delay);
-
-                    cdRunScript(script);
-                    cdResetKey();
-                } // if
-            } // for
-        } // if
-#endif
-    } // timer
+    }
 #endif
 
     //----------------------------------------
