@@ -343,9 +343,11 @@ ifPermissions() {
                     keyAnimation = "";
                     lmSendConfig("keyAnimationID", (string)(keyAnimationID = NULL_KEY));
 
-                    for (i++; i; i--) {
+                    i++;
+                    for (; i; i--) {
                         animKey = llList2Key(animList, i);
-                        if (animKey != NULL_KEY) llStopAnimation(animKey);
+                        debugSay(2,"DEBUG-AVATAR",">Stopping animation #" + (string)i + ": " + (string)animKey);
+                        if (animKey) llStopAnimation(animKey);
                     }
 
                     llStartAnimation("Stand");
@@ -363,10 +365,13 @@ ifPermissions() {
                         key animKeyI;
 
                         while ((animList = llGetAnimationList(dollID)) != [ animKey ]) {
-                            animCount = llGetListLength(animList);
+                            //animCount = llGetListLength(animList);
 
-                            for (i = animCount; i; i--) {
+                            i++;
+                            for (; i; i--) {
+
                                 animKeyI = llList2Key(animList, i);
+                                debugSay(2,"DEBUG-AVATAR","Stopping animation #" + (string)i + ": " + (string)animKeyI);
                                 if (animKeyI != animKey) llStopAnimation(animKeyI);
                             }
 
@@ -403,11 +408,10 @@ ifPermissions() {
             if (permMask & PERMISSION_TAKE_CONTROLS) {
 
                 debugSay(2,"DEBUG-COLLAPSE","Take Controls being processed");
-                debugSay(2,"DEBUG-COLLAPSE","haveControls = " + (string)haveControls);
-                debugSay(2,"DEBUG-COLLAPSE","afk = " + (string)afk);
-                debugSay(2,"DEBUG-COLLAPSE","collapsed = " + (string)collapsed);
-                debugSay(2,"DEBUG-COLLAPSE","cdSelfPosed() = " + (string)cdSelfPosed());
-                debugSay(2,"DEBUG-COLLAPSE","cdPosed() = " + (string)cdPosed());
+                debugSay(2,"DEBUG-COLLAPSE","haveControls = " + (string)haveControls + "; collapsed = " + (string)collapsed);
+                //debugSay(2,"DEBUG-COLLAPSE","afk = " + (string)afk);
+                //debugSay(2,"DEBUG-COLLAPSE","cdSelfPosed() = " + (string)cdSelfPosed());
+                //debugSay(2,"DEBUG-COLLAPSE","cdPosed() = " + (string)cdPosed());
 
                 if (!haveControls && (afk || collapsed || cdSelfPosed())) {
                     // No reason for us to be locking the controls and we do not already have them
@@ -694,10 +698,14 @@ default {
                 string oldanim = keyAnimation;
                 keyAnimation = value;
 
-                if (cdCollapsedAnim() && collapsed) {
-                    lmSendConfig("keyAnimation", "");
-                    ifPermissions();
-                }
+                // Purpose of this code is unknown: it appears
+                // to de-animate a collapsed dolly when the animation
+                // is set to collapse... say What?
+                //
+                //if (cdCollapsedAnim() && collapsed) {
+                //    lmSendConfig("keyAnimation", "");
+                //    ifPermissions();
+                //}
 
                 isAnimated = (keyAnimation != "");
 
@@ -823,16 +831,6 @@ default {
                     "Shoes",    RLV_STRIP_SHOES
                 ];
                 integer i;
-
-//              if ((i = llListFindList(parts, [part])) != NOT_FOUND) {
-//                  cdLoadData(RLV_NC, llList2Integer(parts, i));
-//              } else if (part = "ALL") {
-//                  i = -llGetListLength(parts);
-//
-//                  do {
-//                      cdLoadData(RLV_NC, llList2Integer(parts, i));
-//                  } while (++i);
-//              }
 
                 // This allows an avi to have "barefeet" and "shoes" simultaneously:
                 // removing shoes puts on barefeet
@@ -1109,112 +1107,6 @@ default {
             // Note this will be rejected if @unsit=n or @tploc=n are active
             lmRunRLVas("TP", "tpto:" + locx + "/" + locy + "/" + locz + "=force");
         }
-#ifdef WITHOUT_LOAD_DATA
-        else if (request == requestLoadData) {
-            integer dataType = (integer)cdGetValue(data, [0]);
-
-            if (dataType == RLV_STRIP) {
-                string part = cdGetValue(data, [1]);
-                string value; integer i;
-
-                while ((value = cdGetValue(data, ([2,"attachments",i++]))) != JSON_INVALID) lmRunRLV("remattach:" + value + "=force");
-                i = 0;
-                while ((value = cdGetValue(data, ([2,"layers",     i++]))) != JSON_INVALID) lmRunRLV("remoutfit:" + value + "=force");
-
-                if (RLVstarted) cdLoadData(RLV_NC, RLV_BASE_RESTRICTIONS);
-            }
-            else if (dataType == RLV_RESTRICT) {
-                string restrictions;
-                integer group = -1; integer setState;
-                integer posed = (cdPosed() && (poserID != dollID));
-
-                list states = [
-                    autoTP,
-                    afk || collapsed || !canFly || posed,
-                    collapsed,
-                    collapsed || !canSit || posed,
-                    collapsed || !canStand || posed,
-                    collapsed || (posed && poseSilence),
-                    afk || hasCarrier || collapsed || tpLureOnly || posed,
-                    afk || hasCarrier || collapsed || posed,
-                    (afk || collapsed || !canDressSelf || wearLock) * (~(llGetInventoryCreator("Main") == dollID) + 1)
-                ];
-                integer index;
-
-                while ((index = llSubStringIndex(data, "$C")) != NOT_FOUND) {
-                    if (redirchan == "") redirchan = (string)llRound(llFrand(0x7fffffff));
-                    data = llInsertString(llDeleteSubString(data, index, index + 1), index, redirchan);
-                }
-
-                //----------------------------------------
-                // From here, seems to be a setting of the basic RLV settings...
-                // should be separate
-                string baseRLV;
-
-                if (RLVok && !RLVstarted) {
-                    llOwnerSay("@clear");
-
-#ifdef DEVELOPER_MODE
-                    // if Doll is one of the developers... dont lock:
-                    // prevents inadvertent lock-in during development
-
-                    cdSayQuietly("Developer Key not locked");
-
-                    baseRLV += "attachallthis_except:" + myPath + "=add,detachallthis_except:" + myPath + "=add,";
-#endif
-                }
-
-#ifndef DEVELOPER_MODE
-                key mainCreator;
-                mainCreator = llGetInventoryCreator("Main");
-
-                // We lock the key on here - but in the menu system, it appears
-                // unlocked and detachable: this is because it can be detached
-                // via the menu. To make the key truly "undetachable", we get
-                // rid of the menu item to unlock it
-
-                if (mainCreator != dollID) {
-                    lmRunRLVas("Base", "detach=n,permissive=n");  //locks key
-
-                    locked = 1; // Note the locked variable also remains false for developer mode keys
-                                // This way controllers are still informed of unauthorized detaching so developer dolls are still accountable
-                                // With this is the implicit assumption that controllers of developer dolls will be understanding and accepting of
-                                // the occasional necessity of detaching during active development if this proves false we may need to fudge this
-                                // in the section below.
-                }
-                else if (RLVok && !RLVstarted) llSay(DEBUG_CHANNEL, "Backup protection mechanism activated not locking on creator");
-#endif
-
-                if (!RLVstarted) {
-                    if (RLVok) llOwnerSay("Enabling RLV mode");
-#ifdef WAKESCRIPT
-                    else llSetScriptState("StatusRLV", 0);
-#endif
-                    cdListenerDeactivate(rlvHandle);
-                    lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
-                    lmRLVreport(RLVok, rlvAPIversion, 0);
-                }
-
-                if (userBaseRLVcmd != "") lmRunRLVas("UserBase", userBaseRLVcmd);
-
-                //cdRlvSay("@clear=redir");
-                string restrictionList;
-
-                while (cdGetElementType(data, ([1,++group])) != JSON_INVALID) {
-                    setState = llList2Integer(states, group);
-                    cdSetRestrictionsList(data,setState);
-                }
-
-                lmRunRLVas("Core", baseRLV + restrictionList + "sendchannel:" + (string)chatChannel + "=rem");
-
-                RLVstarted = (RLVstarted | RLVok);
-
-#ifndef DEVELOPER_MODE
-                if (mainCreator == dollID) lmRunRLVas("Base", "clear=unshared,clear=attachallthis");
-#endif
-            }
-        }
-#endif
     }
 
     //----------------------------------------
