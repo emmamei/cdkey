@@ -299,8 +299,10 @@ default {
 
         if (RLVok) {
             debugSay(2,"DEBUG-SEARCHING","Timer tripped at " + formatFloat(llGetTime() - outfitsSearchTimer,1) + "s");
-            if (outfitSearching == 0)
+            if (outfitSearching == 0) {
+                debugSay(2,"DEBUG-SEARCHING","Turning off timer");
                 llSetTimerEvent(0.0);
+            }
             else {
                 if (outfitsFolder == "") {
                     if (outfitSearchTries++ < MAX_SEARCH_RETRIES)
@@ -741,6 +743,7 @@ default {
                     }
 
                     outfitSearching = 0;
+                    debugSay(2,"DEBUG-SEARCHING","Turning off timer (listen)");
                     llSetTimerEvent(0.0);
                     llListenRemove(rlvHandle3);
                     debugSay(2,"DEBUG-SEARCHING","Outfits search completed in " + formatFloat(llGetTime() - outfitsSearchTimer,1) + "s");
