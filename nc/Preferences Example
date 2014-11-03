@@ -7,6 +7,9 @@
 # and blank lines before using this file as an active preferences
 # file
 
+# Can the key be detached?
+detachable = no
+
 # Suppress public chat messages
 quiet key = no
 
@@ -18,6 +21,9 @@ wind time = 30
 
 # What is the maximum time available on the key? (in minutes)
 max time = 180
+
+# Is the dolly silenced during poses?
+pose silence = yes
 
 # Does busy mode also set AFK?
 busy is away = no
@@ -37,6 +43,18 @@ detachable = yes
 # Can the dolly be dressed by the public?
 outfitable = yes
 
+# Path to Type folders and other outfits
+#outfits path = 
+
+# Is the dolly permitted to outfit themselves?
+can wear = yes
+
+# Is the dolly permitted to pose themselves?
+can pose = yes
+
+# Is the dolly permitted to go AFK?
+can afk = yes
+
 # Is the dolly permitted to fly?
 can fly = yes
 
@@ -55,13 +73,21 @@ doll gender = female
 # Attach this folder when shoes stripped
 #barefeet path = 
 
+# Additional custom RLV commands to use when dolly is AFK
+# (must be correct RLV syntax)
+#afk rlv = 
+
+# Additional custom RLV commands to use when posing
+# (must be correct RLV syntax)
+#pose rlv = 
+
 # Additional custom RLV commands to use on startup
 # (must be correct RLV syntax)
-#user startup rlv = 
+#base rlv = 
 
 # Additional custom RLV commands to use on collapse
 # (must be correct RLV syntax)
-#user collapse rlv = touchall=n,fartouch=n
+#collapse rlv = touchall=n,fartouch=n
 
 # Doll's Controller (or Mistress): value is user key value
 # Add multiple lines for multiple controllers
