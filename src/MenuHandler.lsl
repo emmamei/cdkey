@@ -525,14 +525,11 @@ default
                                 if (canDress) menu += "Outfits...";
                             }
 
-                            if (isController) {
-                                menu += "RLV Off";
-                            }
+                            if (isController) menu += "RLV Off";
                         } else {
                             // Note this section is valid if RLV == 0 (no RLV)
                             // but ALSO if RLVok == -1 (unset)
-                            if (isDoll || isController)
-                                menu += "RLV On";
+                            if (isDoll || isController) menu += "RLV On";
                         }
 
                         // Can the doll be transformed? Add menu button
@@ -547,8 +544,7 @@ default
                             }
                         }
                         else {
-                            if ((!isDoll && canPose) || isDoll)
-                                menu += "Poses...";
+                            if ((!isDoll && canPose) || isDoll) menu += "Poses...";
                         }
 
                         // Fix for issue #157
@@ -595,7 +591,7 @@ default
                     if (RLVok == -1) msg += "Still checking for RLV support some features unavailable.\n";
                     else if (RLVok == 0) {
                         msg += "No RLV detected some features unavailable.\n";
-                        if (cdIsDoll(id) || cdIsController(id)) menu += "RLV On";
+                        //if (cdIsDoll(id) || cdIsController(id)) menu += "RLV On";
                     }
 
                     msg += "See " + WEB_DOMAIN + manpage + " for more information."
