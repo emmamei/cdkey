@@ -219,12 +219,11 @@ collapse(integer newCollapseState) {
 
     lmInternalCommand("collapse", (string)collapsed, llGetKey());
 
-    // Note that this sets the Timer Event to the lowest possible
-    // practical value - and the proper value is set during the timer
-    // event: so we want to finish the timer event before it triggers
-    // a second time...
+    // note that this means a delay between when the
+    // timer triggers and when the state of collapse
+    // changes
     //
-    llSetTimerEvent(1);
+    llSetTimerEvent(15);
 }
 
 //========================================
@@ -298,14 +297,15 @@ default {
     //----------------------------------------
     touch_start(integer num) {
         key id = llDetectedKey(0);
+        string agentName = llGetDisplayName(id);
 
         if (RLVok == -1 && dollID != id) {
-            llSay(PUBLIC_CHANNEL, dollName + "'s key clanks and clinks.... it doesn't seem to be ready yet.");
-            llOwnerSay("The state of RLV is not yet determined.");
+            lmSendToAgent(dollName + "'s key clanks and clinks.... it doesn't seem to be ready yet.");
+            llOwnerSay(agentName + " is fiddling with your Key but the state of RLV is not yet determined.");
             return;
         }
 
-        lmMenuReply(MAIN, llGetDisplayName(id), id);
+        lmMenuReply(MAIN, agentName, id);
     }
 
     //----------------------------------------
@@ -447,7 +447,7 @@ default {
                     // This message is intentionally excluded from the quiet key setting as it is not good for
                     // dolls to simply go down silently.
 
-                    llSay(0, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on their key.)");
+                    llSay(0, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on Dolly's key.)");
                     collapse(NO_TIME);
                 }
             }
