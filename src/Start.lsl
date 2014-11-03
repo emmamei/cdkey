@@ -200,12 +200,6 @@ processConfiguration(string name, string value) {
     else if (value == "no"  || value == "off") value = "0";
 
     integer i;
-    //list firstWord = [ "barefeet path", "helpless dolly", "quiet key" ];
-    //list capSubsiquent = [ "busy is away", "can afk", "can fly", "can pose", "can sit",
-    //                       "can stand", "can wear", "detachable", "doll type",
-    //                       "pleasure doll", "pose silence" ];
-    //list rlv = [ "afk rlv", "base rlv", "collapse rlv", "pose rlv" ];
-
     list configs = [ "barefeet path", "helpless dolly", "quiet key", "outfits path",
                      "busy is away", "can afk", "can fly", "can pose", "can sit", "can stand",
                      "can wear", "detachable", "doll type", "pleasure doll", "pose silence",
@@ -448,11 +442,18 @@ default {
                 keyAnimation = value;
 
                 if (!collapsed) {
-                    if (!cdNoAnim() && !cdCollapsedAnim()) {
+
+                    // Dolly is operating normally (not collapsed)
+
+                    if (cdPoseAnim()) {
+                        // keyAnimation is a pose of some sort
                         lmRunRLV(defaultPoseRLVcmd);
                         if (userPoseRLVcmd != "") lmRunRLVas("UserPose", userPoseRLVcmd);
                     }
                     else {
+                        // either animation is null, or animation
+                        // is the collapse animation but we're not collapsed
+                        // (the latter should be an error)
                         lmRunRLV("clear");
                         if (userPoseRLVcmd != "") lmRunRLVas("UserPose", "clear");
                     }
@@ -462,6 +463,7 @@ default {
                 afk = (integer)value;
 
                 if (!collapsed) {
+                    // a collapse overrides AFK - ignore AFK if we are collapsed
                     if (afk) {
                         lmRunRLV(defaultAfkRLVcmd);
                         if (userAfkRLVcmd != "") lmRunRLVas("UserAfk", userAfkRLVcmd);
@@ -492,11 +494,13 @@ default {
                 debugSay(2, "DEBUG-START", "userCollapseRLVcmd = " + userCollapseRLVcmd);
 
                 if (collapsed) {
+                    // We are collapsed: activate RLV restrictions
                     lmRunRLV(defaultCollapseRLVcmd);
                     if (userCollapseRLVcmd != "") lmRunRLVas("UserCollapse", userCollapseRLVcmd);
                 }
                 else {
                     if (wasCollapsed) {
+                        // We were collapsed but aren't now... so clear RLV restrictions
                         lmRunRLV("clear");
                         if (userCollapseRLVcmd != "") lmRunRLVas("UserCollapse", "clear");
                     }
@@ -536,14 +540,18 @@ default {
             }
 
             if (RLVok) {
+                // If RLV is ok, then trigger all of the necessary RLV restrictions
                 if (collapsed) {
+                    // Dolly collapse overrides all others
                     lmRunRLV(defaultCollapseRLVcmd);
                     if (userCollapseRLVcmd != "") lmRunRLVas("UserCollapse", userCollapseRLVcmd);
                 }
                 else {
+                    // Not collapsed: clear any user collapse RLV restrictions
                     lmRunRLV("clear");
                     if (userCollapseRLVcmd != "") lmRunRLVas("UserCollapse", "clear");
 
+                    // Is Dolly AFK? Trigger RLV restrictions as appropriate
                     if (afk) {
                         lmRunRLV(defaultAfkRLVcmd);
                         if (userAfkRLVcmd != "") lmRunRLVas("UserAfk", userAfkRLVcmd);
@@ -553,7 +561,8 @@ default {
                         if (userAfkRLVcmd != "") lmRunRLVas("UserAfk", "clear");
                     }
 
-                    if (!cdNoAnim() && !cdCollapsedAnim()) {
+                    // Are we posed? Trigger RLV restrictions for being posed
+                    if (cdPoseAnim()) {
                         lmRunRLV(defaultPoseRLVcmd);
                         if (userPoseRLVcmd != "") lmRunRLVas("UserPose", userPoseRLVcmd);
                     }
