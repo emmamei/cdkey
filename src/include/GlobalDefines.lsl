@@ -170,7 +170,7 @@ list BuiltinControllers = BUILTIN_CONTROLLERS;
 #define cdCarried()			(carrierID != NULL_KEY)
 #define cdCollapsedAnim()		(keyAnimation == ANIMATION_COLLAPSED)
 #define cdNoAnim()			(keyAnimation == "")
-#define cdPoseAnim()                    (!cdNoAmin() && !cdCollapsedAnim())
+#define cdPoseAnim()                    (!cdNoAnim() && !cdCollapsedAnim())
 #define cdPosed()			(!collapsed && !cdNoAnim())
 #define cdSelfPosed()			(poserID == dollID)
 #define cdWindDown()			(!collapsed && cdAttached() && (dollType != "Builder") && (dollType != "Key"))

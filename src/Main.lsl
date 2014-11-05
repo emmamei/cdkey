@@ -300,7 +300,7 @@ default {
         string agentName = llGetDisplayName(id);
 
         if (RLVok == -1 && dollID != id) {
-            lmSendToAgent(dollName + "'s key clanks and clinks.... it doesn't seem to be ready yet.");
+            lmSendToAgent(dollName + "'s key clanks and clinks.... it doesn't seem to be ready yet.",id);
             llOwnerSay(agentName + " is fiddling with your Key but the state of RLV is not yet determined.");
             return;
         }
