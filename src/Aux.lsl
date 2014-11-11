@@ -73,6 +73,14 @@ integer textboxHandle;
 integer textboxType;
 integer offlineMode = YES;
 
+integer i;
+integer code;
+string script;
+integer remoteSeq;
+integer optHeader;
+list split;
+string msg;
+
 // Only place gender is currently set is in the preferences
 setGender(string gender) {
 
@@ -134,15 +142,15 @@ default {
     link_message(integer source, integer i, string data, key id) {
 
         // Parse link message header information
-        list split        =     cdSplitArgs(data);
-        string script     =     cdListElement(split, 0);
-        integer remoteSeq =     (i & 0xFFFF0000) >> 16;
-        integer optHeader =     (i & 0x00000C00) >> 10;
-        integer code      =      i & 0x000003FF;
-        split             =     llDeleteSubList(split, 0, 0 + optHeader);
+        split     = cdSplitArgs(data);
+        script    = cdListElement(split, 0);
+        remoteSeq = (i & 0xFFFF0000) >> 16;
+        optHeader = (i & 0x00000C00) >> 10;
+        code      =  i & 0x000003FF;
+        split     = llDeleteSubList(split, 0, 0 + optHeader);
 
         if ((code == 11) || (code == 12)) {
-            string msg = llList2String(split, 0);
+            msg = llList2String(split, 0);
             debugSay(5, "DEBUG", "Code #" + (string)code + ": message = " + msg);
 
             sendMsg(id, msg);
@@ -152,8 +160,8 @@ default {
                     sendMsg(dollID, msg);
         }
         else if (code == 15) {
-            string msg = llList2String(split, 0);
-            integer i;
+            msg = llList2String(split, 0);
+            i = 0;
             for (i = 0; i < llGetListLength(cdList2ListStrided(controllers, 0, -1, 2)); i++) {
                 string targetName = llList2String(controllers, i * 2 + 1);
                 key targetKey = llList2Key(controllers, i * 2);
@@ -175,7 +183,7 @@ default {
             // This is the bulk of 136/135 message processing
             //
             if ((code == 135) && (!memCollecting)) {
-                integer i;
+                i = 0;
                 for (i = 0; i < llGetInventoryNumber(10); i++) {
                     string script = llGetInventoryName(10, i);
 
@@ -210,7 +218,7 @@ default {
                     memData = cdSetValue(memData, [script], json);
                     //debugSay(5, "DEBUG-CHAT", "memData: " + memData);
 
-                    integer i = llListFindList(memWait, [script]);
+                    i = llListFindList(memWait, [script]);
 
                     if ((i != -1) || ((memTime < llGetTime()) && (code == 135))) {
                         memWait = llDeleteSubList(memWait, i, i);
@@ -232,7 +240,7 @@ default {
                             memData = cdSetValue(memData,[cdMyScriptName()],llList2Json(JSON_ARRAY, [used_memory, memory_limit, free_memory, available_memory]));
 
                             float totUsed; float totLimit; float totFree; float totAvail; integer warnFlag;
-                            integer i; string scriptName; list statList;
+                            i = 0; string scriptName; list statList;
                             string output = "Script Memory Status:";
                             string type;
 
@@ -362,7 +370,7 @@ default {
             if (script != "MenuHandler") return;
 
             if (name == "canDress") {
-                string msg;
+                msg;
                 if (value == "1") msg = "Other people can now outfit you, but you remain ";
                 else msg = "Other people can no longer outfit you, but you remain ";
                 if (wearLock || !canDressSelf) msg += "un";
@@ -394,7 +402,7 @@ default {
                 integer auto = llList2Integer(split, 1);
                 windRate = llList2String(split, 2);
                 minsLeft = llList2String(split, 3);
-                string msg;
+                msg;
 
                 if (afk) {
                     if (auto) msg = "Automatically entering AFK mode.";
@@ -430,7 +438,7 @@ default {
             string avatar = llList2String(split, 1);
 
             if (choice == "Help...") {
-                string msg = "Here you can find various options to get help with your " +
+                msg = "Here you can find various options to get help with your " +
                             "key and to connect with the community.";
                 list pluslist = [ "Join Group", "Visit Dollhouse" ];
                 if (llGetInventoryType(NOTECARD_HELP) == INVENTORY_NOTECARD) pluslist += [ "Help Notecard" ];
@@ -458,7 +466,7 @@ default {
             }
             else if (choice == "Access...") {
                 debugSay(5, "DEBUG-AUX", "Dialog channel: " + (string)dialogChannel);
-                string msg = "Key Access Menu.\n" +
+                msg = "Key Access Menu.\n" +
                              "These are powerful options allowing you to give someone total control of your key or block someone from touch or even winding your key\n" +
                              "Good dollies should read their key help before\n" +
                              "Blacklist - Fully block this avatar from using any key option even winding\n" +
@@ -475,7 +483,7 @@ default {
                 visitDollhouse += 1;
             }
             if (choice == "Abilities...") {
-                string msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
+                msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
                 list pluslist;
 
                 if (RLVok) {
@@ -505,7 +513,7 @@ default {
                 llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
             }
             else if (choice == "Features...") {
-                string msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
+                msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
                 list pluslist = [];
 
                 pluslist += cdGetButton("Carryable", id, canCarry, 0);
@@ -553,7 +561,7 @@ default {
                 llOwnerSay("Gender is now set to " + dollGender);
             }
             else if (choice == "Gem Colour...") {
-                string msg = "Here you can choose your own gem colour.";
+                msg = "Here you can choose your own gem colour.";
                     list pluslist;
 
                     pluslist = COLOR_NAMES;
@@ -584,7 +592,7 @@ default {
                 }
                 else if (llGetSubString(choice,0,12) == "Factory Reset") {
                     textboxType = 4;
-                    string msg = "Are you sure you want to factory reset, all controllers and settings will be lost.  Your controllers notified if you proceed.  Type FACTORY RESET bellow to confirm.";
+                    msg = "Are you sure you want to factory reset, all controllers and settings will be lost.  Your controllers notified if you proceed.  Type FACTORY RESET bellow to confirm.";
                     if(llGetSubString(choice,14,14) == "2") msg = "You must type the words FACTORY RESET exactly and in capitals to confirm.";
                     llTextBox(dollID, msg, textboxChannel);
                 }
@@ -688,7 +696,7 @@ default {
 
 #ifdef NO_DOLLMSG
         if (request == ncRequestDollMessage) {
-            integer i = 2;
+            i = 2;
             list findList = [ "windRate", "minsLeft" ];
             list replaceList = [ windRate, minsLeft ];
             string find;
@@ -728,14 +736,14 @@ default {
     // TIMER
     //----------------------------------------
     timer() {
-        if (memCollecting) {
-            lmMemReport(0.0, memRequested);
-        }
+        if (memCollecting) lmMemReport(0.0, memRequested);
         else if (factoryReset) cdResetKey();
-        else if (textboxHandle && (listenTime < llGetTime())) {
-            llListenRemove(textboxHandle);
-            textboxHandle = 0;
+        else if (textboxHandle) {
+            if (listenTime < llGetTime()) {
+                llListenRemove(textboxHandle);
+                textboxHandle = 0;
+            }
         }
-        else if (!textboxHandle) llSetTimerEvent(0.0);
+        else llSetTimerEvent(0.0);
     }
 }
