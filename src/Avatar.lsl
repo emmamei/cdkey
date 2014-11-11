@@ -9,6 +9,7 @@
 #include "include/GlobalDefines.lsl"
 #include "include/Json.lsl"
 
+#define CHECK_RLV 1
 //#define DEBUG_BADRLV
 #define cdSayQuietly(x) { string z = x; if (quiet) llOwnerSay(z); else llSay(0,z); }
 #define NOT_IN_REGION ZERO_VECTOR
@@ -30,16 +31,25 @@ key carrierID = NULL_KEY;
 integer allControls = ALL_CONTROLS;
 
 key rlvTPrequest;
-key requestLoadData;
+#ifndef DEVELOPER_MODE
+key mainCreator;
+#endif
+//key requestLoadData;
 key keyAnimationID;
 key lastAttachedID;
+#ifdef DEVELOPER_MODE
+float lastTimerEvent;
+float thisTimerEvent;
+float timerInterval;
+integer timeReporting = 1;
+#endif
 
 list rlvSources;
 list rlvStatus;
 
 float rlvTimer;
 
-float baseWindRate;
+//float baseWindRate;
 float afkSlowWalkSpeed = 5;
 float animRefreshRate = 8.0;
 
@@ -48,6 +58,15 @@ float nextAnimRefresh;
 
 vector carrierPos;
 vector lockPos;
+
+list split;
+string script;
+integer remoteSeq;
+integer optHeader;
+integer code;
+
+string name;
+string value;
 
 string barefeet;
 string carrierName;
@@ -60,78 +79,176 @@ string myPath;
 string pronounHerDoll = "Her";
 string pronounSheDoll = "She";
 string rlvAPIversion;
-string redirchan;
+//string redirchan;
 string userBaseRLVcmd;
 
 integer afk;
-integer isAnimated;
+//integer isAnimated;
+integer isFrozen;
+integer isNoScript;
 integer hasCarrier;
 //integer isPosed; (use cdPosed)
 //integer isSelfPosed; (use cdSelfPosed)
+integer i;
+key animKey;
+list animList;
+
+key grantorID;
+integer permMask;
 
 integer carryMoved;
 integer rlvChannel;
 integer clearAnim = 1;
 integer collapsed;
-integer confgured;
+//integer configured;
 integer dialogChannel;
-integer haveControls;
+//integer haveControls;
 integer rlvHandle;
 integer locked;
 #ifdef SIM_FRIENDLY
 integer lowScriptMode;
 #endif
 integer poseSilence;
-integer refreshControls;
+//integer refreshControls;
+#ifdef RLV_CHECK
 integer RLVck = 0;
-integer RLVok = UNSET;
 integer RLVstarted;
-integer startup = 1;
+#endif
+integer RLVok = UNSET;
+//integer startup = 1;
 integer targetHandle;
-integer ticks;
+//integer ticks;
 integer wearLock;
 integer newAttach = 1;
-integer creatorNoteDone;
+//integer creatorNoteDone;
 integer chatChannel = 75;
-
-//integer dollState;
-//#define cdXorSet(a,b,c)         a = ((a ^ (a & b)) | (c))
-//#define cdXorSetDollState(a,b)  cdXorSet(dollState,a,b)
-//#define cdSetDollState(a)       cdXorSetDollState(a,a)
-//#define cdUnsetDollState(a)     cdXorSetDollState(a,0)
-//#define cdSetDollStateIf(a,b)   cdXorSet(dollState,a,a*((b)!=0))
-//#define DOLL_AFK                0x01
-//#define DOLL_ANIMATED           0x02
-//#define DOLL_CARRIED            0x04
-//#define DOLL_COLLAPSED          0x08
-//#define DOLL_POSED              0x10
-//#define DOLL_POSER_IS_SELF      0x20
 
 //========================================
 // FUNCTIONS
 //========================================
+
 key animStart(string animation) {
-    if ((llGetPermissionsKey() != dollID) || ((llGetPermissions() & PERMISSION_TRIGGER_ANIMATION) == 0)) return NULL_KEY;
+    if ((llGetPermissionsKey() != dollID) || (!(llGetPermissions() & PERMISSION_TRIGGER_ANIMATION)))
+        return NULL_KEY;
 
-    while (llGetListLength(llGetAnimationList(dollID))) llStopAnimation(llList2Key(llGetAnimationList(dollID), 0));
-
-    integer i; key animID = llGetInventoryKey(animation);
     list oldList = llGetAnimationList(dollID);
+
+    // Stop all animations
+    while (llGetListLength(oldList))
+        llStopAnimation(llList2Key(oldList, 0));
+
+    oldList = llGetAnimationList(dollID);
+
+    key animID = llGetInventoryKey(animation); // Only works on full perm animations
     llStartAnimation(animation);
-    list newList = llGetAnimationList(dollID);
 
-    while (llGetListLength(oldList)) {
-        key animKey = llList2Key(oldList, 0); integer index;
-        while ((index = llListFindList(newList, [ animKey ])) != -1) newList = llDeleteSubList(newList, index, index);
+    // This next section is to work around animations that arent full perm:
+    // scan the AnimationList and yank the key of the animation we just started
+    if (animID)
+        return (animID);
+    else {
+        i = llGetListLength(oldList);
+        list newList = llGetAnimationList(dollID);
+        animKey = NULL_KEY;
+        integer index;
 
-        oldList = llDeleteSubList(oldList, 0, 0);
+        while(i--) {
+            animKey = llList2Key(oldList, i);
+
+            while (~(index = llListFindList(newList, [ animKey ])))
+                newList = llDeleteSubList(newList, index, index);
+        }
+
+        if (llGetListLength(newList) == 1) return llList2Key(newList, 0);
+        else return NULL_KEY;
     }
-
-    if (animID) return animID;
-    else if (llGetListLength(newList) == 1) return llList2Key(newList, 0);
-    else return NULL_KEY;
 }
 
+clearAnimations() {
+    // Clear all animations
+
+    animList = llGetAnimationList(dollID);
+    animKey = NULL_KEY;
+
+    //integer animCount = llGetListLength(animList);
+    i = llGetListLength(animList);
+
+    keyAnimation = "";
+    lmSendConfig("keyAnimationID", (string)(keyAnimationID = NULL_KEY));
+
+    while (i--) {
+        animKey = llList2Key(animList, i);
+        if (animKey) llStopAnimation(animKey);
+    }
+
+    llStartAnimation("Stand");
+    animRefreshRate = 0.0;
+    clearAnim = 0;
+    cdLockMeisterCmd("booton");
+}
+
+oneAnimation() {
+    animList = llGetAnimationList(dollID);
+    key curAnim = llList2Key(animList, 0);
+    animKey = NULL_KEY;
+    //integer animCount = llGetListLength(animList);
+    i = llGetListLength(animList);
+
+    // Strip down to a single animation (keyAnimation)
+
+    cdLockMeisterCmd("bootoff");
+
+    // keyAnimationID was null so grab the real thing
+    if (keyAnimationID) animKey = keyAnimationID;
+    else                animKey = llGetInventoryKey(keyAnimation); // only works with full perm animations
+
+    if (animKey) {
+        key animKeyI;
+
+        while ((animList = llGetAnimationList(dollID)) != [ animKey ]) {
+            //animCount = llGetListLength(animList);
+            debugSay(2,"DEBUG-AVATAR","[ " + llList2CSV(animList) + " ] (size " + (string)i + ")");
+
+            while (i--) {
+
+                animKeyI = llList2Key(animList, i);
+
+                if (animKeyI != animKey) {
+                    debugSay(2,"DEBUG-AVATAR","Stopping animation #" + (string)i + ": " + (string)animKeyI);
+                    llStopAnimation(animKeyI);
+                }
+            }
+
+            // Dont start the animation unless its not running
+            if (llGetAnimationList(dollID) != [ animKey ]) llStartAnimation(keyAnimation);
+        }
+    }
+    else animKey = animStart(keyAnimation);
+
+    if (keyAnimationID == NULL_KEY) {
+        if (animKey != NULL_KEY) lmSendConfig("keyAnimationID", (string)(keyAnimationID = animKey));
+        animRefreshRate = 4.0;
+    }
+    else {
+        debugSay(7, "DEBUG", "animID=" + (string)keyAnimationID + " curAnim=" + (string)curAnim + " animRefreshRate=" + (string)animRefreshRate);
+
+        // this makes the refresh rate "adaptive": if nothing happens,
+        // another frame's worth is added to the refresh rate each time;
+        // if an animation takes over or tries to - the refresh rate is
+        // cut in half. There is also clipping at 1 frame minimum and
+        // 30s maximum.
+        if (curAnim == keyAnimationID) {
+            animRefreshRate += (1.0/llGetRegionFPS());                  // +1 Frame
+            if (animRefreshRate > 30.0) animRefreshRate = 30.0;             // 30 Second limit
+        }
+        else {
+            animRefreshRate /= 2.0;                                     // -50%
+            if (animRefreshRate < 0.022) animRefreshRate = 0.022;           // Limit once per frame
+        }
+    }
+}
+
+#ifdef CHECK_RLV
 //----------------------------------------
 // RLV Initialization Functions
 
@@ -258,7 +375,6 @@ activateRLV() {
     }
 
 #ifndef DEVELOPER_MODE
-    key mainCreator;
     mainCreator = llGetInventoryCreator("Main");
 
     // We lock the key on here - but in the menu system, it appears
@@ -299,196 +415,135 @@ activateRLV() {
     if (mainCreator == dollID) lmRunRLVas("Base", "clear=unshared,clear=attachallthis");
 #endif
 }
+#endif // CHECK_RLV
 
 ifPermissions() {
-
-    debugSay(2,"DEBUG-COLLAPSE","Looking at permissions");
+    // This is repeatedly and frequently called - pays to be fast
 
     // Don't do anything unless attached
-    if (llGetAttached()) {
-        key grantorID = llGetPermissionsKey();
-        integer permMask = llGetPermissions();
+    if (!llGetAttached()) return;
 
-        debugSay(2,"DEBUG-COLLAPSE","Permission processing begun");
+    grantorID = llGetPermissionsKey();
+    permMask = llGetPermissions();
 
-        // If permissions granted to someone other than Dolly,
-        // start over...
-        if (grantorID != NULL_KEY && grantorID != dollID) {
-            cdResetKey();
+    // If permissions granted to someone other than Dolly,
+    // start over...
+     if (grantorID != dollID) {
+        if (grantorID) cdResetKey();
+    }
+
+    if ((permMask & PERMISSION_MASK) != PERMISSION_MASK) {
+        // FIXME: llRequestPermissions runs this function: means a double run if PERMISSION_MASK is off-kilter
+        llRequestPermissions(dollID, PERMISSION_MASK);
+        return;
         }
 
-        if ((permMask & PERMISSION_MASK) != PERMISSION_MASK) {
-            // FIXME: llRequestPermissions runs this function: means a double run if PERMISSION_MASK is off-kilter
-            llRequestPermissions(dollID, PERMISSION_MASK);
-            return;
-            }
+    if (grantorID == NULL_KEY) return;
 
-        // only way to get here is grantorID is dollID or NULL_KEY
-        if (grantorID == dollID) {
+    // only way to get here is grantorID is dollID
 
-            //----------------------------------------
-            // PERMISSION_TRIGGER_ANIMATION
+    //----------------------------------------
+    // PERMISSION_TRIGGER_ANIMATION
 
-            if ((permMask & PERMISSION_TRIGGER_ANIMATION) != 0) {
+    if (permMask & PERMISSION_TRIGGER_ANIMATION) {
 
-                debugSay(2,"DEBUG-COLLAPSE","Animation trigger being processed");
+        animList = llGetAnimationList(dollID);
 
-                list animList = llGetAnimationList(dollID);
-                key curAnim = llList2Key(animList, 0);
-                integer animCount = llGetListLength(animList);
-                integer i = animCount;
-                key animKey;
+        if (clearAnim) clearAnimations();
+        else if (!cdNoAnim()) oneAnimation(); 
 
-                if (clearAnim) {
-                    keyAnimation = "";
-                    lmSendConfig("keyAnimationID", (string)(keyAnimationID = NULL_KEY));
+        if (animRefreshRate) nextAnimRefresh = llGetTime() + animRefreshRate;
+        llSetTimerEvent(animRefreshRate);
+    }
 
-                    i++;
-                    for (; i; i--) {
-                        animKey = llList2Key(animList, i);
-                        debugSay(2,"DEBUG-AVATAR",">Stopping animation #" + (string)i + ": " + (string)animKey);
-                        if (animKey) llStopAnimation(animKey);
-                    }
+    //----------------------------------------
+    // PERMISSION_TAKE_CONTROLS
 
-                    llStartAnimation("Stand");
-                    animRefreshRate = 0.0;
-                    clearAnim = 0;
-                    cdLockMeisterCmd("booton");
-                } else if (!cdNoAnim()) {
-                    cdLockMeisterCmd("bootoff");
+    isFrozen = (collapsed || keyAnimation != "");
 
-                    animKey = keyAnimationID;
+    if (permMask & PERMISSION_TAKE_CONTROLS) {
 
-                    if (animKey == NULL_KEY) animKey = llGetInventoryKey(keyAnimation);
+        //debugSay(2,"DEBUG-COLLAPSE","haveControls = " + (string)haveControls + "; collapsed = " + (string)collapsed);
 
-                    if (animKey) {
-                        key animKeyI;
+        if (isFrozen)
+            // Dolly is "frozen": either collapsed or posed
 
-                        while ((animList = llGetAnimationList(dollID)) != [ animKey ]) {
-                            //animCount = llGetListLength(animList);
+            // When collapsed or posed the doll should not be able to move at all; so the key will
+            // accept their controls, but no need to pass on: ignore all input.
+            llTakeControls(ALL_CONTROLS, TRUE, FALSE);
+#ifdef SLOW_WALK
+        else if (afk)
+            // Dolly is AFK
 
-                            i++;
-                            for (; i; i--) {
+            // To slow movement during AFK, we do not want to lock the doll's controls completely; we
+            // want to instead respond to the input, so we need ACCEPT=TRUE, PASS_ON=TRUE
+            llTakeControls(ALL_CONTROLS, TRUE, TRUE);
+#endif
+        else {
+            // Dolly is not AFK nor collapsed nor posed
 
-                                animKeyI = llList2Key(animList, i);
-                                debugSay(2,"DEBUG-AVATAR","Stopping animation #" + (string)i + ": " + (string)animKeyI);
-                                if (animKeyI != animKey) llStopAnimation(animKeyI);
-                            }
+#ifdef NO_RELEASECONTROLS
+            if (isNoScript)
+#endif
+                // We do not want to release the controls if the land is noScript; doing so
+                // would effectively shut down the key until one entered Script-enabled
+                // land again
 
-                            llStartAnimation(keyAnimation);
-                        }
-                    }
-                    else animKey = animStart(keyAnimation);
+                // Dont release controls... we're in a NoScript zone...
+                llTakeControls(ALL_CONTROLS, FALSE, TRUE);
 
-                    if (keyAnimationID == NULL_KEY) {
-                        if (animKey != NULL_KEY) lmSendConfig("keyAnimationID", (string)(keyAnimationID = animKey));
-                        animRefreshRate = 4.0;
-                    }
-                    else {
-                        debugSay(7, "DEBUG", "animID=" + (string)keyAnimationID + " curAnim=" + (string)curAnim + " animRefreshRate=" + (string)animRefreshRate);
-
-                        if (curAnim == keyAnimationID) {
-                            animRefreshRate += (1.0/llGetRegionFPS());                  // +1 Frame
-                            if (animRefreshRate > 30.0) animRefreshRate = 30.0;             // 30 Second limit
-                        }
-                        else {
-                            animRefreshRate /= 2.0;                                     // -50%
-                            if (animRefreshRate < 0.022) animRefreshRate = 0.022;           // Limit once per frame
-                        }
-                    }
-                }
-
-                if (animRefreshRate) nextAnimRefresh = llGetTime() + animRefreshRate;
-                llSetTimerEvent(nextAnimRefresh);
-            }
-
-            //----------------------------------------
-            // PERMISSION_TAKE_CONTROLS
-
-            if (permMask & PERMISSION_TAKE_CONTROLS) {
-
-                debugSay(2,"DEBUG-COLLAPSE","Take Controls being processed");
-                debugSay(2,"DEBUG-COLLAPSE","haveControls = " + (string)haveControls + "; collapsed = " + (string)collapsed);
-                //debugSay(2,"DEBUG-COLLAPSE","afk = " + (string)afk);
-                //debugSay(2,"DEBUG-COLLAPSE","cdSelfPosed() = " + (string)cdSelfPosed());
-                //debugSay(2,"DEBUG-COLLAPSE","cdPosed() = " + (string)cdPosed());
-
-                if (!haveControls && (afk || collapsed || cdSelfPosed())) {
-                    // No reason for us to be locking the controls and we do not already have them
-                    // This just serves to get us treated as a vehicle to run on NoScript land
-                    llTakeControls(ALL_CONTROLS, FALSE, TRUE);
-                }
-                else if (collapsed || cdPosed()) {
-                    // When collapsed or posed the doll should not be able to move at all; so the key will
-                    // accept their controls, but no need to pass on: ignore all input.
-                    llTakeControls(ALL_CONTROLS, TRUE, FALSE);
-                    haveControls = 1;
-                }
-                else if (afk) {
-                    // To slow movement during AFK, we do not want to lock the doll's controls completely; we
-                    // want to instead respond to the input, so we need ACCEPT=TRUE, PASS_ON=TRUE
-                    llTakeControls(ALL_CONTROLS, TRUE, TRUE);
-                    haveControls = 1;
-                }
-                else if (haveControls) {
-                    // We don't need to grab the dolls controls, we already have them.
-                    //
-                    // I (Silky) have grounds to suspect there may be a Second Life bug where taking controls
-                    // and then trying to let go to do ACCEPT=FALSE, PASS_ON=TRUE may not always
-                    // work reliably to release and regrab
-
-                    refreshControls = 1;
-
-                    if ((llGetParcelFlags(llGetPos()) & PARCEL_FLAG_ALLOW_SCRIPTS) != 0) {
-
-                        // We do not want to release the controls if the land is noScript; doing so
-                        // would effectively shut down the key until one entered Script-enabled
-                        // land again
-
-                        llReleaseControls();
-
-                        haveControls = 0;
-                        refreshControls = 0;
-
-                        // This code is contained in the run_event - so this function
-                        // repeats the function we are in.
-                        llRequestPermissions(dollID, PERMISSION_MASK);  // Releasing controls drops the permissions
-                                                                        // get them back.
-                    }
-                    else llTakeControls(ALL_CONTROLS, FALSE, TRUE);
-                }
-            }
-
-            //----------------------------------------
-            // Moving to Target
-
-            if (collapsed || cdPosed()) {
-
-                if (lockPos == ZERO_VECTOR) lmSendConfig("lockPos", (string)(lockPos = llGetPos()));
-
-                llTargetRemove(targetHandle);
-                targetHandle = llTarget(lockPos, 1.0);
-                llMoveToTarget(lockPos, 0.7);
-            }
-            else if (hasCarrier) {
-
-                if (lockPos) lmSendConfig("lockPos", (string)(lockPos = ZERO_VECTOR));
-
-                // Stop moving to Target
-                llTargetRemove(targetHandle);
-                llStopMoveToTarget();
-
-                // Re-enable with new target
-                vector carrierPos = llList2Vector(llGetObjectDetails(carrierID, [ OBJECT_POS ]), 0);
-
-                if (carrierPos) targetHandle = llTarget(carrierPos, CARRY_RANGE);
-            }
+#ifdef NO_RELEASECONTROLS
             else {
-                // Stop moving to Target
-                llTargetRemove(targetHandle);
-                llStopMoveToTarget();
+
+                // Release controls drops the PERMISSIONS_TAKE_CONTROLS flag and permissions
+                // so we have to ask for them again
+
+                llReleaseControls();
+
+                //haveControls = 0;
+                //refreshControls = 0;
+
+                // This code is contained in the run_event - so this function
+                // repeats the function we are in.
+                llRequestPermissions(dollID, PERMISSION_MASK); // get TAKE_CONTROLS perm back
             }
+#endif
         }
+    }
+
+    //----------------------------------------
+    // Moving to Target
+
+    if (isFrozen) {
+
+        if (lockPos == ZERO_VECTOR) lmSendConfig("lockPos", (string)(lockPos = llGetPos()));
+
+        llTargetRemove(targetHandle);
+        targetHandle = llTarget(lockPos, 1.0);
+        llMoveToTarget(lockPos, 0.7);
+    }
+    else if (hasCarrier) {
+
+        if (lockPos) lmSendConfig("lockPos", (string)(lockPos = ZERO_VECTOR));
+
+        // Stop moving to Target
+        llTargetRemove(targetHandle);
+        llStopMoveToTarget();
+
+        // Re-enable with new target
+        vector carrierPos = llList2Vector(llGetObjectDetails(carrierID, [ OBJECT_POS ]), 0);
+
+        if (carrierPos) {
+            targetHandle = llTarget(carrierPos, CARRY_RANGE);
+            llMoveToTarget(carrierPos, 0.7);
+        }
+        else
+            llOwnerSay("Carrier is out of region?!");
+    }
+    else {
+        // Stop moving to Target
+        llTargetRemove(targetHandle);
+        llStopMoveToTarget();
     }
 }
 
@@ -515,6 +570,7 @@ default {
 
         cdInitializeSeq();
 
+        isNoScript = llGetParcelFlags(llGetPos()) & PARCEL_FLAG_ALLOW_SCRIPTS;
         llRequestPermissions(dollID, PERMISSION_MASK);
     }
 
@@ -523,6 +579,7 @@ default {
     //----------------------------------------
     on_rez(integer start) {
 
+#ifdef CHECK_RLV
         rlvTimer = llGetTime();
         RLVck = 0;
         RLVok = -1;
@@ -532,10 +589,13 @@ default {
 #ifdef DEVELOPER_MODE
         myPath = "";
 #endif
+#endif // CHECK_RLV
 
         llStopMoveToTarget();
         llTargetRemove(targetHandle);
 
+        debugSay(2,"DEBUG-COLLAPSE","ifPermissions (on_rez)");
+        isNoScript = llGetParcelFlags(llGetPos()) & PARCEL_FLAG_ALLOW_SCRIPTS;
         ifPermissions();
     }
 
@@ -547,28 +607,26 @@ default {
             llStopMoveToTarget();
             llTargetRemove(targetHandle);
 
+            debugSay(2,"DEBUG-COLLAPSE","ifPermissions (changed)");
+            isNoScript = llGetParcelFlags(llGetPos()) & PARCEL_FLAG_ALLOW_SCRIPTS;
             ifPermissions();
-        }
-
-        if (change & CHANGED_OWNER) {
-            llStopMoveToTarget();
-            llTargetRemove(targetHandle);
-
-            llResetScript();
         }
     }
 
+#ifdef CHECK_RLV
     //----------------------------------------
     // LISTEN
     //----------------------------------------
     listen(integer chan, string name, key id, string msg) {
 
-        debugSay(2, "DEBUG-AVATAR", "Listener tripped....");
+        //debugSay(2, "DEBUG-AVATAR", "Listener tripped....");
         if (chan == rlvChannel) {
-            debugSay(2, "DEBUG-RLV", "RLV Message received: " + msg);
+            //debugSay(2, "DEBUG-RLV", "RLV Message received: " + msg);
 
-            if ((llGetSubString(msg, 0, 13) == "RestrainedLove") ||
-                (llGetSubString(msg, 0, 13) == "RestrainedLife")) {
+            // Could be "RestrainedLove" or "RestrainedLife" but we
+            // can test for both this way - and the likelihood that
+            // a false positive will come through is pretty minimal.
+            if (llGetSubString(msg, 0, 10) == "RestrainedL") {
 
                 debugSay(2, "DEBUG-RLV", "RLV Version: " + msg);
 
@@ -588,22 +646,22 @@ default {
                 activateRLV();
 #endif
             }
-#ifdef DEVELOPER_MODE
             else {
+#ifdef DEVELOPER_MODE
                 debugSay(2, "DEBUG-RLV", "RLV Key Path: " + msg);
                 myPath = msg;
-
+#endif
                 nextRLVcheck = 0.0;
                 RLVok = 1;
                 lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
-                debugSay(2, "DEBUG-RLV", "RLV set to " + (string)RLVok + " and message sent on link channel");
-                debugSay(2,"DEBUG-RLV","RLV check completed in " + formatFloat((llGetTime() - rlvTimer),1) + "s");
+                //debugSay(2, "DEBUG-RLV", "RLV set to " + (string)RLVok + " and message sent on link channel");
+                llOwnerSay("RLV check completed in " + formatFloat((llGetTime() - rlvTimer),1) + "s");
                 lmRLVreport(RLVok, rlvAPIversion, 0);
                 activateRLV();
             }
-#endif
         }
     }
+#endif //CHECK_RLV
 
     //----------------------------------------
     // ATTACH
@@ -625,8 +683,11 @@ default {
         llTargetRemove(targetHandle);
 
         if (id) {
+            debugSay(2,"DEBUG-COLLAPSE","ifPermissions (attach)");
             ifPermissions();
+#ifdef CHECK_RLV
             doCheckRLV();
+#endif
         }
 
         newAttach = (lastAttachedID != dollID);
@@ -639,19 +700,21 @@ default {
     link_message(integer sender, integer i, string data, key id) {
 
         // Parse link message header information
-        list split        =     cdSplitArgs(data);
-        string script     =     cdListElement(split, 0);
-        integer remoteSeq =     (i & 0xFFFF0000) >> 16;
-        integer optHeader =     (i & 0x00000C00) >> 10;
-        integer code      =      i & 0x000003FF;
-        split             =     llDeleteSubList(split, 0, 0 + optHeader);
+        split     = cdSplitArgs(data);
+        script    = cdListElement(split, 0);
+        remoteSeq = (i & 0xFFFF0000) >> 16;
+        optHeader = (i & 0x00000C00) >> 10;
+        code      =  i & 0x000003FF;
+
+        split     = llDeleteSubList(split, 0, 0 + optHeader);
 
         scaleMem();
 
         if (code == 110) {
-            configured = 1;
+            //configured = 1;
             //doCheckRLV();
 
+            debugSay(2,"DEBUG-COLLAPSE","ifPermissions (link_message 110)");
             ifPermissions();
         }
         else if (code == 135) {
@@ -662,9 +725,9 @@ default {
         cdConfigReport();
 
         else if (code == 300) {
-            string name = llList2String(split, 0);
+            name = llList2String(split, 0);
             split = llDeleteSubList(split, 0, 0);
-            string value = llList2String(split, 0);
+            value = llList2String(split, 0);
 
 // CHANGED_OTHER bit used to indicate changes of RLV status that
 // would not normally be reflected as a doll state.
@@ -672,28 +735,31 @@ default {
 
             //integer oldState = dollState;              // Used to determine if a refresh of RLV state is needed
 
-            if (name == "autoTP")                        autoTP = (integer)value;
-            else if (name == "carrierID") {
+            // if (name == "autoTP")                        autoTP = (integer)value;
+            if (name == "carrierID") {
                 carrierID = (key)value;
                 hasCarrier = cdCarried();
             }
             else if (name == "afk")                         afk = (integer)value;
-            else if (name == "canFly")                   canFly = (integer)value;
-            else if (name == "canSit")                   canSit = (integer)value;
-            else if (name == "canStand")               canStand = (integer)value;
-            else if (name == "canDressSelf")       canDressSelf = (integer)value;
+            //else if (name == "canFly")                   canFly = (integer)value;
+            //else if (name == "canSit")                   canSit = (integer)value;
+            //else if (name == "canStand")               canStand = (integer)value;
+            //else if (name == "canDressSelf")       canDressSelf = (integer)value;
             else if (name == "collapsed") {
                     collapsed = (integer)value;
 
                     if (collapsed) lmSendConfig("keyAnimation", (keyAnimation = ANIMATION_COLLAPSED));
                     else if (cdCollapsedAnim()) lmSendConfig("keyAnimation", (keyAnimation = ""));
 
-                    debugSay(2,"DEBUG-COLLAPSE","Asking for permissions");
+                    debugSay(2,"DEBUG-COLLAPSE","ifPermissions (link_message 300/collapsed)");
                     ifPermissions();
             }
-            else if (name == "tpLureOnly")           tpLureOnly = (integer)value;
-            else if (name == "poseSilence")         poseSilence = (integer)value;
+            //else if (name == "tpLureOnly")           tpLureOnly = (integer)value;
+            //else if (name == "poseSilence")         poseSilence = (integer)value;
             else if (name == "userBaseRLVcmd")   userBaseRLVcmd = value;
+#ifdef DEVELOPER_MODE
+            else if (name == "timeReporting")     timeReporting = (integer)value;
+#endif
             else if (name == "keyAnimation") {
                 string oldanim = keyAnimation;
                 keyAnimation = value;
@@ -707,7 +773,7 @@ default {
                 //    ifPermissions();
                 //}
 
-                isAnimated = (keyAnimation != "");
+                //isAnimated = (keyAnimation != "");
 
                 if cdNoAnim() clearAnim = 1;
                 else {
@@ -716,6 +782,9 @@ default {
                     }
                     lmSendConfig("keyAnimationID", (string)(keyAnimationID = animStart(keyAnimation)));
                 }
+
+                debugSay(2,"DEBUG-COLLAPSE","ifPermissions (link_message 300/keyAnimation)");
+                ifPermissions();
             }
             else if (name == "poserID")                 poserID = (key)value;
             else {
@@ -734,8 +803,8 @@ default {
                 else if (name == "canPose")                     canPose = (integer)value;
                 else if (name == "barefeet")                   barefeet = value;
                 else if (name == "wearLock")                   wearLock = (integer)value;
-                else if (name == "dollType")                   dollType = value;
-                else if (name == "controllers")             controllers = split;
+                //else if (name == "dollType")                   dollType = value;
+                //else if (name == "controllers")             controllers = split;
                 else if (name == "pronounHerDoll")       pronounHerDoll = value;
                 else if (name == "pronounSheDoll")       pronounSheDoll = value;
                 else if (name == "dialogChannel") {
@@ -758,6 +827,7 @@ default {
             }
 
             //if (RLVstarted) cdLoadData(RLV_NC, RLV_BASE_RESTRICTIONS);
+            debugSay(2,"DEBUG-COLLAPSE","ifPermissions (link_message 300)");
             ifPermissions();
         }
         else if (code == 305) {
@@ -768,10 +838,12 @@ default {
                 if (RLVok || RLVstarted) llOwnerSay("@clear,detachme=force");
                 else llDetachFromAvatar();
             }
+#ifdef CHECK_RLV
             else if (cmd == "doCheckRLV") {
                 doCheckRLV();
                 lmSendConfig("RLVok",(string)RLVok);
             }
+#endif
             else if (cmd == "TP") {
                 string lm = llList2String(split, 0);
                 llRegionSayTo(id, 0, "Teleporting dolly " + dollName + " to  landmark " + lm + ".");
@@ -798,6 +870,7 @@ default {
             if (llGetSubString(choice,0,3) == "Wind") return;
             else if (choice == MAIN) return;
 
+#ifdef CHECK_RLV
             else if (choice == "RLV Off") {
                 RLVck = 0;
                 RLVok = 0;
@@ -813,6 +886,7 @@ default {
                 doCheckRLV();
                 lmSendConfig("RLVok",(string)RLVok);
             }
+#endif // CHECK_RLV
 #ifdef ADULT_MODE
             else if (subchoice == "Strip") {
                 if (choice == "Strip...") {
@@ -830,7 +904,8 @@ default {
                     "Panties",  RLV_STRIP_PANTIES,
                     "Shoes",    RLV_STRIP_SHOES
                 ];
-                integer i;
+
+                i = 0;
 
                 // This allows an avi to have "barefeet" and "shoes" simultaneously:
                 // removing shoes puts on barefeet
@@ -913,11 +988,12 @@ default {
                 }
 
                 integer poseCount = llGetInventoryNumber(20);
-                list poseList; integer i = poseCount;
+                list poseList;
+                i = poseCount;
                 string poseName;
                 string prefix;
 
-                for (; i; i--) {
+                while (i--) {
                     poseName = llGetInventoryName(20, i);
                     prefix = cdGetFirstChar(poseName);
 
@@ -940,7 +1016,7 @@ default {
                 poseCount = llGetListLength(poseList);
                 integer pages = 1;
 
-                if (poseCount > 11) {
+                if (poseCount > 9) {
                     pages = llCeil((float)poseCount / 9.0);
                     poseList = llList2List(poseList, (page - 1) * 9, page * 9 - 1);
 
@@ -957,6 +1033,8 @@ default {
                 cdDialogListen();
                 llDialog(id, "Select the pose to put Dolly into", poseList, dialogChannel);
             }
+
+            debugSay(2,"DEBUG-COLLAPSE","ifPermissions (link_message 500)");
             ifPermissions();
         }
     }
@@ -974,22 +1052,26 @@ default {
     // Is it really necessary to do ifPermissions repeatedly?
 
     timer() {
+        thisTimerEvent = llGetTime();
+
+#ifdef DEVELOPER_MODE
+        if (cdAttached()) timerInterval = thisTimerEvent - lastTimerEvent;
+        lastTimerEvent = thisTimerEvent;
+
+        if (timeReporting) llOwnerSay("Avatar Timer fired, interval " + formatFloat(timerInterval,3) + "s.");
+#endif
+
         // IF RLV is ok we don't have to check it do we?
 
-        //debugSay(2,"DEBUG-AVATAR","timer tripped...");
         if (RLVok == UNSET) {
             // this makes sure that enough time has elapsed - and prevents
             // the check from being missed...
 
-            debugSay(2,"DEBUG-RLV","nextRLVcheck = " + (string)nextRLVcheck);
-            if (nextRLVcheck < llGetTime()) {
-                debugSay(2,"DEBUG-RLV","performing next try of RLVcheck...");
-                checkRLV();
-            }
-
+            if (nextRLVcheck < llGetTime()) checkRLV();
             lmSendConfig("RLVok",(string)RLVok);
         }
 
+        debugSay(2,"DEBUG-COLLAPSE","ifPermissions (timer)");
         ifPermissions();
 
 #ifdef PREDICTIVE_TIMER
@@ -1069,7 +1151,7 @@ default {
     //
     // In our case it is used here with physics calls to slow movement for
     // a doll when in AFK mode.  This will work regardless of whether the
-    // doll is in RLV or not though RLV is a bonus as it allows preventing
+    // doll is in RLV or not though RLV is a bonus as it allows us to prevent
     // running.
 
     control(key id, integer level, integer edge) {
@@ -1078,15 +1160,16 @@ default {
         // currently held and integer edge representing keys which have
         // been pressed or released in this period (Since last control event).
 
-        if (!(llGetAgentInfo(llGetOwner()) & AGENT_WALKING)) {
-            llApplyImpulse(<0, 0, 0>, TRUE);
-        }
-        else {
-            if (afk && (keyAnimation == "") && (id == dollID)) {
-                if      (level & ~edge & CONTROL_FWD)  llApplyImpulse(<-1, 0, 0> * afkSlowWalkSpeed, TRUE);
-                else if (level & ~edge & CONTROL_BACK) llApplyImpulse(< 1, 0, 0>  * afkSlowWalkSpeed, TRUE);
+        if (llGetAgentInfo(llGetOwner()) & AGENT_WALKING) {
+            if (afk) {
+                if ((keyAnimation == "") && (id == dollID)) {
+                         if (level & ~edge & CONTROL_FWD)  llApplyImpulse(<-1, 0, 0> * afkSlowWalkSpeed, TRUE);
+                    else if (level & ~edge & CONTROL_BACK) llApplyImpulse(< 1, 0, 0> * afkSlowWalkSpeed, TRUE);
+                }
             }
         }
+        else
+            llApplyImpulse(<0, 0, 0>, TRUE);
     }
 #endif
 
@@ -1098,14 +1181,13 @@ default {
         if (request == rlvTPrequest) {
             vector global = llGetRegionCorner() + (vector)data;
 
-            string locx = (string)llFloor(global.x);
-            string locy = (string)llFloor(global.y);
-            string locz = (string)llFloor(global.z);
-
             llOwnerSay("Dolly is now teleporting.");
 
             // Note this will be rejected if @unsit=n or @tploc=n are active
-            lmRunRLVas("TP", "tpto:" + locx + "/" + locy + "/" + locz + "=force");
+            lmRunRLVas("TP", "tpto:" +
+                    (string) llFloor( global.x ) + "/" +
+                    (string) llFloor( global.y ) + "/" +
+                    (string) llFloor( global.z ) + "=force");
         }
     }
 
@@ -1113,6 +1195,7 @@ default {
     // RUN TIME PERMISSIONS
     //----------------------------------------
     run_time_permissions(integer perm) {
+        debugSay(2,"DEBUG-COLLAPSE","ifPermissions (run_time_permissions)");
         ifPermissions();
     }
 }
