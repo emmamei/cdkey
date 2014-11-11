@@ -710,13 +710,7 @@ default {
             }
 
             if (~llListFindList(folderList, (list)"~nude"))        lmSendConfig("nudeFolder","~nude");
-#ifdef DEVELOPER_MODE
-            else llOwnerSay("WARN: No nude (~nude) folder found with your outfits folder...");
-#endif
             if (~llListFindList(folderList, (list)"~normalself"))  lmSendConfig("normalselfFolder","~normalself");
-#ifdef DEVELOPER_MODE
-            else llOwnerSay("WARN: No normal self (~normalself) folder found with your outfits folder...");
-#endif
         }
         else if (channel == rlvChannel2) {
             debugSay(2,"DEBUG-LISTEN","Channel #2 received (\"" + typeFolder + "\"): " + choice);
@@ -746,7 +740,8 @@ default {
                     debugSay(2,"DEBUG-SEARCHING","Turning off timer (listen)");
                     llSetTimerEvent(0.0);
                     llListenRemove(rlvHandle3);
-                    debugSay(2,"DEBUG-SEARCHING","Outfits search completed in " + formatFloat(llGetTime() - outfitsSearchTimer,1) + "s");
+                    //debugSay(2,"DEBUG-SEARCHING","Outfits search completed in " + formatFloat(llGetTime() - outfitsSearchTimer,1) + "s");
+                    llOwnerSay("Outfits search completed in " + formatFloat(llGetTime() - outfitsSearchTimer,1) + "s");
                     // We're done at this stage
 
                     // is this redundant or prudent?
