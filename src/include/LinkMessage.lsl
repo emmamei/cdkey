@@ -11,25 +11,28 @@
 string seqStatus;
 integer mySeqNum;
 
-integer cdCheckSeqNum(string script, integer seqNum) {
-    integer last = (integer)cdGetValue(seqStatus,[script]);
-    integer ret;
-
-    if ((last == 0) || (seqNum == (last + 1))) ret = 1;
-    else {
-        
-        llOwnerSay("Missing or out of order link message from '" + script + "' just recieved sequence number #" + (string)seqNum + " but there was no #" + (string)(last + 1));
-        ret = 0;
-    }
-
-    if (seqNum > last) seqStatus = cdSetValue(seqStatus,[script],(string)seqNum);
-    return ret;
-}
+// Not yet being used
+//
+//integer cdCheckSeqNum(string script, integer seqNum) {
+//    integer last = (integer)cdGetValue(seqStatus,[script]);
+//    integer ret;
+//
+//    if ((last == 0) || (seqNum == (last + 1))) ret = 1;
+//    else {
+//        
+//        llOwnerSay("Missing or out of order link message from '" + script + "' just recieved sequence number #" + (string)seqNum + " but there was no #" + (string)(last + 1));
+//        ret = 0;
+//    }
+//
+//    if (seqNum > last) seqStatus = cdSetValue(seqStatus,[script],(string)seqNum);
+//    return ret;
+//}
 
 cdLinkMessage(integer target, integer opt, integer code, string data, key id) {
-    ++mySeqNum;
-    llMessageLinked(target, ((mySeqNum << 16) | (opt << 10) | code), cdMyScriptName() + "|" + data, id);
+    llMessageLinked(target, (((++mySeqNum) << 16) | (opt << 10) | code), cdMyScriptName() + "|" + data, id);
 }
+
+// #define cdLinkMessage(target,opt,code,data,id) llMessageLinked(target, (((mySeqNum++) << 16) | (opt << 10) | code), cdMyScriptName() + "|" + data, id)
 
 #define cdLinkCode(a,b,c) (((a & 0xFFFF) << 16) | (b << 10) | c)
 #define cdInitializeSeq() mySeqNum = llRound(llFrand(1<<15))
