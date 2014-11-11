@@ -287,9 +287,9 @@ default {
             lmSendConfig("keyHandler", (string)(keyHandler = NULL_KEY));
 #endif
         }
-        if (change & CHANGED_OWNER) {
-            llSleep(60);
-        }
+        //if (change & CHANGED_OWNER) {
+        //    llSleep(60);
+        //}
     }
 
     //----------------------------------------
