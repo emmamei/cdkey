@@ -388,7 +388,7 @@ default
             }
             else return; // For some other doll? noise? matters not it's someone elses problem.
 
-            debugSay(2, "CHAT-DEBUG", "On #" + (string)channel + " secondlife:///app/agent/" + (string)id + "/about: pre:" + prefix + "(ok) cmd:" + msg + " id:" + (string)id);
+            //debugSay(2, "CHAT-DEBUG", "On #" + (string)channel + " secondlife:///app/agent/" + (string)id + "/about: pre:" + prefix + "(ok) cmd:" + msg + " id:" + (string)id);
 
             // Is the "msg" an animation?
             if (llGetInventoryType(msg) == 20) {
@@ -477,14 +477,11 @@ default
 
                 if (isDoll || isController) {
                     // Normal user commands
-                    if (choice == "detach") {
-                        if (detachable || isController) {
-                            lmInternalCommand("detach", "", NULL_KEY);
-                        }
-                        else {
-                            lmSendToAgent("Key can't be detached...", id);
-                        }
-                    }
+                    if (choice == "detach")
+
+                        if (detachable || isController) lmInternalCommand("detach", "", NULL_KEY);
+                        else lmSendToAgent("Key can't be detached...", id);
+
                     else if (choice == "help") {
                     string help = "Commands:
     Commands can be prefixed with your prefix, which is currently " + llToUpper(chatPrefix) + "\n
@@ -553,19 +550,19 @@ default
                         cdCapability(poseSilence,  "Doll is",  "silenced while posing");
                         cdCapability(wearLock,     "Doll's clothing' is",  "currently locked on");
 
-                        if (windRate == 0.0) { s += "Key is not winding down.\n"; }
-                        else { s += "Current wind rate is " + formatFloat(windRate,2) + ".\n"; }
+                        if (windRate) s += "Current wind rate is " + formatFloat(windRate,2) + ".\n";
+                        else s += "Key is not winding down.\n";
 
-                        if (RLVok == UNSET) { s += "RLV status is unknown.\n"; }
-                        else if (RLVok == 1) { s += "RLV is active.\nRLV version: " + RLVver; }
+                        if (RLVok == UNSET) s += "RLV status is unknown.\n";
+                        else if (RLVok == 1) s += "RLV is active.\nRLV version: " + RLVver;
                         else s += "RLV is not active.\n";
 
                         lmSendToAgent(s, id);
                     }
                     else if (choice == "stat") {
-                        debugSay(6, "DEBUG", "timeLeftOnKey = " + (string)timeLeftOnKey);
-                        debugSay(6, "DEBUG", "currentLimit = " + (string)currentLimit);
-                        debugSay(6, "DEBUG", "displayWindRate = " + (string)displayWindRate);
+                        //debugSay(6, "DEBUG", "timeLeftOnKey = " + (string)timeLeftOnKey);
+                        //debugSay(6, "DEBUG", "currentLimit = " + (string)currentLimit);
+                        //debugSay(6, "DEBUG", "displayWindRate = " + (string)displayWindRate);
 
                         float t1 = timeLeftOnKey / (SEC_TO_MIN * displayWindRate);
                         float t2 = currentLimit / (SEC_TO_MIN * displayWindRate);
@@ -574,8 +571,7 @@ default
                         string msg = "Time: " + (string)llRound(t1) + "/" +
                                     (string)llRound(t2) + " min (" + formatFloat(p, 2) + "% capacity)";
 
-                        if (windRate == 0.0) msg += " and key is currently stopped.";
-                        else {
+                        if (windRate) {
                             msg += " unwinding at a ";
 
                             if (windRate == 1.0) msg += "normal rate.";
@@ -586,14 +582,14 @@ default
                                 msg += " of " + formatFloat(windRate, 1) + "x.";
                             }
 
-                        }
+                        } else msg += " and key is currently stopped.";
 
                         lmSendToAgent(msg, id);
                     }
                     else if (choice == "stats") {
-                        debugSay(6, "DEBUG", "timeLeftOnKey = " + (string)timeLeftOnKey);
-                        debugSay(6, "DEBUG", "currentLimit = " + (string)currentLimit);
-                        debugSay(6, "DEBUG", "displayWindRate = " + (string)displayWindRate);
+                        //debugSay(6, "DEBUG", "timeLeftOnKey = " + (string)timeLeftOnKey);
+                        //debugSay(6, "DEBUG", "currentLimit = " + (string)currentLimit);
+                        //debugSay(6, "DEBUG", "displayWindRate = " + (string)displayWindRate);
 
                         //displayWindRate;
 
@@ -645,9 +641,7 @@ default
 
                         string s = "Dolly's Key is now ";
                         if (demoMode) {
-                            if (timeLeftOnKey > DEMO_LIMIT) {
-                                lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = DEMO_LIMIT));
-                            }
+                            if (timeLeftOnKey > DEMO_LIMIT) lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = DEMO_LIMIT));
                             s += "in demo mode: " + (string)llRound(timeLeftOnKey / SEC_TO_MIN) + " of " + (string)llFloor(DEMO_LIMIT / SEC_TO_MIN) + " minutes remaining.";
                         }
                         else {
@@ -760,7 +754,7 @@ default
                     else if (choice == "unblacklist") {
                         if ((llToLower(blockedControlName) == llToLower(param)) && (llGetUnixTime() < (blockedControlTime + 300))) {
                             llOwnerSay("Adding previously blacklisted user " + blockedControlName + " as controller.");
-                            blacklistMode = -1;
+                            //blacklistMode = -1;
                             lmInternalCommand("addRemBlacklist", blockedControlUUID + "|" + blockedControlName, dollID);
                         }
                         blacklistMode = -1;
@@ -853,8 +847,16 @@ default
                     }
                     else if (choice == "timereporting") {
                         string s = "Time reporting turned ";
-                        if (param == "0") s+= "off.";
-                        else s+= "on.";
+
+                        if (param == "0") s += "off.";
+                        else if (param == "off") {
+                            s += "off.";
+                            param = "0";
+                        }
+                        else {
+                            s += "on.";
+                            param = "1";
+                        }
 
                         llOwnerSay(s);
                         lmSendConfig("timeReporting", (string)(timeReporting = (integer)param));
