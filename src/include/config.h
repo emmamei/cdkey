@@ -13,7 +13,7 @@
 /* #define WEAR_AT_LOGIN 1 */
 
 /* adds slowed walking during AFK */
-#define SLOW_WALK 1
+/* #define SLOW_WALK 1 */
 
 /* adds processing for multiple keys on broadcast */
 /* #define KEY_HANDLER 1 */
