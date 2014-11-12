@@ -498,6 +498,8 @@ default {
 #ifdef WAKESCRIPT
             if (choice == "wakeScript") {
                 // This is a call to ServiceReceiver.lsl
+                //
+                // It asks for a refresh of these variables
                 if (name == cdMyScriptName()) cdLinkMessage(LINK_THIS, 0, 303, "debugLevel|dialogChannel|dollType|quiet|mustAgreeToType|RLVok|showPhrases|wearAtLogin", llGetKey());
             }
 #endif
