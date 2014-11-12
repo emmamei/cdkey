@@ -110,7 +110,7 @@ integer lowScriptMode;
 #endif
 integer poseSilence;
 //integer refreshControls;
-#ifdef RLV_CHECK
+#ifdef CHECK_RLV
 integer RLVck = 0;
 integer RLVstarted;
 #endif
@@ -128,40 +128,100 @@ integer chatChannel = 75;
 //========================================
 
 key animStart(string animation) {
+    debugSay(2,"DEBUG-AVATAR","animStart");
     if ((llGetPermissionsKey() != dollID) || (!(llGetPermissions() & PERMISSION_TRIGGER_ANIMATION)))
         return NULL_KEY;
 
     list oldList = llGetAnimationList(dollID);
+    i = llGetListLength(oldList);
 
+    debugSay(2,"DEBUG-AVATAR","animStart");
     // Stop all animations
-    while (llGetListLength(oldList))
-        llStopAnimation(llList2Key(oldList, 0));
+    while (i--)
+        llStopAnimation(llList2Key(oldList, i));
 
     oldList = llGetAnimationList(dollID);
 
-    key animID = llGetInventoryKey(animation); // Only works on full perm animations
+    //key animID = llGetInventoryKey(animation); // Only works on full perm animations
     llStartAnimation(animation);
 
-    // This next section is to work around animations that arent full perm:
-    // scan the AnimationList and yank the key of the animation we just started
-    if (animID)
-        return (animID);
-    else {
-        i = llGetListLength(oldList);
-        list newList = llGetAnimationList(dollID);
-        animKey = NULL_KEY;
-        integer index;
+    list newList = llGetAnimationList(dollID);
+    integer j = llGetListLength(newList);
 
+    // This section not only grabs the ID of the running
+    // animation, but also checks to see that all former
+    // animations were stopped... if we shortcut, we
+    // lose that capability
+    //
+    // We test for three possibilities:
+    //    1. There's only one animation currently running
+    //    2. There's no animations running (error)
+    //    3. There's two animations running: one failed to stop
+    //    4. There's only one animation running that wasn't before
+
+    // only one animation running: assume its ours and return its ID
+    if (j == 1) return llList2Key(newList, 0);
+
+    // NO animations are running: stopping animations succeeded
+    // but animation start failed
+    else if (j == 0)
+        llSay(DEBUG_CHANNEL,"Animation start failed!");
+
+    // Couldn't stop all animations - which should only
+    // happen if the last and only animation was a looped animation...
+    // We've started another animation so it won't be the only one:
+    // so try again...
+    else if (j == 2) {
+
+        // The old list doesn't have the new animation in it - so iterate
+        // over it and kill that last animation...
+
+        i = llGetListLength(oldList);
+        if (i == 1) {
+            // oldList contains one animation we couldn't stop...
+            // After trying to stop it again, we check the running animations
+            // again to see if we have just the one (presumably) ours:
+            // if so, we can return it immediately
+
+            llStopAnimation(llList2Key(oldList, 0));
+            j = llGetListLength(newList = llGetAnimationList(dollID));
+            if (j == 1) return llList2Key(newList, 0);
+        }
+        else {
+            // old list is not 1: several animations did not stop
+            llSay(DEBUG_CHANNEL,"Animation stop failed: " + (string)i + "animations were still running; start failed");
+        }
+    }
+    else if (j - i == 1) {
+        // Several animations other than ours are still running, not just one
+        llSay(DEBUG_CHANNEL,"Animation stop failed: " + (string)i + "animations are still running");
+
+        // At this point we have multiple animations that did not stop;
+        // so iterate over the list and try to stop them all again
+        //
+        // Note that if some animations have started in the meantime
+        // other than ours, they won't be stopped either...
+
+        // We have two lists, one of which is one longer than the other...
+        // we want to find the ONE key which is different
+
+        // Starting from the end is faster because we can imply a
+        // test against zero - but also because that is likely
+        // where the difference is... but can't assume that is true
         while(i--) {
             animKey = llList2Key(oldList, i);
 
-            while (~(index = llListFindList(newList, [ animKey ])))
-                newList = llDeleteSubList(newList, index, index);
+            if (llListFindList(newList, [ animKey ]) == NOT_FOUND)
+                // There's only one element different between the two...
+                // or should be - we could have a situation where
+                // one animation was stopped and another started
+                // "behind our backs" on top of what we did - but
+                // we consider this unlikely
+                return animKey;
         }
-
-        if (llGetListLength(newList) == 1) return llList2Key(newList, 0);
-        else return NULL_KEY;
     }
+
+    return NULL_KEY;
 }
 
 clearAnimations() {
@@ -188,64 +248,97 @@ clearAnimations() {
 }
 
 oneAnimation() {
-    animList = llGetAnimationList(dollID);
-    key curAnim = llList2Key(animList, 0);
-    animKey = NULL_KEY;
-    //integer animCount = llGetListLength(animList);
-    i = llGetListLength(animList);
+    integer upRefresh;
+    debugSay(2,"DEBUG-AVATAR","oneAnimation");
 
     // Strip down to a single animation (keyAnimation)
 
     cdLockMeisterCmd("bootoff");
 
-    // keyAnimationID was null so grab the real thing
-    if (keyAnimationID) animKey = keyAnimationID;
-    else                animKey = llGetInventoryKey(keyAnimation); // only works with full perm animations
+    // keyAnimationID is null so grab the real thing. Note that
+    // keyAnimationID is expected to match keyAnimation, but does it
+    // really?
 
+    if ((animKey = llGetInventoryKey(keyAnimation)) == NULL_KEY) 
+        animKey = keyAnimationID;
+
+    animList = llGetAnimationList(dollID);
     if (animKey) {
-        key animKeyI;
+        // if animKey is running alone - we've nothing to do...
+        if (animList != [ animKey ]) {
+            // animStart() would stop everything; we only want to
+            // stop all the rogue animations OTHER than what we want
+            // to keep running
+            key animKeyI;
 
-        while ((animList = llGetAnimationList(dollID)) != [ animKey ]) {
-            //animCount = llGetListLength(animList);
-            debugSay(2,"DEBUG-AVATAR","[ " + llList2CSV(animList) + " ] (size " + (string)i + ")");
+            if (llListFindList(animList, [ animKey ]) == NOT_FOUND) {
+                // Animation isn't running currently: let animStart() handle it
+                animKey = animStart(keyAnimation);
+            }
+            else {
+                // animKey animation IS running... don't stop it; stop everything else
 
-            while (i--) {
+                debugSay(2,"DEBUG-AVATAR","Running animKey loop");
 
-                animKeyI = llList2Key(animList, i);
+                // Other animations are trying to "get in"; make note of it
+                upRefresh = 1;
 
-                if (animKeyI != animKey) {
-                    debugSay(2,"DEBUG-AVATAR","Stopping animation #" + (string)i + ": " + (string)animKeyI);
-                    llStopAnimation(animKeyI);
+                i = llGetListLength(animList);
+                while (i--) {
+                    animKeyI = llList2Key(animList, i);
+
+                    if (animKeyI != animKey) {
+                        debugSay(2,"DEBUG-AVATAR","Stopping animation #" + (string)i + ": " + (string)animKeyI);
+                        llStopAnimation(animKeyI);
+                    }
                 }
             }
-
-            // Dont start the animation unless its not running
-            if (llGetAnimationList(dollID) != [ animKey ]) llStartAnimation(keyAnimation);
         }
     }
     else animKey = animStart(keyAnimation);
 
+    // animKey should now be the key of a running animation - the only animation...
+    // keyAnimationID, if not corrupted, is the previous animation...
+
     if (keyAnimationID == NULL_KEY) {
-        if (animKey != NULL_KEY) lmSendConfig("keyAnimationID", (string)(keyAnimationID = animKey));
-        animRefreshRate = 4.0;
+        if (animKey != NULL_KEY) {
+            lmSendConfig("keyAnimationID", (string)(keyAnimationID = animKey));
+            animRefreshRate = 4.0;
+        }
+        else animRefreshRate = 0.0;
     }
     else {
-        debugSay(7, "DEBUG", "animID=" + (string)keyAnimationID + " curAnim=" + (string)curAnim + " animRefreshRate=" + (string)animRefreshRate);
+        if (animKey != keyAnimationID)
+            lmSendConfig("keyAnimationID", (string)(keyAnimationID = animKey));
 
         // this makes the refresh rate "adaptive": if nothing happens,
         // another frame's worth is added to the refresh rate each time;
         // if an animation takes over or tries to - the refresh rate is
-        // cut in half. There is also clipping at 1 frame minimum and
-        // 30s maximum.
-        if (curAnim == keyAnimationID) {
-            animRefreshRate += (1.0/llGetRegionFPS());                  // +1 Frame
-            if (animRefreshRate > 30.0) animRefreshRate = 30.0;             // 30 Second limit
+        // cut in half. There is also clipping at the maximum and minimum times
+        //
+        // Note that the refresh times are dependent on Frames: the busier a
+        // region is, the longer time between refreshes - and vice versa.
+        // Helps to keep things accurate and perhaps not be so brutal to
+        // a busy region - also keeps us from having two timer events collide
+
+#define MIN_FRAMES 4
+#define ADD_FRAMES 5
+
+        if (upRefresh) {
+            // We found our animation being interfered with; cut the refreshRate
+            // so that we run more often: and "fight back" for our animation
+            animRefreshRate /= 2.0;                                     // -50%
+            if (animRefreshRate < llGetRegionFPS() * MIN_FRAMES)
+                animRefreshRate = llGetRegionFPS() * MIN_FRAMES;        // Minimum amount of time (by Frames)
         }
         else {
-            animRefreshRate /= 2.0;                                     // -50%
-            if (animRefreshRate < 0.022) animRefreshRate = 0.022;           // Limit once per frame
+            // No interference - so run less often
+            animRefreshRate += (1.0/llGetRegionFPS()) * ADD_FRAMES;     // +5 (current) Frame's worth of time
+            if (animRefreshRate > 30.0) animRefreshRate = 30.0;         // 30 Second limit
         }
     }
+
+    debugSay(4, "DEBUG", "Animation Refresh Rate: " + formatFloat(animRefreshRate,2));
 }
 
 #ifdef CHECK_RLV
@@ -419,6 +512,22 @@ activateRLV() {
 
 ifPermissions() {
     // This is repeatedly and frequently called - pays to be fast
+    //
+    // ifPermissions is called in these locations at writing:
+    //   * on_rez
+    //   * changed
+    //   * attach
+    //   * link_message 110
+    //   * link_message 300/collapsed
+    //   * link_message 300/keyAnimation
+    //   * link_message 300
+    //   * link_message 500
+    //   * timer
+    //   * run_time_permissions
+    //
+    // Note especially the call during run_time_permissions:
+    // that section is called by llRequestPermissions() and
+    // similar functions - from within this function...
 
     // Don't do anything unless attached
     if (!llGetAttached()) return;
@@ -456,6 +565,7 @@ ifPermissions() {
         llSetTimerEvent(animRefreshRate);
     }
 
+    debugSay(2,"DEBUG-AVATAR","animRefreshRate = " + (string)animRefreshRate + "; keyAnimation = " + keyAnimation);
     //----------------------------------------
     // PERMISSION_TAKE_CONTROLS
 
@@ -464,6 +574,7 @@ ifPermissions() {
     if (permMask & PERMISSION_TAKE_CONTROLS) {
 
         //debugSay(2,"DEBUG-COLLAPSE","haveControls = " + (string)haveControls + "; collapsed = " + (string)collapsed);
+        debugSay(2,"DEBUG-AVATAR","Taking controls...");
 
         if (isFrozen)
             // Dolly is "frozen": either collapsed or posed
@@ -514,6 +625,7 @@ ifPermissions() {
     //----------------------------------------
     // Moving to Target
 
+    debugSay(2,"DEBUG-AVATAR","Moving to target");
     if (isFrozen) {
 
         if (lockPos == ZERO_VECTOR) lmSendConfig("lockPos", (string)(lockPos = llGetPos()));
