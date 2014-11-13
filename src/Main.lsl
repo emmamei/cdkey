@@ -141,7 +141,7 @@ key simRatingQuery;
 //========================================
 // FUNCTIONS
 //========================================
-#ifndef DEVELOPER_MODE
+#ifdef LOCKON
 ifPermissions() {
     key grantor = llGetPermissionsKey();
     integer perm = llGetPermissions();
@@ -151,8 +151,10 @@ ifPermissions() {
         llSleep(10);
     }
 
-    if (!((perm & PERMISSION_MASK) == PERMISSION_MASK))
+    if ((perm & PERMISSION_MASK) != PERMISSION_MASK) {
         llRequestPermissions(dollID, PERMISSION_MASK);
+        return;
+    }
 
     if (perm & PERMISSION_ATTACH && !cdAttached()) llAttachToAvatar(ATTACH_BACK);
     else if (!cdAttached() && llGetTime() > 120.0) {
@@ -393,7 +395,7 @@ default {
 
         lmInternalCommand("getTimeUpdates", "", llGetKey());
 
-#ifndef DEVELOPER_MODE
+#ifdef LOCKON
         ifPermissions();
 #endif
         // Update sign if appropriate
@@ -1071,7 +1073,7 @@ default {
         }
     }
 
-#ifndef DEVELOPER_MODE
+#ifdef LOCKON
     run_time_permissions(integer perm) {
         if (!cdAttached()) llOwnerSay("@acceptpermission=rem");
         ifPermissions();

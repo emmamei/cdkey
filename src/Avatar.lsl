@@ -31,7 +31,7 @@ key carrierID = NULL_KEY;
 integer allControls = ALL_CONTROLS;
 
 key rlvTPrequest;
-#ifndef DEVELOPER_MODE
+#ifdef LOCKON
 key mainCreator;
 #endif
 //key requestLoadData;
@@ -467,7 +467,7 @@ activateRLV() {
 #endif
     }
 
-#ifndef DEVELOPER_MODE
+#ifdef LOCKON
     mainCreator = llGetInventoryCreator("Main");
 
     // We lock the key on here - but in the menu system, it appears
@@ -504,7 +504,7 @@ activateRLV() {
     //RLVstarted = (RLVstarted | RLVok);
     RLVstarted = 1;
 
-#ifndef DEVELOPER_MODE
+#ifdef LOCKON
     if (mainCreator == dollID) lmRunRLVas("Base", "clear=unshared,clear=attachallthis");
 #endif
 }
