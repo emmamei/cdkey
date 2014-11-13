@@ -26,7 +26,7 @@
 string bigsubfolder = "dressup"; //name of subfolder in RLV to always use if available. But also checks for outfits.
 
 // FIXME: This should be in a notecard so it can be changed without mangling the scripts.
-string outfits_url = "http://communitydolls.com/outfits.htm";
+string outfits_url = WEB_DOMAIN + "outfits.htm";
 
 string prefix;
 
