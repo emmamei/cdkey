@@ -3,26 +3,19 @@
 /* announce deprecation of prefix? or be quiet... */
 // #define PREFIX_NEEDED 1
 
-/* store configuration vars in a list in ServiceReceiver.lsl */
-#define STORED_CONFIG 1
-
 /* Defines the Default wind amount */
 #define WIND_DEFAULT 1800.0
+
+/* enable lag reduction mode when detecting sustained high time dilation in
+   the local region. This slightly delays certain events and turns off non
+   essential candy to produce a large drop in script time */
+/* #define SIM_FRIENDLY 1 */
 
 /* adds wear at login feature: choose new outfit every login */
 /* #define WEAR_AT_LOGIN 1 */
 
 /* adds slowed walking during AFK */
-/* #define SLOW_WALK 1 */
-
-/* adds processing for multiple keys on broadcast */
-/* #define KEY_HANDLER 1 */
-
-/* adds update processing in ServiceReciever */
-#define UPDATE_METHOD_CDKEY 1
-
-/* enable Link Message 320 (RLV confirms?) in StatusRLV */
-/* #define LINK_320 1 */
+#define SLOW_WALK 1
 
 /* The predictive timer predicts when the next event will occur, and
    tries to set the timer to match. */
@@ -30,9 +23,6 @@
 
 /* Manipulate Script running dynamically */
 /* #define WAKESCRIPT 1 */
-
-/* enable database back-end processing */
-// #define DATABASE_BACKEND 1
 
 /* enable the inclusion of adult features such as stripping and slut doll in
    the key */
@@ -64,13 +54,17 @@
    performance statistics etc */
 #define DEVELOPER_MODE 1
 
+/* Does the developer key "lock on" ? */
+#ifdef DEVELOPER_MODE
+// #define LOCKON 1
+#else
+// Non-dev key should ALWAYS lock on
+#define LOCKON 1
+#endif
+
 /* enable testing and debugging features and allows the doll to access
    normally inaccessible functions like strip and wind */
 /* #define TESTER_MODE 1 */
-
-/* enable off-sim database back-end, which allows all settings to be
-   stored and restored from off-sim - makes settings more persistent */
-//#define DATABASE_MODE 0
 
 /* enable the start up introduction/hypno text provided that the required
    "Intro Text" notecard is also present */
@@ -83,7 +77,7 @@
 #define PACKAGE_NAME "Community Doll Key"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Community Doll Key (Beta) 5-Apr-14"
+#define PACKAGE_STRING "Community Doll Key (Beta) 10-Nov-2014"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "cdkey-beta"
@@ -92,12 +86,8 @@
 #define PACKAGE_URL "https://github.com/emmamei/cdkey"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "5-Apr-14"
+#define PACKAGE_VERSION "10-Nov-14"
 
 /* Define to the numeric version of this package. */
 #define PACKAGE_VERNUM 140405
 
-/* enable lag reduction mode when detecting sustained high time dilation in
-   the local region. This slightly delays certain events and turns off non
-   essential candy to produce a large drop in script time */
-/* #define SIM_FRIENDLY 1 */
