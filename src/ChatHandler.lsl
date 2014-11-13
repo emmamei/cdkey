@@ -220,7 +220,7 @@ default
                 integer type; string typeString; string barString; integer mode;
                 list tmpList; list barList; // barList represents the opposite (of blacklist or controller list) which bars adding.
 
-                if ((id != DATABASE_ID) && (script != "MenuHandler")) id = listID;
+                id = listID;
                 if (name == "") return; // fix for issue #141
 
                 // These lists become mangled sometimes for reasons unclear creating a new handler for both here
@@ -270,11 +270,6 @@ default
                 if (mode == ADD_MODE) {
 
                     integer load;
-
-                    if (id == DATABASE_ID) {
-                        load = TRUE;
-                        llOwnerSay("Restoring " + name + " as " + typeString + " from database settings.");
-                    }
 
                     if (i == NOT_FOUND) {
                         // Handle adding
@@ -425,47 +420,6 @@ default
                     if (choice == "build") {
                         lmConfigReport();
                     }
-                }
-
-                // Commands only for Doll or Built-in Controllers:
-                //    * refreshvars
-                //    * dumpstate
-                //    * httppreload
-                //    * rlvinit
-
-                if (isDoll || cdIsBuiltinController(id)) {
-#ifdef DATABASE_BACKEND
-                    // Do an internal resresh of all local variables from local db
-                    if (choice == "refreshvars") {
-                        cdRefreshVars();
-                    }
-                    // Request verbose full key state dump to chat
-                    else if (choice == "dumpstate") {
-                        cdDumpState();
-                    }
-                    // Service reinitialization and remote restore
-                    else if (choice == "httpreload") {
-                        if (!offlineMode) {
-                            llResetOtherScript("ServiceReceiver");
-                            llSleep(1.0);
-                            llResetOtherScript("ServiceRequester");
-                            llSleep(2.0);
-                        }
-                    } else 
-#endif
-                    // Try a hard RLV reinitialzation
-//                  if (choice == "rlvinit") {
-//                      llSetScriptState("StatusRLV", 1);
-//                      llResetOtherScript("StatusRLV");
-//                      llResetOtherScript("Avatar");
-//
-//                      llSleep(1.0);
-                        //cdRefreshVars();
-                        //llSleep(5.0);
-                        // Inject menu click
-
-//                      cdMenuInject("*RLV On*",llGetDisplayName(dollID), id);
-//                  }
                 }
 
                 // Commands only for Doll or Controllers
