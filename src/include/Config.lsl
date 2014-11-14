@@ -18,12 +18,6 @@
 #define TEST []
 #endif
 
-#ifdef SIM_FRIENDLY
-#define FRI ["LowScript"]
-#else
-#define FRI []
-#endif
-
 #ifdef LINK_320
 #define L320 ["Link320"]
 #else

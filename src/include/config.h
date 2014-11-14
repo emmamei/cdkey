@@ -6,11 +6,6 @@
 /* Defines the Default wind amount */
 #define WIND_DEFAULT 1800.0
 
-/* enable lag reduction mode when detecting sustained high time dilation in
-   the local region. This slightly delays certain events and turns off non
-   essential candy to produce a large drop in script time */
-/* #define SIM_FRIENDLY 1 */
-
 /* adds wear at login feature: choose new outfit every login */
 /* #define WEAR_AT_LOGIN 1 */
 
