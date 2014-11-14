@@ -266,9 +266,7 @@ setGender(string gender) {
         pronounSheDoll = "He";
     }
     else {
-        if (gender == "sissy") dollGender = "Sissy";
-        else dollGender = "Female";
-
+        dollGender = "Female";
         pronounHerDoll = "Her";
         pronounSheDoll = "She";
     }
@@ -336,6 +334,9 @@ doneConfiguration(integer prefsRead) {
 
         lmSendConfig("dollyName", (dollyName = "Dolly " + name));
     }
+
+    // WearLock should be clear
+    lmSendConfig("wearLock","0");
 
     if (isAttached) cdSetKeyName(dollyName + "'s Key");
 
