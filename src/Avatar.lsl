@@ -9,6 +9,9 @@
 #include "include/GlobalDefines.lsl"
 #include "include/Json.lsl"
 
+#define LOW_FPS 30.0
+#define LOW_DILATION 0.8
+
 #define CHECK_RLV 1
 //#define DEBUG_BADRLV
 #define cdSayQuietly(x) { string z = x; if (quiet) llOwnerSay(z); else llSay(0,z); }
@@ -100,9 +103,7 @@ integer dialogChannel;
 //integer haveControls;
 integer rlvHandle;
 integer locked;
-#ifdef SIM_FRIENDLY
 integer lowScriptMode;
-#endif
 //integer poseSilence;
 //integer refreshControls;
 #ifdef CHECK_RLV
@@ -564,7 +565,7 @@ ifPermissions() {
 
     if (permMask & PERMISSION_TAKE_CONTROLS) {
 
-        //debugSay(2,"DEBUG-COLLAPSE","haveControls = " + (string)haveControls + "; collapsed = " + (string)collapsed);
+        //debugSay(2,"DEBUG-AVATAR","haveControls = " + (string)haveControls + "; collapsed = " + (string)collapsed);
         debugSay(2,"DEBUG-AVATAR","Taking controls...");
 
         if (isFrozen)
@@ -697,7 +698,7 @@ default {
         llStopMoveToTarget();
         llTargetRemove(targetHandle);
 
-        debugSay(2,"DEBUG-COLLAPSE","ifPermissions (on_rez)");
+        debugSay(2,"DEBUG-AVATAR","ifPermissions (on_rez)");
         isNoScript = llGetParcelFlags(llGetPos()) & PARCEL_FLAG_ALLOW_SCRIPTS;
         ifPermissions();
     }
@@ -710,8 +711,18 @@ default {
             llStopMoveToTarget();
             llTargetRemove(targetHandle);
 
-            debugSay(2,"DEBUG-COLLAPSE","ifPermissions (changed)");
             isNoScript = llGetParcelFlags(llGetPos()) & PARCEL_FLAG_ALLOW_SCRIPTS;
+            lowScriptMode = (llGetRegionFPS() < LOW_FPS || llGetRegionTimeDilation() < LOW_DILATION);
+
+#ifdef DEVELOPER_MODE
+            msg = "Region ";
+            if (isNOScript) msg += "does not allow scripts";
+            else msg += "allows scripts";
+
+            debugSay(2,"DEBUG-AVATAR",msg);
+            debugSay(2,"DEBUG-AVATAR","Region FPS: " + formatFloat(llGetRegionFPS(),1) + "; Region Time Dilation: " + formatFloat(llGetRegionTimeDilation(),3));
+            debugSay(2,"DEBUG-AVATAR","ifPermissions (changed)");
+#endif
             ifPermissions();
         }
     }
@@ -786,11 +797,18 @@ default {
         llTargetRemove(targetHandle);
 
         if (id) {
-            debugSay(2,"DEBUG-COLLAPSE","ifPermissions (attach)");
+            debugSay(2,"DEBUG-AVATAR","ifPermissions (attach)");
             ifPermissions();
 #ifdef CHECK_RLV
             doCheckRLV();
 #endif
+            lowScriptMode = (llGetRegionFPS() < LOW_FPS || llGetRegionTimeDilation() < LOW_DILATION);
+
+#ifdef DEVELOPER_MODE
+            debugSay(2,"DEBUG-AVATAR","Region FPS: " + formatFloat(llGetRegionFPS(),1) + "; Region Time Dilation: " + formatFloat(llGetRegionTimeDilation(),3));
+            debugSay(2,"DEBUG-AVATAR","ifPermissions (changed)");
+#endif
+            ifPermissions();
         }
 
         newAttach = (lastAttachedID != dollID);
@@ -817,7 +835,7 @@ default {
             //configured = 1;
             //doCheckRLV();
 
-            debugSay(2,"DEBUG-COLLAPSE","ifPermissions (link_message 110)");
+            debugSay(2,"DEBUG-AVATAR","ifPermissions (link_message 110)");
             ifPermissions();
         }
         else if (code == 135) {
@@ -854,7 +872,7 @@ default {
                     if (collapsed) lmSendConfig("keyAnimation", (keyAnimation = ANIMATION_COLLAPSED));
                     else if (cdCollapsedAnim()) lmSendConfig("keyAnimation", (keyAnimation = ""));
 
-                    debugSay(2,"DEBUG-COLLAPSE","ifPermissions (link_message 300/collapsed)");
+                    debugSay(2,"DEBUG-AVATAR","ifPermissions (link_message 300/collapsed)");
                     ifPermissions();
             }
             //else if (name == "tpLureOnly")           tpLureOnly = (integer)value;
@@ -886,7 +904,7 @@ default {
                     lmSendConfig("keyAnimationID", (string)(keyAnimationID = animStart(keyAnimation)));
                 }
 
-                debugSay(2,"DEBUG-COLLAPSE","ifPermissions (link_message 300/keyAnimation)");
+                debugSay(2,"DEBUG-AVATAR","ifPermissions (link_message 300/keyAnimation)");
                 ifPermissions();
             }
             else if (name == "poserID")                 poserID = (key)value;
@@ -898,9 +916,7 @@ default {
 #ifdef DEVELOPER_MODE
                 else if (name == "debugLevel")               debugLevel = (integer)value;
 #endif
-#ifdef SIM_FRIENDLY
                 else if (name == "lowScriptMode")         lowScriptMode = (integer)value;
-#endif
                 else if (name == "quiet")                         quiet = (integer)value;
                 else if (name == "chatChannel")             chatChannel = (integer)value;
                 else if (name == "canPose")                     canPose = (integer)value;
@@ -930,7 +946,7 @@ default {
             }
 
             //if (RLVstarted) cdLoadData(RLV_NC, RLV_BASE_RESTRICTIONS);
-            debugSay(2,"DEBUG-COLLAPSE","ifPermissions (link_message 300)");
+            debugSay(2,"DEBUG-AVATAR","ifPermissions (link_message 300)");
             ifPermissions();
         }
         else if (code == INTERNAL_CMD) {
@@ -1120,7 +1136,7 @@ default {
                 }
             }
 
-            debugSay(2,"DEBUG-COLLAPSE","ifPermissions (link_message 500)");
+            debugSay(2,"DEBUG-AVATAR","ifPermissions (link_message 500)");
             ifPermissions();
         }
     }
@@ -1158,7 +1174,7 @@ default {
             //lmSendConfig("RLVok",(string)RLVok);
         }
 
-        debugSay(2,"DEBUG-COLLAPSE","ifPermissions (timer)");
+        debugSay(2,"DEBUG-AVATAR","ifPermissions (timer)");
         ifPermissions();
 
 #ifdef PREDICTIVE_TIMER
@@ -1282,7 +1298,7 @@ default {
     // RUN TIME PERMISSIONS
     //----------------------------------------
     run_time_permissions(integer perm) {
-        debugSay(2,"DEBUG-COLLAPSE","ifPermissions (run_time_permissions)");
+        debugSay(2,"DEBUG-AVATAR","ifPermissions (run_time_permissions)");
         ifPermissions();
     }
 }

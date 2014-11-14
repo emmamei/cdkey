@@ -40,7 +40,7 @@ float delayTime = 15.0; // in seconds
 #ifdef DEVELOPER_MODE
 float initTimer;
 #endif
-float nextLagCheck;
+//float nextLagCheck;
 
 key dollID = NULL_KEY;
 key MistressID = NULL_KEY;
@@ -130,9 +130,7 @@ integer databaseOnline;
 float keyLimit;
 
 integer afk;
-#ifdef SIM_FRIENDLY
 integer lowScriptMode;
-#endif
 
 //=======================================
 // FUNCTIONS
@@ -429,9 +427,7 @@ default {
                  if (name == "ncPrefsLoadedUUID")    ncPrefsLoadedUUID = llDeleteSubList(split,0,0);
 //          else if (name == "offlineMode")                offlineMode = (integer)value;
 //          else if (name == "databaseOnline")          databaseOnline = (integer)value;
-#ifdef SIM_FRIENDLY
             else if (name == "lowScriptMode")            lowScriptMode = (integer)value;
-#endif
             else if (name == "dialogChannel")            dialogChannel = (integer)value;
             else if (name == "demoMode")                      demoMode = (integer)value;
             else if (name == "quiet")                            quiet = (integer)value;
@@ -584,7 +580,7 @@ default {
                 if (cdIsController(id)) cdResetKey();
             }
 
-            nextLagCheck = llGetTime() + SEC_TO_MIN;
+            //nextLagCheck = llGetTime() + SEC_TO_MIN;
         }
     }
 
@@ -622,9 +618,7 @@ default {
     touch_start(integer num) {
         if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
 
-#ifdef SIM_FRIENDLY
-        nextLagCheck = llGetTime() + SEC_TO_MIN;
-#endif
+        //nextLagCheck = llGetTime() + SEC_TO_MIN;
     }
 
     //----------------------------------------
@@ -677,11 +671,9 @@ default {
         afk = 0;
         lmSendConfig("afk", "0");
 
-#ifdef SIM_FRIENDLY
         // when attaching we're not in lowScriptMode
         lowScriptMode = 0;
         lmSendConfig("lowScriptMode", "0");
-#endif
 
         // reset collapse environment if needed
         lmInternalCommand("collapse", (string)collapsed, llGetKey());
