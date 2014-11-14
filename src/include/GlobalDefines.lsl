@@ -13,7 +13,7 @@
 // #define C 105
 // #define D 110
 #define MEM_REPORT 135
-#define SET_CONFIG 300
+#define CONFIG 300
 #define INTERNAL_CMD 305
 #define RLV_CMD 315
 // #define E 350
