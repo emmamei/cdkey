@@ -26,7 +26,7 @@
 string bigsubfolder = "dressup"; //name of subfolder in RLV to always use if available. But also checks for outfits.
 
 // FIXME: This should be in a notecard so it can be changed without mangling the scripts.
-string outfits_url = WEB_DOMAIN + "outfits.htm";
+string outfits_url = "outfits.htm";
 
 string prefix;
 
@@ -238,8 +238,11 @@ changeComplete(integer success) {
     if (change) llOwnerSay("Change to new outfit " + newoutfitname + " complete.");
 
     // Note: if wearLock is already set, it STAYS set with this setting
-    lmInternalCommand("wearLock", (string)(wearLock = (wearLock ||
-                                                      ((dresserID != NULL_KEY) && (dresserID != dollID)))), NULL_KEY);
+    //
+    // This triggers Main and sets wearLockExpire
+    lmInternalCommand("wearLock", (string)(wearLock = (wearLock || ((dresserID) && (dresserID != dollID)))), NULL_KEY);
+    lmSendConfig("wearLock", (string)(wearLock));
+
     candresstimeout = 0;
     change = 0;
 
@@ -479,7 +482,7 @@ default {
             }
             else {
                 msgx = "You may choose any outfit for " + llToLower(pronounHerDoll) + " to wear.\n\n";
-                if (dresserID == dollID) msgx = "See " + outfits_url + " for more information on outfits.\n\n";
+                if (dresserID == dollID) msgx = "See " + WEB_DOMAIN + outfits_url + " for more information on outfits.\n\n";
                 msgx += folderStatus();
 
                 integer select = (integer)llGetSubString(choice, 0, llSubStringIndex(choice, ".") - 1);
@@ -880,7 +883,7 @@ default {
             else newoutfits2 = [ "Outfits Prev", "Outfits Next" ] + newoutfits2;
 
             msgx = "You may choose any outfit.\n";
-            if (dresserID == dollID) msgx = "See " + outfits_url + " for more information on outfits.\n";
+            if (dresserID == dollID) msgx = "See " + WEB_DOMAIN + outfits_url + " for more information on outfits.\n";
             msgx += "Numbers match outfit names in chat, using chat history (CTRL+H) may help.\n\n" + folderStatus();
 
             // Provide a dialog to user to choose new outfit
