@@ -422,7 +422,7 @@ default {
                     // if Dolly is stripped by someone else, Dolly cannot
                     // dress for a time: wearLock is activated
 
-                    //lmInternalCommand("wearLock", (string)(wearLock = 1), NULL_KEY);
+                    lmInternalCommand("wearLock", (string)(wearLock = 1), NULL_KEY);
                     lmSendConfig("wearLock", (string)(wearLock = 1));
 
                     if (!quiet) llSay(0, "The dolly " + dollName + " has " + llToLower(pronounHerDoll) + " " + llToLower(part) + " stripped off " + llToLower(pronounHerDoll) + " and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes.");
