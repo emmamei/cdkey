@@ -14,7 +14,7 @@
 #define cdListenUser(a,b) llListen(a, NO_FILTER,         b, NO_FILTER)
 #define cdResetKey() llResetOtherScript("Start")
 
-#define MESSAGE_NC "DataMessages"
+//#define MESSAGE_NC "DataMessages"
 #define DISPLAY_DOLL 0
 #define SELF_DRESS 2
 #define CAN_FLY 4
@@ -359,6 +359,7 @@ default {
                 textboxChannel = dialogChannel - 1111;
             }
 
+#ifdef DOLL_MSG
             //----------------------------------------
             // OUTPUT MESSAGES FROM MENU SELECTIONS
 
@@ -370,7 +371,6 @@ default {
             if (script != "MenuHandler") return;
 
             if (name == "canDress") {
-                msg;
                 if (value == "1") msg = "Other people can now outfit you, but you remain ";
                 else msg = "Other people can no longer outfit you, but you remain ";
                 if (wearLock || !canDressSelf) msg += "un";
@@ -392,6 +392,7 @@ default {
             else if (name == "pleasureDoll")    dollMessageCode = PLEASURE_DOLL + (integer)value;
 #endif
             if (dollMessageCode >= 0) llOwnerSay("Doll message code #" + (string)dollMessageCode);
+#endif // DOLL_MSG
         }
         else if (code == 305) {
             string cmd = llList2String(split, 0);
@@ -421,7 +422,8 @@ default {
                     // if Dolly is stripped by someone else, Dolly cannot
                     // dress for a time: wearLock is activated
 
-                    lmInternalCommand("wearLock", (string)(wearLock = 1), NULL_KEY);
+                    //lmInternalCommand("wearLock", (string)(wearLock = 1), NULL_KEY);
+                    lmSendConfig("wearLock", (string)(wearLock = 1));
 
                     if (!quiet) llSay(0, "The dolly " + dollName + " has " + llToLower(pronounHerDoll) + " " + llToLower(part) + " stripped off " + llToLower(pronounHerDoll) + " and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes.");
                     else llOwnerSay("You have had your " + llToLower(part) + " stripped off you and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes");
