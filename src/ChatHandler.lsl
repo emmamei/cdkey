@@ -26,7 +26,7 @@ list windTimes              = [30];
 
 float collapseTime          = 0.0;
 float currentLimit          = 10800.0;
-float wearLockExpire;
+//float wearLockExpire;
 integer wearLock;
 
 string dollGender           = "Female";
@@ -199,7 +199,7 @@ default
             }
             else if (name == "tpLureOnly")                 tpLureOnly = (integer)value;
             else if (name == "windTimes")                   windTimes = llJson2List(value);
-            else if (name == "wearLockExpire")         wearLockExpire = (float)value;
+            //else if (name == "wearLockExpire")         wearLockExpire = (float)value;
             else if (name == "wearLock")                     wearLock = (integer)value;
             else if (name == "windRate")                     windRate = (float)value;
         }
