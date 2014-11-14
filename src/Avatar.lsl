@@ -17,18 +17,13 @@
 #define MAX_RLVCHECK_TRIES 5
 #define RLV_TIMEOUT 20.0
 #define UNSET -1
+#define ALL_CONTROLS (CONTROL_FWD|CONTROL_BACK|CONTROL_LEFT|CONTROL_RIGHT|CONTROL_ROT_LEFT|CONTROL_ROT_RIGHT|CONTROL_UP|CONTROL_DOWN|CONTROL_LBUTTON|CONTROL_ML_LBUTTON)
 
 #define cdListenerDeactivate(a) llListenControl(a, 0)
 #define cdListenerActivate(a) llListenControl(a, 1)
 #define cdResetKey() llResetOtherScript("Start")
 
 key carrierID = NULL_KEY;
-
-// Could set allControls to -1 for quick full bit set - 
-// but that would set fields with undefined values: this is more
-// accurate
-#define ALL_CONTROLS (CONTROL_FWD|CONTROL_BACK|CONTROL_LEFT|CONTROL_RIGHT|CONTROL_ROT_LEFT|CONTROL_ROT_RIGHT|CONTROL_UP|CONTROL_DOWN|CONTROL_LBUTTON|CONTROL_ML_LBUTTON)
-integer allControls = ALL_CONTROLS;
 
 key rlvTPrequest;
 #ifdef LOCKON
@@ -44,8 +39,8 @@ float timerInterval;
 integer timeReporting = 1;
 #endif
 
-list rlvSources;
-list rlvStatus;
+//list rlvSources;
+//list rlvStatus;
 
 float rlvTimer;
 
@@ -108,7 +103,7 @@ integer locked;
 #ifdef SIM_FRIENDLY
 integer lowScriptMode;
 #endif
-integer poseSilence;
+//integer poseSilence;
 //integer refreshControls;
 #ifdef CHECK_RLV
 integer RLVck = 0;
@@ -118,7 +113,7 @@ integer RLVok = UNSET;
 //integer startup = 1;
 integer targetHandle;
 //integer ticks;
-integer wearLock;
+//integer wearLock;
 integer newAttach = 1;
 //integer creatorNoteDone;
 integer chatChannel = 75;
@@ -457,7 +452,7 @@ activateRLV() {
     if (!RLVstarted) {
         llOwnerSay("@clear");
 
-#ifdef DEVELOPER_MODE
+#ifndef LOCKON
         // if Doll is one of the developers... dont lock:
         // prevents inadvertent lock-in during development
 
@@ -465,6 +460,11 @@ activateRLV() {
 
         baseRLV += "attachallthis_except:" + myPath + "=add,detachallthis_except:" + myPath + "=add,";
 #endif
+        llOwnerSay("Enabling RLV mode");
+
+        cdListenerDeactivate(rlvHandle);
+        lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
+        lmRLVreport(RLVok, rlvAPIversion, 0);
     }
 
 #ifdef LOCKON
@@ -484,29 +484,20 @@ activateRLV() {
                     // the occasional necessity of detaching during active development if this proves false we may need to fudge this
                     // in the section below.
     }
-    else if (RLVok && !RLVstarted) llSay(DEBUG_CHANNEL, "Backup protection mechanism activated not locking on creator");
-#endif
-
-    if (!RLVstarted) {
-        if (RLVok) llOwnerSay("Enabling RLV mode");
-
-        cdListenerDeactivate(rlvHandle);
-        lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
-        lmRLVreport(RLVok, rlvAPIversion, 0);
+    else {
+        if (!RLVstarted) llSay(DEBUG_CHANNEL, "Backup protection mechanism activated not locking on creator");
+        lmRunRLVas("Base", "clear=unshared,clear=attachallthis");
     }
+#endif
 
     if (userBaseRLVcmd != "") lmRunRLVas("UserBase", userBaseRLVcmd);
 
     //lmRunRLVas("Core", baseRLV + restrictionList + "sendchannel:" + (string)chatChannel + "=rem");
-    lmRunRLVas("Core", baseRLV + "sendchannel:" + (string)chatChannel + "=rem");
+    lmRunRLVas("Core", baseRLV + ",sendchannel:" + (string)chatChannel + "=rem");
 
     // If we get here - RLVok is already set
     //RLVstarted = (RLVstarted | RLVok);
     RLVstarted = 1;
-
-#ifdef LOCKON
-    if (mainCreator == dollID) lmRunRLVas("Base", "clear=unshared,clear=attachallthis");
-#endif
 }
 #endif // CHECK_RLV
 
@@ -766,7 +757,7 @@ default {
                 nextRLVcheck = 0.0;
                 RLVok = 1;
                 lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
-                //debugSay(2, "DEBUG-RLV", "RLV set to " + (string)RLVok + " and message sent on link channel");
+                debugSay(2, "DEBUG-RLV", "RLV set to " + (string)RLVok + " and message sent on link channel");
                 llOwnerSay("RLV check completed in " + formatFloat((llGetTime() - rlvTimer),1) + "s");
                 lmRLVreport(RLVok, rlvAPIversion, 0);
                 activateRLV();
@@ -836,7 +827,7 @@ default {
 
         cdConfigReport();
 
-        else if (code == 300) {
+        else if (code == CONFIG) {
             name = llList2String(split, 0);
             split = llDeleteSubList(split, 0, 0);
             value = llList2String(split, 0);
@@ -914,7 +905,7 @@ default {
                 else if (name == "chatChannel")             chatChannel = (integer)value;
                 else if (name == "canPose")                     canPose = (integer)value;
                 else if (name == "barefeet")                   barefeet = value;
-                else if (name == "wearLock")                   wearLock = (integer)value;
+                //else if (name == "wearLock")                   wearLock = (integer)value;
                 //else if (name == "dollType")                   dollType = value;
                 //else if (name == "controllers")             controllers = split;
                 else if (name == "pronounHerDoll")       pronounHerDoll = value;
@@ -942,7 +933,7 @@ default {
             debugSay(2,"DEBUG-COLLAPSE","ifPermissions (link_message 300)");
             ifPermissions();
         }
-        else if (code == 305) {
+        else if (code == INTERNAL_CMD) {
             string cmd = llList2String(split, 0);
             split = llDeleteSubList(split, 0, 0);
 
@@ -961,22 +952,17 @@ default {
                 llRegionSayTo(id, 0, "Teleporting dolly " + dollName + " to  landmark " + lm + ".");
                 rlvTPrequest = llRequestInventoryData(lm);
             }
-            else if (cmd == "wearLock") {
-                // WearLockExpire is set by Main.lsl...
+            //else if (cmd == "wearLock") {
 
-                lmSendConfig("wearLock", (string)(wearLock = llList2Integer(split, 0)));
-            }
+            //    lmSendConfig("wearLock", (string)(wearLock = llList2Integer(split, 0)));
+            //}
         }
-        else if (code == 500) {
+        else if (code == MENU_SELECTION) {
             string choice = llList2String(split, 0);
             string name = llList2String(split, 1);
 
             string subchoice = llGetSubString(choice,0,4);
             integer dollIsPoseable = ((!cdIsDoll(id) && canPose) || cdSelfPosed());
-            integer dollNotPosed = (keyAnimation == "");
-            //debugSay(5,"500","dollIsPoseable = " + (string)dollIsPoseable);
-            //debugSay(5,"500","dollNotPosed = " + (string)dollNotPosed);
-            //debugSay(5,"500","choice = " + choice);
 
             // First: Quick ignores
             if (llGetSubString(choice,0,3) == "Wind") return;
@@ -1003,7 +989,7 @@ default {
             else if (subchoice == "Strip") {
                 if (choice == "Strip...") {
                     list buttons = llListSort(["Strip Top", "Strip Bra", "Strip Bottom", "Strip Panties", "Strip Shoes", "Strip ALL"], 1, 1);
-                    cdDialogListen();
+                    //cdDialogListen();
                     llDialog(id, "Take off:", dialogSort(buttons + MAIN), dialogChannel); // Do strip menu
                     return;
                 }
@@ -1053,97 +1039,85 @@ default {
                 lmSendConfig("poserID", (string)(poserID = NULL_KEY));
             }
 
-            // choice is Inventory Animation Item
-            else if ((keyAnimation == "" || dollIsPoseable) && llGetInventoryType(choice) == 20) {
-                lmSendConfig("keyAnimation", (string)(keyAnimation = choice));
-                lmSendConfig("poserID", (string)(poserID = id));
-            }
+            else if (keyAnimation == "" || dollIsPoseable) {
 
-            // choice is Inventory Animation Item with prefix
-            else if ((keyAnimation == "" || dollIsPoseable) && llGetInventoryType(llGetSubString(choice, 2, -1)) == 20) {
-                lmSendConfig("keyAnimation", (string)(keyAnimation = llGetSubString(choice, 2, -1)));
-                lmSendConfig("poserID", (string)(poserID = id));
-            }
-
-//            else if (keyAnimation == "" || ((!cdIsDoll(id) && canPose) || cdSelfPosed())) {
-//                if (((!cdIsDoll(id) && canPose) || cdSelfPosed()) && choice == "Unpose") {
-//                    lmSendConfig("keyAnimation", (string)(keyAnimation = ""));
-//                    lmSendConfig("poserID", (string)(poserID = NULL_KEY));
-//                }
-//                else {
-//                    string anim = "";
-//
-//                    if (llGetInventoryType(choice) == 20) anim = choice;
-//                    else if (llGetInventoryType(llGetSubString(choice, 2, -1)) == 20) anim = llGetSubString(choice, 2, -1);
-//
-//                    if (anim != "") {
-//                        lmSendConfig("keyAnimation", (string)(keyAnimation = anim));
-//                        lmSendConfig("poserID", (string)(poserID = id));
-//                    }
-//                }
-//            }
-
-            // choice is menu of Poses
-            else if ((keyAnimation == "" || dollIsPoseable) && subchoice == "Poses") {
-                poserID = id;
-
-                integer page = (integer)llStringTrim(llGetSubString(choice, 5, -1), STRING_TRIM);
-                integer isController;
-                integer isDoll;
-
-                isController = cdIsController(id);
-                isDoll = cdIsDoll(id);
-
-                if (!page) {
-                    page = 1;
-                    if (!isDoll) llOwnerSay(cdUserProfile(id) + " is looking at your poses menu.");
+                // choice is Inventory Animation Item
+                if (llGetInventoryType(choice) == 20) {
+                    lmSendConfig("keyAnimation", (string)(keyAnimation = choice));
+                    lmSendConfig("poserID", (string)(poserID = id));
                 }
 
-                integer poseCount = llGetInventoryNumber(20);
-                list poseList;
-                i = poseCount;
-                string poseName;
-                string prefix;
+                // Nothing in the code strips the prefix out - so this code serves no purpose
+                //
+                // choice is Inventory Animation Item with prefix
+                //else if (llGetInventoryType(llGetSubString(choice, 2, -1)) == 20) {
+                //    lmSendConfig("keyAnimation", (string)(keyAnimation = llGetSubString(choice, 2, -1)));
+                //    lmSendConfig("poserID", (string)(poserID = id));
+                //}
 
-                while (i--) {
-                    poseName = llGetInventoryName(20, i);
-                    prefix = cdGetFirstChar(poseName);
+                // choice is menu of Poses
+                else if (subchoice == "Poses") {
+                    poserID = id;
 
-                    // Is the pose a pose we can show in the menu?
-                    //
-                    if (poseName != ANIMATION_COLLAPSED) {
-                        if (prefix != "!" && prefix != ".") prefix = "";
+                    integer page = (integer)llStringTrim(llGetSubString(choice, 5, -1), STRING_TRIM);
+                    integer isController;
+                    integer isDoll;
 
-                        if (isDoll ||
-                           (isController && prefix == "!") ||
-                           (prefix == "")) {
+                    isController = cdIsController(id);
+                    isDoll = cdIsDoll(id);
 
-                            // add a star to active animation
-                            if (poseName != keyAnimation) poseList += poseName;
-                            else poseList += [ "* " + poseName ];
+                    if (!page) {
+                        page = 1;
+                        if (!isDoll) llOwnerSay(cdUserProfile(id) + " is looking at your poses menu.");
+                    }
+
+                    integer poseCount = llGetInventoryNumber(20);
+                    list poseList;
+                    i = poseCount;
+                    string poseName;
+                    string prefix;
+
+                    while (i--) {
+                        poseName = llGetInventoryName(20, i);
+                        prefix = cdGetFirstChar(poseName);
+
+                        // Is the pose a pose we can show in the menu?
+                        //
+                        if (poseName != ANIMATION_COLLAPSED) {
+                            if (prefix != "!" && prefix != ".") prefix = "";
+
+                            if (isDoll ||
+                               (isController && prefix == "!") ||
+                               (prefix == "")) {
+
+                                if (poseName != keyAnimation) poseList += poseName;
+                            }
                         }
                     }
+
+                    poseCount = llGetListLength(poseList);
+                    integer pages = 1;
+
+                    if (poseCount > 9) {
+                        pages = llCeil((float)poseCount / 9.0);
+                        i = (page - 1) * 9;
+                        poseList = llList2List(poseList, i, i + 8);
+
+                        integer prevPage = page - 1;
+                        integer nextPage = page + 1;
+
+                        if (prevPage == 0) prevPage = 1;
+                        if (nextPage > pages) nextPage = pages;
+
+                        poseList = [ "Poses " + (string)prevPage, "Poses " + (string)nextPage, MAIN ] + poseList;
+                    }
+                    else poseList = dialogSort(poseList + [ MAIN ]);
+
+                    string msg = "Select the pose to put dolly into";
+                    if (keyAnimation) msg += " (current pose is " + keyAnimation + ")";
+                    //cdDialogListen();
+                    llDialog(id, msg, poseList, dialogChannel);
                 }
-
-                poseCount = llGetListLength(poseList);
-                integer pages = 1;
-
-                if (poseCount > 9) {
-                    pages = llCeil((float)poseCount / 9.0);
-                    poseList = llList2List(poseList, (page - 1) * 9, page * 9 - 1);
-
-                    integer prevPage = page - 1;
-                    integer nextPage = page + 1;
-
-                    if (prevPage == 0) prevPage = 1;
-                    if (nextPage > pages) nextPage = pages;
-
-                    poseList = [ "Poses " + (string)prevPage, "Poses " + (string)nextPage, MAIN ] + poseList;
-                }
-                else poseList = dialogSort(poseList + [ MAIN ]);
-
-                cdDialogListen();
-                llDialog(id, "Select the pose to put Dolly into", poseList, dialogChannel);
             }
 
             debugSay(2,"DEBUG-COLLAPSE","ifPermissions (link_message 500)");
@@ -1173,14 +1147,15 @@ default {
         if (timeReporting) llOwnerSay("Avatar Timer fired, interval " + formatFloat(timerInterval,3) + "s.");
 #endif
 
-        // IF RLV is ok we don't have to check it do we?
+        // IF RLV is unset that means we timed out - but for devs we might be still
+        // searching the path.... but it should be okay anyway...
 
         if (RLVok == UNSET) {
             // this makes sure that enough time has elapsed - and prevents
             // the check from being missed...
 
             if (nextRLVcheck < llGetTime()) checkRLV();
-            lmSendConfig("RLVok",(string)RLVok);
+            //lmSendConfig("RLVok",(string)RLVok);
         }
 
         debugSay(2,"DEBUG-COLLAPSE","ifPermissions (timer)");
