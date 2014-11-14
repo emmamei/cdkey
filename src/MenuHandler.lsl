@@ -60,7 +60,6 @@ integer canDressSelf = 1;
 //integer canStand = 1;
 integer canRepeat = 1;
 //integer poseSilence;
-//integer canDressSelf;
 //integer canUnwear;
 integer carryMoved;
 integer primLight = 1;
