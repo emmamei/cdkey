@@ -61,9 +61,7 @@ key keyHandler = NULL_KEY;
 
 integer dialogChannel;
 integer targetHandle;
-#ifdef SIM_FRIENDLY
 integer lowScriptMode;
-#endif
 integer busyIsAway;
 integer ticks;
 
@@ -97,9 +95,11 @@ integer signOn;
 //integer timerStarted;
 integer warned;
 integer wearLock;
-integer timeReporting = 1;
 
+#ifdef DEVELOPER_MODE
+integer timeReporting = 1;
 integer debugLevel = DEBUG_LEVEL;
+#endif
 
 // If the key is a Transforming Key - one that can transform from one
 // type of Doll to another - this tracks the current type of doll.
@@ -108,11 +108,11 @@ string dollType = "Regular";
 float winderRechargeTime;
 float wearLockExpire;
 float carryExpire;
-float lastRandomTime;
+//float lastRandomTime;
 float lastTimerEvent;
-float menuSleep;
-float lastTickTime;
-float timeToJamRepair;
+//float menuSleep;
+//float lastTickTime;
+float jamExpire;
 #ifdef PREDICTIVE_TIMER
 float nextExpiryTime;
 #endif
@@ -122,10 +122,8 @@ float keyLimit        = 10800.0;
 float timeLeftOnKey   = windamount;
 float baseWindRate    = windRate;
 float displayWindRate = windRate;
-integer HTTPinterval  = 60;
-integer HTTPthrottle  = 10;
-integer lastPostTimestamp;
-integer lastSendTimestamp;
+//integer HTTPinterval  = 60;
+//integer HTTPthrottle  = 10;
 float collapseTime;
 list windTimes        = [ 30 ];
 
@@ -191,7 +189,7 @@ collapse(integer newCollapseState) {
         }
         else if (newCollapseState == JAMMED) {
             // Time span (random) = 120.0 (two minutes) to 300.0 (five minutes)
-            lmSendConfig("timeToJamRepair", (string)(timeToJamRepair = llGetTime() + (llFrand(180.0) + 120.0)));
+            lmSendConfig("jamExpire", (string)(jamExpire = llGetTime() + (llFrand(180.0) + 120.0)));
         }
 
         // If not already collapsed, mark the start time
@@ -203,8 +201,8 @@ collapse(integer newCollapseState) {
 
     // If not jammed, reset time to Jam Repair
     if (newCollapseState != JAMMED) {
-        if (timeToJamRepair != 0.0) {
-            lmSendConfig("timeToJamRepair", (string)(timeToJamRepair = 0.0));
+        if (jamExpire) {
+            lmSendConfig("jamExpire", (string)(jamExpire = 0.0));
         }
     }
 
@@ -367,7 +365,7 @@ default {
         if (collapsed == NO_TIME)
             if (timeLeftOnKey > 0.0) collapse(NOT_COLLAPSED);
         else if (collapsed == JAMMED)
-            if (timeToJamRepair <= thisTimerEvent) collapse(NOT_COLLAPSED);
+            if (jamExpire <= thisTimerEvent) collapse(NOT_COLLAPSED);
 
         // Did the pose expire? If so, unpose Dolly
         if (poseExpire) {
@@ -389,7 +387,8 @@ default {
         if (wearLockExpire) {
             if (wearLockExpire <= thisTimerEvent) {
                 lmInternalCommand("wearLock", "0", NULL_KEY);
-                lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0.0));
+                lmSendConfig("wearLock", "0");
+                //lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0.0));
             }
         }
 
@@ -467,7 +466,7 @@ default {
 
         if (poseExpire)          possibleEvents += poseExpire - thisTimerEvent;
         if (wearLockExpire)      possibleEvents += wearLockExpire - thisTimerEvent;
-        if (timeToJamRepair)     possibleEvents += timeToJamRepair - thisTimerEvent;
+        if (jamExpire)           possibleEvents += jamExpire - thisTimerEvent;
 
         if (afk && autoAFK) {   // This lets us run a short cut timer event
                                 // that only checks for the doll returning
@@ -477,14 +476,12 @@ default {
             possibleEvents += 2.0;
         }
 
-#ifdef SIM_FRIENDLY
         if (possibleEvents != []) {
             if (lowScriptMode)              possibleEvents += 300.0;
             else                            possibleEvents += 60.0;
         }
-        else
-#endif
-        possibleEvents += 20.0;
+        else possibleEvents += 20.0;
+
         if (timeLeftOnKey != 0.0)           possibleEvents += timeLeftOnKey;
 
         // Set timer to the first of our predicted events.
@@ -518,11 +515,8 @@ default {
 
             configured = 1;
 
-#ifdef SIM_FRIENDLY
             if (lowScriptMode) llSetTimerEvent(LOW_RATE);
-            else
-#endif
-            if (!cdAttached()) llSetTimerEvent(60.0);
+            else if (!cdAttached()) llSetTimerEvent(60.0);
             else llSetTimerEvent(STD_RATE);
             timerStarted = 1;
         }
@@ -540,11 +534,8 @@ default {
             if (script == "Start") {
                 clearAnim = 1;
 
-#ifdef SIM_FRIENDLY
                 if (lowScriptMode) llSetTimerEvent(LOW_RATE);
-                else
-#endif
-                if (!cdAttached()) llSetTimerEvent(60.0);
+                else if (!cdAttached()) llSetTimerEvent(60.0);
                 else llSetTimerEvent(STD_RATE);
                 timerStarted = 1;
             }
@@ -600,45 +591,39 @@ default {
             else if (name == "windamount")                 windamount = (float)value;
             else if (name == "baseWindRate") {
                 if ((float)value > 0.33) baseWindRate = (float)value;   // Minimum baseWindRate set at 0.33 any lower and reset to 1.0 this should
-                else baseWindRate = 1.0;                                // guarantee no more 0's causing math errors when SL has dropped a link.
+                else lmSendConfig("baseWindRate", "1");                 // guarantee no more 0's causing math errors when SL has dropped a link.
             }
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "dollType")                     dollType = value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
             else if (name == "dialogChannel")           dialogChannel = (integer)value;
-            else if (name == "debugLevel")                 debugLevel = (integer)value;
-            else if ((name == "wearLockExpire") || (name == "poseExpire") || (name == "timeToJamRepair") || (name == "carryExpire") || (name == "collapseTime")) {
-                if (script != "Main") {
-                    float timeSet = 0.0;
-                    if ((float)value) timeSet = llGetTime() + (float)value;
 
-                    // These values are supposed to be positive, except collapseTime
-                    // which should be negative
-                    //
-                    // Note that the Link Message contents were an offset from
-                    // the current time, but here the variables are being set
-                    // as a specific time in the future...
+            // This keeps the timers up to date - via a GetTimeUpdates internal command
+            else if ((name == "wearLockExpire")  ||
+                     (name == "poseExpire")      ||
+                     (name == "jamExpire")       ||
+                     (name == "carryExpire")     ||
+                     (name == "collapseTime")) {
 
-                         if (name == "wearLockExpire")    wearLockExpire = timeSet;
-                    else if (name == "poseExpire")            poseExpire = timeSet;
-                    else if (name == "timeToJamRepair")  timeToJamRepair = timeSet;
-                    else if (name == "carryExpire")          carryExpire = timeSet;
-                    else if (name == "collapseTime")        collapseTime = timeSet;
-                }
+                float timeSet;
+
+                // The value parameter is supposed to be positive, except collapseTime
+                // which should be negative
+                if ((float)value) timeSet = llGetTime() + (float)value;
+
+                // Note that the Link Message contents were an offset from
+                // the current time, but here the variables are being set
+                // as a specific time in the future, except collapseTime which
+                // is being set as a time in the past
+
+                     if (name == "wearLockExpire")    wearLockExpire = timeSet;
+                else if (name == "poseExpire")            poseExpire = timeSet;
+                else if (name == "jamExpire")              jamExpire = timeSet;
+                else if (name == "carryExpire")          carryExpire = timeSet;
+                else if (name == "collapseTime")        collapseTime = timeSet;
             }
-
             else if (name == "windTimes") {
-            // -- if we see windTimes sent not by this script - and reply with setWindTimes -
-            //    we set the stage for a loop where the other side sees the setWindTimes and replies
-            //    with windTimes again, setting the stage for a loop. This has been seen in-world
-            //    with the MenuHandler script.
-
-//              // If we see Wind Times sent as a config and not by this script then we pass the input through or
-//              // setWindTimes handler to make sure that it has been properly processed and all invalids cleaned.
-//              if (script != "Main") lmInternalCommand("setWindTimes", llDumpList2String(llJson2List(value),"|"), id);
-//              else windTimes = llJson2List(value);
-
                 if (script != "Main") llOwnerSay("windTimes LinkMessage sent by " + script + " with value " + value);
                 else windTimes = llJson2List(value);
             }
@@ -647,21 +632,16 @@ default {
             }
             else if (name == "collapsed")                    collapsed = (integer)value;
 #ifdef KEY_HANDLER
-            else if (name == "keyHandler") {
-                keyHandler = (key)value;
-            }
+            else if (name == "keyHandler")                  keyHandler = (key)value;
 #endif
             else if (name == "keyLimit") {
                 keyLimit = (float)value;
                 if (script != "Main") lmMenuReply("Wind", "", NULL_KEY);
             }
-            else if (name == "demoMode") {
-                demoMode = (integer)value;
-            }
+            else if (name == "demoMode")                     demoMode = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")           timeReporting = (integer)value;
 #endif
-#ifdef SIM_FRIENDLY
             else if (name == "lowScriptMode") {
                 lowScriptMode = (integer)value;
 
@@ -670,10 +650,9 @@ default {
                     else llSetTimerEvent(STD_RATE);
                 }
             }
-#endif
         }
 
-        else if (code == 305) {
+        else if (code == INTERNAL_CMD) {
             string cmd = llList2String(split, 0);
             split = llDeleteSubList(split, 0, 0);
             integer isController = cdIsController(id);
@@ -681,22 +660,26 @@ default {
             if (cmd == "getTimeUpdates") {
                 float t = llGetTime();
 
-                // Internal variables are based on absolute Script Time (except timeLeftOnKey);
-                // Link Messages are based on an offset time
+                // Internal variables are sent on the wire in various ways:
                 //
-                // All values are positive except collapseTime which is negative
+                //   * timeLeftOnKey (seconds) - positive seconds remaining (adjusted elsewhere)
+                //   * {wear|jam|pose|carry}Expire (seconds) - positive seconds remaining
+                //   * collapseTime (seconds) - negative seconds remaining
+                //
+                // Internally they are:
+                //
+                //   * timeLeftOnKey (seconds) - positive seconds remaining (adjusted elsewhere)
+                //   * {wear|jam|pose|carry}Expire (time) - time of expiration
+                //   * collapseTime (time) - time of collapse
+                //
+                // The reasons for this disparity are not immediately clear.
 
                 if (cdTimeSet(timeLeftOnKey))       lmSendConfig("timeLeftOnKey",    (string) timeLeftOnKey);
                 if (cdTimeSet(wearLockExpire))      lmSendConfig("wearLockExpire",   (string)(wearLockExpire - t));
-                if (cdTimeSet(timeToJamRepair))     lmSendConfig("timeToJamRepair",  (string)(timeToJamRepair - t));
+                if (cdTimeSet(jamExpire))           lmSendConfig("jamExpire",        (string)(jamExpire - t));
                 if (cdTimeSet(poseExpire))          lmSendConfig("poseExpire",       (string)(poseExpire - t));
                 if (cdTimeSet(carryExpire))         lmSendConfig("carryExpire",      (string)(carryExpire - t));
                 if (cdTimeSet(collapseTime))        lmSendConfig("collapseTime",     (string)(collapseTime - t));
-
-                lastSendTimestamp = llGetUnixTime();
-                // In offline mode we update the timer locally
-                //if (offlineMode)
-                    lastPostTimestamp = lastSendTimestamp;
             }
             else if (cmd == "setAFK") {
                 lmSendConfig("afk", (string)(afk = llList2Integer(split, 0)));
@@ -752,18 +735,18 @@ default {
             }
 
             else if (cmd == "wearLock") {
+                // This either primes the wearLockExpire or resets it
+                wearLock = llList2Integer(split, 0);
+                if (wearLock) wearLock = 1; // bullet-proofing
 
-                // WearLock is set by Avatar.lsl...
-
-                //wearLockExpire = WEAR_LOCK_TIME;
-
-                if (llList2Integer(split, 0)) {
+                if (wearLock) {
                     wearLockExpire = llGetTime() + WEAR_LOCK_TIME;
                     displayWindRate = setWindRate();
                 }
                 else wearLockExpire = 0.0;
 
                 lmSendConfig("wearLockExpire", (string)wearLockExpire);
+                lmSendConfig("wearLock", (string)(wearLock));
             }
             else if (cmd == "windMenu") {
                 // Compute "time remaining" message for windMenu
