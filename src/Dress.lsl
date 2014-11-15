@@ -240,7 +240,7 @@ changeComplete(integer success) {
     // Note: if wearLock is already set, it STAYS set with this setting
     //
     // This triggers Main and sets wearLockExpire
-    lmInternalCommand("wearLock", (string)(wearLock = (wearLock || ((dresserID) && (dresserID != dollID)))), NULL_KEY);
+    lmInternalCommand("wearLock", (string)(wearLock = (wearLock || ((dresserID != NULL_KEY) && (dresserID != dollID)))), NULL_KEY);
     //lmSendConfig("wearLock", (string)(wearLock));
 
     candresstimeout = 0;
@@ -465,6 +465,12 @@ default {
 
             if (choice == "Outfits..." && candresstemp) {
                 if (!isDresser(id)) return;
+
+                if (wearLock) {
+                    cdDialogListen();
+                    llDialog(dresserID, "Clothing was just changed; cannot change right now.", ["OK"], dialogChannel);
+                    return;
+                }
 
                 if (outfitsFolder != "") {
                     if (useTypeFolder) clothingFolder = typeFolder;
