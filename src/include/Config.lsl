@@ -58,7 +58,7 @@
 #define HAVE_SALT ["HaveSalt=no"]
 #endif
 
-#define BUILD_REPORT llListSort(ADULT + KEY_MODE + DEV + L320 + HAVE_SALT + FRI + TEST + UPCDKEY + BADRLV + DEBUG, 1, 1)
+#define BUILD_REPORT llListSort(ADULT + KEY_MODE + DEV + L320 + HAVE_SALT + TEST + UPCDKEY + BADRLV + DEBUG, 1, 1)
 
 #define lmConfigReport() llMessageLinked(LINK_THIS, 142, cdMyScriptName(), NULL_KEY)
 
