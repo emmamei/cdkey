@@ -13,26 +13,9 @@
 #define NO_FILTER ""
 #define cdListenUser(a,b) llListen(a, NO_FILTER,         b, NO_FILTER)
 #define cdResetKey() llResetOtherScript("Start")
-
-//#define MESSAGE_NC "DataMessages"
-#define DISPLAY_DOLL 0
-#define SELF_DRESS 2
-#define CAN_FLY 4
-#define CAN_REPEAT 6
-#define CAN_POSE 8
-#define CAN_CARRY 10
-#define DO_WARNINGS 12
-#define OFFLINE 14
-#define VISIBLE 16
-#define POSE_SILENCE 18
-#define PLEASURE_DOLL 20
-#define SET_AFK 22
-#define JOIN_GROUP 25
 #define UNSET -1
 
 #define HIPPO_UPDATE -2948813
-
-integer dollMessageCode;
 
 key lmRequest;
 key carrierID = NULL_KEY;
@@ -358,41 +341,6 @@ default {
                 dialogChannel = (integer)value;
                 textboxChannel = dialogChannel - 1111;
             }
-
-#ifdef DOLL_MSG
-            //----------------------------------------
-            // OUTPUT MESSAGES FROM MENU SELECTIONS
-
-            // Before this point, it is all about setting values and options;
-            // this section is all about outputting messages chosen from MenuHandler's
-            // menus....
-            //
-            // Only MenuHandler script can activate these selections...
-            if (script != "MenuHandler") return;
-
-            if (name == "canDress") {
-                if (value == "1") msg = "Other people can now outfit you, but you remain ";
-                else msg = "Other people can no longer outfit you, but you remain ";
-                if (wearLock || !canDressSelf) msg += "un";
-                llOwnerSay(msg + "able to dress yourself.");
-            }
-
-            dollMessageCode = -1;
-
-                 if (name == "canDressSelf")    dollMessageCode = SELF_DRESS + (integer)value;
-            else if (name == "canFly")          dollMessageCode = CAN_FLY + (integer)value;
-            else if (name == "canRepeat")       dollMessageCode = CAN_REPEAT + (integer)value;
-            else if (name == "canPose")         dollMessageCode = CAN_POSE + (integer)value;
-            else if (name == "canCarry")        dollMessageCode = CAN_CARRY + (integer)value;
-            else if (name == "doWarnings")      dollMessageCode = DO_WARNINGS + (integer)value;
-            else if (name == "offlineMode")     dollMessageCode = OFFLINE + (integer)value;
-            else if (name == "isVisible")       dollMessageCode = VISIBLE + (integer)value;
-            else if (name == "poseSilence")     dollMessageCode = POSE_SILENCE + (integer)value;
-#ifdef ADULT_MODE
-            else if (name == "pleasureDoll")    dollMessageCode = PLEASURE_DOLL + (integer)value;
-#endif
-            if (dollMessageCode >= 0) llOwnerSay("Doll message code #" + (string)dollMessageCode);
-#endif // DOLL_MSG
         }
         else if (code == 305) {
             string cmd = llList2String(split, 0);
