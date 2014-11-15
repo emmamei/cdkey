@@ -12,7 +12,6 @@
 #define LOW_FPS 30.0
 #define LOW_DILATION 0.8
 
-#define CHECK_RLV 1
 //#define DEBUG_BADRLV
 #define cdSayQuietly(x) { string z = x; if (quiet) llOwnerSay(z); else llSay(0,z); }
 #define NOT_IN_REGION ZERO_VECTOR
@@ -63,6 +62,7 @@ integer remoteSeq;
 integer optHeader;
 integer code;
 
+string msg;
 string name;
 string value;
 
@@ -95,21 +95,17 @@ key grantorID;
 integer permMask;
 
 integer carryMoved;
-integer rlvChannel;
+//integer rlvChannel;
 integer clearAnim = 1;
 integer collapsed;
 //integer configured;
 integer dialogChannel;
 //integer haveControls;
-integer rlvHandle;
+//integer rlvHandle;
 integer locked;
 integer lowScriptMode;
 //integer poseSilence;
 //integer refreshControls;
-#ifdef CHECK_RLV
-integer RLVck = 0;
-integer RLVstarted;
-#endif
 integer RLVok = UNSET;
 //integer startup = 1;
 integer targetHandle;
@@ -299,7 +295,9 @@ oneAnimation() {
     if (keyAnimationID == NULL_KEY) {
         if (animKey != NULL_KEY) {
             lmSendConfig("keyAnimationID", (string)(keyAnimationID = animKey));
-            animRefreshRate = 4.0;
+
+            if (lowScriptMode )animRefreshRate = 10.0;
+            else animRefreshRate = 4.0;
         }
         else animRefreshRate = 0.0;
     }
@@ -324,8 +322,9 @@ oneAnimation() {
             // We found our animation being interfered with; cut the refreshRate
             // so that we run more often: and "fight back" for our animation
             animRefreshRate /= 2.0;                                     // -50%
-            if (animRefreshRate < llGetRegionFPS() * MIN_FRAMES)
-                animRefreshRate = llGetRegionFPS() * MIN_FRAMES;        // Minimum amount of time (by Frames)
+            minRate = (1/llGetRegionFPS()) * MIN_FRAMES;
+            if (minRate)
+                animRefreshRate = minRate;        // Minimum amount of time (by Frames)
         }
         else {
             // No interference - so run less often
@@ -336,171 +335,6 @@ oneAnimation() {
 
     debugSay(4, "DEBUG", "Animation Refresh Rate: " + formatFloat(animRefreshRate,2));
 }
-
-#ifdef CHECK_RLV
-//----------------------------------------
-// RLV Initialization Functions
-
-// Check for RLV support from user's viewer
-//
-// This is the starter function
-
-doCheckRLV() {
-    rlvTimer = llGetTime();
-    RLVck = 0;
-    RLVok = UNSET;
-    rlvAPIversion = "";
-    RLVstarted = 0;
-
-#ifdef DEVELOPER_MODE
-    myPath = "";
-#endif
-
-    debugSay(2,"DEBUG-RLV","starting a check for RLV");
-    checkRLV();
-}
-
-// This the actual check - and is run multiple times
-// to check for RLV
-//
-// Currently runs on init 110 - button press - and timer
-
-checkRLV() {
-    if (RLVok == 1) {
-        RLVck = 0;
-        llSetTimerEvent(60.0);
-        return;
-    }
-
-    debugSay(2,"DEBUG-RLV","checking for RLV - try " + (string)RLVck + " of " + (string)MAX_RLVCHECK_TRIES);
-
-    // rlvAPIversion is set by the listener when a message is received
-    // myPath is set by the listener if a message is received that is not
-    // a RestrainedLove or RestrainedLife message
-
-    if (RLVck < MAX_RLVCHECK_TRIES) {
-        // Check RLV again: give it several tries
-
-        // Setting the DEBUG_BADRLV flag causes the listener to not be open for the check
-        // This makes the viewer appear to have no RLV support as no reply will be heard
-        // from the check; all other code works normally.
-
-        // Increase number of check - RLVck is check number
-        if (RLVck <= 0) {
-            RLVck = 1;
-#ifdef WAKESCRIPT
-            cdWakeScript("StatusRLV");
-            cdWakeScript("Transform");
-#endif
-        }
-        else RLVck++;
-
-#ifdef DEBUG_BADRLV
-        // Make viewer act is if there is no RLV support
-        cdListenerDeactivate(rlvHandle);
-#else
-        cdListenerActivate(rlvHandle);
-#endif
-
-        // Get RLV API version if we don't have it already
-        if (rlvAPIversion == "") {
-            if (RLVck > 2) llOwnerSay("@version=" + (string)rlvChannel);
-            else llOwnerSay("@versionnew=" + (string)rlvChannel);
-        }
-#ifdef DEVELOPER_MODE
-        else {
-            // We got a positive RLV response - so try the path
-            llOwnerSay("@getpathnew=" + (string)rlvChannel);
-        }
-#endif
-        // Set next RLV check in 20s
-        llSetTimerEvent(RLV_TIMEOUT);
-        nextRLVcheck = llGetTime() + RLV_TIMEOUT;
-    }
-    else {
-        // RLVck reached max
-        debugSay(2,"DEBUG-RLV","RLV check failed...");
-
-        // RLVstarted implies RLVok: if RLV has been activated in
-        // the key code, then RLVstarted is set - or does it?
-
-        if (!RLVstarted) {
-            if (RLVok) llOwnerSay("Reattached Community Doll Key with " + rlvAPIversion + " active...");
-            else llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
-            debugSay(5,"DEBUG-RLV","myPath = " + (string)myPath + " and rlvAPIversion = " + rlvAPIversion);
-            nextRLVcheck = 0.0;
-        }
-
-#ifdef DEVELOPER_MODE
-        if ((rlvAPIversion != "") && (myPath == "")) { // Dont enable RLV on devs if @getpath is returning no usable result to avoid lockouts.
-            llSay(DEBUG_CHANNEL, "WARNING: Sanity check failure developer key not found in #RLV see README.dev for more information.");
-            return;
-        }
-#endif
-    }
-}
-
-// Activate RLV settings
-
-activateRLV() {
-    if (!RLVok) {
-        RLVstarted = 0;
-        return;
-    }
-
-    string baseRLV;
-
-    if (!RLVstarted) {
-        llOwnerSay("@clear");
-
-#ifndef LOCKON
-        // if Doll is one of the developers... dont lock:
-        // prevents inadvertent lock-in during development
-
-        cdSayQuietly("Developer Key not locked");
-
-        baseRLV += "attachallthis_except:" + myPath + "=add,detachallthis_except:" + myPath + "=add,";
-#endif
-        llOwnerSay("Enabling RLV mode");
-
-        cdListenerDeactivate(rlvHandle);
-        lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
-        lmRLVreport(RLVok, rlvAPIversion, 0);
-    }
-
-#ifdef LOCKON
-    mainCreator = llGetInventoryCreator("Main");
-
-    // We lock the key on here - but in the menu system, it appears
-    // unlocked and detachable: this is because it can be detached
-    // via the menu. To make the key truly "undetachable", we get
-    // rid of the menu item to unlock it
-
-    if (mainCreator != dollID) {
-        lmRunRLVas("Base", "detach=n,permissive=n");  //locks key
-
-        locked = 1; // Note the locked variable also remains false for developer mode keys
-                    // This way controllers are still informed of unauthorized detaching so developer dolls are still accountable
-                    // With this is the implicit assumption that controllers of developer dolls will be understanding and accepting of
-                    // the occasional necessity of detaching during active development if this proves false we may need to fudge this
-                    // in the section below.
-    }
-    else {
-        if (!RLVstarted) llSay(DEBUG_CHANNEL, "Backup protection mechanism activated not locking on creator");
-        lmRunRLVas("Base", "clear=unshared,clear=attachallthis");
-    }
-#endif
-
-    if (userBaseRLVcmd != "") lmRunRLVas("UserBase", userBaseRLVcmd);
-
-    //lmRunRLVas("Core", baseRLV + restrictionList + "sendchannel:" + (string)chatChannel + "=rem");
-    lmRunRLVas("Core", baseRLV + ",sendchannel:" + (string)chatChannel + "=rem");
-
-    // If we get here - RLVok is already set
-    //RLVstarted = (RLVstarted | RLVok);
-    RLVstarted = 1;
-}
-#endif // CHECK_RLV
 
 ifPermissions() {
     // This is repeatedly and frequently called - pays to be fast
@@ -662,16 +496,7 @@ default {
     state_entry() {
         dollName = llGetDisplayName(dollID = llGetOwner());
 
-        rlvTimer = llGetTime();
-        RLVck = 0;
         RLVok = UNSET;
-        rlvAPIversion = "";
-        RLVstarted = 0;
-
-#ifdef DEVELOPER_MODE
-        myPath = "";
-#endif
-
         cdInitializeSeq();
 
         isNoScript = llGetParcelFlags(llGetPos()) & PARCEL_FLAG_ALLOW_SCRIPTS;
@@ -683,18 +508,7 @@ default {
     //----------------------------------------
     on_rez(integer start) {
 
-#ifdef CHECK_RLV
-        rlvTimer = llGetTime();
-        RLVck = 0;
-        RLVok = -1;
-        rlvAPIversion = "";
-        RLVstarted = 0;
-
-#ifdef DEVELOPER_MODE
-        myPath = "";
-#endif
-#endif // CHECK_RLV
-
+        RLVok = UNSET;
         llStopMoveToTarget();
         llTargetRemove(targetHandle);
 
@@ -712,11 +526,11 @@ default {
             llTargetRemove(targetHandle);
 
             isNoScript = llGetParcelFlags(llGetPos()) & PARCEL_FLAG_ALLOW_SCRIPTS;
-            lowScriptMode = (llGetRegionFPS() < LOW_FPS || llGetRegionTimeDilation() < LOW_DILATION);
+            lmSendConfig("lowScriptMode",(string)(lowScriptMode = (llGetRegionFPS() < LOW_FPS || llGetRegionTimeDilation() < LOW_DILATION)));
 
 #ifdef DEVELOPER_MODE
             msg = "Region ";
-            if (isNOScript) msg += "does not allow scripts";
+            if (isNoScript) msg += "does not allow scripts";
             else msg += "allows scripts";
 
             debugSay(2,"DEBUG-AVATAR",msg);
@@ -726,56 +540,6 @@ default {
             ifPermissions();
         }
     }
-
-#ifdef CHECK_RLV
-    //----------------------------------------
-    // LISTEN
-    //----------------------------------------
-    listen(integer chan, string name, key id, string msg) {
-
-        //debugSay(2, "DEBUG-AVATAR", "Listener tripped....");
-        if (chan == rlvChannel) {
-            //debugSay(2, "DEBUG-RLV", "RLV Message received: " + msg);
-
-            // Could be "RestrainedLove" or "RestrainedLife" but we
-            // can test for both this way - and the likelihood that
-            // a false positive will come through is pretty minimal.
-            if (llGetSubString(msg, 0, 10) == "RestrainedL") {
-
-                debugSay(2, "DEBUG-RLV", "RLV Version: " + msg);
-
-                rlvAPIversion = msg;
-
-#ifdef DEVELOPER_MODE
-                // We got a positive RLV response - so try the path
-                llOwnerSay("@getpathnew=" + (string)rlvChannel);
-
-                llSetTimerEvent(RLV_TIMEOUT);
-                nextRLVcheck = llGetTime() + RLV_TIMEOUT;
-#else
-                nextRLVcheck = 0.0;
-                RLVok = 1;
-                lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
-                lmRLVreport(RLVok, rlvAPIversion, 0);
-                activateRLV();
-#endif
-            }
-            else {
-#ifdef DEVELOPER_MODE
-                debugSay(2, "DEBUG-RLV", "RLV Key Path: " + msg);
-                myPath = msg;
-#endif
-                nextRLVcheck = 0.0;
-                RLVok = 1;
-                lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
-                debugSay(2, "DEBUG-RLV", "RLV set to " + (string)RLVok + " and message sent on link channel");
-                llOwnerSay("RLV check completed in " + formatFloat((llGetTime() - rlvTimer),1) + "s");
-                lmRLVreport(RLVok, rlvAPIversion, 0);
-                activateRLV();
-            }
-        }
-    }
-#endif //CHECK_RLV
 
     //----------------------------------------
     // ATTACH
@@ -799,10 +563,7 @@ default {
         if (id) {
             debugSay(2,"DEBUG-AVATAR","ifPermissions (attach)");
             ifPermissions();
-#ifdef CHECK_RLV
-            doCheckRLV();
-#endif
-            lowScriptMode = (llGetRegionFPS() < LOW_FPS || llGetRegionTimeDilation() < LOW_DILATION);
+            lmSendConfig("lowScriptMode",(string)(lowScriptMode = (llGetRegionFPS() < LOW_FPS || llGetRegionTimeDilation() < LOW_DILATION)));
 
 #ifdef DEVELOPER_MODE
             debugSay(2,"DEBUG-AVATAR","Region FPS: " + formatFloat(llGetRegionFPS(),1) + "; Region Time Dilation: " + formatFloat(llGetRegionTimeDilation(),3));
@@ -926,21 +687,8 @@ default {
                 //else if (name == "controllers")             controllers = split;
                 else if (name == "pronounHerDoll")       pronounHerDoll = value;
                 else if (name == "pronounSheDoll")       pronounSheDoll = value;
-                else if (name == "dialogChannel") {
-                    dialogChannel = (integer)value;
-
-                    llListenRemove(rlvHandle);
-                    // Calculate positive (RLV compatible) rlvChannel
-                    rlvChannel = ~dialogChannel + 1;
-                    rlvHandle = llListen(rlvChannel, "", "", "");
-                    cdListenerDeactivate(rlvHandle);
-
-                    // as soon as rlvHandle is valid - we can check for RLV
-                    if (RLVok == UNSET) checkRLV();
-                }
-                else if (name == "keyAnimationID") {
-                    keyAnimationID = (key)value;
-                }
+                else if (name == "dialogChannel")         dialogChannel = (integer)value;
+                else if (name == "keyAnimationID")       keyAnimationID = (key)value;
 
                 return;
             }
@@ -954,15 +702,9 @@ default {
             split = llDeleteSubList(split, 0, 0);
 
             if (cmd == "detach") {
-                if (RLVok || RLVstarted) llOwnerSay("@clear,detachme=force");
+                if (RLVok) llOwnerSay("@clear,detachme=force");
                 else llDetachFromAvatar();
             }
-#ifdef CHECK_RLV
-            else if (cmd == "doCheckRLV") {
-                doCheckRLV();
-                lmSendConfig("RLVok",(string)RLVok);
-            }
-#endif
             else if (cmd == "TP") {
                 string lm = llList2String(split, 0);
                 llRegionSayTo(id, 0, "Teleporting dolly " + dollName + " to  landmark " + lm + ".");
@@ -984,23 +726,6 @@ default {
             if (llGetSubString(choice,0,3) == "Wind") return;
             else if (choice == MAIN) return;
 
-#ifdef CHECK_RLV
-            else if (choice == "RLV Off") {
-                RLVck = 0;
-                RLVok = 0;
-                rlvAPIversion = "";
-                RLVstarted = 0;
-
-#ifdef DEVELOPER_MODE
-                myPath = "";
-#endif
-                lmSendConfig("RLVok",(string)RLVok);
-            }
-            else if (choice == "RLV On") {
-                doCheckRLV();
-                lmSendConfig("RLVok",(string)RLVok);
-            }
-#endif // CHECK_RLV
 #ifdef ADULT_MODE
             else if (subchoice == "Strip") {
                 if (choice == "Strip...") {
@@ -1129,7 +854,7 @@ default {
                     }
                     else poseList = dialogSort(poseList + [ MAIN ]);
 
-                    string msg = "Select the pose to put dolly into";
+                    msg = "Select the pose to put dolly into";
                     if (keyAnimation) msg += " (current pose is " + keyAnimation + ")";
                     //cdDialogListen();
                     llDialog(id, msg, poseList, dialogChannel);
@@ -1154,28 +879,14 @@ default {
     // Is it really necessary to do ifPermissions repeatedly?
 
     timer() {
+#ifdef DEVELOPER_MODE
         thisTimerEvent = llGetTime();
 
-#ifdef DEVELOPER_MODE
         if (cdAttached()) timerInterval = thisTimerEvent - lastTimerEvent;
         lastTimerEvent = thisTimerEvent;
 
         if (timeReporting) llOwnerSay("Avatar Timer fired, interval " + formatFloat(timerInterval,3) + "s.");
 #endif
-
-        // IF RLV is unset that means we timed out - but for devs we might be still
-        // searching the path.... but it should be okay anyway...
-
-        if (RLVok == UNSET) {
-            // this makes sure that enough time has elapsed - and prevents
-            // the check from being missed...
-
-            if (nextRLVcheck < llGetTime()) checkRLV();
-            //lmSendConfig("RLVok",(string)RLVok);
-        }
-
-        debugSay(2,"DEBUG-AVATAR","ifPermissions (timer)");
-        ifPermissions();
 
 #ifdef PREDICTIVE_TIMER
         // This takes the next possible RLV check and animation refresh,
@@ -1185,7 +896,6 @@ default {
 
         list possibleEvents =       [60.0];
         float t = llGetTime();
-        if (nextRLVcheck > 0.0)     possibleEvents += nextRLVcheck - t;
         if (nextAnimRefresh > 0.0)  possibleEvents += nextAnimRefresh - t;
         llSetTimerEvent(llListStatistics(LIST_STAT_MIN,possibleEvents) + 0.022); // Not 0
 #endif
