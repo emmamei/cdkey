@@ -79,7 +79,6 @@ integer RLVok = UNSET;
 //integer takeoverAllowed;
 //integer warned;
 //integer offlineMode;
-integer wearLock;
 integer dbConfig;
 integer textboxType;
 integer debugLevel = DEBUG_LEVEL;
@@ -95,9 +94,6 @@ string isDollName;
 string dollType = "Regular";
 string pronounHerDoll = "Her";
 string pronounSheDoll = "She";
-#ifdef MARKETPLACE
-string marketplaceURL = "";
-#endif
 
 vector gemColour;
 
@@ -245,9 +241,6 @@ default
                 if ((float)value != 0) displayWindRate = (float)value;
             }
             else if (name == "keyAnimation")             keyAnimation = value;
-#ifdef MARKETPLACE
-            else if (name == "marketplaceURL")         marketplaceURL = value;
-#endif
             else if (name == "afk")                               afk = (integer)value;
             //else if (name == "autoTP")                         autoTP = (integer)value;
 
@@ -281,7 +274,6 @@ default
                 //else if (name == "canStand")                     canStand = (integer)value;
                 //else if (name == "canRepeat")                   canRepeat = (integer)value;
             }
-            else if (name == "wearLock")                     wearLock = (integer)value;
             else if (name == "RLVok")                           RLVok = (integer)value;
 
             // shortcut: d
@@ -519,7 +511,7 @@ default
                             // Can the doll be dressed? Add menu button
 
                             if (isDoll) {
-                                if (canDressSelf && !wearLock) menu += "Outfits...";
+                                if (canDressSelf) menu += "Outfits...";
                             } else {
                                 if (canDress) menu += "Outfits...";
                             }
@@ -581,11 +573,6 @@ default
                         else if (!detachable) menu += [ "Detach" ];
                     }
 
-#ifdef MARKETPLACE
-                    if (!isDoll) {
-                        if (marketplaceURL != "") menu += "Get a Key";
-                    }
-#endif
 
                     if (RLVok == -1) msg += "Still checking for RLV support some features unavailable.\n";
                     else if (RLVok == 0) {
@@ -773,9 +760,6 @@ default
                     cdDialogListen();
                     llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
                 }
-#ifdef MARKETPLACE
-                else if (choice == "Get a Key") llLoadURL(id, "To get your own free community doll key from our marketplace store click \"Go to page\"", marketplaceURL);
-#endif
                 else if (choice == "Detach") { lmInternalCommand("detach", "", id); }
                 else if (choice == "Reload Config") {
                     cdResetKey();
