@@ -124,8 +124,8 @@ integer resetState;
 
 integer rlvWait;
 integer RLVok = UNSET;
-integer databaseFinished;
-integer databaseOnline;
+//integer databaseFinished;
+//integer databaseOnline;
 
 float keyLimit;
 
@@ -194,8 +194,17 @@ processConfiguration(string name, string value) {
     //----------------------------------------
     // Assign values to program variables
 
-         if (value == "yes" || value == "on")  value = "1";
-    else if (value == "no"  || value == "off") value = "0";
+         if (value == "yes"  || value == "YES" ||
+             value == "on"   || value = "ON"   ||
+             value == "true" || value = "TRUE")
+
+             value = "1";
+
+    else if (value == "no"    || value == "NO"     ||
+             value == "off"   || value == "OFF"    ||
+             value == "false" || value == "FALSE")
+
+             value = "0";
 
     integer i;
     list configs = [ "barefeet path", "helpless dolly", "quiet key", "outfits path",
@@ -210,7 +219,7 @@ processConfiguration(string name, string value) {
                      "userAfkRLVcmd", "userBaseRLVcmd", "userCollapseRLVcmd", "userPoseRLVcmd" ];
 
     list internals = [ "wind time", "blacklist name", "controller name" ];
-    list cmdName = [ "setWindtimes", "getBlacklistName", "getMistressName" ];
+    list cmdName = [ "setWindTime", "getBlacklistName", "getMistressName" ];
 
     // This processes a single line from the preferences notecard...
     // processing done a single time during the read of the nc belong elsewhere
