@@ -30,7 +30,7 @@ float memTime;
 string memData;
 string minsLeft;
 string windRate;
-string windTime;
+integer windMins;
 string dollyName;
 string carrierName;
 string pronounHerDoll = "Her";
@@ -319,7 +319,7 @@ default {
             else if (name == "dollGender")                 dollGender = value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
-            else if (name == "windTime")                     windTime = (integer)value;
+            else if (name == "windMins")                     windMins = (integer)value;
             else if (name == "wearLock")                     wearLock = (integer)value;
             else if (name == "blacklist")                   blacklist = llListSort(cdList2ListStrided(split,0,-1,2),1,1);   // Import the UUID entries only here, is all we need to blacklist test.
             else if (name == "primLight")                   primLight = (integer)value;
@@ -383,7 +383,7 @@ default {
         else if (code == 350) {
             RLVok = (llList2Integer(split, 1) == 1);
         }
-        else if (code == 500) {
+        else if (code == MENU_SELECTION) {
             string choice = llList2String(split, 0);
             string avatar = llList2String(split, 1);
 
@@ -493,7 +493,7 @@ default {
 
                 list pluslist = ["Dolly Name...","Gem Colour...","Gender:" + dollGender];
 
-                if (cdIsController(id)) pluslist += [ "Max Time...", "Wind Times..." ];
+                if (cdIsController(id)) pluslist += [ "Max Time...", "Wind Time..." ];
                 cdDialogListen();
                 llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(pluslist, 1, 1) + cdGetButton("Key Glow", id, primGlow, 0) + cdGetButton("Gem Light", id, primLight, 0) + MAIN), dialogChannel);
             }
@@ -551,9 +551,9 @@ default {
         }
 
         // HippoUPDATE reply
-        else if (code == HIPPO_UPDATE) {
-            if (data == "VERSION") llOwnerSay("Your key is already up to date");
-        }
+        //else if (code == HIPPO_UPDATE) {
+        //    if (data == "VERSION") llOwnerSay("Your key is already up to date");
+        //}
     }
 
     //----------------------------------------
