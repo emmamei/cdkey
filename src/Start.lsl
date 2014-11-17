@@ -195,8 +195,8 @@ processConfiguration(string name, string value) {
     // Assign values to program variables
 
          if (value == "yes"  || value == "YES" ||
-             value == "on"   || value = "ON"   ||
-             value == "true" || value = "TRUE")
+             value == "on"   || value == "ON"   ||
+             value == "true" || value == "TRUE")
 
              value = "1";
 
@@ -774,6 +774,10 @@ default {
         // if the user can modify the key - and change its inventory -
         // it may be possible to override values at the least and to
         // reset the key at the worst.
+        //
+        // Note that if Start.lsl is modified, this does not get run,
+        // but Start.lsl is reset immediately - and upon reset,
+        // resets the entire key.
 
         if (change & CHANGED_INVENTORY) {
             if (cdNotecardExists(NOTECARD_PREFERENCES)) {
@@ -787,7 +791,6 @@ default {
 #ifdef DEVELOPER_MODE
                     ncStart = llGetTime();
 #endif
-
                     // Start reading from first line (which is 0)
                     ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, (ncLine = 0));
                     return;
@@ -799,21 +802,19 @@ default {
 
             // What if inventory changes several times in a row?
             llOwnerSay("Key contents modified; restarting in 60 seconds.");
-            llSleep(60.0);
-            cdResetKey();
+            llSetTimerEvent(60.0);
         }
     }
 
-#ifdef START_TIMER
     //----------------------------------------
     // TIMER
     //----------------------------------------
     timer() {
-
-        // No purpose to a timer here?
-
+        // We only get here if the key was modified
+        llOwnerSay("Now resetting key.");
+        llSleep(5.0);
+        cdResetKey();
     }
-#endif
 
     //----------------------------------------
     // RUN TIME PERMISSIONS

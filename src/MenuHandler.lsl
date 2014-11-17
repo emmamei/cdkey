@@ -438,7 +438,7 @@ default
                             msg = "Uncarry frees " + dollName + " when you are done with " + pronounHerDoll;
                             menu = ["Uncarry"];
                         }
-                        else if (cdIsBuiltinController()) {
+                        else if (cdIsBuiltinController(id)) {
                             msg = dollName + " is being carred by " + carrierName + ". ";
                             menu = ["Uncarry"];
                         }
@@ -447,7 +447,7 @@ default
                             else msg = dollName + " is currently being carried by " + carrierName + ". They have full control over this doll.\n";
                             menu = ["Help..."];
                             cdDialogListen();
-                            llDialog(id, timeleft + msg, dialogSort( [ "Help..." ], dialogChannel);
+                            llDialog(id, timeleft + msg, [ "Help..." ], dialogChannel);
                             return;
                         }
                     }

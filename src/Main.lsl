@@ -62,6 +62,7 @@ key keyHandler = NULL_KEY;
 integer dialogChannel;
 integer targetHandle;
 integer lowScriptMode;
+float lastLowScriptTime;
 integer busyIsAway;
 integer ticks;
 
@@ -127,7 +128,7 @@ float effectiveLimit  = keyLimit;
 //integer HTTPthrottle  = 10;
 float collapseTime;
 integer windMins = 30;
-integer effectiveWindTime = 30;
+float effectiveWindTime = 30.0;
 
 string keyAnimation;
 string dollName;
@@ -344,13 +345,14 @@ default {
         if (lowScriptMode) {
             // Don't trigger immediately - wait 10 minutes
             if (lastLowScriptTime)
-                if (llGetTime() - lastlowScriptTime > 600) {
+                if (llGetTime() - lastLowScriptTime > 600) {
                     lowScriptMode = 0;
                     llOwnerSay("ATTN: Power-saving mode activated.");
                 }
+        }
         else {
-            if (lowScriptTrigger) {
-                lowScript = 1;
+            if (cdLowScriptTrigger) {
+                lowScriptMode = 1;
                 lastLowScriptTime = llGetTime();
                 llOwnerSay("ATTN: Normal mode activated.");
             }
@@ -704,7 +706,7 @@ default {
             else if (cmd == "getWindTime") {
                 windMins = llList2Integer(split, 0);
                 if (windMins <= 0 || windMins > 120) windMins = 30;
-                lmSendConfig("windMins", (string)(windMins);
+                lmSendConfig("windMins", (string)(windMins));
             }
             else if (cmd == "setAFK") {
                 lmSendConfig("afk", (string)(afk = llList2Integer(split, 0)));
@@ -811,7 +813,7 @@ default {
 
                 if (winderRechargeTime <= llGetUnixTime()) {
                     // Winder is recharged and usable.
-                    windAmount = 0;
+                    windAmount = 0.0;
 
                     if (collapsed == NO_TIME) {
                         lmSendToController(dollName + " has activated the emergency winder.");
@@ -832,14 +834,12 @@ default {
                     }
                 }
                 else {
-                   float timeX = ((winderRechargeTime - llGetUnixTime()) / SEC_TO_MIN);
-                   string s;
+                   float rechargeMins = ((winderRechargeTime - llGetUnixTime()) / SEC_TO_MIN);
+                   string s = "Emergency self-winder is not yet recharged. There remains ";
 
-                   s = "Emergency self-winder is not yet recharged. There remains ";
-
-                   llSay(DEBUG_CHANNEL,"Winder recharge: timeX = " + (string)timeX + " minutes");
-                   if (timeX < 60.0) s += (string)llFloor(timeX) + " minutes ";
-                   else s += "over " + (string)llFloor(timeX / 60.0) + " hours ";
+                   //llSay(DEBUG_CHANNEL,"Winder recharge: rechargeMins = " + (string)rechargeMins + " minutes");
+                   if (rechargeMins < 60.0) s += (string)llFloor(rechargeMins) + " minutes ";
+                   else s += "over " + (string)llFloor(rechargeMins / 60.0) + " hours ";
 
                    llOwnerSay(s + "before it will be ready again.");
                 }
@@ -860,8 +860,8 @@ default {
                     return;
                 }
 
-                if (demoMode) effectiveWindTime = 60;
-                else effectiveWindTime = windMins * SEC_TO_MIN;
+                if (demoMode) effectiveWindTime = 60.0;
+                else effectiveWindTime = (float)windMins * SEC_TO_MIN;
 
                 if (timeLeftOnKey + effectiveWindTime > effectiveLimit) windAmount = effectiveLimit - timeLeftOnKey;
                 else windAmount = effectiveWindTime;
@@ -872,8 +872,8 @@ default {
                     cdDialogListen();
                     llDialog(id, "Dolly is already fully wound.", [MAIN], dialogChannel);
                 }
-                else if (windAmount > 0) {
-                    if (effectiveWindTime > 0) lmSendToAgent("You have given " + dollName + " " + (string)effectiveWindTime + " more minutes of life.", id);
+                else if (windAmount > 0.0) {
+                    if (effectiveWindTime > 0.0) lmSendToAgent("You have given " + dollName + " " + (string)effectiveWindTime + " more minutes of life.", id);
 
                     if (timeLeftOnKey == effectiveLimit) { // Fully wound
                         llOwnerSay("You have been fully wound - " + (string)llRound(effectiveLimit / (SEC_TO_MIN * displayWindRate)) + " minutes remaining.");
@@ -918,42 +918,47 @@ default {
                     dialogSort(["45m", "60m", "75m", "90m", "120m", "150m", "180m", "240m", "300m", "360m", "480m", MAIN]), dialogChannel);
             }
             // Shortcut only: last chars = "min"
-            else if (llGetSubString(choice,-3,-1) == "min" && script == "Main") {
+            else if (script == "Main") {
+                if (llGetSubString(choice,-3,-1) == "min" && script == "Main") {
 
-                // specific values: rules out invalid values
-                if ((choice ==  "45m") ||
-                    (choice ==  "60m") ||
-                    (choice ==  "60m") ||
-                    (choice ==  "75m") ||
-                    (choice ==  "90m") ||
-                    (choice == "120m")) {
+                    // specific values: rules out invalid values
+                    if ((choice ==  "45min") ||
+                        (choice ==  "60min") ||
+                        (choice ==  "60min") ||
+                        (choice ==  "75min") ||
+                        (choice ==  "90min") ||
+                        (choice == "120min")) {
 
-                    lmSendConfig("windMins", (string)(windMins = (float)choice));
-            }
-            // Shortcut only: last char = "m"
-            else if (llGetSubString(choice,-1,-1) == "m" && script == "Main") {
+                        // Breaking in two parts avoids all those conversions
+                        windMins = (integer)choice;
+                        lmSendConfig("windMins", choice);
+                    }
+                }
+                // Shortcut only: last char = "m"
+                else if (llGetSubString(choice,-1,-1) == "m" && script == "Main") {
 
-                // specific values: rules out invalid values
-                if ((choice ==  "45m") ||
-                    (choice ==  "60m") ||
-                    (choice ==  "60m") ||
-                    (choice ==  "75m") ||
-                    (choice ==  "90m") ||
-                    (choice == "120m") ||
-                    (choice == "150m") ||
-                    (choice == "180m") ||
-                    (choice == "240m") ||
-                    (choice == "300m") ||
-                    (choice == "360m") ||
-                    (choice == "480m")) {
+                    // specific values: rules out invalid values
+                    if ((choice ==  "45m") ||
+                        (choice ==  "60m") ||
+                        (choice ==  "60m") ||
+                        (choice ==  "75m") ||
+                        (choice ==  "90m") ||
+                        (choice == "120m") ||
+                        (choice == "150m") ||
+                        (choice == "180m") ||
+                        (choice == "240m") ||
+                        (choice == "300m") ||
+                        (choice == "360m") ||
+                        (choice == "480m")) {
 
-                    lmSendConfig("keyLimit", (string)(keyLimit = ((float)choice * SEC_TO_MIN)));
+                        lmSendConfig("keyLimit", (string)(keyLimit = ((float)choice * SEC_TO_MIN)));
+                    }
                 }
             }
             else if (choice == "Wind Time...") {
                 cdDialogListen();
                 llDialog(id, "You can set the amount of time in each wind.\nDolly currently winds " + (string)windMins + " mins.",
-                    dialogSort(["15min", "30min", "45min", "60min", "90min", MAIN]), dialogChannel);
+                    dialogSort(["15min", "30min", "45min", "60min", "90min", "120min", MAIN]), dialogChannel);
             }
             else if (cdIsCarrier(id) || cdIsController(id)) {
                 if (choice == "Hold") collapse(JAMMED);

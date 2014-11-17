@@ -9,9 +9,6 @@
 #include "include/GlobalDefines.lsl"
 #include "include/Json.lsl"
 
-#define LOW_FPS 30.0
-#define LOW_DILATION 0.8
-
 //#define DEBUG_BADRLV
 #define cdSayQuietly(x) { string z = x; if (quiet) llOwnerSay(z); else llSay(0,z); }
 #define NOT_IN_REGION ZERO_VECTOR
