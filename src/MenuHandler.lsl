@@ -404,16 +404,14 @@ default
                 string msg;
                 list menu;
                 string manpage;
-                //string windButton = llList2String(split, 0);
-                string windButton = "Wind";
 
                 //if (startup) lmSendToAgent("Dolly's key is still establishing connections with " + llToLower(pronounHerDoll) + " systems please try again in a few minutes.", id);
 
                 if (llListFindList(blacklist, [ (string)id ]) == NOT_FOUND) {
                     // Cache access test results
                     integer hasCarrier      = cdCarried()  ;
-                    integer isCarrier       = cdIsCarrier(id)       || cdIsBuiltinController(id);
-                    integer isController    = cdIsController(id);
+                    integer isCarrier       = cdIsCarrier(id);
+                    integer isController    = cdIsController(id) || cdIsBuiltinController(id);
                     integer isDoll          = cdIsDoll(id);
                     integer numControllers  = cdControllerCount();
 
@@ -433,26 +431,23 @@ default
 
                     // Handle our "special" states first which significantly alter the menu
 
-                    // When the doll is carried they have exclusive control
+                    // When the doll is carried the carrier has exclusive control
                     if (hasCarrier) {
                         // Doll being carried clicked on key
-                        if (isDoll) {
-                            msg = "You are being carried by " + carrierName + ". ";
-                            menu = ["Help..."];
-                        }
-                        else if (isCarrier) {
+                        if (isCarrier) {
                             msg = "Uncarry frees " + dollName + " when you are done with " + pronounHerDoll;
                             menu = ["Uncarry"];
                         }
-
-                        // Someone else clicked on key
-                        else {
-                            msg = dollName + " is currently being carried by " + carrierName + ". They have full control over this doll.\n";
-                            menu = ["Help..."];
+                        else if (cdIsBuiltinController()) {
+                            msg = dollName + " is being carred by " + carrierName + ". ";
+                            menu = ["Uncarry"];
                         }
-                        if (!isCarrier) {
+                        else {
+                            if (isDoll) msg = "You are being carried by " + carrierName + ". ";
+                            else msg = dollName + " is currently being carried by " + carrierName + ". They have full control over this doll.\n";
+                            menu = ["Help..."];
                             cdDialogListen();
-                            llDialog(id, timeleft + msg, dialogSort(llListSort(menu, 1, 1)) , dialogChannel);
+                            llDialog(id, timeleft + msg, dialogSort( [ "Help..." ], dialogChannel);
                             return;
                         }
                     }
@@ -476,7 +471,7 @@ default
                                 }
 
                                 // If the doll is still down after 1800 seconds (30 minutes) and their
-                                // emergency winder is recharged add a button for it
+                                // emergency winder is recharged; add a button for it
 
                                 if ((timeCollapsed > 1800.0) && (winderRechargeTime <= llGetUnixTime())) {
                                     menu += ["Wind Emg"];
@@ -498,9 +493,7 @@ default
                         if (isDoll) {
                             menu += "Options...";
                             if (detachable) menu += "Detach";
-
                             if (canAFK) menu += "AFK";
-
                             menu += "Visible";
                         }
                         else {
@@ -514,11 +507,8 @@ default
                         if (RLVok == 1) {
                             // Can the doll be dressed? Add menu button
 
-                            if (isDoll) {
-                                if (canDressSelf) menu += "Outfits...";
-                            } else {
-                                if (canDress) menu += "Outfits...";
-                            }
+                            if (isDoll) if (canDressSelf) menu += "Outfits...";
+                            else        if (canDress)     menu += "Outfits...";
 
                             if (isController) menu += "RLV Off";
                         } else {
@@ -565,10 +555,10 @@ default
 #endif
                     }
 
+                    if (!isDoll) menu += "Wind";
 #ifdef TESTER_MODE
-                    if ((debugLevel != 0) && isDoll) menu += windButton;
+                    else if (debugLevel != 0) menu += "Wind";
 #endif
-                    if (!isDoll) menu += windButton;
                     menu += "Help...";
 
                     // Options only available if controller
@@ -597,7 +587,10 @@ default
 
                     menu = llListSort(menu, 1, 1);
 
-                    integer i;
+                    // This is needed because we want to sort by name;
+                    // this section puts the checkmark marker on both
+                    // keys by replacing them within the list
+
                     if ((i = llListFindList(menu, ["AFK"]))     != NOT_FOUND) menu = llListReplaceList(menu, cdGetButton("AFK",     id, afk,     0), i, i);
                     if ((i = llListFindList(menu, ["Visible"])) != NOT_FOUND) menu = llListReplaceList(menu, cdGetButton("Visible", id, visible, 0), i, i);
 
