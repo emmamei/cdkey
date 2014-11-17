@@ -30,7 +30,7 @@ float memTime;
 string memData;
 string minsLeft;
 string windRate;
-string windTimes;
+string windTime;
 string dollyName;
 string carrierName;
 string pronounHerDoll = "Her";
@@ -319,7 +319,7 @@ default {
             else if (name == "dollGender")                 dollGender = value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
-            else if (name == "windTimes")                   windTimes = value;
+            else if (name == "windTime")                     windTime = (integer)value;
             else if (name == "wearLock")                     wearLock = (integer)value;
             else if (name == "blacklist")                   blacklist = llListSort(cdList2ListStrided(split,0,-1,2),1,1);   // Import the UUID entries only here, is all we need to blacklist test.
             else if (name == "primLight")                   primLight = (integer)value;
@@ -527,7 +527,7 @@ default {
             }
 
             // Textbox generating menus
-            if (choice == "Custom..." || choice == "Dolly Name..." || choice == "Wind Times..." || choice == "Factory Reset") {
+            if (choice == "Custom..." || choice == "Dolly Name..." || choice == "Factory Reset") {
                 if (choice == "Custom...") {
                     textboxType = 1;
                     llTextBox(id, "Here you can input a custom colour value\nCurrent colour: " + curGemColour + "\nEnter vector eg <0.900, 0.500, 0.000>\nOr Hex eg #A4B355\nOr RGB eg 240, 120, 10", textboxChannel);
@@ -535,10 +535,6 @@ default {
                 else if (choice == "Dolly Name...") {
                     textboxType = 2;
                     llTextBox(id, "Here you can change your dolly name from " + dollyName + " to a name of your choice.", textboxChannel);
-                }
-                else if (choice == "Wind Times...") {
-                    textboxType = 3;
-                    llTextBox(id, "Enter 1 to 11 valid wind times between 1 and " + (string)(maxMins/2) + " (in minutes), separated by space, comma, or vertical bar (\"|\").\nCurrent: " + windTimes, textboxChannel);
                 }
                 else if (llGetSubString(choice,0,12) == "Factory Reset") {
                     textboxType = 4;
@@ -582,7 +578,6 @@ default {
             // Text box input - 4 types
             //   1: Gem Color
             //   2: Dolly Name
-            //   3: Wind Times (moved to Main.lsl)
             //   4: Safeword Confirm
 
             // Type 1 = Custom Gem Color
@@ -608,10 +603,6 @@ default {
 
             // Type 2 = New Dolly Name
             else if (textboxType == 2) lmSendConfig("dollyName", choice);
-
-            // Type 3 = Wind Times
-            // -- send the raw list Main.lsl processes (which handles setting those up anyway)
-            else if (textboxType == 3) lmInternalCommand("setWindTimes", choice, NULL_KEY);
 
             // Type 4 = Safeword Confirm
             else if (textboxType == 4) {
