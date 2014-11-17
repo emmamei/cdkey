@@ -22,10 +22,10 @@ key keyHandler              = NULL_KEY;
 #endif
 key listID                  = NULL_KEY;
 
-integer windTime = 30;
+integer windMins = 30;
 
 float collapseTime          = 0.0;
-float currentLimit          = 10800.0;
+float effectiveLimit          = 10800.0;
 //float wearLockExpire;
 integer wearLock;
 
@@ -162,8 +162,8 @@ default
                 else if (name == "dollGender")             dollGender = value;
                 else if (name == "demoMode") {
                     demoMode = (integer)value;
-                    if (!demoMode) currentLimit = keyLimit;
-                    else currentLimit = DEMO_LIMIT;
+                    if (!demoMode) effectiveLimit = keyLimit;
+                    else effectiveLimit = DEMO_LIMIT;
                 }
 #ifdef DEVELOPER_MODE
                 else if (name == "debugLevel")             debugLevel = (integer)value;
@@ -194,11 +194,11 @@ default
 #endif
                 else if (name == "keyLimit") {
                     keyLimit = (float)value;
-                    if (!demoMode) currentLimit = keyLimit;
+                    if (!demoMode) effectiveLimit = keyLimit;
                 }
             }
             else if (name == "tpLureOnly")                 tpLureOnly = (integer)value;
-            else if (name == "windTime")                     windTime = (integer)value;
+            else if (name == "windMins")                     windMins = (integer)value;
             //else if (name == "wearLockExpire")         wearLockExpire = (float)value;
             else if (name == "wearLock")                     wearLock = (integer)value;
             else if (name == "windRate")                     windRate = (float)value;
@@ -484,7 +484,7 @@ default
                     }
                     else if (choice == "xstats") {
                         string s = "Extended stats:\nDoll is a " + dollType + " Doll.\nAFK time factor: " +
-                                   formatFloat(RATE_AFK, 1) + "x\nWind amount: " + (string)windTime + " (mins)\n";
+                                   formatFloat(RATE_AFK, 1) + "x\nWind amount: " + (string)windMins + " (mins)\n";
 
                         if (demoMode) s += "Demo mode is enabled";
 
@@ -515,11 +515,11 @@ default
                     }
                     else if (choice == "stat") {
                         //debugSay(6, "DEBUG", "timeLeftOnKey = " + (string)timeLeftOnKey);
-                        //debugSay(6, "DEBUG", "currentLimit = " + (string)currentLimit);
+                        //debugSay(6, "DEBUG", "effectiveLimit = " + (string)effectiveLimit);
                         //debugSay(6, "DEBUG", "displayWindRate = " + (string)displayWindRate);
 
                         float t1 = timeLeftOnKey / (SEC_TO_MIN * displayWindRate);
-                        float t2 = currentLimit / (SEC_TO_MIN * displayWindRate);
+                        float t2 = effectiveLimit / (SEC_TO_MIN * displayWindRate);
                         float p = t1 * 100.0 / t2;
 
                         string msg = "Time: " + (string)llRound(t1) + "/" +
@@ -542,13 +542,13 @@ default
                     }
                     else if (choice == "stats") {
                         //debugSay(6, "DEBUG", "timeLeftOnKey = " + (string)timeLeftOnKey);
-                        //debugSay(6, "DEBUG", "currentLimit = " + (string)currentLimit);
+                        //debugSay(6, "DEBUG", "effectiveLimit = " + (string)effectiveLimit);
                         //debugSay(6, "DEBUG", "displayWindRate = " + (string)displayWindRate);
 
                         //displayWindRate;
 
                         lmSendToAgent("Time remaining: " + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate)) + " minutes of " +
-                                    (string)llRound(currentLimit / (SEC_TO_MIN * displayWindRate)) + " minutes.", id);
+                                    (string)llRound(effectiveLimit / (SEC_TO_MIN * displayWindRate)) + " minutes.", id);
 
                         string msg;
 
