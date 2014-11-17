@@ -22,7 +22,7 @@ key keyHandler              = NULL_KEY;
 #endif
 key listID                  = NULL_KEY;
 
-list windTimes              = [30];
+integer windTime = 30;
 
 float collapseTime          = 0.0;
 float currentLimit          = 10800.0;
@@ -198,7 +198,7 @@ default
                 }
             }
             else if (name == "tpLureOnly")                 tpLureOnly = (integer)value;
-            else if (name == "windTimes")                   windTimes = llJson2List(value);
+            else if (name == "windTime")                     windTime = (integer)value;
             //else if (name == "wearLockExpire")         wearLockExpire = (float)value;
             else if (name == "wearLock")                     wearLock = (integer)value;
             else if (name == "windRate")                     windRate = (float)value;
@@ -484,7 +484,7 @@ default
                     }
                     else if (choice == "xstats") {
                         string s = "Extended stats:\nDoll is a " + dollType + " Doll.\nAFK time factor: " +
-                                   formatFloat(RATE_AFK, 1) + "x\nConfigured wind times: " + llList2CSV(windTimes) + " (mins)\n";
+                                   formatFloat(RATE_AFK, 1) + "x\nWind amount: " + (string)windTime + " (mins)\n";
 
                         if (demoMode) s += "Demo mode is enabled";
 
