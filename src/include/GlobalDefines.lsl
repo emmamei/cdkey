@@ -106,6 +106,7 @@ list BuiltinControllers = BUILTIN_CONTROLLERS;
 #define cdIsUserController(id)          (llListFindList(USER_CONTROLLERS, [ (string)id ]) != -1)
 #define cdIsController(id)              cdGetControllerStatus(id)
 
+#define cdLowScriptTrigger   (lowScriptMode = (llGetRegionFPS() < LOW_FPS || llGetRegionTimeDilation() < LOW_DILATION))
 
 // Used by this file below for OPTION_DATE
 //#define PACKAGE_VERSION "26 February 2014"
