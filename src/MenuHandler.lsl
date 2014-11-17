@@ -401,7 +401,11 @@ default
                 // Apply exemptions to base RLV
             }
             else if (cmd == "mainMenu") {
-                string msg; list menu; string manpage; string windButton = llList2String(split, 0);
+                string msg;
+                list menu;
+                string manpage;
+                //string windButton = llList2String(split, 0);
+                string windButton = "Wind";
 
                 //if (startup) lmSendToAgent("Dolly's key is still establishing connections with " + llToLower(pronounHerDoll) + " systems please try again in a few minutes.", id);
 
