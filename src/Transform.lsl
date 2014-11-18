@@ -79,7 +79,7 @@ integer RLVok;
 string currentState;
 integer dbConfig;
 integer mustAgreeToType;
-integer showPhrases;
+integer showPhrases = TRUE;
 #ifdef WEAR_AT_LOGIN
 integer wearAtLogin;
 #endif
@@ -103,6 +103,7 @@ integer quiet;
 setDollType(string choice, integer automated) {
     if (choice == "Transform") stateName = transform;
     else stateName = choice;
+    debugSay(2,"DEBUG-DOLLTYPE","Transforming to " + stateName);
 
     // Convert state name to Title case
     stateName = cdGetFirstChar(llToUpper(stateName)) + cdButFirstChar(llToLower(stateName));
@@ -715,46 +716,83 @@ default {
             if (~llListFindList(folderList, (list)"~normalself"))  lmSendConfig("normalselfFolder","~normalself");
         }
         else if (channel == rlvChannel2) {
+
+            // Note that we may have gotten here *without* having run through
+            // the outfits search first - due to have done the outfits search
+            // much earlier... However.... if we are here, then the outfits search
+            // must have run before, but not necessarily immediately before...
+
             debugSay(2,"DEBUG-LISTEN","Channel #2 received (\"" + typeFolder + "\"): " + choice);
 
             if (typeFolderExpected != "" && typeFolder != typeFolderExpected) {
+                // This comparison is inexact - but a quick check to see
+                // if the typeFolderExpected is contained in the string
                 if (llSubStringIndex(choice,typeFolderExpected) >= 0) {
 
                     list folderList = llCSV2List(choice);
+
+                    // This is exact check:
                     if (~llListFindList(folderList, (list)typeFolderExpected)) {
 
                         useTypeFolder = YES;
+                        typeFolderExpected = "";
                         typeFolder = typeFolderExpected;
                         debugSay(2,"DEBUG-LISTEN","typeFolder = " + typeFolder);
 
                         lmSendConfig("outfitsFolder", outfitsFolder);
+                        lmSendConfig("useTypeFolder", "1");
                         lmSendConfig("typeFolder", typeFolder);
-                        lmSendConfig("useTypeFolder", (string)useTypeFolder);
                     }
                     else {
                         useTypeFolder = NO;
+                        typeFolder = "";
                         typeFolderExpected = "";
+
                         lmSendConfig("outfitsFolder", outfitsFolder);
-                        lmSendConfig("useTypeFolder", (string)useTypeFolder);
+                        lmSendConfig("useTypeFolder", "0");
                         lmSendConfig("typeFolder", "");
                     }
 
-                    outfitSearching = 0;
-                    debugSay(2,"DEBUG-SEARCHING","Turning off timer (listen)");
-                    llSetTimerEvent(0.0);
-                    llListenRemove(rlvHandle3);
-                    //debugSay(2,"DEBUG-SEARCHING","Outfits search completed in " + formatFloat(llGetTime() - outfitsSearchTimer,1) + "s");
-                    llOwnerSay("Outfits search completed in " + formatFloat(llGetTime() - outfitsSearchTimer,1) + "s");
-                    // We're done at this stage
+                }
+                // typeFolderExpected not found at all
+                else {
+                    useTypeFolder = NO;
+                    typeFolder = "";
+                    typeFolderExpected = "";
 
-                    // is this redundant or prudent?
-                    lmSendConfig("nudeFolder","");
-                    lmSendConfig("normalselfFolder","");
+                    lmSendConfig("outfitsFolder", outfitsFolder);
+                    lmSendConfig("useTypeFolder", "0");
+                    lmSendConfig("typeFolder", "");
+                }
+
+                // at this point we've either found the typeFolder or not,
+                // and the outfitsFolder is set
+                debugSay(2,"DEBUG-SEARCHING","Turning off timer (listen)");
+                llSetTimerEvent(0.0);
+
+                // are we doing the initial complete search? or is this just
+                // a type change?
+                if (outfitSearching) {
+                    debugSay(2,"DEBUG-SEARCHING","Finishing outfits search");
+                    llListenRemove(rlvHandle3);
+
+                    outfitSearching = 0;
+                    llOwnerSay("Outfits search completed in " + formatFloat(llGetTime() - outfitsSearchTimer,1) + "s");
+                    outfitsSearchTimer = 0.0;
+
+                    // Check for ~nude and ~normalself in the same level as the typeFolder
 
                     if (~llListFindList(folderList, (list)"~nude"))        lmSendConfig("nudeFolder",outfitsFolder + "/~nude");
-                    else llOwnerSay("WARN: No nude (~nude) folder found in your outfits folder...");
+                    else {
+                        llOwnerSay("WARN: No nude (~nude) folder found in your outfits folder...");
+                        lmSendConfig("nudeFolder","");
+                    }
+
                     if (~llListFindList(folderList, (list)"~normalself"))  lmSendConfig("normalselfFolder",outfitsFolder + "/~normalself");
-                    else llOwnerSay("WARN: No normal self (~normalself) folder found in your outfits folder...");
+                    else {
+                        llOwnerSay("WARN: No normal self (~normalself) folder found in your outfits folder...");
+                        lmSendConfig("normalselfFolder","");
+                    }
                 }
             }
         }
