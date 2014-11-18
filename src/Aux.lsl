@@ -418,9 +418,9 @@ default {
                 debugSay(5, "DEBUG-AUX", "Dialog channel: " + (string)dialogChannel);
                 msg = "Key Access Menu.\n" +
                              "These are powerful options allowing you to give someone total control of your key or block someone from touch or even winding your key\n" +
-                             "Good dollies should read their key help before\n" +
-                             "Blacklist - Fully block this avatar from using any key option even winding\n" +
-                             "Controller - Take care choosing your controllers, they have great control over their doll can only be removed by their choice";
+                             "Good dollies should read their key help before adjusting these options\n" +
+                             "Blacklist - Fully block this avatar from using the key at all (even winding!)\n" +
+                             "Controller - Take care choosing your controllers, they have great control over Dolly and cannot be removed by you";
                 list pluslist;
                 if cdIsBuiltinController(id) pluslist +=  "⊖ Controller";
 
