@@ -117,14 +117,13 @@ integer chatChannel = 75;
 //========================================
 
 key animStart(string animation) {
-    debugSay(2,"DEBUG-AVATAR","animStart");
+
     if ((llGetPermissionsKey() != dollID) || (!(llGetPermissions() & PERMISSION_TRIGGER_ANIMATION)))
         return NULL_KEY;
 
     list oldList = llGetAnimationList(dollID);
     i = llGetListLength(oldList);
 
-    debugSay(2,"DEBUG-AVATAR","animStart");
     // Stop all animations
     while (i--)
         llStopAnimation(llList2Key(oldList, i));
@@ -238,7 +237,6 @@ clearAnimations() {
 
 oneAnimation() {
     integer upRefresh;
-    debugSay(2,"DEBUG-AVATAR","oneAnimation");
 
     // Strip down to a single animation (keyAnimation)
 
@@ -267,8 +265,6 @@ oneAnimation() {
             else {
                 // animKey animation IS running... don't stop it; stop everything else
 
-                debugSay(2,"DEBUG-AVATAR","Running animKey loop");
-
                 // Other animations are trying to "get in"; make note of it
                 upRefresh = 1;
 
@@ -276,10 +272,7 @@ oneAnimation() {
                 while (i--) {
                     animKeyI = llList2Key(animList, i);
 
-                    if (animKeyI != animKey) {
-                        debugSay(2,"DEBUG-AVATAR","Stopping animation #" + (string)i + ": " + (string)animKeyI);
-                        llStopAnimation(animKeyI);
-                    }
+                    if (animKeyI != animKey) llStopAnimation(animKeyI);
                 }
             }
         }
@@ -319,9 +312,8 @@ oneAnimation() {
             // We found our animation being interfered with; cut the refreshRate
             // so that we run more often: and "fight back" for our animation
             animRefreshRate /= 2.0;                                     // -50%
-            minRate = (1/llGetRegionFPS()) * MIN_FRAMES;
-            if (minRate)
-                animRefreshRate = minRate;        // Minimum amount of time (by Frames)
+            float minRate = (1/llGetRegionFPS()) * MIN_FRAMES;
+            if (minRate) animRefreshRate = minRate;        // Minimum amount of time (by Frames)
         }
         else {
             // No interference - so run less often
@@ -388,7 +380,6 @@ ifPermissions() {
         llSetTimerEvent(animRefreshRate);
     }
 
-    debugSay(2,"DEBUG-AVATAR","animRefreshRate = " + (string)animRefreshRate + "; keyAnimation = " + keyAnimation);
     //----------------------------------------
     // PERMISSION_TAKE_CONTROLS
 
@@ -397,7 +388,6 @@ ifPermissions() {
     if (permMask & PERMISSION_TAKE_CONTROLS) {
 
         //debugSay(2,"DEBUG-AVATAR","haveControls = " + (string)haveControls + "; collapsed = " + (string)collapsed);
-        debugSay(2,"DEBUG-AVATAR","Taking controls...");
 
         if (isFrozen)
             // Dolly is "frozen": either collapsed or posed
@@ -448,7 +438,6 @@ ifPermissions() {
     //----------------------------------------
     // Moving to Target
 
-    debugSay(2,"DEBUG-AVATAR","Moving to target");
     if (isFrozen) {
 
         if (lockPos == ZERO_VECTOR) lmSendConfig("lockPos", (string)(lockPos = llGetPos()));
