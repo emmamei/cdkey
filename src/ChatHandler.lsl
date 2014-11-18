@@ -162,8 +162,8 @@ default
                 else if (name == "dollGender")             dollGender = value;
                 else if (name == "demoMode") {
                     demoMode = (integer)value;
-                    if (!demoMode) effectiveLimit = keyLimit;
-                    else effectiveLimit = DEMO_LIMIT;
+                    if (demoMode) effectiveLimit = DEMO_LIMIT;
+                    else effectiveLimit = keyLimit;
                 }
 #ifdef DEVELOPER_MODE
                 else if (name == "debugLevel")             debugLevel = (integer)value;
