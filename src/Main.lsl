@@ -525,6 +525,11 @@ default {
         integer code      =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
+#ifdef DEVELOPER_MODE
+        if (code == 500)
+            debugSay(2,"DEBUG-MAIN", "LinkMessage|500: choice = " + (string)llList2String(split, 0) + " and script = " + (string)script);
+#endif
+
         if (code == 102) {
             lmMenuReply("Wind", "", NULL_KEY);
 
@@ -915,50 +920,48 @@ default {
                 // If the Max Times available are changed, be sure to change the next choice also
                 cdDialogListen();
                 llDialog(id, "You can set the maximum available time here.  Dolly cannot be wound beyond this amount of time.\nDolly currently has " + (string)llFloor(timeLeftOnKey / SEC_TO_MIN) + " mins left of " + (string)llFloor(keyLimit / SEC_TO_MIN) + ". If you lower the maximum, Dolly will lose the extra time entirely.",
-                    dialogSort(["45m", "60m", "75m", "90m", "120m", "150m", "180m", "240m", "300m", "360m", "480m", MAIN]), dialogChannel);
+                    dialogSort(["45m", "60m", "75m", "90m", "120m", "150m", "180m", "240m", MAIN]), dialogChannel);
             }
-            // Shortcut only: last chars = "min"
-            else if (script == "Main") {
-                if (llGetSubString(choice,-3,-1) == "min" && script == "Main") {
 
-                    // specific values: rules out invalid values
-                    if ((choice ==  "45min") ||
-                        (choice ==  "60min") ||
-                        (choice ==  "60min") ||
-                        (choice ==  "75min") ||
-                        (choice ==  "90min") ||
-                        (choice == "120min")) {
+            else if ((choice ==  "15min") ||
+                     (choice ==  "30min") ||
+                     (choice ==  "45min") ||
+                     (choice ==  "60min") ||
+                     (choice ==  "90min") ||
+                     (choice == "120min")) {
 
-                        // Breaking in two parts avoids all those conversions
-                        windMins = (integer)choice;
-                        lmSendConfig("windMins", choice);
-                    }
-                }
-                // Shortcut only: last char = "m"
-                else if (llGetSubString(choice,-1,-1) == "m" && script == "Main") {
+                if (windMins * SEC_TO_MIN > keyLimit) lmSendConfig("windMins", (string)(windMins = 30));
+                else lmSendConfig("windMins", (string)(windMins = (integer)choice));
+                lmSendToAgent("Winding now set to " + (string)windMins + " minutes",id);
+            }
 
-                    // specific values: rules out invalid values
-                    if ((choice ==  "45m") ||
-                        (choice ==  "60m") ||
-                        (choice ==  "60m") ||
-                        (choice ==  "75m") ||
-                        (choice ==  "90m") ||
-                        (choice == "120m") ||
-                        (choice == "150m") ||
-                        (choice == "180m") ||
-                        (choice == "240m") ||
-                        (choice == "300m") ||
-                        (choice == "360m") ||
-                        (choice == "480m")) {
+            else if ((choice ==  "45m") ||
+                     (choice ==  "60m") ||
+                     (choice ==  "75m") ||
+                     (choice ==  "90m") ||
+                     (choice == "120m") ||
+                     (choice == "150m") ||
+                     (choice == "180m") ||
+                     (choice == "240m")) {
 
-                        lmSendConfig("keyLimit", (string)(keyLimit = ((float)choice * SEC_TO_MIN)));
-                    }
-                }
+                lmSendConfig("keyLimit", (string)(keyLimit = ((float)choice * SEC_TO_MIN)));
+                lmSendToAgent("Key limit now set to " + (string)llFloor(keyLimit / SEC_TO_MIN) + " minutes",id);
+                if (keyLimit < timeLeftOnKey) lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = keyLimit));
             }
             else if (choice == "Wind Time...") {
+                list windChoices;
+
+                // Build up the allowed winding times based on the KeyLimit
+                if (keyLimit >=  30) windChoices +=  "15min";
+                if (keyLimit >=  60) windChoices +=  "30min";
+                if (keyLimit >=  90) windChoices +=  "45min";
+                if (keyLimit >= 120) windChoices +=  "60min";
+                if (keyLimit >= 180) windChoices +=  "90min";
+                if (keyLimit >= 240) windChoices += "120min";
+
                 cdDialogListen();
                 llDialog(id, "You can set the amount of time in each wind.\nDolly currently winds " + (string)windMins + " mins.",
-                    dialogSort(["15min", "30min", "45min", "60min", "90min", "120min", MAIN]), dialogChannel);
+                    dialogSort(windChoices + [ MAIN ]), dialogChannel);
             }
             else if (cdIsCarrier(id) || cdIsController(id)) {
                 if (choice == "Hold") collapse(JAMMED);
