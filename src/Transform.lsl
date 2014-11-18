@@ -733,6 +733,7 @@ default {
                     }
                     else {
                         useTypeFolder = NO;
+                        typeFolderExpected = "";
                         lmSendConfig("outfitsFolder", outfitsFolder);
                         lmSendConfig("useTypeFolder", (string)useTypeFolder);
                         lmSendConfig("typeFolder", "");
