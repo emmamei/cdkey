@@ -551,7 +551,7 @@ default {
                     else if ((outfitsFolder != "") && (choice != newoutfitname)) {
                         string rlv;
 #ifdef DEVELOPER_MODE
-                        // If we are in developer mode we are in danger of being ripped
+                        // If we are in developer mode we are in danger of the key being ripped
                         // off here.  We therefore will use a temporary @detach=n restriction.
                         llOwnerSay("Developer key locked in place to prevent accidental detachment during dressing.");
                         rlv="attachthis=y,detachthis=n,detach=n,";
@@ -577,10 +577,10 @@ default {
                             newoutfit += clothingFolder + "/";
                         newoutfit += newoutfitname;
 
-                        lmSendConfig("newoutfitname", (newoutfitname));
+                        lmSendConfig("newoutfitname",   (newoutfitname));
                         lmSendConfig("newoutfitfolder", (newoutfitfolder));
-                        lmSendConfig("newoutfitpath", (newoutfitpath));
-                        lmSendConfig("newoutfit", (newoutfit));
+                        lmSendConfig("newoutfitpath",   (newoutfitpath));
+                        lmSendConfig("newoutfit",       (newoutfit));
                     }
 
                     newoutfitwordend = llStringLength(newoutfit)  - 1;
