@@ -40,6 +40,7 @@ integer timeReporting = 1;
 
 //list rlvSources;
 //list rlvStatus;
+list controllers;
 
 float rlvTimer;
 
@@ -670,7 +671,7 @@ default {
                 else if (name == "barefeet")                   barefeet = value;
                 //else if (name == "wearLock")                   wearLock = (integer)value;
                 //else if (name == "dollType")                   dollType = value;
-                //else if (name == "controllers")             controllers = split;
+                else if (name == "controllers")             controllers = split;
                 else if (name == "pronounHerDoll")       pronounHerDoll = value;
                 else if (name == "pronounSheDoll")       pronounSheDoll = value;
                 else if (name == "dialogChannel")         dialogChannel = (integer)value;
