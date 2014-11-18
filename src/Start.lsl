@@ -211,12 +211,12 @@ processConfiguration(string name, string value) {
                      "busy is away", "can afk", "can fly", "can pose", "can sit", "can stand",
                      "can wear", "detachable", "doll type", "pleasure doll", "pose silence",
                      "auto tp", "outfitable", "initial time", "max time",
-                     "afk rlv", "base rlv", "collapse rlv", "pose rlv" ];
+                     "afk rlv", "base rlv", "collapse rlv", "pose rlv" , "show phrases"];
     list sendName = [ "barefeet", "helpless", "quiet", "outfitsFolder",
                      "busyIsAway", "canAfk", "canFly", "canPose", "canSit", "canStand",
                      "canWear", "detachable", "dollType", "pleasureDoll", "poseSilence",
                      "autoTP", "canDress", "timeLeftOnKey", "keyLimit",
-                     "userAfkRLVcmd", "userBaseRLVcmd", "userCollapseRLVcmd", "userPoseRLVcmd" ];
+                     "userAfkRLVcmd", "userBaseRLVcmd", "userCollapseRLVcmd", "userPoseRLVcmd" , "showPhrases"];
 
     list internals = [ "wind time", "blacklist key", "controller key" ];
     list cmdName = [ "setWindTime", "addBlacklist", "addMistress" ];

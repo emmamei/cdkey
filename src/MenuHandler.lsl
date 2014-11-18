@@ -258,8 +258,8 @@ default
             // The function assumes that a null key response means that there is no
             // key found.
             else if (name == "name4key") {
-                name = llList2String(split, 0);
-                uuid = llList2Key(split, 1);
+                string name = llList2String(split, 0);
+                key uuid = llList2Key(split, 1);
 
                 if (uuid) {
                     if ((i = llListFindList(controllers, [ name ] )) != NOT_FOUND)
@@ -288,16 +288,16 @@ default
                     uuid = llList2Key(split, i - 1);
                     uuidList = [];
 
-                    if (name == "")
+                    if (name == "") {
                         if (uuid == NULL_KEY)
-                            llDeleteSubList(split, i-1, i);
+                            llDeleteSubList(split, i - 1, i);
 
                         // Try llKey2Name first - for case when they
                         // are present: this makes the assumption that
                         // llKey2Name is faster and easier than
                         // llRequestAgentData.... but is it?
                         //
-                        else if ((name = llKey2Name(i - 1)) == "") {
+                        else if ((name = llKey2Name(uuid)) == "") {
                             uuid = llList2String(split, i - 1);
                             uuidList += uuid;
 
@@ -309,14 +309,17 @@ default
                                 nameRequest = llRequestAgentData(uuid, DATA_NAME);
                         }
                     }
-                    else if (uuid == NULL_KEY) {
-                        if (name == "")
-                            llDeleteSubList(split, i-1, i);
-                        else
-                            // This may or may not succeed... put it out there
-                            lmSendConfig("name2key", name);
+                    else {
+                        if (uuid == NULL_KEY) {
+                            if (name == "")
+                                llDeleteSubList(split, i - 1, i);
+                            else
+                                // This may or may not succeed... put it out there
+                                lmSendConfig("name2key", name);
+                        }
                     }
 
+                    i--;
                 }
 
                 // We test to see if there was a change: we only need to propogate
@@ -778,6 +781,7 @@ default
         if (query_id == nameRequest) {
             key uuid = llList2Key(uuidList, 0);
             string name = data;
+            integer i;
 
             if (uuid) {
                 if ((i = llListFindList(controllers, [ uuid ] )) != NOT_FOUND)
@@ -786,7 +790,7 @@ default
                     blacklist = llListReplaceList(blacklist, [ uuid, name ], i, i + 1);
                 lmSendConfig("controllers", llDumpList2String(controllers, "|"));
                 lmSendConfig("blacklist", llDumpList2String(blacklist, "|"));
-                uuList = llDeleteSubList(uuList, 0, 1);
+                uuidList = llDeleteSubList(uuidList, 0, 1);
             }
 
             if (uuidList != []) nameRequest = llRequestAgentData(llList2Key(uuidList, 0), DATA_NAME);
@@ -1037,13 +1041,10 @@ default
                                 else if (afterSpace == "Quiet Key") lmSendConfig("quiet", (string)(quiet = isX));
                                 else if (afterSpace == "Carryable") lmSendConfig("canCarry", (string)(canCarry = isX));
                                 else if (afterSpace == "Outfitable") lmSendConfig("canDress", (string)(canDress = isX));
+                                else if (afterSpace == "Phrases") lmSendConfig("showPhrases", (string)(showPhrases = isX));
                                 else if (afterSpace == "Poseable") lmSendConfig("canPose", (string)(canPose = isX));
                                 else if (afterSpace == "Warnings") lmSendConfig("doWarnings", (string)isX);
-//                              else if (afterSpace == "Offline") {
-//                                  lmSendConfig("offlineMode", (string)isX);
-//                                  llSleep(1.0);
-//                                  cdLinkMessage(LINK_THIS, 0, 301, "", NULL_KEY);
-//                              }
+
                                 // if is not Doll, they can set and unset these options...
                                 // if is Doll, these abilities can only be removed (X)
                                 else if (afterSpace == "Rpt Wind") {

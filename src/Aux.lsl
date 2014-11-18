@@ -37,6 +37,7 @@ string pronounHerDoll = "Her";
 string pronounSheDoll = "She";
 string dollGender = "Female";
 string curGemColour;
+integer showPhrases;
 integer maxMins;
 integer configured;
 integer ncLine;
@@ -300,6 +301,7 @@ default {
             else if (name == "keyLimit")                      maxMins = llRound((float)value / 60.0);
             else if (name == "quiet")                           quiet = (integer)value;
             else if (name == "autoTP")                         autoTP = (integer)value;
+            else if (name == "showPhrases")               showPhrases = (integer)value;
             else if (name == "canAFK")                         canAFK = (integer)value;
             else if (name == "canCarry")                     canCarry = (integer)value;
             else if (name == "canDress")                     canDress = (integer)value;
@@ -480,6 +482,7 @@ default {
 
                 pluslist += cdGetButton("Type Text", id, signOn, 0);
                 pluslist += cdGetButton("Warnings", id, doWarnings, 0);
+                pluslist += cdGetButton("showPhrases", id, showPhrases, 0);
                 //pluslist += cdGetButton("Offline", id, offlineMode, 0);
                 // One-way options
                 pluslist = llListInsertList(pluslist, cdGetButton("Allow AFK", id, canAFK, 1), 0);

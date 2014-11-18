@@ -204,7 +204,7 @@ default
             string cmd = llList2String(split, 0);
 
             if ((cmd == "addMistress") ||
-                (cmd == "addBlacklist") {
+                (cmd == "addBlacklist")) {
 
                 string uuid = llList2String(split, 1);
                 string name = llList2String(split, 2);
@@ -511,10 +511,10 @@ default
                         cdCapability(canPose,      "Doll can", "be posed by the public");
                         cdCapability(canSit,       "Doll can", "sit");
                         cdCapability(canStand,     "Doll can", "stand");
-                        cdCapability(canRepeat,    "Doll can", "multiply wound");
+                        cdCapability(canRepeat,    "Doll can", "be multiply wound");
                         cdCapability(canDressSelf, "Doll can", "dress by " + p + "self");
                         cdCapability(poseSilence,  "Doll is",  "silenced while posing");
-                        cdCapability(wearLock,     "Doll's clothing' is",  "currently locked on");
+                        cdCapability(wearLock,     "Doll's clothing is",  "currently locked on");
 
                         if (windRate) s += "Current wind rate is " + formatFloat(windRate,2) + ".\n";
                         else s += "Key is not winding down.\n";

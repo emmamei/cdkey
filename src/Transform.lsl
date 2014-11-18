@@ -724,12 +724,12 @@ default {
 
             debugSay(2,"DEBUG-LISTEN","Channel #2 received (\"" + typeFolder + "\"): " + choice);
 
+            list folderList = llCSV2List(choice);
+
             if (typeFolderExpected != "" && typeFolder != typeFolderExpected) {
                 // This comparison is inexact - but a quick check to see
                 // if the typeFolderExpected is contained in the string
                 if (llSubStringIndex(choice,typeFolderExpected) >= 0) {
-
-                    list folderList = llCSV2List(choice);
 
                     // This is exact check:
                     if (~llListFindList(folderList, (list)typeFolderExpected)) {
