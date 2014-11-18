@@ -43,6 +43,7 @@ key menuID = NULL_KEY;
 key uniqueID = NULL_KEY;
 
 //list windTimes = [ 30 ];
+list uuidList;
 
 float timeLeftOnKey;
 float windDefault = WIND_DEFAULT;
@@ -110,6 +111,8 @@ list dialogKeys;
 list dialogNames;
 list dialogButtons;
 
+key nameRequest;
+
 //========================================
 // FUNCTIONS
 //========================================
@@ -159,13 +162,21 @@ doDialogChannel() {
     debugSay(2, "DEBUG-MENU", "Dialog Handle is set....");
 }
 
+integer listCompare(list a, list b) {
+    if (a != b) return FALSE;    // Note: This is comparing list lengths only
+
+    return !llListFindList(a, b);  
+    // As both lists are the same length, llListFindList() can only return 0 or -1 
+    // Which we return as TRUE or FALSE respectively    
+}
+
 //========================================
 // STATES
 //========================================
 default
 {
     //----------------------------------------
-    // STATE ENTRy
+    // STATE ENTRY
     //----------------------------------------
     state_entry() {
         dollID = llGetOwner();
@@ -237,6 +248,28 @@ default
             }
             else if (name == "baseWindRate")             baseWindRate = (float)value;
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
+
+            // This name4key function becomes "dead code" unless a companion script
+            // with the ability to look up names offline is added.
+            //
+            // This script sends a name2key link message 300 and name4key handles the
+            // response.
+            //
+            // The function assumes that a null key response means that there is no
+            // key found.
+            else if (name == "name4key") {
+                name = llList2String(split, 0);
+                uuid = llList2Key(split, 1);
+
+                if (uuid) {
+                    if ((i = llListFindList(controllers, [ name ] )) != NOT_FOUND)
+                        controllers = llListReplaceList(controllers, [ uuid, name ], i - 1, i);
+                    if ((i = llListFindList(blacklist, [ name ] )) != NOT_FOUND)
+                        blacklist = llListReplaceList(blacklist, [ uuid, name ], i - 1, i);
+                    lmSendConfig("controllers", llDumpList2String(controllers, "|"));
+                    lmSendConfig("blacklist", llDumpList2String(blacklist, "|"));
+                }
+            }
             else if (name == "displayWindRate") {
                 if ((float)value != 0) displayWindRate = (float)value;
             }
@@ -246,17 +279,65 @@ default
 
             // have to test before shortcut "c" because of compound conditional: "controllers"
             else if ((name == "controllers") || (name == "blacklist")) {
-                integer i;
-                for (; i < llGetListLength(split); i++) {
-                    if (llList2String(split, i) == "") split = llDeleteSubList(split, i, i--);
+                integer i = llGetListLength(split) - 1;
+                string name;
+                key uuid;
+
+                while (i >= 0) {
+                    name = llList2String(split, i);
+                    uuid = llList2Key(split, i - 1);
+                    uuidList = [];
+
+                    if (name == "")
+                        if (uuid == NULL_KEY)
+                            llDeleteSubList(split, i-1, i);
+
+                        // Try llKey2Name first - for case when they
+                        // are present: this makes the assumption that
+                        // llKey2Name is faster and easier than
+                        // llRequestAgentData.... but is it?
+                        //
+                        else if ((name = llKey2Name(i - 1)) == "") {
+                            uuid = llList2String(split, i - 1);
+                            uuidList += uuid;
+
+                            // if the nameRequest is unset, start it up.
+                            // The dataserver nameRequest event will be
+                            // reading from the uuidList and getting the data put
+                            // into the list.
+                            if (nameRequest == NULL_KEY)
+                                nameRequest = llRequestAgentData(uuid, DATA_NAME);
+                        }
+                    }
+                    else if (uuid == NULL_KEY) {
+                        if (name == "")
+                            llDeleteSubList(split, i-1, i);
+                        else
+                            // This may or may not succeed... put it out there
+                            lmSendConfig("name2key", name);
+                    }
+
                 }
 
+                // We test to see if there was a change: we only need to propogate
+                // the new list if it has changed. In this way we prevent endless
+                // loops through this code. If there is no change - even if not
+                // all names or uuids are set - then the loop stops and we continue
+                // onwards
                 if (name == "controllers") {
-                    controllers = split;
-                    //if (!startup) lmInternalCommand("updateExceptions", "", NULL_KEY);
-                    lmInternalCommand("updateExceptions", "", NULL_KEY);
+                    if (!listCompare(controllers,split)) {
+                        controllers = split;
+                        lmSendConfig("controllers", llDumpList2String(controllers, "|"));
+                        //if (!startup) lmInternalCommand("updateExceptions", "", NULL_KEY);
+                        lmInternalCommand("updateExceptions", "", NULL_KEY);
+                    }
                 }
-                else blacklist = split;
+                else {
+                    if (!listCompare(blacklist,split)) {
+                        blacklist = split;
+                        lmSendConfig("blacklist", llDumpList2String(blacklist, "|"));
+                    }
+                }
             }
 
             // shortcut: c
@@ -655,12 +736,12 @@ default
         if (controlHandle) {
             channel = controlChannel;
             type = "controller list";
-            current = cdList2ListStrided(controllers, 0, -1, 2);
+            current = controllers;
         }
         else {
             channel = blacklistChannel;
             type = "blacklist";
-            current = cdList2ListStrided(blacklist, 0, -1, 2);
+            current = blacklist;
         }
 
         while ((i < num) && (llGetListLength(dialogButtons) < 12)) {
@@ -686,6 +767,31 @@ default
     no_sensor() {
         cdDialogListen();
         llDialog(dollID, "No avatars detected within chat range", [MAIN], dialogChannel);
+    }
+
+    //----------------------------------------
+    // DATASERVER
+    //----------------------------------------
+    dataserver(key query_id, string data) {
+
+        // Reading notecard DataAppearance (JSON list of appearance settings)
+        if (query_id == nameRequest) {
+            key uuid = llList2Key(uuidList, 0);
+            string name = data;
+
+            if (uuid) {
+                if ((i = llListFindList(controllers, [ uuid ] )) != NOT_FOUND)
+                    controllers = llListReplaceList(controllers, [ uuid, name ], i, i + 1);
+                if ((i = llListFindList(blacklist, [ uuid ] )) != NOT_FOUND)
+                    blacklist = llListReplaceList(blacklist, [ uuid, name ], i, i + 1);
+                lmSendConfig("controllers", llDumpList2String(controllers, "|"));
+                lmSendConfig("blacklist", llDumpList2String(blacklist, "|"));
+                uuList = llDeleteSubList(uuList, 0, 1);
+            }
+
+            if (uuidList != []) nameRequest = llRequestAgentData(llList2Key(uuidList, 0), DATA_NAME);
+            else nameRequest = NULL_KEY;
+        }
     }
 
     //----------------------------------------
@@ -981,22 +1087,26 @@ default
             string uuid = llList2String(dialogKeys, i);
 
             if (channel == blacklistChannel) {
+
+                // shutdown the listener
                 if (blacklistHandle) {
                     llListenRemove(blacklistHandle);
                     blacklistHandle = 0;
                 }
-                if (llListFindList(blacklist, [uuid,name]) == -1) lmSendConfig("blacklistMode", (string)1);
-                else lmSendConfig("blacklistMode", (string)-1);
-                lmInternalCommand("addRemBlacklist", (string)uuid + "|" + name, id);
+
+                if (llListFindList(controllers, [uuid,name]) == NOT_FOUND) lmInternalCommand("addBlacklist", (string)uuid + "|" + name, id);
+                else                                                       lmInternalCommand("remBlacklist", (string)uuid + "|" + name, id);
             }
             else {
+
+                // shutdown the listener
                 if (controlHandle) {
                     llListenRemove(controlHandle);
                     controlHandle = 0;
                 }
 
-                if (llListFindList(controllers, [uuid,name]) == -1)  lmInternalCommand("addMistress", (string)uuid + "|" + name, id);
-                else if (cdIsBuiltinController(id))                  lmInternalCommand("remMistress", (string)uuid + "|" + name, id);
+                if (llListFindList(controllers, [uuid,name]) == NOT_FOUND)  lmInternalCommand("addMistress", (string)uuid + "|" + name, id);
+                else if (cdIsBuiltinController(id))                         lmInternalCommand("remMistress", (string)uuid + "|" + name, id);
             }
         }
 

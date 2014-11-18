@@ -218,8 +218,8 @@ processConfiguration(string name, string value) {
                      "autoTP", "canDress", "timeLeftOnKey", "keyLimit",
                      "userAfkRLVcmd", "userBaseRLVcmd", "userCollapseRLVcmd", "userPoseRLVcmd" ];
 
-    list internals = [ "wind time", "blacklist name", "controller name" ];
-    list cmdName = [ "setWindTime", "getBlacklistName", "getMistressName" ];
+    list internals = [ "wind time", "blacklist key", "controller key" ];
+    list cmdName = [ "setWindTime", "addBlacklist", "addMistress" ];
 
     // This processes a single line from the preferences notecard...
     // processing done a single time during the read of the nc belong elsewhere
@@ -240,13 +240,13 @@ processConfiguration(string name, string value) {
     else if (name == "doll gender") {
         setGender(value);
     }
-    else if (name == "blacklist") {
+    else if (name == "blacklist key") {
         if (llListFindList(blacklist, [ value ]) == NOT_FOUND)
-            lmSendConfig("blacklist", llDumpList2String((blacklist = llListSort(blacklist + [ value, llRequestAgentData((key)value, DATA_NAME) ], 2, 1)), "|"));
+            lmSendConfig("blacklist", llDumpList2String((blacklist += [ value, "" ]), "|"));
     }
-    else if (name == "controller") {
+    else if (name == "controller key") {
         if (llListFindList(controllers, [ value ]) == NOT_FOUND)
-            lmSendConfig("controllers", llDumpList2String((controllers = llListSort(controllers + [ value, llRequestAgentData((key)value, DATA_NAME) ], 2, 1)), "|"));
+            lmSendConfig("controllers", llDumpList2String((controllers += [ value, "" ]), "|"));
     }
     //--------------------------------------------------------------------------
     // Disabled for future use, allows for extention scripts to add support for
@@ -443,6 +443,8 @@ default {
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                  debugLevel = (integer)value;
 #endif
+            else if (name == "controllers")                controllers = split;
+            else if (name == "blacklist")                    blacklist = split;
             else if (name == "keyLimit")                      keyLimit = (float)value;
             else if (name == "keyAnimation") {
                 keyAnimation = value;
