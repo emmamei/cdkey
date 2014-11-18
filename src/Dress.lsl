@@ -271,7 +271,6 @@ doDebug(string src) {
     debugSay(5, "DEBUG", ">> normalselfFolder = " + normalselfFolder);
     debugSay(5, "DEBUG", ">> nudeFolder = " + nudeFolder);
 }
-#endif
 
 string folderStatus() {
     string exists = "not found";
@@ -284,6 +283,7 @@ string folderStatus() {
            "\nUse ~normalself: " + normalselfFolder +
            "\nUse ~nude: " + nudeFolder;
 }
+#endif
 
 //========================================
 // STATES
@@ -489,7 +489,9 @@ default {
             else {
                 msgx = "You may choose any outfit for " + llToLower(pronounHerDoll) + " to wear.\n\n";
                 if (dresserID == dollID) msgx = "See " + WEB_DOMAIN + outfits_url + " for more information on outfits.\n\n";
+#ifdef DEVELOPER_MODE
                 msgx += folderStatus();
+#endif
 
                 integer select = (integer)llGetSubString(choice, 0, llSubStringIndex(choice, ".") - 1);
                 if (select != 0) choice = cdListElement(outfitsList, select - 1);
@@ -890,7 +892,11 @@ default {
 
             msgx = "You may choose any outfit.\n";
             if (dresserID == dollID) msgx = "See " + WEB_DOMAIN + outfits_url + " for more information on outfits.\n";
+#ifdef DEVELOPER_MODE
             msgx += "Numbers match outfit names in chat, using chat history (CTRL+H) may help.\n\n" + folderStatus();
+#else
+            msgx += "Numbers match outfit names in chat, using chat history (CTRL+H) may help.";
+#endif
 
             // Provide a dialog to user to choose new outfit
             cdDialogListen();
