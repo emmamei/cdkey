@@ -13,9 +13,11 @@
 #include "include/GlobalDefines.lsl"
 
 #define TYPE_FLAG "*"
+#define NO_FILTER ""
 
 #define cdProfileURL(i) "secondlife:///app/agent/"+(string)(i)+"/about"
 #define cdStringEndMatch(a,b) llGetSubString(a,-llStringLength(b),STRING_END)==b
+#define cdListenMine(a)   llListen(a, NO_FILTER, dollID, NO_FILTER)
 
 // Channel to use to discard dialog output
 #define DISCARD_CHANNEL 9999
@@ -55,7 +57,7 @@ integer outfitSearching;
 
 integer findTypeFolder;
 
-integer rlvHandle;
+//integer rlvHandle;
 integer rlvHandle2;
 integer rlvHandle3;
 integer useTypeFolder;
@@ -220,6 +222,7 @@ folderSearch(string folder, integer channel) {
 
     // The folder search starts as a RLV @getinv call...
     //
+    cdListenMine(channel);
     if (folder == "")
         lmRunRLV("getinv=" + (string)channel);
     else
@@ -303,15 +306,19 @@ default {
             if (outfitSearching == 0) {
                 debugSay(2,"DEBUG-SEARCHING","Turning off timer");
                 llSetTimerEvent(0.0);
+                llListenRemove(rlvHandle2);
+                llListenRemove(rlvHandle3);
             }
             else {
                 if (outfitsFolder == "") {
                     if (outfitSearchTries++ < MAX_SEARCH_RETRIES)
                         folderSearch("",rlvChannel3);
+                    else llListenRemove(rlvHandle3);
                 } else {
                     if (typeFolder == "" && typeFolderExpected != "") {
                         if (typeSearchTries++ < MAX_SEARCH_RETRIES)
                             folderSearch(outfitsFolder,rlvChannel2);
+                        else llListenRemove(rlvHandle2);
                     }
                 }
             }
@@ -456,12 +463,12 @@ default {
                             // Now we have a result of RLV checks - and if it is Ok,
                             // startup the RLV channels and search for folders
                             //
-                            if (!rlvHandle) llListenRemove(rlvHandle);
-                            rlvHandle = cdListenAll(rlvChannel);
-                            if (!rlvHandle2) llListenRemove(rlvHandle2);
-                            rlvHandle2 = cdListenAll(rlvChannel2);
-                            if (!rlvHandle3) llListenRemove(rlvHandle3);
-                            rlvHandle3 = cdListenAll(rlvChannel3);
+                            //if (!rlvHandle) llListenRemove(rlvHandle);
+                            //rlvHandle = cdListenMine(rlvChannel);
+                            //if (!rlvHandle2) llListenRemove(rlvHandle2);
+                            rlvHandle2 = cdListenMine(rlvChannel2);
+                            //if (!rlvHandle3) llListenRemove(rlvHandle3);
+                            rlvHandle3 = cdListenMine(rlvChannel3);
 
                             if (outfitsFolder == "" && !outfitSearching) {
                                 outfitSearching++;
@@ -517,12 +524,12 @@ default {
 
             if (RLVok) {
                 if (rlvChannel) {
-                    if (rlvHandle) llListenRemove(rlvHandle);
-                    rlvHandle = cdListenAll(rlvChannel);
-                    if (rlvHandle2) llListenRemove(rlvHandle2);
-                    rlvHandle2 = cdListenAll(rlvChannel2);
-                    if (!rlvHandle3) llListenRemove(rlvHandle3);
-                    rlvHandle3 = cdListenAll(rlvChannel3);
+                    //if (rlvHandle) llListenRemove(rlvHandle);
+                    //rlvHandle = cdListenMine(rlvChannel);
+                    //if (rlvHandle2) llListenRemove(rlvHandle2);
+                    rlvHandle2 = cdListenMine(rlvChannel2);
+                    //if (!rlvHandle3) llListenRemove(rlvHandle3);
+                    rlvHandle3 = cdListenMine(rlvChannel3);
 
                     if (outfitsFolder == "" && !outfitSearching) {
                         outfitSearching++;
@@ -683,6 +690,7 @@ default {
         // folders we want...
         //
         if (channel == rlvChannel3) {
+            llListenRemove(rlvHandle3);
             debugSay(2,"DEBUG-LISTEN","Channel #1 received (outfitsFolder = \"" + outfitsFolder + "\"): " + choice);
 
             list folderList = llCSV2List(choice);
@@ -721,6 +729,8 @@ default {
             // the outfits search first - due to have done the outfits search
             // much earlier... However.... if we are here, then the outfits search
             // must have run before, but not necessarily immediately before...
+
+            llListenRemove(rlvHandle2);
 
             debugSay(2,"DEBUG-LISTEN","Channel #2 received (\"" + typeFolder + "\"): " + choice);
 
@@ -774,7 +784,6 @@ default {
                 // a type change?
                 if (outfitSearching) {
                     debugSay(2,"DEBUG-SEARCHING","Finishing outfits search");
-                    llListenRemove(rlvHandle3);
 
                     outfitSearching = 0;
                     llOwnerSay("Outfits search completed in " + formatFloat(llGetTime() - outfitsSearchTimer,1) + "s");
