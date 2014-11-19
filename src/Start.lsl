@@ -211,12 +211,12 @@ processConfiguration(string name, string value) {
                      "busy is away", "can afk", "can fly", "can pose", "can sit", "can stand",
                      "can wear", "detachable", "doll type", "pleasure doll", "pose silence",
                      "auto tp", "outfitable", "initial time", "max time",
-                     "afk rlv", "base rlv", "collapse rlv", "pose rlv" , "show phrases"];
+                     "afk rlv", "base rlv", "collapse rlv", "pose rlv" , "show phrases", "debug level"];
     list sendName = [ "barefeet", "helpless", "quiet", "outfitsFolder",
                      "busyIsAway", "canAfk", "canFly", "canPose", "canSit", "canStand",
                      "canWear", "detachable", "dollType", "pleasureDoll", "poseSilence",
                      "autoTP", "canDress", "timeLeftOnKey", "keyLimit",
-                     "userAfkRLVcmd", "userBaseRLVcmd", "userCollapseRLVcmd", "userPoseRLVcmd" , "showPhrases"];
+                     "userAfkRLVcmd", "userBaseRLVcmd", "userCollapseRLVcmd", "userPoseRLVcmd" , "showPhrases", "debugLevel"];
 
     list internals = [ "wind time", "blacklist key", "controller key" ];
     list cmdName = [ "setWindTime", "addBlacklist", "addMistress" ];
@@ -374,22 +374,20 @@ doneConfiguration(integer prefsRead) {
 doRestart() {
 
     integer n;
-    string me = cdMyScriptName();
     string script;
 
     debugSay(2,"DEBUG-RESET","Resetting Key scripts");
 
     // Set all other scripts to run state and reset them
-    n = llGetInventoryNumber(INVENTORY_SCRIPT) - 1;
-    while(n >= 0) {
-        script = llGetInventoryName(INVENTORY_SCRIPT, n--);
-        if (script != me) {
+    n = llGetInventoryNumber(INVENTORY_SCRIPT);
+    while(n--) {
+        script = llGetInventoryName(INVENTORY_SCRIPT, n);
+        if (script != "Start") {
 
-            debugSay(5,"DEBUG-RESET","Resetting " + script);
+            debugSay(5,"DEBUG-RESET","========>> Resetting #" + (string)n + ": '" + script + "'");
 
-            cdRunScript(script);
+            //cdRunScript(script);
             llResetOtherScript(script);
-            //llSleep(1.0);
         }
     }
 
@@ -762,9 +760,10 @@ default {
 
         if (change & CHANGED_OWNER) {
 
+            llOwnerSay("You have a new key! Congratulations!\n" +
+                "Look at PreferencesExample to see how to set the preferences for your new key.");
+
             if (cdNotecardExists(NOTECARD_PREFERENCES)) {
-                llOwnerSay("You have a new key! Congratulations!\n" +
-                    "Look at PreferencesExample to see how to set the preferences for your new key.");
                 llRemoveInventory(NOTECARD_PREFERENCES);
             }
 
@@ -781,7 +780,7 @@ default {
         // but Start.lsl is reset immediately - and upon reset,
         // resets the entire key.
 
-        if (change & CHANGED_INVENTORY) {
+        else if (change & CHANGED_INVENTORY) {
             if (cdNotecardExists(NOTECARD_PREFERENCES)) {
                 string ncKey = (string)llGetInventoryKey(NOTECARD_PREFERENCES);
 
@@ -813,6 +812,8 @@ default {
     //----------------------------------------
     timer() {
         // We only get here if the key was modified
+        llSetTimerEvent(0.0);
+
         llOwnerSay("Now resetting key.");
         llSleep(5.0);
         cdResetKey();
