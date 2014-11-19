@@ -482,7 +482,7 @@ default {
 
                 pluslist += cdGetButton("Type Text", id, signOn, 0);
                 pluslist += cdGetButton("Warnings", id, doWarnings, 0);
-                pluslist += cdGetButton("showPhrases", id, showPhrases, 0);
+                pluslist += cdGetButton("Phrases", id, showPhrases, 0);
                 //pluslist += cdGetButton("Offline", id, offlineMode, 0);
                 // One-way options
                 pluslist = llListInsertList(pluslist, cdGetButton("Allow AFK", id, canAFK, 1), 0);

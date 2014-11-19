@@ -56,6 +56,7 @@ integer autoAFK = 1;
 integer canCarry = 1;
 integer canDress = 1;
 integer canDressSelf = 1;
+integer showPhrases;
 //integer canFly = 1;
 //integer canSit = 1;
 //integer canStand = 1;
@@ -134,7 +135,7 @@ doDialogChannelWithReset() {
 doDialogChannel() {
     if (dialogChannel != 0) {
         // This assumes that if dialogChannel is set, it is open
-        cdListenerActivate(dialogChannel);
+        //cdListenerActivate(dialogHandle);
         lmSendConfig("dialogChannel", (string)(dialogChannel));
         return;
     }
@@ -157,8 +158,7 @@ doDialogChannel() {
     debugSay(2, "DEBUG-MENU", "Dialog channel is set to " + (string)dialogChannel);
     //llSleep(2); // Make sure dialogChannel setting has time to propogate
 
-    // Deactivate listener for finer control - but this is not yet ready
-    //cdListenerDeactivate(dialogHandle);
+    cdListenerDeactivate(dialogHandle);
     debugSay(2, "DEBUG-MENU", "Dialog Handle is set....");
 }
 
@@ -206,8 +206,6 @@ default
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
         if (code == 102) {
-            //if (script == "ServiceReceiver") dbConfig = 1;
-            //else
             if (data == "Start") configured = 1;
 
             debugSay(4, "DEBUG-MENU", "Setting dialog channel...");
@@ -353,6 +351,7 @@ default
                 else if (name == "canDressSelf")             canDressSelf = (integer)value;
                 else if (name == "collapsed")                   collapsed = (integer)value;
                 else if (name == "configured")                 configured = (integer)value;
+                else if (name == "showPhrases")               showPhrases = (integer)value;
                 //else if (name == "canFly")                         canFly = (integer)value;
                 //else if (name == "canSit")                         canSit = (integer)value;
                 //else if (name == "canStand")                     canStand = (integer)value;
