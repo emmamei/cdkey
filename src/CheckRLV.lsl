@@ -354,22 +354,25 @@ default {
                 RLVok = 1;
                 lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
                 lmRLVreport(RLVok, rlvAPIversion, 0);
+                cdListenerDeactivate(rlvHandle);
                 activateRLV();
 #endif
             }
-            else {
 #ifdef DEVELOPER_MODE
+            else {
                 debugSay(2, "DEBUG-RLV", "RLV Key Path: " + msg);
                 myPath = msg;
-#endif
+
                 nextRLVcheck = 0.0;
                 RLVok = 1;
                 lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
                 //debugSay(2, "DEBUG-RLV", "RLV set to " + (string)RLVok + " and message sent on link channel");
                 llOwnerSay("RLV check completed in " + formatFloat((llGetTime() - rlvTimer),1) + "s");
                 lmRLVreport(RLVok, rlvAPIversion, 0);
+                cdListenerDeactivate(rlvHandle);
                 activateRLV();
             }
+#endif
         }
     }
 
