@@ -323,7 +323,7 @@ default {
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
             else if (name == "windMins")                     windMins = (integer)value;
             else if (name == "wearLock")                     wearLock = (integer)value;
-            else if (name == "blacklist")                   blacklist = llListSort(cdList2ListStrided(split,0,-1,2),1,1);   // Import the UUID entries only here, is all we need to blacklist test.
+            else if (name == "blacklist")                   blacklist = split;
             else if (name == "primLight")                   primLight = (integer)value;
             else if (name == "primGlow")                     primGlow = (integer)value;
             else if (name == "isVisible")                     visible = (integer)value;
@@ -392,19 +392,19 @@ default {
             if (choice == "Help...") {
                 msg = "Here you can find various options to get help with your " +
                             "key and to connect with the community.";
-                list pluslist = [ "Join Group", "Visit Dollhouse" ];
-                if (llGetInventoryType(NOTECARD_HELP) == INVENTORY_NOTECARD) pluslist += [ "Help Notecard" ];
+                list plusList = [ "Join Group", "Visit Dollhouse" ];
+                if (llGetInventoryType(NOTECARD_HELP) == INVENTORY_NOTECARD) plusList += [ "Help Notecard" ];
 
                 // This assumes a Doll cannot be her own controller...
-                if (cdIsController(id)) pluslist += "Reset Scripts";
+                if (cdIsController(id)) plusList += "Reset Scripts";
 #ifdef UPDATE_SCRIPT
-                if (cdIsDoll(id)) pluslist += ["Reset Scripts","Check Update","Factory Reset"];
+                if (cdIsDoll(id)) plusList += ["Reset Scripts","Check Update","Factory Reset"];
 #else
-                if (cdIsDoll(id)) pluslist += ["Reset Scripts","Factory Reset"];
+                if (cdIsDoll(id)) plusList += ["Reset Scripts","Factory Reset"];
 #endif
 
                 cdDialogListen();
-                llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
+                llDialog(id, msg, dialogSort(plusList + MAIN), dialogChannel);
             }
             else if (choice == "Help Notecard") {
                 llGiveInventory(id,NOTECARD_HELP);
@@ -417,39 +417,60 @@ default {
                 lmSendToAgent("Here is your link to the community dolls group profile secondlife:///app/group/0f0c0dd5-a611-2529-d5c7-1284fb719003/about",id);
             }
             else if (choice == "Access...") {
-                debugSay(5, "DEBUG-AUX", "Dialog channel: " + (string)dialogChannel);
+                //debugSay(5, "DEBUG-AUX", "Dialog channel: " + (string)dialogChannel);
                 msg = "Key Access Menu.\n" +
                              "These are powerful options allowing you to give someone total control of your key or block someone from touch or even winding your key\n" +
                              "Good dollies should read their key help before adjusting these options\n" +
                              "Blacklist - Fully block this avatar from using the key at all (even winding!)\n" +
                              "Controller - Take care choosing your controllers, they have great control over Dolly and cannot be removed by you";
-                list pluslist;
-                if cdIsBuiltinController(id) pluslist +=  "⊖ Controller";
+                list plusList;
 
-                pluslist += [ "⊕ Blacklist", "List Blacklist", "⊖ Blacklist", "⊕ Controller", "List Controller" ];
+                // This complicated setup really isnt: it follows these rules:
+                //
+                //  * If there's no blacklist entries, you can't remove (but can still list)
+                //  * If there's no controller entries, you can't remove (but can still list)
+                //  * If you are controller, you can remove controllers
+                //  * If you are Dolly, you can manipulate the blacklist
+                //  * If you are Dolly, you can add controllers
+                //  * If you are controller OR Dolly, you can list Controllers
+                //
+                // Why allow listing an empty list? It is a way of confirming status to the
+                // viewer, with the appropriate message (already provided for)
+                //
+                if ((cdIsController(id)) && (cdControllerCount() > 0)) plusList =  "⊖ Controller";
+
+                if (cdIsDoll(id)) {
+                    plusList += [ "⊕ Blacklist", "List Blacklist" ];
+
+                    if (llGetListLength(blacklist)) plusList += [ "⊖ Blacklist" ];
+
+                    plusList += [ "⊕ Controller" ];
+                }
+
+                plusList +=  "List Controller";
 
                 cdDialogListen();
-                llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
+                llDialog(id, msg, dialogSort(plusList + MAIN), dialogChannel);
             }
             else if (choice == "Visit Dollhouse") {
                 visitDollhouse += 1;
             }
             if (choice == "Abilities...") {
                 msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
-                list pluslist;
+                list plusList;
 
                 if (RLVok) {
                     // One-way options
-                    pluslist += cdGetButton("Detachable", id, detachable, 1);
-                    pluslist += cdGetButton("Flying", id, canFly, 1);
-                    pluslist += cdGetButton("Sitting", id, canSit, 1);
-                    pluslist += cdGetButton("Standing", id, canStand, 1);
-                    pluslist += cdGetButton("Self Dress", id, canDressSelf, 1);
-                    pluslist += cdGetButton("Self TP", id, !tpLureOnly, 1);
-                    pluslist += cdGetButton("Force TP", id, autoTP, 1);
+                    plusList += cdGetButton("Detachable", id, detachable, 1);
+                    plusList += cdGetButton("Flying", id, canFly, 1);
+                    plusList += cdGetButton("Sitting", id, canSit, 1);
+                    plusList += cdGetButton("Standing", id, canStand, 1);
+                    plusList += cdGetButton("Self Dress", id, canDressSelf, 1);
+                    plusList += cdGetButton("Self TP", id, !tpLureOnly, 1);
+                    plusList += cdGetButton("Force TP", id, autoTP, 1);
 
                     if (canPose) { // Option to silence the doll while posed this this option is a no-op when canPose == 0
-                        pluslist += cdGetButton("Silent Pose", id, poseSilence, 1);
+                        plusList += cdGetButton("Silent Pose", id, poseSilence, 1);
                     }
                 }
                 else {
@@ -458,47 +479,47 @@ default {
 
                     msg += "\n\nEither Dolly does not have an RLV capable viewer, or " + s + " has RLV turned off in " + p + " viewer settings.  There are no usable options available.";
 
-                    pluslist = [ "OK" ];
+                    plusList = [ "OK" ];
                 }
 
                 cdDialogListen();
-                llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
+                llDialog(id, msg, dialogSort(plusList + MAIN), dialogChannel);
             }
             else if (choice == "Features...") {
                 msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
-                list pluslist = [];
+                list plusList = [];
 
-                pluslist += cdGetButton("Carryable", id, canCarry, 0);
-                pluslist += cdGetButton("Outfitable", id, canDress, 0);
+                plusList += cdGetButton("Carryable", id, canCarry, 0);
+                plusList += cdGetButton("Outfitable", id, canDress, 0);
 #ifdef ADULT_MODE
-                pluslist += cdGetButton("Pleasure", id, pleasureDoll, 0);
+                plusList += cdGetButton("Pleasure", id, pleasureDoll, 0);
 #endif
                 if (dollType != "Display")
-                    pluslist += cdGetButton("Poseable", id, canPose, 0);
+                    plusList += cdGetButton("Poseable", id, canPose, 0);
 
-                pluslist += cdGetButton("Quiet Key", id, quiet, 0);
+                plusList += cdGetButton("Quiet Key", id, quiet, 0);
 
-                //if (isTransformingKey) pluslist += cdGetButton("Type Text", id, signOn, 0);
+                //if (isTransformingKey) plusList += cdGetButton("Type Text", id, signOn, 0);
 
-                pluslist += cdGetButton("Type Text", id, signOn, 0);
-                pluslist += cdGetButton("Warnings", id, doWarnings, 0);
-                pluslist += cdGetButton("Phrases", id, showPhrases, 0);
-                //pluslist += cdGetButton("Offline", id, offlineMode, 0);
+                plusList += cdGetButton("Type Text", id, signOn, 0);
+                plusList += cdGetButton("Warnings", id, doWarnings, 0);
+                plusList += cdGetButton("Phrases", id, showPhrases, 0);
+                //plusList += cdGetButton("Offline", id, offlineMode, 0);
                 // One-way options
-                pluslist = llListInsertList(pluslist, cdGetButton("Allow AFK", id, canAFK, 1), 0);
-                pluslist = llListInsertList(pluslist, cdGetButton("Rpt Wind", id, canRepeat, 1), 6);
+                plusList = llListInsertList(plusList, cdGetButton("Allow AFK", id, canAFK, 1), 0);
+                plusList = llListInsertList(plusList, cdGetButton("Rpt Wind", id, canRepeat, 1), 6);
 
                 cdDialogListen();
-                llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
+                llDialog(id, msg, dialogSort(plusList + MAIN), dialogChannel);
             }
             // Key menu is only shown for Controllers and for the Doll themselves
             else if (choice == "Key..." && (cdIsController(id) || cdIsDoll(id))) {
 
-                list pluslist = ["Dolly Name...","Gem Colour...","Gender:" + dollGender];
+                list plusList = ["Dolly Name...","Gem Colour...","Gender:" + dollGender];
 
-                if (cdIsController(id)) pluslist += [ "Max Time...", "Wind Time..." ];
+                if (cdIsController(id)) plusList += [ "Max Time...", "Wind Time..." ];
                 cdDialogListen();
-                llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(pluslist, 1, 1) + cdGetButton("Key Glow", id, primGlow, 0) + cdGetButton("Gem Light", id, primLight, 0) + MAIN), dialogChannel);
+                llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(plusList, 1, 1) + cdGetButton("Key Glow", id, primGlow, 0) + cdGetButton("Gem Light", id, primLight, 0) + MAIN), dialogChannel);
             }
             else if (llGetSubString(choice,0,6) == "Gender:") {
                 string s = llGetSubString(choice,7,-1);
@@ -515,12 +536,12 @@ default {
             }
             else if (choice == "Gem Colour...") {
                 msg = "Here you can choose your own gem colour.";
-                    list pluslist;
+                    list plusList;
 
-                    pluslist = COLOR_NAMES;
+                    plusList = COLOR_NAMES;
 
                     cdDialogListen();
-                    llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
+                    llDialog(id, msg, dialogSort(plusList + MAIN), dialogChannel);
             }
             else if ((llListFindList(COLOR_NAMES, [ choice ]) != -1) && (choice != "Custom..")) {
                 integer index = llListFindList(COLOR_NAMES, [ choice ]);
