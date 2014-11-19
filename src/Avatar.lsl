@@ -715,28 +715,67 @@ default {
 
 #ifdef ADULT_MODE
             else if (subchoice == "Strip") {
+
                 if (choice == "Strip...") {
+
+                    // Generate the Strip Menu and display
                     list buttons = llListSort(["Strip Top", "Strip Bra", "Strip Bottom", "Strip Panties", "Strip Shoes", "Strip ALL"], 1, 1);
+
                     //cdDialogListen();
                     llDialog(id, "Take off:", dialogSort(buttons + MAIN), dialogChannel); // Do strip menu
                     return;
                 }
 
+                // choice is "Strip <something>"
                 string part = llGetSubString(choice,6,-1);
-                list parts = [
-                    "Top",      RLV_STRIP_TOP,
-                    "Bra",      RLV_STRIP_BRA,
-                    "Bottom",   RLV_STRIP_BOTTOM,
-                    "Panties",  RLV_STRIP_PANTIES,
-                    "Shoes",    RLV_STRIP_SHOES
+                integer partN;
+                string rlv;
+                integer n;
+
+                list attachments = [
+                    "chin,chest,l forearm,left hand,left pec,left shoulder,l upper arm,r forearm,right hand,right pec,right shoulder,r upper arm,r forearm,right pec,stomach",
+                    "",
+                    "left hip,left lower leg,l upper leg,pelvis,right hip,right lower leg,r upper leg",
+                    "",
+                    "left foot,l lower leg,right foot,r lower leg"
                 ];
 
-                i = 0;
+                list layers = [
+                    "gloves,jacket,shirt",
+                    "undershirt",
+                    "pants,skirt",
+                    "underpants",
+                    "shoes,socks"
+                ]
 
-                // This allows an avi to have "barefeet" and "shoes" simultaneously:
-                // removing shoes puts on barefeet
-                if ((part == "Shoes") || (part == "ALL")) {
-                    if (barefeet != "") lmRunRLVas("Dress","attachallover:" + barefeet + "=force");
+                if (part == "ALL" || part == "Shoes")
+                    if (barefeet != "") rlv += "attachallover:" + barefeet + "=force,";
+
+                // These two parts DO have replicated code, but creating a function
+                // would use up more space probably - and more time.
+                if (part == "ALL") {
+                    n = 5;
+                    while (n--) {
+                        rlv += "detach:" + llDumpList2String(llCSV2List(llList2String(attachments,n)), "=force,detach:") + "=force" +
+                               ",remoutfit:" + llDumpList2String(llCSV2List(llList2String(layers,n)), "=force,remoutfit:") + "=force";
+                        lmRunRLVas("Dress", rlv);
+                    }
+
+                    if (extra != "") rlv += extra;
+                    lmRunRLVas("Dress", rlv);
+                }
+                else {
+                    if (part == "Top")           partN = RLV_STRIP_TOP;
+                    else if (part == "Bra")      partN = RLV_STRIP_BRA;
+                    else if (part == "Bottom")   partN = RLV_STRIP_BOTTOM;
+                    else if (part == "Panties")  partN = RLV_STRIP_PANTIES;
+                    else if (part == "Shoes")    partN = RLV_STRIP_SHOES;
+
+                    rlv += "detach:" + llDumpList2String(llCSV2List(llList2String(attachments,partN)), "=force,detach:") + "=force" +
+                           ",remoutfit:" + llDumpList2String(llCSV2List(llList2String(layers,partN)), "=force,remoutfit:") + "=force";
+
+                    lmRunRLVas("Dress", rlv);
+                    lmInternalCommand("strip",part);
                 }
             }
 #endif

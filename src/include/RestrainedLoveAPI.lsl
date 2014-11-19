@@ -26,4 +26,10 @@
 #define RLV_STRIP_PANTIES_OUTFIT "remoutfit:underpants=force"
 #define RLV_STRIP_SHOES_OUTFIT "remoutfit:shoes=force,remoutfit:socks=force"
 
+// Strip indexes
+#define RLV_STRIP_TOP 0
+#define RLV_STRIP_BRA 1
+#define RLV_STRIP_BOTTOM 2
+#define RLV_STRIP_PANTIES 3
+#define RLV_STRIP_SHOES 4
 #endif // RLV_API_LSL
