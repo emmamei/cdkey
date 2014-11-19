@@ -217,14 +217,26 @@ list BuiltinControllers = BUILTIN_CONTROLLERS;
 #include "LinkMessage.lsl"
 
 integer cdGetControllerStatus(key id) {
-    if (cdIsBuiltinController(id)) {
-        return TRUE;
-    }
+//  if (cdIsBuiltinController(id)) {
+//      return TRUE;
+//  }
+//  else {
+//      if (cdIsDoll(id)) return (!cdControllerCount());
+//      else return (cdIsUserController(id));
+//  }
+//  return FALSE;
+
+    // If the Dolly is a Builtin Controller, it makes
+    // no difference: they are still normal to the Key here.
+    // If the id belongs to a Builtin Controller who is
+    // NOT the Dolly, then is ok
+    //
+    if (cdIsDoll(id))
+        return (!cdControllerCount());
     else {
-        if (cdIsDoll(id)) return (!cdControllerCount());
+        if (cdIsBuiltinController(id)) return TRUE;
         else return (cdIsUserController(id));
     }
-    return FALSE;
 }
 
 // GLOBAL_DEFINES
