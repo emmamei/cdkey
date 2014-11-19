@@ -277,27 +277,14 @@ default
                 string barString;
                 list tmpList;
 
-                // we don't want controllers to be added to the blacklist;
-                // likewise, we don't want to allow those on the blacklist
-                // to be controllers. barlist represents the "contra" list
-                // opposing the added-to list.
-                //
-                list barList;
-
-                // These lists become mangled sometimes for reasons unclear creating a new handler for both here
-                // with a more thorough validation process which should also be somewhat more fault tollerant in
-                // the event that a list does become corrupted also.
-
                 // Initial settings
                 if (cmd != "remBlacklist") {
                     typeString = "controller";
                     tmpList = controllers;
-                    barList = blacklist;
                 }
                 else {
                     typeString = "blacklist";
                     tmpList = blacklist;
-                    barList = controllers;
                 }
 
                 if (split = []) {
