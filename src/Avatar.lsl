@@ -721,7 +721,7 @@ default {
                     // Generate the Strip Menu and display
                     list buttons = llListSort(["Strip Top", "Strip Bra", "Strip Bottom", "Strip Panties", "Strip Shoes", "Strip ALL"], 1, 1);
 
-                    //cdDialogListen();
+                    cdDialogListen();
                     llDialog(id, "Note that it doesn't make much sense to strip underwear or bras without stripping the top first.\n\nTake off:",
                         dialogSort(buttons + MAIN), dialogChannel); // Do strip menu
                     return;
@@ -747,7 +747,7 @@ default {
                     "pants,skirt",
                     "underpants",
                     "shoes,socks"
-                ]
+                ];
 
                 // These two parts DO have replicated code, but creating a function
                 // would use up more space probably - and more time.
@@ -774,10 +774,11 @@ default {
 
                 // We separate this out for two reasones: a) saves space; b) separates the RLV
                 // processes so we can be sure this runs after the stripping process
-                if (part == "ALL" || part == "Shoes")
+                if (part == "ALL" || part == "Shoes") {
                     if (barefeet != "") lmRunRLVas("Dress","attachallover:" + barefeet + "=force,");
+                }
 
-                lmInternalCommand("strip",part);
+                lmInternalCommand("strip", part, id);
             }
 #endif
             else if (choice == "Carry") {
@@ -883,7 +884,7 @@ default {
 
                     msg = "Select the pose to put dolly into";
                     if (keyAnimation) msg += " (current pose is " + keyAnimation + ")";
-                    //cdDialogListen();
+                    cdDialogListen();
                     llDialog(id, msg, poseList, dialogChannel);
                 }
             }
