@@ -856,7 +856,7 @@ default {
 
                 if (collapsed == JAMMED) {
                     cdDialogListen();
-                    llDialog(id, "The Dolly cannot be wound while " + llToLower(pronounHerDoll) + " key is being held.", ["Help..."], dialogChannel);
+                    llDialog(id, "The Dolly cannot be wound while " + llToLower(pronounHerDoll) + " key is being held.", ["Help...", "OK"], dialogChannel);
                     return;
                 }
 

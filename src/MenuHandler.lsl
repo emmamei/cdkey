@@ -528,9 +528,9 @@ default
                         else {
                             if (isDoll) msg = "You are being carried by " + carrierName + ". ";
                             else msg = dollName + " is currently being carried by " + carrierName + ". They have full control over this doll.\n";
-                            menu = ["Help..."];
+
                             cdDialogListen();
-                            llDialog(id, timeleft + msg, [ "Help..." ], dialogChannel);
+                            llDialog(id, timeleft + msg, [ "Help...", "OK" ], dialogChannel);
                             return;
                         }
                     }
@@ -823,10 +823,6 @@ default
         name = llGetDisplayName(id); // FIXME: name can get set to ""
 
         integer space = llSubStringIndex(choice, " ");
-        // 04-03-2014 Dev-Note:
-        // Varnames for these two sub strings have changed, current usage makes them misleading.
-        string beforeSpace = llStringTrim(llGetSubString(choice, 0, space),STRING_TRIM);
-        string afterSpace = llDeleteSubString(choice, 0, space);
 
         //debugSay(3, "DEBUG-MENU", "Button clicked: " + choice + ", afterSpace=\"" + afterSpace + "\", beforeSpace=\"" + beforeSpace + "\"");
 
@@ -875,6 +871,9 @@ default
                 }
             }
             else {
+                string beforeSpace = llStringTrim(llGetSubString(choice, 0, space),STRING_TRIM);
+                string afterSpace = llDeleteSubString(choice, 0, space);
+
                 // Space Found in Menu Selection
                      if (afterSpace == "Visible") lmSendConfig("isVisible", (string)(visible = (beforeSpace == CROSS)));
                 else if (afterSpace == "AFK") {
@@ -933,7 +932,7 @@ default
                     }
                     else if (beforeSpace == CIRCLE_MINUS) {
                         if (dialogKeys == []) {
-                            msg = "You currently have nobody listed in your " + msg + " did you mean to select the add option instead?.";
+                            msg = "Your " + msg + " is empty.";
                             llRegionSayTo(id, 0, msg);
                             return;
                         }
