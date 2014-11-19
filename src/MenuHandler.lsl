@@ -135,7 +135,7 @@ doDialogChannelWithReset() {
 doDialogChannel() {
     if (dialogChannel != 0) {
         // This assumes that if dialogChannel is set, it is open
-        //cdListenerActivate(dialogHandle);
+        cdListenerActivate(dialogHandle);
         lmSendConfig("dialogChannel", (string)(dialogChannel));
         return;
     }
@@ -492,11 +492,11 @@ default
 
                 if (llListFindList(blacklist, [ (string)id ]) == NOT_FOUND) {
                     // Cache access test results
-                    integer hasCarrier      = cdCarried()  ;
-                    integer isCarrier       = cdIsCarrier(id);
-                    integer isController    = cdIsController(id) || cdIsBuiltinController(id);
-                    integer isDoll          = cdIsDoll(id);
-                    integer numControllers  = cdControllerCount();
+                    //integer hasCarrier      = cdCarried();
+                    //integer isCarrier       = cdIsCarrier(id);
+                    //integer isController    = cdIsController(id);
+                    //integer isDoll          = cdIsDoll(id);
+                    //integer numControllers  = cdControllerCount();
 
                     // Compute "time remaining" message for mainMenu/windMenu
                     string timeleft;
@@ -521,7 +521,7 @@ default
                             msg = "Uncarry frees " + dollName + " when you are done with " + pronounHerDoll;
                             menu = ["Uncarry"];
                         }
-                        else if (cdIsBuiltinController(id)) {
+                        else if (cdIsController(id)) {
                             msg = dollName + " is being carred by " + carrierName + ". ";
                             menu = ["Uncarry"];
                         }
@@ -710,6 +710,8 @@ default
         if (blacklistHandle) { llListenRemove(blacklistHandle); blacklistHandle = 0; }
         if (controlHandle)   { llListenRemove(controlHandle);     controlHandle = 0; }
 
+        if (dialogHandle) cdListenerDeactivate(dialogHandle);
+
         //cdListenerDeactivate(dialogHandle);
         dialogKeys = [];
         dialogButtons = [];
@@ -813,7 +815,7 @@ default
 
         // Cache access test results
         integer hasCarrier      = cdCarried();
-        integer isCarrier       = cdIsCarrier(id)       || cdIsBuiltinController(id);
+        integer isCarrier       = cdIsCarrier(id);
         integer isController    = cdIsController(id);
         integer isDoll          = cdIsDoll(id);
         integer numControllers  = cdControllerCount();
@@ -839,21 +841,19 @@ default
 
             if (space == NOT_FOUND) {
                 if (choice == "Options...") {
+
                     string msg; list pluslist;
-                    if (isDoll) {
+
+                    if (isDoll || cdIsBuiltinController(id)) {
                         msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation.";
 
-                        pluslist += [ "Type...", "Access..." ];
-
-                        if (isController) pluslist += "Abilities...";
+                        pluslist += [ "Type...", "Access...", "Abilities..." ];
                     }
-                    else if (isController) {
+                    else if (cdIsUserController) {
 
                         msg = "See " + WEB_DOMAIN + "controller.htm. Choose what you want to happen.";
-
                         pluslist += [ "Abilities...", "Drop Control" ];
 
-                        if (llListFindList(BuiltinControllers, [(string)id]) != -1) pluslist += [ "Access..." ];
                     }
                     else return;
 
@@ -936,28 +936,37 @@ default
                             llRegionSayTo(id, 0, msg);
                             return;
                         }
-                        else msg = "Choose a person to remove from your " + msg;
+                        else {
+                            if (cdIsDoll(id)) msg = "Choose a person to remove from your " + msg;
+                            else msg = "Choose a person to remove from Dolly's " + msg;
+                        }
 
                         cdDialogListen();
                         llDialog(id, msg, dialogSort(llListSort(dialogButtons, 1, 1) + MAIN), activeChannel);
                         llSetTimerEvent(MENU_TIMEOUT);
                     }
                     else if (beforeSpace == "List") {
-                        if (dialogNames == []) msg = "Your " + msg + " is empty.";
+                        if (dialogNames == [])
+                            if (cdIsDoll(id)) msg = "Your " + msg + " is empty.";
+                            else msg = "Doll's " + msg + " is empty.";
                         else {
-                            msg = "Current " + msg + ":";
-                            for (i = 0; i < n; i++) msg += "\n" + (string)(i+1) + ". " + llList2String(dialogNames, i);
+                            if (cdIsDoll(id)) msg = "Current " + msg + ":";
+                            else msg = "Doll's current " + msg + ":";
+
+                            i = n + 1;
+                            while (i--)
+                                msg += "\n" + (string)(n - i + 1) + ". " + llList2String(dialogNames, -i);
                         }
-                        llOwnerSay(msg);
+                        llRegionSayTo(id, 0, msg);
                     }
                 }
-                else if (isController && choice == "Drop Control") {
-                    integer index = llListFindList(controllers, [ (string)id ]);
+                else if (cdIsUserController() && choice == "Drop Control") {
+                    integer index;
 
-                    if (index != -1) {
+                    if ((index = llListFindList(controllers, [ id ])) != NOT_FOUND) {
                         controllers = llDeleteSubList(controllers, index, index + 1);
                         lmSendConfig("controllers", llDumpList2String(controllers, "|"));
-                        lmSendToAgent("You are no longer controller of this key.", id);
+                        lmSendToAgent("You are no longer a controller of this Dolly.", id);
                     }
                     //else {
                     //    llSay(DEBUG_CHANNEL, "Drop Control option triggered by non-controller!");
@@ -1088,10 +1097,10 @@ default
             if (channel == blacklistChannel) {
 
                 // shutdown the listener
-                if (blacklistHandle) {
+                //if (blacklistHandle) {
                     llListenRemove(blacklistHandle);
                     blacklistHandle = 0;
-                }
+                //}
 
                 if (llListFindList(controllers, [uuid,name]) == NOT_FOUND) lmInternalCommand("addBlacklist", (string)uuid + "|" + name, id);
                 else                                                       lmInternalCommand("remBlacklist", (string)uuid + "|" + name, id);
@@ -1099,22 +1108,19 @@ default
             else {
 
                 // shutdown the listener
-                if (controlHandle) {
+                //if (controlHandle) {
                     llListenRemove(controlHandle);
                     controlHandle = 0;
-                }
+                //}
 
                 if (llListFindList(controllers, [uuid,name]) == NOT_FOUND)  lmInternalCommand("addMistress", (string)uuid + "|" + name, id);
-                else if (cdIsBuiltinController(id))                         lmInternalCommand("remMistress", (string)uuid + "|" + name, id);
+                else if (cdIsController(id))                                lmInternalCommand("remMistress", (string)uuid + "|" + name, id);
             }
         }
 
-        // Ideally the listener should be closed here and only reopened when we spawn another menu.
-        // Other scripts also use the dialog listener created in this script.  Until they are written to send
-        // a dialogListen command whenever they respawn a dialog, we have to keep the listener open
-        // at any sign of usage.
-        cdListenerActivate(dialogHandle);
-        llSetTimerEvent(MENU_TIMEOUT);
+        // Every call to llDialog should be preceded by cdDialogListen
+        //cdListenerActivate(dialogHandle);
+        //llSetTimerEvent(MENU_TIMEOUT);
     }
 }
 
