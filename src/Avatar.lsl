@@ -722,7 +722,8 @@ default {
                     list buttons = llListSort(["Strip Top", "Strip Bra", "Strip Bottom", "Strip Panties", "Strip Shoes", "Strip ALL"], 1, 1);
 
                     //cdDialogListen();
-                    llDialog(id, "Take off:", dialogSort(buttons + MAIN), dialogChannel); // Do strip menu
+                    llDialog(id, "Note that it doesn't make much sense to strip underwear or bras without stripping the top first.\n\nTake off:",
+                        dialogSort(buttons + MAIN), dialogChannel); // Do strip menu
                     return;
                 }
 
@@ -748,21 +749,15 @@ default {
                     "shoes,socks"
                 ]
 
-                if (part == "ALL" || part == "Shoes")
-                    if (barefeet != "") rlv += "attachallover:" + barefeet + "=force,";
-
                 // These two parts DO have replicated code, but creating a function
                 // would use up more space probably - and more time.
                 if (part == "ALL") {
                     n = 5;
                     while (n--) {
-                        rlv += "detach:" + llDumpList2String(llCSV2List(llList2String(attachments,n)), "=force,detach:") + "=force" +
-                               ",remoutfit:" + llDumpList2String(llCSV2List(llList2String(layers,n)), "=force,remoutfit:") + "=force";
+                        rlv = "detach:" + llDumpList2String(llCSV2List(llList2String(attachments,n)), "=force,detach:") + "=force" +
+                              ",remoutfit:" + llDumpList2String(llCSV2List(llList2String(layers,n)), "=force,remoutfit:") + "=force";
                         lmRunRLVas("Dress", rlv);
                     }
-
-                    if (extra != "") rlv += extra;
-                    lmRunRLVas("Dress", rlv);
                 }
                 else {
                     if (part == "Top")           partN = RLV_STRIP_TOP;
@@ -771,12 +766,18 @@ default {
                     else if (part == "Panties")  partN = RLV_STRIP_PANTIES;
                     else if (part == "Shoes")    partN = RLV_STRIP_SHOES;
 
-                    rlv += "detach:" + llDumpList2String(llCSV2List(llList2String(attachments,partN)), "=force,detach:") + "=force" +
-                           ",remoutfit:" + llDumpList2String(llCSV2List(llList2String(layers,partN)), "=force,remoutfit:") + "=force";
+                    rlv = "detach:" + llDumpList2String(llCSV2List(llList2String(attachments,partN)), "=force,detach:") + "=force" +
+                          ",remoutfit:" + llDumpList2String(llCSV2List(llList2String(layers,partN)), "=force,remoutfit:") + "=force";
 
                     lmRunRLVas("Dress", rlv);
-                    lmInternalCommand("strip",part);
                 }
+
+                // We separate this out for two reasones: a) saves space; b) separates the RLV
+                // processes so we can be sure this runs after the stripping process
+                if (part == "ALL" || part == "Shoes")
+                    if (barefeet != "") lmRunRLVas("Dress","attachallover:" + barefeet + "=force,");
+
+                lmInternalCommand("strip",part);
             }
 #endif
             else if (choice == "Carry") {
