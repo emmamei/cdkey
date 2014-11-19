@@ -159,13 +159,12 @@ list outfitsPage(list outfitList) {
 // Should be current clothing folder
 
 setActiveFolder() {
-    //string oldActive = activeFolder;
-
-    // outfitsFolder defaults to "> Outfits" (no searches)
-    if (outfitsFolder == "") {
-        outfitsFolder = "> Outfits";
-        lmSendConfig("outfitsFolder", outfitsFolder);
-    }
+    // outfitsFolder is set by a search in the Transform script
+    //
+    //if (outfitsFolder == "") {
+    //    outfitsFolder = "> Outfits";
+    //    lmSendConfig("outfitsFolder", outfitsFolder);
+    //}
 
     // set activeFolder
     if (clothingFolder == "") activeFolder = outfitsFolder;
@@ -498,7 +497,8 @@ default {
 
                 if (choice == "OK") {
                     ; // No outfits: only OK is available
-                } else if (llGetSubString(choice, 0, 6) == "Outfits") {
+                }
+                else if (llGetSubString(choice, 0, 6) == "Outfits") {
                     if (!isDresser(id)) return;
 
                     if (choice == "Outfits Next") {
