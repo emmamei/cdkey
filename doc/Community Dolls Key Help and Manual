@@ -21,7 +21,7 @@ There many, many, many New Features - perhaps too many to list. Here are some of
 
 * Color of the gem can be changed - and it shines too!
 
-* The winding time can be changed, and multiple amounts can be presented to the winder.
+* The amount of time for each wind can be changed
 
 * Repeat windings are greatly simplified - and can be allowed, or not, as desired.
 
@@ -39,7 +39,7 @@ There many, many, many New Features - perhaps too many to list. Here are some of
 
 * When the Dolly goes into Away status, the Dolly automatically enters the "low power mode" (AFK).
 
-* An emergency winder is available on a limited basis.
+* An emergency winder is available on a limited basis (with a recharge time).
 
 * A chat interface is available.
 
@@ -128,7 +128,7 @@ On the initial menu seen after a Key is touched are the following buttons:
 
     * Wind
 
-    Wind up the dolly a certain amount, typically 30 or 60 minutes. If there are multiple amounts that can be chosen, a new menu will appear with the choices available. If the winding amount is fixed (i.e., not multiple amounts to choose from) then there will be no menu, just a normal winding. If the doll is fully wound by a wind, then the winding will not return to the menu. Another option will be present if a Dolly can be fully wound, "Wind Full", which will fully wind a dolly.
+    Wind up the dolly a certain amount, typically 30 or 60 minutes.
 
     Normally, the Dolly may be wound several times in a row by a winder.  If the Repeat Winding option is unset, then a Winder is not able to wind the Dolly repeatedly, but must be wound by different people in succession.
 
@@ -292,6 +292,10 @@ Options > Features
 
     A user may wind the Dolly over and over, until the Dolly's Key is fully wound. If this option is set, then a different user must wind the Dolly each sequential time: no user may wind two times in a row.
 
+    * Phrases
+
+    If the hypnotic phrases are on, a message will appear once every 60 seconds or so, a suggestion, to get the Doll to accept her new Type.
+
 Options > Key
 -------------
 
@@ -307,9 +311,9 @@ Options > Key
 
     The Maximum Time a Dolly may be wound. Typical maximums are 120 minutes or 180 minutes - but it can be made shorter or longer.
 
-    * Wind Times
+    * Wind Time
 
-    How much time is each wind? This option allows the Dolly to set the amount of time in each wind; multiple values are possible, in which case the winder gets to choose which one to use. If only one value is provided, then there is no winding time menu and a Wind is automatically done.
+    How much time is each wind? This option allows the Dolly to set the amount of time in each wind.
 
 Help/Support
 ------------
