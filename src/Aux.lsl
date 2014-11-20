@@ -437,7 +437,7 @@ default {
                 // Why allow listing an empty list? It is a way of confirming status to the
                 // viewer, with the appropriate message (already provided for)
                 //
-                if ((cdIsController(id)) && (cdControllerCount() > 0)) plusList =  "⊖ Controller";
+                if ((cdIsController(id)) && (cdControllerCount() > 0)) plusList = [ "⊖ Controller" ];
 
                 if (cdIsDoll(id)) {
                     plusList += [ "⊕ Blacklist", "List Blacklist" ];

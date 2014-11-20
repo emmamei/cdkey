@@ -492,11 +492,11 @@ default
 
                 if (llListFindList(blacklist, [ (string)id ]) == NOT_FOUND) {
                     // Cache access test results
-                    //integer hasCarrier      = cdCarried();
-                    //integer isCarrier       = cdIsCarrier(id);
-                    //integer isController    = cdIsController(id);
-                    //integer isDoll          = cdIsDoll(id);
-                    //integer numControllers  = cdControllerCount();
+                    integer hasCarrier      = cdCarried();
+                    integer isCarrier       = cdIsCarrier(id);
+                    integer isController    = cdIsController(id);
+                    integer isDoll          = cdIsDoll(id);
+                    integer numControllers  = cdControllerCount();
 
                     // Compute "time remaining" message for mainMenu/windMenu
                     string timeleft;
@@ -849,7 +849,7 @@ default
 
                         pluslist += [ "Type...", "Access...", "Abilities..." ];
                     }
-                    else if (cdIsUserController) {
+                    else if (cdIsUserController(id)) {
 
                         msg = "See " + WEB_DOMAIN + "controller.htm. Choose what you want to happen.";
                         pluslist += [ "Abilities...", "Drop Control" ];
@@ -946,21 +946,22 @@ default
                         llSetTimerEvent(MENU_TIMEOUT);
                     }
                     else if (beforeSpace == "List") {
-                        if (dialogNames == [])
+                        if (dialogNames == []) {
                             if (cdIsDoll(id)) msg = "Your " + msg + " is empty.";
                             else msg = "Doll's " + msg + " is empty.";
+                        }
                         else {
                             if (cdIsDoll(id)) msg = "Current " + msg + ":";
                             else msg = "Doll's current " + msg + ":";
 
                             i = n + 1;
                             while (i--)
-                                msg += "\n" + (string)(n - i + 1) + ". " + llList2String(dialogNames, -i);
+                                msg += "\n" + (string)(n - i + 1) + ". " + llList2String(dialogNames, n - i);
                         }
                         llRegionSayTo(id, 0, msg);
                     }
                 }
-                else if (cdIsUserController() && choice == "Drop Control") {
+                else if (cdIsUserController(id) && choice == "Drop Control") {
                     integer index;
 
                     if ((index = llListFindList(controllers, [ id ])) != NOT_FOUND) {

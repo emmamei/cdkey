@@ -902,14 +902,12 @@ default {
                     lmSendConfig("winderID", (string)(winderID = id));
                 }
 
-                // Uncollapse any non type 2 collapse that may be active after first confirming
-                // that we do definately have positive time left now. This test calls the uncollapse
-                // function without reqard to the collapse state reported by this script and thus
-                // it can and will by design be triggered when the doll is not collapsed at all.
-                // This suffices both to uncollapse a doll when wound but further serves to make
-                // any valid wind (attempt) restorative for an out of sync or false collapse
-                // state whether in this script or any other.
-                if ((timeLeftOnKey > 0.0) && (collapsed != JAMMED)) collapse(NOT_COLLAPSED);
+                // If we have time left and are not jammed, then "uncollapse" by calling the
+                // collapse function with NOT_COLLAPSED. Note that this is repetitive and in
+                // the best of worlds doesn't serve any purpose: if there is time left on the
+                // clock then we should not be down.  However this makes SURE we are not down.
+                //
+                if ((timeLeftOnKey > 0.0) && (collapsed == NO_TIME)) collapse(NOT_COLLAPSED);
             }
 
             // Note that Max Times are "m" and Wind Times are "min" - this is on purpose to
