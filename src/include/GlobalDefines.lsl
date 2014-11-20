@@ -55,8 +55,11 @@
 #define LOCKMEISTER_CHANNEL -8888
 // Seconds per minute
 #define SEC_TO_MIN 60.0
-// Community dolls website
+// Community Dolls web URLs
+#define WEB_DEV "https://github.com/emmamei/cdkey/tree/Development"
 #define WEB_DOMAIN "http://communitydolls.com/"
+#define WEB_BLOG "http://communitydolls.blogspot.com/"
+#define WEB_GROUP "secondlife:///app/group/0f0c0dd5-a611-2529-d5c7-1284fb719003/about"
 // Maximum number of @getinvworn failures while dressing
 #define MAX_DRESS_FAILURES 5
 // This defines the config settings that we never expedite HTTP POST for

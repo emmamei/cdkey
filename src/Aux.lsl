@@ -49,9 +49,6 @@ integer wearLock;
 integer rezzed;
 integer primGlow = 1;
 integer primLight = 1;
-integer visitDollhouse;
-integer targetHandle;
-integer factoryReset;
 integer textboxChannel;
 integer textboxHandle;
 integer textboxType;
@@ -110,15 +107,14 @@ default {
         rezzed = 1;
     }
 
-    //----------------------------------------
-    // CHANGED
-    //----------------------------------------
-    changed(integer change) {
-        if (change & CHANGED_TELEPORT) {
-            visitDollhouse = 0;
-            lmRequest = llRequestInventoryData(LANDMARK_CDROOM);
-        }
-    }
+//  //----------------------------------------
+//  // CHANGED
+//  //----------------------------------------
+//  changed(integer change) {
+//      if (change & CHANGED_TELEPORT) {
+//          ;
+//      }
+//  }
 
     //----------------------------------------
     // LINK MESSAGE
@@ -133,27 +129,7 @@ default {
         code      =  i & 0x000003FF;
         split     = llDeleteSubList(split, 0, 0 + optHeader);
 
-        if ((code == 11) || (code == 12)) {
-            msg = llList2String(split, 0);
-            debugSay(5, "DEBUG", "Code #" + (string)code + ": message = " + msg);
-
-            sendMsg(id, msg);
-
-            if (code == 12)
-                if (!cdIsDoll(id))
-                    sendMsg(dollID, msg);
-        }
-        else if (code == 15) {
-            msg = llList2String(split, 0);
-            i = 0;
-            for (i = 0; i < llGetListLength(cdList2ListStrided(controllers, 0, -1, 2)); i++) {
-                string targetName = llList2String(controllers, i * 2 + 1);
-                key targetKey = llList2Key(controllers, i * 2);
-                debugSay(7, "DEBUG", "MistressMsg To: " + targetName + " (" + (string)targetKey + ")\n" + msg);
-                sendMsg(targetKey, msg);
-            }
-        }
-        else if (code == 102) {
+        if (code == 102) {
             configured = 1;
             scaleMem();
         }
@@ -392,7 +368,7 @@ default {
             if (choice == "Help...") {
                 msg = "Here you can find various options to get help with your " +
                             "key and to connect with the community.";
-                list plusList = [ "Join Group", "Visit Dollhouse", "Visit Website", "Visit Blog" ];
+                list plusList = [ "Join Group", "Visit Dollhouse", "Visit Website", "Visit Blog", "Visit Development" ];
                 if (llGetInventoryType(NOTECARD_HELP) == INVENTORY_NOTECARD) plusList += [ "Help Notecard" ];
 
                 // Remember, a doll cannot be her own controller, unless there is no other
@@ -401,16 +377,22 @@ default {
                 cdDialogListen();
                 llDialog(id, msg, dialogSort(plusList + MAIN), dialogChannel);
             }
-            else if (choice == "Help Notecard") {
+            else if (choice == "Help Notecard")
                 llGiveInventory(id,NOTECARD_HELP);
-            }
             else if (choice == "Visit Dollhouse") {
+                // If is Dolly, whisk Dolly away to Location of Landmark
+                // If is someone else, give Landmark to them
                 if (cdIsDoll(id)) llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|TP|" + LANDMARK_CDROOM, id);
                 else llGiveInventory(id, LANDMARK_CDROOM);
             }
-            else if (choice == "Join Group") {
-                lmSendToAgent("Here is your link to the community dolls group profile secondlife:///app/group/0f0c0dd5-a611-2529-d5c7-1284fb719003/about",id);
-            }
+            else if (choice == "Visit Development")
+                lmSendToAgent("Here is your link to the Community Doll Key development: " + WEB_DEV, id);
+            else if (choice == "Visit Website")
+                lmSendToAgent("Here is your link to the Community Dolls group blog: " + WEB_BLOG, id);
+            else if (choice == "Visit Blog")
+                lmSendToAgent("Here is your link to the Community Dolls group website: " + WEB_DOMAIN, id);
+            else if (choice == "Join Group")
+                lmSendToAgent("Here is your link to the Community Dolls group profile: " + WEB_GROUP, id);
             else if (choice == "Access...") {
                 //debugSay(5, "DEBUG-AUX", "Dialog channel: " + (string)dialogChannel);
                 msg = "Key Access Menu.\n" +
@@ -446,9 +428,6 @@ default {
 
                 cdDialogListen();
                 llDialog(id, msg, dialogSort(plusList + MAIN), dialogChannel);
-            }
-            else if (choice == "Visit Dollhouse") {
-                visitDollhouse += 1;
             }
             if (choice == "Abilities...") {
                 msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
@@ -559,7 +538,7 @@ default {
                 if (textboxHandle) llListenRemove(textboxHandle);
                 textboxHandle = cdListenUser(textboxChannel, id);
                 listenTime = llGetTime() + 60.0;
-                if (!factoryReset) llSetTimerEvent(60.0);
+                llSetTimerEvent(60.0);
             }
         }
 
@@ -624,50 +603,6 @@ default {
             if (textboxType == 1) lmMenuReply("Gem Colour", name, id);
             else lmMenuReply("Key...", name, id);
         }
-    }
-
-    //----------------------------------------
-    // DATASERVER
-    //----------------------------------------
-    dataserver(key request, string data) {
-        integer index;
-
-#ifdef NO_DOLLMSG
-        if (request == ncRequestDollMessage) {
-            i = 2;
-            list findList = [ "windRate", "minsLeft" ];
-            list replaceList = [ windRate, minsLeft ];
-            string find;
-            string replace;
-
-            for (; i; i--) {
-                find = "%" + llList2String(findList, i) + "%";
-                replace = llList2String(replaceList, i);
-
-                while ( ( index = llSubStringIndex(data, find) ) != -1) {
-                    data = llInsertString(llDeleteSubString(data, index, index + llStringLength(find) - 1), index, replace);
-                }
-            }
-            llOwnerSay(data);
-        }
-        else
-#endif
-        if (request == lmRequest) {
-            vector lmData = (vector)data;
-
-            if ((lmData.x < 256) && (lmData.y < 256)) {
-                targetHandle = llTarget(lmData, 1.0);
-                llMoveToTarget(lmData, 0.000001);
-            }
-        }
-    }
-
-    //----------------------------------------
-    // AT TARGET
-    //----------------------------------------
-    at_target(integer target, vector targetPos, vector ourPos) {
-        llTargetRemove(target);
-        llStopMoveToTarget();
     }
 
     //----------------------------------------

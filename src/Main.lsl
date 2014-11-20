@@ -157,11 +157,11 @@ ifPermissions() {
         return;
     }
 
-    if (perm & PERMISSION_ATTACH && !cdAttached()) llAttachToAvatar(ATTACH_BACK);
-    else if (!cdAttached() && llGetTime() > 120.0) {
-        llOwnerSay("@acceptpermission=add");
-        llRequestPermissions(dollID, PERMISSION_ATTACH);
-    }
+//  if (perm & PERMISSION_ATTACH && !cdAttached()) llAttachToAvatar(ATTACH_BACK);
+//  else if (!cdAttached() && llGetTime() > 120.0) {
+//      llOwnerSay("@acceptpermission=add");
+//      llRequestPermissions(dollID, PERMISSION_ATTACH);
+//  }
 }
 #endif
 
@@ -970,7 +970,7 @@ default {
 
 #ifdef LOCKON
     run_time_permissions(integer perm) {
-        if (!cdAttached()) llOwnerSay("@acceptpermission=rem");
+//      if (!cdAttached()) llOwnerSay("@acceptpermission=rem");
         ifPermissions();
     }
 #endif
