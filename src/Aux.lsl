@@ -392,16 +392,11 @@ default {
             if (choice == "Help...") {
                 msg = "Here you can find various options to get help with your " +
                             "key and to connect with the community.";
-                list plusList = [ "Join Group", "Visit Dollhouse" ];
+                list plusList = [ "Join Group", "Visit Dollhouse", "Visit Website", "Visit Blog" ];
                 if (llGetInventoryType(NOTECARD_HELP) == INVENTORY_NOTECARD) plusList += [ "Help Notecard" ];
 
-                // This assumes a Doll cannot be her own controller...
-                if (cdIsController(id)) plusList += "Reset Scripts";
-#ifdef UPDATE_SCRIPT
-                if (cdIsDoll(id)) plusList += ["Reset Scripts","Check Update","Factory Reset"];
-#else
-                if (cdIsDoll(id)) plusList += ["Reset Scripts","Factory Reset"];
-#endif
+                // Remember, a doll cannot be her own controller, unless there is no other
+                if (cdIsController(id)) plusList += "Reset Key";
 
                 cdDialogListen();
                 llDialog(id, msg, dialogSort(plusList + MAIN), dialogChannel);
@@ -551,7 +546,7 @@ default {
             }
 
             // Textbox generating menus
-            if (choice == "Custom..." || choice == "Dolly Name..." || choice == "Factory Reset") {
+            if (choice == "Custom..." || choice == "Dolly Name..." ) {
                 if (choice == "Custom...") {
                     textboxType = 1;
                     llTextBox(id, "Here you can input a custom colour value\nCurrent colour: " + curGemColour + "\nEnter vector eg <0.900, 0.500, 0.000>\nOr Hex eg #A4B355\nOr RGB eg 240, 120, 10", textboxChannel);
@@ -559,12 +554,6 @@ default {
                 else if (choice == "Dolly Name...") {
                     textboxType = 2;
                     llTextBox(id, "Here you can change your dolly name from " + dollyName + " to a name of your choice.", textboxChannel);
-                }
-                else if (llGetSubString(choice,0,12) == "Factory Reset") {
-                    textboxType = 4;
-                    msg = "Are you sure you want to factory reset, all controllers and settings will be lost.  Your controllers notified if you proceed.  Type FACTORY RESET bellow to confirm.";
-                    if(llGetSubString(choice,14,14) == "2") msg = "You must type the words FACTORY RESET exactly and in capitals to confirm.";
-                    llTextBox(dollID, msg, textboxChannel);
                 }
 
                 if (textboxHandle) llListenRemove(textboxHandle);
@@ -602,7 +591,6 @@ default {
             // Text box input - 4 types
             //   1: Gem Color
             //   2: Dolly Name
-            //   4: Safeword Confirm
 
             // Type 1 = Custom Gem Color
             if (textboxType == 1) {
@@ -627,21 +615,6 @@ default {
 
             // Type 2 = New Dolly Name
             else if (textboxType == 2) lmSendConfig("dollyName", choice);
-
-            // Type 4 = Safeword Confirm
-            else if (textboxType == 4) {
-                if (choice == "FACTORY RESET") {
-                    lmSendToController(dollName + " has initiated a factory reset all key settings have been reset.");
-                    lmSendConfig("SAFEWORD", "1");
-                    llOwnerSay("You have initiated a factory reset and your key will reset in 30 seconds.");
-                    factoryReset = 1;
-                    llSetTimerEvent(30.0);
-                }
-                else {
-                    lmMenuReply("Factory Reset", name, id);
-                }
-                return;
-            }
 
             // After processing the choice, what menu do we give back?
             //
@@ -702,7 +675,6 @@ default {
     //----------------------------------------
     timer() {
         if (memCollecting) lmMemReport(0.0, memRequested);
-        else if (factoryReset) cdResetKey();
         else if (textboxHandle) {
             if (listenTime < llGetTime()) {
                 llListenRemove(textboxHandle);

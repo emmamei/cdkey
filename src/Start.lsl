@@ -593,7 +593,7 @@ default {
             string selection = llList2String(split, 0);
             string name = llList2String(split, 1);
 
-            if (selection == "Reset Scripts") {
+            if (selection == "Reset Key") {
                 if (cdIsController(id)) cdResetKey();
             }
 
