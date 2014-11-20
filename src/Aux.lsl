@@ -370,6 +370,7 @@ default {
                             "key and to connect with the community.";
                 list plusList = [ "Join Group", "Visit Dollhouse", "Visit Website", "Visit Blog", "Visit Development" ];
                 if (llGetInventoryType(NOTECARD_HELP) == INVENTORY_NOTECARD) plusList += [ "Help Notecard" ];
+                if ((!cdIsDoll(id)) && (llGetInventoryType(OBJECT_KEY) == INVENTORY_OBJECT)) plusList += [ "Get Key" ];
 
                 // Remember, a doll cannot be her own controller, unless there is no other
                 if (cdIsController(id)) plusList += "Reset Key";
@@ -378,6 +379,8 @@ default {
                 llDialog(id, msg, dialogSort(plusList + MAIN), dialogChannel);
             }
             else if (choice == "Help Notecard")
+                llGiveInventory(id,NOTECARD_HELP);
+            else if (choice == "Get Key")
                 llGiveInventory(id,NOTECARD_HELP);
             else if (choice == "Visit Dollhouse") {
                 // If is Dolly, whisk Dolly away to Location of Landmark

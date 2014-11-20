@@ -39,6 +39,8 @@
 #define LANDMARK_CDROOM "Community Dolls at BDSM Pasha Desires"
 // Name of the help notecard
 #define NOTECARD_HELP "Community Dolls Key Help and Manual"
+// Name of the key object
+#define OBJECT_KEY "Community Dolls Key"
 // Name of the preferences notecard
 #define NOTECARD_PREFERENCES "Preferences"
 // Name of the intro text notecard
