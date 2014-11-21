@@ -208,23 +208,26 @@ processConfiguration(string name, string value) {
 
     integer i;
     list configs = [ "barefeet path", "helpless dolly", "quiet key", "outfits path",
-                     "busy is away", "can afk", "can fly", "can pose", "can sit", "can stand",
-                     "can wear", "detachable", "doll type", "pleasure doll", "pose silence",
+                     "busy is away", "can afk", "can fly", "poseable", "can sit", "can stand",
+                     "can dress", "detachable", "doll type", "pleasure doll", "pose silence",
                      "auto tp", "outfitable", "initial time", "max time",
                      "afk rlv", "base rlv", "collapse rlv", "pose rlv" , "show phrases",
+                     "dressable", "carryable", "repeatable wind",
 #ifdef DEVELOPER_MODE
                      "debug level"
 #endif
-                     ];
+                   ];
+
     list sendName = [ "barefeet", "helpless", "quiet", "outfitsFolder",
-                     "busyIsAway", "canAfk", "canFly", "canPose", "canSit", "canStand",
-                     "canWear", "detachable", "dollType", "pleasureDoll", "poseSilence",
-                     "autoTP", "canDress", "timeLeftOnKey", "keyLimit",
-                     "userAfkRLVcmd", "userBaseRLVcmd", "userCollapseRLVcmd", "userPoseRLVcmd" , "showPhrases",
+                      "busyIsAway", "canAfk", "canFly", "canPose", "canSit", "canStand",
+                      "canDressSelf", "detachable", "dollType", "pleasureDoll", "poseSilence",
+                      "autoTP", "canDress", "timeLeftOnKey", "keyLimit",
+                      "userAfkRLVcmd", "userBaseRLVcmd", "userCollapseRLVcmd", "userPoseRLVcmd" , "showPhrases",
+                      "canDress", "canCarry", "canRepeat",
 #ifdef DEVELOPER_MODE
-                     "debugLevel"
+                      "debugLevel"
 #endif
-                     ];
+                    ];
 
     list internals = [ "wind time", "blacklist key", "controller key" ];
     list cmdName = [ "setWindTime", "addBlacklist", "addMistress" ];
@@ -246,15 +249,21 @@ processConfiguration(string name, string value) {
         lmInternalCommand(cdListElement(cmdName,i), value, NULL_KEY);
     }
     else if (name == "doll gender") {
-        setGender(value);
+        // This only accepts valid values
+        if (value == "female" || value == "woman" || value == "girl") setGender("female");
+        else if (value == "male" || value == "man" || value == "boy") setGender("male");
     }
     else if (name == "blacklist key") {
-        if (llListFindList(blacklist, [ value ]) == NOT_FOUND)
-            lmSendConfig("blacklist", llDumpList2String((blacklist += [ value, "" ]), "|"));
+        if (llList2Key([ value ], 0) != NULL_KEY) {
+            if (llListFindList(blacklist, [ value ]) == NOT_FOUND)
+                lmSendConfig("blacklist", llDumpList2String((blacklist += [ "", value ]), "|"));
+        }
     }
     else if (name == "controller key") {
-        if (llListFindList(controllers, [ value ]) == NOT_FOUND)
-            lmSendConfig("controllers", llDumpList2String((controllers += [ value, "" ]), "|"));
+        if (llList2Key([ value ], 0) != NULL_KEY) {
+            if (llListFindList(controllers, [ value ]) == NOT_FOUND)
+                lmSendConfig("controllers", llDumpList2String((controllers += [ "", value ]), "|"));
+        }
     }
     //--------------------------------------------------------------------------
     // Disabled for future use, allows for extention scripts to add support for
