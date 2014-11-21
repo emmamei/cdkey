@@ -8,12 +8,12 @@ key carrierID               = NULL_KEY;
 key dresserID               = NULL_KEY;
 key dollID                  = NULL_KEY;
 key poserID                 = NULL_KEY;
-key uniqueID		    	= NULL_KEY;
+key uniqueID                = NULL_KEY;
 key keyAnimationID          = NULL_KEY;
 
 list BuiltinControllers     = BUILTIN_CONTROLLERS;
 list controllers            = [];
-list blacklist		    	= [];
+list blacklist              = [];
 
 string carrierName;
 string dresserName;
@@ -26,7 +26,7 @@ string simRating;
 float dilationMedian        = 1.0;
 float keyLimit              = 10800.0;
 float timeLeftOnKey         = 1800.0;
-float windamount            = 1800.0;
+float windAmount            = 1800.0;
 float baseWindRate          = RATE_STANDARD;
 float displayWindRate	    = RATE_STANDARD;
 float windRate              = RATE_STANDARD;
@@ -41,7 +41,7 @@ integer canPose             = 1;
 integer canRepeat           = 1;
 integer canSit              = 1;
 integer canStand            = 1;
-integer canDressSelf             = 1;
+integer canDressSelf        = 1;
 integer canUnwear           = 1;
 integer collapsed;
 integer configured;
@@ -62,13 +62,10 @@ integer visible             = 1;
 
 //integer initState	    = 104;
 integer initCode;
-#ifdef DEVELOPER_MODE
+
+#ifdef DEBUG_MODE
 integer debugLevel          = DEBUG_LEVEL;
-#else
-#ifdef TESTER_MODE
-integer debugLevel          = DEBUG_LEVEL;
-#endif //TESTER_MODE
-#endif //DEVELOPER_MODE
+#endif
 
 integer dialogChannel;
 integer dialogHandle;
