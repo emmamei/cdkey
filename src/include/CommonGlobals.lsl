@@ -38,7 +38,7 @@ integer canCarry            = 1;
 integer canDress            = 1;
 integer canFly              = 1;
 integer canPose             = 1;
-integer canRepeat           = 1;
+integer canRepeatWind       = 1;
 integer canSit              = 1;
 integer canStand            = 1;
 integer canDressSelf        = 1;
@@ -60,7 +60,6 @@ integer signOn;
 integer takeoverAllowed;
 integer visible             = 1;
 
-//integer initState	    = 104;
 integer initCode;
 
 #ifdef DEBUG_MODE

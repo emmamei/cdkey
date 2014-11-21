@@ -314,7 +314,7 @@ default {
             else if (name == "canFly")                         canFly = (integer)value;
             else if (name == "canSit")                         canSit = (integer)value;
             else if (name == "canStand")                     canStand = (integer)value;
-            else if (name == "canRepeat")                   canRepeat = (integer)value;
+            else if (name == "canRepeatWind")           canRepeatWind = (integer)value;
             else if (name == "dollyName")                   dollyName = value;
             else if (name == "doWarnings")                 doWarnings = (integer)value;
             else if (name == "poseSilence")               poseSilence = (integer)value;
@@ -512,7 +512,7 @@ default {
                 //plusList += cdGetButton("Offline", id, offlineMode, 0);
                 // One-way options
                 plusList = llListInsertList(plusList, cdGetButton("Allow AFK", id, canAFK, 1), 0);
-                plusList = llListInsertList(plusList, cdGetButton("Rpt Wind", id, canRepeat, 1), 6);
+                plusList = llListInsertList(plusList, cdGetButton("Rpt Wind", id, canRepeatWind, 1), 6);
 
                 cdDialogListen();
                 llDialog(id, msg, dialogSort(plusList + MAIN), dialogChannel);

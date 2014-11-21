@@ -575,7 +575,7 @@ default {
                     lmInternalCommand("setAFK", (string)afk + "|1|" + formatFloat(windRate, 1) + "|" + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate)), NULL_KEY);
                 }
             }
-            else if (name == "canRepeat")                   canRepeat = (integer)value;
+            else if (name == "canRepeatWind")           canRepeatWind = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
@@ -797,7 +797,7 @@ default {
                     return;
                 }
 
-                if (!canRepeat && (id == winderID)) {
+                if (!canRepeatWind && (id == winderID)) {
                     lmSendToAgent("Dolly needs to be wound by someone else before you can wind " + llToLower(pronounHerDoll) + " again.", id);
                     return;
                 }
@@ -827,7 +827,7 @@ default {
 
                         lmSendToAgent("Doll is now at " + formatFloat((float)timeLeftOnKey * 100.0 / (float)effectiveLimit, 2) + "% of capacity.", id);
 
-                        if (canRepeat || cdIsController(id) || cdIsCarrier(id)) lmInternalCommand("mainMenu", "Wind|" + name, id);
+                        if (canRepeatWind || cdIsController(id) || cdIsCarrier(id)) lmInternalCommand("mainMenu", "Wind|" + name, id);
                     }
 
                     llSleep(1.0); // Make sure that the uncollapse RLV runs before sending the message containing winder name.

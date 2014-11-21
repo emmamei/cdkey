@@ -222,7 +222,7 @@ processConfiguration(string name, string value) {
 #ifdef DEVELOPER_MODE
                       "timeLeftOnKey",
 #endif
-                      "canDress", "canCarry", "canRepeat"
+                      "canDress", "canCarry", "canRepeatWind"
                     ];
 
 //  list internals = [ "wind time", "blacklist key", "controller key" ];

@@ -54,34 +54,17 @@ integer canCarry = 1;
 integer canDress = 1;
 integer canDressSelf = 1;
 integer showPhrases;
-//integer canFly = 1;
-//integer canSit = 1;
-//integer canStand = 1;
-integer canRepeat = 1;
-//integer poseSilence;
-//integer canUnwear;
 integer carryMoved;
 integer primLight = 1;
 integer clearAnim;
 integer collapsed;
 integer configured;
 integer demoMode;
-//integer detachable = 1;
-//integer doWarnings;
-//integer tpLureOnly;
-//integer pleasureDoll;
-//integer isTransformingKey;
 integer visible = 1;
-//integer quiet;
 integer RLVok = UNSET;
-//integer signOn;
-//integer takeoverAllowed;
-//integer warned;
-//integer offlineMode;
 integer dbConfig;
 integer textboxType;
 integer debugLevel = DEBUG_LEVEL;
-//integer startup = 1;
 
 integer blacklistChannel;
 integer controlChannel;
@@ -99,7 +82,6 @@ vector gemColour;
 string carrierName;
 string mistressName;
 string keyAnimation;
-//string dollyName;
 string menuName;
 
 integer winderRechargeTime;
@@ -348,10 +330,6 @@ default
                 else if (name == "collapsed")                   collapsed = (integer)value;
                 else if (name == "configured")                 configured = (integer)value;
                 else if (name == "showPhrases")               showPhrases = (integer)value;
-                //else if (name == "canFly")                         canFly = (integer)value;
-                //else if (name == "canSit")                         canSit = (integer)value;
-                //else if (name == "canStand")                     canStand = (integer)value;
-                //else if (name == "canRepeat")                   canRepeat = (integer)value;
             }
             else if (name == "RLVok")                           RLVok = (integer)value;
 
@@ -1051,7 +1029,7 @@ default
                                 // if is Doll, these abilities can only be removed (X)
                                 else if (afterSpace == "Rpt Wind") {
                                     if (!isX || !isDoll) {
-                                        lmSendConfig("canRepeat", (string)isX);
+                                        lmSendConfig("canRepeatWind", (string)isX);
                                     }
                                     else if (isDoll) {
                                         llOwnerSay("The Repeat Wind option cannot be re-enabled by you.");

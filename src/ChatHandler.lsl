@@ -131,7 +131,7 @@ default
                 else if (name == "canFly")                     canFly = (integer)value;
                 else if (name == "canSit")                     canSit = (integer)value;
                 else if (name == "canStand")                 canStand = (integer)value;
-                else if (name == "canRepeat")               canRepeat = (integer)value;
+                else if (name == "canRepeatWind")       canRepeatWind = (integer)value;
                 else if (name == "configured")             configured = (integer)value;
                 else if (name == "controllers")           controllers = split;
                 else if (name == "chatChannel") {
@@ -572,19 +572,19 @@ default
 
                         string p = llToLower(pronounHerDoll);
 
-                        cdCapability(autoTP,       "Doll can", "be force teleported");
-                        cdCapability(detachable,   "Doll can", "detach " + p + " key");
-                        cdCapability(canDress,     "Doll can", "be dressed by the public");
-                        cdCapability(canCarry,     "Doll can", "be carried by the public");
-                        cdCapability(canAFK,       "Doll can", "go AFK");
-                        cdCapability(canFly,       "Doll can", "fly");
-                        cdCapability(canPose,      "Doll can", "be posed by the public");
-                        cdCapability(canSit,       "Doll can", "sit");
-                        cdCapability(canStand,     "Doll can", "stand");
-                        cdCapability(canRepeat,    "Doll can", "be multiply wound");
-                        cdCapability(canDressSelf, "Doll can", "dress by " + p + "self");
-                        cdCapability(poseSilence,  "Doll is",  "silenced while posing");
-                        cdCapability(wearLock,     "Doll's clothing is",  "currently locked on");
+                        cdCapability(autoTP,         "Doll can", "be force teleported");
+                        cdCapability(detachable,     "Doll can", "detach " + p + " key");
+                        cdCapability(canDress,       "Doll can", "be dressed by the public");
+                        cdCapability(canCarry,       "Doll can", "be carried by the public");
+                        cdCapability(canAFK,         "Doll can", "go AFK");
+                        cdCapability(canFly,         "Doll can", "fly");
+                        cdCapability(canPose,        "Doll can", "be posed by the public");
+                        cdCapability(canSit,         "Doll can", "sit");
+                        cdCapability(canStand,       "Doll can", "stand");
+                        cdCapability(canRepeatWind,  "Doll can", "be multiply wound");
+                        cdCapability(canDressSelf,   "Doll can", "dress by " + p + "self");
+                        cdCapability(poseSilence,    "Doll is",  "silenced while posing");
+                        cdCapability(wearLock,       "Doll's clothing is",  "currently locked on");
 
                         if (windRate) s += "Current wind rate is " + formatFloat(windRate,2) + ".\n";
                         else s += "Key is not winding down.\n";
