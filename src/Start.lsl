@@ -859,8 +859,8 @@ default {
             // changed - it was something else...
 
             // What if inventory changes several times in a row?
-            llOwnerSay("Key contents modified; restarting in 60 seconds.");
-            llSetTimerEvent(60.0);
+            llOwnerSay("Key contents modified; restarting in 120 seconds.");
+            llSetTimerEvent(120.0);
         }
     }
 
