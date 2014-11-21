@@ -157,7 +157,7 @@ default {
             key targetKey;
             integer n = llGetListLength(cdList2ListStrided(controllers, 0, -1, 2));
 
-            while (n--)
+            while (n--) {
                 targetName = llList2String(controllers, (n << 1) + 1);
                 targetKey = llList2Key(controllers, n << 1);
 
