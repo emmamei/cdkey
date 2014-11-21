@@ -9,9 +9,6 @@
 #include "include/GlobalDefines.lsl"
 #define cdMenuInject(a,b,c) lmMenuReply(a,b,c)
 
-#define cdRefreshVars() cdLinkMessage(LINK_THIS, 0, 301, "", NULL_KEY)
-#define cdDumpState()   cdLinkMessage(LINK_THIS, 0, 302, "", NULL_KEY);
-
 #define UNSET -1
 
 // FIXME: Depends on a variable s
@@ -110,13 +107,6 @@ default
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
             string c = cdGetFirstChar(name); // for speedup
-
-            if (value == RECORD_DELETE) {
-                value = "";
-                split = [];
-            } else {
-                split = llDeleteSubList(split, 0, 0);
-            }
 
                  if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
             else if (name == "collapseTime")             collapseTime = (float)value;
@@ -369,7 +359,7 @@ default
                 //prefix = llGetSubString(msg,0,0);
                 msg = llGetSubString(msg,1,-1);
             }
-            else if ((prefix == "#") {
+            else if (prefix == "#") {
                 // if Dolly gives a #cmd ignore it...
                 // if someone else gives it - they are being ignored themselves,
                 //    but we act on it.
@@ -447,11 +437,20 @@ default
                 // they are adjusted differently for each kind of user
                 //   * help
                 //
+                // Biggest problem in the help commands is that the
+                // validation of the user's status has to be replicated in
+                // both the help function and in the function itself; if there
+                // was a way to combine the help with the functions it would be
+                // much better...
+                //
                 if (choice == "help") {
                     // First: anyone can do these commands
                     string help = "Commands:
     Commands can be prefixed with your prefix, which is currently " + llToLower(chatPrefix) + "\n";
-                    if (isDoll || isController)
+
+                    // if is Doll or Controller, can do these commands
+                    if (isDoll || isController) {
+                        help +=
 "
     build .......... list build configurations
     detach ......... detach key if possible
@@ -462,13 +461,38 @@ default
     release ........ stop the current pose if possible
     demo ........... toggle demo mode
     [posename] ..... activate the named pose if possible
+    poses .......... show Poses menu
+    listposes ...... list all poses
     help ........... this list of commands";
-#ifdef TESTER_MODE
-                    help +=
-"
-    wind ........... wind key";
-#else
-                    if (cdIsDoll(id)) {
+
+                        if (isDoll & canDressSelf) {
+                            help += "
+    outfits ........ show Outfits menu";
+                        }
+                    }
+                    // Not dolly OR controller...
+                    else {
+                        if (canDress) {
+                            help += "
+    outfits ........ show Outfits menu";
+                        }
+
+                        if (canPose) {
+                            help += "
+    poses .......... show Poses menu
+    listposes ...... list all poses
+    [posename] ..... activate the named pose if possible";
+                        }
+
+                        if (canCarry) {
+                            help += "
+    carry .......... pick up Dolly
+    uncarry ........ drop Dolly";
+                        }
+                    }
+
+                    // wind command changes sense when others use it
+                    if (isDoll) {
                         help +=
 "
     wind ........... trigger emergency autowind";
@@ -476,19 +500,15 @@ default
                     else {
                         help +=
 "
+    carry .......... pick up Dolly
+    uncarry ........ drop Dolly
     wind ........... wind key";
                     }
-#endif
+
                     help +=
 "
-    wind ........... wind key
-    outfits ........ show Outfits menu
     menu ........... show main menu
-    types .......... show Types menu
-    poses .......... show Poses menu
-    listposes ...... list all poses
-    carry .......... pick up Dolly
-    uncarry ........ drop Dolly";
+    types .......... show Types menu";
 
                     if (isDoll || cdIsBuiltinController(id)) {
                         help +=
@@ -665,7 +685,9 @@ default
 
                             s += "running normally: " + (string)llRound(timeLeftOnKey / SEC_TO_MIN) + " of " + (string)llFloor(keyLimit / SEC_TO_MIN) + " minutes remaining.";
                         }
-                        llSendToAgent(s,id);
+
+                        //llSendToAgent(s,id);
+                        llOwnerSay(s);
                         return;
                     }
                 }
@@ -687,22 +709,19 @@ default
                     // if Dolly gives this command, its an Emergency Winder activation.
                     // if someone else, it is a normal wind of the Doll.
                     // if a Tester - it is a normal wind (Emergency Winder not available!)
-#ifdef TESTER_MODE
-                    cdMenuInject("Wind", name, id);
-#else
+
                     if (isDoll) cdMenuInject("Wind Emg", dollName, dollID);
                     else cdMenuInject("Wind", name, id);
-#endif
                     return;
                 }
                 else if (choice == "outfits") {
-                    if (isDoll(id)) {
+                    if (isDoll) {
                         if (canDressSelf) cdMenuInject("Outfits...", name, id);
-                        else lmSendToAgent("You are not allowed to dress yourself",id)
+                        else lmSendToAgent("You are not allowed to dress yourself",id);
                     }
                     else {
                         if (canDress) cdMenuInject("Outfits...", name, id);
-                        else lmSendToAgent("You are not allowed to dress Dolly",id)
+                        else lmSendToAgent("You are not allowed to dress Dolly",id);
                     }
 
                     return;
@@ -716,7 +735,7 @@ default
                     return;
                 }
                 else if (choice == "poses") {
-                    if (isDoll(id) || isController) cdMenuInject("Poses...", name, id);
+                    if (isDoll || isController) cdMenuInject("Poses...", name, id);
                     else {
                         if (canPose) cdMenuInject("Poses...", name, id);
                         else lmSendToAgent("You are not allowed to pose Dolly", id);
@@ -757,16 +776,10 @@ default
                                 (isController && (thisPrefix == "!")) ||
                                 (thisPrefix == "")) {
 
-                                    if (keyAnimation == thisPose) {
-                                        lmSendToAgent("\t*\t" + thisPose, id);
-                                    }
-                                    else {
-                                        lmSendToAgent("\t\t" + thisPose, id);
-                                    }
+                                if (keyAnimation == thisPose) lmSendToAgent("\t*\t" + thisPose, id);
+                                else lmSendToAgent("\t\t" + thisPose, id);
                             }
-                            else if (keyAnimation == thisPose) {
-                                lmSendToAgent("\t*\t{private}", id);
-                            }
+                            else if (keyAnimation == thisPose) lmSendToAgent("\t*\t{private}", id);
                         }
                     }
                     return;
@@ -776,7 +789,7 @@ default
                     return;
                 }
                 else if (choice == "uncarry") {
-                    if (!isDoll) )cdMenuInject("Uncarry", name, id);
+                    if (!isDoll) cdMenuInject("Uncarry", name, id);
                     return;
                 }
             }
@@ -827,10 +840,11 @@ default
                         string newPrefix = param;
                         string c1 = llGetSubString(newPrefix,0,0);
                         string msg = "The prefix you entered is not valid, the prefix must ";
+                        integer n = llStringLength(newPrefix);
 
                         // * must be greater than two characters and less than ten characters
 
-                        if (llStringLength(newPrefix) < 2 || llStringLength(newPrefix) > 10) {
+                        if (n < 2 || n > 10) {
                             // Why? Two character user prefixes are standard and familiar; too much false positives with
                             // just 1 letter (~4%) with letter + letter/digit it's (~0.1%)
                             lmSendToAgent(msg + "be between two and ten characters long.", id);
@@ -882,9 +896,6 @@ default
                             llOwnerSay(msg);
                             llResetOtherScript(script);
                             llSetScriptState(script, 1);
-                            //llSleep(5.0);
-                            //cdRefreshVars();
-                            //llSleep(5.0);
 
                             msg = "Script '" + script + "'";
                             if (llGetScriptState(script)) msg += " seems to be running now.";
@@ -922,7 +933,7 @@ default
                         string paramData = cdMyScriptName() + "|" + llList2String(params,1);
                         integer paramCode = llList2Integer(params,0);
 
-                        llOwnerSay("INJECT LINK:\nLink Code: " + (string)paramsCode +
+                        llOwnerSay("INJECT LINK:\nLink Code: " + (string)paramCode +
                                    "\nData: " + paramData +
                                    "\nKey: " + (string)paramKey);
                         llMessageLinked(LINK_THIS, paramCode, paramData, paramKey);
