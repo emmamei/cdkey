@@ -437,7 +437,9 @@ default
                         if (gemColour != newColour) {
                             if (!s) {
                                 for (j = 0; j < llGetLinkNumberOfSides(i); j++) {
-                                    vector shade = <llFrand(0.2) - 0.1 + newColour.x, llFrand(0.2) - 0.1 + newColour.y, llFrand(0.2) - 0.1 + newColour.z> * (1.0 + (llFrand(0.2) - 0.1));
+                                    vector shade = <llFrand(0.2) - 0.1 + newColour.x,
+                                                    llFrand(0.2) - 0.1 + newColour.y,
+                                                    llFrand(0.2) - 0.1 + newColour.z>  * (1.0 + (llFrand(0.2) - 0.1));
 
                                     if (shade.x < 0.0) shade.x = 0.0;
                                     if (shade.y < 0.0) shade.y = 0.0;
