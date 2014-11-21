@@ -77,6 +77,12 @@ setGender(string gender) {
     }
 }
 
+// This is an ingenious function:
+//
+// If the id belongs to Dolly, then llOwnerSay
+// If the id belongs to an avi nearby, then llRegionSayTo
+// If neither of the above, then llInstantMessage
+//
 sendMsg(key id, string msg) {
     if (id) {
         if cdIsDoll(id) llOwnerSay(msg);
@@ -129,7 +135,38 @@ default {
         code      =  i & 0x000003FF;
         split     = llDeleteSubList(split, 0, 0 + optHeader);
 
-        if (code == 102) {
+        // 11: lmSendToAgent
+        // 12: lmSendToAgentPlusDoll
+        // 15: lmSendToController
+        //
+        if ((code == 11) || (code == 12)) {
+            msg = llList2String(split, 0);
+
+            //debugSay(5, "DEBUG", "Code #" + (string)code + ": message = " + msg);
+
+            sendMsg(id, msg);
+
+            if (code == 12)
+                // Don't send to Dolly if we just DID send to Dolly
+                if (!cdIsDoll(id)) sendMsg(dollID, msg);
+        }
+        else if (code == 15) {
+            msg = llList2String(split, 0);
+            i = 0;
+            string targetName;
+            key targetKey;
+            integer n = llGetListLength(cdList2ListStrided(controllers, 0, -1, 2));
+
+            while (n--)
+                targetName = llList2String(controllers, (n << 1) + 1);
+                targetKey = llList2Key(controllers, n << 1);
+
+                debugSay(7, "DEBUG", "MistressMsg To: " + targetName + " (" + (string)targetKey + ")\n" + msg);
+
+                sendMsg(targetKey, msg);
+            }
+        }
+        else if (code == 102) {
             configured = 1;
             scaleMem();
         }
@@ -147,12 +184,7 @@ default {
                 for (i = 0; i < llGetInventoryNumber(10); i++) {
                     string script = llGetInventoryName(10, i);
 
-                    if (
-#ifdef UPDATE_SCRIPT
-                        (script != "UpdateScript") &&
-#endif
-                        (script != cdMyScriptName())) {
-
+                    if (script != cdMyScriptName()) {
                         if (llGetScriptState(script)) memWait += script;
                     }
                 }
@@ -160,15 +192,11 @@ default {
                 memData = "";
                 memTime = llGetTime() + 5.0;
                 llSetTimerEvent(4.0);
-#ifdef DEVELOPER_MODE
-                memRequested = 1;
-#else
-#ifdef TESTER_MODE
+#ifdef DEBUG_MODE
                 memRequested = 1;
 #else
                 memRequested = llList2Integer(split, 1);
-#endif //TESTER_MODE
-#endif //DEVELOPER_MODE
+#endif
             }
             else if ((code == 136) || ((memTime < llGetTime()) && (code == 135))) {
                 string json = llList2String(split, 0);
@@ -269,7 +297,7 @@ default {
             split = llDeleteSubList(split, 0, 0);
 
                  if (name == "controllers")               controllers = split;
-#ifdef DEVELOPER_MODE
+#ifdef DEBUG_MODE
             else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
             else if (name == "keyAnimation")             keyAnimation = value;
