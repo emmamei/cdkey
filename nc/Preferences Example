@@ -19,6 +19,9 @@ dolly name = Mei Stone
 # Set key up for a demo?
 demo mode = no
 
+# Set chat mode: open to world ("world"), Dolly only ("dolly") or "disabled"
+dolly mode = dolly
+
 # Can the key be detached?
 detachable = no
 

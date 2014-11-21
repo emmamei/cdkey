@@ -33,6 +33,8 @@ string pronounHerDoll       = "Her";
 string pronounSheDoll       = "She";
 string dollName             = "";
 string msg;
+integer chatEnable           = TRUE;
+string chatFilter           = "";
 
 integer autoAFK             = 1;
 #ifdef KEY_HANDLER
@@ -61,11 +63,10 @@ default
 
         // Beware listener is now available to users other than the doll
         // make sure to take this into account within all handlers.
-        chatHandle = cdListenAll(chatChannel);
+        chatHandle = llListen(chatChannel, "", chatFilter, "");
 #ifdef KEY_HANDLER
         broadcastHandle = cdListenAll(broadcastOn);
 #endif
-
         cdInitializeSeq();
     }
 
@@ -134,11 +135,21 @@ default
                 else if (name == "canRepeatWind")       canRepeatWind = (integer)value;
                 else if (name == "configured")             configured = (integer)value;
                 else if (name == "controllers")           controllers = split;
+                else if (name == "chatEnable") {
+                    chatEnable = (integer)value;
+                    if (chatEnable) cdListenerActivate(chatHandle);
+                    else cdListenerDeactivate(chatHandle);
+                }
+                else if (name == "chatFilter") {
+                    chatFilter = value;
+                    llListenRemove(chatHandle);
+                    chatHandle = llListen(chatChannel, "", chatFilter, "");
+                }
                 else if (name == "chatChannel") {
                     chatChannel = (integer)value;
                     dollID = llGetOwner();
                     llListenRemove(chatHandle);
-                    chatHandle = cdListenAll(chatChannel);
+                    chatHandle = llListen(chatChannel, "", chatFilter, "");
                 }
             }
 

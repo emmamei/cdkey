@@ -495,18 +495,18 @@ default
                         // Doll being carried clicked on key
                         if (isCarrier) {
                             msg = "Uncarry frees " + dollName + " when you are done with " + pronounHerDoll;
-                            menu = ["Uncarry"];
+                            menu = ["Uncarry","OK"];
                         }
-                        else if (cdIsController(id)) {
-                            msg = dollName + " is being carred by " + carrierName + ". ";
-                            menu = ["Uncarry"];
+                        else if (cdIsController(id) && IsDoll) {
+                            msg = dollName + " is being carried by " + carrierName + ". ";
+                            menu = ["Uncarry","OK"];
                         }
                         else {
                             if (isDoll) msg = "You are being carried by " + carrierName + ". ";
                             else msg = dollName + " is currently being carried by " + carrierName + ". They have full control over this doll.\n";
 
                             cdDialogListen();
-                            llDialog(id, timeleft + msg, [ "Help...", "OK" ], dialogChannel);
+                            llDialog(id, timeleft + msg, [ "OK" ], dialogChannel);
                             return;
                         }
                     }
@@ -603,11 +603,7 @@ default
 #ifdef ADULT_MODE
                         // Is doll strippable?
                         if ((RLVok == 1) && (pleasureDoll || dollType == "Slut")) {
-                            if (isController || isCarrier
-#ifdef TESTER_MODE
-                                    || ((debugLevel != 0) && isDoll)
-#endif
-                            ) {
+                            if (isController || isCarrier) {
                                     if (simRating == "MATURE" || simRating == "ADULT") menu += "Strip...";
                             }
                         }
@@ -615,9 +611,6 @@ default
                     }
 
                     if (!isDoll) menu += "Wind";
-#ifdef TESTER_MODE
-                    else if (debugLevel != 0) menu += "Wind";
-#endif
                     menu += "Help...";
 
                     // Options only available if controller
@@ -627,7 +620,7 @@ default
                     }
 
 
-                    if (RLVok == -1) msg += "Still checking for RLV support some features unavailable.\n";
+                    if (RLVok == UNSET) msg += "Still checking for RLV support some features unavailable.\n";
                     else if (RLVok == 0) {
                         msg += "No RLV detected some features unavailable.\n";
                         //if (cdIsDoll(id) || cdIsController(id)) menu += "RLV On";
@@ -637,10 +630,6 @@ default
 
 #ifdef DEVELOPER_MODE
                     + " (Key is in Developer Mode.)"
-#else
-#ifdef TESTER_MODE
-                    + " (Key is in Tester Mode.)"
-#endif
 #endif
                     ;
 
@@ -648,7 +637,8 @@ default
 
                     // This is needed because we want to sort by name;
                     // this section puts the checkmark marker on both
-                    // keys by replacing them within the list
+                    // keys by replacing them within the list - and thus
+                    // not disturbing the alphabetic order
 
                     if ((i = llListFindList(menu, ["AFK"]))     != NOT_FOUND) menu = llListReplaceList(menu, cdGetButton("AFK",     id, afk,     0), i, i);
                     if ((i = llListFindList(menu, ["Visible"])) != NOT_FOUND) menu = llListReplaceList(menu, cdGetButton("Visible", id, visible, 0), i, i);
@@ -658,7 +648,6 @@ default
                 }
                 else {
                     msg = "You are not permitted any access to this dolly's key.";
-
                     menu = ["Leave Alone"];
                 }
 

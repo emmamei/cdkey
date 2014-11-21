@@ -46,6 +46,8 @@ key MistressID = NULL_KEY;
 string dollName;
 string dollyName;
 string appearanceData;
+string chatFilter = "";
+integer chatEnable = TRUE;
 
 #define APPEARANCE_NC "DataAppearance"
 key ncPrefsKey;
@@ -256,10 +258,11 @@ processConfiguration(string name, string value) {
 
             // validate value and also timeLeftOnKey
             if ((float)value > 240) value = "240";
-            else if ((float)value < 30) value = "30";
+            else if ((float)value < 10) value = "30";
             if (timeLeftOnKey > (float)value) timeLeftOnKey = (float)value;
         }
 
+        // FIXME: Note the lack of validation here (!)
         lmSendConfig(cdListElement(sendName,i), value);
     }
     else if ((i = cdListElementP(internals,name)) != NOT_FOUND) {
@@ -278,10 +281,22 @@ processConfiguration(string name, string value) {
         }
         lmInternalCommand(cdListElement(cmdName,i), value, NULL_KEY);
     }
+    else if (name == "chat mode") {
+        chatFilter = "";
+        chatEnable = TRUE;
+
+        if (value == "dolly") chatFilter = (string)dollID;
+        else if (value == "disabled") chatEnable = FALSE;
+        else if (value == "world") chatFilter = "";
+
+        lmSendConfig("chatEnable",(string)chatEnable);
+        lmSendConfig("chatFilter",chatFilter);
+    }
     else if (name == "doll gender") {
         // This only accepts valid values
         if (value == "female" || value == "woman" || value == "girl") setGender("female");
         else if (value == "male" || value == "man" || value == "boy") setGender("male");
+        else setGender("female");
     }
     else if (name == "blacklist key") {
         if (llList2Key([ value ], 0) != NULL_KEY) {

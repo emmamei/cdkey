@@ -57,21 +57,10 @@
 #define LOCKON 1
 #endif
 
-/* enable testing and debugging features and allows the doll to access
-   normally inaccessible functions like strip and wind */
-#ifndef DEVELOPER_MODE
-// #define TESTER_MODE 1
-#endif
-
 /* Enable debugging code - in contrast to Developer code
    Use this to hand out keys with Debugging but without Developer-specific
    capabilities */
 #ifdef DEVELOPER_MODE
-// Developer Keys ought to put out debugging
-#define DEBUG_MODE 1
-#endif
-#ifdef TESTER_MODE
-// Test Keys ought to put out debugging
 #define DEBUG_MODE 1
 #endif
 

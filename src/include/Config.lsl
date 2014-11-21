@@ -12,12 +12,6 @@
 #define DEV []
 #endif
 
-#ifdef TESTER_MODE
-#define TEST ["Test"]
-#else
-#define TEST []
-#endif
-
 #ifdef LINK_320
 #define L320 ["Link320"]
 #else
@@ -45,11 +39,7 @@
 #ifdef DEVELOPER_MODE
 #define KEY_MODE ["Mode=Developer"]
 #else
-#ifdef TESTER_MODE
-#define KEY_MODE ["Mode=Tester"]
-#else
 #define KEY_MODE ["Mode=Normal"]
-#endif
 #endif
 
 #ifdef SALT
@@ -58,7 +48,7 @@
 #define HAVE_SALT ["HaveSalt=no"]
 #endif
 
-#define BUILD_REPORT llListSort(ADULT + KEY_MODE + DEV + L320 + HAVE_SALT + TEST + UPCDKEY + BADRLV + DEBUG, 1, 1)
+#define BUILD_REPORT llListSort(ADULT + KEY_MODE + DEV + L320 + HAVE_SALT + UPCDKEY + BADRLV + DEBUG, 1, 1)
 
 #define lmConfigReport() llMessageLinked(LINK_THIS, 142, cdMyScriptName(), NULL_KEY)
 
