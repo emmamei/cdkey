@@ -48,7 +48,6 @@ string dollyName;
 string appearanceData;
 
 #define APPEARANCE_NC "DataAppearance"
-#define NC_ATTACHLIST "DataAttachments"
 key ncPrefsKey;
 list ncPrefsLoadedUUID;
 key ncIntroKey;
@@ -201,7 +200,7 @@ processConfiguration(string name, string value) {
     list configs = [ "barefeet path", "helpless dolly", "quiet key", "outfits path",
                      "busy is away", "can afk", "can fly", "poseable", "can sit", "can stand",
                      "can dress", "detachable", "doll type", "pleasure doll", "pose silence",
-                     "auto tp", "outfitable", "max time", "chat channel",
+                     "auto tp", "outfitable", "max time", "chat channel", "dolly name", "demo mode",
                      "afk rlv", "base rlv", "collapse rlv", "pose rlv" , "show phrases",
 #ifdef DEBUG_MODE
                      "debug level",
@@ -215,7 +214,7 @@ processConfiguration(string name, string value) {
     list sendName = [ "barefeet", "helpless", "quiet", "outfitsFolder",
                       "busyIsAway", "canAfk", "canFly", "canPose", "canSit", "canStand",
                       "canDressSelf", "detachable", "dollType", "pleasureDoll", "poseSilence",
-                      "autoTP", "canDress", "timeLeftOnKey", "keyLimit", "chatChannel"
+                      "autoTP", "canDress", "timeLeftOnKey", "keyLimit", "chatChannel", "dollyName", "demoMode",
                       "userAfkRLVcmd", "userBaseRLVcmd", "userCollapseRLVcmd", "userPoseRLVcmd" , "showPhrases",
 #ifdef DEBUG_MODE
                       "debugLevel",
@@ -358,7 +357,9 @@ readPreferences() {
 //          that is, preferences have been read if they exist
 
 doneConfiguration(integer prefsRead) {
-    // prefsRead appears to be superfluous.... or IS it? Left in for now
+    // By now preferences SHOULD have been read - if there were any.
+    // the variable prefsRead allows us to know if prefs were read...
+    // but how do we use this knowledge?
 
     resetState = RESET_NONE;
 

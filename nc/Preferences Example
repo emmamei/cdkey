@@ -13,6 +13,12 @@ doll gender = girl
 # What channel do we listen on for commands?
 chat channel = 75
 
+# Dolly's Name
+dolly name = Mei Stone
+
+# Set key up for a demo?
+demo mode = no
+
 # Can the key be detached?
 detachable = no
 

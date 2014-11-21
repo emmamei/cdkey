@@ -1,1 +1,0 @@
-{"name2key":{"HTTPS":0,"URL":"api.silkytech.com/name2key/"},"httpdb":{"HTTPS":1,"URL":"api.silkytech.com/httpdb/"},"objdns":{"HTTPS":1,"URL":"api.silkytech.com/objdns/"}}
