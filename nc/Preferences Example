@@ -19,9 +19,6 @@ quiet key = no
 # Dolly can be posed by the public?
 poseable = yes
 
-# Dolly can be dressed by the public?
-dressable = yes
-
 # Dolly can be carried by the public?
 carryable = yes
 
@@ -54,6 +51,8 @@ auto tp = no
 
 # Can the dolly be dressed by the public?
 outfitable = yes
+# Synonym for "outfitable" --
+dressable = yes
 
 # Path to Type folders and other outfits
 #outfits path = 
@@ -61,8 +60,8 @@ outfitable = yes
 # Is the dolly permitted to outfit themselves?
 can dress = yes
 
-# Is the dolly permitted to pose themselves?
-can pose = yes
+# Can the dolly be posed by the public?
+poseable = yes
 
 # Is the dolly permitted to go AFK?
 can afk = yes
@@ -78,9 +77,6 @@ can stand = yes
 
 # What type of doll is the dolly?
 doll type = Regular
-
-# What gender is dolly? ("male", "female", or "sissy")
-doll gender = female
 
 # Attach this folder when shoes stripped
 #barefeet path = 
