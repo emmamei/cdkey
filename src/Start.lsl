@@ -201,7 +201,7 @@ processConfiguration(string name, string value) {
     list configs = [ "barefeet path", "helpless dolly", "quiet key", "outfits path",
                      "busy is away", "can afk", "can fly", "poseable", "can sit", "can stand",
                      "can dress", "detachable", "doll type", "pleasure doll", "pose silence",
-                     "auto tp", "outfitable", "max time",
+                     "auto tp", "outfitable", "max time", "chat channel",
                      "afk rlv", "base rlv", "collapse rlv", "pose rlv" , "show phrases",
 #ifdef DEBUG_MODE
                      "debug level",
@@ -215,7 +215,7 @@ processConfiguration(string name, string value) {
     list sendName = [ "barefeet", "helpless", "quiet", "outfitsFolder",
                       "busyIsAway", "canAfk", "canFly", "canPose", "canSit", "canStand",
                       "canDressSelf", "detachable", "dollType", "pleasureDoll", "poseSilence",
-                      "autoTP", "canDress", "timeLeftOnKey", "keyLimit",
+                      "autoTP", "canDress", "timeLeftOnKey", "keyLimit", "chatChannel"
                       "userAfkRLVcmd", "userBaseRLVcmd", "userCollapseRLVcmd", "userPoseRLVcmd" , "showPhrases",
 #ifdef DEBUG_MODE
                       "debugLevel",

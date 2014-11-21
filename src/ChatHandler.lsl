@@ -86,7 +86,7 @@ default
 
         if (code == 110) {
             if (chatPrefix == "") {
-                // If chat prefix is not configured by DB or prefs we initialize the default prefix
+                // If chat prefix is not configured elsewhere, we default to
                 // using the initials of the dolly's name in legacy name format.
                 string key2Name = llKey2Name(dollID);
                 integer i = llSubStringIndex(key2Name, " ") + 1;
@@ -138,7 +138,7 @@ default
                     chatChannel = (integer)value;
                     dollID = llGetOwner();
                     llListenRemove(chatHandle);
-                    chatHandle = llListen(chatChannel, NO_FILTER, dollID, NO_FILTER);
+                    chatHandle = cdListenAll(chatChannel);
                 }
             }
 
@@ -823,10 +823,11 @@ default
                         if ((string) ((integer) c) == c) {
                             integer ch = (integer) c;
 
-                            if (ch != 0 && ch != DEBUG_CHANNEL) { // FIXME: Sanity checking should be extended
-                                chatChannel = ch;
-                                llListenRemove(chatHandle);
-                                chatHandle = llListen(ch, "", llGetOwner(), "");
+                            if (ch > 0) {
+                                lmSendConfig("chatChannel",(string)ch)
+                            }
+                            else {
+                                lmSendToAgent("Invalid channel (" + (string)ch + ") ignored")
                             }
                         }
                         return;
