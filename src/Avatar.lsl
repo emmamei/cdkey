@@ -784,11 +784,11 @@ default {
                     string name = llKey2Name(id);
 
                     if (name) {
-                        if (quiet) lmSendToAgent("You have wrestled Dolly away from " + carriedName + ".", id);
+                        if (quiet) lmSendToAgent("You have wrestled Dolly away from " + carrierName + ".", id);
                         else llSay(0, "Dolly " + dollName + " has been wrestled away from " + carrierName + " by " + llKey2Name(id));
                     }
                     else {
-                        if (quiet) lmSendToAgent("You have wrestled Dolly away from " + carriedName + ".", id);
+                        if (quiet) lmSendToAgent("You have wrestled Dolly away from " + carrierName + ".", id);
                         else llSay(0, "Dolly " + dollName + " has been wrestled away from " + carrierName);
                     }
                 }

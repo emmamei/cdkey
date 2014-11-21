@@ -11,8 +11,9 @@
 
 #define UNSET -1
 
-// FIXME: Depends on a variable s
 #define cdCapability(c,p,u) { s += p; if (!(c)) { s += " not"; }; s += " " + u + ".\n"; }
+#define cdListenerActivate(a) llListenControl(a, 1)
+#define cdListenerDeactivate(a) llListenControl(a, 0)
 
 #ifdef KEY_HANDLER
 key keyHandler              = NULL_KEY;
@@ -834,12 +835,8 @@ default
                         if ((string) ((integer) c) == c) {
                             integer ch = (integer) c;
 
-                            if (ch > 0) {
-                                lmSendConfig("chatChannel",(string)ch)
-                            }
-                            else {
-                                lmSendToAgent("Invalid channel (" + (string)ch + ") ignored")
-                            }
+                            if (ch > 0) lmSendConfig("chatChannel",(string)ch);
+                            else lmSendToAgent("Invalid channel (" + (string)ch + ") ignored",id);
                         }
                         return;
                     }

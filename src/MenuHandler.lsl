@@ -497,7 +497,7 @@ default
                             msg = "Uncarry frees " + dollName + " when you are done with " + pronounHerDoll;
                             menu = ["Uncarry","OK"];
                         }
-                        else if (cdIsController(id) && IsDoll) {
+                        else if (cdIsController(id) && isDoll) {
                             msg = dollName + " is being carried by " + carrierName + ". ";
                             menu = ["Uncarry","OK"];
                         }
