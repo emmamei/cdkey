@@ -365,7 +365,7 @@ default {
                     msg += " Key unwinding has slowed to " + (string)windRate + "x and movements and abilities are restricted.";
                 }
                 else msg = "You are now no longer away from keyboard (AFK). Movements are unrestricted and winding down proceeds at normal rate. ";
-                llOwnerSay(msg + " You have " + (string)minsLeft + " minutes of life remaining.");
+                llOwnerSay(msg + " You have " + (string)minsLeft + " minutes of life left.");
             }
 #ifdef ADULT_MODE
             else if (cmd == "strip") {
