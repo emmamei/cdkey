@@ -7,14 +7,29 @@
 # and blank lines before using this file as an active preferences
 # file
 
+# What gender is dolly?
+doll gender = girl
+
 # Can the key be detached?
 detachable = no
 
 # Suppress public chat messages
 quiet key = no
 
-# How much time does the key start with? (in minutes)
-initial time = 30
+# Dolly can be posed by the public?
+poseable = yes
+
+# Dolly can be dressed by the public?
+dressable = yes
+
+# Dolly can be carried by the public?
+carryable = yes
+
+# Dolly can be repetitively wound by winders?
+repeatable wind = yes
+
+# Show type phrases when available?
+show phrases = no
 
 # How many minutes does a wind provide? (in minutes)
 wind time = 30
@@ -37,9 +52,6 @@ pleasure doll = no
 # Can doll be sent a TP by anyone in SL?
 auto tp = no
 
-# Is the key detachable?
-detachable = yes
-
 # Can the dolly be dressed by the public?
 outfitable = yes
 
@@ -47,7 +59,7 @@ outfitable = yes
 #outfits path = 
 
 # Is the dolly permitted to outfit themselves?
-can wear = yes
+can dress = yes
 
 # Is the dolly permitted to pose themselves?
 can pose = yes
@@ -91,13 +103,9 @@ doll gender = female
 
 # Doll's Controller (or Mistress): value is user key value
 # Add multiple lines for multiple controllers
-#controller = 
-
-#controller name =
+#controller key = 
 
 # Blacklist: value is user key value
 # Add multiple lines for multiple blacklist entries
-#blacklist =
-
-#blacklist name =
+#blacklist key =
 
