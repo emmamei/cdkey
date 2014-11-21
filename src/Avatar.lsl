@@ -779,9 +779,22 @@ default {
                 if (cdIsCarrier(id)) {
                     if (quiet) lmSendToAgent("You were carrying " + dollName + " and have now placed them down.", carrierID);
                     else llSay(0, "Dolly " + dollName + " has been placed down by " + carrierName);
-                    lmSendConfig("carrierID", (string)(carrierID = NULL_KEY));
-                    lmSendConfig("carrierName", (carrierName = ""));
                 }
+                else {
+                    string name = llKey2Name(id);
+
+                    if (name) {
+                        if (quiet) lmSendToAgent("You have wrestled Dolly away from " + carriedName + ".", id);
+                        else llSay(0, "Dolly " + dollName + " has been wrestled away from " + carrierName + " by " + llKey2Name(id));
+                    }
+                    else {
+                        if (quiet) lmSendToAgent("You have wrestled Dolly away from " + carriedName + ".", id);
+                        else llSay(0, "Dolly " + dollName + " has been wrestled away from " + carrierName);
+                    }
+                }
+
+                lmSendConfig("carrierID", (string)(carrierID = NULL_KEY));
+                lmSendConfig("carrierName", (carrierName = ""));
             }
 
             // Unpose: remove animation and poser
