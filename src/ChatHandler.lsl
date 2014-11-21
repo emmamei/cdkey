@@ -354,6 +354,13 @@ default
             string prefix = cdGetFirstChar(msg);
 
             // Before we proceed first verify that the command is for us.
+            //
+            // Check prefix:
+            //   * All dollies ('*') - respond
+            //   * All dollies except us ('#') - respond if we didn't send it
+            //   * Prefix ('xx') - respond
+            //   * Nothing - assume its ours and complain
+
             if (prefix == "*") {
                 // *prefix is global, strip from choice and continue
                 //prefix = llGetSubString(msg,0,0);
