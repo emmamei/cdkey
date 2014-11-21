@@ -363,6 +363,7 @@ default
             lmInternalCommand("getTimeUpdates","",NULL_KEY);
             llSleep(2);
             debugSay(5,"CHAT-DEBUG",("Got a chat channel message: " + name + "/" + (string)id + "/" + msg));
+            //msg = llToLower(msg);
             string prefix = cdGetFirstChar(msg);
 
             // Before we proceed first verify that the command is for us.
@@ -395,6 +396,8 @@ default
                     prefix = llGetSubString(msg, 0, n - 1);
                     msg = llGetSubString(msg, n, -1);
                 }
+                else if (isDoll)
+                    llOwnerSay("Use of chat commands without a prefix is depreciated and will be removed in a future release.");
             }
 
             // If we got here, it means that the prefix is not "*" or "#" or the chatPrefix...
@@ -444,10 +447,9 @@ default
             //if (isDoll || (!isDoll && canCarry)) { }
             // Choice is a command, not a pose
             integer space = llSubStringIndex(msg, " ");
-            string choice = msg;
+            string choice = llToLower(msg);
 
             if (!PARAMETERS_EXIST) { // Commands without parameters handled first
-                choice = llToLower(choice);
 
                 //----------------------------------------
                 // PUBLIC COMMAND (help)
