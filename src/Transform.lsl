@@ -616,6 +616,11 @@ default {
 
                     string msg = "These change the personality of " + dollName + "; Dolly is currently a " + stateName + " Doll. ";
                     list choices = types;
+                    integer i;
+
+                    if ((i = llListFindList(choices, (list)stateName)) != NOT_FOUND) {
+                        choices = llDeleteSubList(choices, i, i);
+                    }
 
                     if (cdIsDoll(id)) {
                         msg += "What type of doll do you want to be?";
