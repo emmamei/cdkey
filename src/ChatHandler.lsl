@@ -47,6 +47,8 @@ integer chatChannel         = 75;
 integer chatHandle          = 0;
 #ifdef DEVELOPER_MODE
 integer timeReporting       = 0;
+#endif
+#ifdef DEBUG_MODE
 integer debugLevel          = DEBUG_LEVEL;
 #endif
 integer RLVok               = UNSET;
@@ -161,7 +163,7 @@ default
                     if (demoMode) effectiveLimit = DEMO_LIMIT;
                     else effectiveLimit = keyLimit;
                 }
-#ifdef DEVELOPER_MODE
+#ifdef DEBUG_MODE
                 else if (name == "debugLevel")             debugLevel = (integer)value;
 #endif
             }
@@ -344,15 +346,18 @@ default
         integer isDoll = cdIsDoll(id);
         integer isController = cdIsController(id);
 
-        debugSay(5,"CHAT-DEBUG",("Got a message: " + name + "/" + (string)id + "/" + msg));
-        // Deny access to the menus when the command was recieved from blacklisted avatar
-        if (!isDoll && (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND)) {
-            lmSendToAgent("You are not permitted to access this key.", id);
-            return;
-        }
+        //----------------------------------------
+        // CHAT COMMAND CHANNEL
+        //----------------------------------------
 
-        // Text commands
         if (channel == chatChannel) {
+            debugSay(5,"CHAT-DEBUG",("Got a message: " + name + "/" + (string)id + "/" + msg));
+            // Deny access to the menus when the command was recieved from blacklisted avatar
+            if (!isDoll && (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND)) {
+                lmSendToAgent("You are not permitted to access this key.", id);
+                return;
+            }
+
             lmInternalCommand("getTimeUpdates","",NULL_KEY);
             llSleep(2);
             debugSay(5,"CHAT-DEBUG",("Got a chat channel message: " + name + "/" + (string)id + "/" + msg));
@@ -364,28 +369,50 @@ default
                 //prefix = llGetSubString(msg,0,0);
                 msg = llGetSubString(msg,1,-1);
             }
-            else if ((prefix == "#") && !isDoll) {
-                // #prefix is an all others prefix like with OC etc
-                //prefix = llGetSubString(msg,0,0);
-                msg = llGetSubString(msg,1,-1);
+            else if ((prefix == "#") {
+                // if Dolly gives a #cmd ignore it...
+                // if someone else gives it - they are being ignored themselves,
+                //    but we act on it.
+                if (isDoll) return;
+                else {
+                    // #prefix is an all others prefix like with OC etc
+                    //prefix = llGetSubString(msg,0,0);
+                    msg = llGetSubString(msg,1,-1);
+                }
             }
-            else if (llToLower(llGetSubString(msg,0,1)) == chatPrefix) {
-                prefix = llGetSubString(msg,0,1);
-                msg = llGetSubString(msg,2,-1);
+            else if (chatPrefix) {
+                integer n = llStringLength(chatPrefix);
+                if (llToLower(llGetSubString(msg, 0, n - 1)) == chatPrefix) {
+                    prefix = llGetSubString(msg, 0, n - 1);
+                    msg = llGetSubString(msg, n, -1);
+                }
             }
+
+            // If we got here, it means that the prefix is not "*" or "#" or the chatPrefix...
+            // Therefore, if Doll issued the command, Doll needs to be notified of need for prefix
             else if (isDoll) {
-#ifdef PREFIX_NEEDED
                 llOwnerSay("Use of chat commands without a prefix is depreciated and will be removed in a future release.");
-#else
-                ;
-#endif
             }
+
+            // If we got here, it means that the prefix is not "*" or "#" or the chatPrefix...
+            // AND it means that the command was issued by someone other than Doll
+            // So ignore it
             else return; // For some other doll? noise? matters not it's someone elses problem.
 
             //debugSay(2, "CHAT-DEBUG", "On #" + (string)channel + " secondlife:///app/agent/" + (string)id + "/about: pre:" + prefix + "(ok) cmd:" + msg + " id:" + (string)id);
 
+            // If we get here, we know this:
+            //
+            //   * If Doll, they've been warned about the Prefix if needed
+            //   * If not Doll, they used the prefix
+            //   * If the prefix is '#' someone else used it, not Dolly
+            //   * If the prefix is '*' could have been used by anyone
+
+            // Trim message in case there are spaces
+            msg = llStringTrim(msg,STRING_TRIM);
+
             // Is the "msg" an animation?
-            if (llGetInventoryType(msg) == 20) {
+            if (llGetInventoryType(msg) == INVENTORY_ANIMATION) {
                 string firstChar = cdGetFirstChar(msg);
 
                 // if animation starts with "." only Doll has access to it
@@ -397,14 +424,15 @@ default
                     if (isDoll || isController) { cdMenuInject(msg, name, id); }
                 }
                 else {
-                    cdMenuInject(msg, name, id);
+                    // It's a pose but from a member of the public
+                    if (canPose) cdMenuInject(msg, name, id);
                 }
-
                 return;
             }
 
 #define PARAMETERS_EXIST (space != NOT_FOUND)
 
+            //if (isDoll || (!isDoll && canCarry)) { }
             // Choice is a command, not a pose
             integer space = llSubStringIndex(msg, " ");
             string choice = msg;
@@ -412,74 +440,102 @@ default
             if (!PARAMETERS_EXIST) { // Commands without parameters handled first
                 choice = llToLower(choice);
 
-                // Commands only for Doll
-                //    * build
-
-                if (isDoll) {
-                    if (choice == "build") {
-                        lmConfigReport();
+                //----------------------------------------
+                // PUBLIC COMMAND (help)
+                //
+                // The help commands should be handled here, as
+                // they are adjusted differently for each kind of user
+                //   * help
+                //
+                if (choice == "help") {
+                    // First: anyone can do these commands
+                    string help = "Commands:
+    Commands can be prefixed with your prefix, which is currently " + llToLower(chatPrefix) + "\n";
+                    if (isDoll || isController)
+"
+    build .......... list build configurations
+    detach ......... detach key if possible
+    devhelp ........ list of developer commands
+    stat ........... concise current status
+    stats .......... selected statistics and settings
+    xstats ......... extended statistics and settings
+    release ........ stop the current pose if possible
+    demo ........... toggle demo mode
+    [posename] ..... activate the named pose if possible
+    help ........... this list of commands";
+#ifdef TESTER_MODE
+                    help +=
+"
+    wind ........... wind key";
+#else
+                    if (cdIsDoll(id)) {
+                        help +=
+"
+    wind ........... trigger emergency autowind";
                     }
+                    else {
+                        help +=
+"
+    wind ........... wind key";
+                    }
+#endif
+                    help +=
+"
+    wind ........... wind key
+    outfits ........ show Outfits menu
+    menu ........... show main menu
+    types .......... show Types menu
+    poses .......... show Poses menu
+    listposes ...... list all poses
+    carry .......... pick up Dolly
+    uncarry ........ drop Dolly";
+
+                    if (isDoll || cdIsBuiltinController(id)) {
+                        help +=
+"
+    channel ## ..... change channel
+    prefix XX ...... change chat command prefix
+    controller NN .. add controller
+    blacklist NN ... add to blacklist
+    unblacklist NN . remove from blacklist";
+#ifdef WAKESCRIPT
+                        help +=
+"
+    wakescript NN .. wake up script";
+#endif
+                    }
+#ifdef DEBUG_MODE
+                    if (isDoll) help +=
+"
+    debug # ........ set the debugging message verbosity 0-9";
+#endif
+                    lmSendToAgent(help, id);
+                    return;
                 }
 
+                //----------------------------------------
+                // DOLL & CONTROLLER COMMANDS
+                //
                 // Commands only for Doll or Controllers
+                //   * build
                 //   * detach
-                //   * help
-                //   * devhelp
-                //   * listhelp
                 //   * xstats
-
+                //   * stat
+                //   * stats
+                //   * release
+                //   * demo
+                //
                 if (isDoll || isController) {
-                    // Normal user commands
-                    if (choice == "detach")
+                    if (choice == "build") {
+                        lmConfigReport();
+                        return;
+                    }
+                    else if (choice == "detach") {
 
                         if (detachable || isController) lmInternalCommand("detach", "", NULL_KEY);
                         else lmSendToAgent("Key can't be detached...", id);
 
-                    else if (choice == "help") {
-                    string help = "Commands:
-    Commands can be prefixed with your prefix, which is currently " + llToUpper(chatPrefix) + "\n
-    detach ......... detach key if possible
-    stat ........... concise current status
-    stats .......... selected statistics and settings
-    xstats ......... extended statistics and settings
-    poses .......... list all poses
-    wind ........... trigger emergency autowind
-    demo ........... toggle demo mode
-    [posename] ..... activate the named pose if possible
-    release ........ stop the current pose if possible
-    channel ## ..... change channel
-    prefix XX ...... change chat command prefix
-    help ........... this list of commands
-    dumpstate ...... dump all key state to chat history
-    build .......... list build configurations
-    listhelp ....... list controller/blacklist commands"
-#ifdef DEVELOPER_MODE
-    +
-"
-    devhelp ........ list of developer commands"
-#endif
-    ;
-                    lmSendToAgent(help, id);
-                    }
-#ifdef DEVELOPER_MODE
-                    else if (choice == "devhelp") {
-                    string help = "Developer Commands:\n
-    timereporting .. periodic reporting of script time usage
-    debug # ........ set the debugging message verbosity 0-9
-    inject ......... inject an aribtary link message the format is
-                     int#str#key with all but the first optional.";
-                     lmSendToAgent(help, id);
-                    }
-#endif
-
-                    else if (choice == "listhelp") {
-                    string help = "Access Commands:
-                     The following commands must be followed by the desired
-                     user's username (not display name!).\n
-    controller ..... add the username to the controller list
-    blacklist ...... blacklist the username if not blacklisted
-    unblacklist .... unblacklist the username if they are blacklisted";
-                    lmSendToAgent(help, id);
+                        return;
                     }
                     else if (choice == "xstats") {
                         string s = "Extended stats:\nDoll is a " + dollType + " Doll.\nAFK time factor: " +
@@ -511,6 +567,7 @@ default
                         else s += "RLV is not active.\n";
 
                         lmSendToAgent(s, id);
+                        return;
                     }
                     else if (choice == "stat") {
                         //debugSay(6, "DEBUG", "timeLeftOnKey = " + (string)timeLeftOnKey);
@@ -538,6 +595,7 @@ default
                         } else msg += " and key is currently stopped.";
 
                         lmSendToAgent(msg, id);
+                        return;
                     }
                     else if (choice == "stats") {
                         //debugSay(6, "DEBUG", "timeLeftOnKey = " + (string)timeLeftOnKey);
@@ -574,6 +632,7 @@ default
                         }
 
                         lmMemReport(1.0, 1);
+                        return;
                     }
                     else if (choice == "release") {
                         string p = llToLower(pronounHerDoll);
@@ -581,6 +640,7 @@ default
 
                         if ((poserID != NULL_KEY) && (poserID != dollID)) llOwnerSay("Dolly tries to wrest control of " + p + " body from the pose but " + s + " is no longer in control of " + p + " form.");
                         else lmMenuReply("Unpose", dollName, dollID);
+                        return;
                     }
 
                     // Demo: short time span
@@ -605,81 +665,137 @@ default
 
                             s += "running normally: " + (string)llRound(timeLeftOnKey / SEC_TO_MIN) + " of " + (string)llFloor(keyLimit / SEC_TO_MIN) + " minutes remaining.";
                         }
-                        llOwnerSay(s);
-                    }
-                    else if (choice == "listposes") {
-                        integer n = llGetInventoryNumber(INVENTORY_ANIMATION);
-
-                        string thisPose; string thisPrefix;
-
-                        while(n) {
-                            thisPose = llGetInventoryName(INVENTORY_ANIMATION, --n);
-                            thisPrefix = cdGetFirstChar(thisPose);
-
-                            if ((thisPrefix != "!") && (thisPrefix != ".")) thisPrefix = "";
-
-                            // Collapsed animation is special: skip it
-                            if (thisPose != ANIMATION_COLLAPSED) {
-
-                                // Doll sees all animations
-                                // Controller sees only animations with a "!" prefix
-                                // Animations with no prefix are seen by all
-                                //
-                                // -- or --
-                                //
-                                // Doll sees all animations regardless of prefix
-                                // Controller sees animations with no prefix and a "!" prefix
-                                // General public sees only those animations with no prefix
-                                //
-                                // -- or --
-                                //
-                                // "!" prefix is seen by Doll and Controller
-                                // "." prefix is seen by Doll
-                                // Other animations with no prefix are seen by all
-                                //
-                                if (isDoll ||
-                                    (isController && (thisPrefix == "!")) ||
-                                    (thisPrefix == "")) {
-
-                                        if (keyAnimation == thisPose) {
-                                            lmSendToAgent("\t*\t" + thisPose, id);
-                                        }
-                                        else {
-                                            lmSendToAgent("\t\t" + thisPose, id);
-                                        }
-                                }
-                                else if (keyAnimation == thisPose) {
-                                    lmSendToAgent("\t*\t{private}", id);
-                                }
-                            }
-                        }
+                        llSendToAgent(s,id);
+                        return;
                     }
                 }
 
+                //----------------------------------------
+                // PUBLIC COMMANDS
+                //
+                // These are the commands that anyone can give:
+                //   * wind
+                //   * outfits
+                //   * menu
+                //   * types
+                //   * poses
+                //   * listposes
+                //   * carry
+                //   * uncarry
+                //
                 if (choice == "wind") {
                     // if Dolly gives this command, its an Emergency Winder activation.
                     // if someone else, it is a normal wind of the Doll.
-#ifndef TESTER_MODE
+                    // if a Tester - it is a normal wind (Emergency Winder not available!)
+#ifdef TESTER_MODE
+                    cdMenuInject("Wind", name, id);
+#else
                     if (isDoll) cdMenuInject("Wind Emg", dollName, dollID);
-                    else {
+                    else cdMenuInject("Wind", name, id);
 #endif
-                        cdMenuInject("Wind", name, id);
-#ifndef TESTER_MODE
-                        }
-#endif
+                    return;
                 }
-                else if (choice == "menu")    cdMenuInject(MAIN, name, id);
-                else if (choice == "outfits") cdMenuInject("Outfits...", name, id);
-                else if (choice == "types")   cdMenuInject("Types...", name, id);
-                else if (choice == "poses")   cdMenuInject("Poses...", name, id);
-                else if (choice == "carry")   cdMenuInject("Carry", name, id);
-                else if (choice == "uncarry") cdMenuInject("Uncarry", name, id);
+                else if (choice == "outfits") {
+                    if (isDoll(id)) {
+                        if (canDressSelf) cdMenuInject("Outfits...", name, id);
+                        else lmSendToAgent("You are not allowed to dress yourself",id)
+                    }
+                    else {
+                        if (canDress) cdMenuInject("Outfits...", name, id);
+                        else lmSendToAgent("You are not allowed to dress Dolly",id)
+                    }
+
+                    return;
+                }
+                else if (choice == "menu") {
+                    cdMenuInject(MAIN, name, id);
+                    return;
+                }
+                else if (choice == "types") {
+                    cdMenuInject("Types...", name, id);
+                    return;
+                }
+                else if (choice == "poses") {
+                    if (isDoll(id) || isController) cdMenuInject("Poses...", name, id);
+                    else {
+                        if (canPose) cdMenuInject("Poses...", name, id);
+                        else lmSendToAgent("You are not allowed to pose Dolly", id);
+                    }
+                    return;
+                }
+                else if (choice == "listposes") {
+                    integer n = llGetInventoryNumber(INVENTORY_ANIMATION);
+
+                    string thisPose; string thisPrefix;
+
+                    while(n) {
+                        thisPose = llGetInventoryName(INVENTORY_ANIMATION, --n);
+                        thisPrefix = cdGetFirstChar(thisPose);
+
+                        if ((thisPrefix != "!") && (thisPrefix != ".")) thisPrefix = "";
+
+                        // Collapsed animation is special: skip it
+                        if (thisPose != ANIMATION_COLLAPSED) {
+
+                            // Doll sees all animations
+                            // Controller sees only animations with a "!" prefix
+                            // Animations with no prefix are seen by all
+                            //
+                            // -- or --
+                            //
+                            // Doll sees all animations regardless of prefix
+                            // Controller sees animations with no prefix and a "!" prefix
+                            // General public sees only those animations with no prefix
+                            //
+                            // -- or --
+                            //
+                            // "!" prefix is seen by Doll and Controller
+                            // "." prefix is seen by Doll
+                            // Other animations with no prefix are seen by all
+                            //
+                            if (isDoll ||
+                                (isController && (thisPrefix == "!")) ||
+                                (thisPrefix == "")) {
+
+                                    if (keyAnimation == thisPose) {
+                                        lmSendToAgent("\t*\t" + thisPose, id);
+                                    }
+                                    else {
+                                        lmSendToAgent("\t\t" + thisPose, id);
+                                    }
+                            }
+                            else if (keyAnimation == thisPose) {
+                                lmSendToAgent("\t*\t{private}", id);
+                            }
+                        }
+                    }
+                    return;
+                }
+                else if (choice == "carry") {
+                    if (!isDoll) cdMenuInject("Carry", name, id);
+                    return;
+                }
+                else if (choice == "uncarry") {
+                    if (!isDoll) )cdMenuInject("Uncarry", name, id);
+                    return;
+                }
             }
             else {
                 // Command has secondary parameter
                 string param =           llStringTrim(llGetSubString(choice, space + 1, STRING_END), STRING_TRIM);
                 choice       = llToLower(llStringTrim(llGetSubString(   msg,         0,  space - 1), STRING_TRIM));
 
+                //----------------------------------------
+                // DOLL & EMBEDDED CONTROLLER COMMANDS (with parameter)
+                //
+                // Access to these commands for Doll and embedded controllers only:
+                //   * channel 999
+                //   * controller AAA
+                //   * blacklist AAA
+                //   * unblacklist AAA
+                //   * prefix ZZZ
+                //   * wakescript NNNN
+                //
                 if (isDoll || cdIsBuiltinController(id)) {
                     if (choice == "channel") {
                         string c = param;
@@ -693,22 +809,31 @@ default
                                 chatHandle = llListen(ch, "", llGetOwner(), "");
                             }
                         }
+                        return;
                     }
-                    else if (choice == "controller")  lmInternalCommand("addMistress", param, id);
-                    else if (choice == "blacklist")   lmInternalCommand("addBlacklist", param, id);
-                    else if (choice == "unblacklist") lmInternalCommand("remBlacklist", param, id);
+                    else if (choice == "controller") {
+                        lmInternalCommand("addMistress", param, id);
+                        return;
+                    }
+                    else if (choice == "blacklist") {
+                        lmInternalCommand("addBlacklist", param, id);
+                        return;
+                    }
+                    else if (choice == "unblacklist") {
+                        lmInternalCommand("remBlacklist", param, id);
+                        return;
+                    }
                     else if (choice == "prefix") {
                         string newPrefix = param;
                         string c1 = llGetSubString(newPrefix,0,0);
                         string msg = "The prefix you entered is not valid, the prefix must ";
 
-                        // * must be greater than two characters
+                        // * must be greater than two characters and less than ten characters
 
-                        if (llStringLength(newPrefix) == 2) {
+                        if (llStringLength(newPrefix) < 2 || llStringLength(newPrefix) > 10) {
                             // Why? Two character user prefixes are standard and familiar; too much false positives with
-                            // just 1 letter (~4%) with letter + letter/digit it's (~0.1%) - excessively long prefixes
-                            // are bad for useability.
-                            lmSendToAgent(msg + "be at least two characters long.", id);
+                            // just 1 letter (~4%) with letter + letter/digit it's (~0.1%)
+                            lmSendToAgent(msg + "be between two and ten characters long.", id);
                         }
 
                         // * contain numbers and letters only
@@ -731,8 +856,9 @@ default
 
                         else {
                             chatPrefix = newPrefix;
-                            lmSendToAgentPlusDoll("Chat prefix has been changed to " + llToUpper(chatPrefix) + " the new prefix should now be used for all commands.", id);
+                            lmSendToAgentPlusDoll("Chat prefix has been changed to " + llToLower(chatPrefix) + " the new prefix should now be used for all commands.", id);
                         }
+                        return;
                     }
 #ifdef WAKESCRIPT
                     else if (choice == "wakescript") {
@@ -766,21 +892,41 @@ default
 
                             llOwnerSay(msg);
                         }
+                        return;
                     }
 #endif
                 }
+
+                //----------------------------------------
+                // DOLL COMMANDS (with parameter)
+                //
+                // These commands are for dolly ONLY
+                //   * debug
+                //   * inject
+                //   * timereporting
+                //
                 if (isDoll) {
-#ifdef DEVELOPER_MODE
+#ifdef DEBUG_MODE
                     if (choice == "debug") {
                         lmSendConfig("debugLevel", (string)(debugLevel = (integer)param));
                         llOwnerSay("DEBUG_LEVEL = " + (string)debugLevel);
+                        return;
                     }
+#else
+                    ;
+#endif
+#ifdef DEVELOPER_MODE
                     else if (choice == "inject") {
                         list params = llParseString2List(param, ["#"], []);
-                        llOwnerSay("INJECT LINK:\nLink Code: " + (string)llList2Integer(params, 0) + "\n" +
-                                   "Data: " + cdMyScriptName() + "|" + llList2String(params, 1) + "\n" +
-                                   "Key: " + (string)llList2Key(params, 2));
-                        llMessageLinked(LINK_THIS, llList2Integer(params, 0), cdMyScriptName() + "|" + llList2String(params, 1), llList2Key(params, 2));
+                        key paramKey = llList2Key(params,2); // NULL_KEY if not valid
+                        string paramData = cdMyScriptName() + "|" + llList2String(params,1);
+                        integer paramCode = llList2Integer(params,0);
+
+                        llOwnerSay("INJECT LINK:\nLink Code: " + (string)paramsCode +
+                                   "\nData: " + paramData +
+                                   "\nKey: " + (string)paramKey);
+                        llMessageLinked(LINK_THIS, paramCode, paramData, paramKey);
+                        return;
                     }
                     else if (choice == "timereporting") {
                         string s = "Time reporting turned ";
@@ -797,19 +943,18 @@ default
 
                         llOwnerSay(s);
                         lmSendConfig("timeReporting", (string)(timeReporting = (integer)param));
+                        return;
                     }
-#else
-#ifdef TESTER_MODE
-                    else if (choice == "debug") {
-                        lmSendConfig("debugLevel", (string)(debugLevel = (integer)param));
-                        llOwnerSay("DEBUG_LEVEL = " + (string)debugLevel);
-                    }
-#endif
 #endif
                 }
             }
         }
+
 #ifdef KEY_HANDLER
+        //----------------------------------------
+        // KEY HANDLER CHANNEL
+        //----------------------------------------
+
         else if (channel == broadcastOn) {
             if (llGetSubString(msg, 0, 4) == "keys ") {
                 string subcommand = llGetSubString(msg, 5, STRING_END);
