@@ -304,6 +304,7 @@ default {
             else if (name == "poserID")                       poserID = (key)value;
             else if (name == "keyLimit")                      maxMins = llRound((float)value / 60.0);
             else if (name == "quiet")                           quiet = (integer)value;
+            else if (name == "RLVok")                           RLVok = (integer)value;
             else if (name == "autoTP")                         autoTP = (integer)value;
             else if (name == "showPhrases")               showPhrases = (integer)value;
             else if (name == "canAFK")                         canAFK = (integer)value;
