@@ -29,13 +29,9 @@
 //#define ALL_CONTROLS (CONTROL_FWD|CONTROL_BACK|CONTROL_LEFT|CONTROL_RIGHT|CONTROL_ROT_LEFT|CONTROL_ROT_RIGHT|CONTROL_UP|CONTROL_DOWN|CONTROL_LBUTTON|CONTROL_ML_LBUTTON)
 //integer allControls = ALL_CONTROLS;
 
-//key rlvTPrequest;
 #ifndef DEVELOPER_MODE
 key mainCreator;
 #endif
-//key requestLoadData;
-//key keyAnimationID;
-//key lastAttachedID;
 #ifdef DEVELOPER_MODE
 float lastTimerEvent;
 float thisTimerEvent;
@@ -43,20 +39,9 @@ float timerInterval;
 integer timeReporting = 1;
 #endif
 
-//list rlvSources;
-//list rlvStatus;
-
 float rlvTimer;
 
-//float baseWindRate;
-//float afkSlowWalkSpeed = 5;
-//float animRefreshRate = 8.0;
-
 float nextRLVcheck;
-//float nextAnimRefresh;
-
-//vector carrierPos;
-//vector lockPos;
 
 list split;
 string script;
@@ -67,56 +52,22 @@ integer code;
 string name;
 string value;
 
-//string barefeet;
-//string carrierName;
-//string keyAnimation;
-
 #ifdef DEVELOPER_MODE
 string myPath;
 #endif
 
-//string pronounHerDoll = "Her";
-//string pronounSheDoll = "She";
 string rlvAPIversion;
-//string redirchan;
 string userBaseRLVcmd;
 
-//integer afk;
-//integer isAnimated;
-//integer isFrozen;
-//integer isNoScript;
-//integer hasCarrier;
-//integer isPosed; (use cdPosed)
-//integer isSelfPosed; (use cdSelfPosed)
 integer i;
-//key animKey;
-//list animList;
-
-//key grantorID;
-//integer permMask;
-
-//integer carryMoved;
 integer rlvChannel;
-//integer clearAnim = 1;
-//integer collapsed;
-//integer dialogChannel;
-//integer haveControls;
 integer rlvHandle;
-//integer locked;
 #ifdef SIM_FRIENDLY
 integer lowScriptMode;
 #endif
-//integer poseSilence;
-//integer refreshControls;
 integer RLVck = 0;
 integer RLVok = UNSET;
 integer RLVstarted;
-//integer startup = 1;
-//integer targetHandle;
-//integer ticks;
-//integer wearLock;
-//integer newAttach = 1;
-//integer creatorNoteDone;
 integer chatChannel = 75;
 
 //========================================

@@ -68,32 +68,15 @@ integer ticks;
 
 integer afk;
 integer autoAFK = 1;
-//integer autoTP;
 integer canAFK = 1;
-//integer canCarry = 1;
-//integer canDress = 1;
-//integer canFly = 1;
-//integer canSit = 1;
-//integer canStand = 1;
-//integer canRepeat = 1;
-//integer canDressSelf;
-//integer canUnwear;
 integer clearAnim;
 integer collapsed;
 integer configured;
 integer demoMode;
-//integer detachable = 1;
-//integer doWarnings;
-//integer tpLureOnly;
-//integer pleasureDoll;
-//integer isTransformingKey;
-//integer visible = 1;
 integer quiet;
 integer RLVok = -1;
 integer RLVck = 1;
 integer signOn;
-//integer takeoverAllowed;
-//integer timerStarted;
 integer warned;
 integer wearLock;
 
@@ -109,23 +92,15 @@ string dollType = "Regular";
 float winderRechargeTime;
 float wearLockExpire;
 float carryExpire;
-//float lastRandomTime;
 float lastTimerEvent;
-//float menuSleep;
-//float lastTickTime;
 float jamExpire;
 #ifdef PREDICTIVE_TIMER
 float nextExpiryTime;
 #endif
 float poseExpire;
-//float windAmount      = WIND_DEFAULT;
-////float keyLimit        = 10800.0;
-////float timeLeftOnKey   = windAmount;
 float baseWindRate    = windRate;
 float displayWindRate = windRate;
 float effectiveLimit  = keyLimit;
-//integer HTTPinterval  = 60;
-//integer HTTPthrottle  = 10;
 float collapseTime;
 integer windMins = 30;
 float effectiveWindTime = 30.0;
@@ -269,13 +244,12 @@ default {
             lmRating(simRating);
 
 #ifdef ADULT_MODE
+            if (pleasureDoll || (dollType == "Slut")) {
 
-            //if (pleasureDoll || (dollType == "Slut")) {
-
-            //    if (cdRating2Integer(simRating) < 2) {
-            //        llOwnerSay("Entered " + llGetRegionName() + "; rating is " + llToLower(simRating) + " - so stripping disabled.");
-            //    }
-            //}
+                if (cdRating2Integer(simRating) < 2) {
+                    llOwnerSay("Entered " + llGetRegionName() + "; rating is " + llToLower(simRating) + " - so stripping disabled.");
+                }
+            }
 #endif
         }
     }
@@ -290,9 +264,6 @@ default {
             lmSendConfig("keyHandler", (string)(keyHandler = NULL_KEY));
 #endif
         }
-        //if (change & CHANGED_OWNER) {
-        //    llSleep(60);
-        //}
     }
 
     //----------------------------------------
@@ -745,40 +716,6 @@ default {
                 lmSendConfig("wearLockExpire", (string)wearLockExpire);
                 lmSendConfig("wearLock", (string)(wearLock));
             }
-//            else if (cmd == "windMenu") {
-//                // Compute "time remaining" message for windMenu
-//                if (id == NULL_KEY) return;
-//
-//                string name = llList2String(split, 0);
-//                float windLimit = llList2Float(split, 1);
-//
-//                list windButtons = ["Wind"];
-//
-//                if (demoMode) effectiveWindTime = 1;
-//                else effectiveWindTime = windMins * SEC_TO_MIN;
-//
-//                if (cdIsController(id)) windButtons += ["Hold","Unwind"];
-//                else if (cdIsCarrier(id)) windButtons += "Hold";
-//
-//                // Now build dialog message
-//                string timeleft;
-//
-//                displayWindRate = setWindRate();
-//                integer minsLeft = llRound(timeLeftOnKey / (60.0 * displayWindRate));
-//
-//                if (minsLeft > 0) {
-//                    timeleft = "Dolly has " + (string)minsLeft + " minutes remaining.\n";
-//
-//                    timeleft += "Key is ";
-//                    if (cdKeyStopped()) timeleft += "not winding down.\n";
-//                    else timeleft += "winding down at " + formatFloat(displayWindRate, 1) + "x rate.\n";
-//                }
-//                else timeleft = "Dolly has no time left.\n";
-//
-//                // Finally, present dialog
-//                cdDialogListen();
-//                llDialog(id, timeleft + "What do you wish to do?", dialogSort(windButtons + MAIN), dialogChannel);
-//            }
         }
 
         else if (code == 350) {

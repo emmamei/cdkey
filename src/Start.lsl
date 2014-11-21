@@ -36,11 +36,9 @@
 // VARIABLES
 //=======================================
 float delayTime = 15.0; // in seconds
-//float nextIntro;
 #ifdef DEVELOPER_MODE
 float initTimer;
 #endif
-//float nextLagCheck;
 
 key dollID = NULL_KEY;
 key MistressID = NULL_KEY;
@@ -72,7 +70,6 @@ key lastAttachAvatar;
 list controllers;
 list blacklist;
 list recentDilation;
-//list windTimes;
 
 integer quiet = NO;
 integer newAttach = YES;
@@ -111,9 +108,6 @@ string defaultPoseRLVcmd = "";
 string dollGender = "Female";
 string pronounHerDoll = "Her";
 string pronounSheDoll = "She";
-//string nameOverride;
-//integer startup;
-//integer initState = 104;
 integer introLine;
 integer introLines;
 
@@ -124,9 +118,6 @@ integer resetState;
 
 integer rlvWait;
 integer RLVok = UNSET;
-//integer databaseFinished;
-//integer databaseOnline;
-
 float keyLimit;
 
 integer afk;
@@ -369,17 +360,6 @@ readPreferences() {
 doneConfiguration(integer prefsRead) {
     // prefsRead appears to be superfluous.... or IS it? Left in for now
 
-    //debugSay(3,"DEBUG-START","Configuration done - resetState = " + (string)resetState);
-
-    // Are we resetting? resetState will be either RESET_NORMAL or RESET_STARTUP - nonzero.
-    // If so, then reset the key.
-    //
-    //if (resetState) {
-    //    debugSay(3,"DEBUG-START","Configuration done - resetting Key");
-    //    llSleep(7.5);
-    //    cdResetKey();
-    //}
-
     resetState = RESET_NONE;
 
     debugSay(3,"DEBUG-START","Configuration done - starting init code 102 and 104 and 105");
@@ -489,8 +469,6 @@ default {
             string value = llList2String(split, 1);
 
                  if (name == "ncPrefsLoadedUUID")    ncPrefsLoadedUUID = llDeleteSubList(split,0,0);
-//          else if (name == "offlineMode")                offlineMode = (integer)value;
-//          else if (name == "databaseOnline")          databaseOnline = (integer)value;
             else if (name == "lowScriptMode")            lowScriptMode = (integer)value;
             else if (name == "dialogChannel")            dialogChannel = (integer)value;
             else if (name == "demoMode")                      demoMode = (integer)value;
@@ -578,11 +556,9 @@ default {
                         integer space = llSubStringIndex(name, " ");
 
                         if (space != NOT_FOUND) name = llGetSubString(name, 0, space -1);
-                        //llOwnerSay("INIT:300: dollyName = " + dollyName + " (send to 300)");
 
                         lmSendConfig("dollyName", (dollyName = "Dolly " + name));
                     }
-                    //llOwnerSay("INIT:300: dollyName = " + dollyName + " (setting)");
                     if (cdAttached()) cdSetKeyName(dollyName + "'s Key");
                 }
             }
@@ -645,8 +621,6 @@ default {
             if (selection == "Reset Key") {
                 if (cdIsController(id)) cdResetKey();
             }
-
-            //nextLagCheck = llGetTime() + SEC_TO_MIN;
         }
     }
 
@@ -683,8 +657,6 @@ default {
     //----------------------------------------
     touch_start(integer num) {
         if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
-
-        //nextLagCheck = llGetTime() + SEC_TO_MIN;
     }
 
     //----------------------------------------
@@ -698,13 +670,8 @@ default {
         else cdResetKeyName();
 
         RLVok = UNSET;
-        //startup = 2;
-
-        //databaseOnline = 0;
-        //databaseFinished = 0;
 
         llResetTime();
-        //sendMsg(dollID, "Reattached, Initializing");
     }
 
     //----------------------------------------

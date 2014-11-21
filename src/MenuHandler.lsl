@@ -42,7 +42,6 @@ key menuID = NULL_KEY;
 // does this need to be a global?
 key uniqueID = NULL_KEY;
 
-//list windTimes = [ 30 ];
 list uuidList;
 
 float timeLeftOnKey;
@@ -51,8 +50,6 @@ float collapseTime;
 
 integer afk;
 integer autoAFK = 1;
-//integer autoTP;
-//integer canAFK = 1;
 integer canCarry = 1;
 integer canDress = 1;
 integer canDressSelf = 1;
@@ -273,7 +270,6 @@ default
             }
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "afk")                               afk = (integer)value;
-            //else if (name == "autoTP")                         autoTP = (integer)value;
 
             // have to test before shortcut "c" because of compound conditional: "controllers"
             else if ((name == "controllers") || (name == "blacklist")) {
@@ -983,10 +979,6 @@ default
                     if (isDoll || isController) {
                         integer isX = (beforeSpace == CROSS);
 
-                        //debugSay(4, "DEBUG-MENU", "Option setting is " + (string)isX);
-                        //debugSay(5, "DEBUG-MENU", "Option 'beforeSpace' is " + beforeSpace);
-                        //debugSay(5, "DEBUG-MENU", "Option 'afterSpace' is " + afterSpace);
-
                         // Entering key menu section
                         if (afterSpace == "Gem Light") {
                              lmSendConfig("primLight", (string)isX);
@@ -1100,10 +1092,8 @@ default
             if (channel == blacklistChannel) {
 
                 // shutdown the listener
-                //if (blacklistHandle) {
-                    llListenRemove(blacklistHandle);
-                    blacklistHandle = 0;
-                //}
+                llListenRemove(blacklistHandle);
+                blacklistHandle = 0;
 
                 if (llListFindList(controllers, [uuid,name]) == NOT_FOUND) lmInternalCommand("addBlacklist", (string)uuid + "|" + name, id);
                 else                                                       lmInternalCommand("remBlacklist", (string)uuid + "|" + name, id);
@@ -1111,10 +1101,8 @@ default
             else {
 
                 // shutdown the listener
-                //if (controlHandle) {
-                    llListenRemove(controlHandle);
-                    controlHandle = 0;
-                //}
+                llListenRemove(controlHandle);
+                controlHandle = 0;
 
                 if (llListFindList(controllers, [uuid,name]) == NOT_FOUND)  lmInternalCommand("addMistress", (string)uuid + "|" + name, id);
                 else if (cdIsController(id))                                lmInternalCommand("remMistress", (string)uuid + "|" + name, id);

@@ -28,7 +28,6 @@ key rlvTPrequest;
 #ifdef LOCKON
 key mainCreator;
 #endif
-//key requestLoadData;
 key keyAnimationID;
 key lastAttachedID;
 #ifdef DEVELOPER_MODE
@@ -38,13 +37,10 @@ float timerInterval;
 integer timeReporting = 1;
 #endif
 
-//list rlvSources;
-//list rlvStatus;
 list controllers;
 
 float rlvTimer;
 
-//float baseWindRate;
 float afkSlowWalkSpeed = 5;
 float animRefreshRate = 8.0;
 
@@ -75,16 +71,12 @@ string myPath;
 string pronounHerDoll = "Her";
 string pronounSheDoll = "She";
 string rlvAPIversion;
-//string redirchan;
 string userBaseRLVcmd;
 
 integer afk;
-//integer isAnimated;
 integer isFrozen;
 integer isNoScript;
 integer hasCarrier;
-//integer isPosed; (use cdPosed)
-//integer isSelfPosed; (use cdSelfPosed)
 integer i;
 key animKey;
 list animList;
@@ -93,24 +85,14 @@ key grantorID;
 integer permMask;
 
 integer carryMoved;
-//integer rlvChannel;
 integer clearAnim = 1;
 integer collapsed;
-//integer configured;
 integer dialogChannel;
-//integer haveControls;
-//integer rlvHandle;
 integer locked;
 integer lowScriptMode;
-//integer poseSilence;
-//integer refreshControls;
 integer RLVok = UNSET;
-//integer startup = 1;
 integer targetHandle;
-//integer ticks;
-//integer wearLock;
 integer newAttach = 1;
-//integer creatorNoteDone;
 integer chatChannel = 75;
 
 //========================================
