@@ -118,9 +118,9 @@ float jamExpire;
 float nextExpiryTime;
 #endif
 float poseExpire;
-float windAmount      = WIND_DEFAULT;
-float keyLimit        = 10800.0;
-float timeLeftOnKey   = windAmount;
+//float windAmount      = WIND_DEFAULT;
+////float keyLimit        = 10800.0;
+////float timeLeftOnKey   = windAmount;
 float baseWindRate    = windRate;
 float displayWindRate = windRate;
 float effectiveLimit  = keyLimit;
