@@ -59,7 +59,21 @@
 
 /* enable testing and debugging features and allows the doll to access
    normally inaccessible functions like strip and wind */
-/* #define TESTER_MODE 1 */
+#ifndef DEVELOPER_MODE
+// #define TESTER_MODE 1
+#endif
+
+/* Enable debugging code - in contrast to Developer code
+   Use this to hand out keys with Debugging but without Developer-specific
+   capabilities */
+#ifdef DEVELOPER_MODE
+// Developer Keys ought to put out debugging
+#define DEBUG_MODE 1
+#endif
+#ifdef TESTER_MODE
+// Test Keys ought to put out debugging
+#define DEBUG_MODE 1
+#endif
 
 /* enable the start up introduction/hypno text provided that the required
    "Intro Text" notecard is also present */
@@ -81,8 +95,8 @@
 #define PACKAGE_URL "https://github.com/emmamei/cdkey"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "10-Nov-14"
+#define PACKAGE_VERSION "20-Nov-14"
 
 /* Define to the numeric version of this package. */
-#define PACKAGE_VERNUM 140405
+#define PACKAGE_VERNUM 141120
 
