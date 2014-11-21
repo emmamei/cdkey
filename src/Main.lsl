@@ -545,15 +545,12 @@ default {
 
         cdConfigReport();
 
-        else if (code == 300) {
+        else if (code == CONFIG) {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
             split = llDeleteSubList(split, 0, 0);
 
-                 if (name == "timeLeftOnKey") {
-                     timeLeftOnKey = (float)value;
-                     //if (collapsed == NO_TIME && timeLeftOnKey > 0.0) collapse(NOT_COLLAPSED);
-                 }
+                 if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
             else if (name == "afk")                               afk = (integer)value;
             else if (name == "winderID")                     winderID = (key)value;
             else if (name == "carrierID") {

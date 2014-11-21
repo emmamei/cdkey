@@ -768,6 +768,7 @@ default {
 #ifdef DEVELOPER_MODE
                 sendMsg(dollID, "Preferences read in " + formatFloat(llGetTime() - ncStart, 2) + "s");
 #endif
+                llSleep(0.5); // Link Message processing time?
                 doneConfiguration(PREFS_READ);
             }
             else {
