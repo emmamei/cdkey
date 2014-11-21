@@ -210,12 +210,15 @@ processConfiguration(string name, string value) {
     list configs = [ "barefeet path", "helpless dolly", "quiet key", "outfits path",
                      "busy is away", "can afk", "can fly", "poseable", "can sit", "can stand",
                      "can dress", "detachable", "doll type", "pleasure doll", "pose silence",
-                     "auto tp", "outfitable", "initial time", "max time",
+                     "auto tp", "outfitable", "max time",
                      "afk rlv", "base rlv", "collapse rlv", "pose rlv" , "show phrases",
-                     "dressable", "carryable", "repeatable wind",
-#ifdef DEVELOPER_MODE
-                     "debug level"
+#ifdef DEBUG_MODE
+                     "debug level",
 #endif
+#ifdef DEVELOPER_MODE
+                     "initial time",
+#endif
+                     "dressable", "carryable", "repeatable wind"
                    ];
 
     list sendName = [ "barefeet", "helpless", "quiet", "outfitsFolder",
@@ -223,29 +226,66 @@ processConfiguration(string name, string value) {
                       "canDressSelf", "detachable", "dollType", "pleasureDoll", "poseSilence",
                       "autoTP", "canDress", "timeLeftOnKey", "keyLimit",
                       "userAfkRLVcmd", "userBaseRLVcmd", "userCollapseRLVcmd", "userPoseRLVcmd" , "showPhrases",
-                      "canDress", "canCarry", "canRepeat",
-#ifdef DEVELOPER_MODE
-                      "debugLevel"
+#ifdef DEBUG_MODE
+                      "debugLevel",
 #endif
+#ifdef DEVELOPER_MODE
+                      "timeLeftOnKey",
+#endif
+                      "canDress", "canCarry", "canRepeat"
                     ];
 
-    list internals = [ "wind time", "blacklist key", "controller key" ];
-    list cmdName = [ "setWindTime", "addBlacklist", "addMistress" ];
+//  list internals = [ "wind time", "blacklist key", "controller key" ];
+//  list cmdName = [ "setWindTime", "addBlacklist", "addMistress" ];
+    list internals = [ "wind time" ];
+    list cmdName = [ "setWindTime" ];
+
+    // Three specially handled configuration entries:
+    //   * doll gender
+    //   * blacklist key
+    //   * controller key
 
     // This processes a single line from the preferences notecard...
     // processing done a single time during the read of the nc belong elsewhere
 
     name = llToLower(name);
     if ((i = cdListElementP(configs,name)) != NOT_FOUND) {
+#ifdef DEVELOPER_MODE
         if (name == "initial time") {
             value = (string)((float)value * SEC_TO_MIN);
-        } else if (name == "max time") {
+
+            // validate value
+            if ((float)value > 90) value = "90";
+            else if ((float)value < 15) value = "15";
+            if ((float)value > keyLimit) value = (string)keyLimit;
+        }
+        else
+#endif
+        if (name == "max time") {
             value = (string)((float)value * SEC_TO_MIN);
+
+            // validate value and also timeLeftOnKey
+            if ((float)value > 240) value = "240";
+            else if ((float)value < 30) value = "30";
+            if (timeLeftOnKey > (float)value) timeLeftOnKey = (float)value;
         }
 
         lmSendConfig(cdListElement(sendName,i), value);
     }
     else if ((i = cdListElementP(internals,name)) != NOT_FOUND) {
+        if (name == "wind time") {
+
+            // validate value
+            if ((float)value > 90) value = "90";
+            else if ((float)value < 15) value = "15";
+
+            // If it takes 2 winds or less to wind dolly, then
+            // we fall back to 6 winds: note that this happens AFTER
+            // the numerical validation: so potentioally, after this next
+            // statement, we could have a wind time of less than 15 - which
+            // is to be expected
+            if ((float)value > (keyLimit / 2)) value = (string)llFloor(keyLimit / 6);
+        }
         lmInternalCommand(cdListElement(cmdName,i), value, NULL_KEY);
     }
     else if (name == "doll gender") {
