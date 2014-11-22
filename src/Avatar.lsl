@@ -269,7 +269,7 @@ oneAnimation() {
         if (animKey != NULL_KEY) {
             lmSendConfig("keyAnimationID", (string)(keyAnimationID = animKey));
 
-            if (lowScriptMode )animRefreshRate = 10.0;
+            if (lowScriptMode) animRefreshRate = 10.0;
             else animRefreshRate = 4.0;
         }
         else animRefreshRate = 0.0;
@@ -495,7 +495,7 @@ default {
             llTargetRemove(targetHandle);
 
             isNoScript = llGetParcelFlags(llGetPos()) & PARCEL_FLAG_ALLOW_SCRIPTS;
-            lmSendConfig("lowScriptMode",(string)(lowScriptMode = (llGetRegionFPS() < LOW_FPS || llGetRegionTimeDilation() < LOW_DILATION)));
+            lmSendConfig("lowScriptMode",(string)(lowScriptMode = cdLowScriptTrigger));
 
 #ifdef DEVELOPER_MODE
             msg = "Region ";
