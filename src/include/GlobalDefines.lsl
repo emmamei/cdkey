@@ -107,7 +107,8 @@ list BuiltinControllers = BUILTIN_CONTROLLERS;
 // Tests of id
 #define cdIsDoll(id)                    (id == dollID)
 #define cdIsCarrier(id)                 (id == carrierID)
-#define cdIsBuiltinController(id)       (llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1)
+#define cdIsBuiltinController(id)       (id != dollID && llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1)
+#define cdDollyIsBuiltinController(id)  (id == dollID && llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1)
 #define cdIsUserController(id)          (llListFindList(USER_CONTROLLERS, [ (string)id ]) != -1)
 #define cdIsController(id)              cdGetControllerStatus(id)
 
