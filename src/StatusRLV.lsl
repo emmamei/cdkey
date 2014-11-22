@@ -106,8 +106,7 @@ default {
 
             if (name == "RLVok")    RLVok = (integer)value;
 #ifdef DEVELOPER_MODE
-            else
-            if (name == "debugLevel") debugLevel = (integer)cdListElement(split, 1);
+            else if (name == "debugLevel") debugLevel = (integer)cdListElement(split, 1);
 #endif
             return;
         }
@@ -124,6 +123,9 @@ default {
             //string realScript = script;
             //string script = cdListElement(split, 0);
             string commandString = cdListElement(split, 1);
+
+            // This can happen...
+            if (commandString == "") return;
 
             debugSay(1,"DEBUG-STATUSRLV","Got Link Message 315 from script " + script + ": " + commandString);
 
