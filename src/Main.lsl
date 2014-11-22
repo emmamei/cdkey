@@ -314,18 +314,32 @@ default {
         if (cdAttached()) timerInterval = thisTimerEvent - lastTimerEvent;
 
         if (lowScriptMode) {
-            // Don't trigger immediately - wait 10 minutes
-            if (lastLowScriptTime)
+            // We're in lowScriptMode.... is that still
+            // relevant? Check....
+
+            if (cdLowScriptTrigger) {
+                lastLowScriptTime = llGetTime(); // mark the time
+            }
+            else {
+                // Nope - all is good again: BUT don't trigger
+                // normal mode immediately - wait 10 minutes
+                // to see if this good news sticks
+
                 if (llGetTime() - lastLowScriptTime > 600) {
+                    lastLowScriptTime = 0;
                     lowScriptMode = 0;
-                    llOwnerSay("ATTN: Power-saving mode activated.");
+                    llOwnerSay("ATTN: Normal mode activated.");
                 }
+            }
         }
         else {
             if (cdLowScriptTrigger) {
+                // We're not in lowScriptMode, but have been triggered...
+                // Go into "power saving mode", say so, and mark the time
+
                 lowScriptMode = 1;
                 lastLowScriptTime = llGetTime();
-                llOwnerSay("ATTN: Normal mode activated.");
+                llOwnerSay("ATTN: Power-saving mode activated.");
             }
         }
 
