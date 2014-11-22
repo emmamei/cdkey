@@ -466,13 +466,20 @@ default
 
                 //if (startup) lmSendToAgent("Dolly's key is still establishing connections with " + llToLower(pronounHerDoll) + " systems please try again in a few minutes.", id);
 
-                if (llListFindList(blacklist, [ (string)id ]) == NOT_FOUND) {
+                if (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND) {
+                    msg = "You are not permitted any access to this dolly's key.";
+                    menu = ["Leave Alone"];
+                }
+                else {
                     // Cache access test results
                     integer hasCarrier      = cdCarried();
                     integer isCarrier       = cdIsCarrier(id);
                     integer isController    = cdIsController(id);
                     integer isDoll          = cdIsDoll(id);
                     integer numControllers  = cdControllerCount();
+
+                    //----------------------------------------
+                    // Build message for Main Menu display
 
                     // Compute "time remaining" message for mainMenu/windMenu
                     string timeleft;
@@ -488,18 +495,25 @@ default
                     }
                     else timeleft = "Dolly has no time left.\n";
 
+                    //----------------------------------------
+                    // Start building menu
+
                     // Handle our "special" states first which significantly alter the menu
+                    //
+                    // 1. Doll has carrier
+                    // 2. Doll is collapsed and is accessing their menu
+                    // 3. Doll isnot collapsed and either has no carrier, or carrier is accessor
 
                     // When the doll is carried the carrier has exclusive control
                     if (hasCarrier) {
                         // Doll being carried clicked on key
                         if (isCarrier) {
                             msg = "Uncarry frees " + dollName + " when you are done with " + pronounHerDoll;
-                            menu = ["Uncarry","OK"];
+                            menu = ["Uncarry"];
                         }
-                        else if (cdIsController(id) && isDoll) {
+                        else if (cdIsController(id) && !isDoll) {
                             msg = dollName + " is being carried by " + carrierName + ". ";
-                            menu = ["Uncarry","OK"];
+                            menu = ["Uncarry"];
                         }
                         else {
                             if (isDoll) msg = "You are being carried by " + carrierName + ". ";
@@ -539,6 +553,18 @@ default
                         }
                     }
 
+                    // We dont get here only if accessor is Dolly and she is collapsed
+                    //
+                    // This is, in essence, a "normal" (full) menu
+                    //
+                    // Those who skip this section (due to condition) are:
+                    //   * Collapsed dolly (acessor is not Dolly)
+                    //   * Carried Dolly (non-carrier is accessor)
+                    //
+                    // Note that Controllers also skip this section if Dolly has a carrier -
+                    // but they get an "Uncarry" button to wrest control back from the
+                    // carrier - in which case they get this menu back
+                    //
                     if (!collapsed && (!hasCarrier || isCarrier)) {
                         // State: not collapsed; and either: a) toucher is carrier; or b) doll has no carrier...
                         //
@@ -550,8 +576,6 @@ default
 
                         // Options only available to dolly
                         if (isDoll) {
-                            menu += "Options...";
-                            if (detachable) menu += "Detach";
                             if (canAFK) menu += "AFK";
                             menu += "Visible";
                         }
@@ -567,7 +591,7 @@ default
                             // Can the doll be dressed? Add menu button
 
                             if (isDoll) if (canDressSelf) menu += "Outfits...";
-                            else        if (canDress)     menu += "Outfits...";
+                            else        if (canDress || isController)     menu += "Outfits...";
 
                             if (isController) menu += "RLV Off";
                         } else {
@@ -576,24 +600,22 @@ default
                             if (isDoll || isController) menu += "RLV On";
                         }
 
-                        // Can the doll be transformed? Add menu button
-                        //if (isTransformingKey) menu += "Types...";
                         menu += "Types...";
 
                         if (keyAnimation != "") {
                             msg += "Doll is currently posed.\n";
 
-                            if ((!isDoll && canPose) || (poserID == dollID)) {
+                            if ((isController) || (!isDoll && canPose) || (poserID == dollID)) {
                                 menu += ["Poses...","Unpose"];
                             }
                         }
                         else {
-                            if ((!isDoll && canPose) || isDoll) menu += "Poses...";
+                            if ((!isDoll && canPose) || isDoll || isController) menu += "Poses...";
                         }
 
                         // Fix for issue #157
                         if (!isDoll) {
-                            if (canCarry) {
+                            if (canCarry || isController) {
                                 msg += "Carry option picks up " + dollName + " and temporarily makes the Dolly exclusively yours.\n";
 
                                 if (!hasCarrier) menu += "Carry";
@@ -613,12 +635,14 @@ default
                     if (!isDoll) menu += "Wind";
                     menu += "Help...";
 
-                    // Options only available if controller
+                    // Options only available if controller... controller might
+                    // be Dolly, and that's ok
                     if (isController) {
-                        if (!isDoll) menu += [ "Options...","Detach" ];
-                        else if (!detachable) menu += [ "Detach" ];
-                    }
+                        menu += [ "Options..."];
 
+                        // Do we want Dolly to hae Detach capability... ever?
+                        if (detachable) menu += [ "Detach" ];
+                    }
 
                     if (RLVok == UNSET) msg += "Still checking for RLV support some features unavailable.\n";
                     else if (RLVok == 0) {
@@ -645,10 +669,6 @@ default
 
                     msg = timeleft + msg;
                     timeleft = "";
-                }
-                else {
-                    msg = "You are not permitted any access to this dolly's key.";
-                    menu = ["Leave Alone"];
                 }
 
                 cdListenerActivate(dialogHandle);
@@ -965,16 +985,12 @@ default
                             // Abilities
                             if (afterSpace == "Silent Pose") {
                                 isAbility = 1;
-                                if (isX || !isDoll) {
-                                    // if is not Doll, they can set and unset this option
-                                    // if is Doll, they can only enable this option
-                                    lmSendConfig("poseSilence", (string)isX);
-                                }
-                                else if (isDoll) {
-                                    llOwnerSay("The Silent Pose cannot be disabled by you.");
-                                }
+                                // if is not Doll - or Controller, they can set and unset this option
+                                // if is Doll, they can only enable this option
+                                if (isX || !isDoll || isController) lmSendConfig("poseSilence", (string)isX);
+                                else if (isDoll) llOwnerSay("The Silent Pose cannot be disabled by you.");
                             }
-                            else if (!isX || !isDoll) {
+                            else if (!isX || !isDoll || isController) {
                                 // if is not Doll, they can set and unset these options...
                                 // if is Doll, these abilities can only be removed (X)
                                 isAbility = 1;
@@ -1017,7 +1033,7 @@ default
                                 // if is not Doll, they can set and unset these options...
                                 // if is Doll, these abilities can only be removed (X)
                                 else if (afterSpace == "Rpt Wind") {
-                                    if (!isX || !isDoll) {
+                                    if (!isX || !isDoll || isController) {
                                         lmSendConfig("canRepeatWind", (string)isX);
                                     }
                                     else if (isDoll) {
@@ -1025,7 +1041,7 @@ default
                                     }
                                 }
                                 else if (afterSpace == "Allow AFK") {
-                                    if (!isX || !isDoll) {
+                                    if (!isX || !isDoll || isController) {
                                         lmSendConfig("canAFK", (string)(canAFK = isX));
                                     }
                                     else if (isDoll) {
