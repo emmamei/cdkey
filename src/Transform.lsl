@@ -171,7 +171,23 @@ reloadTypeNames() {
         typeName = llGetInventoryName(INVENTORY_NOTECARD, --n);
 
         if (cdGetFirstChar(typeName) == TYPE_FLAG) {
-            types += cdButFirstChar(typeName);
+            typeName = cdButFirstChar(typeName);
+
+            // Disallow several types of Keys: if we allowed
+            // these, then creating a notecard would enable
+            // the type without any access controls
+            //
+            // The Slut model is allowed (in a normal fashion)
+            // if this is an ADULT key
+            //
+            if (typeName != "Builder") &&
+#ifdef ADULT_MODE
+               (typeName != "Slut")    &&
+#endif
+               (typeName != "Key") {
+
+                types += typeName;
+            }
         }
     }
 }
@@ -622,8 +638,21 @@ default {
                         choices = llDeleteSubList(choices, i, i);
                     }
 
+                    if (llListFindList(choices, (list)"Display") != NOT_FOUND) choices += [ "Display" ];
+#ifdef ADULT_MODE
+                    if (llListFindList(choices, (list)"Slut")    != NOT_FOUND) choices += [ "Slut" ];
+#endif
                     if (cdIsDoll(id)) {
                         msg += "What type of doll do you want to be?";
+
+                        // if Dolly has no User Controllers (they are controller) AND
+                        // Dolly is a built-in Controller - add two options
+                        if (cdIsController(id)) {
+                            if (cdDollyIsBuiltinController(id)) {
+                                if (llListFindList(choices, (list)"Key")     != NOT_FOUND) choices += [ "Key" ];
+                                if (llListFindList(choices, (list)"Builder") != NOT_FOUND) choices += [ "Builder" ];
+                            }
+                        }
                     }
                     else {
                         msg += "What type of doll do you want the Doll to be?";
