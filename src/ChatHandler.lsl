@@ -475,7 +475,6 @@ default
 "
     build .......... list build configurations
     detach ......... detach key if possible
-    devhelp ........ list of developer commands
     stat ........... concise current status
     stats .......... selected statistics and settings
     xstats ......... extended statistics and settings
