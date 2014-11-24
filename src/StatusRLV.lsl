@@ -125,7 +125,7 @@ default {
             string commandString = cdListElement(split, 1);
 
             // This can happen...
-            if (commandString == "") return;
+            if (commandString == "" || commandString == "0") return;
 
             debugSay(1,"DEBUG-STATUSRLV","Got Link Message 315 from script " + script + ": " + commandString);
 
