@@ -22,6 +22,11 @@
 #define cdListenerActivate(a) llListenControl(a, 1)
 #define cdResetKey() llResetOtherScript("Start")
 
+#define MIN_FRAMES 4
+#define ADD_FRAMES 5
+#define cdMinRefresh() ((1.0/llGetRegionFPS()) * MIN_FRAMES)
+#define cdAddRefresh() ((1.0/llGetRegionFPS()) * ADD_FRAMES)
+
 key carrierID = NULL_KEY;
 
 key rlvTPrequest;
@@ -288,19 +293,18 @@ oneAnimation() {
         // Helps to keep things accurate and perhaps not be so brutal to
         // a busy region - also keeps us from having two timer events collide
 
-#define MIN_FRAMES 4
-#define ADD_FRAMES 5
-
         if (upRefresh) {
             // We found our animation being interfered with; cut the refreshRate
             // so that we run more often: and "fight back" for our animation
             animRefreshRate /= 2.0;                                     // -50%
-            float minRate = (1/llGetRegionFPS()) * MIN_FRAMES;
-            if (minRate) animRefreshRate = minRate;        // Minimum amount of time (by Frames)
+
+            if (animRefreshRate < cdMinRefresh())
+                animRefreshRate = cdMinRefresh();                   // Minimum amount of time (by Frames)
+            upRefresh = 0;
         }
         else {
             // No interference - so run less often
-            animRefreshRate += (1.0/llGetRegionFPS()) * ADD_FRAMES;     // +5 (current) Frame's worth of time
+            animRefreshRate += cdAddRefresh();
             if (animRefreshRate > 30.0) animRefreshRate = 30.0;         // 30 Second limit
         }
     }
@@ -606,7 +610,7 @@ default {
                     ifPermissions();
             }
             //else if (name == "tpLureOnly")           tpLureOnly = (integer)value;
-            //else if (name == "poseSilence")         poseSilence = (integer)value;
+            else if (name == "poseSilence")         poseSilence = (integer)value;
             else if (name == "userBaseRLVcmd")   userBaseRLVcmd = value;
 #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")     timeReporting = (integer)value;
@@ -902,6 +906,12 @@ default {
     // Is it really necessary to do ifPermissions repeatedly?
 
     timer() {
+        if (clearAnim) clearAnimations();
+        else if (!cdNoAnim()) oneAnimation(); 
+
+        if (animRefreshRate) nextAnimRefresh = llGetTime() + animRefreshRate;
+        llSetTimerEvent(animRefreshRate);
+
 #ifdef DEVELOPER_MODE
         thisTimerEvent = llGetTime();
 
