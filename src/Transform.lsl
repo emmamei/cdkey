@@ -180,11 +180,11 @@ reloadTypeNames() {
             // The Slut model is allowed (in a normal fashion)
             // if this is an ADULT key
             //
-            if (typeName != "Builder") &&
+            if ((typeName != "Builder") &&
 #ifdef ADULT_MODE
-               (typeName != "Slut")    &&
+                (typeName != "Slut")    &&
 #endif
-               (typeName != "Key") {
+                (typeName != "Key")) {
 
                 types += typeName;
             }
@@ -638,9 +638,9 @@ default {
                         choices = llDeleteSubList(choices, i, i);
                     }
 
-                    if (llListFindList(choices, (list)"Display") != NOT_FOUND) choices += [ "Display" ];
+                    if (llListFindList(choices, (list)"Display") == NOT_FOUND) choices += [ "Display" ];
 #ifdef ADULT_MODE
-                    if (llListFindList(choices, (list)"Slut")    != NOT_FOUND) choices += [ "Slut" ];
+                    if (llListFindList(choices, (list)"Slut")    == NOT_FOUND) choices += [ "Slut" ];
 #endif
                     if (cdIsDoll(id)) {
                         msg += "What type of doll do you want to be?";
@@ -648,9 +648,17 @@ default {
                         // if Dolly has no User Controllers (they are controller) AND
                         // Dolly is a built-in Controller - add two options
                         if (cdIsController(id)) {
+
+                            // The Key special function is for Built-in Dolls other than Dolly
+                            if (!cdIsDoll(id)) {
+                                if (cdIsBuiltinController(id)) {
+                                    if (llListFindList(choices, (list)"Key")     == NOT_FOUND) choices += [ "Key" ];
+                                }
+                            }
+
+                            // if Dolly IS a Built-in Controller - give them a Builder option
                             if (cdDollyIsBuiltinController(id)) {
-                                if (llListFindList(choices, (list)"Key")     != NOT_FOUND) choices += [ "Key" ];
-                                if (llListFindList(choices, (list)"Builder") != NOT_FOUND) choices += [ "Builder" ];
+                                if (llListFindList(choices, (list)"Builder") == NOT_FOUND) choices += [ "Builder" ];
                             }
                         }
                     }
