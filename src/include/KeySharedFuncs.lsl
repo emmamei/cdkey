@@ -19,22 +19,25 @@ float setWindRate() {
     float newWindRate;
     //vector agentPos = llList2Vector(llGetObjectDetails(dollID, [ OBJECT_POS ]), 0);
     //integer agentInfo = llGetAgentInfo(dollID);
-    
+
     newWindRate = baseWindRate;
     if (afk) newWindRate *= 0.5;
-    
-    if (windRate != newWindRate * cdWindDown()) {
-        windRate = newWindRate * cdWindDown();
-        
-        // baseWindRate is the starting point for all rates...
-        // displayWindRate is the currently "valid" rate...
-        // windRate is the actual rate, including full stop (or no unwinding)
-        lmSendConfig("baseWindRate", (string)baseWindRate);
-	lmSendConfig("displayWindRate", (string)newWindRate);
-        lmSendConfig("windRate", (string)windRate);
 
-    }
-    
+    if (cdWindDown()) windRate = newWindRate * cdWindDown();
+    else windRate = 0.0;
+
+//  if (windRate != newWindRate * cdWindDown()) {
+//      windRate = newWindRate * cdWindDown();
+
+    // baseWindRate is the starting point for all rates...
+    // displayWindRate is the currently "valid" rate...
+    // windRate is the actual rate, including full stop (or no unwinding)
+    lmSendConfig("baseWindRate", (string)baseWindRate);
+    lmSendConfig("displayWindRate", (string)newWindRate);
+    lmSendConfig("windRate", (string)windRate);
+
+//  }
+
     // llTargetOmega: With normalized vector spinrate is equal to radians per second
     // 2𝜋 radians per rotation.  This sets a normal rotation rate of 4 rpm about the
     // Z axis multiplied by the wind rate this way the key will visually run faster as
@@ -70,7 +73,7 @@ integer cdOutfitRating(string outfit) {
 }
 
 // Gracefully degrades to legacy name without "Resident" if llGetDisplayName is giving a false return
-#define cdGetDisplayName(id) cdGracefulDisplayName(id) 
+#define cdGetDisplayName(id) cdGracefulDisplayName(id)
 
 string cdGracefulDisplayName(key id) {
    string displayName;
