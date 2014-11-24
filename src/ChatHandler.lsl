@@ -665,7 +665,7 @@ default
 
                         lmSendToAgent(msg, id);
 
-                        if (!cdCollapsedAnim() && !cdNoAnim()) {
+                        if (!cdCollapsedAnim() && cdAnimated()) {
                         //    llOwnerSay(dollID, "Current pose: " + currentAnimation);
                         //    llOwnerSay(dollID, "Pose time remaining: " + (string)(poseTime / SEC_TO_MIN) + " minutes.");
                             llOwnerSay("Doll is posed.");
