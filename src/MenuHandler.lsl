@@ -376,16 +376,15 @@ default
                 llSetLinkAlpha(LINK_SET, (float)visible, ALL_SIDES);
             }
         }
-        else if (code == 305) {
+        else if (code == INTERNAL_CMD) {
             string cmd = llList2String(split, 0);
             split = llDeleteSubList(split, 0, 0);
 
-
             // Deny access to the menus when the command was recieved from blacklisted avatar
-            if (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND) {
-                lmSendToAgent("You are not permitted to access this key.", id);
-                return;
-            }
+            //if (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND) {
+            //    lmSendToAgent("You are not permitted to access this key.", id);
+            //    return;
+            //}
 
             if (cmd == "dialogListen") {
 
@@ -437,27 +436,6 @@ default
                     lmSendConfig("gemColour", (string)(gemColour = newColour));
                 }
                 params = [];
-            }
-            else if (cmd == "updateExceptions") {
-
-                // Exempt builtin or user specified controllers from TP restictions
-
-                list allow = BUILTIN_CONTROLLERS + cdList2ListStrided(controllers, 0, -1, 2);
-
-                // Also exempt the carrier StatusRLV will ignore the duplicate if carrier is a controller so save work
-
-                if cdCarried() allow += carrierID;
-
-                // Directly dump the list using the static parts of the RLV command as a seperator no looping
-
-                lmRunRLVas("Base", "clear=tplure:,tplure:"          + llDumpList2String(allow, "=add,tplure:")    + "=add");
-                lmRunRLVas("Base", "clear=accepttp:,accepttp:"      + llDumpList2String(allow, "=add,accepttp:")  + "=add");
-                lmRunRLVas("Base", "clear=sendim:,sendim:"          + llDumpList2String(allow, "=add,sendim:")    + "=add");
-                lmRunRLVas("Base", "clear=recvim:,recvim:"          + llDumpList2String(allow, "=add,recvim:")    + "=add");
-                lmRunRLVas("Base", "clear=recvchat:,recvchat:"      + llDumpList2String(allow, "=add,recvchat:")  + "=add");
-                lmRunRLVas("Base", "clear=recvemote:,recvemote:"    + llDumpList2String(allow, "=add,recvemote:") + "=add");
-
-                // Apply exemptions to base RLV
             }
             else if (cmd == "mainMenu") {
                 string msg;
@@ -633,15 +611,18 @@ default
                     }
 
                     if (!isDoll) menu += "Wind";
-                    menu += "Help...";
 
-                    // Options only available if controller... controller might
-                    // be Dolly, and that's ok
-                    if (isController) {
-                        menu += [ "Options..."];
+                    if (!collapsed || !isDoll) {
+                        menu += "Help...";
 
-                        // Do we want Dolly to hae Detach capability... ever?
-                        if (detachable) menu += [ "Detach" ];
+                        // Options only available if controller... controller might
+                        // be Dolly, and that's ok
+                        if (isController) {
+                            menu += [ "Options..."];
+
+                            // Do we want Dolly to hae Detach capability... ever?
+                            if (detachable) menu += [ "Detach" ];
+                        }
                     }
 
                     if (lowScriptMode)

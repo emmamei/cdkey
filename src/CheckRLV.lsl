@@ -423,6 +423,27 @@ default {
             split = llDeleteSubList(split, 0, 0);
 
             if (cmd == "doCheckRLV") doCheckRLV();
+            else if (cmd == "updateExceptions") {
+
+                // Exempt builtin or user specified controllers from TP restictions
+
+                list allow = BUILTIN_CONTROLLERS + cdList2ListStrided(controllers, 0, -1, 2);
+
+                // Also exempt the carrier StatusRLV will ignore the duplicate if carrier is a controller so save work
+
+                if cdCarried() allow += carrierID;
+
+                // Directly dump the list using the static parts of the RLV command as a seperator no looping
+
+                lmRunRLVas("Base", "clear=tplure:,tplure:"          + llDumpList2String(allow, "=add,tplure:")    + "=add");
+                lmRunRLVas("Base", "clear=accepttp:,accepttp:"      + llDumpList2String(allow, "=add,accepttp:")  + "=add");
+                lmRunRLVas("Base", "clear=sendim:,sendim:"          + llDumpList2String(allow, "=add,sendim:")    + "=add");
+                lmRunRLVas("Base", "clear=recvim:,recvim:"          + llDumpList2String(allow, "=add,recvim:")    + "=add");
+                lmRunRLVas("Base", "clear=recvchat:,recvchat:"      + llDumpList2String(allow, "=add,recvchat:")  + "=add");
+                lmRunRLVas("Base", "clear=recvemote:,recvemote:"    + llDumpList2String(allow, "=add,recvemote:") + "=add");
+
+                // Apply exemptions to base RLV
+            }
         }
         else if (code == MENU_SELECTION) {
             string choice = llList2String(split, 0);
