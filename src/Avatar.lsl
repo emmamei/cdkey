@@ -358,10 +358,10 @@ ifPermissions() {
 
     if (permMask & PERMISSION_TRIGGER_ANIMATION) {
 
-        animList = llGetAnimationList(dollID);
+        //animList = llGetAnimationList(dollID);
 
         if (clearAnim) clearAnimations();
-        else if (!cdNoAnim()) oneAnimation(); 
+        else if (cdAnimated()) oneAnimation(); 
 
         if (animRefreshRate) nextAnimRefresh = llGetTime() + animRefreshRate;
         llSetTimerEvent(animRefreshRate);
@@ -802,9 +802,12 @@ default {
             }
 
             // Unpose: remove animation and poser
-            else if (dollIsPoseable && choice == "Unpose") {
+            //else if (dollIsPoseable && choice == "Unpose") {
+            else if (choice == "Unpose") {
                 lmSendConfig("keyAnimation", (string)(keyAnimation = ""));
                 lmSendConfig("poserID", (string)(poserID = NULL_KEY));
+
+                clearAnimations();
             }
 
             else if (keyAnimation == "" || dollIsPoseable) {
@@ -813,15 +816,8 @@ default {
                 if (llGetInventoryType(choice) == 20) {
                     lmSendConfig("keyAnimation", (string)(keyAnimation = choice));
                     lmSendConfig("poserID", (string)(poserID = id));
+                    oneAnimation();
                 }
-
-                // Nothing in the code strips the prefix out - so this code serves no purpose
-                //
-                // choice is Inventory Animation Item with prefix
-                //else if (llGetInventoryType(llGetSubString(choice, 2, -1)) == 20) {
-                //    lmSendConfig("keyAnimation", (string)(keyAnimation = llGetSubString(choice, 2, -1)));
-                //    lmSendConfig("poserID", (string)(poserID = id));
-                //}
 
                 // choice is menu of Poses
                 else if (subchoice == "Poses") {
@@ -907,7 +903,7 @@ default {
 
     timer() {
         if (clearAnim) clearAnimations();
-        else if (!cdNoAnim()) oneAnimation(); 
+        else if (cdAnimated()) oneAnimation(); 
 
         if (animRefreshRate) nextAnimRefresh = llGetTime() + animRefreshRate;
         llSetTimerEvent(animRefreshRate);
@@ -915,10 +911,11 @@ default {
 #ifdef DEVELOPER_MODE
         thisTimerEvent = llGetTime();
 
-        if (cdAttached()) timerInterval = thisTimerEvent - lastTimerEvent;
+        if (lastTimerEvent) {
+            timerInterval = thisTimerEvent - lastTimerEvent;
+            if (timeReporting) llOwnerSay("Avatar Timer fired, interval " + formatFloat(timerInterval,3) + "s.");
+        }
         lastTimerEvent = thisTimerEvent;
-
-        if (timeReporting) llOwnerSay("Avatar Timer fired, interval " + formatFloat(timerInterval,3) + "s.");
 #endif
 
 #ifdef PREDICTIVE_TIMER
@@ -982,7 +979,7 @@ default {
                 carryMoved = 1;
             }
         }
-        else if (!cdNoAnim()) {
+        else if (cdAnimated()) {
             llMoveToTarget(lockPos, 0.7);
         }
     }
