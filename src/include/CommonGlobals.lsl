@@ -48,7 +48,7 @@ integer configured;
 integer demoMode;
 integer detachable          = 1;
 integer doWarnings;
-integer tpLureOnly;
+integer canSelfTP;
 integer isTransformingKey   = 1;
 integer lowScriptMode;
 integer offlineMode         = TRUE;
@@ -56,7 +56,7 @@ integer pleasureDoll;
 integer poseSilence;
 integer quiet;
 integer RLVok               = -1;
-integer signOn;
+integer hoverTextOn;
 integer takeoverAllowed;
 integer visible             = 1;
 

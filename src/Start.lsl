@@ -199,7 +199,7 @@ processConfiguration(string name, string value) {
              value = "0";
 
     integer i;
-    list configs = [ "barefeet path", "helpless dolly", "quiet key", "outfits path",
+    list configs = [ "barefeet path", "quiet key", "outfits path",
                      "busy is away", "can afk", "can fly", "poseable", "can sit", "can stand",
                      "can dress", "detachable", "doll type", "pleasure doll", "pose silence",
                      "auto tp", "outfitable", "max time", "chat channel", "dolly name", "demo mode",
@@ -213,7 +213,7 @@ processConfiguration(string name, string value) {
                      "dressable", "carryable", "repeatable wind"
                    ];
 
-    list sendName = [ "barefeet", "helpless", "quiet", "outfitsFolder",
+    list sendName = [ "barefeet", "quiet", "outfitsFolder",
                       "busyIsAway", "canAfk", "canFly", "canPose", "canSit", "canStand",
                       "canDressSelf", "detachable", "dollType", "pleasureDoll", "poseSilence",
                       "autoTP", "canDress", "timeLeftOnKey", "keyLimit", "chatChannel", "dollyName", "demoMode",
@@ -291,6 +291,10 @@ processConfiguration(string name, string value) {
 
         lmSendConfig("chatEnable",(string)chatEnable);
         lmSendConfig("chatFilter",chatFilter);
+    }
+    else if (name == "helpless dolly") {
+        if (value == "1") lmSendConfig("canSelfTP", "0");
+        else lmSendConfig("canSelfTP", "1");
     }
     else if (name == "doll gender") {
         // This only accepts valid values

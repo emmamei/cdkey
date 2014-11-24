@@ -76,7 +76,7 @@ integer demoMode;
 integer quiet;
 integer RLVok = -1;
 integer RLVck = 1;
-integer signOn;
+integer hoverTextOn;
 integer warned;
 integer wearLock;
 
@@ -412,7 +412,7 @@ default {
 
              if (collapsed) { cdSetHovertext("Disabled Dolly!",        ( RED    )); }
         else if (afk)       { cdSetHovertext(dollType + " Doll (AFK)", ( YELLOW )); }
-        else if (signOn)    { cdSetHovertext(dollType + " Doll",       ( WHITE  )); }
+        else if (hoverTextOn)    { cdSetHovertext(dollType + " Doll",       ( WHITE  )); }
         else                { cdSetHovertext("",                       ( WHITE  )); }
 
         //--------------------------------
@@ -593,7 +593,7 @@ default {
             else if (name == "configured")                 configured = (integer)value;
             else if (name == "busyIsAway")                 busyIsAway = (integer)value;
             else if (name == "quiet")                           quiet = (integer)value;
-            else if (name == "signOn")                         signOn = (integer)value;
+            else if (name == "hoverTextOn")                         hoverTextOn = (integer)value;
             else if (name == "windAmount")                 windAmount = (float)value;
             else if (name == "baseWindRate") {
                 if ((float)value > 0.33) baseWindRate = (float)value;   // Minimum baseWindRate set at 0.33 any lower and reset to 1.0 this should

@@ -197,7 +197,7 @@ default
                     if (!demoMode) effectiveLimit = keyLimit;
                 }
             }
-            else if (name == "tpLureOnly")                 tpLureOnly = (integer)value;
+            else if (name == "canSelfTP")                 canSelfTP = (integer)value;
             else if (name == "windMins")                     windMins = (integer)value;
             //else if (name == "wearLockExpire")         wearLockExpire = (float)value;
             else if (name == "wearLock")                     wearLock = (integer)value;

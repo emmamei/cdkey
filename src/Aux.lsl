@@ -29,7 +29,8 @@ float listenTime;
 float memTime;
 string memData;
 string minsLeft;
-string windRate;
+//string windRate;
+float windRate;
 integer windMins;
 string dollyName;
 string carrierName;
@@ -320,9 +321,9 @@ default {
             else if (name == "doWarnings")                 doWarnings = (integer)value;
             else if (name == "poseSilence")               poseSilence = (integer)value;
             else if (name == "detachable")                 detachable = (integer)value;
-            else if (name == "tpLureOnly")                 tpLureOnly = (integer)value;
+            else if (name == "canSelfTP")                     canSelfTP = (integer)value;
             else if (name == "pleasureDoll")             pleasureDoll = (integer)value;
-            else if (name == "signOn")                         signOn = (integer)value;
+            //else if (name == "hoverTextOn")                         hoverTextOn = (integer)value;
             else if (name == "dollGender")                 dollGender = value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
@@ -356,9 +357,9 @@ default {
             if (cmd == "setAFK") {
                 afk = llList2Integer(split, 0);
                 integer auto = llList2Integer(split, 1);
-                windRate = llList2String(split, 2);
+                windRate = (float)llList2String(split, 2);
                 minsLeft = llList2String(split, 3);
-                msg;
+                //msg;
 
                 if (afk) {
                     if (auto) msg = "Automatically entering AFK mode.";
@@ -367,6 +368,9 @@ default {
                 }
                 else msg = "You are now no longer away from keyboard (AFK). Movements are unrestricted and winding down proceeds at normal rate. ";
                 llOwnerSay(msg + " You have " + (string)minsLeft + " minutes of life left.");
+
+                lmSendConfig("windRate", (string)(windRate));
+                lmSendConfig("afk", (string)(afk));
             }
 #ifdef ADULT_MODE
             else if (cmd == "strip") {
@@ -472,7 +476,7 @@ default {
                     plusList += cdGetButton("Sitting", id, canSit, 1);
                     plusList += cdGetButton("Standing", id, canStand, 1);
                     plusList += cdGetButton("Self Dress", id, canDressSelf, 1);
-                    plusList += cdGetButton("Self TP", id, !tpLureOnly, 1);
+                    plusList += cdGetButton("Self TP", id, canSelfTP, 1);
                     plusList += cdGetButton("Force TP", id, autoTP, 1);
 
                     if (canPose) { // Option to silence the doll while posed this this option is a no-op when canPose == 0
@@ -505,9 +509,9 @@ default {
 
                 plusList += cdGetButton("Quiet Key", id, quiet, 0);
 
-                //if (isTransformingKey) plusList += cdGetButton("Type Text", id, signOn, 0);
+                //if (isTransformingKey) plusList += cdGetButton("Type Text", id, hoverTextOn, 0);
 
-                plusList += cdGetButton("Type Text", id, signOn, 0);
+                plusList += cdGetButton("Type Text", id, hoverTextOn, 0);
                 plusList += cdGetButton("Warnings", id, doWarnings, 0);
                 plusList += cdGetButton("Phrases", id, showPhrases, 0);
                 //plusList += cdGetButton("Offline", id, offlineMode, 0);

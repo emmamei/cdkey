@@ -43,6 +43,8 @@ key menuID = NULL_KEY;
 key uniqueID = NULL_KEY;
 
 list uuidList;
+integer i;
+integer n;
 
 float timeLeftOnKey;
 float windDefault = WIND_DEFAULT;
@@ -121,7 +123,6 @@ doDialogChannel() {
 
     // generate a uniqueID for dolly to use
     lmSendConfig("uniqueID", (string)(uniqueID = llGenerateKey()));
-    debugSay(2, "DEBUG-MENU", "Your unique key is " + (string)uniqueID);
 
     integer generateChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)uniqueID, -7, -1));
 
@@ -134,11 +135,9 @@ doDialogChannel() {
 
     // Dont announce the channel until its open
     lmSendConfig("dialogChannel", (string)(dialogChannel));
-    debugSay(2, "DEBUG-MENU", "Dialog channel is set to " + (string)dialogChannel);
     //llSleep(2); // Make sure dialogChannel setting has time to propogate
 
     cdListenerDeactivate(dialogHandle);
-    debugSay(2, "DEBUG-MENU", "Dialog Handle is set....");
 }
 
 integer listCompare(list a, list b) {
@@ -187,7 +186,6 @@ default
         if (code == 102) {
             if (data == "Start") configured = 1;
 
-            debugSay(4, "DEBUG-MENU", "Setting dialog channel...");
             doDialogChannel();
             scaleMem();
         }
@@ -206,7 +204,7 @@ default
         else if (code == 150) {
             simRating = llList2String(split, 0);
         }
-        else if (code == 300) {
+        else if (code == CONFIG) {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
             split = llDeleteSubList(split, 0, 0);
@@ -224,6 +222,7 @@ default
                 else                                     collapseTime = 0.0;
             }
             else if (name == "baseWindRate")             baseWindRate = (float)value;
+            else if (name == "windRate")                     windRate = (float)value;
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
 
             // This name4key function becomes "dead code" unless a companion script
@@ -327,6 +326,7 @@ default
                 else if (name == "canDress")                     canDress = (integer)value;
                 else if (name == "canPose")                       canPose = (integer)value;
                 else if (name == "canDressSelf")             canDressSelf = (integer)value;
+                else if (name == "canSelfTP")                     canSelfTP = (integer)value;
                 else if (name == "collapsed")                   collapsed = (integer)value;
                 else if (name == "configured")                 configured = (integer)value;
                 else if (name == "showPhrases")               showPhrases = (integer)value;
@@ -366,7 +366,7 @@ default
             //else if (name == "tpLureOnly")               tpLureOnly = (integer)value;
             //else if (name == "isTransformingKey")   isTransformingKey = (integer)value;
             else if (name == "quiet")                           quiet = (integer)value;
-            //else if (name == "signOn")                         signOn = (integer)value;
+            else if (name == "hoverTextOn")                         hoverTextOn = (integer)value;
             //else if (name == "uniqueID") {
             //    if (script != "ServiceReceiver") return;
             //    uniqueID = (key)value;
@@ -403,7 +403,7 @@ default
             }
             else if (cmd == "setGemColour") {
                 vector newColour = (vector)llList2String(split, 0);
-                integer i; integer j; integer s; list params; list colourParams;
+                integer j; integer s; list params; list colourParams;
 
                 for (i = 1; i < llGetNumberOfPrims(); i++) {
                     params += [ PRIM_LINK_TARGET, i ];
@@ -644,6 +644,9 @@ default
                         if (detachable) menu += [ "Detach" ];
                     }
 
+                    if (lowScriptMode)
+                        msg += " Key is in power-saving mode. ";
+
                     if (RLVok == UNSET) msg += "Still checking for RLV support some features unavailable.\n";
                     else if (RLVok == 0) {
                         msg += "No RLV detected some features unavailable.\n";
@@ -651,9 +654,9 @@ default
                     }
 
                     msg += "See " + WEB_DOMAIN + manpage + " for more information."
-
 #ifdef DEVELOPER_MODE
                     + " (Key is in Developer Mode.)"
+                    + "\nCurrent region FPS is " + formatFloat(llGetRegionFPS(),1) + " FPS.";
 #endif
                     ;
 
@@ -710,7 +713,6 @@ default
     // SENSOR
     //----------------------------------------
     sensor(integer num) {
-        integer i;
         integer channel;
         string type;
         list current;
@@ -737,7 +739,7 @@ default
             foundKey = llDetectedKey(i);
             foundName = llDetectedName(i);
 
-            if (llListFindList(current, [(string)foundKey]) == -1) { // Don't list existing users
+            if (llListFindList(current, [(string)foundKey]) == NOT_FOUND) { // Don't list existing users
                 dialogKeys += foundKey;
                 dialogNames += foundName;
                 dialogButtons += llGetSubString(foundName, 0, 23);
@@ -767,7 +769,6 @@ default
         if (query_id == nameRequest) {
             key uuid = llList2Key(uuidList, 0);
             string name = data;
-            integer i;
 
             if (uuid) {
                 if ((i = llListFindList(controllers, [ uuid ] )) != NOT_FOUND)
@@ -811,8 +812,6 @@ default
 
         integer space = llSubStringIndex(choice, " ");
 
-        //debugSay(3, "DEBUG-MENU", "Button clicked: " + choice + ", afterSpace=\"" + afterSpace + "\", beforeSpace=\"" + beforeSpace + "\"");
-
         lmMenuReply(choice, name, id);
 
         menuID = id;
@@ -837,7 +836,7 @@ default
                     else if (cdIsUserController(id)) {
 
                         msg = "See " + WEB_DOMAIN + "controller.htm. Choose what you want to happen.";
-                        pluslist += [ "Abilities...", "Drop Control" ];
+                        pluslist += [ "Type...", "Access...", "Abilities...", "Drop Control" ];
 
                     }
                     else return;
@@ -847,13 +846,8 @@ default
                     cdDialogListen();
                     llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
                 }
-                else if (choice == "Detach") { lmInternalCommand("detach", "", id); }
-                else if (choice == "Reload Config") {
-                    cdResetKey();
-                }
-                else if (choice == "TP Home") {
-                    lmInternalCommand("TP", LANDMARK_HOME, id);
-                }
+                else if (choice == "Detach") lmInternalCommand("detach", "", id);
+                else if (choice == "TP Home") lmInternalCommand("TP", LANDMARK_HOME, id);
             }
             else {
                 string beforeSpace = llStringTrim(llGetSubString(choice, 0, space),STRING_TRIM);
@@ -903,7 +897,9 @@ default
                     }
 
                     // Only need this once now, make dialogButtons = numbered list of names truncated to 24 char limit
-                    dialogButtons = []; integer i; integer n = llGetListLength(dialogKeys);
+                    dialogButtons = [];
+                    n = llGetListLength(dialogKeys);
+
                     for (i = 0; i < n; i++) dialogButtons += llGetSubString((string)(i+1) + ". " + llList2String(dialogNames, i), 0, 23);
 
                     if (beforeSpace == CIRCLE_PLUS) {
@@ -946,7 +942,7 @@ default
                         llRegionSayTo(id, 0, msg);
                     }
                 }
-                else if (cdIsUserController(id) && choice == "Drop Control") {
+                else if (choice == "Drop Control") {
                     integer index;
 
                     if ((index = llListFindList(controllers, [ id ])) != NOT_FOUND) {
@@ -994,24 +990,24 @@ default
                                 // if is not Doll, they can set and unset these options...
                                 // if is Doll, these abilities can only be removed (X)
                                 isAbility = 1;
-                                if (afterSpace == "Self TP") lmSendConfig("tpLureOnly", (string)isX);
+                                     if (afterSpace == "Self TP")    lmSendConfig("canSelfTP",    (string)(canSelfTP = isX));
                                 else if (afterSpace == "Self Dress") lmSendConfig("canDressSelf", (string)(canDressSelf = isX));
-                                else if (afterSpace == "Detachable") lmSendConfig("detachable", (string)(detachable = isX));
-                                else if (afterSpace == "Flying") lmSendConfig("canFly", (string)isX);
-                                else if (afterSpace == "Sitting") lmSendConfig("canSit", (string)isX);
-                                else if (afterSpace == "Standing") lmSendConfig("canStand", (string)isX);
-                                else if (afterSpace == "Force TP") lmSendConfig("autoTP", (string)isX);
+                                else if (afterSpace == "Detachable") lmSendConfig("detachable",   (string)(detachable = isX));
+                                else if (afterSpace == "Flying")     lmSendConfig("canFly",       (string)isX);
+                                else if (afterSpace == "Sitting")    lmSendConfig("canSit",       (string)isX);
+                                else if (afterSpace == "Standing")   lmSendConfig("canStand",     (string)isX);
+                                else if (afterSpace == "Force TP")   lmSendConfig("autoTP",       (string)isX);
                                 else isAbility = 0;
                             }
                             else if (isX && isDoll) {
                                 isAbility = 1;
-                                if (afterSpace == "Self TP") llOwnerSay("The Self TP option cannot be re-enabled by you.");
+                                     if (afterSpace == "Self TP")    llOwnerSay("The Self TP option cannot be re-enabled by you.");
                                 else if (afterSpace == "Self Dress") llOwnerSay("The Self Dress option cannot be re-enabled by you.");
                                 else if (afterSpace == "Detachable") llOwnerSay("The Detachable option cannot be re-enabled by you.");
-                                else if (afterSpace == "Flying") llOwnerSay("The Flying option cannot be re-enabled by you.");
-                                else if (afterSpace == "Sitting") llOwnerSay("The Sitting option cannot be re-enabled by you.");
-                                else if (afterSpace == "Standing") llOwnerSay("The Standing option cannot be re-enabled by you.");
-                                else if (afterSpace == "Force TP") llOwnerSay("The Force TP option cannot be re-enabled by you.");
+                                else if (afterSpace == "Flying")     llOwnerSay("The Flying option cannot be re-enabled by you.");
+                                else if (afterSpace == "Sitting")    llOwnerSay("The Sitting option cannot be re-enabled by you.");
+                                else if (afterSpace == "Standing")   llOwnerSay("The Standing option cannot be re-enabled by you.");
+                                else if (afterSpace == "Force TP")   llOwnerSay("The Force TP option cannot be re-enabled by you.");
                                 else isAbility = 0;
                             }
 
@@ -1022,31 +1018,23 @@ default
                                 //----------------------------------------
                                 // Features
                                 isFeature = 1; // Maybe it'a a features menu item
-                                if (afterSpace == "Type Text") lmSendConfig("signOn", (string)isX);
-                                else if (afterSpace == "Quiet Key") lmSendConfig("quiet", (string)(quiet = isX));
-                                else if (afterSpace == "Carryable") lmSendConfig("canCarry", (string)(canCarry = isX));
-                                else if (afterSpace == "Outfitable") lmSendConfig("canDress", (string)(canDress = isX));
-                                else if (afterSpace == "Phrases") lmSendConfig("showPhrases", (string)(showPhrases = isX));
-                                else if (afterSpace == "Poseable") lmSendConfig("canPose", (string)(canPose = isX));
-                                else if (afterSpace == "Warnings") lmSendConfig("doWarnings", (string)isX);
+                                     if (afterSpace == "Type Text")  lmSendConfig("hoverTextOn",      (string)isX);
+                                else if (afterSpace == "Quiet Key")  lmSendConfig("quiet",       (string)(quiet = isX));
+                                else if (afterSpace == "Carryable")  lmSendConfig("canCarry",    (string)(canCarry = isX));
+                                else if (afterSpace == "Outfitable") lmSendConfig("canDress",    (string)(canDress = isX));
+                                else if (afterSpace == "Phrases")    lmSendConfig("showPhrases", (string)(showPhrases = isX));
+                                else if (afterSpace == "Poseable")   lmSendConfig("canPose",     (string)(canPose = isX));
+                                else if (afterSpace == "Warnings")   lmSendConfig("doWarnings",  (string)isX);
 
                                 // if is not Doll, they can set and unset these options...
                                 // if is Doll, these abilities can only be removed (X)
                                 else if (afterSpace == "Rpt Wind") {
-                                    if (!isX || !isDoll || isController) {
-                                        lmSendConfig("canRepeatWind", (string)isX);
-                                    }
-                                    else if (isDoll) {
-                                        llOwnerSay("The Repeat Wind option cannot be re-enabled by you.");
-                                    }
+                                    if (!isX || !isDoll || isController) lmSendConfig("canRepeatWind", (string)isX);
+                                    else if (isDoll) llOwnerSay("The Repeat Wind option cannot be re-enabled by you.");
                                 }
                                 else if (afterSpace == "Allow AFK") {
-                                    if (!isX || !isDoll || isController) {
-                                        lmSendConfig("canAFK", (string)(canAFK = isX));
-                                    }
-                                    else if (isDoll) {
-                                        llOwnerSay("The Allow AFK option cannot be re-enabled by you.");
-                                    }
+                                    if (!isX || !isDoll || isController) lmSendConfig("canAFK", (string)(canAFK = isX));
+                                    else if (isDoll) llOwnerSay("The Allow AFK option cannot be re-enabled by you.");
                                 }
 #ifdef ADULT_MODE
                                 else if (afterSpace == "Pleasure") lmSendConfig("pleasureDoll", (string)(pleasureDoll = isX));
