@@ -21,6 +21,9 @@
 #define cdListenerActivate(a) llListenControl(a, 1)
 #define cdResetKey() llResetOtherScript("Start")
 
+integer canSelfTP;
+integer canWear;
+integer wearLock;
 //key carrierID = NULL_KEY;
 
 // Could set allControls to -1 for quick full bit set - 
@@ -156,27 +159,56 @@ checkRLV() {
     else {
         // RLVck reached max
         debugSay(2,"DEBUG-RLV","RLV check failed...");
+        RLVok = 0;
 
-        // RLVstarted implies RLVok: if RLV has been activated in
-        // the key code, then RLVstarted is set - or does it?
-
-        if (!RLVstarted) {
-            if (RLVok) llOwnerSay("Reattached Community Doll Key with " + rlvAPIversion + " active...");
-            else llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
-            debugSay(5,"DEBUG-RLV","myPath = " + (string)myPath + " and rlvAPIversion = " + rlvAPIversion);
+        //if (!RLVstarted) {
+            // if (rlvAPIversion != "") llOwnerSay("Reattached Community Doll Key with " + rlvAPIversion + " active...");
+            //else
+            llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
+            //debugSay(5,"DEBUG-RLV","myPath = " + (string)myPath + " and rlvAPIversion = " + rlvAPIversion);
             nextRLVcheck = 0.0;
-        }
+        //}
 
 #ifdef DEVELOPER_MODE
-        if ((rlvAPIversion != "") && (myPath == "")) { // Dont enable RLV on devs if @getpath is returning no usable result to avoid lockouts.
-            llSay(DEBUG_CHANNEL, "WARNING: Sanity check failure developer key not found in #RLV see README.dev for more information.");
-            return;
-        }
+        //if ((rlvAPIversion != "") && (myPath == "")) { // Dont enable RLV on devs if @getpath is returning no usable result to avoid lockouts.
+        //    llSay(DEBUG_CHANNEL, "WARNING: Sanity check failure developer key not found in #RLV see README.dev for more information.");
+        //    return;
+        //}
 #endif
     }
 }
 
+activateRLVBase() {
+    string baseRLV;
+
+    if (userBaseRLVcmd != "") lmRunRLVas("UserBase", userBaseRLVcmd);
+
+    //lmRunRLVas("Core", baseRLV + restrictionList + "sendchannel:" + (string)chatChannel + "=rem");
+    lmRunRLVas("Core", baseRLV + ",sendchannel:" + (string)chatChannel + "=rem");
+
+    if (userBaseRLVcmd != "")
+        lmRunRLVas("User:Base", userBaseRLVcmd);
+    
+    if (autoTP) baseRLV += "accepttp=n,";
+    else baseRLV += "accepttp=y,";
+    if (canSelfTP) baseRLV += "tplm=n,tploc=n,";
+    else baseRLV += "tplm=y,tploc=y,";
+    if (!canFly) baseRLV += "fly=n,";
+    else baseRLV += "fly=y,";
+    if (!canStand) baseRLV += "unsit=n,";
+    else baseRLV += "unsit=y,";
+    if (!canSit) baseRLV += "sit=n";
+    else baseRLV += "sit=y";
+    
+    lmRunRLVas("Base", baseRLV);
+    
+    if (!canWear || collapsed || wearLock || afk) lmRunRLVas("Dress", "unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
+    else lmRunRLVas("Dress", "clear");
+}
+
 // Activate RLV settings
+//
+// This is designed to be called repetitively...
 
 activateRLV() {
     if (!RLVok) {
@@ -199,38 +231,34 @@ activateRLV() {
 #endif
         llOwnerSay("Enabling RLV mode");
 
+#ifdef LOCKON
+        mainCreator = llGetInventoryCreator("Main");
+
+        // We lock the key on here - but in the menu system, it appears
+        // unlocked and detachable: this is because it can be detached
+        // via the menu. To make the key truly "undetachable", we get
+        // rid of the menu item to unlock it
+
+        if (mainCreator != dollID) {
+            lmRunRLVas("Base", "detach=n,permissive=n");  //locks key
+
+            locked = 1; // Note the locked variable also remains false for developer mode keys
+                        // This way controllers are still informed of unauthorized detaching so developer dolls are still accountable
+                        // With this is the implicit assumption that controllers of developer dolls will be understanding and accepting of
+                        // the occasional necessity of detaching during active development if this proves false we may need to fudge this
+                        // in the section below.
+        }
+        else {
+            if (!RLVstarted) llSay(DEBUG_CHANNEL, "Backup protection mechanism activated not locking on creator");
+            lmRunRLVas("Base", "clear=unshared,clear=attachallthis");
+        }
+#endif
         cdListenerDeactivate(rlvHandle);
         lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
         lmRLVreport(RLVok, rlvAPIversion, 0);
     }
 
-#ifdef LOCKON
-    mainCreator = llGetInventoryCreator("Main");
-
-    // We lock the key on here - but in the menu system, it appears
-    // unlocked and detachable: this is because it can be detached
-    // via the menu. To make the key truly "undetachable", we get
-    // rid of the menu item to unlock it
-
-    if (mainCreator != dollID) {
-        lmRunRLVas("Base", "detach=n,permissive=n");  //locks key
-
-        locked = 1; // Note the locked variable also remains false for developer mode keys
-                    // This way controllers are still informed of unauthorized detaching so developer dolls are still accountable
-                    // With this is the implicit assumption that controllers of developer dolls will be understanding and accepting of
-                    // the occasional necessity of detaching during active development if this proves false we may need to fudge this
-                    // in the section below.
-    }
-    else {
-        if (!RLVstarted) llSay(DEBUG_CHANNEL, "Backup protection mechanism activated not locking on creator");
-        lmRunRLVas("Base", "clear=unshared,clear=attachallthis");
-    }
-#endif
-
-    if (userBaseRLVcmd != "") lmRunRLVas("UserBase", userBaseRLVcmd);
-
-    //lmRunRLVas("Core", baseRLV + restrictionList + "sendchannel:" + (string)chatChannel + "=rem");
-    lmRunRLVas("Core", baseRLV + ",sendchannel:" + (string)chatChannel + "=rem");
+    activateRLVBase();
 
     // If we get here - RLVok is already set
     //RLVstarted = (RLVstarted | RLVok);
@@ -365,7 +393,18 @@ default {
             
             // Like to be soemthing here before long... so mark it
             ;
-            if (name == "dialogChannel") {
+
+                 if (name == "autoTP")     {    autoTP = (integer)value; activateRLVBase(); }
+            else if (name == "canSelfTP")  { canSelfTP = (integer)value; activateRLVBase(); }
+            else if (name == "canFly")     {    canFly = (integer)value; activateRLVBase(); }
+            else if (name == "canStand")   {  canStand = (integer)value; activateRLVBase(); }
+            else if (name == "canSit")     {    canSit = (integer)value; activateRLVBase(); }
+            else if (name == "canWear")    {   canWear = (integer)value; activateRLVBase(); }
+            else if (name == "collapsed")  { collapsed = (integer)value; activateRLVBase(); }
+            else if (name == "wearLock")   {  wearLock = (integer)value; activateRLVBase(); }
+            else if (name == "afk")        {       afk = (integer)value; activateRLVBase(); }
+    
+            else if (name == "dialogChannel") {
                 dialogChannel = (integer)value;
 
                 llListenRemove(rlvHandle);
