@@ -191,7 +191,7 @@ activateRLVBase() {
     
     if (autoTP) baseRLV += "accepttp=n,";
     else baseRLV += "accepttp=y,";
-    if (canSelfTP) baseRLV += "tplm=n,tploc=n,";
+    if (!canSelfTP) baseRLV += "tplm=n,tploc=n,";
     else baseRLV += "tplm=y,tploc=y,";
     if (!canFly) baseRLV += "fly=n,";
     else baseRLV += "fly=y,";
