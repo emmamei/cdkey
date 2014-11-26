@@ -293,6 +293,7 @@ processConfiguration(string name, string value) {
         lmSendConfig("chatFilter",chatFilter);
     }
     else if (name == "helpless dolly") {
+        // Note inverted sense of this value: this is intentional
         if (value == "1") lmSendConfig("canSelfTP", "0");
         else lmSendConfig("canSelfTP", "1");
     }

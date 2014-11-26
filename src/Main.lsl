@@ -813,6 +813,8 @@ default {
                     return;
                 }
 
+                // effectiveWindTime allows us to preserve the real wind
+                // even when demo mode is active
                 if (demoMode) effectiveWindTime = 60.0;
                 else effectiveWindTime = (float)windMins * SEC_TO_MIN;
 
@@ -822,6 +824,10 @@ default {
                 lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey += windAmount));
 
                 if (windAmount < 60.0) {
+
+                    // note that this message might go out even if we "wound" Dolly with 30 seconds
+                    // more... but in the grand scheme of things, she was fully wound: so say so
+
                     cdDialogListen();
                     llDialog(id, "Dolly is already fully wound.", [MAIN], dialogChannel);
                 }
