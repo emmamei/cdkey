@@ -22,8 +22,8 @@
 #define cdListenerActivate(a) llListenControl(a, 1)
 #define cdResetKey() llResetOtherScript("Start")
 
-#define MIN_FRAMES 4
-#define ADD_FRAMES 5
+#define MIN_FRAMES 20
+#define ADD_FRAMES 20
 #define cdMinRefresh() ((1.0/llGetRegionFPS()) * MIN_FRAMES)
 #define cdAddRefresh() ((1.0/llGetRegionFPS()) * ADD_FRAMES)
 
@@ -275,7 +275,7 @@ oneAnimation() {
             lmSendConfig("keyAnimationID", (string)(keyAnimationID = animKey));
 
             if (lowScriptMode) animRefreshRate = 10.0;
-            else animRefreshRate = 4.0;
+            else animRefreshRate = 8.0;
         }
         else animRefreshRate = 0.0;
     }
@@ -806,8 +806,10 @@ default {
             else if (choice == "Unpose") {
                 lmSendConfig("keyAnimation", (string)(keyAnimation = ""));
                 lmSendConfig("poserID", (string)(poserID = NULL_KEY));
+                lmSendConfig("poseExpire", "0");
 
                 clearAnimations();
+                lmRunRLV("sendchat=y");
             }
 
             else if (keyAnimation == "" || dollIsPoseable) {
@@ -816,7 +818,9 @@ default {
                 if (llGetInventoryType(choice) == 20) {
                     lmSendConfig("keyAnimation", (string)(keyAnimation = choice));
                     lmSendConfig("poserID", (string)(poserID = id));
+                    lmSendConfig("poseExpire", (string)(llGetTime() + 300));
                     oneAnimation();
+                    if (poseSilence) lmRunRLV("sendchat=n");
                 }
 
                 // choice is menu of Poses
