@@ -237,6 +237,12 @@ default
                     barList = controllers;
                 }
 
+                // Dolly can NOT be added to either list
+                if (cdIsDoll((key)uuid)) {
+                    lmSendToAgent("You can't select Dolly for this list.",(key)uuid);
+                    return;
+                }
+
                 //----------------------------------------
                 // VALIDATION
                 //
