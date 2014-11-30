@@ -492,6 +492,7 @@ default {
                  if (name == "ncPrefsLoadedUUID")    ncPrefsLoadedUUID = llDeleteSubList(split,0,0);
             else if (name == "lowScriptMode")            lowScriptMode = (integer)value;
             else if (name == "dialogChannel")            dialogChannel = (integer)value;
+            else if (name == "timeLeftOnKey")            timeLeftOnKey = (integer)value;
             else if (name == "demoMode")                      demoMode = (integer)value;
             else if (name == "quiet")                            quiet = (integer)value;
 #ifdef DEVELOPER_MODE
@@ -726,8 +727,8 @@ default {
         lmSendConfig("afk", "0");
 
         // when attaching we're not in lowScriptMode
-        lowScriptMode = 0;
-        lmSendConfig("lowScriptMode", "0");
+        //lowScriptMode = 0;
+        //lmSendConfig("lowScriptMode", "0");
 
         // reset collapse environment if needed
         lmInternalCommand("collapse", (string)collapsed, llGetKey());
@@ -850,6 +851,14 @@ default {
             // What if inventory changes several times in a row?
             llOwnerSay("Key contents modified; restarting in 120 seconds.");
             llSetTimerEvent(120.0);
+
+            // In the unlikely event that we are due to expire before
+            // resetting - bump the time up to allow us to reset BEFORE
+            // expiring... (which avoids the expire completely)
+            if (timeLeftOnKey < 120.0) {
+                lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 150.0));
+                lmInternalCommand("getTimeUpdates","",NULL_KEY);
+            }
         }
     }
 
