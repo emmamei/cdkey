@@ -119,7 +119,9 @@ setDollType(string choice, integer automated) {
 
     // Look for Notecard for the Doll Type and start reading it if showPhrases is enabled
     //
-    if (showPhrases) {
+    // Builder and Key types don't allow for Notecard Hypno - this is also left in even
+    // if Key type is unused, as it disallows the Key Type altogether
+    if (showPhrases && stateName != "Builder" && stateName != "Key"){
         if (llGetInventoryType(typeNotecard) == INVENTORY_NOTECARD) {
 
             kQuery = llGetNotecardLine(typeNotecard,readLine++);
@@ -133,8 +135,12 @@ setDollType(string choice, integer automated) {
 #endif
     }
 
-    // Dont lock if transformation is automated
-    if (automated) minMinutes = 0;
+    // Dont lock if transformation is automated (or is a Builder or Key type)
+    if (automated || stateName == "Builder"
+#ifdef KEY_TYPE
+    || stateName == "Key"
+#endif
+    ) minMinutes = 0;
     else minMinutes = TRANSFORM_LOCK_TIME;
 
     currentState = stateName;
@@ -148,17 +154,25 @@ setDollType(string choice, integer automated) {
     // This is being done too early...
     //if (!RLVok) { lmSendToAgentPlusDoll("Because RLV is disabled, Dolly does not have the capability to change outfit.",transformerId); };
 
-    typeFolder = "";
-    outfitSearchTries = 0;
-    typeSearchTries = 0;
+    // If the dolly Type is Key, then exit. Note that
+    // the Builder can have outfits if they like.
+#ifdef KEY_TYPE
+    if (stateName != "Key") {
+#endif
+        typeFolder = "";
+        outfitSearchTries = 0;
+        typeSearchTries = 0;
 
-    // if RLV is non-functional, dont search for a Type Folder
-    if (RLVok) {
-        debugSay(2,"DEBUG-DOLLTYPE","Searching for " + typeFolderExpected);
-        outfitsSearchTimer = llGetTime();
-        folderSearch(outfitsFolder,rlvChannel2);
-    }
+        // if RLV is non-functional, dont search for a Type Folder
+        if (RLVok) {
+            debugSay(2,"DEBUG-DOLLTYPE","Searching for " + typeFolderExpected);
+            outfitsSearchTimer = llGetTime();
+            folderSearch(outfitsFolder,rlvChannel2);
+        }
     // if NOT RLVok then we have a DollType with no associated typeFolder...
+#ifdef KEY_TYPE
+    }
+#endif
 }
 
 reloadTypeNames() {
@@ -180,16 +194,34 @@ reloadTypeNames() {
             // The Slut model is allowed (in a normal fashion)
             // if this is an ADULT key
             //
-            if ((typeName != "Builder") &&
-#ifdef ADULT_MODE
-                (typeName != "Slut")    &&
+            if (   (typeName != "Builder")
+                && (typeName != "Key")
+#ifndef ADULT_MODE
+                && (typeName != "Slut")
 #endif
-                (typeName != "Key")) {
+                ) {
 
                 types += typeName;
             }
         }
     }
+
+    //We don't need a Notecard to be present for these to be active
+    //
+    // Note the following rules of the built-in types:
+    //   - Display: Notecard is ok but not needed
+    //   - Slut: rejects type even if Notecard is present if not ADULT, else Notecard ok but not needed
+    //   - Builder: rejects Notecards entirely
+    //   - Key: rejects Notecards entirely
+    //
+    if (llListFindList(types, (list)"Display") == NOT_FOUND) types += [ "Display" ];
+#ifdef ADULT_MODE
+    if (llListFindList(types, (list)"Slut") == NOT_FOUND) types += [ "Slut" ];
+#endif
+    if (cdDollyIsBuiltinController(transformerId)) { types += [ "Builder" ]; showPhrases = 0; }
+#ifdef KEY_TYPE
+    if (cdIsBuiltinController(transformerId))      { types += [ "Key" ];     showPhrases = 0; }
+#endif
 }
 
 runTimedTriggers() {
@@ -339,17 +371,6 @@ default {
                 }
             }
         }
-        else if (showPhrases) {
-            debugSay(5,"DEBUG-TRANSFORM","Stopping timer");
-            // Phrases are being shown...
-            cdStopTimer();
-        }
-#ifdef WAKESCRIPT
-        else {
-            // If no phrases are being shown, then stop script: no need to keep running
-            if ((menuTime + 60.0) < llGetTime()) cdStopScript(cdMyScriptName());
-        }
-#endif
     }
 
     //----------------------------------------
@@ -629,44 +650,25 @@ default {
                 else {
                     // Transformation lock time has expired: transformations (type changes) now allowed
                     reloadTypeNames();
+                    debugSay(5,"DEBUG-TYPES","Type names reloaded");
 
                     string msg = "These change the personality of " + dollName + "; Dolly is currently a " + stateName + " Doll. ";
-                    list choices = types;
                     integer i;
 
+                    // We need a new list var to be able to change the display, not the
+                    // available types
+                    list choices = types;
+
+                    // Delete the current type: transforming to current type is redundant
                     if ((i = llListFindList(choices, (list)stateName)) != NOT_FOUND) {
                         choices = llDeleteSubList(choices, i, i);
                     }
 
-                    if (llListFindList(choices, (list)"Display") == NOT_FOUND) choices += [ "Display" ];
-#ifdef ADULT_MODE
-                    if (llListFindList(choices, (list)"Slut")    == NOT_FOUND) choices += [ "Slut" ];
-#endif
-                    if (cdIsDoll(id)) {
-                        msg += "What type of doll do you want to be?";
-
-                        // if Dolly has no User Controllers (they are controller) AND
-                        // Dolly is a built-in Controller - add two options
-                        if (cdIsController(id)) {
-
-                            // The Key special function is for Built-in Dolls other than Dolly
-                            if (!cdIsDoll(id)) {
-                                if (cdIsBuiltinController(id)) {
-                                    if (llListFindList(choices, (list)"Key")     == NOT_FOUND) choices += [ "Key" ];
-                                }
-                            }
-
-                            // if Dolly IS a Built-in Controller - give them a Builder option
-                            if (cdDollyIsBuiltinController(id)) {
-                                if (llListFindList(choices, (list)"Builder") == NOT_FOUND) choices += [ "Builder" ];
-                            }
-                        }
-                    }
+                    if (cdIsDoll(id)) msg += "What type of doll do you want to be?";
                     else {
                         msg += "What type of doll do you want the Doll to be?";
                         llOwnerSay(cdProfileURL(id) + " is looking at your doll types.");
                     }
-
 
                     debugSay(5,"DEBUG-TYPES","Generating unlocked dialog");
                     cdDialogListen();
@@ -683,13 +685,13 @@ default {
             }
             else if (cdListElementP(types, choice) != NOT_FOUND) {
                 // "choice" is a valid Type: change to it as appropriate
-                if (cdIsDoll(id)) {
-                    // Doll chose a Type: just do it
+                if (cdIsDoll(id) || cdIsController(id)) {
+                    // Doll (or a Controller) chose a Type: just do it
                     transformedViaMenu = YES;
                     setDollType(choice, NOT_AUTOMATED);
                 }
                 else {
-                    // Someone else chose a Type
+                    // A member of the public chose a Type
                     if (mustAgreeToType) {
                         if (!cdIsDoll(id)) lmSendToAgent("Getting confirmation from Doll...",id);
 
