@@ -223,6 +223,7 @@ default
             }
             else if (name == "baseWindRate")             baseWindRate = (float)value;
             else if (name == "windRate")                     windRate = (float)value;
+            else if (name == "lowScriptMode")           lowScriptMode = (float)value;
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
 
             // This name4key function becomes "dead code" unless a companion script
@@ -352,7 +353,7 @@ default
             // shortcut: p
             else if (c == "p") {
                      if (name == "poserID")                       poserID = (key)value;
-                //else if (name == "poseSilence")               poseSilence = (integer)value;
+                else if (name == "poseSilence")               poseSilence = (integer)value;
                 else if (name == "primLight") {
                     primLight = (integer)value;
                     lmInternalCommand("setGemColour", (string)gemColour, NULL_KEY);
@@ -962,14 +963,20 @@ default
                             // Abilities
                             if (afterSpace == "Silent Pose") {
                                 isAbility = 1;
-                                // if is not Doll - or Controller, they can set and unset this option
-                                // if is Doll, they can only enable this option
+                                // if X is true - this value can be changed -OR-
+                                // if is NOT Dolly - this value can be changed -OR-
+                                // if is a Controller - this value can be changed
+                                //
+                                // otherwise - if this is a Dolly with Controller - cannot make this setting false.
                                 if (isX || !isDoll || isController) lmSendConfig("poseSilence", (string)isX);
-                                else if (isDoll) llOwnerSay("The Silent Pose cannot be disabled by you.");
+                                else if (!isX && isDoll) llOwnerSay("The Silent Pose cannot be disabled by you.");
                             }
                             else if (!isX || !isDoll || isController) {
-                                // if is not Doll, they can set and unset these options...
-                                // if is Doll, these abilities can only be removed (X)
+                                // if X is false - these values can be changed -OR-
+                                // if is not Doll - these values can be changed -OR-
+                                // if isController - these values can be changed
+                                //
+                                // However! if X is true and isDoll and is NOT Controller - then skip to next...
                                 isAbility = 1;
                                      if (afterSpace == "Self TP")    lmSendConfig("canSelfTP",    (string)(canSelfTP = isX));
                                 else if (afterSpace == "Self Dress") lmSendConfig("canDressSelf", (string)(canDressSelf = isX));
@@ -981,6 +988,7 @@ default
                                 else isAbility = 0;
                             }
                             else if (isX && isDoll) {
+                                // Dolly (accessor) is trying to enable: reject
                                 isAbility = 1;
                                      if (afterSpace == "Self TP")    llOwnerSay("The Self TP option cannot be re-enabled by you.");
                                 else if (afterSpace == "Self Dress") llOwnerSay("The Self Dress option cannot be re-enabled by you.");
