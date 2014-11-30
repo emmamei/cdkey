@@ -499,7 +499,7 @@ default {
             llTargetRemove(targetHandle);
 
             isNoScript = llGetParcelFlags(llGetPos()) & PARCEL_FLAG_ALLOW_SCRIPTS;
-            lmSendConfig("lowScriptMode",(string)(lowScriptMode = cdLowScriptTrigger));
+            //lmSendConfig("lowScriptMode",(string)(lowScriptMode = cdLowScriptTrigger));
 
 #ifdef DEVELOPER_MODE
             msg = "Region ";
@@ -536,7 +536,7 @@ default {
         if (id) {
             debugSay(2,"DEBUG-AVATAR","ifPermissions (attach)");
             ifPermissions();
-            lmSendConfig("lowScriptMode",(string)(lowScriptMode = (llGetRegionFPS() < LOW_FPS || llGetRegionTimeDilation() < LOW_DILATION)));
+            //lmSendConfig("lowScriptMode",(string)(lowScriptMode = cdLowScriptTrigger));
 
 #ifdef DEVELOPER_MODE
             debugSay(2,"DEBUG-AVATAR","Region FPS: " + formatFloat(llGetRegionFPS(),1) + "; Region Time Dilation: " + formatFloat(llGetRegionTimeDilation(),3));
