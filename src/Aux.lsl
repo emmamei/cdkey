@@ -537,10 +537,8 @@ default {
                 // Whatever the current element is - set gender
                 // to the next in a circular loop
 
-                if (s == "Male")
-                    setGender("female");
-                else if (s == "Female")
-                    setGender("male");
+                     if (s == "Male")   setGender("female");
+                else if (s == "Female") setGender("male");
 
                 llOwnerSay("Gender is now set to " + dollGender);
             }
@@ -553,15 +551,16 @@ default {
                     cdDialogListen();
                     llDialog(id, msg, dialogSort(plusList + MAIN), dialogChannel);
             }
-            else if ((llListFindList(COLOR_NAMES, [ choice ]) != -1) && (choice != "Custom..")) {
+            else if (llListFindList(COLOR_NAMES, [ choice ]) != NOT_FOUND) {
                 integer index = llListFindList(COLOR_NAMES, [ choice ]);
                 string choice = (string)llList2Vector(COLOR_VALUE, index);
 
                 lmInternalCommand("setGemColour", choice, id);
+                lmMenuReply("Gem Colour...", llGetDisplayName(id), id);
             }
 
             // Textbox generating menus
-            if (choice == "Custom..." || choice == "Dolly Name..." ) {
+            else if (choice == "Custom..." || choice == "Dolly Name..." ) {
                 if (choice == "Custom...") {
                     textboxType = 1;
                     llTextBox(id, "Here you can input a custom colour value\nCurrent colour: " + curGemColour + "\nEnter vector eg <0.900, 0.500, 0.000>\nOr Hex eg #A4B355\nOr RGB eg 240, 120, 10", textboxChannel);
@@ -636,7 +635,7 @@ default {
             // For all types except #1 (Gem Color) give back the "Key..."
             // Menu...
             //
-            if (textboxType == 1) lmMenuReply("Gem Colour", name, id);
+            if (textboxType == 1) lmMenuReply("Gem Colour...", name, id);
             else lmMenuReply("Key...", name, id);
         }
     }
