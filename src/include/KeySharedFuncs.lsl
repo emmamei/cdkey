@@ -16,27 +16,35 @@ float lastTimerEvent;
 integer timerStarted;
 
 float setWindRate() {
-    float newWindRate;
+    //float newWindRate;
     //vector agentPos = llList2Vector(llGetObjectDetails(dollID, [ OBJECT_POS ]), 0);
     //integer agentInfo = llGetAgentInfo(dollID);
 
-    newWindRate = baseWindRate;
-    if (afk) newWindRate *= 0.5;
+    //newWindRate = baseWindRate;
+    //if (afk) newWindRate *= 0.5;
 
-    if (cdWindDown()) windRate = newWindRate * cdWindDown();
+    displayWindRate = baseWindRate;
+    if (afk) displayWindRate *= 0.5;
+
+    if (cdWindDown()) windRate = displayWindRate;
     else windRate = 0.0;
 
-//  if (windRate != newWindRate * cdWindDown()) {
-//      windRate = newWindRate * cdWindDown();
-
-    // baseWindRate is the starting point for all rates...
-    // displayWindRate is the currently "valid" rate...
-    // windRate is the actual rate, including full stop (or no unwinding)
+    // There are three winding rates:
+    //
+    // baseWindRate is the basic rate when the Key is full-on and without
+    //     restrictions or adjustments
+    //
+    // displayWindRate appears to be the rate the Key would be going at
+    //     if it was operating.
+    //
+    // windRate is the actual discernable Key winding rate. THIS is the
+    //     amount of most importance, and the one that accounts for
+    //     the Key's actual winding down - the others are "storage" to
+    //     preserve other rates.
+    //
     lmSendConfig("baseWindRate", (string)baseWindRate);
-    lmSendConfig("displayWindRate", (string)newWindRate);
+    lmSendConfig("displayWindRate", (string)displayWindRate);
     lmSendConfig("windRate", (string)windRate);
-
-//  }
 
     // llTargetOmega: With normalized vector spinrate is equal to radians per second
     // 2𝜋 radians per rotation.  This sets a normal rotation rate of 4 rpm about the
@@ -44,7 +52,7 @@ float setWindRate() {
     // the dolly begins using their time faster.
     llTargetOmega(<0.0, 0.0, 1.0>, windRate * TWO_PI / 8.0, 1);
 
-    return newWindRate;
+    return displayWindRate;
 }
 
 #define CHECK "✔"
