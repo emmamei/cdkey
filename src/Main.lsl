@@ -94,9 +94,6 @@ float wearLockExpire;
 float carryExpire;
 float lastTimerEvent;
 float jamExpire;
-#ifdef PREDICTIVE_TIMER
-float nextExpiryTime;
-#endif
 float poseExpire;
 float baseWindRate    = windRate;
 float displayWindRate = windRate;
@@ -767,9 +764,6 @@ default {
                 string windButton;
 
                 if ((cdIsCarrier(id)) || (cdIsController(id))) windButton = "Wind";
-#ifdef WAKESCRIPT
-                cdWakeScript("Transform");
-#endif
                 lmInternalCommand("mainMenu", windButton + "|" + name, id);
             }
             else if (choice == "Wind Emg") {
