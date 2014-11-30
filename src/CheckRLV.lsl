@@ -203,7 +203,9 @@ activateRLVBase() {
     lmRunRLVas("Base", baseRLV);
     
     if (!canWear || collapsed || wearLock || afk) lmRunRLVas("Dress", "unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
-    else lmRunRLVas("Dress", "clear");
+    else
+        // lmRunRLVas("Dress", "clear");
+        lmRunRLVas("Dress", "unsharedwear=y,unsharedunwear=y,attachallthis:=y,detachallthis:=y");
 }
 
 // Activate RLV settings
