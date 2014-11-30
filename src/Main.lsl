@@ -64,7 +64,7 @@ integer targetHandle;
 integer lowScriptMode;
 float lastLowScriptTime;
 integer busyIsAway;
-integer ticks;
+//integer ticks;
 
 integer afk;
 integer autoAFK = 1;
@@ -225,6 +225,9 @@ default {
         cdInitializeSeq();
     }
 
+    //----------------------------------------
+    // ON REZ
+    //----------------------------------------
     on_rez(integer start) {
         timerStarted = 1;
         configured = 1;
@@ -273,12 +276,11 @@ default {
         key id = llDetectedKey(0);
         string agentName = llGetDisplayName(id);
 
-        if (RLVok == -1 && dollID != id) {
+        if (RLVok == UNSET && dollID != id) {
             lmSendToAgent(dollName + "'s key clanks and clinks.... it doesn't seem to be ready yet.",id);
             llOwnerSay(agentName + " is fiddling with your Key but the state of RLV is not yet determined.");
             return;
         }
-
         lmMenuReply(MAIN, agentName, id);
     }
 
@@ -293,6 +295,11 @@ default {
         //    3. Is Doll away?
         //    4. Wind down
         //    5. How far away is carrier? ("follow")
+
+        //----------------------------------------
+        // AUTO AFK TRIGGERS
+
+        // if we can AFK, check for auto AFK triggers
         if (canAFK) {
             integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0);
 
@@ -308,68 +315,106 @@ default {
             }
         }
 
+        //----------------------------------------
+        // TIMER INTERVAL
+
         float thisTimerEvent = llGetTime();
         float timerInterval;
 
         if (cdAttached()) timerInterval = thisTimerEvent - lastTimerEvent;
 
+        //----------------------------------------
+        // LOW SCRIPT MODE
+
+        // Note that this is NOT the only place where lowScriptMode
+        // is set. lowScriptMode is set via Start.lsl at startup  (to 0);
+        // and is set by Avatar.lsl after TP or Region change and on Attach.
+        // On those situations, it is perhaps good to be able to set the value
+        // directly. This is, however, the ONLY place that lastLowScriptTIme
+        // is set.
+        //
         if (lowScriptMode) {
+
             // We're in lowScriptMode.... is that still
             // relevant? Check....
 
             if (cdLowScriptTrigger) {
-                lastLowScriptTime = llGetTime(); // mark the time
+                // lowScriptMode continues...
+                lastLowScriptTime = llGetTime();
             }
             else {
+                // lowScript is no longer valid... but wait....
                 // Nope - all is good again: BUT don't trigger
                 // normal mode immediately - wait 10 minutes
                 // to see if this good news sticks
 
-                if (llGetTime() - lastLowScriptTime > 600) {
-                    lastLowScriptTime = 0;
-                    lowScriptMode = 0;
+                if ((llGetTime() - lastLowScriptTime) > 600) {
+                    debugSay(2,"DEBUG-MAIN", ">> Normal mode buffering expired...");
+                    lmSendConfig("lowScriptMode","0");
                     llOwnerSay("ATTN: Normal mode activated.");
+                    llSetTimerEvent(STD_RATE);
                 }
             }
         }
         else {
+            // We're not in lowScriptMode....should we be?
+            // Test...
+            //
             if (cdLowScriptTrigger) {
                 // We're not in lowScriptMode, but have been triggered...
                 // Go into "power saving mode", say so, and mark the time
 
-                lowScriptMode = 1;
-                lastLowScriptTime = llGetTime();
+                lmSendConfig("lowScriptMode","1");
                 llOwnerSay("ATTN: Power-saving mode activated.");
+                llSetTimerEvent(LOW_RATE);
             }
         }
 
 #ifdef DEVELOPER_MODE
+        //----------------------------------------
+        // TIME REPORTING (MAIN)
+
         if (timeReporting) llOwnerSay("Main Timer fired, interval " + formatFloat(timerInterval,3) + "s.");
 #endif
-
-#ifdef PREDICTIVE_TIMER
-        if (cdTimeSet(nextExpiryTime) && (thisTimerEvent < nextExpiryTime) && (timerInterval < 10.0)) return;
-#endif
+        //----------------------------------------
+        // CARRY TIMER: RUN OR RESET
 
         // If carried, the carry times out (expires) if the carrier is
         // not in range for the duration
         if (carryExpire > 0.0) {
-            if (llGetAgentSize(carrierID) == ZERO_VECTOR)       lmSendConfig("carryExpire", (string)(carryExpire -= timerInterval));
+
+            // Remember: carryExpire is a Time - so needs to convert to a relative value as it
+            // is sent out... sigh... the "down shift" is imprecise but it works... note that NOTHING
+            // changes until after the Timer Event is done...
+            if (llGetAgentSize(carrierID) == ZERO_VECTOR)       lmSendConfig("carryExpire", (string)(carryExpire -= thisTimerEvent));
             else                                                lmSendConfig("carryExpire", (string)(carryExpire = CARRY_TIMEOUT));
         }
 
+        //----------------------------------------
+        // SET WIND RATE
+
         displayWindRate = setWindRate();
         //llOwnerSay((string)thisTimerEvent + " - " + (string)lastTimerEvent + " = " + (string)timerInterval + " @ " + (string)windRate);
+
+        //----------------------------------------
+        // TIME SAVED (TIMER INTERVAL)
+
         lastTimerEvent = thisTimerEvent;
 
         // Increment a counter
-        ticks++;
+        //ticks++;
+
+        //----------------------------------------
+        // CHECK COLLAPSE STATE
 
         // False collapse? Collapsed = 1 while timeLeftOnKey is positive is an invalid condition
         if (collapsed == NO_TIME)
             if (timeLeftOnKey > 0.0) collapse(NOT_COLLAPSED);
         else if (collapsed == JAMMED)
             if (jamExpire <= thisTimerEvent) collapse(NOT_COLLAPSED);
+
+        //----------------------------------------
+        // POSE TIMED OUT?
 
         // Did the pose expire? If so, unpose Dolly
         if (poseExpire) {
@@ -379,6 +424,9 @@ default {
             }
         }
 
+        //----------------------------------------
+        // CARRY TIMED OUT?
+
         // Has the carry timed out? If so, drop the Dolly
         if (carryExpire) {
             if (carryExpire <= thisTimerEvent) {
@@ -386,6 +434,9 @@ default {
                 lmSendConfig("carryExpire", (string)(carryExpire = 0.0));
             }
         }
+
+        //----------------------------------------
+        // WEARLOCK TIMED OUT?
 
         // Has the clothing lock - wear lock - run its course? If so, reset lock
         if (wearLockExpire) {
@@ -460,40 +511,9 @@ default {
 
         scaleMem();
 
-#ifdef PREDICTIVE_TIMER
-        // Determine next event to fire and set timer to match
-        list possibleEvents;
-        if (carryExpire) {
-                                 possibleEvents += carryExpire - thisTimerEvent;
-                                 possibleEvents += 10.0;
-        }
-
-        if (poseExpire)          possibleEvents += poseExpire - thisTimerEvent;
-        if (wearLockExpire)      possibleEvents += wearLockExpire - thisTimerEvent;
-        if (jamExpire)           possibleEvents += jamExpire - thisTimerEvent;
-
-        if (afk && autoAFK) {   // This lets us run a short cut timer event
-                                // that only checks for the doll returning
-                                // from AFK to keep the latency low without
-                                // having to accelerate everything else in addition
-            nextExpiryTime = thisTimerEvent + cdListMin(possibleEvents);
-            possibleEvents += 2.0;
-        }
-
-        if (possibleEvents != []) {
-            if (lowScriptMode)              possibleEvents += 300.0;
-            else                            possibleEvents += 60.0;
-        }
-        else possibleEvents += 20.0;
-
-        if (timeLeftOnKey != 0.0)           possibleEvents += timeLeftOnKey;
-
-        // Set timer to the first of our predicted events.
-        llSetTimerEvent(cdListMin(possibleEvents) + 0.022); // Minimum event delay is 0.022s pointless setting faster
-#else
-        // This takes the place of the predictive timer
-        llSetTimerEvent(30.0);
-#endif
+        // Set default timer... do we want to do this?
+        // It interferes with lowScriptMode
+        //llSetTimerEvent(30.0);
     }
 
     //----------------------------------------
@@ -527,6 +547,7 @@ default {
             if (lowScriptMode) llSetTimerEvent(LOW_RATE);
             else if (!cdAttached()) llSetTimerEvent(60.0);
             else llSetTimerEvent(STD_RATE);
+
             timerStarted = 1;
         }
 
@@ -593,7 +614,7 @@ default {
             else if (name == "configured")                 configured = (integer)value;
             else if (name == "busyIsAway")                 busyIsAway = (integer)value;
             else if (name == "quiet")                           quiet = (integer)value;
-            else if (name == "hoverTextOn")                         hoverTextOn = (integer)value;
+            else if (name == "hoverTextOn")               hoverTextOn = (integer)value;
             else if (name == "windAmount")                 windAmount = (float)value;
             else if (name == "baseWindRate") {
                 if ((float)value > 0.33) baseWindRate = (float)value;   // Minimum baseWindRate set at 0.33 any lower and reset to 1.0 this should
@@ -651,14 +672,6 @@ default {
 #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")           timeReporting = (integer)value;
 #endif
-            else if (name == "lowScriptMode") {
-                lowScriptMode = (integer)value;
-
-                if (timerStarted) {
-                    if (lowScriptMode) llSetTimerEvent(LOW_RATE);
-                    else llSetTimerEvent(STD_RATE);
-                }
-            }
         }
 
         else if (code == INTERNAL_CMD) {
@@ -828,11 +841,14 @@ default {
                     // note that this message might go out even if we "wound" Dolly with 30 seconds
                     // more... but in the grand scheme of things, she was fully wound: so say so
 
+                    // Make it literally true:
+                    timeLeftOnKey = effectiveLimit;
+
                     cdDialogListen();
                     llDialog(id, "Dolly is already fully wound.", [MAIN], dialogChannel);
                 }
                 else if (windAmount > 0.0) {
-                    if (effectiveWindTime > 0.0) lmSendToAgent("You have given " + dollName + " " + (string)effectiveWindTime + " more minutes of life.", id);
+                    if (effectiveWindTime > 0.0) lmSendToAgent("You have given " + dollName + " " + (string)llFloor(effectiveWindTime / SEC_TO_MIN) + " more minutes of life.", id);
 
                     if (timeLeftOnKey == effectiveLimit) { // Fully wound
                         llOwnerSay("You have been fully wound - " + (string)llRound(effectiveLimit / (SEC_TO_MIN * displayWindRate)) + " minutes remaining.");
