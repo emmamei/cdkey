@@ -223,7 +223,7 @@ default
             }
             else if (name == "baseWindRate")             baseWindRate = (float)value;
             else if (name == "windRate")                     windRate = (float)value;
-            else if (name == "lowScriptMode")           lowScriptMode = (float)value;
+            else if (name == "lowScriptMode")           lowScriptMode = (integer)value;
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
 
             // This name4key function becomes "dead code" unless a companion script
@@ -327,7 +327,7 @@ default
                 else if (name == "canDress")                     canDress = (integer)value;
                 else if (name == "canPose")                       canPose = (integer)value;
                 else if (name == "canDressSelf")             canDressSelf = (integer)value;
-                else if (name == "canSelfTP")                     canSelfTP = (integer)value;
+                else if (name == "canSelfTP")                   canSelfTP = (integer)value;
                 else if (name == "collapsed")                   collapsed = (integer)value;
                 else if (name == "configured")                 configured = (integer)value;
                 else if (name == "showPhrases")               showPhrases = (integer)value;
@@ -829,9 +829,13 @@ default
                     llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
                 }
                 else if (choice == "Detach") lmInternalCommand("detach", "", id);
-                else if (choice == "TP Home") lmInternalCommand("TP", LANDMARK_HOME, id);
             }
             else {
+                if (choice == "TP Home") {
+                    lmInternalCommand("TP", LANDMARK_HOME, id);
+                    return;
+                }
+
                 string beforeSpace = llStringTrim(llGetSubString(choice, 0, space),STRING_TRIM);
                 string afterSpace = llDeleteSubString(choice, 0, space);
 
