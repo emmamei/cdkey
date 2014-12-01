@@ -12,11 +12,14 @@
 // #define B 104
 // #define C 105
 // #define D 110
+// #define E 11
+// #define F 12
+// #define G 15
 #define MEM_REPORT 135
 #define CONFIG 300
 #define INTERNAL_CMD 305
 #define RLV_CMD 315
-// #define E 350
+#define RLV_RESET 350
 #define MENU_SELECTION 500
 
 #define VSTR  + "\nScript Date: " + PACKAGE_VERSION
