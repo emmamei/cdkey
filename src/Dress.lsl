@@ -30,9 +30,9 @@ string outfits_url = "outfits.htm";
 
 string prefix;
 
-integer candresstemp = TRUE;
+integer tempWearLock = FALSE;
 integer candresstimeout;
-integer dresspassed;
+integer dressTries;
 
 key dollID = NULL_KEY;
 key dresserID = NULL_KEY;
@@ -245,7 +245,7 @@ changeComplete(integer success) {
     candresstimeout = 0;
     change = 0;
 
-    candresstemp = TRUE;
+    tempWearLock = FALSE;
     llSetTimerEvent(0.0);
 
     dresserID = NULL_KEY;
@@ -320,7 +320,7 @@ default {
             llListenRemove(listen_id_2668);
             llListenRemove(listen_id_2669);
 
-            changeComplete(0);
+            changeComplete(FALSE);
         }
     }
 
@@ -339,45 +339,7 @@ default {
 
         scaleMem();
 
-        if (code == 102) {
-            ;
-        }
-
-        // else if (code == 104) {
-        //     if (script != "Start") return;
-        //     startup = 1;
-        // }
-        // else if (code == 105) {
-        //     if (script != "Start") return;
-        //     startup = 2;
-        // }
-        // else if (code == 110) {
-        //     initState = 105;
-        // }
-
-        else if (code == 135) {
-            memReport(cdMyScriptName(),cdListFloatElement(split, 0));
-        } else
-
-        cdConfigReport();
-
-        else if (code == 150) {
-            simRating = cdListElement(split, 0);
-            integer cdOutfitRating = cdOutfitRating(newoutfitname);
-            integer regionRating = cdRating2Integer(simRating);
-
-            debugSay(3, "DEBUG", "Region rating " + llToLower(simRating) + " outfit " + newoutfitname + " cdOutfitRating: " + (string)cdOutfitRating +
-                        " regionRating: " + (string)regionRating);
-
-            if (RLVok) {
-                if (cdOutfitRating > regionRating) {
-                    pushRandom = 1;
-                    clothingFolder = newoutfitpath;
-                    listInventoryOn("2665");
-                }
-            }
-        }
-        else if (code == 300) {
+        if (code == CONFIG) {
             string name = cdListElement(split, 0);
             string value = cdListElement(split, 1);
             string c = cdGetFirstChar(name);
@@ -424,18 +386,20 @@ default {
             else if (name == "useTypeFolder")              useTypeFolder = (integer)value;
             else if (name == "wearLock")                        wearLock = (integer)value;
         }
-        else if (code == 305) {
+        else if (code == INTERNAL_CMD) {
             string cmd = cdListElement(split, 0);
 
-            // If this code is linked with an argument of "random", then
-            // choose random outfit and be done
+            // Choose an (appropriate) random outfit and put it on
             //
-            // This is used on style change - and any time an auto-select is necessary
             if (cmd == "randomDress") {
 #ifdef DEVELOPER_MODE
                 llOwnerSay("random dress chosen"); // DEBUG
 #endif
-                if (candresstemp) {
+                if (tempWearLock) {
+                    string s = llToLower(pronounSheDoll);
+                    llRegionSayTo(dresserID, 0, "Dolly cannot be dressed right now; " + s + " is already dressing");
+                }
+                else {
                     if (useTypeFolder) clothingFolder = typeFolder;
                     else clothingFolder = "";
 
@@ -446,23 +410,19 @@ default {
 #endif
                     listInventoryOn("2665");
                 }
-                else {
-                    string s = llToLower(pronounSheDoll);
-                    llRegionSayTo(dresserID, 0, "Dolly cannot be dressed right now; " + s + " is already dressing");
-                }
             }
         }
-        else if (code == 350) {
+        else if (code == RLV_RESET) {
             RLVok = (cdListIntegerElement(split, 0) == 1);
         }
         // Choice #500: (From Main Menu) Dress Dolly
-        else if (code == 500)  {
+        else if (code == MENU_SELECTION)  {
             string choice = cdListElement(split, 0);
             string name = cdListElement(split, 1);
 
-            debugSay(6, "DEBUG-DRESS", (string)candresstemp + " " + choice);
+            debugSay(6, "DEBUG-DRESS", (string)tempWearLock + " " + choice);
 
-            if (choice == "Outfits..." && candresstemp) {
+            if (choice == "Outfits..." && !tempWearLock) {
                 if (!isDresser(id)) return;
 
                 if (wearLock) {
@@ -549,18 +509,18 @@ default {
                         return;
                     }
                     else if ((outfitsFolder != "") && (choice != newoutfitname)) {
-                        string rlv;
 #ifdef DEVELOPER_MODE
                         // If we are in developer mode we are in danger of the key being ripped
                         // off here.  We therefore will use a temporary @detach=n restriction.
                         llOwnerSay("Developer key locked in place to prevent accidental detachment during dressing.");
-                        rlv="attachthis=y,detachthis=n,detach=n,";
+                        lmRunRLV("attachthis=y,detachthis=n,detach=n,touchall=n,showinv=n");
+#else
+                        lmRunRLV("touchall=n,showinv=n");
 #endif
-                        lmRunRLV(rlv + "touchall=n,showinv=n");
-                        candresstemp = FALSE;
+                        tempWearLock = TRUE;
 
                         dressingFailures = 0;
-                        dresspassed = 0;
+                        dressTries = 0;
                         change = 1;
 
                         lmSendConfig("oldoutfitname",   (  oldoutfitname = newoutfitname));
@@ -666,6 +626,48 @@ default {
                     if (yfolder != "") rlvRequest("getinvworn:" + yfolder + "=", 2669);
 
                     llSetTimerEvent(10.0);
+                }
+            }
+        }
+        else if (code < 200) {
+            if (code == 102) {
+                ;
+            }
+
+            // else if (code == 104) {
+            //     if (script != "Start") return;
+            //     startup = 1;
+            // }
+            // else if (code == 105) {
+            //     if (script != "Start") return;
+            //     startup = 2;
+            // }
+            // else if (code == 110) {
+            //     initState = 105;
+            // }
+
+            else if (code == 135) {
+                memReport(cdMyScriptName(),cdListFloatElement(split, 0));
+            }
+            else if (code == 142) {
+
+                cdConfigureReport();
+
+            }
+            else if (code == 150) {
+                simRating = cdListElement(split, 0);
+                integer cdOutfitRating = cdOutfitRating(newoutfitname);
+                integer regionRating = cdRating2Integer(simRating);
+
+                debugSay(3, "DEBUG", "Region rating " + llToLower(simRating) + " outfit " + newoutfitname + " cdOutfitRating: " + (string)cdOutfitRating +
+                            " regionRating: " + (string)regionRating);
+
+                if (RLVok) {
+                    if (cdOutfitRating > regionRating) {
+                        pushRandom = 1;
+                        clothingFolder = newoutfitpath;
+                        listInventoryOn("2665");
+                    }
                 }
             }
         }
@@ -935,17 +937,17 @@ default {
                 }
             }
             else if (dressingFailures > MAX_DRESS_FAILURES) {
-                changeComplete(0);
+                changeComplete(FALSE);
             }
             else {
-                dresspassed++;
+                dressTries++;
                 if (xfolder == normalselfFolder && newoutfitpath != "") xfolder = newoutfit;
                 else xfolder = "";
 
                 if (xfolder != "") rlvRequest("getinvworn:" + xfolder + "=", 2668);
-                else if (dresspassed >= 3) changeComplete(1);
+                else if (dressTries >= 3) changeComplete(TRUE);
             }
-            debugSay(6, "DEBUG", "candresstimeout = " + (string)candresstimeout + ", dresspassed = " + (string)dresspassed);
+            debugSay(6, "DEBUG", "candresstimeout = " + (string)candresstimeout + ", dressTries = " + (string)dressTries);
         }
 
         //----------------------------------------
@@ -954,29 +956,37 @@ default {
         // Check to see if all items are fully removed; if not, try again
         //
         else if (channel == (rlvBaseChannel + 2669)) {
+            string c1 = llGetSubString(choice,1,1);
+            string c2 = llGetSubString(choice,2,2);
+
             llListenRemove(listen_id_2669);
+
             debugSay(6, "DEBUG", ">> @getinvworn:" + yfolder);
             debugSay(6, "DEBUG", ">>> " + choice);
-            if (((llGetSubString(choice,1,1) != "0" && llGetSubString(choice,1,1) != "1") ||
-                (llGetSubString(choice,2,2) != "0" && llGetSubString(choice,2,2) != "1")) &&
+
+            if (((c1 != "0" && c1 != "1") ||
+                 (c2 != "0" && c2 != "1")) &&
                 ++dressingFailures <= MAX_DRESS_FAILURES) {
+
                 llSleep(4.0);
+
                 if (RLVok) {
                     if (!canDressSelf || afk || collapsed || wearLock) lmRunRLV("detachallthis:=y,attachallthis:" + outfitsFolder + "=n,detachallthis:" + yfolder + "=force,detachallthis:=n");
                     else lmRunRLV("attachallthis:" + outfitsFolder + "=n,detachall:" + yfolder + "=force");
+
                     rlvRequest("getinvworn:" + yfolder + "=", 2669);
                     candresstimeout++;
                 }
             }
             else if (dressingFailures > MAX_DRESS_FAILURES) {
-                changeComplete(0);
+                changeComplete(FALSE);
             }
             else {
-                dresspassed++;
-                if (dresspassed >= 3) changeComplete(1);
+                dressTries++;
+                if (dressTries >= 3) changeComplete(TRUE);
             }
 
-            debugSay(6, "DEBUG", "candresstimeout = " + (string)candresstimeout + ", dresspassed = " + (string)dresspassed);
+            debugSay(6, "DEBUG", "candresstimeout = " + (string)candresstimeout + ", dressTries = " + (string)dressTries);
         }
 
         llSleep(1.0);
