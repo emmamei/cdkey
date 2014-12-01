@@ -7,8 +7,8 @@
 //-----------------------------------
 // Internal Shared Functions
 //-----------------------------------
-#define STD_RATE 2.0
-#define LOW_RATE 8.0
+#define STD_RATE 30.0
+#define LOW_RATE 60.0
 
 #define cdWakeScript(a) llSetScriptState(a,1); lmInternalCommand("wakeScript", a, llGetKey())
 
@@ -42,9 +42,19 @@ float setWindRate() {
     //     the Key's actual winding down - the others are "storage" to
     //     preserve other rates.
     //
-    lmSendConfig("baseWindRate", (string)baseWindRate);
-    lmSendConfig("displayWindRate", (string)displayWindRate);
-    lmSendConfig("windRate", (string)windRate);
+    // The difference between windRate and displayWindRate is that windRate
+    // can have a flag value of zero. The windRate value could be folded
+    // into the displayWindRate value and a flag of "windingDown" could be
+    // used instead - for clarity and simplicity and separation of meanings.
+
+    // This routine is not only setting the Wind Rate - but refreshing
+    // winding rate values on the wire - EVERY time. This needs to be
+    // segregated out into a different area as it is unrelated to this
+    // function.
+    //
+    // Note too that baseWindRate never changes in this function at all.
+    //
+    broadcastWindRate();
 
     // llTargetOmega: With normalized vector spinrate is equal to radians per second
     // 2𝜋 radians per rotation.  This sets a normal rotation rate of 4 rpm about the
@@ -52,7 +62,17 @@ float setWindRate() {
     // the dolly begins using their time faster.
     llTargetOmega(<0.0, 0.0, 1.0>, windRate * TWO_PI / 8.0, 1);
 
+    // Note that this is mostly irrelevant: this function is used to set
+    // the displayWindRate as a side effect anyway - so the return is useless,
+    // and setting the displayWindRate to the value returned is also useless.
+    //
     return displayWindRate;
+}
+
+broadcastWindRate() {
+    lmSendConfig("baseWindRate", (string)baseWindRate);
+    lmSendConfig("displayWindRate", (string)displayWindRate);
+    lmSendConfig("windRate", (string)windRate);
 }
 
 #define CHECK "✔"
