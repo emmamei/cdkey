@@ -40,6 +40,12 @@
 //========================================
 // VARIABLES
 //========================================
+#ifdef DEVELOPER_MODE
+integer timeReporting = 1;
+#endif
+integer busyIsAway;
+integer autoAFK;
+float timeLeftOnKey;
 string dollName;
 string stateName;
 list types;
@@ -264,6 +270,23 @@ runTimedTriggers() {
     }
 }
 
+// Folders need to be searched for: the outfits folder, and the
+// type folder also - plus the ~nude and ~normal folders on top
+// of that.
+//
+// First, search for outfits folder. Not finding this should be
+// an error.
+//
+// Once found, find a type folder within the outfits folder.
+// This type folder search may be repeated, and not finding one
+// is not an error.
+//
+// The ~nude and ~normal folders should be within the outfits folder,
+// but could be at the same level too.
+//
+// Both major searches (outfits and type) are combined with a timeout
+// and multiple retry.
+
 folderSearch(string folder, integer channel) {
 
     debugSay(2,"DEBUG-FOLDERSEARCH","folderSearch: Searching within \"" + folder + "\"");
@@ -349,15 +372,25 @@ default {
         // typeFolder = Folder related to current Doll Type (e.g., "*Japanese")
         // typeFolderExpected = Computed but untested typeFolder
 
+#ifdef DEVELOPER_MODE
+        if (timeReporting)
+            debugSay(2,"DEBUG-SEARCHING","Transform timer Timer fired, interval " + formatFloat(llGetTime() - lastTimerEvent,3) + "s.");
+#endif
+
         if (RLVok) {
-            debugSay(2,"DEBUG-SEARCHING","Timer tripped at " + formatFloat(llGetTime() - outfitsSearchTimer,1) + "s");
-            if (outfitSearching == 0) {
-                debugSay(2,"DEBUG-SEARCHING","Turning off timer");
-                llSetTimerEvent(0.0);
-                llListenRemove(rlvHandle2);
-                llListenRemove(rlvHandle3);
+
+            if (outfitsSearchTimer) {
+                debugSay(2,"DEBUG-SEARCHING","Search aborted after " + formatFloat(llGetTime() - outfitsSearchTimer,1) + "s");
+                outfitsSearchTimer = 0.0; // reset
             }
-            else {
+
+            if (outfitSearching) {
+                // Note carefully - if the search tries is maxed,
+                // that means that the attempted RLV call failed
+                // and the listener got nothing - NOT that the
+                // search failed... search failures ("failure to find")
+                // are marked by the listener code.
+
                 if (outfitsFolder == "") {
                     if (outfitSearchTries++ < MAX_SEARCH_RETRIES)
                         folderSearch("",rlvChannel3);
@@ -370,7 +403,58 @@ default {
                     }
                 }
             }
+            else {
+                if (rlvHandle2) {
+                    llListenRemove(rlvHandle2);
+                    rlvHandle2 = 0;
+                    llSetTimerEvent(30.0);
+                }
+
+                if (rlvHandle3) {
+                    llListenRemove(rlvHandle3);
+                    rlvHandle3 = 0;
+                    llSetTimerEvent(30.0);
+                }
+            }
         }
+
+        //----------------------------------------
+        // UPDATE HOVERTEXT
+
+        // Update sign if appropriate
+        string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
+
+#define cdSetHovertext(x,c) if(primText!=x)llSetText(x,c,1.0)
+
+#define RED    <1.0,0.0,0.0>
+#define YELLOW <1.0,1.0,0.0>
+#define WHITE  <1.0,1.0,1.0>
+
+             if (collapsed)   { cdSetHovertext("Disabled Dolly!",        ( RED    )); }
+        else if (afk)         { cdSetHovertext(dollType + " Doll (AFK)", ( YELLOW )); }
+        else if (hoverTextOn) { cdSetHovertext(dollType + " Doll",       ( WHITE  )); }
+        else                  { cdSetHovertext("",                       ( WHITE  )); }
+
+        //----------------------------------------
+        // AUTO AFK TRIGGERS
+
+        // if we can AFK, check for auto AFK triggers
+        if (canAFK) {
+            integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0);
+
+            // When Dolly is "away" - enter AFK
+            // Also set away when busy
+
+            if (autoAFK && (afk != dollAway)) {
+
+                lmSendConfig("afk", (string)(afk = dollAway));
+
+                displayWindRate = setWindRate();
+                lmInternalCommand("setAFK", (string)afk + "|1|" + formatFloat(windRate, 1) + "|" + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate)), NULL_KEY);
+            }
+        }
+
+        lastTimerEvent = llGetTime();
     }
 
     //----------------------------------------
@@ -395,11 +479,6 @@ default {
         // If greater than 6, print everything
 
         if (debugLevel > 4) {
-            if (debugLevel < 6) {
-                if (code == 700) return;
-                //if (choice == "keyHandler" || choice == "getTimeUpdates" || choice == "timeLeftOnKey") return;
-            }
-
             string s = "Transform Link Msg:" + script + ":" + (string)code + ":choice/name";
             string t = choice + "/" + name;
 
@@ -409,61 +488,22 @@ default {
 #endif
         scaleMem();
 
-        // First, dump those we don''t want... (but occur frequently!)
-        if (code == 700) return;
-
-        //else if (code == 136) return;
-        //else if (code == 150) return;
-        //else if (code == 315) return;
-        //else if (code == 11) return;
-
-        else if (code == 102) {
-            // FIXME: Is this relevant?
-            // Trigger Transforming Key setting
-            // if (!isTransformingKey) lmSendConfig("isTransformingKey", (string)(isTransformingKey = 1));
-            // lmSendConfig("isTransformingKey", (string)(isTransformingKey = 1));
-
-            configured = 1;
-            //if (stateName != currentState) setDollType(stateName, AUTOMATED);
-        }
-
-        else if (code == 104) {
-            if (script == "Start") {
-                reloadTypeNames();
-                //-- startup = 1;
-                llSetTimerEvent(60.0);   // every minute
-            }
-        }
-
-        //else if (code == 105) {
-        //    if (script != "Start") return;
-        //}
-
-        else if (code == 110) {
-            //initState = 105;
-            setDollType(stateName, AUTOMATED);
-            //startup = 0;
-            ;
-        }
-
-        else if (code == 135) {
-            float delay = (float)choice;
-            memReport(cdMyScriptName(),delay);
-        }
-        else
-
-        cdConfigReport(); // FIXME: this "code" is invalid
-
-        else if (code == 300) {
+        if (code == CONFIG) {
             string value = name;
             string name = choice;
 
             if (script != cdMyScriptName()) {
-                     if (name == "timeLeftOnKey") runTimedTriggers();
-#ifdef KEY_HANDLER
-                else if (name == "keyHandler") return;
+                     if (name == "timeLeftOnKey")                          timeLeftOnKey = (float)value;
+                else if (name == "afk")                                              afk = (integer)value;
+                else if (name == "autoAFK")                                      autoAFK = (integer)value;
+#ifdef DEVELOPER_MDOE
+                else if (name == "timeReporting")                          timeReporting = (integer)value;
 #endif
+                else if (name == "collapsed")                                  collapsed = (integer)value;
                 else if (name == "quiet")                                          quiet = (integer)value;
+                else if (name == "hoverTextOn")                              hoverTextOn = (integer)value;
+                else if (name == "busyIsAway")                                busyIsAway = (integer)value;
+                else if (name == "canAFK")                                        canAFK = (integer)value;
                 else if (name == "mustAgreeToType")                      mustAgreeToType = (integer)value;
                 else if (name == "showPhrases") {
                     showPhrases = (integer)value;
@@ -539,19 +579,11 @@ default {
             }
         }
 
-        else if (code == 305) {
-#ifdef WAKESCRIPT
-            if (choice == "wakeScript") {
-                // This is a call to ServiceReceiver.lsl
-                //
-                // It asks for a refresh of these variables
-                if (name == cdMyScriptName()) cdLinkMessage(LINK_THIS, 0, 303, "debugLevel|dialogChannel|dollType|quiet|mustAgreeToType|RLVok|showPhrases|wearAtLogin", llGetKey());
-            }
-#endif
+        else if (code == INTERNAL_CMD) {
             ;
         }
 
-        else if (code == 350) {
+        else if (code == RLV_RESET) {
             RLVok = ((integer)choice == 1);
 
             outfitsFolder = "";
@@ -587,7 +619,7 @@ default {
             }
         }
 
-        else if (code == 500) {
+        else if (code == MENU_SELECTION) {
             // string name = cdListElement(split, 2);
             string optName = llGetSubString(choice, 2, STRING_END);
             string curState = cdGetFirstChar(choice);
@@ -708,21 +740,45 @@ default {
                     }
                 }
             }
-#ifdef DEVELOPER_MODE
-            else {
-                debugSay(5,"DEBUG-TRANSFORM","500/Choice not handled: " + choice);
-            }
-#endif
+        }
+        else if (code < 200) {
+            if (code == 102) {
+                // FIXME: Is this relevant?
+                // Trigger Transforming Key setting
+                // if (!isTransformingKey) lmSendConfig("isTransformingKey", (string)(isTransformingKey = 1));
+                // lmSendConfig("isTransformingKey", (string)(isTransformingKey = 1));
 
-#ifdef WAKESCRIPT
-            if ((!showPhrases) && ((menuTime == 0.0) || ((menuTime + 60) < llGetTime()))) llSetScriptState(cdMyScriptName(), 0);
-#endif
+                configured = 1;
+                //if (stateName != currentState) setDollType(stateName, AUTOMATED);
+            }
+
+            else if (code == 104) {
+                if (script == "Start") {
+                    reloadTypeNames();
+                    //-- startup = 1;
+                    llSetTimerEvent(30.0);   // every minute
+                }
+            }
+
+            //else if (code == 105) {
+            //    if (script != "Start") return;
+            //}
+
+            else if (code == 110) {
+                //initState = 105;
+                setDollType(stateName, AUTOMATED);
+                //startup = 0;
+                ;
+            }
+
+            else if (code == 135) {
+                float delay = (float)choice;
+                memReport(cdMyScriptName(),delay);
+            }
+            else if (code == 142) {
+                cdConfigureReport();
+            }
         }
-#ifdef DEVELOPER_MODE
-        else {
-            debugSay(6,"DEBUG-TRANSFORM","Transform Link Message not handled: " + name + "/" + (string)code);
-        }
-#endif
     }
 
     //----------------------------------------
@@ -757,10 +813,11 @@ default {
                     debugSay(2,"DEBUG-SEARCHING","typeFolder = \"" + typeFolder + "\" and typeFolderExpected = \"" + typeFolderExpected + "\"");
                     // Search for a typeFolder...
                     if (typeFolder == "" && typeFolderExpected != "") {
-                        debugSay(2,"DEBUG-SEARCHING","Outfit folder found at " + formatFloat(llGetTime() - outfitsSearchTimer,1) + "s; searching for typeFolder");
+                        debugSay(2,"DEBUG-SEARCHING","Outfit folder found in " + formatFloat(llGetTime() - outfitsSearchTimer,1) + "s; searching for typeFolder");
                         // outfitsFolder search is done: search for typeFolder
                         folderSearch(outfitsFolder,rlvChannel2);
                     }
+                    //else lmInternalCommand("randomDress","",NULL_KEY);
                 }
             }
 
@@ -821,14 +878,12 @@ default {
 
                 // at this point we've either found the typeFolder or not,
                 // and the outfitsFolder is set
-                debugSay(2,"DEBUG-SEARCHING","Turning off timer (listen)");
-                llSetTimerEvent(0.0);
+                //debugSay(2,"DEBUG-SEARCHING","Turning off timer (listen)");
+                llSetTimerEvent(30.0);
 
                 // are we doing the initial complete search? or is this just
                 // a type change?
                 if (outfitSearching) {
-                    debugSay(2,"DEBUG-SEARCHING","Finishing outfits search");
-
                     outfitSearching = 0;
                     llOwnerSay("Outfits search completed in " + formatFloat(llGetTime() - outfitsSearchTimer,1) + "s");
                     outfitsSearchTimer = 0.0;
@@ -847,6 +902,7 @@ default {
                         lmSendConfig("normalselfFolder","");
                     }
                 }
+                //else lmInternalCommand("randomDress","",NULL_KEY);
             }
         }
     }
@@ -858,7 +914,7 @@ default {
 
         if (query_id == kQuery) {
             if (data == EOF) {
-                debugSay(2,"DEBUG-TRANSFORM","Read " + (string)readLine + " lines from " + typeNotecard);
+                llOwnerSay("Reading of " + typeNotecard + " completed: " + (string)readLine + " read");
                 kQuery = NULL_KEY;
                 readLine = 0;
             }
@@ -866,7 +922,7 @@ default {
                 // This is the real meat: currentPhrases is built up
                 if (llStringLength(data) > 1) currentPhrases += data;
 
-                //llSetTimerEvent(5.0);
+                // Read next line
                 kQuery = llGetNotecardLine(typeNotecard,readLine++);
             }
         }
