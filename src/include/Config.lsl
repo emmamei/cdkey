@@ -42,16 +42,11 @@
 #define KEY_MODE ["Mode=Normal"]
 #endif
 
-#ifdef SALT
-#define HAVE_SALT ["HaveSalt=yes"]
-#else
-#define HAVE_SALT ["HaveSalt=no"]
-#endif
-
-#define BUILD_REPORT llListSort(ADULT + KEY_MODE + DEV + L320 + HAVE_SALT + UPCDKEY + BADRLV + DEBUG, 1, 1)
+#define BUILD_REPORT llListSort(ADULT + KEY_MODE + DEV + L320 + UPCDKEY + BADRLV + DEBUG, 1, 1)
 
 #define lmConfigReport() llMessageLinked(LINK_THIS, 142, cdMyScriptName(), NULL_KEY)
 
 #define cdConfigReport() if (code == 142) llOwnerSay(__SHORTFILE__ + ":" + (string)__LINE__ + "\t\t\t\tCompiled  by " + __AGENTNAME__ + "\t" +  __DATE__ + " " + __TIME__ + "\nWith: " + llList2CSV(BUILD_REPORT))
+#define cdConfigureReport() llOwnerSay(__SHORTFILE__ + ":" + (string)__LINE__ + "\t\t\t\tCompiled  by " + __AGENTNAME__ + "\t" +  __DATE__ + " " + __TIME__ + "\nWith: " + llList2CSV(BUILD_REPORT))
 
 #endif //CONFIG_LSL
