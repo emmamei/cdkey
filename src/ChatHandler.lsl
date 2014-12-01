@@ -15,9 +15,6 @@
 #define cdListenerActivate(a) llListenControl(a, 1)
 #define cdListenerDeactivate(a) llListenControl(a, 0)
 
-#ifdef KEY_HANDLER
-key keyHandler              = NULL_KEY;
-#endif
 //key listID                  = NULL_KEY;
 
 integer windMins = 30;
@@ -38,10 +35,6 @@ integer chatEnable           = TRUE;
 string chatFilter           = "";
 
 integer autoAFK             = 1;
-#ifdef KEY_HANDLER
-integer broadcastOn         = -1873418555;
-integer broadcastHandle     = 0;
-#endif
 integer busyIsAway          = 0;
 integer chatChannel         = 75;
 integer chatHandle          = 0;
@@ -65,9 +58,6 @@ default
         // Beware listener is now available to users other than the doll
         // make sure to take this into account within all handlers.
         chatHandle = llListen(chatChannel, "", chatFilter, "");
-#ifdef KEY_HANDLER
-        broadcastHandle = cdListenAll(broadcastOn);
-#endif
         cdInitializeSeq();
     }
 
@@ -86,26 +76,7 @@ default
 
         scaleMem();
 
-        if (code == 110) {
-            if (chatPrefix == "") {
-                // If chat prefix is not configured elsewhere, we default to
-                // using the initials of the dolly's name in legacy name format.
-                string key2Name = llKey2Name(dollID);
-                integer i = llSubStringIndex(key2Name, " ") + 1;
-
-                chatPrefix = llToLower(llGetSubString(key2Name,0,0) + llGetSubString(key2Name,i,i));
-                lmSendConfig("chatPrefix", chatPrefix);
-            }
-
-            llOwnerSay("Setting up chat commands on channel " + (string)chatChannel + " with prefix \"" + llToLower(chatPrefix) + "\"");
-        }
-        else if (code == 135) {
-            memReport(cdMyScriptName(),llList2Float(split, 0));
-        } else
-
-        cdConfigReport();
-
-        else if (code == 300) {
+        if (code == CONFIG) {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
             string c = cdGetFirstChar(name); // for speedup
@@ -187,11 +158,6 @@ default
             // Shortcut: k
             else if (c == "k") {
                      if (name == "keyAnimation")         keyAnimation = value;
-#ifdef KEY_HANDLER
-                else if (name == "keyHandler") {
-                    keyHandler = (key)value;
-                }
-#endif
                 else if (name == "keyLimit") {
                     keyLimit = (float)value;
                     if (!demoMode) effectiveLimit = keyLimit;
@@ -204,7 +170,7 @@ default
             else if (name == "windRate")                     windRate = (float)value;
         }
 
-        else if (code == 305) {
+        else if (code == INTERNAL_CMD) {
             string cmd = llList2String(split, 0);
 
             if ((cmd == "addMistress") ||
@@ -325,9 +291,31 @@ default
                 lmSendConfig("controllers", llDumpList2String(controllers, "|") );
             }
         }
-        else if (code == 350) {
+        else if (code == RLV_RESET) {
             RLVok = llList2Integer(split, 0);
             RLVver = llList2String(split, 1);
+        }
+        else if (code < 200) {
+            if (code == 110) {
+                if (chatPrefix == "") {
+                    // If chat prefix is not configured elsewhere, we default to
+                    // using the initials of the dolly's name in legacy name format.
+                    string key2Name = llKey2Name(dollID);
+                    integer i = llSubStringIndex(key2Name, " ") + 1;
+
+                    chatPrefix = llToLower(llGetSubString(key2Name,0,0) + llGetSubString(key2Name,i,i));
+                    lmSendConfig("chatPrefix", chatPrefix);
+                }
+
+                llOwnerSay("Setting up chat commands on channel " + (string)chatChannel + " with prefix \"" + llToLower(chatPrefix) + "\"");
+            }
+            else if (code == 135) {
+                memReport(cdMyScriptName(),llList2Float(split, 0));
+            }
+            else if (code == 142) {
+
+                cdConfigureReport();
+            }
         }
     }
 
@@ -544,11 +532,6 @@ default
     controller NN .. add controller
     blacklist NN ... add to blacklist
     unblacklist NN . remove from blacklist";
-#ifdef WAKESCRIPT
-                        help +=
-"
-    wakescript NN .. wake up script";
-#endif
                     }
 #ifdef DEBUG_MODE
                     if (isDoll) help +=
@@ -897,38 +880,6 @@ default
                         }
                         return;
                     }
-#ifdef WAKESCRIPT
-                    else if (choice == "wakescript") {
-                        string script;
-
-                        // if param is script; set var - else search for it?
-                        // FIXME: return if not a script at all
-                        if (llGetInventoryType(param) == INVENTORY_SCRIPT) script = param;
-                        else {
-                            integer i; for (i = 0; i < llGetInventoryNumber(INVENTORY_SCRIPT); i++) {
-                                if (llToLower(llGetInventoryName(INVENTORY_SCRIPT, i)) == llToLower(param)) script = param;
-                            }
-                        }
-
-                        if (llGetScriptState(script)) llOwnerSay("The '" + script + "' script is already in a running state");
-                        else if ((RLVok != 1) && (script == "StatusRLV"))
-                            llOwnerSay("StatusRLV will not run until RLV is enabled, this is by design.  Try the rlvinit command instead.");
-                        else {
-                            string msg = "Trying to wake '" + script + "'";
-
-                            llOwnerSay(msg);
-                            llResetOtherScript(script);
-                            llSetScriptState(script, 1);
-
-                            msg = "Script '" + script + "'";
-                            if (llGetScriptState(script)) msg += " seems to be running now.";
-                            else msg += " appears to have stopped running again after being restarted.  If you are not getting script errors this may be intentional.";
-
-                            llOwnerSay(msg);
-                        }
-                        return;
-                    }
-#endif
                 }
 
                 //----------------------------------------
@@ -983,28 +934,5 @@ default
                 }
             }
         }
-
-#ifdef KEY_HANDLER
-        //----------------------------------------
-        // KEY HANDLER CHANNEL
-        //----------------------------------------
-
-        else if (channel == broadcastOn) {
-            if (llGetSubString(msg, 0, 4) == "keys ") {
-                string subcommand = llGetSubString(msg, 5, STRING_END);
-                debugSay(9, "BROADCAST-DEBUG", "Broadcast recv: From: " + name + " (" + (string)id + ") Owner: " + llGetDisplayName(llGetOwnerKey(id)) + " (" + (string)llGetOwnerKey(id) +  ") " + msg);
-                if (subcommand == "claimed") {
-                    if (keyHandler == llGetKey()) {
-                        llRegionSay(broadcastOn, "keys released");
-                        debugSay(9, "BROADCAST-DEBUG", "Broadcast sent: keys released");
-                    }
-                    lmSendConfig("keyHandler", (string)(keyHandler = id));
-                }
-                else if ((subcommand == "released") && (keyHandler == id)) {
-                    lmSendConfig("keyHandler", (string)(keyHandler = NULL_KEY));
-                }
-            }
-        }
-#endif
     }
 }
