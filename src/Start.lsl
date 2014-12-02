@@ -241,15 +241,18 @@ processConfiguration(string name, string value) {
     // processing done a single time during the read of the nc belong elsewhere
 
     name = llToLower(name);
+
     if ((i = cdListElementP(configs,name)) != NOT_FOUND) {
 #ifdef DEVELOPER_MODE
         if (name == "initial time") {
             value = (string)((float)value * SEC_TO_MIN);
 
+#define MAX_WINDS 12.0
+#define MIN_WINDS 4.0
+
             // validate value
-            if ((float)value > 90) value = "90";
-            else if ((float)value < 15) value = "15";
-            if ((float)value > keyLimit) value = (string)keyLimit;
+                 if ((float)value > keyLimit / MIN_WINDS) value = (string)(keyLimit / MIN_WINDS);
+            else if ((float)value < keyLimit / MAX_WINDS) value = (string)(keyLimit / MAX_WINDS);
         }
         else
 #endif
@@ -791,6 +794,7 @@ default {
 
                     // this is the heart of preferences processing
                     processConfiguration(name, value);
+                    llSleep(0.2); // Try not to overload the events queue
                 }
 
                 // get next Notecard Line
