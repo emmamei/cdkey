@@ -481,21 +481,28 @@ default
                     //
                     // 1. Doll has carrier
                     // 2. Doll is collapsed and is accessing their menu
-                    // 3. Doll isnot collapsed and either has no carrier, or carrier is accessor
+                    // 3. Doll is not collapsed and either has no carrier, or carrier is accessor
 
                     // When the doll is carried the carrier has exclusive control
                     if (hasCarrier) {
                         // Doll being carried clicked on key
                         if (isCarrier) {
-                            msg = "Uncarry frees " + dollName + " when you are done with " + pronounHerDoll;
+                            msg = "Uncarry frees " + dollName + " when you are done with " + pronounHerDoll + ". ";
                             menu = ["Uncarry"];
+                            if (collapsed) {
+                                msg += "(Doll is collapsed.) ";
+                                //menu += ["Wind"];
+                            }
                         }
                         else if (cdIsController(id) && !isDoll) {
                             msg = dollName + " is being carried by " + carrierName + ". ";
                             menu = ["Uncarry"];
                         }
                         else {
-                            if (isDoll) msg = "You are being carried by " + carrierName + ". ";
+                            if (isDoll) {
+                                msg = "You are being carried by " + carrierName + ". ";
+                                if (collapsed) msg += "You need winding, too. ";
+                            }
                             else msg = dollName + " is currently being carried by " + carrierName + ". They have full control over this doll.\n";
 
                             cdDialogListen();
@@ -529,10 +536,15 @@ default
                                     menu += ["Wind Emg"];
                                 }
                             }
+
+                            //cdDialogListen();
+                            //llDialog(id, timeleft + msg, [ "OK" ], dialogChannel);
+                            //return;
                         }
                     }
 
-                    // We dont get here only if accessor is Dolly and she is collapsed
+                    // Similarly, if accessor is Dolly, and she has a carrier - we
+                    // never get here.
                     //
                     // This is, in essence, a "normal" (full) menu
                     //
@@ -629,13 +641,13 @@ default
                     if (lowScriptMode)
                         msg += " Key is in power-saving mode. ";
 
-                    if (RLVok == UNSET) msg += "Still checking for RLV support some features unavailable.\n";
+                    if (RLVok == UNSET) msg += " Still checking for RLV support some features unavailable.";
                     else if (RLVok == 0) {
-                        msg += "No RLV detected some features unavailable.\n";
+                        msg += " No RLV detected some features unavailable.";
                         //if (cdIsDoll(id) || cdIsController(id)) menu += "RLV On";
                     }
 
-                    msg += "See " + WEB_DOMAIN + manpage + " for more information."
+                    msg += "See " + WEB_DOMAIN + manpage + " for more information. "
 #ifdef DEVELOPER_MODE
                     + " (Key is in Developer Mode.)"
                     + "\nCurrent region FPS is " + formatFloat(llGetRegionFPS(),1) + " FPS.";
