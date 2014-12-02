@@ -565,21 +565,7 @@ default {
 
         scaleMem();
 
-        if (code == 110) {
-            //configured = 1;
-            //doCheckRLV();
-
-            debugSay(2,"DEBUG-AVATAR","ifPermissions (link_message 110)");
-            ifPermissions();
-        }
-        else if (code == 135) {
-            float delay = llList2Float(split, 0);
-            memReport(cdMyScriptName(),delay);
-        } else
-
-        cdConfigReport();
-
-        else if (code == CONFIG) {
+        if (code == CONFIG) {
             name = llList2String(split, 0);
             split = llDeleteSubList(split, 0, 0);
             value = llList2String(split, 0);
@@ -802,7 +788,6 @@ default {
             }
 
             // Unpose: remove animation and poser
-            //else if (dollIsPoseable && choice == "Unpose") {
             else if (choice == "Unpose") {
                 lmSendConfig("keyAnimation", (string)(keyAnimation = ""));
                 lmSendConfig("poserID", (string)(poserID = NULL_KEY));
@@ -887,10 +872,26 @@ default {
                     llDialog(id, msg, poseList, dialogChannel);
                 }
             }
-
-            debugSay(2,"DEBUG-AVATAR","ifPermissions (link_message 500)");
-            ifPermissions();
         }
+        else if (code < 200) {
+            if (code == 110) {
+                //configured = 1;
+                //doCheckRLV();
+
+                debugSay(2,"DEBUG-AVATAR","ifPermissions (link_message 110)");
+                ifPermissions();
+            }
+            else if (code == 135) {
+                float delay = llList2Float(split, 0);
+                memReport(cdMyScriptName(),delay);
+            }
+            else if (code == 142) {
+                cdConfigureReport();
+            }
+        }
+
+        //debugSay(2,"DEBUG-AVATAR","ifPermissions (link_message 500)");
+        //ifPermissions();
     }
 
     //----------------------------------------
