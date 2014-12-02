@@ -644,16 +644,16 @@ default {
                 if (afk) {
                     if (autoSet) msg = "Automatically entering AFK mode.";
                     else msg = "You are now away from keyboard (AFK).";
-                    msg += " Key unwinding has slowed to " + (string)windRate + "x and movements and abilities are restricted.";
+                    msg += " Your Key has slowed to " + formatFloat(windRate,2) + "x its normal rate, and your movements and abilities are hindered as a result.";
                 }
-                else msg = "You are now no longer away from keyboard (AFK). Movements are unrestricted and winding down proceeds at normal rate. ";
+                else msg = "You are now no longer away from keyboard (AFK). Your key has been restored to normal operation, and winds down once again at its normal rate.";
                 llOwnerSay(msg + " You have " + (string)minsLeft + " minutes of life left.");
 
                 lmSendConfig("windRate", (string)(windRate));
                 lmSendConfig("afk", (string)(afk));
                 lmSendConfig("autoAFK", (string)autoAFK);
             }
-            else if ((cmd == "collapse") && (script != "Main")) collapse(llList2Integer(split, 0));
+            else if (cmd == "collapse") collapse(llList2Integer(split, 0));
             else if (cmd == "wearLock") {
                 // This either primes the wearLockExpire or resets it
                 wearLock = llList2Integer(split, 0);
@@ -669,7 +669,7 @@ default {
                 lmSendConfig("wearLock", (string)(wearLock));
             }
         }
-        else if (code == 350) {
+        else if (code == RLV_RESET) {
             RLVok = (llList2Integer(split, 0) == 1);
             rlvAPIversion = llList2String(split, 1);
 
@@ -678,7 +678,7 @@ default {
                 llSay(DEBUG_CHANNEL, "(RLV Confirmed): Dolly collapsed with time on Key!");
                 collapse(NOT_COLLAPSED);
             }
-            else if (!collapsed && timeLeftOnKey <= 0) lmInternalCommand("collapse", "0", NULL_KEY);
+            else if (!collapsed && timeLeftOnKey <= 0) collapse(NOT_COLLAPSED);
 
             if (!canDress) llOwnerSay("The public cannot outfit you.");
 
