@@ -475,9 +475,8 @@ default {
         transformerId = id;
 
 #ifdef DEVELOPER_MODE
-        // If greater than 4, print Link Messages other than "heartbeat" Link Messages
-        // If greater than 6, print everything
-
+        // This is a way to watch the messages coming over the wire...
+        // no need for a separate script to do it
         if (debugLevel > 4) {
             string s = "Transform Link Msg:" + script + ":" + (string)code + ":choice/name";
             string t = choice + "/" + name;
@@ -489,13 +488,14 @@ default {
         scaleMem();
 
         if (code == CONFIG) {
+
             string value = name;
             string name = choice;
 
                  if (name == "timeLeftOnKey")                          timeLeftOnKey = (float)value;
             else if (name == "afk")                                              afk = (integer)value;
             else if (name == "autoAFK")                                      autoAFK = (integer)value;
-#ifdef DEVELOPER_MDOE
+#ifdef DEVELOPER_MODE
             else if (name == "timeReporting")                          timeReporting = (integer)value;
 #endif
             else if (name == "lowScriptMode")                          lowScriptMode = (integer)value;
