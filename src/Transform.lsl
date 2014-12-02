@@ -64,8 +64,8 @@ integer outfitSearching;
 integer findTypeFolder;
 
 //integer rlvHandle;
-integer rlvHandle2;
-integer rlvHandle3;
+integer typeSearchHandle;
+integer outfitSearchHandle;
 integer useTypeFolder;
 integer transformedViaMenu;
 string transform;
@@ -73,8 +73,8 @@ string typeFolder;
 
 integer dialogChannel;
 integer rlvChannel;
-integer rlvChannel2;
-integer rlvChannel3;
+integer typeSearchChannel;
+integer outfitSearchChannel;
 
 integer minMinutes;
 integer configured;
@@ -144,7 +144,7 @@ setDollType(string choice, integer automated) {
     // Dont lock if transformation is automated (or is a Builder or Key type)
     if (automated || stateName == "Builder"
 #ifdef KEY_TYPE
-    || stateName == "Key"
+                  || stateName == "Key"
 #endif
     ) minMinutes = 0;
     else minMinutes = TRANSFORM_LOCK_TIME;
@@ -172,8 +172,9 @@ setDollType(string choice, integer automated) {
         // if RLV is non-functional, dont search for a Type Folder
         if (RLVok) {
             debugSay(2,"DEBUG-DOLLTYPE","Searching for " + typeFolderExpected);
-            outfitsSearchTimer = llGetTime();
-            folderSearch(outfitsFolder,rlvChannel2);
+            //outfitsSearchTimer = llGetTime();
+            typeSearchHandle = cdListenMine(typeSearchChannel);
+            folderSearch(outfitsFolder,typeSearchChannel);
         }
     // if NOT RLVok then we have a DollType with no associated typeFolder...
 #ifdef KEY_TYPE
@@ -373,15 +374,13 @@ default {
         // typeFolderExpected = Computed but untested typeFolder
 
 #ifdef DEVELOPER_MODE
-        if (timeReporting)
-            debugSay(2,"DEBUG-SEARCHING","Transform timer Timer fired, interval " + formatFloat(llGetTime() - lastTimerEvent,3) + "s.");
+        if (timeReporting) llOwnerSay("Transform Timer fired, interval " + formatFloat(llGetTime() - lastTimerEvent,3) + "s.");
 #endif
-
         if (RLVok) {
-
             if (outfitsSearchTimer) {
                 debugSay(2,"DEBUG-SEARCHING","Search aborted after " + formatFloat(llGetTime() - outfitsSearchTimer,1) + "s");
                 outfitsSearchTimer = 0.0; // reset
+
             }
 
             if (outfitSearching) {
@@ -393,27 +392,28 @@ default {
 
                 if (outfitsFolder == "") {
                     if (outfitSearchTries++ < MAX_SEARCH_RETRIES)
-                        folderSearch("",rlvChannel3);
-                    else llListenRemove(rlvHandle3);
+                        folderSearch("",outfitSearchChannel);
+                    else llListenRemove(outfitSearchHandle);
                 } else {
                     if (typeFolder == "" && typeFolderExpected != "") {
                         if (typeSearchTries++ < MAX_SEARCH_RETRIES)
-                            folderSearch(outfitsFolder,rlvChannel2);
-                        else llListenRemove(rlvHandle2);
+                            folderSearch(outfitsFolder,typeSearchChannel);
+                        else llListenRemove(typeSearchHandle);
                     }
                 }
             }
             else {
-                if (rlvHandle2) {
-                    llListenRemove(rlvHandle2);
-                    rlvHandle2 = 0;
-                    llSetTimerEvent(30.0);
+                if (lowScriptMode) llSetTimerEvent(LOW_RATE);
+                else llSetTimerEvent(STD_RATE);
+
+                if (typeSearchHandle) {
+                    llListenRemove(typeSearchHandle);
+                    typeSearchHandle = 0;
                 }
 
-                if (rlvHandle3) {
-                    llListenRemove(rlvHandle3);
-                    rlvHandle3 = 0;
-                    llSetTimerEvent(30.0);
+                if (outfitSearchHandle) {
+                    llListenRemove(outfitSearchHandle);
+                    outfitSearchHandle = 0;
                 }
             }
         }
@@ -492,90 +492,89 @@ default {
             string value = name;
             string name = choice;
 
-            if (script != cdMyScriptName()) {
-                     if (name == "timeLeftOnKey")                          timeLeftOnKey = (float)value;
-                else if (name == "afk")                                              afk = (integer)value;
-                else if (name == "autoAFK")                                      autoAFK = (integer)value;
+                 if (name == "timeLeftOnKey")                          timeLeftOnKey = (float)value;
+            else if (name == "afk")                                              afk = (integer)value;
+            else if (name == "autoAFK")                                      autoAFK = (integer)value;
 #ifdef DEVELOPER_MDOE
-                else if (name == "timeReporting")                          timeReporting = (integer)value;
+            else if (name == "timeReporting")                          timeReporting = (integer)value;
 #endif
-                else if (name == "collapsed")                                  collapsed = (integer)value;
-                else if (name == "quiet")                                          quiet = (integer)value;
-                else if (name == "hoverTextOn")                              hoverTextOn = (integer)value;
-                else if (name == "busyIsAway")                                busyIsAway = (integer)value;
-                else if (name == "canAFK")                                        canAFK = (integer)value;
-                else if (name == "mustAgreeToType")                      mustAgreeToType = (integer)value;
-                else if (name == "showPhrases") {
-                    showPhrases = (integer)value;
-                    currentPhrases = [];
+            else if (name == "lowScriptMode")                          lowScriptMode = (integer)value;
+            else if (name == "collapsed")                                  collapsed = (integer)value;
+            else if (name == "quiet")                                          quiet = (integer)value;
+            else if (name == "hoverTextOn")                              hoverTextOn = (integer)value;
+            else if (name == "busyIsAway")                                busyIsAway = (integer)value;
+            else if (name == "canAFK")                                        canAFK = (integer)value;
+            else if (name == "mustAgreeToType")                      mustAgreeToType = (integer)value;
+            else if (name == "showPhrases") {
+                showPhrases = (integer)value;
+                currentPhrases = [];
 
-                    // if showPhrases is turned on, read hypno phrases from notecard
-                    if (showPhrases) {
-                        if (llGetInventoryType(typeNotecard) == INVENTORY_NOTECARD) {
-                            kQuery = llGetNotecardLine(typeNotecard,readLine);
-                        }
+                // if showPhrases is turned on, read hypno phrases from notecard
+                if (showPhrases) {
+                    if (llGetInventoryType(typeNotecard) == INVENTORY_NOTECARD) {
+                        kQuery = llGetNotecardLine(typeNotecard,readLine);
                     }
                 }
+            }
 #ifdef WEAR_AT_LOGIN
-                else if (name == "wearAtLogin")                              wearAtLogin = (integer)value;
+            else if (name == "wearAtLogin")                              wearAtLogin = (integer)value;
 #endif
-                else if (name == "stateName")                                  stateName = value;
-                else if ((name == "RLVok") || (name == "dialogChannel")) {
+            else if (name == "stateName")                                  stateName = value;
+            else if ((name == "RLVok") || (name == "dialogChannel")) {
 
-                    if (name == "RLVok") RLVok = (integer)value;
-                    else if (name == "dialogChannel") {
-                        dialogChannel = (integer)value;
-                        rlvChannel = ~dialogChannel + 1;
-                        rlvChannel2 = rlvChannel + 1;
-                        rlvChannel3 = rlvChannel + 2;
-                    }
+                if (name == "RLVok") RLVok = (integer)value;
+                else if (name == "dialogChannel") {
+                    dialogChannel = (integer)value;
+                    rlvChannel = ~dialogChannel + 1;
+                    typeSearchChannel = rlvChannel + 1;
+                    outfitSearchChannel = rlvChannel + 2;
+                }
 
 
-                    // If RLV is ok AND rlvChannel is set... then reset
-                    // the rlvChannel and search for OutfitsFolder
+                // If RLV is ok AND rlvChannel is set... then reset
+                // the rlvChannel and search for OutfitsFolder
 
-                    if (RLVok) {
-                        if (rlvChannel) {
-                            //
-                            // Now we have a result of RLV checks - and if it is Ok,
-                            // startup the RLV channels and search for folders
-                            //
-                            //if (!rlvHandle) llListenRemove(rlvHandle);
-                            //rlvHandle = cdListenMine(rlvChannel);
-                            //if (!rlvHandle2) llListenRemove(rlvHandle2);
-                            rlvHandle2 = cdListenMine(rlvChannel2);
-                            //if (!rlvHandle3) llListenRemove(rlvHandle3);
-                            rlvHandle3 = cdListenMine(rlvChannel3);
+                if (RLVok) {
+                    if (rlvChannel) {
+                        //
+                        // Now we have a result of RLV checks - and if it is Ok,
+                        // startup the RLV channels and search for folders
+                        //
+                        //if (!rlvHandle) llListenRemove(rlvHandle);
+                        //rlvHandle = cdListenMine(rlvChannel);
+                        //if (!typeSearchHandle) llListenRemove(typeSearchHandle);
+                        typeSearchHandle = cdListenMine(typeSearchChannel);
+                        //if (!outfitSearchHandle) llListenRemove(outfitSearchHandle);
+                        outfitSearchHandle = cdListenMine(outfitSearchChannel);
 
-                            if (outfitsFolder == "" && !outfitSearching) {
-                                outfitSearching++;
+                        if (outfitsFolder == "" && !outfitSearching) {
+                            outfitSearching++;
 
-                                if (outfitSearching < 2) {
-                                    debugSay(2,"DEBUG-RLVOK","Searching for Outfits and Typefolders");
-                                    outfitsFolder = "";
-                                    typeFolder = "";
-                                    useTypeFolder = 0;
-                                    typeSearchTries = 0;
-                                    outfitSearchTries = 0;
+                            if (outfitSearching < 2) {
+                                debugSay(2,"DEBUG-RLVOK","Searching for Outfits and Typefolders");
+                                outfitsFolder = "";
+                                typeFolder = "";
+                                useTypeFolder = 0;
+                                typeSearchTries = 0;
+                                outfitSearchTries = 0;
 
-                                    outfitsSearchTimer = llGetTime();
-                                    folderSearch(outfitsFolder,rlvChannel3);
-                                }
+                                outfitsSearchTimer = llGetTime();
+                                folderSearch(outfitsFolder,outfitSearchChannel);
                             }
                         }
                     }
                 }
+            }
 #ifdef DEVELOPER_MODE
-                else if (name == "debugLevel") {
-                                                                              debugLevel = (integer)value;
-                }
+            else if (name == "debugLevel") {
+                                                                          debugLevel = (integer)value;
+            }
 #endif
 
-                else if (name == "dollType") {
-                    stateName = value;
-                    // this only runs if some other script sets the Type, not this one
-                    if (configured) setDollType(stateName, AUTOMATED);
-                }
+            else if (name == "dollType") {
+                stateName = value;
+                // this only runs if some other script sets the Type, not this one
+                if (configured) setDollType(stateName, AUTOMATED);
             }
         }
 
@@ -595,10 +594,10 @@ default {
                 if (rlvChannel) {
                     //if (rlvHandle) llListenRemove(rlvHandle);
                     //rlvHandle = cdListenMine(rlvChannel);
-                    //if (rlvHandle2) llListenRemove(rlvHandle2);
-                    rlvHandle2 = cdListenMine(rlvChannel2);
-                    //if (!rlvHandle3) llListenRemove(rlvHandle3);
-                    rlvHandle3 = cdListenMine(rlvChannel3);
+                    //if (typeSearchHandle) llListenRemove(typeSearchHandle);
+                    typeSearchHandle = cdListenMine(typeSearchChannel);
+                    //if (!outfitSearchHandle) llListenRemove(outfitSearchHandle);
+                    outfitSearchHandle = cdListenMine(outfitSearchChannel);
 
                     if (outfitsFolder == "" && !outfitSearching) {
                         outfitSearching++;
@@ -612,7 +611,7 @@ default {
                             outfitSearchTries = 0;
 
                             outfitsSearchTimer = llGetTime();
-                            folderSearch(outfitsFolder,rlvChannel3);
+                            folderSearch(outfitsFolder,outfitSearchChannel);
                         }
                     }
                 }
@@ -674,9 +673,9 @@ default {
                 if (cdTransformLocked()) {
                     debugSay(5,"DEBUG-TYPES","Transform locked");
                     if (cdIsDoll(id)) {
-                        llDialog(id,"You cannot be transformed right now, as you were recently transformed. You can be transformed in " + (string)minMinutes + " minutes.",["OK"], DISCARD_CHANNEL);
+                        llDialog(id,"You cannot be transformed right now, as you were recently transformed into a " + stateName + " doll. You can be transformed in " + (string)minMinutes + " minutes.",["OK"], DISCARD_CHANNEL);
                     } else {
-                        llDialog(id,"The Doll " + dollName + " cannot be transformed right now. The Doll was recently transformed. Dolly can be transformed in " + (string)minMinutes + " minutes.",["OK"], DISCARD_CHANNEL);
+                        llDialog(id,dollName + " cannot be transformed right now. The Doll was recently transformed into a " + stateName + " doll. Dolly can be transformed in " + (string)minMinutes + " minutes.",["OK"], DISCARD_CHANNEL);
                     }
                 }
                 else {
@@ -716,28 +715,29 @@ default {
                 setDollType(choice, NOT_AUTOMATED);
             }
             else if (cdListElementP(types, choice) != NOT_FOUND) {
+                transform = "";
                 // "choice" is a valid Type: change to it as appropriate
-                if (cdIsDoll(id) || cdIsController(id)) {
+                if (cdIsDoll(id) || cdIsController(id) || !mustAgreeToType) {
                     // Doll (or a Controller) chose a Type: just do it
                     transformedViaMenu = YES;
                     setDollType(choice, NOT_AUTOMATED);
                 }
                 else {
-                    // A member of the public chose a Type
-                    if (mustAgreeToType) {
-                        if (!cdIsDoll(id)) lmSendToAgent("Getting confirmation from Doll...",id);
+                    // This section is executed when:
+                    //
+                    // 1. Accessor is NOT Dolly, AND
+                    // 2. Accessor is NOT a Controller, AND
+                    // 3. Dolly must agree to Type...
 
-                        transform = choice; // save transformation Type
-                        list choices = ["Transform", "Dont Transform", MAIN ];
-                        string msg = "Do you wish to be transformed to a " + choice + " Doll?";
+                    // A member of the public chose a Type and confirmation is required
+                    lmSendToAgent("Getting confirmation from Doll...",id);
 
-                        cdDialogListen();
-                        llDialog(dollID, msg, choices, dialogChannel); // this starts a new choice on this channel
-                    }
-                    else {
-                        transformedViaMenu = YES;
-                        setDollType(choice, NOT_AUTOMATED);
-                    }
+                    transform = choice; // save transformation Type
+                    list choices = ["Transform", "Dont Transform", MAIN ];
+                    string msg = "Do you wish to be transformed to a " + choice + " Doll?";
+
+                    cdDialogListen();
+                    llDialog(dollID, msg, choices, dialogChannel); // this starts a new choice on this channel
                 }
             }
         }
@@ -789,8 +789,8 @@ default {
         // if a @getinv call succeeds, then we are here - looking for the
         // folders we want...
         //
-        if (channel == rlvChannel3) {
-            llListenRemove(rlvHandle3);
+        if (channel == outfitSearchChannel) {
+            llListenRemove(outfitSearchHandle);
             debugSay(2,"DEBUG-LISTEN","Channel #1 received (outfitsFolder = \"" + outfitsFolder + "\"): " + choice);
 
             list folderList = llCSV2List(choice);
@@ -815,7 +815,7 @@ default {
                     if (typeFolder == "" && typeFolderExpected != "") {
                         debugSay(2,"DEBUG-SEARCHING","Outfit folder found in " + formatFloat(llGetTime() - outfitsSearchTimer,1) + "s; searching for typeFolder");
                         // outfitsFolder search is done: search for typeFolder
-                        folderSearch(outfitsFolder,rlvChannel2);
+                        folderSearch(outfitsFolder,typeSearchChannel);
                     }
                     //else lmInternalCommand("randomDress","",NULL_KEY);
                 }
@@ -824,14 +824,16 @@ default {
             if (~llListFindList(folderList, (list)"~nude"))        lmSendConfig("nudeFolder","~nude");
             if (~llListFindList(folderList, (list)"~normalself"))  lmSendConfig("normalselfFolder","~normalself");
         }
-        else if (channel == rlvChannel2) {
+        else if (channel == typeSearchChannel) {
 
             // Note that we may have gotten here *without* having run through
             // the outfits search first - due to have done the outfits search
             // much earlier... However.... if we are here, then the outfits search
             // must have run before, but not necessarily immediately before...
 
-            llListenRemove(rlvHandle2);
+            // Note that, unlike the dialog channel, the type search channel is removed and recreated... maybe it should not be
+            llListenRemove(typeSearchHandle);
+            llSetTimerEvent(30.0);
 
             debugSay(2,"DEBUG-LISTEN","Channel #2 received (\"" + typeFolder + "\"): " + choice);
 
