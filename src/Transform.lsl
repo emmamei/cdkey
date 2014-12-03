@@ -22,9 +22,8 @@
 // Channel to use to discard dialog output
 #define DISCARD_CHANNEL 9999
 
-// Transformation (locked) time in minutes
-#define TRANSFORM_LOCK_TIME 5
-#define cdTransformLocked() (minMinutes > 0)
+// Transformation (locked) time in seconds
+#define TRANSFORM_LOCK_TIME 300
 
 // Script Control
 #define RUNNING 1
@@ -40,6 +39,9 @@
 //========================================
 // VARIABLES
 //========================================
+integer phraseCount;
+string msg;
+integer i;
 #ifdef DEVELOPER_MODE
 integer timeReporting = 1;
 #endif
@@ -47,7 +49,7 @@ integer busyIsAway;
 integer autoAFK;
 float timeLeftOnKey;
 string dollName;
-string stateName;
+//string stateName;
 list types;
 float menuTime;
 key transformerId;
@@ -76,7 +78,7 @@ integer rlvChannel;
 integer typeSearchChannel;
 integer outfitSearchChannel;
 
-integer minMinutes;
+float transformLockExpire;
 integer configured;
 integer RLVok;
 
@@ -108,16 +110,24 @@ integer quiet;
 #define AUTOMATED 1
 #define NOT_AUTOMATED 0
 
-setDollType(string choice, integer automated) {
-    if (choice == "Transform") stateName = transform;
-    else stateName = choice;
+setDollType(string stateName, integer automated) {
+    // This is BAD: it shows a knowledge of how we
+    // were called outside of the function - and ties
+    // the function to data outside the function without any
+    // gatekeeper or documentation
+    //if (choice == "Transform") stateName = transform;
+    //else stateName = choice;
+
     debugSay(2,"DEBUG-DOLLTYPE","Transforming to " + stateName);
 
     // Convert state name to Title case
     stateName = cdGetFirstChar(llToUpper(stateName)) + cdButFirstChar(llToLower(stateName));
-    if (stateName == currentState)
-        return;
 
+    // If no change, abort
+    //if (stateName == currentState) return;
+
+    // By not aborting, selecting the same state can cause a "refresh" ...
+    // though our menus do not currently allow this
     currentPhrases = [];
     readLine = 0;
     typeNotecard = TYPE_FLAG + stateName;
@@ -127,45 +137,50 @@ setDollType(string choice, integer automated) {
     //
     // Builder and Key types don't allow for Notecard Hypno - this is also left in even
     // if Key type is unused, as it disallows the Key Type altogether
-    if (showPhrases && stateName != "Builder" && stateName != "Key"){
-        if (llGetInventoryType(typeNotecard) == INVENTORY_NOTECARD) {
+    if (showPhrases) {
+        if (stateName != "Builder" && stateName != "Key") {
+            if (llGetInventoryType(typeNotecard) == INVENTORY_NOTECARD) {
 
-            kQuery = llGetNotecardLine(typeNotecard,readLine++);
+                kQuery = llGetNotecardLine(typeNotecard,readLine++);
 
-            debugSay(2,"DEBUG-DOLLTYPE","Found notecard: " + typeNotecard);
-        }
+                debugSay(2,"DEBUG-DOLLTYPE","Found notecard: " + typeNotecard);
+            }
 #ifdef DEVELOPER_MODE
-        else {
-            debugSay(2,"DEBUG-DOLLTYPE","Found no notecard - looked for " + typeNotecard);
-        }
+            else {
+                debugSay(2,"DEBUG-DOLLTYPE","Found no notecard titled " + typeNotecard);
+            }
 #endif
+        }
     }
 
     // Dont lock if transformation is automated (or is a Builder or Key type)
-    if (automated || stateName == "Builder"
+    if (!automated
+         && stateName != "Builder"
 #ifdef KEY_TYPE
-                  || stateName == "Key"
+         && stateName != "Key"
 #endif
-    ) minMinutes = 0;
-    else minMinutes = TRANSFORM_LOCK_TIME;
+    ) transformLockExpire = llGetTime() + TRANSFORM_LOCK_TIME;
+    else transformLockExpire = 0;
 
     currentState = stateName;
-    lmSendConfig("dollType", stateName);
+    lmSendConfig("dollType", currentState);
 
     cdPause();
 
-    if (!quiet) cdChat(dollName + " has become a " + stateName + " Doll.");
-    else llOwnerSay("You have become a " + stateName + " Doll.");
+    if (!quiet) cdChat(dollName + " has become a " + currentState + " Doll.");
+    else llOwnerSay("You have become a " + currentState + " Doll.");
 
     // This is being done too early...
     //if (!RLVok) { lmSendToAgentPlusDoll("Because RLV is disabled, Dolly does not have the capability to change outfit.",transformerId); };
 
-    // If the dolly Type is Key, then exit. Note that
+    // The Key Dolly is not allowed to have outfits so
+    // no search for Type is warranted; note that
     // the Builder can have outfits if they like.
+    typeFolder = "";
+
 #ifdef KEY_TYPE
-    if (stateName != "Key") {
+    if (currentState != "Key") {
 #endif
-        typeFolder = "";
         outfitSearchTries = 0;
         typeSearchTries = 0;
 
@@ -223,52 +238,13 @@ reloadTypeNames() {
     //
     if (llListFindList(types, (list)"Display") == NOT_FOUND) types += [ "Display" ];
 #ifdef ADULT_MODE
-    if (llListFindList(types, (list)"Slut") == NOT_FOUND) types += [ "Slut" ];
+    if (simRating == "MATURE" || simRating == "ADULT")
+        if (llListFindList(types, (list)"Slut") == NOT_FOUND) types += [ "Slut" ];
 #endif
     if (cdDollyIsBuiltinController(transformerId)) { types += [ "Builder" ]; showPhrases = 0; }
 #ifdef KEY_TYPE
     if (cdIsBuiltinController(transformerId))      { types += [ "Key" ];     showPhrases = 0; }
 #endif
-}
-
-runTimedTriggers() {
-    // transform lock: decrease count
-    if (minMinutes > 0) minMinutes--;
-    else minMinutes = 0; // bulletproofing
-
-    // No phrases to choose from
-    integer phraseCount = llGetListLength(currentPhrases);
-    if (phraseCount == 0) return;
-
-    if (showPhrases) {
-        string msg;
-
-        // select a phrase from the notecard at random
-        string phrase  = llList2String(currentPhrases, llFloor(llFrand(phraseCount)));
-
-        // Starting with a '*' marks a fragment; with none,
-        // the phrase is used as is
-
-        if (cdGetFirstChar(phrase) == "*") {
-
-            phrase = cdButFirstChar(phrase);
-            float r = llFrand(5);
-
-                 if (r < 1.0) msg = "*** feel your need to ";
-            else if (r < 2.0) msg = "*** feel your desire to ";
-            else if (r < 3.0) msg = "*** it pleases you to ";
-            else if (r < 4.0) msg = "*** you want to ";
-            else {
-                if (currentState  == "Domme") msg = "*** You like to ";
-                else msg = "*** feel how people like you to ";
-            }
-        } else msg = "*** ";
-
-        msg += phrase;
-
-        // Phrase has been chosen and put together; now say it
-        llOwnerSay(msg);
-    }
 }
 
 // Folders need to be searched for: the outfits folder, and the
@@ -289,12 +265,13 @@ runTimedTriggers() {
 // and multiple retry.
 
 folderSearch(string folder, integer channel) {
+    integer handle;
 
     debugSay(2,"DEBUG-FOLDERSEARCH","folderSearch: Searching within \"" + folder + "\"");
 
     // The folder search starts as a RLV @getinv call...
     //
-    cdListenMine(channel);
+    //handle = cdListenMine(channel);
     if (folder == "")
         lmRunRLV("getinv=" + (string)channel);
     else
@@ -313,7 +290,7 @@ default {
     state_entry() {
         dollID =   llGetOwner();
         dollName = llGetDisplayName(dollID);
-        stateName = "Regular";
+        currentState = "Regular";
 
         cdInitializeSeq();
 
@@ -376,6 +353,9 @@ default {
 #ifdef DEVELOPER_MODE
         if (timeReporting) llOwnerSay("Transform Timer fired, interval " + formatFloat(llGetTime() - lastTimerEvent,3) + "s.");
 #endif
+        // transform lock: check time
+        if (transformLockExpire  <= llGetTime()) transformLockExpire = 0.0;
+
         if (RLVok) {
             if (outfitsSearchTimer) {
                 debugSay(2,"DEBUG-SEARCHING","Search aborted after " + formatFloat(llGetTime() - outfitsSearchTimer,1) + "s");
@@ -415,6 +395,38 @@ default {
                     llListenRemove(outfitSearchHandle);
                     outfitSearchHandle = 0;
                 }
+            }
+        }
+
+        if (showPhrases) {
+            if (phraseCount) {
+                string msg;
+
+                // select a phrase from the notecard at random
+                string phrase  = llList2String(currentPhrases, llFloor(llFrand(phraseCount)));
+
+                // Starting with a '*' marks a fragment; with none,
+                // the phrase is used as is
+
+                if (cdGetFirstChar(phrase) == "*") {
+
+                    phrase = cdButFirstChar(phrase);
+                    float r = llFrand(5);
+
+                         if (r < 1.0) msg = "*** feel your need to ";
+                    else if (r < 2.0) msg = "*** feel your desire to ";
+                    else if (r < 3.0) msg = "*** it pleases you to ";
+                    else if (r < 4.0) msg = "*** you want to ";
+                    else {
+                        if (currentState  == "Domme") msg = "*** You like to ";
+                        else msg = "*** feel how people like you to ";
+                    }
+                } else msg = "*** ";
+
+                msg += phrase;
+
+                // Phrase has been chosen and put together; now say it
+                llOwnerSay(msg);
             }
         }
 
@@ -487,6 +499,8 @@ default {
 #endif
         scaleMem();
 
+        if (script == "Transform") return;
+
         if (code == CONFIG) {
 
             string value = name;
@@ -500,6 +514,7 @@ default {
 #endif
             else if (name == "lowScriptMode")                          lowScriptMode = (integer)value;
             else if (name == "collapsed")                                  collapsed = (integer)value;
+            else if (name == "simRating")                                  simRating = (integer)value;
             else if (name == "quiet")                                          quiet = (integer)value;
             else if (name == "hoverTextOn")                              hoverTextOn = (integer)value;
             else if (name == "busyIsAway")                                busyIsAway = (integer)value;
@@ -519,7 +534,9 @@ default {
 #ifdef WEAR_AT_LOGIN
             else if (name == "wearAtLogin")                              wearAtLogin = (integer)value;
 #endif
-            else if (name == "stateName")                                  stateName = value;
+            else if (name == "stateName") {
+                currentState = value;
+            }
             else if ((name == "RLVok") || (name == "dialogChannel")) {
 
                 if (name == "RLVok") RLVok = (integer)value;
@@ -572,9 +589,10 @@ default {
 #endif
 
             else if (name == "dollType") {
-                stateName = value;
+                //stateName = value;
+                //currentState = stateName;
                 // this only runs if some other script sets the Type, not this one
-                if (configured) setDollType(stateName, AUTOMATED);
+                setDollType(value, AUTOMATED);
             }
         }
 
@@ -670,12 +688,12 @@ default {
             else if (choice == "Types...") {
                 debugSay(5,"DEBUG-TYPES","Types selected");
                 // Doll must remain in a type for a period of time
-                if (cdTransformLocked()) {
+                if (transformLockExpire) {
                     debugSay(5,"DEBUG-TYPES","Transform locked");
                     if (cdIsDoll(id)) {
-                        llDialog(id,"You cannot be transformed right now, as you were recently transformed into a " + stateName + " doll. You can be transformed in " + (string)minMinutes + " minutes.",["OK"], DISCARD_CHANNEL);
+                        llDialog(id,"You cannot be transformed right now, as you were recently transformed into a " + currentState + " doll. You can be transformed in " + (string)llFloor((transformLockExpire - llGetTime()) / SEC_TO_MIN) + " minutes.",["OK"], DISCARD_CHANNEL);
                     } else {
-                        llDialog(id,dollName + " cannot be transformed right now. The Doll was recently transformed into a " + stateName + " doll. Dolly can be transformed in " + (string)minMinutes + " minutes.",["OK"], DISCARD_CHANNEL);
+                        llDialog(id,dollName + " cannot be transformed right now. The Doll was recently transformed into a " + currentState + " doll. Dolly can be transformed in " + (string)llFloor((transformLockExpire - llGetTime()) / SEC_TO_MIN) + " minutes.",["OK"], DISCARD_CHANNEL);
                     }
                 }
                 else {
@@ -683,15 +701,14 @@ default {
                     reloadTypeNames();
                     debugSay(5,"DEBUG-TYPES","Type names reloaded");
 
-                    string msg = "These change the personality of " + dollName + "; Dolly is currently a " + stateName + " Doll. ";
-                    integer i;
+                    msg = "These change the personality of " + dollName + "; Dolly is currently a " + currentState + " Doll. ";
 
                     // We need a new list var to be able to change the display, not the
                     // available types
                     list choices = types;
 
                     // Delete the current type: transforming to current type is redundant
-                    if ((i = llListFindList(choices, (list)stateName)) != NOT_FOUND) {
+                    if ((i = llListFindList(choices, (list)currentState)) != NOT_FOUND) {
                         choices = llDeleteSubList(choices, i, i);
                     }
 
@@ -710,15 +727,18 @@ default {
 
             // Transform
             else if (choice == "Transform") {
-                choice = transform; // Type name saved from Transform confirmation
+                // We get here because dolly had to confirm the change
+                // of type - and chose "Transform" from the menu
+                //choice = transform; // Type name saved from Transform confirmation
                 transformedViaMenu = YES;
-                setDollType(choice, NOT_AUTOMATED);
+                setDollType(transform, NOT_AUTOMATED);
             }
             else if (cdListElementP(types, choice) != NOT_FOUND) {
-                transform = "";
                 // "choice" is a valid Type: change to it as appropriate
+                transform = "";
+
                 if (cdIsDoll(id) || cdIsController(id) || !mustAgreeToType) {
-                    // Doll (or a Controller) chose a Type: just do it
+                    // Doll (or a Controller) chose a Type - or no confirmation needed: just do it
                     transformedViaMenu = YES;
                     setDollType(choice, NOT_AUTOMATED);
                 }
@@ -766,7 +786,7 @@ default {
 
             else if (code == 110) {
                 //initState = 105;
-                setDollType(stateName, AUTOMATED);
+                setDollType(currentState, AUTOMATED);
                 //startup = 0;
                 ;
             }
@@ -827,7 +847,7 @@ default {
         else if (channel == typeSearchChannel) {
 
             // Note that we may have gotten here *without* having run through
-            // the outfits search first - due to have done the outfits search
+            // the outfits search first - due to having done the outfits search
             // much earlier... However.... if we are here, then the outfits search
             // must have run before, but not necessarily immediately before...
 
@@ -835,7 +855,21 @@ default {
             llListenRemove(typeSearchHandle);
             llSetTimerEvent(30.0);
 
+            // if there is no outfits folder we mark the type folder search
+            // as "failed" and don't use a type folder...
+            if (outfitsFolder == "") {
+                useTypeFolder = NO;
+                typeFolder = "";
+                typeFolderExpected = "";
+
+                lmSendConfig("outfitsFolder", outfitsFolder);
+                lmSendConfig("useTypeFolder", "0");
+                lmSendConfig("typeFolder", "");
+                return;
+            }
+
             debugSay(2,"DEBUG-LISTEN","Channel #2 received (\"" + typeFolder + "\"): " + choice);
+            debugSay(2,"DEBUG-LISTEN","Channel #2: Outfits folder previously found to be " + outfitsFolder);
 
             list folderList = llCSV2List(choice);
 
@@ -848,8 +882,8 @@ default {
                     if (~llListFindList(folderList, (list)typeFolderExpected)) {
 
                         useTypeFolder = YES;
-                        typeFolderExpected = "";
                         typeFolder = typeFolderExpected;
+                        typeFolderExpected = "";
                         debugSay(2,"DEBUG-LISTEN","typeFolder = " + typeFolder);
 
                         lmSendConfig("outfitsFolder", outfitsFolder);
@@ -881,7 +915,7 @@ default {
                 // at this point we've either found the typeFolder or not,
                 // and the outfitsFolder is set
                 //debugSay(2,"DEBUG-SEARCHING","Turning off timer (listen)");
-                llSetTimerEvent(30.0);
+                //llSetTimerEvent(30.0);
 
                 // are we doing the initial complete search? or is this just
                 // a type change?
@@ -904,7 +938,7 @@ default {
                         lmSendConfig("normalselfFolder","");
                     }
                 }
-                //else lmInternalCommand("randomDress","",NULL_KEY);
+                else lmInternalCommand("randomDress","",NULL_KEY);
             }
         }
     }
@@ -916,7 +950,8 @@ default {
 
         if (query_id == kQuery) {
             if (data == EOF) {
-                llOwnerSay("Reading of " + typeNotecard + " completed: " + (string)readLine + " read");
+                phraseCount = llGetListLength(currentPhrases);
+                llOwnerSay("Reading of " + typeNotecard + " completed: " + (string)currentPhrases + " phrases in memory");
                 kQuery = NULL_KEY;
                 readLine = 0;
             }
