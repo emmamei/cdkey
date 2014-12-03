@@ -35,6 +35,7 @@
 //=======================================
 // VARIABLES
 //=======================================
+string msg;
 float delayTime = 15.0; // in seconds
 #ifdef DEVELOPER_MODE
 float initTimer;
@@ -55,6 +56,7 @@ list ncPrefsLoadedUUID;
 key ncIntroKey;
 key ncResetAttach;
 key ncRequestAppearance;
+integer prefsRead;
 
 float timeLeftOnKey;
 float keyLimit;
@@ -205,7 +207,7 @@ processConfiguration(string name, string value) {
                      "auto tp", "outfitable", "max time", "chat channel", "dolly name", "demo mode",
                      "afk rlv", "base rlv", "collapse rlv", "pose rlv" , "show phrases",
 #ifdef DEBUG_MODE
-                     "debug level",
+                     //"debug level",
 #endif
 #ifdef DEVELOPER_MODE
                      "initial time",
@@ -219,7 +221,7 @@ processConfiguration(string name, string value) {
                       "autoTP", "canDress", "timeLeftOnKey", "keyLimit", "chatChannel", "dollyName", "demoMode",
                       "userAfkRLVcmd", "userBaseRLVcmd", "userCollapseRLVcmd", "userPoseRLVcmd" , "showPhrases",
 #ifdef DEBUG_MODE
-                      "debugLevel",
+                      //"debugLevel",
 #endif
 #ifdef DEVELOPER_MODE
                       "timeLeftOnKey",
@@ -266,6 +268,7 @@ processConfiguration(string name, string value) {
         }
 
         // FIXME: Note the lack of validation here (!)
+        debugSay(2, "DEBUG-CONFIG", "Sending message " + cdListElement(sendName,i) + " with value " + (string)value);
         lmSendConfig(cdListElement(sendName,i), value);
     }
     else if ((i = cdListElementP(internals,name)) != NOT_FOUND) {
@@ -325,7 +328,7 @@ processConfiguration(string name, string value) {
     //--------------------------------------------------------------------------
     //else if (llGetSubString(name, 0, 2) == "ext") {
     //    string param = "|" + llDumpList2String(values, "|");
-    //    llMessageLinked(LINK_SET, 101, name + param, NULL_KEY);
+    //    llMessageLinked(LINK_SET, 127, name + param, NULL_KEY);
     //}
 #ifdef DEVELOPER_MODE
     else {
@@ -372,7 +375,8 @@ readPreferences() {
         // File missing - report for debugging only
         debugSay(1, "DEBUG", "No configuration found (" + NOTECARD_PREFERENCES + ")");
 
-        doneConfiguration(PREFS_NOT_READ);
+        prefsRead = PREFS_NOT_READ;
+        lmInitState(101);
     }
 }
 
@@ -384,11 +388,20 @@ doneConfiguration(integer prefsRead) {
     // the variable prefsRead allows us to know if prefs were read...
     // but how do we use this knowledge?
 
+    if (!prefsRead) msg = "No ";
+    else msg = "";
+    llOwnerSay(msg + "Preferences were read");
+
     resetState = RESET_NONE;
 
+    // The messages 102, 104, 105 - and 110 - are not handled by us,
+    // but by others. They are a message that things are done here, and certain
+    // items are are completed.
     debugSay(3,"DEBUG-START","Configuration done - starting init code 102 and 104 and 105");
     lmInitState(102);
+    llSleep(0.5);
     lmInitState(104);
+    llSleep(0.5);
     lmInitState(105);
 
     //initializationCompleted
@@ -475,7 +488,10 @@ default {
 
         scaleMem();
 
-        if (code == 102) {
+        if (code == 101) {
+            doneConfiguration(prefsRead);
+        }
+        else if (code == 102) {
             ;
         }
         else if (code == 135) {
@@ -639,14 +655,14 @@ default {
                 newAttach = 0;
             }
         }
+#ifdef DEVELOPER_MODE
         else if (code == 500) {
             string selection = llList2String(split, 0);
             string name = llList2String(split, 1);
 
-            if (selection == "Reset Key") {
-                if (cdIsController(id)) cdResetKey();
-            }
+            if (selection == "Reset Key") cdResetKey();
         }
+#endif
     }
 
     //----------------------------------------
@@ -674,6 +690,8 @@ default {
         // WHen this script (Start.lsl) resets... EVERYONE resets...
         doRestart();
 
+        // Set the debug level for all scripts early
+        lmSendConfig("debugLevel",(string)debugLevel);
         readPreferences();
     }
 
@@ -766,10 +784,8 @@ default {
                 ncRequestAppearance = llGetNotecardLine(APPEARANCE_NC, ncLine++);
             }
         }
-        else
-
         // Read notecard: Preferences
-        if (query_id == ncPrefsKey) {
+        else if (query_id == ncPrefsKey) {
             if (data == EOF) {
                 lmSendConfig("ncPrefsLoadedUUID", llDumpList2String(llList2List((string)llGetInventoryKey(NOTECARD_PREFERENCES) + ncPrefsLoadedUUID, 0, 9),"|"));
                 lmInternalCommand("getTimeUpdates","",NULL_KEY);
@@ -777,8 +793,8 @@ default {
 #ifdef DEVELOPER_MODE
                 sendMsg(dollID, "Preferences read in " + formatFloat(llGetTime() - ncStart, 2) + "s");
 #endif
-                llSleep(0.5); // Link Message processing time?
-                doneConfiguration(PREFS_READ);
+                prefsRead = PREFS_READ;
+                lmInitState(101);
             }
             else {
                 // Strip comments (prefs)
@@ -793,8 +809,8 @@ default {
                     string value =          llStringTrim(llGetSubString(data, index + 1, -1),STRING_TRIM) ;
 
                     // this is the heart of preferences processing
+                    debugSay(2, "DEBUG-CONFIG", "Processing configuration: name = " + name + "; value = " + value);
                     processConfiguration(name, value);
-                    llSleep(0.2); // Try not to overload the events queue
                 }
 
                 // get next Notecard Line
@@ -828,7 +844,7 @@ default {
         // reset the key at the worst.
         //
         // Note that if Start.lsl is modified, this does not get run,
-        // but Start.lsl is reset immediately - and upon reset,
+        // since Start.lsl is reset immediately - and upon reset,
         // resets the entire key.
 
         else if (change & CHANGED_INVENTORY) {
