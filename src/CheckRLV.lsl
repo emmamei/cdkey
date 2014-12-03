@@ -227,7 +227,7 @@ activateRLV() {
         // if Doll is one of the developers... dont lock:
         // prevents inadvertent lock-in during development
 
-        cdSayQuietly("Developer Key not locked");
+        //cdSayQuietly("Developer Key not locked");
 
         baseRLV += "attachallthis_except:" + myPath + "=add,detachallthis_except:" + myPath + "=add,";
 #endif
