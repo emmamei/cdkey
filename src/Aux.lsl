@@ -234,8 +234,10 @@ default {
                 if (llGetInventoryType(NOTECARD_HELP) == INVENTORY_NOTECARD) plusList += [ "Help Notecard" ];
                 if ((!cdIsDoll(id)) && (llGetInventoryType(OBJECT_KEY) == INVENTORY_OBJECT)) plusList += [ "Get Key" ];
 
+#ifdef DEVELOPER_MODE
                 // Remember, a doll cannot be her own controller, unless there is no other
                 if (cdIsController(id)) plusList += "Reset Key";
+#endif
 
                 cdDialogListen();
                 llDialog(id, msg, dialogSort(plusList + MAIN), dialogChannel);
