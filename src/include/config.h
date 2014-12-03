@@ -28,16 +28,9 @@
 /* #undef DEBUG_BADRLV */
 
 #ifndef DEBUG_LEVEL
-/* enable additional debugging messages up to threshold defaults to 0 in
-   normal mode or 5 if developer mode is active */
-//#define DEBUG_LEVEL 9
-//#define DEBUG_LEVEL 7
-//#define DEBUG_LEVEL 6
-//#define DEBUG_LEVEL 5
-//#define DEBUG_LEVEL 4
-//#define DEBUG_LEVEL 3
-#define DEBUG_LEVEL 3
-//#define DEBUG_LEVEL 0
+/* enable additional debugging messages up to specified threshold.
+   the debug level can be changed at the chat line */
+#define DEBUG_LEVEL 6
 #endif
 
 /* sets the target for debugging messages either DEBUG to send on debug
