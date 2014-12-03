@@ -567,8 +567,8 @@ default {
 
         if (code == CONFIG) {
             name = llList2String(split, 0);
+            value = llList2String(split, 1);
             split = llDeleteSubList(split, 0, 0);
-            value = llList2String(split, 0);
 
 // CHANGED_OTHER bit used to indicate changes of RLV status that
 // would not normally be reflected as a doll state.
@@ -643,7 +643,7 @@ default {
                 else if (name == "barefeet")                   barefeet = value;
                 //else if (name == "wearLock")                   wearLock = (integer)value;
                 //else if (name == "dollType")                   dollType = value;
-                else if (name == "controllers")             controllers = split;
+                else if (name == "controllers")             controllers = llDeleteSubList(split, 0, 0);
                 else if (name == "pronounHerDoll")       pronounHerDoll = value;
                 else if (name == "pronounSheDoll")       pronounSheDoll = value;
                 else if (name == "dialogChannel")         dialogChannel = (integer)value;
