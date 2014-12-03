@@ -212,11 +212,14 @@ integer isDresser(key id) {
         dresserID = id;
         dresserName = llGetDisplayName(dresserID);
 
-        debugSay(4, "DEBUG-DRESS", "looking at dress menu: " + (string)id);
+        // the id/dresserID might not be a valid person - it could be a prim or
+        // other UUID - so... needs fixing... Maybe use llGetAvatarSize (or whatever it is):
+        // the id will match a present avatar if it's an avi doing it'
+        debugSay(4, "DEBUG-DRESS", "looking at dress menu: " + (string)dresserID);
 
-        if (!cdIsDoll(id) || id == llGetKey()) {
-            llOwnerSay("secondlife:///app/agent/" + (string)id + "/about is looking at your dress menu");
-        }
+        //if (!cdIsDoll(id) || id == llGetKey()) {
+        if (!cdIsDoll(dresserID))
+            llOwnerSay("secondlife:///app/agent/" + (string)dresserID + "/about is looking at your dress menu");
     }
     else if (dresserID != id) {
         lmSendToAgent("You look in Dolly's closet for clothes, and notice that " + dresserName + " is already there looking", id);
@@ -420,7 +423,7 @@ default {
             string choice = cdListElement(split, 0);
             string name = cdListElement(split, 1);
 
-            debugSay(6, "DEBUG-DRESS", (string)tempWearLock + " " + choice);
+            //debugSay(6, "DEBUG-DRESS", (string)tempWearLock + " " + choice);
 
             if (choice == "Outfits..." && !tempWearLock) {
                 if (!isDresser(id)) return;
@@ -495,6 +498,7 @@ default {
                     llSetTimerEvent(60.0);
 
                 } else if (cdListElementP(outfitsList, choice) != NOT_FOUND) {
+                    // This could be entered via a menu injection by a random dress choice
                     if (!isDresser(id)) return;
 
                     if (isParentFolder(cdGetFirstChar(choice))) {
