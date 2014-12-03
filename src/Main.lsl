@@ -63,6 +63,7 @@ key dollID = NULL_KEY;
 #ifdef KEY_HANDLER
 key keyHandler = NULL_KEY;
 #endif
+float displayRate;
 
 integer dialogChannel;
 integer targetHandle;
@@ -433,9 +434,9 @@ default {
         // Has the clothing lock - wear lock - run its course? If so, reset lock
         if (wearLockExpire) {
             if (wearLockExpire <= thisTimerEvent) {
-                lmInternalCommand("wearLock", "0", NULL_KEY);
-                lmSendConfig("wearLock", "0");
-                //lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0.0));
+                //lmInternalCommand("wearLock", "0", NULL_KEY);
+                lmSendConfig("wearLock", (string)(wearLock = 0));
+                lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0.0));
             }
         }
 
@@ -548,7 +549,8 @@ default {
             else if (name == "dialogChannel")           dialogChannel = (integer)value;
 
             // This keeps the timers up to date - via a GetTimeUpdates internal command
-            else if ((name == "wearLockExpire")  ||
+            else if (
+                     (name == "wearLockExpire")  ||
                      (name == "poseExpire")      ||
 //                   (name == "jamExpire")       ||
                      (name == "carryExpire")     ||
@@ -866,11 +868,8 @@ default {
         // Quick shortcut...
         else if (code < 200) {
             if (code == 102) {
+                // Single wind for new starting dolly
                 lmMenuReply("Wind", "", NULL_KEY);
-
-                float displayRate = setWindRate();
-                lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
-                llOwnerSay("You have " + (string)llRound(timeLeftOnKey / (60.0 * displayRate)) + " minutes of life remaining.");
 
                 configured = 1;
 
@@ -882,23 +881,24 @@ default {
             }
 
             else if (code == 104) {
-                if (script == "Start") {
-                    dollID = llGetOwner();
-                    dollName = llGetDisplayName(dollID);
+                dollID = llGetOwner();
+                dollName = llGetDisplayName(dollID);
 
-                    clearAnim = 1;
-                }
+                displayRate = setWindRate();
+                lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
+                debugSay(3,"DEBUG-TIME","Time left on key at start: " + (string)timeLeftOnKey);
+                llOwnerSay("You have " + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * displayRate)) + " minutes of life remaining.");
+
+                clearAnim = 1;
             }
 
             else if (code == 105) {
-                if (script == "Start") {
-                    clearAnim = 1;
+                clearAnim = 1;
 
-                    if (lowScriptMode) llSetTimerEvent(LOW_RATE);
-                    else if (!cdAttached()) llSetTimerEvent(60.0);
-                    else llSetTimerEvent(STD_RATE);
-                    timerStarted = 1;
-                }
+                if (lowScriptMode) llSetTimerEvent(LOW_RATE);
+                else if (!cdAttached()) llSetTimerEvent(60.0);
+                else llSetTimerEvent(STD_RATE);
+                timerStarted = 1;
             }
 
             else if (code == 135) {
