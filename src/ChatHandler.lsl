@@ -20,6 +20,7 @@
 integer windMins = 30;
 
 float collapseTime          = 0.0;
+integer collapsed;
 float effectiveLimit          = 10800.0;
 //float wearLockExpire;
 flaot winderLockExpire;
@@ -729,11 +730,11 @@ default
 
                     if (isDoll) {
                         if (collapsed) {
-                            if (winderLockExpire <= llGetTime())
+                            if (llGetTime() - collapseTime > TIME_BEFORE_EMGWIND)
                                 cdMenuInject("Wind Emg", dollName, dollID);
                             else {
 #ifdef DEVELOPER_MODE
-                                llSendToAgentPlusDoll("Emergency detection circuits overridden; emergency winder activated");
+                                llSendToAgentPlusDoll("Emergency detection circuits detect developer access; emergency winder activated");
                                 cdMenuInject("Wind Emg", dollName, dollID);
 #endif
                                 llSendToAgent("Emergency not detected; emergency winder is inactive");
