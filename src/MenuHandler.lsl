@@ -520,6 +520,7 @@ default
                         // is it possible to be collapsed but collapseTime be equal to 0.0?
                         if (collapseTime != 0.0) {
                             float timeCollapsed = llGetTime() - collapseTime;
+                            msg += "You have been collapsed for " + (string)llFloor(timeCollapsed / SEC_TO_MIN) + " minutes. ";
 
                             // Only present the TP home option for the doll if they have been collapsed
                             // for at least 900 seconds (15 minutes) - Suggested by Christina
