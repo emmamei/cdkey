@@ -22,6 +22,7 @@ integer windMins = 30;
 float collapseTime          = 0.0;
 float effectiveLimit          = 10800.0;
 //float wearLockExpire;
+flaot winderLockExpire;
 integer wearLock;
 
 string dollGender           = "Female";
@@ -441,9 +442,10 @@ default
             //if (isDoll || (!isDoll && canCarry)) { }
             // Choice is a command, not a pose
             integer space = llSubStringIndex(msg, " ");
-            string choice = llToLower(msg);
+            string choice = msg;
 
             if (!PARAMETERS_EXIST) { // Commands without parameters handled first
+                choice = llToLower(choice);
 
                 //----------------------------------------
                 // PUBLIC COMMAND (help)
@@ -536,7 +538,8 @@ default
 #ifdef DEBUG_MODE
                     if (isDoll) help +=
 "
-    debug # ........ set the debugging message verbosity 0-9";
+    debug # ........ set the debugging message verbosity 0-9
+    collapse ....... perform an immediate collapse (out of time)";
 #endif
                     lmSendToAgent(help, id);
                     return;
@@ -557,6 +560,11 @@ default
                 if (isDoll || isController) {
                     if (choice == "build") {
                         lmConfigReport();
+                        return;
+                    }
+                    else if (choice == "collapse") {
+                        lmSendConfig("timeLeftOnKey","10");
+                        llOwnerSay("Immediate collapse triggered: ten seconds to collapse");
                         return;
                     }
                     else if (choice == "detach") {
@@ -719,7 +727,23 @@ default
                     // if someone else, it is a normal wind of the Doll.
                     // if a Tester - it is a normal wind (Emergency Winder not available!)
 
-                    if (isDoll) cdMenuInject("Wind Emg", dollName, dollID);
+                    if (isDoll) {
+                        if (collapsed) {
+                            if (winderLockExpire <= llGetTime())
+                                cdMenuInject("Wind Emg", dollName, dollID);
+                            else {
+#ifdef DEVELOPER_MODE
+                                llSendToAgentPlusDoll("Emergency detection circuits overridden; emergency winder activated");
+                                cdMenuInject("Wind Emg", dollName, dollID);
+#endif
+                                llSendToAgent("Emergency not detected; emergency winder is inactive");
+#endif
+                            }
+                        }
+                        else {
+                            llSendToAgent("Dolly is not collapsed; emergency winder is inactive");
+                        }
+                    }
                     else cdMenuInject("Wind", name, id);
                     return;
                 }
