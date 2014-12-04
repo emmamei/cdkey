@@ -210,15 +210,13 @@ default
             split = llDeleteSubList(split, 0, 0);
             string c = cdGetFirstChar(name);
 
-            if (value == RECORD_DELETE) {
-                value = "";
-                split = [];
-            }
-
                  if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
             else if (name == "collapseTime") {
-                // value is the amount of time the Dolly has been down (in negative s)
-                if ((float)value != 0.0)                 collapseTime = (llGetTime() + (float)value);
+                // value from the wire is the amount of time the Dolly has been down (in negative s)
+                // value to us is the actual UNIX time Dolly went down - we use the UNIX time because
+                // when Dolly expires, they might log out and back in but we want to preserve the
+                // collapse time - and not lose it
+                if ((float)value != 0.0)                 collapseTime = (llGetUnixTime() + (float)value);
                 else                                     collapseTime = 0.0;
             }
             else if (name == "baseWindRate")             baseWindRate = (float)value;
@@ -519,13 +517,13 @@ default
 
                         // is it possible to be collapsed but collapseTime be equal to 0.0?
                         if (collapseTime != 0.0) {
-                            float timeCollapsed = llGetTime() - collapseTime;
+                            float timeCollapsed = llGetUnixTime() - collapseTime;
                             msg += "You have been collapsed for " + (string)llFloor(timeCollapsed / SEC_TO_MIN) + " minutes. ";
 
                             // Only present the TP home option for the doll if they have been collapsed
                             // for at least 900 seconds (15 minutes) - Suggested by Christina
 
-                            if (timeCollapsed > 900.0) {
+                            if (timeCollapsed > TIME_BEFORE_TP) {
                                 if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK) {
                                     menu = ["TP Home"];
                                 }
@@ -533,7 +531,7 @@ default
                                 // If the doll is still down after 1800 seconds (30 minutes) and their
                                 // emergency winder is recharged; add a button for it
 
-                                if ((timeCollapsed > 1800.0) && (winderRechargeTime <= llGetUnixTime())) {
+                                if ((timeCollapsed > TIME_BEFORE_EMGWIND) && (winderRechargeTime <= llGetUnixTime())) {
                                     menu += ["Wind Emg"];
                                 }
                             }
