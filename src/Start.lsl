@@ -64,9 +64,7 @@ integer ncLine;
 integer demoMode;
 integer failedReset;
 
-#ifdef DEVELOPER_MODE
 float ncStart;
-#endif
 integer lastAttachPoint;
 key lastAttachAvatar;
 
@@ -206,26 +204,14 @@ processConfiguration(string name, string value) {
                      "can dress", "detachable", "doll type", "pleasure doll", "pose silence",
                      "auto tp", "outfitable", "max time", "chat channel", "dolly name", "demo mode",
                      "afk rlv", "base rlv", "collapse rlv", "pose rlv" , "show phrases",
-#ifdef DEBUG_MODE
-                     //"debug level",
-#endif
-#ifdef DEVELOPER_MODE
-                     "initial time",
-#endif
                      "dressable", "carryable", "repeatable wind"
                    ];
 
     list sendName = [ "barefeet", "quiet", "outfitsFolder",
                       "busyIsAway", "canAfk", "canFly", "canPose", "canSit", "canStand",
                       "canDressSelf", "detachable", "dollType", "pleasureDoll", "poseSilence",
-                      "autoTP", "canDress", "timeLeftOnKey", "keyLimit", "chatChannel", "dollyName", "demoMode",
+                      "autoTP", "canDress", "keyLimit", "chatChannel", "dollyName", "demoMode",
                       "userAfkRLVcmd", "userBaseRLVcmd", "userCollapseRLVcmd", "userPoseRLVcmd" , "showPhrases",
-#ifdef DEBUG_MODE
-                      //"debugLevel",
-#endif
-#ifdef DEVELOPER_MODE
-                      "timeLeftOnKey",
-#endif
                       "canDress", "canCarry", "canRepeatWind"
                     ];
 
@@ -245,30 +231,19 @@ processConfiguration(string name, string value) {
     name = llToLower(name);
 
     if ((i = cdListElementP(configs,name)) != NOT_FOUND) {
-#ifdef DEVELOPER_MODE
-        if (name == "initial time") {
-            value = (string)((float)value * SEC_TO_MIN);
-
-#define MAX_WINDS 12.0
-#define MIN_WINDS 4.0
-
-            // validate value
-                 if ((float)value > keyLimit / MIN_WINDS) value = (string)(keyLimit / MIN_WINDS);
-            else if ((float)value < keyLimit / MAX_WINDS) value = (string)(keyLimit / MAX_WINDS);
-        }
-        else
-#endif
         if (name == "max time") {
             value = (string)((float)value * SEC_TO_MIN);
 
-            // validate value and also timeLeftOnKey
+            // validate value for max time
             if ((float)value > 240) value = "240";
             else if ((float)value < 10) value = "30";
-            if (timeLeftOnKey > (float)value) timeLeftOnKey = (float)value;
         }
 
         // FIXME: Note the lack of validation here (!)
         debugSay(2, "DEBUG-CONFIG", "Sending message " + cdListElement(sendName,i) + " with value " + (string)value);
+
+        // Do both ways for now, just until all are converted or handled
+        lmSetConfig(cdListElement(sendName,i), value);
         lmSendConfig(cdListElement(sendName,i), value);
     }
     else if ((i = cdListElementP(internals,name)) != NOT_FOUND) {
@@ -337,32 +312,33 @@ processConfiguration(string name, string value) {
 #endif
 }
 
-// Only place gender is currently set is in the preferences
+// Gender is actually set in Aux: so send them a set request
 setGender(string gender) {
 
-    if (gender == "male") {
-        dollGender     = "Male";
-        pronounHerDoll = "His";
-        pronounSheDoll = "He";
-    }
-    else {
-        dollGender = "Female";
-        pronounHerDoll = "Her";
-        pronounSheDoll = "She";
-    }
+//  if (gender == "male") {
+//      dollGender     = "Male";
+//      pronounHerDoll = "His";
+//      pronounSheDoll = "He";
+//  }
+//  else {
+//      dollGender = "Female";
+//      pronounHerDoll = "Her";
+//      pronounSheDoll = "She";
+//  }
 
-    lmSendConfig("dollGender",     dollGender);
-    lmSendConfig("pronounHerDoll", pronounHerDoll);
-    lmSendConfig("pronounSheDoll", pronounSheDoll);
+    // We don't actually USE these values - so no processing
+    // of the 300 message is necessary
+
+    lmSetConfig("dollGender",     dollGender);
+    lmSetConfig("pronounHerDoll", pronounHerDoll);
+    lmSetConfig("pronounSheDoll", pronounSheDoll);
 }
 
 // PURPOSE: readPreferences reads the Preferences notecard, if any -
 //          and runs doneConfiguration if no notecard is found
 
 readPreferences() {
-#ifdef DEVELOPER_MODE
     ncStart = llGetTime();
-#endif
 
     // Check to see if the file exists and is a notecard
     if (cdNotecardExists(NOTECARD_PREFERENCES)) {
@@ -417,7 +393,7 @@ doneConfiguration(integer prefsRead) {
     }
 
     // WearLock should be clear
-    lmSendConfig("wearLock","0");
+    lmSetConfig("wearLock","0");
 
     if (isAttached) cdSetKeyName(dollyName + "'s Key");
 
@@ -511,7 +487,7 @@ default {
                  if (name == "ncPrefsLoadedUUID")    ncPrefsLoadedUUID = llDeleteSubList(split,0,0);
             else if (name == "lowScriptMode")            lowScriptMode = (integer)value;
             else if (name == "dialogChannel")            dialogChannel = (integer)value;
-            else if (name == "timeLeftOnKey")            timeLeftOnKey = (integer)value;
+            else if (name == "timeLeftOnKey")            timeLeftOnKey = (float)value;
             else if (name == "demoMode")                      demoMode = (integer)value;
             else if (name == "quiet")                            quiet = (integer)value;
 #ifdef DEVELOPER_MODE
@@ -790,9 +766,9 @@ default {
                 lmSendConfig("ncPrefsLoadedUUID", llDumpList2String(llList2List((string)llGetInventoryKey(NOTECARD_PREFERENCES) + ncPrefsLoadedUUID, 0, 9),"|"));
                 lmInternalCommand("getTimeUpdates","",NULL_KEY);
 
-#ifdef DEVELOPER_MODE
+
                 sendMsg(dollID, "Preferences read in " + formatFloat(llGetTime() - ncStart, 2) + "s");
-#endif
+
                 prefsRead = PREFS_READ;
                 lmInitState(101);
             }
@@ -856,15 +832,13 @@ default {
                     resetState = RESET_NORMAL;
 
                     sendMsg(dollID, "Reloading preferences card");
-#ifdef DEVELOPER_MODE
                     ncStart = llGetTime();
-#endif
                     // Start reading from first line (which is 0)
                     ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, (ncLine = 0));
                     return;
                 }
             }
-
+#ifdef DEVELOPER_MODE
             // if we get here, it was NOT the Preferences Notecard that
             // changed - it was something else...
 
@@ -876,9 +850,10 @@ default {
             // resetting - bump the time up to allow us to reset BEFORE
             // expiring... (which avoids the expire completely)
             if (timeLeftOnKey < 120.0) {
-                lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 150.0));
-                lmInternalCommand("getTimeUpdates","",NULL_KEY);
+                lmSetConfig("timeLeftOnKey", (string)(timeLeftOnKey = 150.0));
+                //lmInternalCommand("getTimeUpdates","",NULL_KEY);
             }
+#endif
         }
     }
 
