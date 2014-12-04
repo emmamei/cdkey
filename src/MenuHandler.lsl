@@ -853,16 +853,11 @@ default
                 // Space Found in Menu Selection
                      if (afterSpace == "Visible") lmSendConfig("isVisible", (string)(visible = (beforeSpace == CROSS)));
                 else if (afterSpace == "AFK") {
-                    lmSendConfig("afk", (string)(afk = (beforeSpace == CROSS)));
-                    float factor = 2.0;
 
-                    if (afk) factor = 0.5;
-
-                    displayWindRate *= factor;
-                    windRate *= factor;
-
-                    lmInternalCommand("setAFK", (string)afk + "|0|" + formatFloat(windRate, 1) + "|" + (string)llRound(timeLeftOnKey / (60.0 * displayWindRate)),id);
-
+                    // This is BAD form here - we are supposed to only set things
+                    // from a 300 message, but here we set afk: we are assuming
+                    // that this setting will prevail
+                    lmSetConfig("afk", (string)(afk = (beforeSpace == CROSS)));
                     lmMenuReply(MAIN, name, id);
                 }
                 else if ((afterSpace == "Blacklist") || (afterSpace == "Controller")) {

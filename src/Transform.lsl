@@ -460,14 +460,17 @@ default {
 
             if (autoAFK && (afk != dollAway)) {
 
-                lmSendConfig("afk", (string)(afk = dollAway));
+                if (dollAway) lmSetConfig("afk", "2");
+                else lmSetConfig("afk", "0");
 
-                displayWindRate = setWindRate();
-                lmInternalCommand("setAFK", (string)afk + "|1|" + formatFloat(windRate, 1) + "|" + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate)), NULL_KEY);
+                //displayWindRate = setWindRate();
+                //lmInternalCommand("setAFK", (string)afk + "|1|" + formatFloat(windRate, 1) + "|" + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate)), NULL_KEY);
             }
         }
 
+#ifdef DEVELOPER_MODE
         lastTimerEvent = llGetTime();
+#endif
     }
 
     //----------------------------------------

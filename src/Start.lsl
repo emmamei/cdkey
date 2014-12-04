@@ -720,8 +720,7 @@ default {
         }
 
         // when attaching key, user is NOT AFK...
-        afk = 0;
-        lmSendConfig("afk", "0");
+        lmSetConfig("afk", "0");
 
         // when attaching we're not in lowScriptMode
         //lowScriptMode = 0;

@@ -139,6 +139,32 @@ ifPermissions() {
         return;
     }
 
+setAfk(integer afkSet) {
+    if (afkSet) afk = 1;
+    integer autoSet = (afkSet == 2);
+
+    displayWindRate = setWindRate();
+
+    if (!autoSet) {
+        integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0);
+
+        if (dollAway != afk) autoAFK = 0;
+        else autoAFK = 1;
+    }
+
+    if (afk) {
+        if (autoSet) msg = "Automatically entering AFK mode.";
+        else msg = "You are now away from keyboard (AFK).";
+        msg += " Your Key has slowed to " + formatFloat(windRate,2) + "x its normal rate, and your movements and abilities are hindered as a result.";
+    }
+    else msg = "You are now no longer away from keyboard (AFK). Your key has been restored to normal operation, and winds down once again at its normal rate.";
+    llOwnerSay(msg + " You have " + (string)minsLeft + " minutes of life left.");
+
+    lmSendConfig("windRate", (string)(windRate));
+    lmSendConfig("afk", (string)(afk));
+    lmSendConfig("autoAFK", (string)autoAFK);
+}
+
 //  if (perm & PERMISSION_ATTACH && !cdAttached()) llAttachToAvatar(ATTACH_BACK);
 //  else if (!cdAttached() && llGetTime() > 120.0) {
 //      llOwnerSay("@acceptpermission=add");
@@ -526,8 +552,7 @@ default {
             string value = llList2String(split, 1);
             split = llDeleteSubList(split, 0, 0);
 
-                 if (name == "afk")                               afk = (integer)value;
-            else if (name == "winderID")                     winderID = (key)value;
+                 if (name == "winderID")                     winderID = (key)value;
             else if (name == "carrierID") {
                 carrierID = (key)value;
 
@@ -612,6 +637,10 @@ default {
                 if (timeLeftOnKey > keyLimit)
                     lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = keyLimit));
             }
+            else if (name == "afk") {
+                setAfk((integer)value);
+                lmSendConfig("afk", (string)afk);
+            }
             else if (name == "timeLeftOnKey")
                 lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = (float)value));
             else if (name == "wearLock")
@@ -651,31 +680,6 @@ default {
 //              if (windMins <= 0 || windMins > 120) windMins = 30;
 //              lmSendConfig("windMins", (string)(windMins));
 //          }
-            else if (cmd == "setAFK") {
-                afk = llList2Integer(split, 0);
-                integer autoSet = llList2Integer(split, 1);
-                windRate = (float)llList2String(split, 2);
-                minsLeft = llList2Integer(split, 3);
-
-                if (!autoSet) {
-                    integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0);
-
-                    if (dollAway == afk) autoAFK = 1;
-                    else autoAFK = 0;
-                }
-
-                if (afk) {
-                    if (autoSet) msg = "Automatically entering AFK mode.";
-                    else msg = "You are now away from keyboard (AFK).";
-                    msg += " Your Key has slowed to " + formatFloat(windRate,2) + "x its normal rate, and your movements and abilities are hindered as a result.";
-                }
-                else msg = "You are now no longer away from keyboard (AFK). Your key has been restored to normal operation, and winds down once again at its normal rate.";
-                llOwnerSay(msg + " You have " + (string)minsLeft + " minutes of life left.");
-
-                lmSendConfig("windRate", (string)(windRate));
-                lmSendConfig("afk", (string)(afk));
-                lmSendConfig("autoAFK", (string)autoAFK);
-            }
             else if (cmd == "collapse") collapse(llList2Integer(split, 0));
             else if (cmd == "wearLock") {
                 // This either primes the wearLockExpire or resets it
