@@ -170,9 +170,6 @@ default {
             else if (name == "canSelfTP")                     canSelfTP = (integer)value;
             else if (name == "pleasureDoll")             pleasureDoll = (integer)value;
             //else if (name == "hoverTextOn")                         hoverTextOn = (integer)value;
-            else if (name == "dollGender")                 dollGender = value;
-            else if (name == "pronounHerDoll")         pronounHerDoll = value;
-            else if (name == "pronounSheDoll")         pronounSheDoll = value;
             else if (name == "windMins")                     windMins = (integer)value;
             else if (name == "wearLock")                     wearLock = (integer)value;
             else if (name == "blacklist")                   blacklist = split;
@@ -195,6 +192,19 @@ default {
                 dialogChannel = (integer)value;
                 textboxChannel = dialogChannel - 1111;
             }
+        }
+        else if (code == SET_CONFIG) {
+                string name = llList2String(split, 0);
+                string value = llList2String(split, 1);
+
+                split = llDeleteSubList(split, 0, 0);
+
+                 if (name == "dollGender")
+                     lmSendConfig("dollGender",(dollGender = value));
+            else if (name == "pronounHerDoll")
+                     lmSendConfig("pronounHerDoll",(pronounHerDoll = value));
+            else if (name == "pronounSheDoll")
+                     lmSendConfig("pronounSheDoll",(pronounSheDoll = value));
         }
         else if (code == INTERNAL_CMD) {
             string cmd = llList2String(split, 0);
