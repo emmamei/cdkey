@@ -803,7 +803,8 @@ default {
                 if (llGetInventoryType(choice) == 20) {
                     lmSendConfig("keyAnimation", (string)(keyAnimation = choice));
                     lmSendConfig("poserID", (string)(poserID = id));
-                    lmSendConfig("poseExpire", (string)(llGetTime() + 300));
+                    //poseExpire = llGetUnixTime() + 300.0;
+                    lmSendConfig("poseExpire", (string)300.0);
                     oneAnimation();
                     if (poseSilence) lmRunRLV("sendchat=n");
                 }
@@ -918,21 +919,9 @@ default {
 
         if (lastTimerEvent) {
             timerInterval = thisTimerEvent - lastTimerEvent;
-            if (timeReporting) llOwnerSay("Avatar Timer fired, interval " + formatFloat(timerInterval,3) + "s.");
+            if (timeReporting) llOwnerSay("Avatar Timer fired, interval " + formatFloat(timerInterval,2) + "s.");
         }
         lastTimerEvent = thisTimerEvent;
-#endif
-
-#ifdef PREDICTIVE_TIMER
-        // This takes the next possible RLV check and animation refresh,
-        // computes the time until that happens, then calculates the miniumum...
-        // This is the amount of time until the next thing happens - and adds one
-        // frame's worth of time.
-
-        list possibleEvents =       [60.0];
-        float t = llGetTime();
-        if (nextAnimRefresh > 0.0)  possibleEvents += nextAnimRefresh - t;
-        llSetTimerEvent(llListStatistics(LIST_STAT_MIN,possibleEvents) + 0.022); // Not 0
 #endif
     }
 
