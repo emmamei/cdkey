@@ -78,7 +78,7 @@ integer rlvChannel;
 integer typeSearchChannel;
 integer outfitSearchChannel;
 
-float transformLockExpire;
+integer transformLockExpire;
 integer configured;
 integer RLVok;
 
@@ -159,11 +159,12 @@ setDollType(string stateName, integer automated) {
 #ifdef KEY_TYPE
          && stateName != "Key"
 #endif
-    ) transformLockExpire = llGetTime() + TRANSFORM_LOCK_TIME;
+    ) transformLockExpire = llGetUnixTime() + TRANSFORM_LOCK_TIME;
     else transformLockExpire = 0;
 
     currentState = stateName;
-    lmSendConfig("dollType", currentState);
+    // We dont respond to this: we don't have to
+    lmSendConfig("dollType", (dollType = currentState));
 
     cdPause();
 
@@ -354,7 +355,7 @@ default {
         if (timeReporting) llOwnerSay("Transform Timer fired, interval " + formatFloat(llGetTime() - lastTimerEvent,3) + "s.");
 #endif
         // transform lock: check time
-        if (transformLockExpire  <= llGetTime()) transformLockExpire = 0.0;
+        if (transformLockExpire  <= llGetUnixTime()) transformLockExpire = 0;
 
         if (RLVok) {
             if (outfitsSearchTimer) {
@@ -514,7 +515,7 @@ default {
 #endif
             else if (name == "lowScriptMode")                          lowScriptMode = (integer)value;
             else if (name == "collapsed")                                  collapsed = (integer)value;
-            else if (name == "simRating")                                  simRating = (integer)value;
+            else if (name == "simRating")                                  simRating = value;
             else if (name == "quiet")                                          quiet = (integer)value;
             else if (name == "hoverTextOn")                              hoverTextOn = (integer)value;
             else if (name == "busyIsAway")                                busyIsAway = (integer)value;
@@ -587,15 +588,18 @@ default {
                                                                           debugLevel = (integer)value;
             }
 #endif
-
-            else if (name == "dollType") {
-                //stateName = value;
-                //currentState = stateName;
-                // this only runs if some other script sets the Type, not this one
-                setDollType(value, AUTOMATED);
-            }
         }
 
+        else if (code == SET_CONFIG) {
+
+            string value = name;
+            string name = choice;
+
+            if (name == "dollType") {
+                setDollType(value, AUTOMATED);
+                //lmSendConfig("dollType",dollType);
+            }
+        }
         else if (code == INTERNAL_CMD) {
             ;
         }
@@ -691,9 +695,9 @@ default {
                 if (transformLockExpire) {
                     debugSay(5,"DEBUG-TYPES","Transform locked");
                     if (cdIsDoll(id)) {
-                        llDialog(id,"You cannot be transformed right now, as you were recently transformed into a " + currentState + " doll. You can be transformed in " + (string)llFloor((transformLockExpire - llGetTime()) / SEC_TO_MIN) + " minutes.",["OK"], DISCARD_CHANNEL);
+                        llDialog(id,"You cannot be transformed right now, as you were recently transformed into a " + currentState + " doll. You can be transformed in " + (string)llFloor((transformLockExpire - llGetUnixTime()) / SEC_TO_MIN) + " minutes.",["OK"], DISCARD_CHANNEL);
                     } else {
-                        llDialog(id,dollName + " cannot be transformed right now. The Doll was recently transformed into a " + currentState + " doll. Dolly can be transformed in " + (string)llFloor((transformLockExpire - llGetTime()) / SEC_TO_MIN) + " minutes.",["OK"], DISCARD_CHANNEL);
+                        llDialog(id,dollName + " cannot be transformed right now. The Doll was recently transformed into a " + currentState + " doll. Dolly can be transformed in " + (string)llFloor((transformLockExpire - llGetUnixTime()) / SEC_TO_MIN) + " minutes.",["OK"], DISCARD_CHANNEL);
                     }
                 }
                 else {
@@ -819,10 +823,10 @@ default {
                 if (llSubStringIndex(choice,"Outfits") >= 0 ||
                     llSubStringIndex(choice,"Dressup") >= 0)   {
 
-                         if (~llListFindList(folderList, (list)"Outfits"))    outfitsFolder = "Outfits";
-                    else if (~llListFindList(folderList, (list)"> Outfits"))  outfitsFolder = "> Outfits";
-                    else if (~llListFindList(folderList, (list)"Dressup"))    outfitsFolder = "Dressup";
-                    else if (~llListFindList(folderList, (list)"> Dressup"))  outfitsFolder = "> Dressup";
+                         if (~llListFindList(folderList, (list)"Outfits"))    outfitsFolder = "> Outfits";
+                    else if (~llListFindList(folderList, (list)"> Outfits"))  outfitsFolder = "Outfits";
+                    else if (~llListFindList(folderList, (list)"Dressup"))    outfitsFolder = "> Dressup";
+                    else if (~llListFindList(folderList, (list)"> Dressup"))  outfitsFolder = "Dressup";
 
                     debugSay(2,"DEBUG-LISTEN","outfitsFolder = " + outfitsFolder);
 
@@ -841,8 +845,8 @@ default {
                 }
             }
 
-            if (~llListFindList(folderList, (list)"~nude"))        lmSendConfig("nudeFolder","~nude");
-            if (~llListFindList(folderList, (list)"~normalself"))  lmSendConfig("normalselfFolder","~normalself");
+            if (~llListFindList(folderList, (list)"~nude"))        lmSendConfig("nudeFolder",(nudeFolder = "~nude"));
+            if (~llListFindList(folderList, (list)"~normalself"))  lmSendConfig("normalselfFolder",(normalselfFolder = "~normalself"));
         }
         else if (channel == typeSearchChannel) {
 
@@ -871,12 +875,13 @@ default {
             debugSay(2,"DEBUG-LISTEN","Channel #2 received (\"" + typeFolder + "\"): " + choice);
             debugSay(2,"DEBUG-LISTEN","Channel #2: Outfits folder previously found to be " + outfitsFolder);
 
-            list folderList = llCSV2List(choice);
-
+            // We should NOT be here if the following statement is false.... RIGHT?
             if (typeFolderExpected != "" && typeFolder != typeFolderExpected) {
                 // This comparison is inexact - but a quick check to see
                 // if the typeFolderExpected is contained in the string
                 if (llSubStringIndex(choice,typeFolderExpected) >= 0) {
+
+                    list folderList = llCSV2List(choice);
 
                     // This is exact check:
                     if (~llListFindList(folderList, (list)typeFolderExpected)) {
@@ -914,8 +919,6 @@ default {
 
                 // at this point we've either found the typeFolder or not,
                 // and the outfitsFolder is set
-                //debugSay(2,"DEBUG-SEARCHING","Turning off timer (listen)");
-                //llSetTimerEvent(30.0);
 
                 // are we doing the initial complete search? or is this just
                 // a type change?
@@ -925,18 +928,29 @@ default {
                     outfitsSearchTimer = 0.0;
 
                     // Check for ~nude and ~normalself in the same level as the typeFolder
+                    //
+                    // This suggests that normalselfFolder and nudeFolder are "set-once" variables - which seems logical.
+                    // It also means that any ~nudeFolder and/or ~normalselfFolder found along side the Outfits folder
+                    // will override any inside of the same
 
-                    if (~llListFindList(folderList, (list)"~nude"))        lmSendConfig("nudeFolder",outfitsFolder + "/~nude");
-                    else {
-                        llOwnerSay("WARN: No nude (~nude) folder found in your outfits folder...");
-                        lmSendConfig("nudeFolder","");
-                    }
+                    if (normalselfFolder != "" || nudeFolder != "") {
+                        if (~llListFindList(folderList, (list)"~nude"))        lmSendConfig("nudeFolder",outfitsFolder + "/~nude");
+                        else {
+                            llOwnerSay("WARN: No nude (~nude) folder found in your outfits folder...");
+                            lmSendConfig("nudeFolder","");
+                        }
 
-                    if (~llListFindList(folderList, (list)"~normalself"))  lmSendConfig("normalselfFolder",outfitsFolder + "/~normalself");
-                    else {
-                        llOwnerSay("WARN: No normal self (~normalself) folder found in your outfits folder...");
-                        lmSendConfig("normalselfFolder","");
+                        if (~llListFindList(folderList, (list)"~normalself"))  lmSendConfig("normalselfFolder",outfitsFolder + "/~normalself");
+                        else {
+                            llOwnerSay("WARN: No normal self (~normalself) folder found in your outfits folder...");
+                            lmSendConfig("normalselfFolder","");
+                        }
                     }
+#ifdef DEVELOPER_MODE
+                    else {
+                        llOwnerSay("WARN: Trying to override normalselfFolder and nudeFolder?!\n\tnudeFolder = " + nudeFolder + "\n\tnormalselfFolder = " + normalselfFolder);
+                    }
+#endif
                 }
                 else lmInternalCommand("randomDress","",NULL_KEY);
             }
