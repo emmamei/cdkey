@@ -11,7 +11,7 @@
 #define cdNullList(a) (llGetListLength(a)==0)
 #define cdListMin(a) llListStatistics(LIST_STAT_MIN,a)
 #define cdKeyStopped() (windRate==0.0)
-#define cdTimeSet(a) (a!=0.0)
+#define cdTimeSet(a) (a!=0)
 #define cdResetKey() llResetOtherScript("Start")
 #define UNSET -1
 
@@ -49,12 +49,17 @@ integer minsLeft;
 float lastEmergencyTime;
 
 // EMERGENCY_LIMIT_TIME needs to be an even number of hours (in seconds)
-#define EMERGENCY_LIMIT_TIME 43200.0 // 12 (RL) Hours = 43200 Seconds
+#define EMERGENCY_LIMIT_TIME 43200 // 12 (RL) Hours = 43200 Seconds
 
 string rlvAPIversion;
+#ifdef DEVELOPER_MODE
 float thisTimerEvent;
+float lastTimerEvent;
 float timerInterval;
-
+#endif
+integer timerMark;
+integer lastTimerMark;
+integer timeSpan;
 
 // Current Controller - or Mistress
 key carrierID = NULL_KEY;
@@ -68,7 +73,7 @@ float displayRate;
 integer dialogChannel;
 integer targetHandle;
 integer lowScriptMode;
-float lastLowScriptTime;
+integer lastLowScriptTime;
 integer busyIsAway;
 //integer ticks;
 
@@ -95,16 +100,15 @@ integer debugLevel = DEBUG_LEVEL;
 // type of Doll to another - this tracks the current type of doll.
 string dollType = "Regular";
 
-float winderRechargeTime;
-float wearLockExpire;
-float carryExpire;
-float lastTimerEvent;
-float jamExpire;
-float poseExpire;
+integer winderRechargeTime;
+integer wearLockExpire;
+integer carryExpire;
+integer jamExpire;
+integer poseExpire;
 float baseWindRate    = windRate;
 float displayWindRate = windRate;
 float effectiveLimit  = keyLimit;
-float collapseTime;
+integer collapseTime;
 integer windMins = 30;
 float effectiveWindTime = 30.0;
 
@@ -162,27 +166,31 @@ collapse(integer newCollapseState) {
 
     if (newCollapseState == NOT_COLLAPSED) {
         lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
+        lmSendConfig("collapseTime", (string)(collapseTime = 0));
     }
     else {
         // Entering a collapsed state
         if (newCollapseState == NO_TIME) {
-            lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0.0));
+            lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0));
         }
         else if (newCollapseState == JAMMED) {
             // Time span (random) = 120.0 (two minutes) to 300.0 (five minutes)
-            jamExpire = llGetTime() + (llFrand(180.0) + 120.0);
+            jamExpire = llGetUnixTime() + ((integer)llFrand(180) + 120);
         }
 
         // If not already collapsed, mark the start time
         if (collapsed == NOT_COLLAPSED) {
-            collapseTime = llGetTime();
+            collapseTime = llGetUnixTime();
+            // A relative time of zero would be misunderstood - so fake up
+            // a "1" (1s) time - a second's inaccuracy isn't bad
+            lmSendConfig("collapseTime", "1");
         }
     }
 
     // If not jammed, reset time to Jam Repair
     if (newCollapseState != JAMMED) {
         if (jamExpire) {
-            jamExpire = 0.0;
+            jamExpire = 0;
             //lmSendConfig("jamExpire", (string)jamExpire);
         }
     }
@@ -196,9 +204,11 @@ collapse(integer newCollapseState) {
     if (collapsed != newCollapseState)
         lmSendConfig("collapsed", (string)(collapsed = newCollapseState));
 
-    if (collapsed) collapseTime = llGetTime();
-    else           collapseTime = 0.0;
-    lmSendConfig("collapseTime",  (string)collapseTime);
+    //if (collapsed) collapseTime = llGetUnixTime();
+    //else           collapseTime = 0;
+
+    // queued up
+    lmInternalCommand("getTimeUpdates", "", llGetKey());
 
     // Current code ignores this utterly... and calls this function
     // we're in anyway
@@ -310,8 +320,20 @@ default {
         //----------------------------------------
         // TIMER INTERVAL
 
-        thisTimerEvent = llGetTime();
-        if (cdAttached()) timerInterval = thisTimerEvent - lastTimerEvent;
+        timerMark = llGetUnixTime();
+        if (lastTimerMark != 0) timeSpan = timerMark - lastTimerMark;
+        else timeSpan = 0;
+
+#ifdef DEVELOPER_MODE
+        debugSay(2,"DEBUG-MAIN", "Unix Time as float = " + (string)((float)llGetUnixTime()) + "; UNIX Time as integer = " + (string)llGetUnixTime());
+
+        if (timereporting) {
+            thisTimerEvent = llGetTime();
+            if (lastTimerEvent)
+                llOwnerSay("Main Timer fired, interval " + (string)(thisEvent - lastTimerEvent) + "s.");
+            lastTimerEvent = thisTimerEvent;
+        }
+#endif
 
         //----------------------------------------
         // LOW SCRIPT MODE
@@ -330,7 +352,7 @@ default {
 
             if (cdLowScriptTrigger) {
                 // lowScriptMode continues...
-                lastLowScriptTime = llGetTime();
+                lastLowScriptTime = llGetUnixTime();
             }
             else {
                 // lowScript is no longer valid... but wait....
@@ -338,10 +360,10 @@ default {
                 // normal mode immediately - wait 10 minutes
                 // to see if this good news sticks
 
-                if ((llGetTime() - lastLowScriptTime) > 600) {
+                if ((llGetUnixTime() - lastLowScriptTime) > 600) {
                     debugSay(2,"DEBUG-MAIN", ">> Normal mode buffering expired...");
                     lowScriptMode = 0;
-                    lastLowScriptTime = 0.0;
+                    lastLowScriptTime = 0;
                     llOwnerSay("ATTN: Normal mode activated.");
                     llSetTimerEvent(STD_RATE);
                 }
@@ -356,42 +378,34 @@ default {
                 // Go into "power saving mode", say so, and mark the time
 
                 lowScriptMode = 1;
-                lastLowScriptTime = llGetTime();
+                lastLowScriptTime = llGetUnixTime();
                 llOwnerSay("ATTN: Power-saving mode activated.");
                 llSetTimerEvent(LOW_RATE);
             }
             else llSetTimerEvent(STD_RATE);
         }
 
-#ifdef DEVELOPER_MODE
-        //----------------------------------------
-        // TIME REPORTING (MAIN)
-
-        if (timeReporting) llOwnerSay("Main Timer fired, interval " + formatFloat(timerInterval,3) + "s.");
-#endif
         //----------------------------------------
         // CARRY TIMER: RUN OR RESET
 
         // If carried, the carry times out (expires) if the carrier is
         // not in range for the duration
-        if (carryExpire > 0.0) {
-
-            // carryExpire is a Time - so it needs to remain so, but keep going
-            // down as time passes
-            if (llGetAgentSize(carrierID) != ZERO_VECTOR)       carryExpire -= timerInterval;
-            else                                                carryExpire = CARRY_TIMEOUT;
+        if (carryExpire > 0) {
+            // carryExpire is a fixed Time in the future - so decreasing it makes no sense...
+            // making it a UnixTime makes no real sense, but it doesn't hurt and that is
+            // standard for these variables
+            if (llGetAgentSize(carrierID) == ZERO_VECTOR)       carryExpire = llGetUnixTime() + CARRY_TIMEOUT;
         }
 
         //----------------------------------------
         // SET WIND RATE
 
         displayWindRate = setWindRate();
-        //llOwnerSay((string)thisTimerEvent + " - " + (string)lastTimerEvent + " = " + (string)timerInterval + " @ " + (string)windRate);
 
         //----------------------------------------
         // TIME SAVED (TIMER INTERVAL)
 
-        lastTimerEvent = thisTimerEvent;
+        lastTimerMark = timerMark;
 
         // Increment a counter
         //ticks++;
@@ -401,18 +415,18 @@ default {
 
         // False collapse? Collapsed = 1 while timeLeftOnKey is positive is an invalid condition
         if (collapsed == NO_TIME)
-            if (timeLeftOnKey > 0.0) collapse(NOT_COLLAPSED);
+            if (timeLeftOnKey > 0) collapse(NOT_COLLAPSED);
         else if (collapsed == JAMMED)
-            if (jamExpire <= thisTimerEvent) collapse(NOT_COLLAPSED);
+            if (jamExpire <= timerMark) collapse(NOT_COLLAPSED);
 
         //----------------------------------------
         // POSE TIMED OUT?
 
         // Did the pose expire? If so, unpose Dolly
         if (poseExpire) {
-            if (poseExpire <= thisTimerEvent) {
+            if (poseExpire <= timerMark) {
                 lmMenuReply("Unpose", "", llGetKey());
-                lmSendConfig("poseExpire", (string)(poseExpire = 0.0));
+                lmSendConfig("poseExpire", (string)(poseExpire = 0));
             }
         }
 
@@ -421,9 +435,9 @@ default {
 
         // Has the carry timed out? If so, drop the Dolly
         if (carryExpire) {
-            if (carryExpire <= thisTimerEvent) {
+            if (carryExpire <= timerMark) {
                 lmMenuReply("Uncarry", carrierName, carrierID);
-                carryExpire = 0.0;
+                carryExpire = 0;
             }
             lmSendConfig("carryExpire", (string)carryExpire);
         }
@@ -433,10 +447,10 @@ default {
 
         // Has the clothing lock - wear lock - run its course? If so, reset lock
         if (wearLockExpire) {
-            if (wearLockExpire <= thisTimerEvent) {
+            if (wearLockExpire <= timerMark) {
                 //lmInternalCommand("wearLock", "0", NULL_KEY);
                 lmSendConfig("wearLock", (string)(wearLock = 0));
-                lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0.0));
+                lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0));
             }
         }
 
@@ -454,11 +468,13 @@ default {
         //
         // Others which cause this effect are not being attached to spine
         // and being doll type Builder or Key
+        //
+        // Note too: if no time measured, then no need to check everything
 
-        if (windRate) {
-            timeLeftOnKey -= timerInterval * windRate;
+        if (windRate && timeSpan) {
+            timeLeftOnKey -= timeSpan * windRate;
 
-            if (timeLeftOnKey > 0.0) {
+            if (timeLeftOnKey > 0) {
 
                 minsLeft = llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate));
 
@@ -489,10 +505,6 @@ default {
         }
 
         scaleMem();
-
-        // Set default timer... do we want to do this?
-        // It interferes with lowScriptMode
-        //llSetTimerEvent(30.0);
     }
 
     //----------------------------------------
@@ -514,15 +526,17 @@ default {
             string value = llList2String(split, 1);
             split = llDeleteSubList(split, 0, 0);
 
-                 if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
-            else if (name == "afk")                               afk = (integer)value;
+                 if (name == "afk")                               afk = (integer)value;
             else if (name == "winderID")                     winderID = (key)value;
             else if (name == "carrierID") {
                 carrierID = (key)value;
 
                 // If we get a carrierID, it means we need to start the carry timer
                 if (carrierID) {
+                    // Send the carryExpire out as a relative value, then convert it
+                    // internally to a fixed time value
                     lmSendConfig("carryExpire", (string)(carryExpire = CARRY_TIMEOUT));
+                    carryExpire += llGetUnixTime();
                 }
             }
             else if (name == "carrierName")               carrierName = value;
@@ -538,10 +552,7 @@ default {
             else if (name == "quiet")                           quiet = (integer)value;
             else if (name == "hoverTextOn")               hoverTextOn = (integer)value;
             else if (name == "windAmount")                 windAmount = (float)value;
-            else if (name == "baseWindRate") {
-                if ((float)value > 0.33) baseWindRate = (float)value;   // Minimum baseWindRate set at 0.33 any lower and reset to 1.0 this should
-                else lmSendConfig("baseWindRate", "1");                 // guarantee no more 0's causing math errors when SL has dropped a link.
-            }
+            else if (name == "baseWindRate")             baseWindRate = (float)value;
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "dollType")                     dollType = value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
@@ -556,11 +567,11 @@ default {
                      (name == "carryExpire")     ||
                      (name == "collapseTime")) {
 
-                float timeSet;
+                integer timeSet;
 
                 // The value parameter is supposed to be positive, except collapseTime
                 // which should be negative
-                if ((float)value) timeSet = llGetTime() + (float)value;
+                if ((integer)value) timeSet = llGetUnixTime() + (integer)value;
 
                 // Note that the Link Message contents were an offset from
                 // the current time, but here the variables are being set
@@ -581,13 +592,6 @@ default {
                 if ((float)value) displayWindRate = (float)value;
             }
             else if (name == "collapsed")                    collapsed = (integer)value;
-#ifdef KEY_HANDLER
-            else if (name == "keyHandler")                  keyHandler = (key)value;
-#endif
-            else if (name == "keyLimit") {
-                keyLimit = (float)value;
-                if (script != "Main") lmMenuReply("Wind", "", NULL_KEY);
-            }
             else if (name == "demoMode") {
                 if (demoMode = (integer)value) effectiveLimit = DEMO_LIMIT;
                 else effectiveLimit = keyLimit;
@@ -596,13 +600,30 @@ default {
             else if (name == "timeReporting")           timeReporting = (integer)value;
 #endif
         }
+        else if (code == SET_CONFIG) {
+            string name = llList2String(split, 0);
+            string value = llList2String(split, 1);
+            split = llDeleteSubList(split, 0, 0);
+
+            if (name == "keyLimit") {
+                lmSendConfig("keyLimit", (string)(keyLimit = (float)value));
+
+                // if limit is less than time left on key, clip time remaining
+                if (timeLeftOnKey > keyLimit)
+                    lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = keyLimit));
+            }
+            else if (name == "timeLeftOnKey")
+                lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = (float)value));
+            else if (name == "wearLock")
+                lmSendConfig("wearLock", (string)(wearLock = (integer)value));
+        }
         else if (code == INTERNAL_CMD) {
             string cmd = llList2String(split, 0);
             split = llDeleteSubList(split, 0, 0);
             integer isController = cdIsController(id);
 
             if (cmd == "getTimeUpdates") {
-                float t = llGetTime();
+                integer t = llGetUnixTime();
 
                 // Internal variables are sent on the wire in various ways:
                 //
@@ -662,10 +683,10 @@ default {
                 if (wearLock) wearLock = 1; // bullet-proofing
 
                 if (wearLock) {
-                    wearLockExpire = llGetTime() + WEAR_LOCK_TIME;
+                    wearLockExpire = llGetUnixTime() + WEAR_LOCK_TIME;
                     //displayWindRate = setWindRate();
                 }
-                else wearLockExpire = 0.0;
+                else wearLockExpire = 0;
 
                 lmSendConfig("wearLockExpire", (string)wearLockExpire);
                 lmSendConfig("wearLock", (string)(wearLock));
@@ -704,7 +725,7 @@ default {
 
                 if (winderRechargeTime <= llGetUnixTime()) {
                     // Winder is recharged and usable.
-                    windAmount = 0.0;
+                    windAmount = 0;
 
                     if (collapsed == NO_TIME) {
                         lmSendToController(dollName + " has activated the emergency winder.");
@@ -715,13 +736,13 @@ default {
                         // of time in a single wind. It is also a form of hard-coding.
                         //
                         windAmount = effectiveLimit * 0.2;
-                        if (windAmount > 3600.0) windAmount = 3600.0;
+                        if (windAmount > 3600) windAmount = 3600;
 
                         lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = windAmount));
                         lmSendConfig("winderRechargeTime", (string)(winderRechargeTime = (llGetUnixTime() + EMERGENCY_LIMIT_TIME)));
                         collapse(NOT_COLLAPSED);
 
-                        llOwnerSay("With an electical sound the motor whirrs into life and gives you " + (string)llRound(windAmount / SEC_TO_MIN) + " minutes of life. The recharger requires " + (string)llRound(EMERGENCY_LIMIT_TIME / 3600.0) + " hours to recharge.");
+                        llOwnerSay("With an electical sound the motor whirrs into life and gives you " + (string)llRound(windAmount / SEC_TO_MIN) + " minutes of life. The recharger requires " + (string)llRound(EMERGENCY_LIMIT_TIME / 3600) + " hours to recharge.");
                     }
                     else {
                         if (collapsed == JAMMED) { llOwnerSay("The emergency winder motor whirrs, splutters and then falls silent, unable to budge your jammed mechanism."); }
@@ -733,8 +754,8 @@ default {
                    string s = "Emergency self-winder is not yet recharged. There remains ";
 
                    //llSay(DEBUG_CHANNEL,"Winder recharge: rechargeMins = " + (string)rechargeMins + " minutes");
-                   if (rechargeMins < 60.0) s += (string)llFloor(rechargeMins) + " minutes ";
-                   else s += "over " + (string)llFloor(rechargeMins / 60.0) + " hours ";
+                   if (rechargeMins < 60) s += (string)llFloor(rechargeMins) + " minutes ";
+                   else s += "over " + (string)llFloor(rechargeMins / 60) + " hours ";
 
                    llOwnerSay(s + "before it will be ready again.");
                 }
@@ -757,7 +778,7 @@ default {
 
                 // effectiveWindTime allows us to preserve the real wind
                 // even when demo mode is active
-                if (demoMode) effectiveWindTime = 60.0;
+                if (demoMode) effectiveWindTime = 60;
                 else effectiveWindTime = (float)windMins * SEC_TO_MIN;
 
                 if (timeLeftOnKey + effectiveWindTime > effectiveLimit) windAmount = effectiveLimit - timeLeftOnKey;
@@ -765,7 +786,7 @@ default {
 
                 lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey += windAmount));
 
-                if (windAmount < 60.0) {
+                if (windAmount < 60) {
 
                     // note that this message might go out even if we "wound" Dolly with 30 seconds
                     // more... but in the grand scheme of things, she was fully wound: so say so
@@ -776,8 +797,8 @@ default {
                     cdDialogListen();
                     llDialog(id, "Dolly is already fully wound.", [MAIN], dialogChannel);
                 }
-                else if (windAmount > 0.0) {
-                    if (effectiveWindTime > 0.0) lmSendToAgent("You have given " + dollName + " " + (string)llFloor(effectiveWindTime / SEC_TO_MIN) + " more minutes of life.", id);
+                else if (windAmount > 0) {
+                    if (effectiveWindTime > 0) lmSendToAgent("You have given " + dollName + " " + (string)llFloor(effectiveWindTime / SEC_TO_MIN) + " more minutes of life.", id);
 
                     if (timeLeftOnKey == effectiveLimit) { // Fully wound
                         llOwnerSay("You have been fully wound - " + (string)llRound(effectiveLimit / (SEC_TO_MIN * displayWindRate)) + " minutes remaining.");
@@ -806,7 +827,7 @@ default {
                 // the best of worlds doesn't serve any purpose: if there is time left on the
                 // clock then we should not be down.  However this makes SURE we are not down.
                 //
-                if ((timeLeftOnKey > 0.0) && (collapsed == NO_TIME)) collapse(NOT_COLLAPSED);
+                if ((timeLeftOnKey > 0) && (collapsed == NO_TIME)) collapse(NOT_COLLAPSED);
             }
 
             // Note that Max Times are "m" and Wind Times are "min" - this is on purpose to
