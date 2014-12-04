@@ -27,12 +27,6 @@
    fails effectively disable the listener for the check reply */
 /* #undef DEBUG_BADRLV */
 
-#ifndef DEBUG_LEVEL
-/* enable additional debugging messages up to specified threshold.
-   the debug level can be changed at the chat line */
-#define DEBUG_LEVEL 6
-#endif
-
 /* sets the target for debugging messages either DEBUG to send on debug
    channel or OWNER to use ownersay */
 #define DEBUG_TARGET 1
@@ -50,10 +44,16 @@
 #define LOCKON 1
 #endif
 
+#ifdef DEVELOPER_MODE
+#ifndef DEBUG_LEVEL
+/* enable additional debugging messages up to specified threshold.
+   the debug level can be changed at the chat line */
+#define DEBUG_LEVEL 6
+#endif
+
 /* Enable debugging code - in contrast to Developer code
    Use this to hand out keys with Debugging but without Developer-specific
    capabilities */
-#ifdef DEVELOPER_MODE
 #define DEBUG_MODE 1
 #endif
 
