@@ -209,15 +209,13 @@ listInventoryOn(string channel) {
 
 integer isDresser(key id) {
     if (dresserID == NULL_KEY) {
+        // check if id is something other than an avatar: and fake up TRUE val if so
+        if (llGetAvatarSize(id) == ZERO_VECTOR) return TRUE;
+
         dresserID = id;
         dresserName = llGetDisplayName(dresserID);
-
-        // the id/dresserID might not be a valid person - it could be a prim or
-        // other UUID - so... needs fixing... Maybe use llGetAvatarSize (or whatever it is):
-        // the id will match a present avatar if it's an avi doing it'
         debugSay(4, "DEBUG-DRESS", "looking at dress menu: " + (string)dresserID);
 
-        //if (!cdIsDoll(id) || id == llGetKey()) {
         if (!cdIsDoll(dresserID))
             llOwnerSay("secondlife:///app/agent/" + (string)dresserID + "/about is looking at your dress menu");
     }
@@ -499,7 +497,8 @@ default {
 
                 } else if (cdListElementP(outfitsList, choice) != NOT_FOUND) {
                     // This could be entered via a menu injection by a random dress choice
-                    if (!isDresser(id)) return;
+                    // No standard user should be entering this way anyway
+                    //if (!isDresser(id)) return;
 
                     if (isParentFolder(cdGetFirstChar(choice))) {
                         if (clothingFolder == "") clothingFolder = choice;
