@@ -8,15 +8,17 @@
 #include "config.h"
 
 // Link message codes
-// #define A 102
-// #define B 104
-// #define C 105
-// #define D 110
+#define INIT_STAGE1 101
+#define INIT_STAGE2 102
+#define INIT_STAGE3 104
+#define INIT_STAGE4 105
+#define INIT_STAGE5 110
 // #define E 11
 // #define F 12
 // #define G 15
 #define MEM_REPORT 135
 #define CONFIG 300
+#define SET_CONFIG 301
 #define INTERNAL_CMD 305
 #define RLV_CMD 315
 #define RLV_RESET 350
@@ -24,8 +26,6 @@
 
 #define VSTR  + "\nScript Date: " + PACKAGE_VERSION
 #define MAIN "~Main Menu~"
-// Remove elements of Startup code
-// #define NO_STARTUP 1
 // Collapse animation - and documentation
 #define ANIMATION_COLLAPSED "collapse"
 // Carry distance for the new carry code
@@ -70,11 +70,13 @@
 // This defines the config settings that we never expedite HTTP POST for
 #define SKIP_EXPEDITE [ "poseExpire", "timeLeftOnKey", "timeToJamRepair", "wearLockExpire", "winderRechargeTime" ]
 // Timeouts
-#define WEAR_LOCK_TIME 600.0
-#define DEMO_LIMIT 300.0
-#define POSE_LIMIT 300.0
-#define CARRY_TIMEOUT 300.0
-#define JAM_DEFAULT_TIME 90.0
+#define WEAR_LOCK_TIME 600
+#define DEMO_LIMIT 300
+#define POSE_LIMIT 300
+#define CARRY_TIMEOUT 300
+#define JAM_DEFAULT_TIME 90
+#define TIME_BEFORE_TP 900
+#define TIME_BEFORE_EMGWIND 1800
 
 // Permissions scripts should request
 //
