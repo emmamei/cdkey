@@ -23,7 +23,7 @@ float collapseTime          = 0.0;
 integer collapsed;
 float effectiveLimit          = 10800.0;
 //float wearLockExpire;
-flaot winderLockExpire;
+//flaot winderLockExpire;
 integer wearLock;
 
 string dollGender           = "Female";
@@ -84,7 +84,7 @@ default
             string c = cdGetFirstChar(name); // for speedup
 
                  if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
-            else if (name == "collapseTime")             collapseTime = (float)value;
+            else if (name == "collapseTime")             collapseTime = llGetUnixTime() + (float)value;
             else if (name == "collapsed")                   collapsed = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")           timeReporting = (integer)value;
@@ -349,7 +349,6 @@ default
         //----------------------------------------
 
         if (channel == chatChannel) {
-            debugSay(5,"CHAT-DEBUG",("Got a message: " + name + "/" + (string)id + "/" + msg));
             // Deny access to the menus when the command was recieved from blacklisted avatar
             if (!isDoll && (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND)) {
                 lmSendToAgent("You are not permitted to access this key.", id);
@@ -357,7 +356,6 @@ default
             }
 
             lmInternalCommand("getTimeUpdates","",NULL_KEY);
-            llSleep(2);
             debugSay(5,"CHAT-DEBUG",("Got a chat channel message: " + name + "/" + (string)id + "/" + msg));
             //msg = llToLower(msg);
             string prefix = cdGetFirstChar(msg);
@@ -386,28 +384,19 @@ default
                     msg = llGetSubString(msg,1,-1);
                 }
             }
-            else if (chatPrefix) {
+            else {
                 integer n = llStringLength(chatPrefix);
                 if (llToLower(llGetSubString(msg, 0, n - 1)) == chatPrefix) {
                     prefix = llGetSubString(msg, 0, n - 1);
                     msg = llGetSubString(msg, n, -1);
                 }
-                else if (isDoll)
-                    llOwnerSay("Use of chat commands without a prefix is depreciated and will be removed in a future release.");
+                else {
+                    if (isDoll)
+                        llOwnerSay("Use of chat commands without a prefix is depreciated and will be removed in a future release.");
+                    else
+                        return;
+                }
             }
-
-            // If we got here, it means that the prefix is not "*" or "#" or the chatPrefix...
-            // Therefore, if Doll issued the command, Doll needs to be notified of need for prefix
-            else if (isDoll) {
-                llOwnerSay("Use of chat commands without a prefix is depreciated and will be removed in a future release.");
-            }
-
-            // If we got here, it means that the prefix is not "*" or "#" or the chatPrefix...
-            // AND it means that the command was issued by someone other than Doll
-            // So ignore it
-            else return; // For some other doll? noise? matters not it's someone elses problem.
-
-            //debugSay(2, "CHAT-DEBUG", "On #" + (string)channel + " secondlife:///app/agent/" + (string)id + "/about: pre:" + prefix + "(ok) cmd:" + msg + " id:" + (string)id);
 
             // If we get here, we know this:
             //
@@ -419,23 +408,25 @@ default
             // Trim message in case there are spaces
             msg = llStringTrim(msg,STRING_TRIM);
 
-            // Is the "msg" an animation?
-            if (llGetInventoryType(msg) == INVENTORY_ANIMATION) {
-                string firstChar = cdGetFirstChar(msg);
+            // Is the "msg" an animation? (and skip the "collapse" animation entirely)
+            if (msg != "collapse") {
+                if (llGetInventoryType(msg) == INVENTORY_ANIMATION) {
+                    string firstChar = cdGetFirstChar(msg);
 
-                // if animation starts with "." only Doll has access to it
-                if (firstChar == ".") {
-                    if (isDoll) { cdMenuInject(msg, name, id); }
+                    // if animation starts with "." only Doll has access to it
+                    if (firstChar == ".") {
+                        if (isDoll) { cdMenuInject(msg, name, id); }
+                    }
+                    // if animation starts with "!" only Doll and Controllers have access to it
+                    else if (firstChar == "!") {
+                        if (isDoll || isController) { cdMenuInject(msg, name, id); }
+                    }
+                    else {
+                        // It's a pose but from a member of the public
+                        if (canPose) cdMenuInject(msg, name, id);
+                    }
+                    return;
                 }
-                // if animation starts with "!" only Doll and Controllers have access to it
-                else if (firstChar == "!") {
-                    if (isDoll || isController) { cdMenuInject(msg, name, id); }
-                }
-                else {
-                    // It's a pose but from a member of the public
-                    if (canPose) cdMenuInject(msg, name, id);
-                }
-                return;
             }
 
 #define PARAMETERS_EXIST (space != NOT_FOUND)
@@ -464,7 +455,11 @@ default
                 if (choice == "help") {
                     // First: anyone can do these commands
                     string help = "Commands:
-    Commands can be prefixed with your prefix, which is currently " + llToLower(chatPrefix) + "\n";
+    Commands can be prefixed with your prefix, which is currently " + llToLower(chatPrefix) + "
+    help ........... this list of commands";
+                    string menus = "Menu Commands:
+
+    Use these commands to trigger menus:\n";
 
                     // if is Doll or Controller, can do these commands
                     if (isDoll || isController) {
@@ -478,25 +473,34 @@ default
     release ........ stop the current pose if possible
     demo ........... toggle demo mode
     [posename] ..... activate the named pose if possible
-    poses .......... show Poses menu
-    listposes ...... list all poses
-    help ........... this list of commands";
+    listposes ...... list all poses";
+                        menus +=
+"
+    poses .......... show Poses menu";
 
-                        if (isDoll & canDressSelf) {
-                            help += "
+                        // accessor is either Doll or controller so...
+                        if (isDoll) {
+                            if (canDressSelf)
+                                menus += "
     outfits ........ show Outfits menu";
                         }
+                        // is Controller, but NOT Doll
+                        else
+                            menus += "
+    outfits ........ show Outfits menu";
                     }
                     // Not dolly OR controller...
                     else {
                         if (canDress) {
-                            help += "
+                            menus += "
     outfits ........ show Outfits menu";
                         }
 
                         if (canPose) {
+                            menus +=
+"
+    poses .......... show Poses menu";
                             help += "
-    poses .......... show Poses menu
     listposes ...... list all poses
     [posename] ..... activate the named pose if possible";
                         }
@@ -517,12 +521,10 @@ default
                     else {
                         help +=
 "
-    carry .......... pick up Dolly
-    uncarry ........ drop Dolly
     wind ........... wind key";
                     }
 
-                    help +=
+                    menus +=
 "
     menu ........... show main menu
     types .......... show Types menu";
@@ -536,10 +538,17 @@ default
     blacklist NN ... add to blacklist
     unblacklist NN . remove from blacklist";
                     }
+                    lmSendToAgent(help, id);
+                    lmSendToAgent(menus, id);
+
 #ifdef DEBUG_MODE
-                    if (isDoll) help +=
+                    if (isDoll) help =
 "
+    Debugging commands:
+
     debug # ........ set the debugging message verbosity 0-9
+    timereporitng .. set timereporting \"on\" or \"off\"
+    inject x#x#x ... inject a link message with \"code#data#key\"
     collapse ....... perform an immediate collapse (out of time)";
 #endif
                     lmSendToAgent(help, id);
@@ -561,11 +570,6 @@ default
                 if (isDoll || isController) {
                     if (choice == "build") {
                         lmConfigReport();
-                        return;
-                    }
-                    else if (choice == "collapse") {
-                        lmSendConfig("timeLeftOnKey","10");
-                        llOwnerSay("Immediate collapse triggered: ten seconds to collapse");
                         return;
                     }
                     else if (choice == "detach") {
@@ -692,7 +696,7 @@ default
 
                         string s = "Dolly's Key is now ";
                         if (demoMode) {
-                            if (timeLeftOnKey > DEMO_LIMIT) lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = DEMO_LIMIT));
+                            if (timeLeftOnKey > DEMO_LIMIT) lmSendConfig("setTimeLeftOnKey", (string)(DEMO_LIMIT));
                             s += "in demo mode: " + (string)llRound(timeLeftOnKey / SEC_TO_MIN) + " of " + (string)llFloor(DEMO_LIMIT / SEC_TO_MIN) + " minutes remaining.";
                         }
                         else {
@@ -730,19 +734,20 @@ default
 
                     if (isDoll) {
                         if (collapsed) {
-                            if (llGetTime() - collapseTime > TIME_BEFORE_EMGWIND)
+                            if ((llGetUnixTime() - collapseTime) > TIME_BEFORE_EMGWIND) {
                                 cdMenuInject("Wind Emg", dollName, dollID);
+                            }
                             else {
 #ifdef DEVELOPER_MODE
-                                llSendToAgentPlusDoll("Emergency detection circuits detect developer access; emergency winder activated");
+                                lmSendToAgentPlusDoll("Emergency detection circuits detect developer access; emergency winder activated",id);
                                 cdMenuInject("Wind Emg", dollName, dollID);
-#endif
-                                llSendToAgent("Emergency not detected; emergency winder is inactive");
+#else
+                                lmSendToAgent("Emergency not detected; emergency winder is inactive",id);
 #endif
                             }
                         }
                         else {
-                            llSendToAgent("Dolly is not collapsed; emergency winder is inactive");
+                            lmSendToAgent("Dolly is not collapsed; emergency winder is inactive",id);
                         }
                     }
                     else cdMenuInject("Wind", name, id);
@@ -914,6 +919,7 @@ default
                 //   * debug
                 //   * inject
                 //   * timereporting
+                //   * collapse
                 //
                 if (isDoll) {
 #ifdef DEBUG_MODE
@@ -926,6 +932,12 @@ default
                     ;
 #endif
 #ifdef DEVELOPER_MODE
+                    else if (choice == "collapse") {
+                        debugSay(3, "DEBUG", "collapse command executed...");
+                        lmSetConfig("timeLeftOnKey","10");
+                        llOwnerSay("Immediate collapse triggered: ten seconds to collapse");
+                        return;
+                    }
                     else if (choice == "inject") {
                         list params = llParseString2List(param, ["#"], []);
                         key paramKey = llList2Key(params,2); // NULL_KEY if not valid
