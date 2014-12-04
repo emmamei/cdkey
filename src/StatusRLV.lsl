@@ -341,9 +341,11 @@ default {
                     }
                 } while (llStringLength(commandString));
                 
-                debugSay(2,"DEBUG-STATUSRLV","Ready to send: " + sendCommands);
 
-                if ((sendCommands != "") && (sendCommands != ",")) llOwnerSay(llGetSubString("@" + sendCommands, 0, -2));
+                if ((sendCommands != "") && (sendCommands != ",")) {
+                    debugSay(2,"DEBUG-STATUSRLV","RLV commands sent: " + sendCommands);
+                    llOwnerSay(llGetSubString("@" + sendCommands, 0, -2));
+                }
 #ifdef LINK_320
                 if ((confCommands != "") && (confCommands != ",")) lmConfirmRLV(script, llGetSubString(confCommands, 0, -2));
 #endif
