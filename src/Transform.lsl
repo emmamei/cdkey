@@ -495,7 +495,7 @@ default {
 #ifdef DEVELOPER_MODE
         // This is a way to watch the messages coming over the wire...
         // no need for a separate script to do it
-        if (debugLevel > 4) {
+        if ((debugLevel > 4 && code != 11 && code != 12 && code != 15) || (debugLevel > 8)) {
             string s = "Transform Link Msg:" + script + ":" + (string)code + ":choice/name";
             string t = choice + "/" + name;
 

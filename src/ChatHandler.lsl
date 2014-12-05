@@ -518,8 +518,8 @@ default
     blacklist NN ... add to blacklist
     unblacklist NN . remove from blacklist";
                     }
-                    lmSendToAgent(help, id);
-                    lmSendToAgent(menus, id);
+                    lmSendToAgent(help + "\n", id);
+                    lmSendToAgent(menus + "\n", id);
 
 #ifdef DEBUG_MODE
                     if (isDoll) help =
@@ -531,7 +531,7 @@ default
     inject x#x#x ... inject a link message with \"code#data#key\"
     collapse ....... perform an immediate collapse (out of time)";
 #endif
-                    lmSendToAgent(help, id);
+                    lmSendToAgent(help + "\n", id);
                     return;
                 }
 
