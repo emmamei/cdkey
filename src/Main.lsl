@@ -588,7 +588,7 @@ default {
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
             else if (name == "dialogChannel")           dialogChannel = (integer)value;
-            else if (name == "transformLockExpire") transformLockExpire = value;
+            else if (name == "transformLockExpire") {
                 if ((integer)value) transformLockExpire = llGetUnixTime() + (integer)value;
                 else transformLockExpire = 0;
             }
@@ -633,21 +633,20 @@ default {
                 //lmSendConfig("effectiveLimit", (string)effectiveLimit);
             }
             else if (name == "afk") {
-                integer setVal = (integer)value;
-                setAfk(setVal);
+                setAfk((integer)value);
                 //lmSendConfig("afk", (string)afk);
             }
             else if (name == "timeLeftOnKey") {
                 timeLeftOnKey = (float)value;
                 if (timeLeftOnKey > effectiveLimit) timeLeftOnKey = effectiveLimit;
 
-                lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = (float)value));
+                lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
                 }
             else if (name == "wearLock")
                 lmSendConfig("wearLock", (string)(wearLock = (integer)value));
 
             else if (name == "lowScriptMode")
-                     lmSendConfig(lowScriptMode = (integer)value);
+                     lmSendConfig("lowScriptMode",(string)(lowScriptMode = (integer)value));
             else if (
                      (name == "wearLockExpire")  ||
                      (name == "poseExpire")      ||

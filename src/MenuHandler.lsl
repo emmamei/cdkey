@@ -9,10 +9,10 @@
 #include "include/GlobalDefines.lsl"
 
 // code to clean up name and key list
-//#define KEY2NAME 1
+#define KEY2NAME 1
 //
 // Code to handle a name2key script
-//#define NAME4KEY 1
+#define NAME4KEY 1
 //
 #define LISTENER_ACTIVE 1
 #define LISTENER_INACTIVE 0
@@ -157,8 +157,8 @@ integer listCompare(list a, list b) {
 //========================================
 // STATES
 //========================================
-default
-{
+default {
+
     //----------------------------------------
     // STATE ENTRY
     //----------------------------------------
@@ -392,11 +392,11 @@ default
 
                  if (name == "blacklist") {
                     blacklist = split;
-                    lmSendConfig("blacklist",llDumpList2String(split,"|");
+                    lmSendConfig("blacklist",llDumpList2String(split,"|"));
             }
             else if (name == "controllers") {
                     controllers = split;
-                    lmSendConfig("controllers",llDumpList2String(split,"|");
+                    lmSendConfig("controllers",llDumpList2String(split,"|"));
             }
         }
         else if (code == INTERNAL_CMD) {
