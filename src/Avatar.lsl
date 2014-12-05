@@ -795,7 +795,7 @@ default {
             else if (choice == "Unpose") {
                 lmSendConfig("keyAnimation", (string)(keyAnimation = ""));
                 lmSendConfig("poserID", (string)(poserID = NULL_KEY));
-                lmSendConfig("poseExpire", "0");
+                lmSetConfig("poseExpire", "0");
 
                 clearAnimations();
                 lmRunRLV("sendchat=y");
@@ -808,7 +808,7 @@ default {
                     lmSendConfig("keyAnimation", (string)(keyAnimation = choice));
                     lmSendConfig("poserID", (string)(poserID = id));
                     //poseExpire = llGetUnixTime() + 300.0;
-                    lmSendConfig("poseExpire", (string)300.0);
+                    lmSetConfig("poseExpire", (string)300.0);
                     oneAnimation();
                     if (poseSilence) lmRunRLV("sendchat=n");
                 }

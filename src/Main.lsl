@@ -218,7 +218,7 @@ collapse(integer newCollapseState) {
     if (newCollapseState != JAMMED) {
         if (jamExpire) {
             jamExpire = 0;
-            //lmSendConfig("jamExpire", (string)jamExpire);
+            lmSendConfig("jamExpire", (string)jamExpire);
         }
     }
 
@@ -234,7 +234,7 @@ collapse(integer newCollapseState) {
     //if (collapsed) collapseTime = llGetUnixTime();
     //else           collapseTime = 0;
 
-    // queued up
+    // queued up: broadcast new times
     lmInternalCommand("getTimeUpdates", "", llGetKey());
 
     // Current code ignores this utterly... and calls this function
@@ -586,30 +586,6 @@ default {
             else if (name == "dialogChannel")           dialogChannel = (integer)value;
 
             // This keeps the timers up to date - via a GetTimeUpdates internal command
-            else if (
-                     (name == "wearLockExpire")  ||
-                     (name == "poseExpire")      ||
-//                   (name == "jamExpire")       ||
-                     (name == "carryExpire")     ||
-                     (name == "collapseTime")) {
-
-                integer timeSet;
-
-                // The value parameter is supposed to be positive, except collapseTime
-                // which should be negative
-                if ((integer)value) timeSet = llGetUnixTime() + (integer)value;
-
-                // Note that the Link Message contents were an offset from
-                // the current time, but here the variables are being set
-                // as a specific time in the future, except collapseTime which
-                // is being set as a time in the past
-
-                     if (name == "wearLockExpire")    wearLockExpire = timeSet;
-                else if (name == "poseExpire")            poseExpire = timeSet;
-//              else if (name == "jamExpire")              jamExpire = timeSet;
-                else if (name == "carryExpire")          carryExpire = timeSet;
-                else if (name == "collapseTime")        collapseTime = timeSet;
-            }
             else if (name == "windMins") {
                 //if (script != "Main") llOwnerSay("windMins LinkMessage sent by " + script + " with value " + value);
                 windMins = (integer)value;
@@ -664,6 +640,30 @@ default {
 
             else if (name == "lowScriptMode")
                      lmSendConfig(lowScriptMode = (integer)value);
+            else if (
+                     (name == "wearLockExpire")  ||
+                     (name == "poseExpire")      ||
+                     (name == "jamExpire")       ||
+                     (name == "carryExpire")     ||
+                     (name == "collapseTime")) {
+
+                integer timeSet;
+
+                // The value parameter is supposed to be positive, except collapseTime
+                // which should be negative
+                if ((integer)value) timeSet = llGetUnixTime() + (integer)value;
+
+                // Note that the Link Message contents were an offset from
+                // the current time, but here the variables are being set
+                // as a specific time in the future, except collapseTime which
+                // is being set as a time in the past
+
+                     if (name == "wearLockExpire")    wearLockExpire = timeSet;
+                else if (name == "poseExpire")            poseExpire = timeSet;
+                else if (name == "jamExpire")              jamExpire = timeSet;
+                else if (name == "carryExpire")          carryExpire = timeSet;
+                else if (name == "collapseTime")        collapseTime = timeSet;
+            }
         }
         else if (code == INTERNAL_CMD) {
             string cmd = llList2String(split, 0);
@@ -689,8 +689,8 @@ default {
 
                 if (cdTimeSet(timeLeftOnKey))       lmSendConfig("timeLeftOnKey",    (string) timeLeftOnKey);
                 if (cdTimeSet(wearLockExpire))      lmSendConfig("wearLockExpire",   (string)(wearLockExpire - t));
-//              if (cdTimeSet(jamExpire))           lmSendConfig("jamExpire",        (string)(jamExpire - t));
-//              if (cdTimeSet(poseExpire))          lmSendConfig("poseExpire",       (string)(poseExpire - t));
+                if (cdTimeSet(jamExpire))           lmSendConfig("jamExpire",        (string)(jamExpire - t));
+                if (cdTimeSet(poseExpire))          lmSendConfig("poseExpire",       (string)(poseExpire - t));
                 if (cdTimeSet(carryExpire))         lmSendConfig("carryExpire",      (string)(carryExpire - t));
                 if (cdTimeSet(collapseTime))        lmSendConfig("collapseTime",     (string)(collapseTime - t));
             }
@@ -788,17 +788,21 @@ default {
             // Winding - pure and simple
             else if (choice == "Wind") {
 
+                // Test and reject winding of jammed dollies
                 if (collapsed == JAMMED) {
                     cdDialogListen();
                     llDialog(id, "The Dolly cannot be wound while " + llToLower(pronounHerDoll) + " key is being held.", ["Help...", "OK"], dialogChannel);
                     return;
                 }
 
+                // Test and reject repeat winding as appropriate
                 if (!canRepeatWind && (id == winderID)) {
                     lmSendToAgent("Dolly needs to be wound by someone else before you can wind " + llToLower(pronounHerDoll) + " again.", id);
                     return;
                 }
 
+                // Here, dolly may be collapsed or not...
+                //
                 // effectiveWindTime allows us to preserve the real wind
                 // even when demo mode is active
                 if (demoMode) effectiveWindTime = 60;
@@ -850,7 +854,7 @@ default {
                 // the best of worlds doesn't serve any purpose: if there is time left on the
                 // clock then we should not be down.  However this makes SURE we are not down.
                 //
-                if ((timeLeftOnKey > 0) && (collapsed == NO_TIME)) collapse(NOT_COLLAPSED);
+                if (collapsed == NO_TIME) collapse(NOT_COLLAPSED);
             }
 
             // Note that Max Times are "m" and Wind Times are "min" - this is on purpose to
