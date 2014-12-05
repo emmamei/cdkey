@@ -632,19 +632,33 @@ default {
             split = llDeleteSubList(split, 0, 0);
 
             if (name == "keyLimit") {
-                lmSendConfig("keyLimit", (string)(keyLimit = (float)value));
+                keyLimit = (float)value;
+
+                // if limit is negative clip it at a default
+                if (keyLimit < 0) keyLimit = 240 * SEC_TO_MIN;
 
                 // if limit is less than time left on key, clip time remaining
-                if (timeLeftOnKey > keyLimit)
-                    lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = keyLimit));
+                if (timeLeftOnKey > keyLimit) timeLeftOnKey = keyLimit;
+
+                // if nto in demo mode set effectiveLimit
+                if (!demoMode) effectiveLimit = keyLimit;
+                else effectiveLimit = DEMO_LIMIT;
+
+                lmSendConfig("keyLimit", (string)keyLimit);
+                lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
+                //lmSendConfig("effectiveLimit", (string)effectiveLimit);
             }
             else if (name == "afk") {
                 integer setVal = (integer)value;
                 setAfk(setVal);
                 //lmSendConfig("afk", (string)afk);
             }
-            else if (name == "timeLeftOnKey")
+            else if (name == "timeLeftOnKey") {
+                timeLeftOnKey = (float)value;
+                if (timeLeftOnKey > effectiveLimit) timeLeftOnKey = effectiveLimit;
+
                 lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = (float)value));
+                }
             else if (name == "wearLock")
                 lmSendConfig("wearLock", (string)(wearLock = (integer)value));
         }
