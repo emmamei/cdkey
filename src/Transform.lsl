@@ -357,8 +357,12 @@ default {
         if (timeReporting) llOwnerSay("Transform Timer fired, interval " + formatFloat(llGetTime() - lastTimerEvent,3) + "s.");
 #endif
         // transform lock: check time
-        if (transformLockExpire  <= llGetUnixTime()) transformLockExpire = 0;
-        lmSendConfig("transformLockExpire",(string)transformLockExpire);
+        if (transformLockExpire) {
+            if (transformLockExpire  <= llGetUnixTime()) {
+                lmSendConfig("transformLockExpire",(string)(transformLockExpire = 0));
+            }
+            else lmSendConfig("transformLockExpire",(string)(llGetUnixTime() - transformLockExpire);
+        }
 
         if (RLVok) {
             if (outfitsSearchTimer) {
@@ -606,7 +610,7 @@ default {
                 //lmSendConfig("dollType",dollType);
             }
             else if (name == "transformLockExpire") {
-                lmSendConfig("transformLockExpire",(string)transformLockExpire);
+                lmSendConfig("transformLockExpire",(string)(transformLockExpire = (integer)value));
             }
         }
         else if (code == INTERNAL_CMD) {
