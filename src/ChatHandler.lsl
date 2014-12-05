@@ -409,27 +409,6 @@ default
             // Trim message in case there are spaces
             msg = llStringTrim(msg,STRING_TRIM);
 
-            // Is the "msg" an animation? (and skip the "collapse" animation entirely)
-            if (msg != "collapse") {
-                if (llGetInventoryType(msg) == INVENTORY_ANIMATION) {
-                    string firstChar = cdGetFirstChar(msg);
-
-                    // if animation starts with "." only Doll has access to it
-                    if (firstChar == ".") {
-                        if (isDoll) { cdMenuInject(msg, name, id); }
-                    }
-                    // if animation starts with "!" only Doll and Controllers have access to it
-                    else if (firstChar == "!") {
-                        if (isDoll || isController) { cdMenuInject(msg, name, id); }
-                    }
-                    else {
-                        // It's a pose but from a member of the public
-                        if (canPose) cdMenuInject(msg, name, id);
-                    }
-                    return;
-                }
-            }
-
 #define PARAMETERS_EXIST (space != NOT_FOUND)
 
             //if (isDoll || (!isDoll && canCarry)) { }
@@ -970,6 +949,27 @@ default
                         return;
                     }
 #endif
+                }
+            }
+
+            // Is the "msg" an animation? (and skip the "collapse" animation entirely)
+            if (msg != "collapse") {
+                if (llGetInventoryType(msg) == INVENTORY_ANIMATION) {
+                    string firstChar = cdGetFirstChar(msg);
+
+                    // if animation starts with "." only Doll has access to it
+                    if (firstChar == ".") {
+                        if (isDoll) { cdMenuInject(msg, name, id); }
+                    }
+                    // if animation starts with "!" only Doll and Controllers have access to it
+                    else if (firstChar == "!") {
+                        if (isDoll || isController) { cdMenuInject(msg, name, id); }
+                    }
+                    else {
+                        // It's a pose but from a member of the public
+                        if (canPose) cdMenuInject(msg, name, id);
+                    }
+                    return;
                 }
             }
         }
