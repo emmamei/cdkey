@@ -661,6 +661,9 @@ default {
                 }
             else if (name == "wearLock")
                 lmSendConfig("wearLock", (string)(wearLock = (integer)value));
+
+            else if (name == "lowScriptMode")
+                     lmSendConfig(lowScriptMode = (integer)value);
         }
         else if (code == INTERNAL_CMD) {
             string cmd = llList2String(split, 0);

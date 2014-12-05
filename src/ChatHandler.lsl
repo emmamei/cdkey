@@ -242,8 +242,8 @@ default
 
                 // we may or may not have changed either of these - but this code
                 // forces a refresh in any case
-                lmSendConfig("blacklist",   llDumpList2String(blacklist,   "|") );
-                lmSendConfig("controllers", llDumpList2String(controllers, "|") );
+                lmSetConfig("blacklist",   llDumpList2String(blacklist,   "|") );
+                lmSetConfig("controllers", llDumpList2String(controllers, "|") );
             }
             else if ((cmd == "remMistress") ||
                      (cmd == "remBlacklist")) {
@@ -268,8 +268,8 @@ default
 
                 if (split = []) {
                     lmSendToAgentPlusDoll("The " + typeString + " list is empty!", id);
-                    lmSendConfig("blacklist",   llDumpList2String(blacklist,   "|") );
-                    lmSendConfig("controllers", llDumpList2String(controllers, "|") );
+                    lmSetConfig("blacklist",   llDumpList2String(blacklist,   "|") );
+                    lmSetConfig("controllers", llDumpList2String(controllers, "|") );
                     return;
                 }
 
@@ -290,8 +290,8 @@ default
 
                 // we may or may not have changed either of these - but this code
                 // forces a refresh in any case
-                lmSendConfig("blacklist",   llDumpList2String(blacklist,   "|") );
-                lmSendConfig("controllers", llDumpList2String(controllers, "|") );
+                lmSetConfig("blacklist",   llDumpList2String(blacklist,   "|") );
+                lmSetConfig("controllers", llDumpList2String(controllers, "|") );
             }
         }
         else if (code == RLV_RESET) {

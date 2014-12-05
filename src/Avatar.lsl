@@ -499,7 +499,6 @@ default {
             llTargetRemove(targetHandle);
 
             isNoScript = llGetParcelFlags(llGetPos()) & PARCEL_FLAG_ALLOW_SCRIPTS;
-            //lmSendConfig("lowScriptMode",(string)(lowScriptMode = cdLowScriptTrigger));
 
 #ifdef DEVELOPER_MODE
             msg = "Region ";
@@ -536,7 +535,6 @@ default {
         if (id) {
             debugSay(2,"DEBUG-AVATAR","ifPermissions (attach)");
             ifPermissions();
-            //lmSendConfig("lowScriptMode",(string)(lowScriptMode = cdLowScriptTrigger));
 
 #ifdef DEVELOPER_MODE
             debugSay(2,"DEBUG-AVATAR","Region FPS: " + formatFloat(llGetRegionFPS(),1) + "; Region Time Dilation: " + formatFloat(llGetRegionTimeDilation(),3));
@@ -636,13 +634,19 @@ default {
 #ifdef DEVELOPER_MODE
                 else if (name == "debugLevel")               debugLevel = (integer)value;
 #endif
-                else if (name == "lowScriptMode")         lowScriptMode = (integer)value;
+                else if (name == "lowScriptMode") {
+                    lowScriptMode = (integer)value;
+
+                    if (lowScriptMode) llSetTimerEvent(LOW_RATE);
+                    else llSetTimerEvent(STD_RATE);
+                }
+
                 else if (name == "quiet")                         quiet = (integer)value;
                 else if (name == "chatChannel")             chatChannel = (integer)value;
                 else if (name == "canPose")                     canPose = (integer)value;
                 else if (name == "barefeet")                   barefeet = value;
                 //else if (name == "wearLock")                   wearLock = (integer)value;
-                //else if (name == "dollType")                   dollType = value;
+                else if (name == "dollType")                   dollType = value;
                 else if (name == "controllers")             controllers = llDeleteSubList(split, 0, 0);
                 else if (name == "pronounHerDoll")       pronounHerDoll = value;
                 else if (name == "pronounSheDoll")       pronounSheDoll = value;
@@ -880,7 +884,10 @@ default {
                 //doCheckRLV();
 
                 debugSay(2,"DEBUG-AVATAR","ifPermissions (link_message 110)");
+                if (dollType == "Display" && keyAnimation != "" && keyAnimation != "collapse")
+
                 ifPermissions();
+                oneAnimation();
             }
             else if (code == 135) {
                 float delay = llList2Float(split, 0);

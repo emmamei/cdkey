@@ -8,6 +8,12 @@
 
 #include "include/GlobalDefines.lsl"
 
+// code to clean up name and key list
+//#define KEY2NAME 1
+//
+// Code to handle a name2key script
+//#define NAME4KEY 1
+//
 #define LISTENER_ACTIVE 1
 #define LISTENER_INACTIVE 0
 #define NO_FILTER ""
@@ -224,6 +230,7 @@ default
             else if (name == "lowScriptMode")           lowScriptMode = (integer)value;
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
 
+#ifdef NAME4KEY
             // This name4key function becomes "dead code" unless a companion script
             // with the ability to look up names offline is added.
             //
@@ -245,14 +252,16 @@ default
                     lmSendConfig("blacklist", llDumpList2String(blacklist, "|"));
                 }
             }
+#endif
             else if (name == "displayWindRate") {
                 if ((float)value != 0) displayWindRate = (float)value;
             }
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "afk")                               afk = (integer)value;
 
+#ifdef KEY2NAME
             // have to test before shortcut "c" because of compound conditional: "controllers"
-            else if ((name == "controllers") || (name == "blacklist")) {
+            else if ((name == "controllers") || (name == "blacklist") && script != "MenuHandler") {
                 integer i = llGetListLength(split) - 1;
                 string name;
                 key uuid;
@@ -316,6 +325,7 @@ default
                     }
                 }
             }
+#endif
 
             // shortcut: c
             else if (c == "c") {
@@ -373,6 +383,20 @@ default
             else if (name == "isVisible") {
                 visible = (integer)value;
                 llSetLinkAlpha(LINK_SET, (float)visible, ALL_SIDES);
+            }
+        }
+        else if (code == SET_CONFIG) {
+            string name = llList2String(split, 0);
+            string value = llList2String(split, 1);
+            split = llDeleteSubList(split, 0, 0);
+
+                 if (name == "blacklist") {
+                    blacklist = split;
+                    lmSendConfig("blacklist",llDumpList2String(split,"|");
+            }
+            else if (name == "controllers") {
+                    controllers = split;
+                    lmSendConfig("controllers",llDumpList2String(split,"|");
             }
         }
         else if (code == INTERNAL_CMD) {
