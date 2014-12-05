@@ -88,7 +88,6 @@ integer RLVok;
 
 //integer menulimit = 9;     // 1.5 minute
 
-string currentState;
 integer dbConfig;
 integer mustAgreeToType;
 integer showPhrases = TRUE;
@@ -120,13 +119,14 @@ setDollType(string stateName, integer automated) {
     //if (choice == "Transform") stateName = transform;
     //else stateName = choice;
 
-    debugSay(2,"DEBUG-DOLLTYPE","Transforming to " + stateName);
+    //debugSay(2,"DEBUG-DOLLTYPE","Transforming to " + stateName);
+    llOwnerSay("Transforming into a " + stateName + " dolly");
 
     // Convert state name to Title case
     stateName = cdGetFirstChar(llToUpper(stateName)) + cdButFirstChar(llToLower(stateName));
 
     // If no change, abort
-    //if (stateName == currentState) return;
+    //if (stateName == dollType) return;
 
     // By not aborting, selecting the same state can cause a "refresh" ...
     // though our menus do not currently allow this
@@ -165,14 +165,13 @@ setDollType(string stateName, integer automated) {
     else transformLockExpire = 0;
     lmSendConfig("transformLockExpire",(string)transformLockExpire);
 
-    currentState = stateName;
     // We dont respond to this: we don't have to
-    lmSendConfig("dollType", (dollType = currentState));
+    lmSendConfig("dollType", (dollType = stateName));
 
     cdPause();
 
-    if (!quiet) cdChat(dollName + " has become a " + currentState + " Doll.");
-    else llOwnerSay("You have become a " + currentState + " Doll.");
+    if (!quiet) cdChat(dollName + " has become a " + dollType + " Doll.");
+    else llOwnerSay("You have become a " + dollType + " Doll.");
 
     // This is being done too early...
     //if (!RLVok) { lmSendToAgentPlusDoll("Because RLV is disabled, Dolly does not have the capability to change outfit.",transformerId); };
@@ -183,7 +182,7 @@ setDollType(string stateName, integer automated) {
     typeFolder = "";
 
 #ifdef KEY_TYPE
-    if (currentState != "Key") {
+    if (dollType != "Key") {
 #endif
         outfitSearchTries = 0;
         typeSearchTries = 0;
@@ -294,7 +293,7 @@ default {
     state_entry() {
         dollID =   llGetOwner();
         dollName = llGetDisplayName(dollID);
-        currentState = "Regular";
+        dollType = "Regular";
 
         cdInitializeSeq();
 
@@ -423,7 +422,7 @@ default {
                     else if (r < 3.0) msg = "*** it pleases you to ";
                     else if (r < 4.0) msg = "*** you want to ";
                     else {
-                        if (currentState  == "Domme") msg = "*** You like to ";
+                        if (dollType  == "Domme") msg = "*** You like to ";
                         else msg = "*** feel how people like you to ";
                     }
                 } else msg = "*** ";
@@ -543,7 +542,7 @@ default {
             else if (name == "wearAtLogin")                              wearAtLogin = (integer)value;
 #endif
             else if (name == "stateName") {
-                currentState = value;
+                dollType = value;
             }
             else if ((name == "RLVok") || (name == "dialogChannel")) {
 
@@ -705,9 +704,9 @@ default {
                 if (transformLockExpire) {
                     debugSay(5,"DEBUG-TYPES","Transform locked");
                     if (cdIsDoll(id)) {
-                        llDialog(id,"You cannot be transformed right now, as you were recently transformed into a " + currentState + " doll. You can be transformed in " + (string)llFloor((transformLockExpire - llGetUnixTime()) / SEC_TO_MIN) + " minutes.",["OK"], DISCARD_CHANNEL);
+                        llDialog(id,"You cannot be transformed right now, as you were recently transformed into a " + dollType + " doll. You can be transformed in " + (string)llFloor((transformLockExpire - llGetUnixTime()) / SEC_TO_MIN) + " minutes.",["OK"], DISCARD_CHANNEL);
                     } else {
-                        llDialog(id,dollName + " cannot be transformed right now. The Doll was recently transformed into a " + currentState + " doll. Dolly can be transformed in " + (string)llFloor((transformLockExpire - llGetUnixTime()) / SEC_TO_MIN) + " minutes.",["OK"], DISCARD_CHANNEL);
+                        llDialog(id,dollName + " cannot be transformed right now. The Doll was recently transformed into a " + dollType + " doll. Dolly can be transformed in " + (string)llFloor((transformLockExpire - llGetUnixTime()) / SEC_TO_MIN) + " minutes.",["OK"], DISCARD_CHANNEL);
                     }
                 }
                 else {
@@ -715,14 +714,14 @@ default {
                     reloadTypeNames();
                     debugSay(5,"DEBUG-TYPES","Type names reloaded");
 
-                    msg = "These change the personality of " + dollName + "; Dolly is currently a " + currentState + " Doll. ";
+                    msg = "These change the personality of " + dollName + "; Dolly is currently a " + dollType + " Doll. ";
 
                     // We need a new list var to be able to change the display, not the
                     // available types
                     list choices = types;
 
                     // Delete the current type: transforming to current type is redundant
-                    if ((i = llListFindList(choices, (list)currentState)) != NOT_FOUND) {
+                    if ((i = llListFindList(choices, (list)dollType)) != NOT_FOUND) {
                         choices = llDeleteSubList(choices, i, i);
                     }
 
@@ -783,14 +782,13 @@ default {
                 // lmSendConfig("isTransformingKey", (string)(isTransformingKey = 1));
 
                 configured = 1;
-                //if (stateName != currentState) setDollType(stateName, AUTOMATED);
+                //if (stateName != dollType) setDollType(stateName, AUTOMATED);
             }
 
             else if (code == 104) {
                 if (script == "Start") {
                     reloadTypeNames();
-                    //-- startup = 1;
-                    llSetTimerEvent(30.0);   // every minute
+                    llSetTimerEvent(30.0);
                 }
             }
 
@@ -800,7 +798,11 @@ default {
 
             else if (code == 110) {
                 //initState = 105;
-                setDollType(currentState, AUTOMATED);
+                //
+                // note that dollType is ALREADY SET....
+                // this is bad form but allows us to defer the subroutine
+                // until now in the startup process
+                setDollType(dollType, AUTOMATED);
                 //startup = 0;
                 ;
             }
@@ -971,7 +973,7 @@ default {
         if (query_id == kQuery) {
             if (data == EOF) {
                 phraseCount = llGetListLength(currentPhrases);
-                llOwnerSay("Reading of " + typeNotecard + " completed: " + (string)phraseCount + " phrases in memory");
+                llOwnerSay("Load of hypnotic device complete: " + (string)phraseCount + " phrases in memory");
                 kQuery = NULL_KEY;
                 readLine = 0;
             }
