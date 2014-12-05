@@ -105,6 +105,10 @@ integer wearLockExpire;
 integer carryExpire;
 integer jamExpire;
 integer poseExpire;
+// Note that unlike the others, we do not maintain
+// transformLockExpire in this script
+integer transformLockExpire;
+
 float baseWindRate    = windRate;
 float displayWindRate = windRate;
 float effectiveLimit  = keyLimit;
@@ -584,6 +588,10 @@ default {
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
             else if (name == "dialogChannel")           dialogChannel = (integer)value;
+            else if (name == "transformLockExpire") transformLockExpire = value;
+                if ((integer)value) transformLockExpire = llGetUnixTime() + (integer)value;
+                else transformLockExpire = 0;
+            }
 
             // This keeps the timers up to date - via a GetTimeUpdates internal command
             else if (name == "windMins") {
@@ -687,12 +695,13 @@ default {
                 //
                 // The reasons for this disparity are not immediately clear.
 
-                if (cdTimeSet(timeLeftOnKey))       lmSendConfig("timeLeftOnKey",    (string) timeLeftOnKey);
-                if (cdTimeSet(wearLockExpire))      lmSendConfig("wearLockExpire",   (string)(wearLockExpire - t));
-                if (cdTimeSet(jamExpire))           lmSendConfig("jamExpire",        (string)(jamExpire - t));
-                if (cdTimeSet(poseExpire))          lmSendConfig("poseExpire",       (string)(poseExpire - t));
-                if (cdTimeSet(carryExpire))         lmSendConfig("carryExpire",      (string)(carryExpire - t));
-                if (cdTimeSet(collapseTime))        lmSendConfig("collapseTime",     (string)(collapseTime - t));
+                if (cdTimeSet(timeLeftOnKey))        lmSendConfig("timeLeftOnKey",         (string) timeLeftOnKey);
+                if (cdTimeSet(wearLockExpire))       lmSendConfig("wearLockExpire",        (string)(wearLockExpire - t));
+                if (cdTimeSet(transformLockExpire))  lmSendConfig("transformLockExpire",   (string)(transformLockExpire - t));
+                if (cdTimeSet(jamExpire))            lmSendConfig("jamExpire",             (string)(jamExpire - t));
+                if (cdTimeSet(poseExpire))           lmSendConfig("poseExpire",            (string)(poseExpire - t));
+                if (cdTimeSet(carryExpire))          lmSendConfig("carryExpire",           (string)(carryExpire - t));
+                if (cdTimeSet(collapseTime))         lmSendConfig("collapseTime",          (string)(collapseTime - t));
             }
 //          else if (cmd == "getWindTime") {
 //              windMins = llList2Integer(split, 0);

@@ -163,6 +163,7 @@ setDollType(string stateName, integer automated) {
 #endif
     ) transformLockExpire = llGetUnixTime() + TRANSFORM_LOCK_TIME;
     else transformLockExpire = 0;
+    lmSendConfig("transformLockExpire",(string)transformLockExpire);
 
     currentState = stateName;
     // We dont respond to this: we don't have to
@@ -358,6 +359,7 @@ default {
 #endif
         // transform lock: check time
         if (transformLockExpire  <= llGetUnixTime()) transformLockExpire = 0;
+        lmSendConfig("transformLockExpire",(string)transformLockExpire);
 
         if (RLVok) {
             if (outfitsSearchTimer) {
@@ -603,6 +605,9 @@ default {
             if (name == "dollType") {
                 setDollType(value, AUTOMATED);
                 //lmSendConfig("dollType",dollType);
+            }
+            else if (name == "transformLockExpire") {
+                lmSendConfig("transformLockExpire",(string)transformLockExpire);
             }
         }
         else if (code == INTERNAL_CMD) {
