@@ -39,6 +39,8 @@
 //========================================
 // VARIABLES
 //========================================
+string nudeFolder;
+string normalselfFolder;
 integer phraseCount;
 string msg;
 integer i;
@@ -818,24 +820,35 @@ default {
         //
         if (channel == outfitSearchChannel) {
             llListenRemove(outfitSearchHandle);
-            debugSay(2,"DEBUG-LISTEN","Channel #1 received (outfitsFolder = \"" + outfitsFolder + "\"): " + choice);
+            debugSay(2,"DEBUG-SEARCHING","Channel #1 received (outfitsFolder = \"" + outfitsFolder + "\"): " + choice);
 
             list folderList = llCSV2List(choice);
+            nudeFolder = "";
+            normalselfFolder = "";
 
             if (outfitsFolder == "") {
+                // vague substring check done here for speed
                 if (llSubStringIndex(choice,"Outfits") >= 0 ||
                     llSubStringIndex(choice,"Dressup") >= 0)   {
 
-                         if (~llListFindList(folderList, (list)"Outfits"))    outfitsFolder = "> Outfits";
-                    else if (~llListFindList(folderList, (list)"> Outfits"))  outfitsFolder = "Outfits";
-                    else if (~llListFindList(folderList, (list)"Dressup"))    outfitsFolder = "> Dressup";
-                    else if (~llListFindList(folderList, (list)"> Dressup"))  outfitsFolder = "Dressup";
+                    // exact match check
+                         if (~llListFindList(folderList, (list)"> Outfits"))  outfitsFolder = "> Outfits";
+                    else if (~llListFindList(folderList, (list)"Outfits"))    outfitsFolder = "Outfits";
+                    else if (~llListFindList(folderList, (list)"> Dressup"))  outfitsFolder = "> Dressup";
+                    else if (~llListFindList(folderList, (list)"Dressup"))    outfitsFolder = "Dressup";
 
-                    debugSay(2,"DEBUG-LISTEN","outfitsFolder = " + outfitsFolder);
+                    if (outfitsFolder != "") {
+                        // This brute force setting is fine: we are searching for the Outfits
+                        // folder, and this is the initial setting
+                        if (~llListFindList(folderList, (list)"~nude"))        lmSendConfig("nudeFolder",(nudeFolder = "~nude"));
+                        if (~llListFindList(folderList, (list)"~normalself"))  lmSendConfig("normalselfFolder",(normalselfFolder = "~normalself"));
+                    }
+
+                    debugSay(2,"DEBUG-SEARCHING","outfitsFolder = " + outfitsFolder);
 
                     lmSendConfig("outfitsFolder", outfitsFolder);
-                    lmSendConfig("typeFolder", typeFolder);
-                    lmSendConfig("useTypeFolder", (string)useTypeFolder);
+                    //lmSendConfig("typeFolder", typeFolder);
+                    //lmSendConfig("useTypeFolder", (string)useTypeFolder);
 
                     debugSay(2,"DEBUG-SEARCHING","typeFolder = \"" + typeFolder + "\" and typeFolderExpected = \"" + typeFolderExpected + "\"");
                     // Search for a typeFolder...
@@ -848,8 +861,7 @@ default {
                 }
             }
 
-            if (~llListFindList(folderList, (list)"~nude"))        lmSendConfig("nudeFolder",(nudeFolder = "~nude"));
-            if (~llListFindList(folderList, (list)"~normalself"))  lmSendConfig("normalselfFolder",(normalselfFolder = "~normalself"));
+
         }
         else if (channel == typeSearchChannel) {
 
@@ -875,16 +887,17 @@ default {
                 return;
             }
 
-            debugSay(2,"DEBUG-LISTEN","Channel #2 received (\"" + typeFolder + "\"): " + choice);
-            debugSay(2,"DEBUG-LISTEN","Channel #2: Outfits folder previously found to be " + outfitsFolder);
+            debugSay(2,"DEBUG-SEARCHING","typeFolder search: looking for type folder: \"" + typeFolderExpected + "\": " + choice);
+            debugSay(2,"DEBUG-SEARCHING","typeFolder search: Outfits folder previously found to be \"" + outfitsFolder + "\"");
 
             // We should NOT be here if the following statement is false.... RIGHT?
             if (typeFolderExpected != "" && typeFolder != typeFolderExpected) {
+                list folderList = llCSV2List(choice);
+
+                debugSay(2,"DEBUG-SEARCHING","looking for typeFolder(Expected) = " + typeFolderExpected);
                 // This comparison is inexact - but a quick check to see
                 // if the typeFolderExpected is contained in the string
                 if (llSubStringIndex(choice,typeFolderExpected) >= 0) {
-
-                    list folderList = llCSV2List(choice);
 
                     // This is exact check:
                     if (~llListFindList(folderList, (list)typeFolderExpected)) {
@@ -892,20 +905,11 @@ default {
                         useTypeFolder = YES;
                         typeFolder = typeFolderExpected;
                         typeFolderExpected = "";
-                        debugSay(2,"DEBUG-LISTEN","typeFolder = " + typeFolder);
-
-                        lmSendConfig("outfitsFolder", outfitsFolder);
-                        lmSendConfig("useTypeFolder", "1");
-                        lmSendConfig("typeFolder", typeFolder);
                     }
                     else {
                         useTypeFolder = NO;
                         typeFolder = "";
                         typeFolderExpected = "";
-
-                        lmSendConfig("outfitsFolder", outfitsFolder);
-                        lmSendConfig("useTypeFolder", "0");
-                        lmSendConfig("typeFolder", "");
                     }
 
                 }
@@ -914,11 +918,11 @@ default {
                     useTypeFolder = NO;
                     typeFolder = "";
                     typeFolderExpected = "";
-
-                    lmSendConfig("outfitsFolder", outfitsFolder);
-                    lmSendConfig("useTypeFolder", "0");
-                    lmSendConfig("typeFolder", "");
                 }
+
+                lmSendConfig("outfitsFolder", outfitsFolder);
+                lmSendConfig("useTypeFolder", (string)useTypeFolder);
+                lmSendConfig("typeFolder", typeFolder);
 
                 // at this point we've either found the typeFolder or not,
                 // and the outfitsFolder is set
@@ -929,6 +933,8 @@ default {
                     outfitSearching = 0;
                     llOwnerSay("Outfits search completed in " + formatFloat(llGetTime() - outfitsSearchTimer,1) + "s");
                     outfitsSearchTimer = 0.0;
+                    nudeFolder = "";
+                    normalselfFolder = "";
 
                     // Check for ~nude and ~normalself in the same level as the typeFolder
                     //
@@ -936,24 +942,16 @@ default {
                     // It also means that any ~nudeFolder and/or ~normalselfFolder found along side the Outfits folder
                     // will override any inside of the same
 
-                    if (normalselfFolder != "" || nudeFolder != "") {
-                        if (~llListFindList(folderList, (list)"~nude"))        lmSendConfig("nudeFolder",outfitsFolder + "/~nude");
-                        else {
-                            llOwnerSay("WARN: No nude (~nude) folder found in your outfits folder...");
-                            lmSendConfig("nudeFolder","");
-                        }
+                    if (~llListFindList(folderList, (list)"~nude")) nudeFolder = outfitsFolder + "/~nude";
+                    else
+                        llOwnerSay("WARN: No nude (~nude) folder found in your outfits folder (\"" + outfitsFolder + "\")...");
 
-                        if (~llListFindList(folderList, (list)"~normalself"))  lmSendConfig("normalselfFolder",outfitsFolder + "/~normalself");
-                        else {
-                            llOwnerSay("WARN: No normal self (~normalself) folder found in your outfits folder...");
-                            lmSendConfig("normalselfFolder","");
-                        }
-                    }
-#ifdef DEVELOPER_MODE
-                    else {
-                        llOwnerSay("WARN: Trying to override normalselfFolder and nudeFolder?!\n\tnudeFolder = " + nudeFolder + "\n\tnormalselfFolder = " + normalselfFolder);
-                    }
-#endif
+                    if (~llListFindList(folderList, (list)"~normalself")) normalselfFolder = outfitsFolder + "/~normalself";
+                    else
+                        llOwnerSay("ERROR: No normal self (~normalself) folder found in your outfits folder (\"" + outfitsFolder + "\")... this folder is necessary for proper operation");
+
+                    lmSendConfig("nudeFolder",nudeFolder);
+                    lmSendConfig("normalselfFolder",normalselfFolder);
                 }
                 else lmInternalCommand("randomDress","",NULL_KEY);
             }
@@ -968,7 +966,7 @@ default {
         if (query_id == kQuery) {
             if (data == EOF) {
                 phraseCount = llGetListLength(currentPhrases);
-                llOwnerSay("Reading of " + typeNotecard + " completed: " + (string)currentPhrases + " phrases in memory");
+                llOwnerSay("Reading of " + typeNotecard + " completed: " + (string)phraseCount + " phrases in memory");
                 kQuery = NULL_KEY;
                 readLine = 0;
             }

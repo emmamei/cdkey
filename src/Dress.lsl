@@ -210,7 +210,7 @@ listInventoryOn(string channel) {
 integer isDresser(key id) {
     if (dresserID == NULL_KEY) {
         // check if id is something other than an avatar: and fake up TRUE val if so
-        if (llGetAvatarSize(id) == ZERO_VECTOR) return TRUE;
+        if (llGetAgentSize(id) == ZERO_VECTOR) return TRUE;
 
         dresserID = id;
         dresserName = llGetDisplayName(dresserID);

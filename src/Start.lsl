@@ -232,11 +232,14 @@ processConfiguration(string name, string value) {
 
     if ((i = cdListElementP(configs,name)) != NOT_FOUND) {
         if (name == "max time") {
-            value = (string)((float)value * SEC_TO_MIN);
+            float val = (float)value;
 
-            // validate value for max time
-            if ((float)value > 240) value = "240";
-            else if ((float)value < 10) value = "30";
+            // validate value for max time (in minutes)
+            if (val > 240) val = 240;
+            else if (val < 10) val = 30;
+
+            // convert to seconds and store back
+            value = (string)(val * SEC_TO_MIN);
         }
 
         // FIXME: Note the lack of validation here (!)
@@ -364,9 +367,7 @@ doneConfiguration(integer prefsRead) {
     // the variable prefsRead allows us to know if prefs were read...
     // but how do we use this knowledge?
 
-    if (!prefsRead) msg = "No ";
-    else msg = "";
-    llOwnerSay(msg + "Preferences were read");
+    if (!prefsRead) llOwnerSay("No preferences were read");
 
     resetState = RESET_NONE;
 

@@ -163,6 +163,7 @@ default
                 else if (name == "keyLimit") {
                     keyLimit = (float)value;
                     if (!demoMode) effectiveLimit = keyLimit;
+                    else effectiveLimit = DEMO_LIMIT;
                 }
             }
             else if (name == "canSelfTP")                 canSelfTP = (integer)value;
@@ -547,7 +548,7 @@ default
     Debugging commands:
 
     debug # ........ set the debugging message verbosity 0-9
-    timereporitng .. set timereporting \"on\" or \"off\"
+    timereporting .. set timereporting \"on\" or \"off\"
     inject x#x#x ... inject a link message with \"code#data#key\"
     collapse ....... perform an immediate collapse (out of time)";
 #endif
@@ -635,6 +636,7 @@ default
                             }
 
                         } else msg += " and key is currently stopped.";
+                        if (demoMode) msg += " (Demo mode active.)";
 
                         lmSendToAgent(msg, id);
                         return;

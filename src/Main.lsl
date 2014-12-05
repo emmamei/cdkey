@@ -139,6 +139,15 @@ ifPermissions() {
         return;
     }
 
+//  if (perm & PERMISSION_ATTACH && !cdAttached()) llAttachToAvatar(ATTACH_BACK);
+//  else if (!cdAttached() && llGetTime() > 120.0) {
+//      llOwnerSay("@acceptpermission=add");
+//      llRequestPermissions(dollID, PERMISSION_ATTACH);
+//  }
+
+}
+#endif
+
 setAfk(integer afkSet) {
     if (afkSet) afk = 1;
     integer autoSet = (afkSet == 2);
@@ -164,14 +173,6 @@ setAfk(integer afkSet) {
     lmSendConfig("afk", (string)(afk));
     lmSendConfig("autoAFK", (string)autoAFK);
 }
-
-//  if (perm & PERMISSION_ATTACH && !cdAttached()) llAttachToAvatar(ATTACH_BACK);
-//  else if (!cdAttached() && llGetTime() > 120.0) {
-//      llOwnerSay("@acceptpermission=add");
-//      llRequestPermissions(dollID, PERMISSION_ATTACH);
-//  }
-}
-#endif
 
 #define NOT_COLLAPSED 0
 #define NO_TIME 1
@@ -353,10 +354,10 @@ default {
 #ifdef DEVELOPER_MODE
         debugSay(2,"DEBUG-MAIN", "Unix Time as float = " + (string)((float)llGetUnixTime()) + "; UNIX Time as integer = " + (string)llGetUnixTime());
 
-        if (timereporting) {
+        if (timeReporting) {
             thisTimerEvent = llGetTime();
             if (lastTimerEvent)
-                llOwnerSay("Main Timer fired, interval " + (string)(thisEvent - lastTimerEvent) + "s.");
+                llOwnerSay("Main Timer fired, interval " + formatFloat(thisTimerEvent - lastTimerEvent,3) + "s.");
             lastTimerEvent = thisTimerEvent;
         }
 #endif
@@ -497,7 +498,7 @@ default {
         //
         // Note too: if no time measured, then no need to check everything
 
-        if (windRate && timeSpan) {
+        if ((windRate != 0) && (timeSpan != 0)) {
             timeLeftOnKey -= timeSpan * windRate;
 
             if (timeLeftOnKey > 0) {
@@ -638,8 +639,9 @@ default {
                     lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = keyLimit));
             }
             else if (name == "afk") {
-                setAfk((integer)value);
-                lmSendConfig("afk", (string)afk);
+                integer setVal = (integer)value;
+                setAfk(setVal);
+                //lmSendConfig("afk", (string)afk);
             }
             else if (name == "timeLeftOnKey")
                 lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = (float)value));
