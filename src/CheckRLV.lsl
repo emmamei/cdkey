@@ -22,7 +22,7 @@
 #define cdResetKey() llResetOtherScript("Start")
 
 integer canSelfTP;
-integer canWear;
+integer canSelfDress;
 integer wearLock;
 //key carrierID = NULL_KEY;
 
@@ -202,10 +202,17 @@ activateRLVBase() {
     
     lmRunRLVas("Base", baseRLV);
     
-    if (!canWear || collapsed || wearLock || afk) lmRunRLVas("Dress", "unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
-    else
+    debugSay(2, "DEBUG-RESTRICT", "Restricting Dress (or not)");
+    debugSay(2, "DEBUG-RESTRICT", "    canSelfDress = " + (string)canSelfDress +
+        "; collapsed = " + (string)collapsed +
+        "; wearLock = " + (string)wearLock +
+        "; afk = " + (string)afk);
+
+    if (!canSelfDress || collapsed || wearLock || afk) lmRunRLVas("Dress", "unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
+    else {
         // lmRunRLVas("Dress", "clear");
         lmRunRLVas("Dress", "unsharedwear=y,unsharedunwear=y,attachallthis:=y,detachallthis:=y");
+    }
 }
 
 // Activate RLV settings
@@ -396,15 +403,15 @@ default {
             // Like to be soemthing here before long... so mark it
             ;
 
-                 if (name == "autoTP")     {    autoTP = (integer)value; activateRLVBase(); }
-            else if (name == "canSelfTP")  { canSelfTP = (integer)value; activateRLVBase(); }
-            else if (name == "canFly")     {    canFly = (integer)value; activateRLVBase(); }
-            else if (name == "canStand")   {  canStand = (integer)value; activateRLVBase(); }
-            else if (name == "canSit")     {    canSit = (integer)value; activateRLVBase(); }
-            else if (name == "canWear")    {   canWear = (integer)value; activateRLVBase(); }
-            else if (name == "collapsed")  { collapsed = (integer)value; activateRLVBase(); }
-            else if (name == "wearLock")   {  wearLock = (integer)value; activateRLVBase(); }
-            else if (name == "afk")        {       afk = (integer)value; activateRLVBase(); }
+                 if (name == "autoTP")        {       autoTP = (integer)value; activateRLVBase(); }
+            else if (name == "canSelfTP")     {    canSelfTP = (integer)value; activateRLVBase(); }
+            else if (name == "canSelfDress")  { canSelfDress = (integer)value; activateRLVBase(); }
+            else if (name == "canFly")        {       canFly = (integer)value; activateRLVBase(); }
+            else if (name == "canStand")      {     canStand = (integer)value; activateRLVBase(); }
+            else if (name == "canSit")        {       canSit = (integer)value; activateRLVBase(); }
+            else if (name == "collapsed")     {    collapsed = (integer)value; activateRLVBase(); }
+            else if (name == "wearLock")      {     wearLock = (integer)value; activateRLVBase(); }
+            else if (name == "afk")           {          afk = (integer)value; activateRLVBase(); }
     
             else if (name == "dialogChannel") {
                 dialogChannel = (integer)value;
