@@ -240,7 +240,7 @@ changeComplete(integer success) {
     // Note: if wearLock is already set, it STAYS set with this setting
     //
     // This triggers Main and sets wearLockExpire
-    lmInternalCommand("wearLock", (string)(wearLock = (wearLock || ((dresserID != NULL_KEY) && (dresserID != dollID)))), NULL_KEY);
+    lmSetConfig("wearLock", (string)(wearLock = (wearLock || ((dresserID != NULL_KEY) && (dresserID != dollID)))));
     //lmSendConfig("wearLock", (string)(wearLock));
 
     candresstimeout = 0;
