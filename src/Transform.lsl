@@ -161,9 +161,13 @@ setDollType(string stateName, integer automated) {
 #ifdef KEY_TYPE
          && stateName != "Key"
 #endif
-    ) transformLockExpire = llGetUnixTime() + TRANSFORM_LOCK_TIME;
-    else transformLockExpire = 0;
-    lmSendConfig("transformLockExpire",(string)transformLockExpire);
+    ) {
+        transformLockExpire = llGetUnixTime() + TRANSFORM_LOCK_TIME;
+        lmSendConfig("transformLockExpire",(string)TRANSFORM_LOCK_TIME);
+    }
+    else {
+        lmSendConfig("transformLockExpire",(string)(transformLockExpire = 0));
+    }
 
     // We dont respond to this: we don't have to
     lmSendConfig("dollType", (dollType = stateName));
@@ -361,7 +365,7 @@ default {
             if (transformLockExpire  <= llGetUnixTime()) {
                 lmSendConfig("transformLockExpire",(string)(transformLockExpire = 0));
             }
-            else lmSendConfig("transformLockExpire",(string)(llGetUnixTime() - transformLockExpire);
+            else lmSendConfig("transformLockExpire",(string)(transformLockExpire - llGetUnixTime()));
         }
 
         if (RLVok) {
@@ -391,9 +395,6 @@ default {
                 }
             }
             else {
-                if (lowScriptMode) llSetTimerEvent(LOW_RATE);
-                else llSetTimerEvent(STD_RATE);
-
                 if (typeSearchHandle) {
                     llListenRemove(typeSearchHandle);
                     typeSearchHandle = 0;
@@ -437,6 +438,9 @@ default {
                 llOwnerSay(msg);
             }
         }
+
+        if (lowScriptMode) llSetTimerEvent(LOW_RATE);
+        else llSetTimerEvent(STD_RATE);
 
         //----------------------------------------
         // UPDATE HOVERTEXT
@@ -523,7 +527,10 @@ default {
 #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")                          timeReporting = (integer)value;
 #endif
-            else if (name == "lowScriptMode")                          lowScriptMode = (integer)value;
+            else if (name == "lowScriptMode") {
+                if (lowScriptMode = (integer)value) llSetTimerEvent(LOW_RATE);
+                else llSetTimerEvent(STD_RATE);
+            }
             else if (name == "collapsed")                                  collapsed = (integer)value;
             else if (name == "simRating")                                  simRating = value;
             else if (name == "quiet")                                          quiet = (integer)value;
@@ -934,6 +941,7 @@ default {
                 lmSendConfig("outfitsFolder", outfitsFolder);
                 lmSendConfig("useTypeFolder", (string)useTypeFolder);
                 lmSendConfig("typeFolder", typeFolder);
+                llSetTimerEvent(STD_RATE);
 
                 // at this point we've either found the typeFolder or not,
                 // and the outfitsFolder is set
