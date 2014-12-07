@@ -127,7 +127,7 @@ default {
             // This can happen...
             if (commandString == "" || commandString == "0") return;
 
-            debugSay(1,"DEBUG-STATUSRLV","Got Link Message 315 from script " + script + ": " + commandString);
+            debugSay(7,"DEBUG-STATUSRLV","Got Link Message 315 from script " + script + ": " + commandString);
 
             //if (script == "") script = realScript;
 
@@ -343,7 +343,7 @@ default {
                 
 
                 if ((sendCommands != "") && (sendCommands != ",")) {
-                    debugSay(2,"DEBUG-STATUSRLV","RLV commands sent: " + sendCommands);
+                    debugSay(7,"DEBUG-STATUSRLV","RLV commands sent: " + sendCommands);
                     llOwnerSay(llGetSubString("@" + sendCommands, 0, -2));
                 }
 #ifdef LINK_320
