@@ -352,15 +352,20 @@ default {
         // TIMER INTERVAL
 
         timerMark = llGetUnixTime();
-        if (lastTimerMark != 0) timeSpan = timerMark - lastTimerMark;
-        else timeSpan = 0;
+        timeSpan = timerMark - lastTimerMark;
+
+        // sanity checking - esp. for relogs
+        if (timeSpan > 120) {
+            timeSpan = 0;
+            lastTimerMark = timerMark;
+        }
 
 #ifdef DEVELOPER_MODE
         debugSay(2,"DEBUG-MAIN", "Unix Time as float = " + (string)((float)llGetUnixTime()) + "; UNIX Time as integer = " + (string)llGetUnixTime());
 
         if (timeReporting) {
             thisTimerEvent = llGetTime();
-            if (lastTimerEvent)
+            if (thisTimerEvent - lastTimerEvent < 120)
                 llOwnerSay("Main Timer fired, interval " + formatFloat(thisTimerEvent - lastTimerEvent,3) + "s.");
             lastTimerEvent = thisTimerEvent;
         }
@@ -383,6 +388,7 @@ default {
 
             if (cdLowScriptTrigger) {
                 // lowScriptMode continues...
+                debugSay(2,"DEBUG-LOWSCRIPT", "Low Script bumped");
                 lastLowScriptTime = llGetUnixTime();
             }
             else {
@@ -392,7 +398,7 @@ default {
                 // to see if this good news sticks
 
                 if ((llGetUnixTime() - lastLowScriptTime) > 600) {
-                    debugSay(2,"DEBUG-MAIN", ">> Normal mode buffering expired...");
+                    debugSay(2,"DEBUG-LOWSCRIPT", ">> Normal mode buffering expired...");
                     lowScriptMode = 0;
                     lastLowScriptTime = 0;
                     llOwnerSay("ATTN: Normal mode activated.");
@@ -413,7 +419,10 @@ default {
                 llOwnerSay("ATTN: Power-saving mode activated.");
                 llSetTimerEvent(LOW_RATE);
             }
-            else llSetTimerEvent(STD_RATE);
+            else {
+                debugSay(2,"DEBUG-LOWSCRIPT", "Standard rate invoked");
+                llSetTimerEvent(STD_RATE);
+            }
         }
 
         //----------------------------------------
@@ -443,6 +452,9 @@ default {
 
         //----------------------------------------
         // CHECK COLLAPSE STATE
+
+        debugSay(3,"DEBUG-TIME","Time left on key before checking collapse: " + (string)timeLeftOnKey);
+        debugSay(3,"DEBUG-TIME","Collapse state is " + (string)collapsed);
 
         // False collapse? Collapsed = 1 while timeLeftOnKey is positive is an invalid condition
         if (collapsed == NO_TIME)
@@ -505,6 +517,7 @@ default {
         if ((windRate != 0) && (timeSpan != 0)) {
             timeLeftOnKey -= timeSpan * windRate;
 
+            debugSay(3,"DEBUG-TIME","Time left on key at winding: " + (string)timeLeftOnKey);
             if (timeLeftOnKey > 0) {
 
                 minsLeft = llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate));
@@ -642,9 +655,10 @@ default {
 
                 lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
                 }
-            else if (name == "wearLock")
+            else if (name == "wearLock") {
                 lmSendConfig("wearLock", (string)(wearLock = (integer)value));
-
+                lmSendConfig("wearLockExpire",(string)WEAR_LOCK_TIME);
+                }
             else if (name == "lowScriptMode")
                      lmSendConfig("lowScriptMode",(string)(lowScriptMode = (integer)value));
             else if (
@@ -711,16 +725,17 @@ default {
             else if (cmd == "wearLock") {
                 // This either primes the wearLockExpire or resets it
                 wearLock = llList2Integer(split, 0);
-                if (wearLock) wearLock = 1; // bullet-proofing
+
+                lmSendConfig("wearLock", (string)(wearLock));
 
                 if (wearLock) {
                     wearLockExpire = llGetUnixTime() + WEAR_LOCK_TIME;
+                    lmSendConfig("wearLockExpire", (string)(WEAR_LOCK_TIME));
                     //displayWindRate = setWindRate();
                 }
-                else wearLockExpire = 0;
-
-                lmSendConfig("wearLockExpire", (string)wearLockExpire);
-                lmSendConfig("wearLock", (string)(wearLock));
+                else {
+                    lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0));
+                }
             }
         }
         else if (code == RLV_RESET) {
