@@ -6,6 +6,7 @@
 //
 // DATE: 27 October 2014
 
+#define POSES_CMD 1
 #include "include/GlobalDefines.lsl"
 #define cdMenuInject(a,b,c) lmMenuReply(a,b,c)
 
@@ -393,7 +394,7 @@ default
                 }
                 else {
                     if (isDoll)
-                        llOwnerSay("Use of chat commands without a prefix is depreciated and will be removed in a future release.");
+                        llOwnerSay("Use of chat commands without a prefix is depreciated and will be removed in a future release. Current prefix is '" + chatPrefix + "'.");
                     else
                         return;
                 }
@@ -677,7 +678,7 @@ default
 
                         string s = "Dolly's Key is now ";
                         if (demoMode) {
-                            if (timeLeftOnKey > DEMO_LIMIT) lmSendConfig("setTimeLeftOnKey", (string)(DEMO_LIMIT));
+                            if (timeLeftOnKey > DEMO_LIMIT) lmSetConfig("timeLeftOnKey", (string)(timeLeftOnKey = DEMO_LIMIT));
                             s += "in demo mode: " + (string)llRound(timeLeftOnKey / SEC_TO_MIN) + " of " + (string)llFloor(DEMO_LIMIT / SEC_TO_MIN) + " minutes remaining.";
                         }
                         else {
@@ -693,6 +694,14 @@ default
                         llOwnerSay(s);
                         return;
                     }
+#ifdef DEVELOPER_MODE
+                    else if (choice == "collapse" && isDoll) {
+                        debugSay(3, "DEBUG", "collapse command executed...");
+                        lmSetConfig("timeLeftOnKey","10");
+                        llOwnerSay("Immediate collapse triggered: ten seconds to collapse");
+                        return;
+                    }
+#endif
                 }
 
                 //----------------------------------------
@@ -903,20 +912,11 @@ default
                 //   * collapse
                 //
                 if (isDoll) {
-#ifdef DEBUG_MODE
+#ifdef DEVELOPER_MODE
+                    llOwnerSay("Choice = " + choice);
                     if (choice == "debug") {
                         lmSendConfig("debugLevel", (string)(debugLevel = (integer)param));
                         llOwnerSay("DEBUG_LEVEL = " + (string)debugLevel);
-                        return;
-                    }
-#else
-                    ;
-#endif
-#ifdef DEVELOPER_MODE
-                    else if (choice == "collapse") {
-                        debugSay(3, "DEBUG", "collapse command executed...");
-                        lmSetConfig("timeLeftOnKey","10");
-                        llOwnerSay("Immediate collapse triggered: ten seconds to collapse");
                         return;
                     }
                     else if (choice == "inject") {
@@ -952,6 +952,7 @@ default
                 }
             }
 
+#ifdef POSES_CMD
             // Is the "msg" an animation? (and skip the "collapse" animation entirely)
             if (msg != "collapse") {
                 if (llGetInventoryType(msg) == INVENTORY_ANIMATION) {
@@ -972,6 +973,7 @@ default
                     return;
                 }
             }
+#endif
         }
     }
 }
