@@ -465,23 +465,7 @@ default {
 
         scaleMem();
 
-        if (code == 101) {
-            doneConfiguration(prefsRead);
-        }
-        else if (code == 102) {
-            ;
-        }
-        else if (code == 135) {
-            if (script == cdMyScriptName()) return;
-
-            float delay = llList2Float(split, 0);
-            memReport(cdMyScriptName(),delay);
-        }
-        else
-
-        cdConfigReport();
-
-        else if (code == 300) {
+        if (code == CONFIG) {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
 
@@ -581,7 +565,7 @@ default {
                 }
             }
         }
-        else if (code == 350) {
+        else if (code == INTERNAL_CMD) {
             RLVok = (llList2Integer(split, 0) == 1);
             rlvWait = 0;
 
@@ -633,13 +617,30 @@ default {
             }
         }
 #ifdef DEVELOPER_MODE
-        else if (code == 500) {
+        else if (code == MENU_SELECTION) {
             string selection = llList2String(split, 0);
             string name = llList2String(split, 1);
 
             if (selection == "Reset Key") cdResetKey();
         }
 #endif
+        else if (code < 200) {
+            if (code == 101) {
+                doneConfiguration(prefsRead);
+            }
+            else if (code == 102) {
+                ;
+            }
+            else if (code == 135) {
+                if (script == cdMyScriptName()) return;
+
+                float delay = llList2Float(split, 0);
+                memReport(cdMyScriptName(),delay);
+            }
+            else if (code == 135) {
+                cdConfigureReport();
+            }
+        }
     }
 
     //----------------------------------------
