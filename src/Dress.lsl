@@ -273,15 +273,30 @@ doDebug(string src) {
 }
 
 string folderStatus() {
-    string exists = "not found";
+    string typeFolderExists;
 
-    if (useTypeFolder) exists = "found";
+    if (useTypeFolder) typeFolderExists = typeFolder + " (being used)";
+    else typeFolderExists = typeFolder + " (not being used)";
+
+    if (typeFolder == "") typeFolderExists = "";
 
     return "Outfits Folder: " + outfitsFolder +
            "\nCurrent Folder: " + activeFolder +
-           "\nType Folder: " + typeFolder + " (" + exists + ")" +
+           "\nType Folder: " + typeFolderExists +
            "\nUse ~normalself: " + normalselfFolder +
            "\nUse ~nude: " + nudeFolder;
+}
+#else
+string folderStatus() {
+    string typeFolderExists;
+
+    if (useTypeFolder) typeFolderExists = typeFolder;
+    else typeFolderExists = typeFolder + " (not found)";
+
+    if (typeFolder == "") typeFolderExists = "n/a";
+
+    return "Outfits Folder: " + outfitsFolder +
+           "\nType Folder: " + typeFolderExists;
 }
 #endif
 
@@ -449,9 +464,7 @@ default {
             else {
                 msgx = "You may choose any outfit for " + llToLower(pronounHerDoll) + " to wear.\n\n";
                 if (dresserID == dollID) msgx = "See " + WEB_DOMAIN + outfits_url + " for more information on outfits.\n\n";
-#ifdef DEVELOPER_MODE
                 msgx += folderStatus();
-#endif
 
                 integer select = (integer)llGetSubString(choice, 0, llSubStringIndex(choice, ".") - 1);
                 if (select != 0) choice = cdListElement(outfitsList, select - 1);
