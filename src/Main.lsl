@@ -388,8 +388,9 @@ default {
 
             if (cdLowScriptTrigger) {
                 // lowScriptMode continues...
-                debugSay(2,"DEBUG-LOWSCRIPT", "Low Script bumped");
+                debugSay(2,"DEBUG-LOWSCRIPT", "Low Script Mode active and bumped");
                 lastLowScriptTime = llGetUnixTime();
+                lmSendConfig("lowScriptMode","1");
             }
             else {
                 // lowScript is no longer valid... but wait....
@@ -397,13 +398,21 @@ default {
                 // normal mode immediately - wait 10 minutes
                 // to see if this good news sticks
 
-                if ((llGetUnixTime() - lastLowScriptTime) > 600) {
-                    debugSay(2,"DEBUG-LOWSCRIPT", ">> Normal mode buffering expired...");
+                integer timeSpan = llGetUnixTime() - lastLowScriptTime;
+
+                if (timeSpan > 600) {
+                    debugSay(2,"DEBUG-LOWSCRIPT", "Low Script Mode active but environment good - disabling");
                     lowScriptMode = 0;
                     lastLowScriptTime = 0;
                     llOwnerSay("ATTN: Normal mode activated.");
                     llSetTimerEvent(STD_RATE);
+                    lmSendConfig("lowScriptMode","0");
                 }
+#ifdef DEVELOPER_MODE
+                else {
+                    debugSay(2,"DEBUG-LOWSCRIPT", "Low Script Mode active but environment good - not yet time (" + (string)timeSpan + "s)");
+                }
+#endif
             }
         }
         else {
@@ -418,10 +427,12 @@ default {
                 lastLowScriptTime = llGetUnixTime();
                 llOwnerSay("ATTN: Power-saving mode activated.");
                 llSetTimerEvent(LOW_RATE);
+                lmSendConfig("lowScriptMode","1");
             }
             else {
-                debugSay(2,"DEBUG-LOWSCRIPT", "Standard rate invoked");
+                debugSay(2,"DEBUG-LOWSCRIPT", "Low Script Mode disabled and running normally");
                 llSetTimerEvent(STD_RATE);
+                lmSendConfig("lowScriptMode","0");
             }
         }
 
@@ -912,9 +923,19 @@ default {
                      (choice == "180m") ||
                      (choice == "240m")) {
 
-                lmSendConfig("keyLimit", (string)(keyLimit = ((float)choice * SEC_TO_MIN)));
+                keyLimit = (float)choice * SEC_TO_MIN;
                 lmSendToAgent("Key limit now set to " + (string)llFloor(keyLimit / SEC_TO_MIN) + " minutes",id);
-                if (keyLimit < timeLeftOnKey) lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = keyLimit));
+
+                // if limit is less than time left on key, clip time remaining
+                if (timeLeftOnKey > keyLimit) timeLeftOnKey = keyLimit;
+
+                // if nto in demo mode set effectiveLimit
+                if (!demoMode) effectiveLimit = keyLimit;
+                else effectiveLimit = DEMO_LIMIT;
+
+                lmSendConfig("keyLimit", (string)keyLimit);
+                lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
+                //lmSendConfig("effectiveLimit", (string)effectiveLimit);
             }
             else if (choice == "Wind Time...") {
                 list windChoices;
