@@ -143,7 +143,7 @@ default {
             split = llDeleteSubList(split, 0, 0);
 
                  if (name == "controllers")               controllers = split;
-#ifdef DEBUG_MODE
+#ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
             else if (name == "keyAnimation")             keyAnimation = value;
@@ -478,7 +478,7 @@ default {
                     memData = "";
                     memTime = llGetTime() + 5.0;
                     llSetTimerEvent(4.0);
-#ifdef DEBUG_MODE
+#ifdef DEVELOPER_MODE
                     memRequested = 1;
 #else
                     memRequested = llList2Integer(split, 1);
