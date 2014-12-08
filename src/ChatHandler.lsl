@@ -702,6 +702,11 @@ default
                         llOwnerSay("Immediate collapse triggered: ten seconds to collapse");
                         return;
                     }
+                    else if (choice == "powersave" && isDoll) {
+                        debugSay(3, "DEBUG", "power save mode initiated");
+                        lmSetConfig("lowScriptMode","1");
+                        return;
+                    }
 #endif
                 }
 
@@ -930,7 +935,7 @@ default
                         integer paramCode = llList2Integer(params,0);
                         string s;
 
-                        llOwnerSay("Injected link message code " + (string)paramCode + " with data " + (string)data + " and key " + (string)paramKey);
+                        llOwnerSay("Injected link message code " + (string)paramCode + " with data " + (string)paramData + " and key " + (string)paramKey);
                         llMessageLinked(LINK_THIS, paramCode, paramData, paramKey);
                         return;
                     }
