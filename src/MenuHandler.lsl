@@ -189,28 +189,7 @@ default {
         integer code      =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
-        if (code == 102) {
-            if (data == "Start") configured = 1;
-
-            doDialogChannel();
-            scaleMem();
-        }
-        else if (code == 110) {
-            //startup = 0;
-            lmInternalCommand("setGemColour", (string)gemColour, NULL_KEY);
-        }
-        else if (code == 135) {
-            float delay = llList2Float(split, 0);
-            memReport(cdMyScriptName(),delay);
-        }
-        else
-
-        cdConfigReport();
-
-        else if (code == 150) {
-            simRating = llList2String(split, 0);
-        }
-        else if (code == CONFIG) {
+        if (code == CONFIG) {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
             split = llDeleteSubList(split, 0, 0);
@@ -673,7 +652,7 @@ default {
                     msg += "See " + WEB_DOMAIN + manpage + " for more information. "
 #ifdef DEVELOPER_MODE
                     + " (Key is in Developer Mode.)"
-                    + "\nCurrent region FPS is " + formatFloat(llGetRegionFPS(),1) + " FPS.";
+                    + "\n\nCurrent region FPS is " + formatFloat(llGetRegionFPS(),1) + " FPS and time dilation is " + formatFloat(llGetRegionTimeDilation(),3) + ".";
 #endif
                     ;
 
@@ -698,11 +677,60 @@ default {
                 llDialog(id, msg, dialogSort(menu), dialogChannel);
             }
         }
+        else if (code == MENU_SELECTION) {
+            string name = llList2String(split, 0);
+            if (name == "Options...") {
+
+                string msg; list pluslist;
+
+                if (cdIsDoll(id) || cdIsBuiltinController(id)) {
+                    msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation.";
+
+                    pluslist += [ "Type...", "Access...", "Abilities..." ];
+                }
+                else if (cdIsUserController(id)) {
+
+                    msg = "See " + WEB_DOMAIN + "controller.htm. Choose what you want to happen.";
+                    pluslist += [ "Type...", "Access...", "Abilities...", "Drop Control" ];
+
+                }
+                else return;
+
+                pluslist += [ "Features...", "Key..." ];
+
+                cdDialogListen();
+                llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
+            }
+        }
         else if (code == 350) {
             string script = llList2String(split, 0);
             RLVok = llList2Integer(split, 1);
 
             lmInternalCommand("updateExceptions", "", NULL_KEY);
+        }
+        else if (code < 200) {
+            if (code == 102) {
+                if (data == "Start") configured = 1;
+
+                doDialogChannel();
+                scaleMem();
+            }
+            else if (code == 110) {
+                //startup = 0;
+                lmInternalCommand("setGemColour", (string)gemColour, NULL_KEY);
+            }
+            else if (code == 135) {
+                float delay = llList2Float(split, 0);
+                memReport(cdMyScriptName(),delay);
+            }
+            else if (code == 142) {
+
+                cdConfigureReport();
+
+            }
+            else if (code == 150) {
+                simRating = llList2String(split, 0);
+            }
         }
     }
 
@@ -829,6 +857,7 @@ default {
 
         integer space = llSubStringIndex(choice, " ");
 
+        debugSay(5,"CHAT-MENU","Menu choice = " + choice + ", space = " + (string)space);
         lmMenuReply(choice, name, id);
 
         menuID = id;
@@ -842,26 +871,27 @@ default {
 
             if (space == NOT_FOUND) {
                 if (choice == "Options...") {
+                    cdMenuInject("Options...");
 
-                    string msg; list pluslist;
-
-                    if (isDoll || cdIsBuiltinController(id)) {
-                        msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation.";
-
-                        pluslist += [ "Type...", "Access...", "Abilities..." ];
-                    }
-                    else if (cdIsUserController(id)) {
-
-                        msg = "See " + WEB_DOMAIN + "controller.htm. Choose what you want to happen.";
-                        pluslist += [ "Type...", "Access...", "Abilities...", "Drop Control" ];
-
-                    }
-                    else return;
-
-                    pluslist += [ "Features...", "Key..." ];
-
-                    cdDialogListen();
-                    llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
+//                    string msg; list pluslist;
+//
+//                    if (isDoll || cdIsBuiltinController(id)) {
+//                        msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation.";
+//
+//                        pluslist += [ "Type...", "Access...", "Abilities..." ];
+//                    }
+//                    else if (cdIsUserController(id)) {
+//
+//                        msg = "See " + WEB_DOMAIN + "controller.htm. Choose what you want to happen.";
+//                        pluslist += [ "Type...", "Access...", "Abilities...", "Drop Control" ];
+//
+//                    }
+//                    else return;
+//
+//                    pluslist += [ "Features...", "Key..." ];
+//
+//                    cdDialogListen();
+//                    llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
                 }
                 else if (choice == "Detach") lmInternalCommand("detach", "", id);
             }

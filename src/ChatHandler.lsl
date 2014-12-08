@@ -44,7 +44,7 @@ integer chatHandle          = 0;
 #ifdef DEVELOPER_MODE
 integer timeReporting       = 0;
 #endif
-#ifdef DEBUG_MODE
+#ifdef DEVELOPER_MODE
 integer debugLevel          = DEBUG_LEVEL;
 #endif
 integer RLVok               = UNSET;
@@ -139,7 +139,7 @@ default
                     if (demoMode) effectiveLimit = DEMO_LIMIT;
                     else effectiveLimit = keyLimit;
                 }
-#ifdef DEBUG_MODE
+#ifdef DEVELOPER_MODE
                 else if (name == "debugLevel")             debugLevel = (integer)value;
 #endif
             }
@@ -508,7 +508,8 @@ default
                     menus +=
 "
     menu ........... show main menu
-    types .......... show Types menu";
+    types .......... show Types menu
+    options ........ show Options menu";
 
                     if (isDoll || cdIsBuiltinController(id)) {
                         help +=
@@ -522,7 +523,7 @@ default
                     lmSendToAgent(help + "\n", id);
                     lmSendToAgent(menus + "\n", id);
 
-#ifdef DEBUG_MODE
+#ifdef DEVELOPER_MODE
                     if (isDoll) help =
 "
     Debugging commands:
@@ -759,6 +760,10 @@ default
                     cdMenuInject(MAIN, name, id);
                     return;
                 }
+                else if (choice == "options") {
+                    cdMenuInject("Options...", name, id);
+                    return;
+                }
                 else if (choice == "types") {
                     cdMenuInject("Types...", name, id);
                     return;
@@ -913,21 +918,19 @@ default
                 //
                 if (isDoll) {
 #ifdef DEVELOPER_MODE
-                    llOwnerSay("Choice = " + choice);
                     if (choice == "debug") {
                         lmSendConfig("debugLevel", (string)(debugLevel = (integer)param));
-                        llOwnerSay("DEBUG_LEVEL = " + (string)debugLevel);
+                        llOwnerSay("Debug level set to " + (string)debugLevel);
                         return;
                     }
                     else if (choice == "inject") {
                         list params = llParseString2List(param, ["#"], []);
                         key paramKey = llList2Key(params,2); // NULL_KEY if not valid
-                        string paramData = cdMyScriptName() + "|" + llList2String(params,1);
+                        string paramData = "ChatHandler|" + llList2String(params,1);
                         integer paramCode = llList2Integer(params,0);
+                        string s;
 
-                        llOwnerSay("INJECT LINK:\nLink Code: " + (string)paramCode +
-                                   "\nData: " + paramData +
-                                   "\nKey: " + (string)paramKey);
+                        llOwnerSay("Injected link message code " + (string)paramCode + " with data " + (string)data + " and key " + (string)paramKey);
                         llMessageLinked(LINK_THIS, paramCode, paramData, paramKey);
                         return;
                     }
