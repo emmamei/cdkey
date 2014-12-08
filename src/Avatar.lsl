@@ -105,6 +105,7 @@ integer chatChannel = 75;
 //========================================
 
 key animStart(string animation) {
+    if (animation == "") return NULL_KEY;
 
     if ((llGetPermissionsKey() != dollID) || (!(llGetPermissions() & PERMISSION_TRIGGER_ANIMATION)))
         return NULL_KEY;
@@ -141,7 +142,7 @@ key animStart(string animation) {
     // NO animations are running: stopping animations succeeded
     // but animation start failed
     else if (j == 0)
-        llSay(DEBUG_CHANNEL,"Animation start failed!");
+        llSay(DEBUG_CHANNEL,"Animation (" + animation + ") start failed!");
 
     // Couldn't stop all animations - which should only
     // happen if the last and only animation was a looped animation...
@@ -165,12 +166,12 @@ key animStart(string animation) {
         }
         else {
             // old list is not 1: several animations did not stop
-            llSay(DEBUG_CHANNEL,"Animation stop failed: " + (string)i + "animations were still running; start failed");
+            llSay(DEBUG_CHANNEL,"Animation stop failed: " + (string)i + " animations were still running; start failed");
         }
     }
     else if (j - i == 1) {
         // Several animations other than ours are still running, not just one
-        llSay(DEBUG_CHANNEL,"Animation stop failed: " + (string)i + "animations are still running");
+        llSay(DEBUG_CHANNEL,"Animation stop failed: " + (string)i + " animations are still running");
 
         // At this point we have multiple animations that did not stop;
         // so iterate over the list and try to stop them all again
@@ -809,7 +810,8 @@ default {
                     lmSendConfig("poserID", (string)(poserID = id));
                     //poseExpire = llGetUnixTime() + 300.0;
                     lmSetConfig("poseExpire", (string)300.0);
-                    oneAnimation();
+
+                    if (cdAnimated()) oneAnimation();
                     if (poseSilence) lmRunRLV("sendchat=n");
                 }
 
