@@ -26,8 +26,14 @@ float setWindRate() {
     displayWindRate = baseWindRate;
     if (afk) displayWindRate *= 0.5;
 
-    if (cdWindDown()) windRate = displayWindRate;
-    else windRate = 0.0;
+    if (cdWindDown()) {
+        windRate = displayWindRate;
+        windingDown = TRUE;
+    }
+    else {
+        windRate = 0.0;
+        windingDown = FALSE;
+    }
 
     // There are three winding rates:
     //

@@ -30,6 +30,7 @@ float windAmount            = 1800.0;
 float baseWindRate          = RATE_STANDARD;
 float displayWindRate	    = RATE_STANDARD;
 float windRate              = RATE_STANDARD;
+integer windingDown;
 
 integer afk;
 integer autoTP;

@@ -174,6 +174,7 @@ setAfk(integer afkSet) {
     llOwnerSay(msg + " You have " + (string)minsLeft + " minutes of life left.");
 
     lmSendConfig("windRate", (string)(windRate));
+    lmSendConfig("windingDown", (string)(windingDown));
     lmSendConfig("afk", (string)(afk));
     lmSendConfig("autoAFK", (string)autoAFK);
 }
@@ -525,7 +526,7 @@ default {
         //
         // Note too: if no time measured, then no need to check everything
 
-        if ((windRate != 0) && (timeSpan != 0)) {
+        if (windingDown && (timeSpan != 0)) {
             timeLeftOnKey -= timeSpan * windRate;
 
             debugSay(3,"DEBUG-TIME","Time left on key at winding: " + (string)timeLeftOnKey);
