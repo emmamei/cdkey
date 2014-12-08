@@ -22,11 +22,11 @@
 #define cdResetKey() llResetOtherScript("Start")
 
 integer canSelfTP;
-integer canSelfDress;
+integer canDressSelf;
 integer wearLock;
 //key carrierID = NULL_KEY;
 
-// Could set allControls to -1 for quick full bit set - 
+// Could set allControls to -1 for quick full bit set -
 // but that would set fields with undefined values: this is more
 // accurate
 //#define ALL_CONTROLS (CONTROL_FWD|CONTROL_BACK|CONTROL_LEFT|CONTROL_RIGHT|CONTROL_ROT_LEFT|CONTROL_ROT_RIGHT|CONTROL_UP|CONTROL_DOWN|CONTROL_LBUTTON|CONTROL_ML_LBUTTON)
@@ -188,7 +188,7 @@ activateRLVBase() {
 
     if (userBaseRLVcmd != "")
         lmRunRLVas("User:Base", userBaseRLVcmd);
-    
+
     if (autoTP) baseRLV += "accepttp=n,";
     else baseRLV += "accepttp=y,";
     if (!canSelfTP) baseRLV += "tplm=n,tploc=n,";
@@ -199,16 +199,16 @@ activateRLVBase() {
     else baseRLV += "unsit=y,";
     if (!canSit) baseRLV += "sit=n";
     else baseRLV += "sit=y";
-    
-    lmRunRLVas("Base", baseRLV);
-    
-    debugSay(2, "DEBUG-RESTRICT", "Restricting Dress (or not)");
-    debugSay(2, "DEBUG-RESTRICT", "    canSelfDress = " + (string)canSelfDress +
-        "; collapsed = " + (string)collapsed +
-        "; wearLock = " + (string)wearLock +
-        "; afk = " + (string)afk);
 
-    if (!canSelfDress || collapsed || wearLock || afk) lmRunRLVas("Dress", "unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
+    lmRunRLVas("Base", baseRLV);
+
+    if (!canDressSelf || collapsed || wearLock || afk) {
+#ifdef DEVELOPER_MODE
+        lmRunRLVas("Dress", "unsharedwear=y,unsharedunwear=y,attachallthis:=y,detachallthis:=y");
+#else
+        lmRunRLVas("Dress", "unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
+#endif
+    }
     else {
         // lmRunRLVas("Dress", "clear");
         lmRunRLVas("Dress", "unsharedwear=y,unsharedunwear=y,attachallthis:=y,detachallthis:=y");
@@ -399,20 +399,20 @@ default {
             name = llList2String(split, 0);
             split = llDeleteSubList(split, 0, 0);
             value = llList2String(split, 0);
-            
+
             // Like to be soemthing here before long... so mark it
             ;
 
                  if (name == "autoTP")        {       autoTP = (integer)value; activateRLVBase(); }
             else if (name == "canSelfTP")     {    canSelfTP = (integer)value; activateRLVBase(); }
-            else if (name == "canSelfDress")  { canSelfDress = (integer)value; activateRLVBase(); }
+            else if (name == "canDressSelf")  { canDressSelf = (integer)value; activateRLVBase(); }
             else if (name == "canFly")        {       canFly = (integer)value; activateRLVBase(); }
             else if (name == "canStand")      {     canStand = (integer)value; activateRLVBase(); }
             else if (name == "canSit")        {       canSit = (integer)value; activateRLVBase(); }
             else if (name == "collapsed")     {    collapsed = (integer)value; activateRLVBase(); }
             else if (name == "wearLock")      {     wearLock = (integer)value; activateRLVBase(); }
             else if (name == "afk")           {          afk = (integer)value; activateRLVBase(); }
-    
+
             else if (name == "dialogChannel") {
                 dialogChannel = (integer)value;
 
