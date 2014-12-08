@@ -240,11 +240,18 @@ oneAnimation() {
 
     animList = llGetAnimationList(dollID);
     if (animKey) {
+
         // if animKey is running alone - we've nothing to do...
         if (animList != [ animKey ]) {
+
+            debugSay(2,"DEBUG-ANIM","Animations list not as expected: " + llDumpList2String(animList,","));
+            debugSay(2,"DEBUG-ANIM","Animation key = " + (string)animKey);
+            debugSay(2,"DEBUG-ANIM","Animation = " + keyAnimation);
+
             // animStart() would stop everything; we only want to
             // stop all the rogue animations OTHER than what we want
             // to keep running
+
             key animKeyI;
 
             if (llListFindList(animList, [ animKey ]) == NOT_FOUND) {
@@ -305,8 +312,14 @@ oneAnimation() {
         }
         else {
             // No interference - so run less often
-            animRefreshRate += cdAddRefresh();
-            if (animRefreshRate > 30.0) animRefreshRate = 30.0;         // 30 Second limit
+            if (lowScriptMode) {
+                animRefreshRate += cdAddRefresh();
+                if (animRefreshRate > 30.0) animRefreshRate = 30.0;
+            }
+            else {
+                animRefreshRate *= 2; // Note this converts a linear increase to a geometric increase
+                if (animRefreshRate > 60.0) animRefreshRate = 60.0;
+            }
         }
     }
 
@@ -638,8 +651,11 @@ default {
                 else if (name == "lowScriptMode") {
                     lowScriptMode = (integer)value;
 
-                    if (lowScriptMode) llSetTimerEvent(LOW_RATE);
-                    else llSetTimerEvent(STD_RATE);
+                    // The Avatar Timer operates under different rules;
+                    // most of the time it's not active at all
+                    //
+                    //if (lowScriptMode) llSetTimerEvent(LOW_RATE);
+                    //else llSetTimerEvent(STD_RATE);
                 }
 
                 else if (name == "quiet")                         quiet = (integer)value;
