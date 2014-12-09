@@ -313,7 +313,6 @@ default {
 #ifdef DEVELOPER_MODE
                 else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
-                //else if (name == "dollyName")                   dollyName = value;
             }
 
             // shortcut: p
