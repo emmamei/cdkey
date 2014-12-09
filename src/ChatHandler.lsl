@@ -15,6 +15,7 @@
 #define cdCapability(c,p,u) { s += p; if (!(c)) { s += " not"; }; s += " " + u + ".\n"; }
 #define cdListenerActivate(a) llListenControl(a, 1)
 #define cdListenerDeactivate(a) llListenControl(a, 0)
+#define cdProfileURL(i) "secondlife:///app/agent/"+(string)(i)+"/about"
 
 //key listID                  = NULL_KEY;
 
@@ -28,7 +29,6 @@ float effectiveLimit          = 10800.0;
 //float wearLockExpire;
 //flaot winderLockExpire;
 integer wearLock;
-integer windingDown;
 
 string dollGender           = "Female";
 string chatPrefix           = "";
@@ -46,9 +46,6 @@ integer chatChannel         = 75;
 integer chatHandle          = 0;
 #ifdef DEVELOPER_MODE
 integer timeReporting       = 0;
-#endif
-#ifdef DEVELOPER_MODE
-integer debugLevel          = DEBUG_LEVEL;
 #endif
 integer RLVok               = UNSET;
 
@@ -597,6 +594,10 @@ default
                         if (RLVok == UNSET) s += "RLV status is unknown.\n";
                         else if (RLVok == 1) s += "RLV is active.\nRLV version: " + RLVver;
                         else s += "RLV is not active.\n";
+
+                        if (lastWinderID) s += "Last winder was " + cdProfileURL(lastWinderID);
+                        if (lastWinderName) s += " (" + lastWinderName + ")";
+                        s += "\n";
 
                         lmSendToAgent(s, id);
                         return;
