@@ -105,25 +105,34 @@ integer chatChannel = 75;
 //========================================
 
 key animStart(string animation) {
+    list oldAnimList;
+    list newAnimList;
+    integer oldAnimListLen;
+    integer newAnimListLen;
+    integer j;
+
     if (animation == "") return NULL_KEY;
 
     if ((llGetPermissionsKey() != dollID) || (!(llGetPermissions() & PERMISSION_TRIGGER_ANIMATION)))
         return NULL_KEY;
 
-    list oldList = llGetAnimationList(dollID);
-    i = llGetListLength(oldList);
+    oldAnimList = llGetAnimationList(dollID);
+    oldAnimListLen = llGetListLength(oldAnimList);
+    i = oldAnimListLen;
 
     // Stop all animations
     while (i--)
-        llStopAnimation(llList2Key(oldList, i));
+        llStopAnimation(llList2Key(oldAnimList, i));
 
-    oldList = llGetAnimationList(dollID);
+    //oldAnimList = llGetAnimationList(dollID);
+    i = oldAnimListLen;
 
     //key animID = llGetInventoryKey(animation); // Only works on full perm animations
     llStartAnimation(animation);
 
-    list newList = llGetAnimationList(dollID);
-    integer j = llGetListLength(newList);
+    newAnimList = llGetAnimationList(dollID);
+    newAnimListLen = llGetListLength(newAnimList);
+    j = newAnimListLen;
 
     // This section not only grabs the ID of the running
     // animation, but also checks to see that all former
@@ -137,7 +146,7 @@ key animStart(string animation) {
     //    4. There's only one animation running that wasn't before
 
     // only one animation running: assume its ours and return its ID
-    if (j == 1) return llList2Key(newList, 0);
+    if (j == 1) return llList2Key(newAnimList, 0);
 
     // NO animations are running: stopping animations succeeded
     // but animation start failed
@@ -153,16 +162,16 @@ key animStart(string animation) {
         // The old list doesn't have the new animation in it - so iterate
         // over it and kill that last animation...
 
-        i = llGetListLength(oldList);
+        i = llGetListLength(oldAnimList);
         if (i == 1) {
-            // oldList contains one animation we couldn't stop...
+            // oldAnimList contains one animation we couldn't stop...
             // After trying to stop it again, we check the running animations
             // again to see if we have just the one (presumably) ours:
             // if so, we can return it immediately
 
-            llStopAnimation(llList2Key(oldList, 0));
-            j = llGetListLength(newList = llGetAnimationList(dollID));
-            if (j == 1) return llList2Key(newList, 0);
+            llStopAnimation(llList2Key(oldAnimList, 0));
+            j = llGetListLength(newAnimList = llGetAnimationList(dollID));
+            if (j == 1) return llList2Key(newAnimList, 0);
         }
         else {
             // old list is not 1: several animations did not stop
@@ -186,9 +195,9 @@ key animStart(string animation) {
         // test against zero - but also because that is likely
         // where the difference is... but can't assume that is true
         while(i--) {
-            animKey = llList2Key(oldList, i);
+            animKey = llList2Key(oldAnimList, i);
 
-            if (llListFindList(newList, [ animKey ]) == NOT_FOUND)
+            if (llListFindList(newAnimList, [ animKey ]) == NOT_FOUND)
                 // There's only one element different between the two...
                 // or should be - we could have a situation where
                 // one animation was stopped and another started
