@@ -72,7 +72,6 @@ integer visible = 1;
 integer RLVok = UNSET;
 integer dbConfig;
 integer textboxType;
-integer debugLevel = DEBUG_LEVEL;
 
 integer blacklistChannel;
 integer controlChannel;
