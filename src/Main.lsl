@@ -63,7 +63,7 @@ integer timeSpan;
 
 // Current Controller - or Mistress
 key carrierID = NULL_KEY;
-key winderID = NULL_KEY;
+key lastWinderID = NULL_KEY;
 key dollID = NULL_KEY;
 #ifdef KEY_HANDLER
 key keyHandler = NULL_KEY;
@@ -73,6 +73,7 @@ float displayRate;
 integer dialogChannel;
 integer targetHandle;
 integer lowScriptMode;
+integer lowScriptTimer;
 integer lastLowScriptTime;
 integer busyIsAway;
 //integer ticks;
@@ -195,15 +196,29 @@ collapse(integer newCollapseState) {
     //if (collapsed == newCollapseState) return; // Make repeated calls fast and unnecessary
 
     debugSay(3,"DEBUG-COLLAPSE","Entering new collapse state (" + (string)newCollapseState + ") with time left of " + (string)timeLeftOnKey);
+    string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
 
     if (newCollapseState == NOT_COLLAPSED) {
         lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
         lmSendConfig("collapseTime", (string)(collapseTime = 0));
+
+#define cdSetHovertext(x,c) if(primText!=x)llSetText(x,c,1.0)
+
+#define RED    <1.0,0.0,0.0>
+#define YELLOW <1.0,1.0,0.0>
+#define WHITE  <1.0,1.0,1.0>
+
+             if (afk)         { cdSetHovertext(dollType + " Doll (AFK)", ( YELLOW )); }
+        else if (hoverTextOn) { cdSetHovertext(dollType + " Doll",       ( WHITE  )); }
+        else                  { cdSetHovertext("",                       ( WHITE  )); }
     }
     else {
+        lmSendConfig("lastWinderID", (string)(lastWinderID = NULL_KEY));
+
         // Entering a collapsed state
         if (newCollapseState == NO_TIME) {
             lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0));
+            cdSetHovertext("Disabled Dolly!",(RED));
         }
         else if (newCollapseState == JAMMED) {
             // Time span (random) = 120.0 (two minutes) to 300.0 (five minutes)
@@ -362,7 +377,8 @@ default {
         }
 
 #ifdef DEVELOPER_MODE
-        debugSay(2,"DEBUG-MAIN", "Unix Time as float = " + (string)((float)llGetUnixTime()) + "; UNIX Time as integer = " + (string)llGetUnixTime());
+        // Informative.... but not directly relevant :)
+        //debugSay(2,"DEBUG-MAIN", "Unix Time as float = " + (string)((float)llGetUnixTime()) + "; UNIX Time as integer = " + (string)llGetUnixTime());
 
         if (timeReporting) {
             thisTimerEvent = llGetTime();
@@ -392,6 +408,7 @@ default {
                 debugSay(2,"DEBUG-LOWSCRIPT", "Low Script Mode active and bumped");
                 lastLowScriptTime = llGetUnixTime();
                 lmSendConfig("lowScriptMode","1");
+                //lowScriptTimer = 1;
             }
             else {
                 // lowScript is no longer valid... but wait....
@@ -405,13 +422,15 @@ default {
                     debugSay(2,"DEBUG-LOWSCRIPT", "Low Script Mode active but environment good - disabling");
                     lowScriptMode = 0;
                     lastLowScriptTime = 0;
-                    llOwnerSay("ATTN: Normal mode activated.");
+                    llOwnerSay("Restoring Key to normal operation.");
                     llSetTimerEvent(STD_RATE);
                     lmSendConfig("lowScriptMode","0");
+                    //lowScriptTimer = 0;
                 }
 #ifdef DEVELOPER_MODE
                 else {
-                    debugSay(2,"DEBUG-LOWSCRIPT", "Low Script Mode active but environment good - not yet time (" + (string)timeSpan + "s)");
+                    debugSay(2,"DEBUG-LOWSCRIPT", "Low Script Mode active but environment good - not yet time (time elapsed " + (string)timeSpan + "s)");
+                    lowScriptTimer = 1;
                 }
 #endif
             }
@@ -425,13 +444,19 @@ default {
                 // Go into "power saving mode", say so, and mark the time
 
                 lowScriptMode = 1;
+                //lowScriptTimer = 1;
                 lastLowScriptTime = llGetUnixTime();
-                llOwnerSay("ATTN: Power-saving mode activated.");
+                llOwnerSay("Time congestion detected: Power-saving mode activated.");
                 llSetTimerEvent(LOW_RATE);
                 lmSendConfig("lowScriptMode","1");
             }
             else {
-                debugSay(2,"DEBUG-LOWSCRIPT", "Low Script Mode disabled and running normally");
+                //if (lowScriptTimer) {
+                //    llOwnerSay("lowScriptMode reset outside of timer!");
+                //    lowScriptTimer = 0;
+                //    lastLowScriptTime = 0;
+                //}
+                debugSay(4,"DEBUG-LOWSCRIPT", "Low Script Mode disabled and running normally");
                 llSetTimerEvent(STD_RATE);
                 lmSendConfig("lowScriptMode","0");
             }
@@ -529,7 +554,7 @@ default {
         if (windingDown && (timeSpan != 0)) {
             timeLeftOnKey -= timeSpan * windRate;
 
-            debugSay(3,"DEBUG-TIME","Time left on key at winding: " + (string)timeLeftOnKey);
+            debugSay(3,"DEBUG-TIME","Time left on key at unwinding: " + (string)timeLeftOnKey);
             if (timeLeftOnKey > 0) {
 
                 minsLeft = llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate));
@@ -582,8 +607,7 @@ default {
             string value = llList2String(split, 1);
             split = llDeleteSubList(split, 0, 0);
 
-                 if (name == "winderID")                     winderID = (key)value;
-            else if (name == "carrierID") {
+             if (name == "carrierID") {
                 carrierID = (key)value;
 
                 // If we get a carrierID, it means we need to start the carry timer
@@ -657,6 +681,9 @@ default {
                 lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
                 //lmSendConfig("effectiveLimit", (string)effectiveLimit);
             }
+            else if (name == "lastWinderID") {
+                lmSendConfig("lastWinderID", (string)(lastWinderID = (key)value));
+            }
             else if (name == "afk") {
                 setAfk((integer)value);
                 //lmSendConfig("afk", (string)afk);
@@ -671,8 +698,11 @@ default {
                 lmSendConfig("wearLock", (string)(wearLock = (integer)value));
                 lmSendConfig("wearLockExpire",(string)WEAR_LOCK_TIME);
                 }
-            else if (name == "lowScriptMode")
-                     lmSendConfig("lowScriptMode",(string)(lowScriptMode = (integer)value));
+            else if (name == "lowScriptMode") {
+                lmSendConfig("lowScriptMode",(string)(lowScriptMode = (integer)value));
+                if (lowScriptMode) lastLowScriptTime = llGetUnixTime();
+                else lastLowScriptTime = 0;
+                }
             else if (
                      (name == "wearLockExpire")  ||
                      (name == "poseExpire")      ||
@@ -771,10 +801,7 @@ default {
             string name = llList2String(split, 1);
 
             if (choice == MAIN) {
-                string windButton;
-
-                if ((cdIsCarrier(id)) || (cdIsController(id))) windButton = "Wind";
-                lmInternalCommand("mainMenu", windButton + "|" + name, id);
+                lmInternalCommand("mainMenu", "|" + name, id);
             }
             else if (choice == "Wind Emg") {
                 // Give this a time limit: can only be done once
@@ -823,6 +850,12 @@ default {
             // Winding - pure and simple
             else if (choice == "Wind") {
 
+                // Four steps:
+                //   1. Can we wind up at all?
+                //   2. Calculate wind time
+                //   3. Send out new timeLeftOnKey
+                //   4. React to wind (including uncollapse)
+
                 // Test and reject winding of jammed dollies
                 if (collapsed == JAMMED) {
                     cdDialogListen();
@@ -830,10 +863,12 @@ default {
                     return;
                 }
 
-                // Test and reject repeat winding as appropriate
-                if (!canRepeatWind && (id == winderID)) {
-                    lmSendToAgent("Dolly needs to be wound by someone else before you can wind " + llToLower(pronounHerDoll) + " again.", id);
-                    return;
+                // Test and reject repeat winding as appropriate - Controllers and Carriers are not limited
+                if (!(cdIsController(id) || cdIsCarrier(id))) {
+                    if (!canRepeatWind && (id == lastWinderID)) {
+                        lmSendToAgent("Dolly needs to be wound by someone else before you can wind " + llToLower(pronounHerDoll) + " again.", id);
+                        return;
+                    }
                 }
 
                 // Here, dolly may be collapsed or not...
@@ -848,48 +883,50 @@ default {
 
                 lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey += windAmount));
 
+                if (collapsed == NO_TIME) {
+                    collapse(NOT_COLLAPSED);
+                    llSleep(1.0); // Make sure that the uncollapse RLV runs before sending the message containing winder name.
+                }
+
+                // Time value of 60s is somewhat arbitrary; it is however less than 1m
+                // So it really would not show up in minute based calculations
                 if (windAmount < 60) {
 
                     // note that this message might go out even if we "wound" Dolly with 30 seconds
                     // more... but in the grand scheme of things, she was fully wound: so say so
 
-                    // Make it literally true:
-                    timeLeftOnKey = effectiveLimit;
-
                     cdDialogListen();
                     llDialog(id, "Dolly is already fully wound.", [MAIN], dialogChannel);
                 }
-                else if (windAmount > 0) {
-                    if (effectiveWindTime > 0) lmSendToAgent("You have given " + dollName + " " + (string)llFloor(effectiveWindTime / SEC_TO_MIN) + " more minutes of life.", id);
+                else {
+                    //if (effectiveWindTime > 0) lmSendToAgent("You have given " + dollName + " " + (string)llFloor(effectiveWindTime / SEC_TO_MIN) + " more minutes of life.", id);
+                    lmSendToAgent("You have given " + dollName + " " + (string)llFloor(windAmount / SEC_TO_MIN) + " more minutes of life.", id);
+                    lmSendConfig("lastWinderID", (string)(lastWinderID = id));
+                    lmSendConfig("lastWinderName", name);
 
                     if (timeLeftOnKey == effectiveLimit) { // Fully wound
-                        llOwnerSay("You have been fully wound - " + (string)llRound(effectiveLimit / (SEC_TO_MIN * displayWindRate)) + " minutes remaining.");
+                        llOwnerSay("You have been fully wound by " + name + " - " + (string)llRound(effectiveLimit / (SEC_TO_MIN * displayWindRate)) + " minutes remaining.");
 
-                        if (!quiet) llSay(0, dollName + " has been fully wound by " + name + ".");
-                        else lmSendToAgent(dollName + " is now fully wound.", id);
+                        if (!quiet) llSay(0, dollName + " has been fully wound by " + name + ". Thanks for winding Dolly!");
+                        else lmSendToAgent(dollName + " is now fully wound. Thanks for winding Dolly!", id);
 
                     } else {
 
                         lmSendToAgent("Doll is now at " + formatFloat((float)timeLeftOnKey * 100.0 / (float)effectiveLimit, 2) + "% of capacity.", id);
-
-                        if (canRepeatWind || cdIsController(id) || cdIsCarrier(id)) lmInternalCommand("mainMenu", "Wind|" + name, id);
+                        lmInternalCommand("mainMenu", "|" + name, id);
                     }
 
-                    llSleep(1.0); // Make sure that the uncollapse RLV runs before sending the message containing winder name.
-
-                    // As we are storing winderID for repeat wind, only give the thankfulness reminder when winder is new.
-                    if ((winderID != id) && (id != dollID))
+#ifdef DEVELOPER_MODE
+                    debugSay(3,"DEBUG-TIME","Time left on key just before winding: " + (string)timeLeftOnKey);
+#endif
+                    // As we are storing lastWinderID for repeat wind, only give the thankfulness reminder when winder is new.
+                    //
+                    // Note that this has the side effect of notifying us to be thankful at the beginning of a repeat wind,
+                    // not at the end...
+                    if ((lastWinderID != id) && (id != dollID))
                         llOwnerSay("Have you remembered to thank " + name + " for winding you?");
 
-                    lmSendConfig("winderID", (string)(winderID = id));
                 }
-
-                // If we have time left and are not jammed, then "uncollapse" by calling the
-                // collapse function with NOT_COLLAPSED. Note that this is repetitive and in
-                // the best of worlds doesn't serve any purpose: if there is time left on the
-                // clock then we should not be down.  However this makes SURE we are not down.
-                //
-                if (collapsed == NO_TIME) collapse(NOT_COLLAPSED);
             }
 
             // Note that Max Times are "m" and Wind Times are "min" - this is on purpose to
