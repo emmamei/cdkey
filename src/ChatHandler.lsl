@@ -19,6 +19,8 @@
 //key listID                  = NULL_KEY;
 
 integer windMins = 30;
+key lastWinderID;
+string lastWinderName;
 
 float collapseTime          = 0.0;
 integer collapsed;
@@ -26,6 +28,7 @@ float effectiveLimit          = 10800.0;
 //float wearLockExpire;
 //flaot winderLockExpire;
 integer wearLock;
+integer windingDown;
 
 string dollGender           = "Female";
 string chatPrefix           = "";
@@ -86,6 +89,9 @@ default
 
                  if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
             else if (name == "collapseTime")             collapseTime = llGetUnixTime() + (float)value;
+            else if (name == "windingDown")               windingDown = (integer)value;
+            else if (name == "lastWinderID")             lastWinderID = (key)value;
+            else if (name == "lastWinderName")         lastWinderName = value;
             else if (name == "collapsed")                   collapsed = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")           timeReporting = (integer)value;
@@ -530,6 +536,7 @@ default
 
     debug # ........ set the debugging message verbosity 0-9
     timereporting .. set timereporting \"on\" or \"off\"
+    powersave ...... turn on powersave mode
     inject x#x#x ... inject a link message with \"code#data#key\"
     collapse ....... perform an immediate collapse (out of time)";
 #endif
@@ -562,7 +569,7 @@ default
                         return;
                     }
                     else if (choice == "xstats") {
-                        string s = "Extended stats:\nDoll is a " + dollType + " Doll.\nAFK time factor: " +
+                        string s = "Extended stats:\n\nDoll is a " + dollType + " Doll.\nAFK time factor: " +
                                    formatFloat(RATE_AFK, 1) + "x\nWind amount: " + (string)windMins + " (mins)\n";
 
                         if (demoMode) s += "Demo mode is enabled";
@@ -582,8 +589,9 @@ default
                         cdCapability(canDressSelf,   "Doll can", "dress by " + p + "self");
                         cdCapability(poseSilence,    "Doll is",  "silenced while posing");
                         cdCapability(wearLock,       "Doll's clothing is",  "currently locked on");
+                        cdCapability(lowScriptMode,  "Doll is",  "currently in powersave mode");
 
-                        if (windRate) s += "Current wind rate is " + formatFloat(windRate,2) + ".\n";
+                        if (windingDown) s += "\nCurrent wind rate is " + formatFloat(windRate,2) + ".\n";
                         else s += "Key is not winding down.\n";
 
                         if (RLVok == UNSET) s += "RLV status is unknown.\n";
@@ -605,7 +613,7 @@ default
                         string msg = "Time: " + (string)llRound(t1) + "/" +
                                     (string)llRound(t2) + " min (" + formatFloat(p, 2) + "% capacity)";
 
-                        if (windRate) {
+                        if (windingDown) {
                             msg += " unwinding at a ";
 
                             if (windRate == 1.0) msg += "normal rate.";
@@ -634,7 +642,7 @@ default
 
                         string msg;
 
-                        if (windRate == 0.0) msg = "Key is stopped.";
+                        if (!windingDown) msg = "Key is stopped.";
                         else {
                             msg = "Key is unwinding at a ";
 
@@ -697,14 +705,13 @@ default
                     }
 #ifdef DEVELOPER_MODE
                     else if (choice == "collapse" && isDoll) {
-                        debugSay(3, "DEBUG", "collapse command executed...");
                         lmSetConfig("timeLeftOnKey","10");
                         llOwnerSay("Immediate collapse triggered: ten seconds to collapse");
                         return;
                     }
                     else if (choice == "powersave" && isDoll) {
-                        debugSay(3, "DEBUG", "power save mode initiated");
                         lmSetConfig("lowScriptMode","1");
+                        llOwnerSay("Power-save mode initiated");
                         return;
                     }
 #endif
