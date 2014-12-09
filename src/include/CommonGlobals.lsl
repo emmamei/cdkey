@@ -30,7 +30,6 @@ float windAmount            = 1800.0;
 float baseWindRate          = RATE_STANDARD;
 float displayWindRate	    = RATE_STANDARD;
 float windRate              = RATE_STANDARD;
-integer windingDown;
 
 integer afk;
 integer autoTP;
@@ -43,25 +42,23 @@ integer canRepeatWind       = 1;
 integer canSit              = 1;
 integer canStand            = 1;
 integer canDressSelf        = 1;
-integer canUnwear           = 1;
 integer collapsed;
 integer configured;
 integer demoMode;
 integer detachable          = 1;
 integer doWarnings;
-integer canSelfTP;
+integer canSelfTP           = 1;
 integer isTransformingKey   = 1;
 integer lowScriptMode;
 integer offlineMode         = TRUE;
 integer pleasureDoll;
-integer poseSilence;
-integer quiet;
+integer poseSilence         = 1;
+integer quiet               = 1;
 integer RLVok               = -1;
 integer hoverTextOn;
 integer takeoverAllowed;
 integer visible             = 1;
-
-integer initCode;
+integer windingDown         = 1;
 
 #ifdef DEBUG_MODE
 integer debugLevel          = DEBUG_LEVEL;
