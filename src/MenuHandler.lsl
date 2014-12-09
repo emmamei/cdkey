@@ -205,6 +205,7 @@ default {
             }
             else if (name == "baseWindRate")             baseWindRate = (float)value;
             else if (name == "windRate")                     windRate = (float)value;
+            else if (name == "windingDown")               windingDown = (float)value;
             else if (name == "lowScriptMode")           lowScriptMode = (integer)value;
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
 
@@ -469,8 +470,8 @@ default {
                         timeleft = "Dolly has " + (string)minsLeft + " minutes remaining.\n";
 
                         timeleft += "Key is ";
-                        if (windRate == 0.0) timeleft += "not winding down.\n";
-                        else timeleft += "winding down at " + formatFloat(displayWindRate, 1) + "x rate.\n";
+                        if (windingDown) timeleft += "winding down at " + formatFloat(displayWindRate, 1) + "x rate.\n";
+                        else timeleft += "not winding down.\n";
                     }
                     else timeleft = "Dolly has no time left.\n";
 

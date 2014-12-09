@@ -10,7 +10,7 @@
 
 #define cdNullList(a) (llGetListLength(a)==0)
 #define cdListMin(a) llListStatistics(LIST_STAT_MIN,a)
-#define cdKeyStopped() (windRate==0.0)
+#define cdKeyStopped() (!windingDown)
 #define cdTimeSet(a) (a!=0)
 #define cdResetKey() llResetOtherScript("Start")
 #define UNSET -1
