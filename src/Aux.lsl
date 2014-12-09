@@ -157,9 +157,8 @@ default {
             else if (name == "doWarnings")                 doWarnings = (integer)value;
             else if (name == "poseSilence")               poseSilence = (integer)value;
             else if (name == "detachable")                 detachable = (integer)value;
-            else if (name == "canSelfTP")                     canSelfTP = (integer)value;
+            else if (name == "canSelfTP")                   canSelfTP = (integer)value;
             else if (name == "pleasureDoll")             pleasureDoll = (integer)value;
-            //else if (name == "hoverTextOn")                         hoverTextOn = (integer)value;
             else if (name == "windMins")                     windMins = (integer)value;
             else if (name == "wearLock")                     wearLock = (integer)value;
             else if (name == "blacklist")                   blacklist = split;
