@@ -34,8 +34,6 @@ integer tempWearLock = FALSE;
 integer candresstimeout;
 integer dressTries;
 
-key dollID = NULL_KEY;
-key dresserID = NULL_KEY;
 key setupID = NULL_KEY;
 
 string newoutfitname;
@@ -48,7 +46,6 @@ string oldoutfitfolder;
 // New simple listener setup we only
 // listen to rlvChannel directly the
 // other we use MenuHandlers link 500's
-integer dialogChannel;
 integer rlvBaseChannel;
 integer change;
 integer pushRandom;
@@ -83,14 +80,10 @@ integer listen_id_2666;
 integer listen_id_2668;
 integer listen_id_2669;
 
-integer afk;
-integer canDressSelf;
-integer collapsed;
 integer fallbackFolder;
 
 //integer startup = 1;
 integer dressingFailures;
-integer RLVok;
 
 integer outfitPage;
 

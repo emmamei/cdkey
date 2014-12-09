@@ -44,7 +44,6 @@
 
 string msg;
 integer minsLeft;
-//integer canPose;
 
 float lastEmergencyTime;
 
@@ -61,45 +60,27 @@ integer timerMark;
 integer lastTimerMark;
 integer timeSpan;
 
-// Current Controller - or Mistress
-key carrierID = NULL_KEY;
 key lastWinderID = NULL_KEY;
-key dollID = NULL_KEY;
 #ifdef KEY_HANDLER
 key keyHandler = NULL_KEY;
 #endif
 float displayRate;
 
-integer dialogChannel;
 integer targetHandle;
-integer lowScriptMode;
 integer lowScriptTimer;
 integer lastLowScriptTime;
 integer busyIsAway;
 //integer ticks;
 
-integer afk;
 integer autoAFK = 1;
-integer canAFK = 1;
 integer clearAnim;
-integer collapsed;
-integer configured;
-integer demoMode;
-integer quiet;
-integer RLVok = -1;
 integer RLVck = 1;
-integer hoverTextOn;
 integer warned;
 integer wearLock;
 
 #ifdef DEVELOPER_MODE
 integer timeReporting = 1;
-integer debugLevel = DEBUG_LEVEL;
 #endif
-
-// If the key is a Transforming Key - one that can transform from one
-// type of Doll to another - this tracks the current type of doll.
-string dollType = "Regular";
 
 integer winderRechargeTime;
 integer wearLockExpire;
@@ -110,15 +91,11 @@ integer poseExpire;
 // transformLockExpire in this script
 integer transformLockExpire;
 
-float baseWindRate    = windRate;
-float displayWindRate = windRate;
 float effectiveLimit  = keyLimit;
 integer collapseTime;
 integer windMins = 30;
 float effectiveWindTime = 30.0;
 
-string keyAnimation;
-string dollName;
 string mistressName;
 string pronounHerDoll = "Her";
 string pronounSheDoll = "She";

@@ -24,7 +24,6 @@ key lastWinderID;
 string lastWinderName;
 
 float collapseTime          = 0.0;
-integer collapsed;
 float effectiveLimit          = 10800.0;
 //float wearLockExpire;
 //flaot winderLockExpire;
@@ -35,7 +34,6 @@ string chatPrefix           = "";
 string RLVver               = "";
 string pronounHerDoll       = "Her";
 string pronounSheDoll       = "She";
-string dollName             = "";
 string msg;
 integer chatEnable           = TRUE;
 string chatFilter           = "";
@@ -47,7 +45,6 @@ integer chatHandle          = 0;
 #ifdef DEVELOPER_MODE
 integer timeReporting       = 0;
 #endif
-integer RLVok               = UNSET;
 
 default
 {

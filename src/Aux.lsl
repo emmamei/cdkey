@@ -18,11 +18,7 @@
 #define HIPPO_UPDATE -2948813
 
 key lmRequest;
-key carrierID = NULL_KEY;
-key dollID = NULL_KEY;
-key poserID = NULL_KEY;
 list memWait;
-list controllers;
 float rezTime;
 float timerEvent;
 float listenTime;
@@ -30,22 +26,17 @@ float memTime;
 string memData;
 string minsLeft;
 //string windRate;
-float windRate;
 integer windMins;
 string dollyName;
-string carrierName;
 string pronounHerDoll = "Her";
 string pronounSheDoll = "She";
 string dollGender = "Female";
 string curGemColour;
 integer showPhrases;
 integer maxMins;
-integer configured;
 integer ncLine;
-integer visible;
 integer memCollecting;
 integer memRequested;
-integer quiet;
 integer wearLock;
 integer rezzed;
 integer primGlow = 1;
@@ -53,7 +44,6 @@ integer primLight = 1;
 integer textboxChannel;
 integer textboxHandle;
 integer textboxType;
-integer offlineMode = YES;
 
 integer i;
 integer code;

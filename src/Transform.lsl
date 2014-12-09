@@ -49,8 +49,6 @@ integer timeReporting = 1;
 #endif
 integer busyIsAway;
 integer autoAFK;
-float timeLeftOnKey;
-string dollName;
 //string stateName;
 list types;
 float menuTime;
@@ -75,14 +73,11 @@ integer transformedViaMenu;
 string transform;
 string typeFolder;
 
-integer dialogChannel;
 integer rlvChannel;
 integer typeSearchChannel;
 integer outfitSearchChannel;
 
 integer transformLockExpire;
-integer configured;
-integer RLVok;
 
 //integer startup = 1;
 
@@ -95,14 +90,11 @@ integer showPhrases = TRUE;
 integer wearAtLogin;
 #endif
 //integer isTransformingKey;
-key dollID;
 string typeFolderExpected;
 
 key kQuery;
 
 list currentPhrases;
-
-integer quiet;
 
 //========================================
 // FUNCTIONS

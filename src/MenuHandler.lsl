@@ -41,59 +41,38 @@
 //========================================
 // Current Controller - or Mistress
 //key MistressID = NULL_KEY;
-key poserID = NULL_KEY;
-key dollID = NULL_KEY;
 key menuID = NULL_KEY;
-
-// does this need to be a global?
-key uniqueID = NULL_KEY;
 
 list uuidList;
 integer i;
 integer n;
 
-float timeLeftOnKey;
 float windDefault = WIND_DEFAULT;
 float collapseTime;
 
-integer afk;
 integer autoAFK = 1;
-integer canCarry = 1;
-integer canDress = 1;
-integer canDressSelf = 1;
 integer showPhrases;
 integer carryMoved;
 integer primLight = 1;
 integer clearAnim;
-integer collapsed;
-integer configured;
-integer demoMode;
-integer visible = 1;
-integer RLVok = UNSET;
 integer dbConfig;
 integer textboxType;
 
 integer blacklistChannel;
 integer controlChannel;
-integer dialogChannel;
 integer blacklistHandle;
 integer controlHandle;
-integer dialogHandle;
 string isDollName;
-string dollType = "Regular";
 string pronounHerDoll = "Her";
 string pronounSheDoll = "She";
 
 vector gemColour;
 
-string carrierName;
 string mistressName;
-string keyAnimation;
 string menuName;
 
 integer winderRechargeTime;
 
-list blacklist;
 list dialogKeys;
 list dialogNames;
 list dialogButtons;
@@ -205,7 +184,7 @@ default {
             }
             else if (name == "baseWindRate")             baseWindRate = (float)value;
             else if (name == "windRate")                     windRate = (float)value;
-            else if (name == "windingDown")               windingDown = (float)value;
+            else if (name == "windingDown")               windingDown = (integer)value;
             else if (name == "lowScriptMode")           lowScriptMode = (integer)value;
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
 

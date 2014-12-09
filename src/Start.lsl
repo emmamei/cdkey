@@ -41,10 +41,8 @@ float delayTime = 15.0; // in seconds
 float initTimer;
 #endif
 
-key dollID = NULL_KEY;
 key MistressID = NULL_KEY;
 
-string dollName;
 string dollyName;
 string appearanceData;
 string chatFilter = "";
@@ -58,31 +56,17 @@ key ncResetAttach;
 key ncRequestAppearance;
 integer prefsRead;
 
-float timeLeftOnKey;
-float keyLimit;
 integer ncLine;
-integer demoMode;
 integer failedReset;
 
 float ncStart;
 integer lastAttachPoint;
 key lastAttachAvatar;
 
-list controllers;
-list blacklist;
 list recentDilation;
 
-integer quiet = NO;
 integer newAttach = YES;
-integer autoTP = NO;
-integer canFly = YES;
-integer canSit = YES;
-integer canStand = YES;
-integer canDress = YES;
-integer detachable = YES;
 integer busyIsAway = NO;
-integer offlineMode = YES;
-integer visible = YES;
 integer primGlow = YES;
 integer primLight = YES;
 integer dbConfigCount;
@@ -90,7 +74,6 @@ integer dbConfigCount;
 vector gemColour;
 
 string barefeet;
-string dollType;
 string attachName;
 integer isAttached;
 
@@ -118,11 +101,6 @@ integer resetState;
 #define RESET_STARTUP 2
 
 integer rlvWait;
-integer RLVok = UNSET;
-float keyLimit;
-
-integer afk;
-integer lowScriptMode;
 
 //=======================================
 // FUNCTIONS

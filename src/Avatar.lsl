@@ -27,13 +27,10 @@
 #define cdMinRefresh() ((1.0/llGetRegionFPS()) * MIN_FRAMES)
 #define cdAddRefresh() ((1.0/llGetRegionFPS()) * ADD_FRAMES)
 
-key carrierID = NULL_KEY;
-
 key rlvTPrequest;
 #ifdef LOCKON
 key mainCreator;
 #endif
-key keyAnimationID;
 key lastAttachedID;
 #ifdef DEVELOPER_MODE
 float lastTimerEvent;
@@ -41,8 +38,6 @@ float thisTimerEvent;
 float timerInterval;
 integer timeReporting = 1;
 #endif
-
-list controllers;
 
 float rlvTimer;
 
@@ -66,8 +61,6 @@ string name;
 string value;
 
 string barefeet;
-string carrierName;
-string keyAnimation;
 
 #ifdef DEVELOPER_MODE
 string myPath;
@@ -78,7 +71,6 @@ string pronounSheDoll = "She";
 string rlvAPIversion;
 string userBaseRLVcmd;
 
-integer afk;
 integer isFrozen;
 integer isNoScript;
 integer hasCarrier;
@@ -91,11 +83,7 @@ integer permMask;
 
 integer carryMoved;
 integer clearAnim = 1;
-integer collapsed;
-integer dialogChannel;
 integer locked;
-integer lowScriptMode;
-integer RLVok = UNSET;
 integer targetHandle;
 integer newAttach = 1;
 integer chatChannel = 75;

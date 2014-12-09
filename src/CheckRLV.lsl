@@ -7,7 +7,6 @@
 // DATE: 27 October 2014
 
 #include "include/GlobalDefines.lsl"
-//#include "include/Json.lsl"
 
 //#define DEBUG_BADRLV
 #define cdSayQuietly(x) { string z = x; if (quiet) llOwnerSay(z); else llSay(0,z); }
@@ -21,10 +20,7 @@
 #define cdListenerActivate(a) llListenControl(a, 1)
 #define cdResetKey() llResetOtherScript("Start")
 
-integer canSelfTP;
-integer canDressSelf;
 integer wearLock;
-//key carrierID = NULL_KEY;
 
 // Could set allControls to -1 for quick full bit set -
 // but that would set fields with undefined values: this is more
@@ -66,10 +62,8 @@ integer i;
 integer rlvChannel;
 integer rlvHandle;
 #ifdef SIM_FRIENDLY
-integer lowScriptMode;
 #endif
 integer RLVck = 0;
-integer RLVok = UNSET;
 integer RLVstarted;
 integer chatChannel = 75;
 
