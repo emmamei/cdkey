@@ -809,16 +809,19 @@ default {
             else if (choice == "Unpose") {
                 lmSendConfig("keyAnimation", (string)(keyAnimation = ""));
                 lmSendConfig("poserID", (string)(poserID = NULL_KEY));
+
+                // poseExpire is being set elsewhere
                 lmSetConfig("poseExpire", "0");
 
                 clearAnimations();
-                lmRunRLV("sendchat=y");
+                if (poseSilence) lmRunRLV("sendchat=y");
+                ifPermissions();
             }
 
             else if (keyAnimation == "" || dollIsPoseable) {
 
                 // choice is Inventory Animation Item
-                if (llGetInventoryType(choice) == 20) {
+                if (llGetInventoryType(choice) == INVENTORY_ANIMATION) {
                     lmSendConfig("keyAnimation", (string)(keyAnimation = choice));
                     lmSendConfig("poserID", (string)(poserID = id));
                     //poseExpire = llGetUnixTime() + 300.0;
@@ -844,7 +847,7 @@ default {
                         if (!isDoll) llOwnerSay(cdUserProfile(id) + " is looking at your poses menu.");
                     }
 
-                    integer poseCount = llGetInventoryNumber(20);
+                    integer poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
                     list poseList;
                     i = poseCount;
                     string poseName;
