@@ -119,7 +119,7 @@ list BuiltinControllers = BUILTIN_CONTROLLERS;
 
 #define LOW_FPS 30.0
 #define LOW_DILATION 0.8
-#define cdLowScriptTrigger   (lowScriptMode = (llGetRegionFPS() < LOW_FPS || llGetRegionTimeDilation() < LOW_DILATION))
+#define cdLowScriptTrigger   (llGetRegionFPS() < LOW_FPS || llGetRegionTimeDilation() < LOW_DILATION)
 
 // Used by this file below for OPTION_DATE
 //#define PACKAGE_VERSION "26 February 2014"
