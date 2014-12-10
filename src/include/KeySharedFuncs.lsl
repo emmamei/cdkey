@@ -79,6 +79,7 @@ broadcastWindRate() {
     lmSendConfig("baseWindRate", (string)baseWindRate);
     lmSendConfig("displayWindRate", (string)displayWindRate);
     lmSendConfig("windRate", (string)windRate);
+    lmSendConfig("windingDown", (string)windingDown);
 }
 
 #define CHECK "✔"

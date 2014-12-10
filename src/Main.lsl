@@ -170,10 +170,12 @@ collapse(integer newCollapseState) {
     // processing can be repeated and nothing bad should happen - and
     // that is how things acted before. Leave this code commented for now.
     //
-    //if (collapsed == newCollapseState) return; // Make repeated calls fast and unnecessary
+    if (collapsed == newCollapseState) return; // Make repeated calls fast and unnecessary
 
     debugSay(3,"DEBUG-COLLAPSE","Entering new collapse state (" + (string)newCollapseState + ") with time left of " + (string)timeLeftOnKey);
+
     string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
+    setWindRate();
 
     if (newCollapseState == NOT_COLLAPSED) {
         lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
@@ -384,7 +386,7 @@ default {
                 // lowScriptMode continues...
                 debugSay(2,"DEBUG-LOWSCRIPT", "Low Script Mode active and bumped");
                 lastLowScriptTime = llGetUnixTime();
-                lmSendConfig("lowScriptMode","1");
+                lmSendConfig("lowScriptMode",(string)(lowScriptMode = 1));
                 //lowScriptTimer = 1;
             }
             else {
@@ -397,17 +399,15 @@ default {
 
                 if (timeSpan > 600) {
                     debugSay(2,"DEBUG-LOWSCRIPT", "Low Script Mode active but environment good - disabling");
-                    lowScriptMode = 0;
                     lastLowScriptTime = 0;
                     llOwnerSay("Restoring Key to normal operation.");
+
+                    lmSendConfig("lowScriptMode",(string)(lowScriptMode = 0));
                     llSetTimerEvent(STD_RATE);
-                    lmSendConfig("lowScriptMode","0");
-                    //lowScriptTimer = 0;
                 }
 #ifdef DEVELOPER_MODE
                 else {
                     debugSay(2,"DEBUG-LOWSCRIPT", "Low Script Mode active but environment good - not yet time (time elapsed " + (string)timeSpan + "s)");
-                    lowScriptTimer = 1;
                 }
 #endif
             }
@@ -420,12 +420,11 @@ default {
                 // We're not in lowScriptMode, but have been triggered...
                 // Go into "power saving mode", say so, and mark the time
 
-                lowScriptMode = 1;
-                //lowScriptTimer = 1;
                 lastLowScriptTime = llGetUnixTime();
                 llOwnerSay("Time congestion detected: Power-saving mode activated.");
+
+                lmSendConfig("lowScriptMode",(string)(lowScriptMode = 1));
                 llSetTimerEvent(LOW_RATE);
-                lmSendConfig("lowScriptMode","1");
             }
             else {
                 //if (lowScriptTimer) {
@@ -434,8 +433,9 @@ default {
                 //    lastLowScriptTime = 0;
                 //}
                 debugSay(4,"DEBUG-LOWSCRIPT", "Low Script Mode disabled and running normally");
+
+                lmSendConfig("lowScriptMode",(string)(lowScriptMode = 0));
                 llSetTimerEvent(STD_RATE);
-                lmSendConfig("lowScriptMode","0");
             }
         }
 
@@ -876,6 +876,13 @@ default {
                     llDialog(id, "Dolly is already fully wound.", [MAIN], dialogChannel);
                 }
                 else {
+                    // As we are storing lastWinderID for repeat wind, only give the thankfulness reminder when winder is new.
+                    //
+                    // Note that this has the side effect of notifying us to be thankful at the beginning of a repeat wind,
+                    // not at the end...
+                    if ((lastWinderID != id) && (id != dollID))
+                        llOwnerSay("Have you remembered to thank " + name + " for winding you?");
+
                     //if (effectiveWindTime > 0) lmSendToAgent("You have given " + dollName + " " + (string)llFloor(effectiveWindTime / SEC_TO_MIN) + " more minutes of life.", id);
                     lmSendToAgent("You have given " + dollName + " " + (string)llFloor(windAmount / SEC_TO_MIN) + " more minutes of life.", id);
                     lmSendConfig("lastWinderID", (string)(lastWinderID = id));
@@ -896,12 +903,6 @@ default {
 #ifdef DEVELOPER_MODE
                     debugSay(3,"DEBUG-TIME","Time left on key just before winding: " + (string)timeLeftOnKey);
 #endif
-                    // As we are storing lastWinderID for repeat wind, only give the thankfulness reminder when winder is new.
-                    //
-                    // Note that this has the side effect of notifying us to be thankful at the beginning of a repeat wind,
-                    // not at the end...
-                    if ((lastWinderID != id) && (id != dollID))
-                        llOwnerSay("Have you remembered to thank " + name + " for winding you?");
 
                 }
             }

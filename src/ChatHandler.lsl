@@ -611,6 +611,7 @@ default
                         string msg = "Time: " + (string)llRound(t1) + "/" +
                                     (string)llRound(t2) + " min (" + formatFloat(p, 2) + "% capacity)";
 
+                        debugSay(3, "DEBUG", "windingDown = " + (string)windingDown);
                         if (windingDown) {
                             msg += " unwinding at a ";
 
