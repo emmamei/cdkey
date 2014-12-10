@@ -112,7 +112,7 @@ setDollType(string stateName, integer automated) {
     //else stateName = choice;
 
     //debugSay(2,"DEBUG-DOLLTYPE","Transforming to " + stateName);
-    llOwnerSay("Transforming into a " + stateName + " dolly");
+    //llOwnerSay("Transforming into a " + stateName + " dolly");
 
     // Convert state name to Title case
     stateName = cdGetFirstChar(llToUpper(stateName)) + cdButFirstChar(llToLower(stateName));
@@ -289,7 +289,7 @@ default {
     state_entry() {
         dollID =   llGetOwner();
         dollName = llGetDisplayName(dollID);
-        dollType = "Regular";
+        //dollType = "Regular";
 
         cdInitializeSeq();
 
@@ -789,10 +789,11 @@ default {
             }
 
             else if (code == 104) {
-                if (script == "Start") {
-                    reloadTypeNames();
-                    llSetTimerEvent(30.0);
-                }
+                reloadTypeNames();
+                llSetTimerEvent(30.0);
+
+                // Might have been set in Prefs, so do this late
+                if (!dollType) setDollType("Regular");
             }
 
             //else if (code == 105) {
