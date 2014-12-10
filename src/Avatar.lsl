@@ -314,7 +314,7 @@ oneAnimation() {
                 if (animRefreshRate > 30.0) animRefreshRate = 30.0;
             }
             else {
-                animRefreshRate *= 2; // Note this converts a linear increase to a geometric increase
+                animRefreshRate *= 1.3; // Note this converts a linear increase to a geometric increase
                 if (animRefreshRate > 60.0) animRefreshRate = 60.0;
             }
         }
