@@ -44,11 +44,6 @@ string normalselfFolder;
 integer phraseCount;
 string msg;
 integer i;
-#ifdef DEVELOPER_MODE
-integer timeReporting = 1;
-#endif
-integer busyIsAway;
-integer autoAFK;
 //string stateName;
 list types;
 float menuTime;
@@ -85,7 +80,6 @@ integer transformLockExpire;
 
 integer dbConfig;
 integer mustAgreeToType;
-integer showPhrases = TRUE;
 #ifdef WEAR_AT_LOGIN
 integer wearAtLogin;
 #endif
@@ -482,11 +476,11 @@ default {
     link_message(integer source, integer i, string data, key id) {
 
         // Parse link message header information
-        list split        =     cdSplitArgs(data);
-        string script     =     cdListElement(split, 0);
-        integer remoteSeq =     (i & 0xFFFF0000) >> 16;
-        integer optHeader =     (i & 0x00000C00) >> 10;
-        integer code      =      i & 0x000003FF;
+        split             =     cdSplitArgs(data);
+        script            =     cdListElement(split, 0);
+        remoteSeq         =     (i & 0xFFFF0000) >> 16;
+        optHeader         =     (i & 0x00000C00) >> 10;
+        code              =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
         string choice = cdListElement(split, 0);

@@ -28,16 +28,11 @@ string minsLeft;
 //string windRate;
 integer windMins;
 string dollyName;
-string pronounHerDoll = "Her";
-string pronounSheDoll = "She";
-string dollGender = "Female";
 string curGemColour;
-integer showPhrases;
 integer maxMins;
 integer ncLine;
 integer memCollecting;
 integer memRequested;
-integer wearLock;
 integer rezzed;
 integer primGlow = 1;
 integer primLight = 1;
@@ -46,11 +41,6 @@ integer textboxHandle;
 integer textboxType;
 
 integer i;
-integer code;
-string script;
-integer remoteSeq;
-integer optHeader;
-list split;
 string msg;
 
 // Only place gender is currently set is in the preferences

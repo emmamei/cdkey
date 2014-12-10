@@ -36,7 +36,6 @@ key lastAttachedID;
 float lastTimerEvent;
 float thisTimerEvent;
 float timerInterval;
-integer timeReporting = 1;
 #endif
 
 float rlvTimer;
@@ -50,12 +49,6 @@ float nextAnimRefresh;
 vector carrierPos;
 vector lockPos;
 
-list split;
-string script;
-integer remoteSeq;
-integer optHeader;
-integer code;
-
 string msg;
 string name;
 string value;
@@ -66,8 +59,6 @@ string barefeet;
 string myPath;
 #endif
 
-string pronounHerDoll = "Her";
-string pronounSheDoll = "She";
 string rlvAPIversion;
 string userBaseRLVcmd;
 

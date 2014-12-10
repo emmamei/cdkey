@@ -23,28 +23,17 @@ integer windMins = 30;
 key lastWinderID;
 string lastWinderName;
 
-float collapseTime          = 0.0;
 float effectiveLimit          = 10800.0;
 //float wearLockExpire;
 //flaot winderLockExpire;
-integer wearLock;
 
-string dollGender           = "Female";
-string chatPrefix           = "";
 string RLVver               = "";
-string pronounHerDoll       = "Her";
-string pronounSheDoll       = "She";
 string msg;
 integer chatEnable           = TRUE;
 string chatFilter           = "";
 
-integer autoAFK             = 1;
-integer busyIsAway          = 0;
 integer chatChannel         = 75;
 integer chatHandle          = 0;
-#ifdef DEVELOPER_MODE
-integer timeReporting       = 0;
-#endif
 
 default
 {
@@ -67,11 +56,11 @@ default
     link_message(integer source, integer i, string data, key id) {
 
         // Parse link message header information
-        list split        =     cdSplitArgs(data);
-        string script     =     cdListElement(split, 0);
-        integer remoteSeq =     (i & 0xFFFF0000) >> 16;
-        integer optHeader =     (i & 0x00000C00) >> 10;
-        integer code      =      i & 0x000003FF;
+        split             =     cdSplitArgs(data);
+        script            =     cdListElement(split, 0);
+        remoteSeq         =     (i & 0xFFFF0000) >> 16;
+        optHeader         =     (i & 0x00000C00) >> 10;
+        code              =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
         scaleMem();

@@ -20,8 +20,6 @@
 #define cdListenerActivate(a) llListenControl(a, 1)
 #define cdResetKey() llResetOtherScript("Start")
 
-integer wearLock;
-
 // Could set allControls to -1 for quick full bit set -
 // but that would set fields with undefined values: this is more
 // accurate
@@ -35,18 +33,11 @@ key mainCreator;
 float lastTimerEvent;
 float thisTimerEvent;
 float timerInterval;
-integer timeReporting = 1;
 #endif
 
 float rlvTimer;
 
 float nextRLVcheck;
-
-list split;
-string script;
-integer remoteSeq;
-integer optHeader;
-integer code;
 
 string name;
 string value;

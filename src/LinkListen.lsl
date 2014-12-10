@@ -59,11 +59,11 @@ default
         llSetMemoryLimit(llGetUsedMemory()+2048);
         
         // Parse link message header information
-        list split        =     cdSplitArgs(data);
-        string script     =     cdListElement(split, 0);
-        integer remoteSeq =     (i & 0xFFFF0000) >> 16;
-        integer optHeader =     (i & 0x00000C00) >> 10;
-        integer code      =      i & 0x000003FF;
+        split             =     cdSplitArgs(data);
+        script            =     cdListElement(split, 0);
+        remoteSeq         =     (i & 0xFFFF0000) >> 16;
+        optHeader         =     (i & 0x00000C00) >> 10;
+        code              =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
         
         string output;

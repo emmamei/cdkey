@@ -50,7 +50,6 @@ integer rlvBaseChannel;
 integer change;
 integer pushRandom;
 
-integer wearLock;
 #ifdef WEAR_AT_LOGIN
 integer wearAtLogin;
 #endif
@@ -91,8 +90,6 @@ string oldattachmentpoints;
 string oldclothespoints;
 integer newoutfitwordend;
 integer outfitPageSize = 9;
-string pronounSheDoll = "She";
-string pronounHerDoll = "Her";
 
 //========================================
 // FUNCTIONS
@@ -339,11 +336,11 @@ default {
     link_message(integer source, integer i, string data, key id) {
 
         // Parse link message header information
-        list split        =     cdSplitArgs(data);
-        string script     =     cdListElement(split, 0);
-        integer remoteSeq =     (i & 0xFFFF0000) >> 16;
-        integer optHeader =     (i & 0x00000C00) >> 10;
-        integer code      =      i & 0x000003FF;
+        split             =     cdSplitArgs(data);
+        script            =     cdListElement(split, 0);
+        remoteSeq         =     (i & 0xFFFF0000) >> 16;
+        optHeader         =     (i & 0x00000C00) >> 10;
+        code              =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
         scaleMem();
