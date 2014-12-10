@@ -45,16 +45,9 @@
 #endif
 
 #ifdef DEVELOPER_MODE
-#ifndef DEBUG_LEVEL
 /* enable additional debugging messages up to specified threshold.
    the debug level can be changed at the chat line */
-#define DEBUG_LEVEL 6
-#endif
-
-/* Enable debugging code - in contrast to Developer code
-   Use this to hand out keys with Debugging but without Developer-specific
-   capabilities */
-#define DEBUG_MODE 1
+#define DEBUG_LEVEL 0
 #endif
 
 /* enable the start up introduction/hypno text provided that the required
