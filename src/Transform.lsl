@@ -787,7 +787,7 @@ default {
                 llSetTimerEvent(30.0);
 
                 // Might have been set in Prefs, so do this late
-                if (!dollType) setDollType("Regular");
+                if (dollType == "") setDollType("Regular", AUTOMATED);
             }
 
             //else if (code == 105) {

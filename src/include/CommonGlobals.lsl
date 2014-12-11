@@ -75,7 +75,7 @@ integer visible             = 1;
 integer wearLock;
 integer windingDown         = 1;
 
-#ifdef DEBUG_MODE
+#ifdef DEVELOPER_MODE
 integer debugLevel          = DEBUG_LEVEL;
 #endif
 
