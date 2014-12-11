@@ -109,14 +109,6 @@ list BuiltinControllers = BUILTIN_CONTROLLERS;
 #define BUILTIN_CONTROLLERS BuiltinControllers
 #define ALL_CONTROLLERS USER_CONTROLLERS + BUILTIN_CONTROLLERS
 
-// Tests of id
-#define cdIsDoll(id)                    (id == dollID)
-#define cdIsCarrier(id)                 (id == carrierID)
-#define cdIsBuiltinController(id)       (id != dollID && llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1)
-#define cdDollyIsBuiltinController(id)  (id == dollID && llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1)
-#define cdIsUserController(id)          (llListFindList(USER_CONTROLLERS, [ (string)id ]) != -1)
-#define cdIsController(id)              cdGetControllerStatus(id)
-
 #define LOW_FPS 30.0
 #define LOW_DILATION 0.8
 #define cdLowScriptTrigger   (llGetRegionFPS() < LOW_FPS || llGetRegionTimeDilation() < LOW_DILATION)
@@ -223,11 +215,36 @@ list BuiltinControllers = BUILTIN_CONTROLLERS;
 #define NORMAL_TIMER_RATE 0.5 * mainTimerEnable
 #define REDUCED_TIMER_RATE 5.0 * mainTimerEnable
 
+// Tests of id
+#define cdIsDoll(id)                    (id == dollID)
+#define cdIsCarrier(id)                 (id == carrierID)
+#define cdDollyIsBuiltinController(id)  (id == dollID && llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1)
+#define cdIsUserController(id)          (llListFindList(USER_CONTROLLERS, [ (string)id ]) != -1)
+#define cdIsController(id)              cdGetControllerStatus(id)
+
 #include "KeySharedFuncs.lsl"
 #include "RestrainedLoveAPI.lsl"
 #include "Utility.lsl"
 #include "Config.lsl"
 #include "LinkMessage.lsl"
+
+integer cdIsBuiltinController(key id) {
+
+    // Did we find the id in the list of User Controllers?
+    if (cdIsUserController(id))
+
+        // A User Controller will never act like a Builtin Controller
+        return FALSE;
+
+    else {
+
+        // Dolly will never "be" a Built-in Controller
+        if (id != dollID)
+            return (llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1);
+        else
+            return FALSE;
+    }
+}
 
 integer cdGetControllerStatus(key id) {
 //  if (cdIsBuiltinController(id)) {
@@ -247,8 +264,8 @@ integer cdGetControllerStatus(key id) {
     if (cdIsDoll(id))
         return (!cdControllerCount());
     else {
-        if (cdIsBuiltinController(id)) return TRUE;
-        else return (cdIsUserController(id));
+        if (cdIsUserController(id)) return TRUE;
+        else return (llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1);
     }
 }
 
