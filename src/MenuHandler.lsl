@@ -600,14 +600,13 @@ default {
 
                     if (!isDoll) menu += "Wind";
 
+                    if ((isDoll && !collapsed) || isController)
+                        menu += "Options";
+
                     if (!collapsed || !isDoll) {
                         menu += "Help...";
 
-                        // Options only available if controller... controller might
-                        // be Dolly, and that's ok
-                        if (isController) {
-                            menu += [ "Options..."];
-
+                        if (isController && detachable && !isDoll) {
                             // Do we want Dolly to hae Detach capability... ever?
                             if (detachable) menu += [ "Detach" ];
                         }
@@ -652,13 +651,27 @@ default {
         }
         else if (code == MENU_SELECTION) {
             string name = llList2String(split, 0);
+
             if (name == "Options...") {
 
-                string msg; list pluslist;
+                string msg;
+                list pluslist;
 
-                if (cdIsDoll(id) || cdIsBuiltinController(id)) {
+                if (cdIsDoll(id)) {
                     msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation.";
+                    pluslist += [ "Features...", "Key..." ];
 
+                    if (hasCarrier || numControllers > 0) {
+                        pluslist += [ "Access" ];
+                    }
+                    else {
+                        pluslist += [ "Type...", "Access...", "Abilities..." ];
+                    }
+                }
+                else if (isCarrier) {
+                    pluslist += [ "Type...", "Abilities..." ];
+                }
+                else if (cdIsBuiltinController(id)) {
                     pluslist += [ "Type...", "Access...", "Abilities..." ];
                 }
                 else if (cdIsUserController(id)) {
@@ -668,7 +681,6 @@ default {
 
                 }
                 else return;
-
                 pluslist += [ "Features...", "Key..." ];
 
                 cdDialogListen();
