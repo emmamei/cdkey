@@ -120,30 +120,38 @@ ifPermissions() {
 }
 #endif
 
-setAfk(integer afkSet) {
-    if (afkSet) afk = 1;
-    integer autoSet = (afkSet == 2);
+setAfk(integer setting) {
+    // afk setting 2 is special: means we automatically set AFK, in
+    // contrast to the user setting AFK otherwise
 
     setWindRate();
 
-    if (!autoSet) {
+    if (setting != 2) {
         integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0);
 
         if (dollAway != afk) autoAFK = 0;
         else autoAFK = 1;
     }
 
-    if (afk) {
-        if (autoSet) msg = "Automatically entering AFK mode.";
-        else msg = "You are now away from keyboard (AFK).";
-        msg += " Your Key has slowed to " + formatFloat(windRate,2) + "x its normal rate, and your movements and abilities are hindered as a result.";
-    }
-    else msg = "You are now no longer away from keyboard (AFK). Your key has been restored to normal operation, and winds down once again at its normal rate.";
-    llOwnerSay(msg + " You have " + (string)minsLeft + " minutes of life left.");
+    // This code makes for too much blather, and we shouldn't be blabbering from the
+    // AFK setting code anyway: make talk at the originating point, which makes it
+    // simpler to put the right message out - or no message.
+    //
+    //if (afk) {
+    //    if (autoSet) msg = "Automatically entering AFK mode.";
+    //    else msg = "You are now away from keyboard (AFK).";
+    //    msg += " Your Key has slowed to " + formatFloat(windRate,2) + "x its normal rate, and your movements and abilities are hindered as a result.";
+    //}
+    //else msg = "You are now no longer away from keyboard (AFK). Your key has been restored to normal operation, and winds down once again at its normal rate.";
+    //llOwnerSay(msg + " You have " + (string)minsLeft + " minutes of life left.");
 
-    lmSendConfig("windRate", (string)(windRate));
-    lmSendConfig("windingDown", (string)(windingDown));
-    lmSendConfig("afk", (string)(afk));
+    // These are redundant: setWindRate does this
+    //lmSendConfig("windRate", (string)(windRate));
+    //lmSendConfig("windingDown", (string)(windingDown));
+
+    // The odd code for setting AFK folds values 1 and 2 into
+    // a single value
+    lmSendConfig("afk", (string)(afk = (setting != 0)));
     lmSendConfig("autoAFK", (string)autoAFK);
 }
 
@@ -871,7 +879,6 @@ default {
                         llOwnerSay("Have you remembered to thank " + name + " for winding you?");
 
                     //if (effectiveWindTime > 0) lmSendToAgent("You have given " + dollName + " " + (string)llFloor(effectiveWindTime / SEC_TO_MIN) + " more minutes of life.", id);
-                    lmSendToAgent("You have given " + dollName + " " + (string)llFloor(windAmount / SEC_TO_MIN) + " more minutes of life.", id);
                     lmSendConfig("lastWinderID", (string)(lastWinderID = id));
                     lmSendConfig("lastWinderName", name);
 
@@ -883,7 +890,9 @@ default {
 
                     } else {
 
-                        lmSendToAgent("Doll is now at " + formatFloat((float)timeLeftOnKey * 100.0 / (float)effectiveLimit, 2) + "% of capacity.", id);
+                        lmSendToAgent("You turn " + dollName + "'s Key, and " + llToLower(pronounSheDoll) + " receives " +
+                            (string)llFloor(windAmount / SEC_TO_MIN) + " more minutes of life (" +
+                            formatFloat((float)timeLeftOnKey * 100.0 / (float)effectiveLimit, 2) + "% capacity).", id);
                         lmInternalCommand("mainMenu", "|" + name, id);
                     }
 

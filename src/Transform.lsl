@@ -465,8 +465,14 @@ default {
 
             if (autoAFK && (afk != dollAway)) {
 
-                if (dollAway) lmSetConfig("afk", "2");
-                else lmSetConfig("afk", "0");
+                if (dollAway) {
+                    lmSetConfig("afk", "2");
+                    llOwnerSay("Automatically entering AFK mode; Key subsystems slowing...");
+                }
+                else {
+                    lmSetConfig("afk", "0");
+                    llOwnerSay("Entering AFK mode; Key subsystems slowing...");
+                }
 
                 //displayWindRate = setWindRate();
                 //lmInternalCommand("setAFK", (string)afk + "|1|" + formatFloat(windRate, 1) + "|" + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate)), NULL_KEY);

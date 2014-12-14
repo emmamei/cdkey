@@ -3,6 +3,7 @@
 
 #include "GlobalDefines.lsl"
 #include "LinkMessage.lsl"
+#include "Utility.lsl"
 
 //-----------------------------------
 // Internal Shared Functions
@@ -78,9 +79,18 @@ broadcastWindRate() {
 #define CHECK "✔"
 #define CROSS "✘"
 
+// Folds a trailing space in
+#define CHECKP "✔ "
+#define CROSSP "✘ "
+
 list cdGetButton(string text, key id, integer enabled, integer oneWay) {
-   if (enabled) return [CHECK + " " + text];
-   else if (!oneWay || cdIsController(id)) return [CROSS + " " + text];
+
+   //debugSay(5,"LIB-MENU","cdGetButton: text = \"" + text + "\"; enabled = " + (string)enabled + "; oneWay = " + (string)oneWay);
+   //debugSay(5,"LIB-MENU","Controller status = " + (string)(cdIsController(id)));
+   if (enabled) return [CHECKP + text];
+
+   // Trying to diwable - only a Controller can clear it
+   if (!oneWay || cdIsController(id)) return [CROSSP + text];
    return [];
 }
 

@@ -678,7 +678,7 @@ default {
                 list pluslist;
 
                 if (cdIsDoll(id)) {
-                    msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation.";
+                    msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. ";
                     pluslist += [ "Features...", "Key..." ];
 
                     if (cdCarried() || cdControllerCount() > 0) {
@@ -700,8 +700,9 @@ default {
                     pluslist += [ "Type...", "Access...", "Abilities...", "Drop Control" ];
 
                 }
+                // This section should never be triggered: it means that
+                // someone who shouldn't see the Options menu did.
                 else return;
-                pluslist += [ "Features...", "Key..." ];
 
                 cdDialogListen();
                 llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
@@ -912,13 +913,21 @@ default {
                 string afterSpace = llDeleteSubString(choice, 0, space);
 
                 // Space Found in Menu Selection
-                     if (afterSpace == "Visible") lmSendConfig("isVisible", (string)(visible = (beforeSpace == CROSS)));
+                if (afterSpace == "Visible") {
+                     lmSendConfig("isVisible", (string)(visible = (beforeSpace == CROSS)));
+                     if (visible) lmSendToAgentPlusDoll("You watch as the Key fades away...",id);
+                     else lmSendToAgentPlusDoll("The Key magically reappears",id);
+                }
                 else if (afterSpace == "AFK") {
 
-                    // This is BAD form here - we are supposed to only set things
-                    // from a 300 message, but here we set afk: we are assuming
-                    // that this setting will prevail
-                    lmSetConfig("afk", (string)(afk = (beforeSpace == CROSS)));
+                    if (beforeSpace == CROSS) {
+                        lmSetConfig("afk", "1");
+                        lmSendToAgentPlusDoll("AFK Mode manually triggered; Key subsystems slowing...",id);
+                    }
+                    else {
+                        lmSetConfig("afk", "0");
+                        lmSendToAgentPlusDoll("You hear the Key whir back to full power",id);
+                    }
                     lmMenuReply(MAIN, name, id);
                 }
                 else if ((afterSpace == "Blacklist") || (afterSpace == "Controller")) {
