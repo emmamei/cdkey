@@ -682,7 +682,7 @@ default {
                     pluslist += [ "Features...", "Key..." ];
 
                     if (cdCarried() || cdControllerCount() > 0) {
-                        pluslist += [ "Access" ];
+                        pluslist += [ "Access..." ];
                     }
                     else {
                         pluslist += [ "Type...", "Access...", "Abilities..." ];
@@ -997,9 +997,9 @@ default {
                             if (cdIsDoll(id)) msg = "Current " + msg + ":";
                             else msg = "Doll's current " + msg + ":";
 
-                            i = n + 1;
+                            i = n;
                             while (i--)
-                                msg += "\n" + (string)(n - i + 1) + ". " + llList2String(dialogNames, n - i);
+                                msg += "\n" + (string)(n - i) + ". " + llList2String(dialogNames, n - i - 1);
                         }
                         llRegionSayTo(id, 0, msg);
                     }
