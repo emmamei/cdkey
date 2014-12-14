@@ -964,9 +964,13 @@ default {
                 llDialog(id, "You can set the amount of time in each wind.\nDolly currently winds " + (string)windMins + " mins.",
                     dialogSort(windChoices + [ MAIN ]), dialogChannel);
             }
-            else if (cdIsCarrier(id) || cdIsController(id)) {
-                if (choice == "Hold") collapse(JAMMED);
-                else if (choice == "Unwind") collapse(NO_TIME);
+            else if (choice == "Hold") {
+                collapse(JAMMED);
+                lmSendToAgentPlusDoll("Dolly freezes, " + pronounHerDoll + " key kept from turning",id);
+            }
+            else if (choice == "Unwind") {
+                collapse(NO_TIME);
+                lmSendToAgentPlusDoll("Dolly collapses, " + pronounHerDoll + " key unwound",id);
             }
         }
         // Quick shortcut...

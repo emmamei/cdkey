@@ -447,7 +447,11 @@ default {
                         timeleft = "Dolly has " + (string)minsLeft + " minutes remaining. ";
 
                         timeleft += "Key is ";
-                        if (windingDown) timeleft += "winding down at " + formatFloat(windRate, 1) + "x rate. ";
+                        if (windingDown) {
+                            if (windRate == 1) timeleft += "winding down at a normal rate. ";
+                            else if (windRate > 1) timeleft += "winding down at an accelerated rate. ";
+                            else if (windRate < 1) timeleft += "winding down at a slowed rate. ";
+                        }
                         else timeleft += "not winding down. ";
                     }
                     else timeleft = "Dolly has no time left. ";
@@ -555,7 +559,10 @@ default {
 
                             // Toucher is not Doll.... could be anyone
                             msg =  dollName + " is a doll and likes to be treated like " +
-                                   "a doll. So feel free to use these options.";
+                                   "a doll. So feel free to use these options. ";
+
+                            if (isCarrier || isController)
+                                menu += [ "Hold", "Unwind" ];
                         }
 
                         if (RLVok == 1) {

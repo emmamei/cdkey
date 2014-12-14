@@ -763,15 +763,13 @@ default {
             }
 #endif
             else if (choice == "Carry") {
-                if (!collapsed && !cdIsDoll(id) && (cdControllerCount() || cdIsController(id))) {
-                    lmSendConfig("carrierID", (string)(carrierID = id));
-                    lmSendConfig("carrierName", (carrierName = name));
+                lmSendConfig("carrierID", (string)(carrierID = id));
+                lmSendConfig("carrierName", (carrierName = name));
 
-                    if (!quiet) llSay(0, "The doll " + dollName + " has been picked up by " + carrierName);
-                    else {
-                        llOwnerSay("You have been picked up by " + carrierName);
-                        llRegionSayTo(carrierID, 0, "You have picked up the doll " + dollName);
-                    }
+                if (!quiet) llSay(0, "Dolly " + dollName + " has been picked up by " + carrierName);
+                else {
+                    llOwnerSay("You have been picked up by " + carrierName);
+                    llRegionSayTo(carrierID, 0, "You have picked up the doll " + dollName);
                 }
             }
             else if (choice == "Uncarry") {
