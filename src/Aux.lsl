@@ -344,8 +344,7 @@ default {
                 cdDialogListen();
                 llDialog(id, msg, dialogSort(plusList + MAIN), dialogChannel);
             }
-            // Key menu is only shown for Controllers and for the Doll themselves
-            else if (choice == "Key..." && (cdIsController(id) || cdIsDoll(id))) {
+            else if (choice == "Key...") {
 
                 list plusList = ["Dolly Name...","Gem Colour...","Gender:" + dollGender];
 
