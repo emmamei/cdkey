@@ -39,6 +39,7 @@
 //========================================
 // VARIABLES
 //========================================
+vector gemColour;
 string nudeFolder;
 string normalselfFolder;
 integer phraseCount;
@@ -621,7 +622,49 @@ default {
             }
         }
         else if (code == INTERNAL_CMD) {
-            ;
+            string cmd = llList2String(split, 0);
+            split = llDeleteSubList(split, 0, 0);
+
+            if (cmd == "setGemColour") {
+                vector newColour = (vector)llList2String(split, 0);
+                integer j; integer s; list params; list colourParams;
+                integer n; integer m;
+
+                n = llGetNumberOfPrims();
+                for (i = 1; i < n; i++) {
+                    params += [ PRIM_LINK_TARGET, i ];
+                    if (llGetSubString(llGetLinkName(i), 0, 4) == "Heart") {
+                        if (gemColour != newColour) {
+                            if (!s) {
+                                m = llGetLinkNumberOfSides(i);
+                                for (j = 0; j < m; j++) {
+                                    vector shade = <llFrand(0.2) - 0.1 + newColour.x,
+                                                    llFrand(0.2) - 0.1 + newColour.y,
+                                                    llFrand(0.2) - 0.1 + newColour.z>  * (1.0 + (llFrand(0.2) - 0.1));
+
+                                    if (shade.x < 0.0) shade.x = 0.0;
+                                    if (shade.y < 0.0) shade.y = 0.0;
+                                    if (shade.z < 0.0) shade.z = 0.0;
+
+                                    if (shade.x > 1.0) shade.x = 1.0;
+                                    if (shade.y > 1.0) shade.y = 1.0;
+                                    if (shade.z > 1.0) shade.z = 1.0;
+
+                                    colourParams += [ PRIM_COLOR, j, shade, 1.0 ];
+                                }
+                                params += colourParams;
+                                s = 1;
+                            }
+                            else params += colourParams;
+                        }
+                    }
+                }
+                llSetLinkPrimitiveParamsFast(0, params);
+                if (gemColour != newColour) {
+                    lmSendConfig("gemColour", (string)(gemColour = newColour));
+                }
+                params = [];
+            }
         }
 
         else if (code == RLV_RESET) {
