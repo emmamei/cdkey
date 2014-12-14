@@ -399,7 +399,7 @@ default {
             //
             if (cmd == "randomDress") {
 #ifdef DEVELOPER_MODE
-                llOwnerSay("random dress chosen"); // DEBUG
+                debugSay(6, "DEBUG-DRESS", "random dress chosen");
 #endif
                 if (tempWearLock) {
                     string s = llToLower(pronounSheDoll);
@@ -411,8 +411,8 @@ default {
 
                     lmSendConfig("clothingFolder", clothingFolder);
 #ifdef DEVELOPER_MODE
-                    llOwnerSay("clothingFolder = " + clothingFolder); // DEBUG
-                    llOwnerSay("listing inventory on 2665..."); // DEBUG
+                    debugSay(6, "DEBUG-DRESS", "clothingFolder = " + clothingFolder);
+                    debugSay(6, "DEBUG-DRESS", "listing inventory on 2665...");
 #endif
                     listInventoryOn("2665");
                 }
@@ -483,7 +483,7 @@ default {
                             lmSendConfig("clothingFolder", clothingFolder);
                             setActiveFolder();
 
-                            llOwnerSay("Trying the " + activeFolder + " folder.");
+                            debugSay(6, "DEBUG-DRESS", "Trying the " + activeFolder + " folder.");
 
                             listInventoryOn("2666");
                             return;
@@ -717,9 +717,7 @@ default {
         //
         if (channel == (rlvBaseChannel + 2665)) { // list of inventory items from the current prefix
 
-#ifdef DEVELOPER_MODE
-            llOwnerSay("inventory listed on 2665..."); // DEBUG
-#endif
+            debugSay(6, "DEBUG-DRESS", "inventory listed on 2665...");
 
             llListenRemove(listen_id_2665);
             outfitsList = llParseString2List(choice, [","], []);
@@ -801,7 +799,7 @@ default {
                         lmSendConfig("clothingFolder", clothingFolder);
                         setActiveFolder();
 
-                        llOwnerSay("Trying the " + activeFolder + " folder.");
+                        debugSay(6, "DEBUG-DRESS", "Trying the " + activeFolder + " folder.");
 
                         listInventoryOn("2665"); // recursion
                     }
@@ -1000,4 +998,4 @@ default {
     }
 }
 
-
+//========== DRESS ==========

@@ -635,3 +635,5 @@ default {
         else llSetTimerEvent(0.0);
     }
 }
+
+//========== AUX ==========

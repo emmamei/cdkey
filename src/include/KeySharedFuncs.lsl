@@ -23,17 +23,10 @@ float setWindRate() {
     //newWindRate = baseWindRate;
     //if (afk) newWindRate *= 0.5;
 
-    displayWindRate = baseWindRate;
-    if (afk) displayWindRate *= 0.5;
+    windingDown = cdWindDown();
+    windRate = baseWindRate;
 
-    if (cdWindDown()) {
-        windRate = displayWindRate;
-        windingDown = TRUE;
-    }
-    else {
-        windRate = 0.0;
-        windingDown = FALSE;
-    }
+    if (afk) windRate *= 0.5 * baseWindRate;
 
     // There are three winding rates:
     //
@@ -72,12 +65,12 @@ float setWindRate() {
     // the displayWindRate as a side effect anyway - so the return is useless,
     // and setting the displayWindRate to the value returned is also useless.
     //
-    return displayWindRate;
+    return windRate;
 }
 
 broadcastWindRate() {
     lmSendConfig("baseWindRate", (string)baseWindRate);
-    lmSendConfig("displayWindRate", (string)displayWindRate);
+    //lmSendConfig("displayWindRate", (string)displayWindRate);
     lmSendConfig("windRate", (string)windRate);
     lmSendConfig("windingDown", (string)windingDown);
 }

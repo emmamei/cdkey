@@ -100,7 +100,7 @@ default {
              if (code == 305) return;
         else if (code == 136) return;
 
-        else if (code == 300) {
+        else if (code == CONFIG) {
             string name = cdListElement(split, 0);
             string value = cdListElement(split, 1);
 
@@ -115,10 +115,11 @@ default {
             float delay = cdListFloatElement(split, 0);
 
             memReport(cdMyScriptName(),delay);
-        } else
+        }
+        else if (code == 142) {
 
-        cdConfigReport();
-
+            cdConfigureReport();
+        }
         else if (code == 315) {
             //string realScript = script;
             //string script = cdListElement(split, 0);
@@ -360,9 +361,11 @@ default {
             }
 #endif
         }
-        else if (code == 350) {
+        else if (code == RLV_RESET) {
             RLVok = (cdListIntegerElement(split, 0) == 1);
             RLVstarted = 1;
         }
     }
 }
+
+//========== STATUSRLV ==========

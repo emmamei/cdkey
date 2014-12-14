@@ -120,7 +120,6 @@ default
             // Shortcut: d
             else if (c == "d") {
                      if (name == "detachable")             detachable = (integer)value;
-                else if (name == "displayWindRate")   displayWindRate = (float)value;
                 else if (name == "dollType")                 dollType = value;
                 else if (name == "dollGender")             dollGender = value;
                 else if (name == "demoMode") {
@@ -593,8 +592,8 @@ default
                         //debugSay(6, "DEBUG", "effectiveLimit = " + (string)effectiveLimit);
                         //debugSay(6, "DEBUG", "displayWindRate = " + (string)displayWindRate);
 
-                        float t1 = timeLeftOnKey / (SEC_TO_MIN * displayWindRate);
-                        float t2 = effectiveLimit / (SEC_TO_MIN * displayWindRate);
+                        float t1 = timeLeftOnKey / (SEC_TO_MIN * windRate);
+                        float t2 = effectiveLimit / (SEC_TO_MIN * windRate);
                         float p = t1 * 100.0 / t2;
 
                         string msg = "Time: " + (string)llRound(t1) + "/" +
@@ -621,12 +620,12 @@ default
                     else if (choice == "stats") {
                         //debugSay(6, "DEBUG", "timeLeftOnKey = " + (string)timeLeftOnKey);
                         //debugSay(6, "DEBUG", "effectiveLimit = " + (string)effectiveLimit);
-                        //debugSay(6, "DEBUG", "displayWindRate = " + (string)displayWindRate);
+                        //debugSay(6, "DEBUG", "windRate = " + (string)windRate);
 
-                        //displayWindRate;
+                        //windRate;
 
-                        lmSendToAgent("Time remaining: " + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate)) + " minutes of " +
-                                    (string)llRound(effectiveLimit / (SEC_TO_MIN * displayWindRate)) + " minutes.", id);
+                        lmSendToAgent("Time remaining: " + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * windRate)) + " minutes of " +
+                                    (string)llRound(effectiveLimit / (SEC_TO_MIN * windRate)) + " minutes.", id);
 
                         string msg;
 
@@ -980,3 +979,5 @@ default
         }
     }
 }
+
+//========== CHATHANDLER ==========

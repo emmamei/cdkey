@@ -1052,3 +1052,5 @@ default {
         ifPermissions();
     }
 }
+
+//========== AVATAR ==========

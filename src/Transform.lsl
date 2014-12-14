@@ -344,7 +344,15 @@ default {
         // typeFolderExpected = Computed but untested typeFolder
 
 #ifdef DEVELOPER_MODE
-        if (timeReporting) llOwnerSay("Transform Timer fired, interval " + formatFloat(llGetTime() - lastTimerEvent,3) + "s.");
+        string s;
+        //if (timeReporting) llOwnerSay("Transform Timer fired, interval " + formatFloat(llGetTime() - lastTimerEvent,3) + "s. (lowScriptMode ");
+
+        s = "Transform Timer fired, interval " + formatFloat(llGetTime() - lastTimerEvent,3) + "s. (lowScriptMode ";
+
+        if (lowScriptMode) s += "is active).";
+        else s += "is not active).";
+
+        if (timeReporting) llOwnerSay(s);
 #endif
         // transform lock: check time
         if (transformLockExpire) {
@@ -877,7 +885,9 @@ default {
 
             // Note that, unlike the dialog channel, the type search channel is removed and recreated... maybe it should not be
             llListenRemove(typeSearchHandle);
-            llSetTimerEvent(30.0);
+            if (lowScriptMode) llSetTimerEvent(LOW_RATE);
+            else llSetTimerEvent(STD_RATE);
+
 
             // if there is no outfits folder we mark the type folder search
             // as "failed" and don't use a type folder...
@@ -928,7 +938,8 @@ default {
                 lmSendConfig("outfitsFolder", outfitsFolder);
                 lmSendConfig("useTypeFolder", (string)useTypeFolder);
                 lmSendConfig("typeFolder", typeFolder);
-                llSetTimerEvent(STD_RATE);
+                if (lowScriptMode) llSetTimerEvent(LOW_RATE);
+                else llSetTimerEvent(STD_RATE);
 
                 // at this point we've either found the typeFolder or not,
                 // and the outfitsFolder is set
@@ -987,4 +998,4 @@ default {
     }
 }
 
-
+//========== TRANSFORM ==========

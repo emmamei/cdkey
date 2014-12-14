@@ -64,7 +64,7 @@ key lastWinderID = NULL_KEY;
 #ifdef KEY_HANDLER
 key keyHandler = NULL_KEY;
 #endif
-float displayRate;
+//float displayRate;
 
 integer targetHandle;
 integer lowScriptTimer;
@@ -124,7 +124,7 @@ setAfk(integer afkSet) {
     if (afkSet) afk = 1;
     integer autoSet = (afkSet == 2);
 
-    displayWindRate = setWindRate();
+    setWindRate();
 
     if (!autoSet) {
         integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0);
@@ -444,7 +444,7 @@ default {
         //----------------------------------------
         // SET WIND RATE
 
-        displayWindRate = setWindRate();
+        setWindRate();
 
         //----------------------------------------
         // TIME SAVED (TIMER INTERVAL)
@@ -524,7 +524,7 @@ default {
             debugSay(3,"DEBUG-TIME","Time left on key at unwinding: " + (string)timeLeftOnKey);
             if (timeLeftOnKey > 0) {
 
-                minsLeft = llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate));
+                minsLeft = llRound(timeLeftOnKey / (SEC_TO_MIN * windRate));
 
                 if (doWarnings && !warned) {
                     if (minsLeft == 30 || minsLeft == 15 || minsLeft == 10 || minsLeft ==  5 || minsLeft ==  2) {
@@ -613,9 +613,6 @@ default {
             else if (name == "windMins") {
                 //if (script != "Main") llOwnerSay("windMins LinkMessage sent by " + script + " with value " + value);
                 windMins = (integer)value;
-            }
-            else if (name == "displayWindRate") {
-                if ((float)value) displayWindRate = (float)value;
             }
             else if (name == "collapsed")                    collapsed = (integer)value;
             else if (name == "demoMode") {
@@ -740,7 +737,6 @@ default {
                 if (wearLock) {
                     wearLockExpire = llGetUnixTime() + WEAR_LOCK_TIME;
                     lmSendConfig("wearLockExpire", (string)(WEAR_LOCK_TIME));
-                    //displayWindRate = setWindRate();
                 }
                 else {
                     lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0));
@@ -768,6 +764,7 @@ default {
             string name = llList2String(split, 1);
 
             if (choice == MAIN) {
+                // call actual Menu code
                 lmInternalCommand("mainMenu", "|" + name, id);
             }
             else if (choice == "Wind Emg") {
@@ -879,7 +876,7 @@ default {
                     lmSendConfig("lastWinderName", name);
 
                     if (timeLeftOnKey == effectiveLimit) { // Fully wound
-                        llOwnerSay("You have been fully wound by " + name + " - " + (string)llRound(effectiveLimit / (SEC_TO_MIN * displayWindRate)) + " minutes remaining.");
+                        llOwnerSay("You have been fully wound by " + name + " - " + (string)llRound(effectiveLimit / (SEC_TO_MIN * windRate)) + " minutes remaining.");
 
                         if (!quiet) llSay(0, dollName + " has been fully wound by " + name + ". Thanks for winding Dolly!");
                         else lmSendToAgent(dollName + " is now fully wound. Thanks for winding Dolly!", id);
@@ -982,10 +979,10 @@ default {
                 dollID = llGetOwner();
                 dollName = llGetDisplayName(dollID);
 
-                displayRate = setWindRate();
+                setWindRate();
                 lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
                 debugSay(3,"DEBUG-TIME","Time left on key at start: " + (string)timeLeftOnKey);
-                llOwnerSay("You have " + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * displayRate)) + " minutes of life remaining.");
+                llOwnerSay("You have " + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * windRate)) + " minutes of life remaining.");
 
                 clearAnim = 1;
             }
@@ -1017,3 +1014,5 @@ default {
     }
 #endif
 }
+
+//========== MAIN ==========

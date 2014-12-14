@@ -26,13 +26,13 @@
 //#define ALL_CONTROLS (CONTROL_FWD|CONTROL_BACK|CONTROL_LEFT|CONTROL_RIGHT|CONTROL_ROT_LEFT|CONTROL_ROT_RIGHT|CONTROL_UP|CONTROL_DOWN|CONTROL_LBUTTON|CONTROL_ML_LBUTTON)
 //integer allControls = ALL_CONTROLS;
 
-#ifndef DEVELOPER_MODE
-key mainCreator;
-#endif
 #ifdef DEVELOPER_MODE
 float lastTimerEvent;
 float thisTimerEvent;
 float timerInterval;
+#else
+key mainCreator;
+integer locked;
 #endif
 
 float rlvTimer;
@@ -376,10 +376,11 @@ default {
         if (code == 135) {
             float delay = llList2Float(split, 0);
             memReport(cdMyScriptName(),delay);
-        } else
+        }
+        else if (code == 142) {
 
-        cdConfigReport();
-
+            cdConfigureReport();
+        }
         else if (code == CONFIG) {
             name = llList2String(split, 0);
             split = llDeleteSubList(split, 0, 0);
@@ -496,3 +497,5 @@ default {
         lmSendConfig("RLVok",(string)RLVok);
     }
 }
+
+//========== CHECKRLV ==========

@@ -643,7 +643,9 @@ default {
         doRestart();
 
         // Set the debug level for all scripts early
+#ifdef DEVELOPER_MODE
         lmSendConfig("debugLevel",(string)debugLevel);
+#endif
         readPreferences();
     }
 
@@ -854,3 +856,4 @@ default {
     }
 }
 
+//========== START ==========
