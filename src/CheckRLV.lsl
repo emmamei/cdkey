@@ -459,7 +459,10 @@ default {
 #endif
                 lmSendConfig("RLVok",(string)RLVok);
             }
-            else if (choice == "RLV On") doCheckRLV();
+            else if (choice == "RLV On") {
+                doCheckRLV();
+                if (RLVok) activateRLV();
+            }
         }
     }
 

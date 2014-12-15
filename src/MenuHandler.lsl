@@ -9,10 +9,10 @@
 #include "include/GlobalDefines.lsl"
 
 // code to clean up name and key list
-#define KEY2NAME 1
+//#define KEY2NAME 1
 //
 // Code to handle a name2key script
-#define NAME4KEY 1
+//#define NAME4KEY 1
 //
 #define LISTENER_ACTIVE 1
 #define LISTENER_INACTIVE 0
@@ -774,29 +774,7 @@ default {
         if (channel == dialogChannel) {
 
             if (space == NOT_FOUND) {
-                if (choice == "Options...") {
-                    cdMenuInject("Options...");
-
-//                    string msg; list pluslist;
-//
-//                    if (isDoll || cdIsBuiltinController(id)) {
-//                        msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation.";
-//
-//                        pluslist += [ "Type...", "Access...", "Abilities..." ];
-//                    }
-//                    else if (cdIsUserController(id)) {
-//
-//                        msg = "See " + WEB_DOMAIN + "controller.htm. Choose what you want to happen.";
-//                        pluslist += [ "Type...", "Access...", "Abilities...", "Drop Control" ];
-//
-//                    }
-//                    else return;
-//
-//                    pluslist += [ "Features...", "Key..." ];
-//
-//                    cdDialogListen();
-//                    llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
-                }
+                if (choice == "Options...") cdMenuInject("Options...");
                 else if (choice == "Detach") lmInternalCommand("detach", "", id);
                 else if (choice == "Accept") lmInternalCommand("addMistress", (string)id + "|" + name, id);
                 else if (choice == "Decline") ; // do nothing
@@ -907,8 +885,9 @@ default {
 
                     if ((index = llListFindList(controllers, [ id ])) != NOT_FOUND) {
                         controllers = llDeleteSubList(controllers, index, index + 1);
-                        lmSendConfig("controllers", llDumpList2String(controllers, "|"));
+                        lmSetConfig("controllers", llDumpList2String(controllers, "|"));
                         lmSendToAgent("You are no longer a controller of this Dolly.", id);
+                        llOwnerSay("Your controller " + name + " has relinquished control.");
                     }
                 }
                 else if (beforeSpace == CROSS || beforeSpace == CHECK) {

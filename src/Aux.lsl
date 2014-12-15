@@ -27,7 +27,7 @@ string memData;
 string minsLeft;
 //string windRate;
 integer windMins;
-string dollyName;
+string dollDisplayName;
 string curGemColour;
 integer maxMins;
 integer ncLine;
@@ -143,7 +143,7 @@ default {
             else if (name == "canSit")                         canSit = (integer)value;
             else if (name == "canStand")                     canStand = (integer)value;
             else if (name == "allowRepeatWind")           allowRepeatWind = (integer)value;
-            else if (name == "dollyName")                   dollyName = value;
+            else if (name == "dollDisplayName")                   dollDisplayName = value;
             else if (name == "doWarnings")                 doWarnings = (integer)value;
             else if (name == "poseSilence")               poseSilence = (integer)value;
             else if (name == "detachable")                 detachable = (integer)value;
@@ -255,6 +255,7 @@ default {
                 lmSendToAgent("Here is your link to the Community Dolls website: " + WEB_DOMAIN, id);
             else if (choice == "Join Group")
                 lmSendToAgent("Here is your link to the Community Dolls group profile: " + WEB_GROUP, id);
+
             else if (choice == "Access...") {
                 //debugSay(5, "DEBUG-AUX", "Dialog channel: " + (string)dialogChannel);
                 msg = "Key Access Menu.\n\n" +
@@ -369,12 +370,13 @@ Controller - Take care choosing your controllers; they have great control over D
                 else if (s == "Female") setGender("male");
 
                 llOwnerSay("Gender is now set to " + dollGender);
+                lmMenuReply("Key...", llGetDisplayName(id), id);
             }
             else if (choice == "Gem Colour...") {
                 msg = "Here you can choose your own gem colour.";
 
-                    cdDialogListen();
-                    llDialog(id, msg, dialogSort(COLOR_NAMES + MAIN), dialogChannel);
+                cdDialogListen();
+                llDialog(id, msg, dialogSort(COLOR_NAMES + MAIN), dialogChannel);
             }
             else if (llListFindList(COLOR_NAMES, [ choice ]) != NOT_FOUND) {
                 integer index = llListFindList(COLOR_NAMES, [ choice ]);
@@ -392,7 +394,7 @@ Controller - Take care choosing your controllers; they have great control over D
                 }
                 else if (choice == "Dolly Name...") {
                     textboxType = 2;
-                    llTextBox(id, "Here you can change your dolly name from " + dollyName + " to a name of your choice.", textboxChannel);
+                    llTextBox(id, "Here you can change your dolly name from " + dollDisplayName + " to a name of your choice.", textboxChannel);
                 }
 
                 if (textboxHandle) llListenRemove(textboxHandle);
@@ -612,7 +614,7 @@ Controller - Take care choosing your controllers; they have great control over D
             }
 
             // Type 2 = New Dolly Name
-            else if (textboxType == 2) lmSendConfig("dollyName", choice);
+            else if (textboxType == 2) lmSendConfig("dollDisplayName", choice);
 
             // After processing the choice, what menu do we give back?
             //

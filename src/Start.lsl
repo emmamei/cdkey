@@ -43,7 +43,7 @@ float initTimer;
 
 key MistressID = NULL_KEY;
 
-string dollyName;
+string dollDisplayName;
 string appearanceData;
 string chatFilter = "";
 integer chatEnable = TRUE;
@@ -184,7 +184,7 @@ processConfiguration(string name, string value) {
     list sendName = [ "barefeet", "quiet", "outfitsFolder",
                       "busyIsAway", "canAfk", "canFly", "allowPose", "canSit", "canStand",
                       "canDressSelf", "detachable", "dollType", "pleasureDoll", "poseSilence",
-                      "autoTP", "allowDress", "keyLimit", "chatChannel", "dollyName", "demoMode",
+                      "autoTP", "allowDress", "keyLimit", "chatChannel", "dollDisplayName", "demoMode",
                       "userAfkRLVcmd", "userBaseRLVcmd", "userCollapseRLVcmd", "userPoseRLVcmd" , "showPhrases",
                       "allowDress", "allowCarry", "allowRepeatWind"
                     ];
@@ -358,19 +358,19 @@ doneConfiguration(integer prefsRead) {
     //initializationCompleted
     isAttached = cdAttached();
 
-    if (dollyName == "") {
+    if (dollDisplayName == "") {
         string name = dollName;
         integer space = llSubStringIndex(name, " ");
 
         if (space != NOT_FOUND) name = llGetSubString(name, 0, space - 1);
 
-        lmSendConfig("dollyName", (dollyName = "Dolly " + name));
+        lmSendConfig("dollDisplayName", (dollDisplayName = "Dolly " + name));
     }
 
     // WearLock should be clear
     lmSetConfig("wearLock","0");
 
-    if (isAttached) cdSetKeyName(dollyName + "'s Key");
+    if (isAttached) cdSetKeyName(dollDisplayName + "'s Key");
 
     debugSay(3,"DEBUG-START","doneConfiguration done - starting init code 110");
     lmInitState(110);
@@ -523,19 +523,19 @@ default {
                     }
                 }
             }
-            else if (name == "dollyName") {
+            else if (name == "dollDisplayName") {
                 if (script != cdMyScriptName()) {
-                    dollyName = value;
+                    dollDisplayName = value;
 
-                    if (dollyName == "") {
+                    if (dollDisplayName == "") {
                         string name = dollName;
                         integer space = llSubStringIndex(name, " ");
 
                         if (space != NOT_FOUND) name = llGetSubString(name, 0, space -1);
 
-                        lmSendConfig("dollyName", (dollyName = "Dolly " + name));
+                        lmSendConfig("dollDisplayName", (dollDisplayName = "Dolly " + name));
                     }
-                    if (cdAttached()) cdSetKeyName(dollyName + "'s Key");
+                    if (cdAttached()) cdSetKeyName(dollDisplayName + "'s Key");
                 }
             }
         }
