@@ -777,7 +777,9 @@ default {
         if (channel == dialogChannel) {
 
             if (space == NOT_FOUND) {
-                if (choice == "Options...") cdMenuInject("Options...");
+                if (choice == "Options...") {
+                    cdMenuInject("Options...");
+                }
                 else if (choice == "Detach") lmInternalCommand("detach", "", id);
                 else if (choice == "Accept") lmInternalCommand("addMistress", (string)id + "|" + name, id);
                 else if (choice == "Decline") ; // do nothing
