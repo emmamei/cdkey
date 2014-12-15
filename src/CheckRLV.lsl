@@ -373,15 +373,7 @@ default {
 
         scaleMem();
 
-        if (code == 135) {
-            float delay = llList2Float(split, 0);
-            memReport(cdMyScriptName(),delay);
-        }
-        else if (code == 142) {
-
-            cdConfigureReport();
-        }
-        else if (code == CONFIG) {
+        if (code == CONFIG) {
             name = llList2String(split, 0);
             split = llDeleteSubList(split, 0, 0);
             value = llList2String(split, 0);
@@ -462,6 +454,16 @@ default {
             else if (choice == "RLV On") {
                 doCheckRLV();
                 if (RLVok) activateRLV();
+            }
+        }
+        else if (code < 200) {
+            if (code == 135) {
+                float delay = llList2Float(split, 0);
+                memReport(cdMyScriptName(),delay);
+            }
+            else if (code == 142) {
+
+                cdConfigureReport();
             }
         }
     }

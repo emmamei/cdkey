@@ -514,8 +514,11 @@ default {
                         if (keyAnimation != "") {
                             msg += "Doll is currently posed. ";
 
-                            if ((isController) || (!isDoll && allowPose) || (poserID == dollID)) {
-                                menu += ["Poses...","Unpose"];
+                            if (isController || (isDoll && poserID == dollID))
+                                menu += [ "Poses...", "Unpose" ];
+                            else if (!isDoll) {
+                                if (allowPose) menu += [ "Poses...", "Unpose" ];
+                                else if (poserID == dollID) menu += [ "Unpose" ];
                             }
                         }
                         else {
@@ -817,8 +820,15 @@ default {
 
                         activeChannel = blacklistChannel;
                         msg = "blacklist";
-                        dialogKeys  = cdList2ListStrided(blacklist, 0, -1, 2);
-                        dialogNames = cdList2ListStrided(blacklist, 1, -1, 2);
+                        if (blacklist == []) {
+                            dialogKeys  = cdList2ListStrided(blacklist, 0, -1, 2);
+                            dialogNames = cdList2ListStrided(blacklist, 1, -1, 2);
+                        }
+                        else {
+                            dialogKeys  = [];
+                            dialogNames = [];
+                            blacklist   = []; // an attempt to free memory
+                        }
                         blacklistHandle = cdListenUser(blacklistChannel, id);
                     }
                     else {
@@ -829,8 +839,15 @@ default {
 
                         activeChannel = controlChannel;
                         msg = "controller list";
-                        dialogKeys  = cdList2ListStrided(controllers, 0, -1, 2);
-                        dialogNames = cdList2ListStrided(controllers, 1, -1, 2);
+                        if (controllers == []) {
+                            dialogKeys  = cdList2ListStrided(controllers, 0, -1, 2);
+                            dialogNames = cdList2ListStrided(controllers, 1, -1, 2);
+                        }
+                        else {
+                            dialogKeys  = [];
+                            dialogNames = [];
+                            controllers = []; // an attempt to free memory
+                        }
                         controlHandle = cdListenUser(controlChannel, id);
                     }
 
@@ -841,7 +858,7 @@ default {
                     for (i = 0; i < n; i++) dialogButtons += llGetSubString((string)(i+1) + ". " + llList2String(dialogNames, i), 0, 23);
 
                     if (beforeSpace == CIRCLE_PLUS) {
-                        if (llGetListLength(dialogKeys) < 11) {
+                        if (n < 11) {
                             llSensor("", "", AGENT, 20.0, PI);
                         }
                         else {
