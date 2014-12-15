@@ -648,7 +648,7 @@ default {
 
                 else if (name == "quiet")                         quiet = (integer)value;
                 else if (name == "chatChannel")             chatChannel = (integer)value;
-                else if (name == "canPose")                     canPose = (integer)value;
+                else if (name == "allowPose")                     allowPose = (integer)value;
                 else if (name == "barefeet")                   barefeet = value;
                 //else if (name == "wearLock")                   wearLock = (integer)value;
                 else if (name == "dollType")                   dollType = value;
@@ -687,15 +687,15 @@ default {
             string choice = llList2String(split, 0);
             string name = llList2String(split, 1);
 
-            string subchoice = llGetSubString(choice,0,4);
-            integer dollIsPoseable = ((!cdIsDoll(id) && canPose) || cdSelfPosed());
+            string choice5 = llGetSubString(choice,0,4);
+            integer dollIsPoseable = ((!cdIsDoll(id) && allowPose) || cdSelfPosed());
 
             // First: Quick ignores
             if (llGetSubString(choice,0,3) == "Wind") return;
             else if (choice == MAIN) return;
 
 #ifdef ADULT_MODE
-            else if (subchoice == "Strip") {
+            else if (choice5 == "Strip") {
 
                 if (choice == "Strip...") {
 
@@ -808,6 +808,9 @@ default {
             }
 
             else if (keyAnimation == "" || dollIsPoseable) {
+                // Rather than a command, we have a possible
+                // animation name - an animation we use to
+                // pose Dolly.
 
                 // choice is Inventory Animation Item
                 if (llGetInventoryType(choice) == INVENTORY_ANIMATION) {
@@ -821,10 +824,12 @@ default {
                 }
 
                 // choice is menu of Poses
-                else if (subchoice == "Poses") {
+                else if (choice5 == "Poses") {
                     poserID = id;
 
+                    // This string could be "..." or a number
                     integer page = (integer)llStringTrim(llGetSubString(choice, 5, -1), STRING_TRIM);
+
                     integer isController;
                     integer isDoll;
 
@@ -843,7 +848,7 @@ default {
                     string prefix;
 
                     while (i--) {
-                        poseName = llGetInventoryName(20, i);
+                        poseName = llGetInventoryName(INVENTORY_ANIMATION, i);
                         prefix = cdGetFirstChar(poseName);
 
                         // Is the pose a pose we can show in the menu?
@@ -868,18 +873,20 @@ default {
                         i = (page - 1) * 9;
                         poseList = llList2List(poseList, i, i + 8);
 
-                        integer prevPage = page - 1;
-                        integer nextPage = page + 1;
+                        integer prevPage;
+                        integer nextPage;
 
-                        if (prevPage == 0) prevPage = 1;
-                        if (nextPage > pages) nextPage = pages;
+                        if (prevPage != 1)     prevPage = page - 1;
+                        if (nextPage != pages) nextPage = page + 1;
 
                         poseList = [ "Poses " + (string)prevPage, "Poses " + (string)nextPage, MAIN ] + poseList;
                     }
-                    else poseList = dialogSort(poseList + [ MAIN ]);
+
+                    poseList = dialogSort(poseList + [ MAIN ]);
 
                     msg = "Select the pose to put dolly into";
                     if (keyAnimation) msg += " (current pose is " + keyAnimation + ")";
+
                     cdDialogListen();
                     llDialog(id, msg, poseList, dialogChannel);
                 }

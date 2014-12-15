@@ -182,11 +182,11 @@ processConfiguration(string name, string value) {
                    ];
 
     list sendName = [ "barefeet", "quiet", "outfitsFolder",
-                      "busyIsAway", "canAfk", "canFly", "canPose", "canSit", "canStand",
+                      "busyIsAway", "canAfk", "canFly", "allowPose", "canSit", "canStand",
                       "canDressSelf", "detachable", "dollType", "pleasureDoll", "poseSilence",
-                      "autoTP", "canDress", "keyLimit", "chatChannel", "dollyName", "demoMode",
+                      "autoTP", "allowDress", "keyLimit", "chatChannel", "dollyName", "demoMode",
                       "userAfkRLVcmd", "userBaseRLVcmd", "userCollapseRLVcmd", "userPoseRLVcmd" , "showPhrases",
-                      "canDress", "canCarry", "canRepeatWind"
+                      "allowDress", "allowCarry", "allowRepeatWind"
                     ];
 
 //  list internals = [ "wind time", "blacklist key", "controller key" ];

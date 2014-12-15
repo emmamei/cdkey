@@ -113,7 +113,7 @@ setDollType(string stateName, integer automated) {
     stateName = cdGetFirstChar(llToUpper(stateName)) + cdButFirstChar(llToLower(stateName));
 
     // If no change, abort
-    //if (stateName == dollType) return;
+    if (stateName == dollType) return;
 
     // By not aborting, selecting the same state can cause a "refresh" ...
     // though our menus do not currently allow this
@@ -350,6 +350,8 @@ default {
 
         s = "Transform Timer fired, interval " + formatFloat(llGetTime() - lastTimerEvent,3) + "s. (lowScriptMode ";
 
+        lastTimerEvent = llGetTime();
+
         if (lowScriptMode) s += "is active).";
         else s += "is not active).";
 
@@ -404,7 +406,6 @@ default {
 
         if (showPhrases) {
             if (phraseCount) {
-                string msg;
 
                 // select a phrase from the notecard at random
                 string phrase  = llList2String(currentPhrases, llFloor(llFrand(phraseCount)));
@@ -443,11 +444,11 @@ default {
         // Update sign if appropriate
         string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
 
-#define cdSetHovertext(x,c) if(primText!=x)llSetText(x,c,1.0)
+//#define cdSetHovertext(x,c) if(primText!=x)llSetText(x,c,1.0)
 
-#define RED    <1.0,0.0,0.0>
-#define YELLOW <1.0,1.0,0.0>
-#define WHITE  <1.0,1.0,1.0>
+//#define RED    <1.0,0.0,0.0>
+//#define YELLOW <1.0,1.0,0.0>
+//#define WHITE  <1.0,1.0,1.0>
 
              if (collapsed)   { cdSetHovertext("Disabled Dolly!",        ( RED    )); }
         else if (afk)         { cdSetHovertext(dollType + " Doll (AFK)", ( YELLOW )); }
@@ -479,10 +480,6 @@ default {
                 //lmInternalCommand("setAFK", (string)afk + "|1|" + formatFloat(windRate, 1) + "|" + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate)), NULL_KEY);
             }
         }
-
-#ifdef DEVELOPER_MODE
-        lastTimerEvent = llGetTime();
-#endif
     }
 
     //----------------------------------------
@@ -539,6 +536,8 @@ default {
             else if (name == "busyIsAway")                                busyIsAway = (integer)value;
             else if (name == "canAFK")                                        canAFK = (integer)value;
             else if (name == "mustAgreeToType")                      mustAgreeToType = (integer)value;
+            else if (name == "winderRechargeTime")                winderRechargeTime = (integer)value;
+            else if (name == "collapseTime")                            collapseTime = (integer)value;
             else if (name == "showPhrases") {
                 showPhrases = (integer)value;
                 currentPhrases = [];
@@ -664,6 +663,91 @@ default {
                     lmSendConfig("gemColour", (string)(gemColour = newColour));
                 }
                 params = [];
+            }
+            else if (cmd == "setHovertext") {
+                string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
+
+                     if (collapsed)   { cdSetHovertext("Disabled Dolly!",        ( RED    )); }
+                else if (afk)         { cdSetHovertext(dollType + " Doll (AFK)", ( YELLOW )); }
+                else if (hoverTextOn) { cdSetHovertext(dollType + " Doll",       ( WHITE  )); }
+                else                  { cdSetHovertext("",                       ( WHITE  )); }
+            }
+            else if (cmd == "carriedMenu") {
+                string carrierName = llList2String(split, 0);
+
+                if (cdIsDoll(id)) {
+                    msg = "You are being carried by " + carrierName + ". ";
+                    if (collapsed) msg += "You need winding, too. ";
+                }
+                else msg = dollName + " is currently being carried by " + carrierName + ". They have full control over this doll. ";
+
+                cdDialogListen();
+                llDialog(id, msg, [ "OK" ], dialogChannel);
+            }
+            else if (cmd == "collapsedMenu") {
+                string timeleft = llList2String(split, 0);
+                list menu;
+
+                // is it possible to be collapsed but collapseTime be equal to 0.0?
+                if (collapseTime != 0.0) {
+                    float timeCollapsed = llGetUnixTime() - collapseTime;
+                    msg = "You need winding. ";
+                    msg += "You have been collapsed for " + (string)llFloor(timeCollapsed / SEC_TO_MIN) + " minutes. ";
+
+                    // Only present the TP home option for the doll if they have been collapsed
+                    // for at least 900 seconds (15 minutes) - Suggested by Christina
+
+                    if (timeCollapsed > TIME_BEFORE_TP) {
+                        if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK)
+                            menu = ["TP Home"];
+
+                        // If the doll is still down after 1800 seconds (30 minutes) and their
+                        // emergency winder is recharged; add a button for it
+
+                        if (timeCollapsed > TIME_BEFORE_EMGWIND) {
+                            if (winderRechargeTime <= llGetUnixTime())
+                                menu += ["Wind Emg"];
+                        }
+                    }
+
+                    cdDialogListen();
+                    llDialog(id, timeleft + msg, [ "OK" ], dialogChannel);
+                }
+            }
+            else if (cmd == "optionsMenu") {
+                debugSay(5,"CHAT-MENU","Options Menu Triggered");
+
+                list pluslist;
+
+                if (cdIsDoll(id)) {
+                    msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. ";
+                    pluslist += [ "Features...", "Key..." ];
+
+                    if (cdCarried() || cdControllerCount() > 0) {
+                        pluslist += [ "Access..." ];
+                    }
+                    else {
+                        pluslist += [ "Type...", "Access...", "Abilities..." ];
+                    }
+                }
+                else if (cdIsCarrier(id)) {
+                    pluslist += [ "Type...", "Abilities..." ];
+                }
+                else if (cdIsBuiltinController(id)) {
+                    pluslist += [ "Type...", "Access...", "Abilities..." ];
+                }
+                else if (cdIsUserController(id)) {
+
+                    msg = "See " + WEB_DOMAIN + "controller.htm. Choose what you want to happen.";
+                    pluslist += [ "Type...", "Access...", "Abilities...", "Drop Control" ];
+
+                }
+                // This section should never be triggered: it means that
+                // someone who shouldn't see the Options menu did.
+                else return;
+
+                cdDialogListen();
+                llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
             }
         }
 

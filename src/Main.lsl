@@ -75,7 +75,6 @@ integer clearAnim;
 integer RLVck = 1;
 integer warned;
 
-integer winderRechargeTime;
 integer wearLockExpire;
 integer carryExpire;
 integer jamExpire;
@@ -178,16 +177,7 @@ collapse(integer newCollapseState) {
     if (newCollapseState == NOT_COLLAPSED) {
         lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
         lmSendConfig("collapseTime", (string)(collapseTime = 0));
-
-#define cdSetHovertext(x,c) if(primText!=x)llSetText(x,c,1.0)
-
-#define RED    <1.0,0.0,0.0>
-#define YELLOW <1.0,1.0,0.0>
-#define WHITE  <1.0,1.0,1.0>
-
-             if (afk)         { cdSetHovertext(dollType + " Doll (AFK)", ( YELLOW )); }
-        else if (hoverTextOn) { cdSetHovertext(dollType + " Doll",       ( WHITE  )); }
-        else                  { cdSetHovertext("",                       ( WHITE  )); }
+        lmInternalCommand("setHovertext", "", llGetKey());
     }
     else {
         lmSendConfig("lastWinderID", (string)(lastWinderID = NULL_KEY));
@@ -195,7 +185,7 @@ collapse(integer newCollapseState) {
         // Entering a collapsed state
         if (newCollapseState == NO_TIME) {
             lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0));
-            cdSetHovertext("Disabled Dolly!",(RED));
+            cdSetHovertext("Disabled Dolly!",CRITICAL);
         }
         else if (newCollapseState == JAMMED) {
             // Time span (random) = 120.0 (two minutes) to 300.0 (five minutes)
@@ -272,6 +262,7 @@ default {
     on_rez(integer start) {
         timerStarted = 1;
         configured = 1;
+        lmInternalCommand("setHovertext", "", llGetKey());
         llSetTimerEvent(30.0);
     }
 
@@ -279,11 +270,6 @@ default {
     // DATASERVER
     //----------------------------------------
     dataserver(key query_id, string data) {
-//      if (query_id == mistressQuery) {
-//          mistressName = data;
-//          llOwnerSay("Your Mistress is " + mistressName);
-//      }
-//      else
         if (query_id == simRatingQuery) {
             simRating = data;
             lmRating(simRating);
@@ -597,7 +583,7 @@ default {
             else if (name == "autoAFK")                       autoAFK = (integer)value;
             //else if (name == "autoTP")                         autoTP = (integer)value;
             else if (name == "canAFK")                         canAFK = (integer)value;
-            else if (name == "canRepeatWind")           canRepeatWind = (integer)value;
+            else if (name == "allowRepeatWind")           allowRepeatWind = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
@@ -762,7 +748,7 @@ default {
             }
             else if (!collapsed && timeLeftOnKey <= 0) collapse(NOT_COLLAPSED);
 
-            if (!canDress) llOwnerSay("The public cannot outfit you.");
+            if (!allowDress) llOwnerSay("The public cannot outfit you.");
 
             simRating = "";
             simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
@@ -837,7 +823,7 @@ default {
 
                 // Test and reject repeat winding as appropriate - Controllers and Carriers are not limited
                 if (!(cdIsController(id) || cdIsCarrier(id))) {
-                    if (!canRepeatWind && (id == lastWinderID)) {
+                    if (!allowRepeatWind && (id == lastWinderID)) {
                         lmSendToAgent("Dolly needs to be wound by someone else before you can wind " + llToLower(pronounHerDoll) + " again.", id);
                         return;
                     }

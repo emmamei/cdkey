@@ -89,14 +89,14 @@ default
             // Shortcut: c
             else if (c == "c") {
                      if (name == "canAFK")                     canAFK = (integer)value;
-                else if (name == "canCarry")                 canCarry = (integer)value;
-                else if (name == "canDress")                 canDress = (integer)value;
-                else if (name == "canPose")                   canPose = (integer)value;
+                else if (name == "allowCarry")                 allowCarry = (integer)value;
+                else if (name == "allowDress")                 allowDress = (integer)value;
+                else if (name == "allowPose")                   allowPose = (integer)value;
                 else if (name == "canDressSelf")         canDressSelf = (integer)value;
                 else if (name == "canFly")                     canFly = (integer)value;
                 else if (name == "canSit")                     canSit = (integer)value;
                 else if (name == "canStand")                 canStand = (integer)value;
-                else if (name == "canRepeatWind")       canRepeatWind = (integer)value;
+                else if (name == "allowRepeatWind")       allowRepeatWind = (integer)value;
                 else if (name == "configured")             configured = (integer)value;
                 else if (name == "controllers")           controllers = split;
                 else if (name == "chatEnable") {
@@ -380,12 +380,8 @@ default
                     prefix = llGetSubString(msg, 0, n - 1);
                     msg = llGetSubString(msg, n, -1);
                 }
-                else {
-                    if (isDoll)
-                        llOwnerSay("Use of chat commands without a prefix is depreciated and will be removed in a future release. Current prefix is '" + chatPrefix + "'.");
-                    else
-                        return;
-                }
+                // We could have a message for a different dolly than us, or
+                // a valid command, or an invalid command: be quiet
             }
 
             // If we get here, we know this:
@@ -400,7 +396,7 @@ default
 
 #define PARAMETERS_EXIST (space != NOT_FOUND)
 
-            //if (isDoll || (!isDoll && canCarry)) { }
+            //if (isDoll || (!isDoll && allowCarry)) { }
             // Choice is a command, not a pose
             integer space = llSubStringIndex(msg, " ");
             string choice = msg;
@@ -460,12 +456,12 @@ default
                     }
                     // Not dolly OR controller...
                     else {
-                        if (canDress) {
+                        if (allowDress) {
                             menus += "
     outfits ........ show Outfits menu";
                         }
 
-                        if (canPose) {
+                        if (allowPose) {
                             menus +=
 "
     poses .......... show Poses menu";
@@ -474,7 +470,7 @@ default
     [posename] ..... activate the named pose if possible";
                         }
 
-                        if (canCarry) {
+                        if (allowCarry) {
                             help += "
     carry .......... pick up Dolly
     uncarry ........ drop Dolly";
@@ -560,14 +556,14 @@ default
 
                         cdCapability(autoTP,         "Doll can", "be force teleported");
                         cdCapability(detachable,     "Doll can", "detach " + p + " key");
-                        cdCapability(canDress,       "Doll can", "be dressed by the public");
-                        cdCapability(canCarry,       "Doll can", "be carried by the public");
+                        cdCapability(allowPose,        "Doll can", "be posed by the public");
+                        cdCapability(allowDress,       "Doll can", "be dressed by the public");
+                        cdCapability(allowCarry,       "Doll can", "be carried by the public");
                         cdCapability(canAFK,         "Doll can", "go AFK");
                         cdCapability(canFly,         "Doll can", "fly");
-                        cdCapability(canPose,        "Doll can", "be posed by the public");
                         cdCapability(canSit,         "Doll can", "sit");
                         cdCapability(canStand,       "Doll can", "stand");
-                        cdCapability(canRepeatWind,  "Doll can", "be multiply wound");
+                        cdCapability(allowRepeatWind,  "Doll can", "be multiply wound");
                         cdCapability(canDressSelf,   "Doll can", "dress by " + p + "self");
                         cdCapability(poseSilence,    "Doll is",  "silenced while posing");
                         cdCapability(wearLock,       "Doll's clothing is",  "currently locked on");
@@ -749,7 +745,7 @@ default
                         else lmSendToAgent("You are not allowed to dress yourself",id);
                     }
                     else {
-                        if (canDress) cdMenuInject("Outfits...", name, id);
+                        if (allowDress) cdMenuInject("Outfits...", name, id);
                         else lmSendToAgent("You are not allowed to dress Dolly",id);
                     }
 
@@ -770,7 +766,7 @@ default
                 else if (choice == "poses") {
                     if (isDoll || isController) cdMenuInject("Poses...", name, id);
                     else {
-                        if (canPose) cdMenuInject("Poses...", name, id);
+                        if (allowPose) cdMenuInject("Poses...", name, id);
                         else lmSendToAgent("You are not allowed to pose Dolly", id);
                     }
                     return;
@@ -970,7 +966,7 @@ default
                     }
                     else {
                         // It's a pose but from a member of the public
-                        if (canPose) cdMenuInject(msg, name, id);
+                        if (allowPose) cdMenuInject(msg, name, id);
                     }
                     return;
                 }

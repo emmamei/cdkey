@@ -135,14 +135,14 @@ default {
             else if (name == "showPhrases")               showPhrases = (integer)value;
             else if (name == "canAFK")                         canAFK = (integer)value;
             else if (name == "afk")                               afk = (integer)value;
-            else if (name == "canCarry")                     canCarry = (integer)value;
-            else if (name == "canDress")                     canDress = (integer)value;
-            else if (name == "canPose")                       canPose = (integer)value;
+            else if (name == "allowCarry")                     allowCarry = (integer)value;
+            else if (name == "allowDress")                     allowDress = (integer)value;
+            else if (name == "allowPose")                       allowPose = (integer)value;
             else if (name == "canDressSelf")             canDressSelf = (integer)value;
             else if (name == "canFly")                         canFly = (integer)value;
             else if (name == "canSit")                         canSit = (integer)value;
             else if (name == "canStand")                     canStand = (integer)value;
-            else if (name == "canRepeatWind")           canRepeatWind = (integer)value;
+            else if (name == "allowRepeatWind")           allowRepeatWind = (integer)value;
             else if (name == "dollyName")                   dollyName = value;
             else if (name == "doWarnings")                 doWarnings = (integer)value;
             else if (name == "poseSilence")               poseSilence = (integer)value;
@@ -217,11 +217,16 @@ default {
             string avatar = llList2String(split, 1);
 
             if (choice == "Help...") {
-                msg = "Here you can find various options to get help with your " +
-                            "key and to connect with the community.";
-                list plusList = [ "Join Group", "Visit Dollhouse", "Visit Website", "Visit Blog", "Visit Development" ];
-                if (llGetInventoryType(NOTECARD_HELP) == INVENTORY_NOTECARD) plusList += [ "Help Notecard" ];
-                if ((!cdIsDoll(id)) && (llGetInventoryType(OBJECT_KEY) == INVENTORY_OBJECT)) plusList += [ "Get Key" ];
+                msg = "Here you can find various options to get help with your key and to connect with the community.";
+                list plusList = [ "Join Group", "Visit Dollhouse", "Visit Website", "Visit Blog", "Visit Development", "Help Notecard" ];
+
+                // Note - to do this Key handout properly, we'd need an infinite Key:
+                // a Key which contains a Key which contains a Key which contains a Key...
+                // Like a never-ending matrushka doll.
+                //
+                if (!cdIsDoll(id))
+                    if ((llGetInventoryType(OBJECT_KEY) == INVENTORY_OBJECT))
+                        plusList += [ "Get Key" ];
 
 #ifdef DEVELOPER_MODE
                 // Remember, a doll cannot be her own controller, unless there is no other
@@ -234,28 +239,29 @@ default {
             else if (choice == "Help Notecard")
                 llGiveInventory(id,NOTECARD_HELP);
             else if (choice == "Get Key")
-                llGiveInventory(id,NOTECARD_HELP);
+                if (llGetInventoryType(OBJECT_KEY) == INVENTORY_OBJECT)
+                    llGiveInventory(id,OBJECT_KEY);
             else if (choice == "Visit Dollhouse") {
                 // If is Dolly, whisk Dolly away to Location of Landmark
                 // If is someone else, give Landmark to them
-                if (cdIsDoll(id)) llMessageLinked(LINK_THIS, 305, llGetScriptName() + "|TP|" + LANDMARK_CDROOM, id);
-                else llGiveInventory(id, LANDMARK_CDROOM);
+                if (cdIsDoll(id)) llMessageLinked(LINK_THIS, 305, "Aux|TP|" + LANDMARK_CDHOME, id);
+                else llGiveInventory(id, LANDMARK_CDHOME);
             }
             else if (choice == "Visit Development")
                 lmSendToAgent("Here is your link to the Community Doll Key development: " + WEB_DEV, id);
             else if (choice == "Visit Website")
-                lmSendToAgent("Here is your link to the Community Dolls group blog: " + WEB_BLOG, id);
+                lmSendToAgent("Here is your link to the Community Dolls blog: " + WEB_BLOG, id);
             else if (choice == "Visit Blog")
-                lmSendToAgent("Here is your link to the Community Dolls group website: " + WEB_DOMAIN, id);
+                lmSendToAgent("Here is your link to the Community Dolls website: " + WEB_DOMAIN, id);
             else if (choice == "Join Group")
                 lmSendToAgent("Here is your link to the Community Dolls group profile: " + WEB_GROUP, id);
             else if (choice == "Access...") {
                 //debugSay(5, "DEBUG-AUX", "Dialog channel: " + (string)dialogChannel);
-                msg = "Key Access Menu.\n" +
-                             "These are powerful options allowing you to give someone total control of your key or block someone from touch or even winding your key\n" +
-                             "Good dollies should read their key help before adjusting these options\n" +
-                             "Blacklist - Fully block this avatar from using the key at all (even winding!)\n" +
-                             "Controller - Take care choosing your controllers, they have great control over Dolly and cannot be removed by you";
+                msg = "Key Access Menu.\n\n" +
+                             "These are powerful options allowing you to give someone total control of your key or block someone from touch or even winding your key. Good dollies should read their key help before adjusting these options.
+                             
+Blacklist - Block a person from using the key entirely (even winding!)
+Controller - Take care choosing your controllers; they have great control over Dolly and cannot be removed by you";
                 list plusList;
 
                 // This complicated setup really isnt: it follows these rules:
@@ -285,11 +291,12 @@ default {
                 cdDialogListen();
                 llDialog(id, msg, dialogSort(plusList + MAIN), dialogChannel);
             }
-            if (choice == "Abilities...") {
+            else if (choice == "Abilities...") {
                 msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
                 list plusList;
 
                 if (RLVok) {
+
                     // One-way options
                     plusList += cdGetButton("Detachable", id, detachable, 1);
                     plusList += cdGetButton("Flying", id, canFly, 1);
@@ -299,7 +306,7 @@ default {
                     plusList += cdGetButton("Self TP", id, canSelfTP, 1);
                     plusList += cdGetButton("Force TP", id, autoTP, 1);
 
-                    if (canPose) { // Option to silence the doll while posed this this option is a no-op when canPose == 0
+                    if (allowPose) { // Option to silence the doll while posed this this option is a no-op when allowPose == 0
                         plusList += cdGetButton("Silent Pose", id, poseSilence, 1);
                     }
                 }
@@ -307,7 +314,7 @@ default {
                     string p = llToLower(pronounHerDoll);
                     string s = llToLower(pronounSheDoll);
 
-                    msg += "\n\nEither Dolly does not have an RLV capable viewer, or " + s + " has RLV turned off in " + p + " viewer settings.  There are no usable options available.";
+                    msg += "Either Dolly does not have an RLV capable viewer, or " + s + " has RLV turned off in " + p + " viewer settings.  There are no usable options available.";
 
                     plusList = [ "OK" ];
                 }
@@ -319,27 +326,27 @@ default {
                 msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
                 list plusList = [];
 
-                plusList += cdGetButton("Carryable", id, canCarry, 0);
-                plusList += cdGetButton("Outfitable", id, canDress, 0);
+                plusList += cdGetButton("Carryable", id, allowCarry, 0);
+                plusList += cdGetButton("Outfitable", id, allowDress, 0);
 #ifdef ADULT_MODE
                 plusList += cdGetButton("Pleasure", id, pleasureDoll, 0);
 #endif
                 if (dollType != "Display")
-                    plusList += cdGetButton("Poseable", id, canPose, 0);
+                    plusList += cdGetButton("Poseable", id, allowPose, 0);
 
                 plusList += cdGetButton("Quiet Key", id, quiet, 0);
-
-                //if (isTransformingKey) plusList += cdGetButton("Type Text", id, hoverTextOn, 0);
 
                 plusList += cdGetButton("Type Text", id, hoverTextOn, 0);
                 plusList += cdGetButton("Warnings", id, doWarnings, 0);
                 plusList += cdGetButton("Phrases", id, showPhrases, 0);
-                //plusList += cdGetButton("Offline", id, offlineMode, 0);
-                // One-way options
-                if (!afk)
-                    plusList = llListInsertList(plusList, cdGetButton("Allow AFK", id, canAFK, 1), 0);
 
-                plusList = llListInsertList(plusList, cdGetButton("Rpt Wind", id, canRepeatWind, 1), 6);
+                // One-way options
+                if (cdIsController(id)) {
+                    if (!afk)
+                        plusList = llListInsertList(plusList, cdGetButton("Allow AFK", id, canAFK, 1), 0);
+
+                    plusList = llListInsertList(plusList, cdGetButton("Rpt Wind", id, allowRepeatWind, 1), 6);
+                }
 
                 cdDialogListen();
                 llDialog(id, msg, dialogSort(plusList + MAIN), dialogChannel);
@@ -365,12 +372,9 @@ default {
             }
             else if (choice == "Gem Colour...") {
                 msg = "Here you can choose your own gem colour.";
-                    list plusList;
-
-                    plusList = COLOR_NAMES;
 
                     cdDialogListen();
-                    llDialog(id, msg, dialogSort(plusList + MAIN), dialogChannel);
+                    llDialog(id, msg, dialogSort(COLOR_NAMES + MAIN), dialogChannel);
             }
             else if (llListFindList(COLOR_NAMES, [ choice ]) != NOT_FOUND) {
                 integer index = llListFindList(COLOR_NAMES, [ choice ]);
@@ -384,7 +388,7 @@ default {
             else if (choice == "Custom..." || choice == "Dolly Name..." ) {
                 if (choice == "Custom...") {
                     textboxType = 1;
-                    llTextBox(id, "Here you can input a custom colour value\nCurrent colour: " + curGemColour + "\nEnter vector eg <0.900, 0.500, 0.000>\nOr Hex eg #A4B355\nOr RGB eg 240, 120, 10", textboxChannel);
+                    llTextBox(id, "Here you can input a custom colour value\n\nCurrent colour: " + curGemColour + "\n\nEnter vector eg <0.900, 0.500, 0.000>\nOr Hex eg #A4B355\nOr RGB eg 240, 120, 10", textboxChannel);
                 }
                 else if (choice == "Dolly Name...") {
                     textboxType = 2;

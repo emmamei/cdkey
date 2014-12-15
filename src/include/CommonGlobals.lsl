@@ -20,7 +20,8 @@ string carrierName;
 string chatPrefix;
 string dollGender           = "Female";
 string dollName;
-string dollType             = "Regular";
+// dollType has a default, but don't set it here'
+string dollType;
 string dresserName;
 string keyAnimation;
 string poserName;
@@ -44,12 +45,12 @@ integer autoAFK             = 1;
 integer autoTP;
 integer busyIsAway;
 integer canAFK              = 1;
-integer canCarry            = 1;
-integer canDress            = 1;
+integer allowCarry            = 1;
+integer allowDress            = 1;
 integer canDressSelf        = 1;
 integer canFly              = 1;
-integer canPose             = 1;
-integer canRepeatWind       = 1;
+integer allowPose             = 1;
+integer allowRepeatWind       = 1;
 integer canSelfTP           = 1;
 integer canSit              = 1;
 integer canStand            = 1;
@@ -74,6 +75,7 @@ integer timeReporting       = 1;
 integer visible             = 1;
 integer wearLock;
 integer windingDown         = 1;
+integer winderRechargeTime;
 
 #ifdef DEVELOPER_MODE
 integer debugLevel          = DEBUG_LEVEL;

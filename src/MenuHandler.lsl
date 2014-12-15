@@ -72,8 +72,6 @@ vector gemColour;
 string mistressName;
 string menuName;
 
-integer winderRechargeTime;
-
 list dialogKeys;
 list dialogNames;
 list dialogButtons;
@@ -287,9 +285,9 @@ default {
             else if (c == "c") {
                      if (name == "carrierID")                   carrierID = (key)value;
                 else if (name == "canAFK")                         canAFK = (integer)value;
-                else if (name == "canCarry")                     canCarry = (integer)value;
-                else if (name == "canDress")                     canDress = (integer)value;
-                else if (name == "canPose")                       canPose = (integer)value;
+                else if (name == "allowCarry")                     allowCarry = (integer)value;
+                else if (name == "allowDress")                     allowDress = (integer)value;
+                else if (name == "allowPose")                       allowPose = (integer)value;
                 else if (name == "canDressSelf")             canDressSelf = (integer)value;
                 else if (name == "canSelfTP")                   canSelfTP = (integer)value;
                 else if (name == "collapsed")                   collapsed = (integer)value;
@@ -327,14 +325,8 @@ default {
                 else if (name == "pronounHerDoll")         pronounHerDoll = value;
                 else if (name == "pronounSheDoll")         pronounSheDoll = value;
             }
-            //else if (name == "tpLureOnly")               tpLureOnly = (integer)value;
-            //else if (name == "isTransformingKey")   isTransformingKey = (integer)value;
             else if (name == "quiet")                           quiet = (integer)value;
             else if (name == "hoverTextOn")                         hoverTextOn = (integer)value;
-            //else if (name == "uniqueID") {
-            //    if (script != "ServiceReceiver") return;
-            //    uniqueID = (key)value;
-            //}
             else if (name == "isVisible") {
                 visible = (integer)value;
                 llSetLinkAlpha(LINK_SET, (float)visible, ALL_SIDES);
@@ -447,15 +439,7 @@ default {
                         }
                         // ...Dolly or member of public
                         else {
-                            if (isDoll) {
-                                msg = "You are being carried by " + carrierName + ". ";
-                                if (collapsed) msg += "You need winding, too. ";
-                            }
-                            else msg = dollName + " is currently being carried by " + carrierName + ". They have full control over this doll. ";
-
-                            cdDialogListen();
-                            llDialog(id, timeleft + msg, [ "OK" ], dialogChannel);
-                            return;
+                            lmInternalCommand("carriedMenu", carrierName, NULL_KEY);
                         }
                     }
 
@@ -465,32 +449,7 @@ default {
                     // key functions with a few exceptions
 
                     else if (collapsed && isDoll) {
-                        // is it possible to be collapsed but collapseTime be equal to 0.0?
-                        if (collapseTime != 0.0) {
-                            float timeCollapsed = llGetUnixTime() - collapseTime;
-                            msg = "You need winding. ";
-                            msg += "You have been collapsed for " + (string)llFloor(timeCollapsed / SEC_TO_MIN) + " minutes. ";
-
-                            // Only present the TP home option for the doll if they have been collapsed
-                            // for at least 900 seconds (15 minutes) - Suggested by Christina
-
-                            if (timeCollapsed > TIME_BEFORE_TP) {
-                                if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK) {
-                                    menu = ["TP Home"];
-                                }
-
-                                // If the doll is still down after 1800 seconds (30 minutes) and their
-                                // emergency winder is recharged; add a button for it
-
-                                if ((timeCollapsed > TIME_BEFORE_EMGWIND) && (winderRechargeTime <= llGetUnixTime())) {
-                                    menu += ["Wind Emg"];
-                                }
-                            }
-
-                            cdDialogListen();
-                            llDialog(id, timeleft + msg, [ "OK" ], dialogChannel);
-                            return;
-                        }
+                        lmInternalCommand("collapsedMenu", timeleft, NULL_KEY);
                     }
 
                     // Two types of folks will never get here: 1) a collapsed Dolly who
@@ -541,7 +500,7 @@ default {
                             // permitted: this is appropriate.
 
                             if (isDoll) if (canDressSelf) menu += "Outfits...";
-                            else        if (canDress || isController)     menu += "Outfits...";
+                            else        if (allowDress || isController)     menu += "Outfits...";
 
                             if (isController) menu += "RLV Off";
                         } else {
@@ -550,18 +509,18 @@ default {
                             if (isDoll || isController) menu += "RLV On";
                         }
 
-                        if (canDress) menu += "Types...";
+                        if (allowDress) menu += "Types...";
 
                         if (keyAnimation != "") {
                             msg += "Doll is currently posed. ";
 
-                            if ((isController) || (!isDoll && canPose) || (poserID == dollID)) {
+                            if ((isController) || (!isDoll && allowPose) || (poserID == dollID)) {
                                 menu += ["Poses...","Unpose"];
                             }
                         }
                         else {
                             // Notice again: Carrier can only pose Dolly if permitted.
-                            if ((!isDoll && canPose) || isDoll || isController) menu += "Poses...";
+                            if ((!isDoll && allowPose) || isDoll || isController) menu += "Poses...";
                         }
 
                         // Fix for issue #157
@@ -569,7 +528,7 @@ default {
                             if (!hasCarrier) {
                                 // Allowing Dolly to carry herself is nonsense... others can
                                 // if Dolly allows it, but a Controller can no matter what
-                                if (canCarry || isController) {
+                                if (allowCarry || isController) {
                                     msg += "Carry option picks up " + dollName + " and temporarily makes the Dolly exclusively yours. ";
                                     menu += "Carry";
                                 }
@@ -646,40 +605,7 @@ default {
             string name = llList2String(split, 0);
 
             if (name == "Options...") {
-                debugSay(5,"CHAT-MENU","Options Menu Triggered");
-
-                string msg;
-                list pluslist;
-
-                if (cdIsDoll(id)) {
-                    msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. ";
-                    pluslist += [ "Features...", "Key..." ];
-
-                    if (cdCarried() || cdControllerCount() > 0) {
-                        pluslist += [ "Access..." ];
-                    }
-                    else {
-                        pluslist += [ "Type...", "Access...", "Abilities..." ];
-                    }
-                }
-                else if (cdIsCarrier(id)) {
-                    pluslist += [ "Type...", "Abilities..." ];
-                }
-                else if (cdIsBuiltinController(id)) {
-                    pluslist += [ "Type...", "Access...", "Abilities..." ];
-                }
-                else if (cdIsUserController(id)) {
-
-                    msg = "See " + WEB_DOMAIN + "controller.htm. Choose what you want to happen.";
-                    pluslist += [ "Type...", "Access...", "Abilities...", "Drop Control" ];
-
-                }
-                // This section should never be triggered: it means that
-                // someone who shouldn't see the Options menu did.
-                else return;
-
-                cdDialogListen();
-                llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
+                lmInternalCommand("optionsMenu", "", NULL_KEY);
             }
         }
         else if (code == RLV_RESET) {
@@ -760,17 +686,16 @@ default {
             current = blacklist;
         }
 
-        while ((i < num) && (llGetListLength(dialogButtons) < 12)) {
-            foundKey = llDetectedKey(i);
-            foundName = llDetectedName(i);
+        i = num + 1;
+        while ((--i) && (llGetListLength(dialogButtons) < 12)) {
+            foundKey = llDetectedKey(i - 1);
+            foundName = llDetectedName(i - 1);
 
-            if (llListFindList(current, [(string)foundKey]) == NOT_FOUND) { // Don't list existing users
+            if (llListFindList(current, [ (string)foundKey] ) == NOT_FOUND) { // Don't list existing users
                 dialogKeys += foundKey;
                 dialogNames += foundName;
                 dialogButtons += llGetSubString(foundName, 0, 23);
             }
-
-            i++;
         }
 
         cdDialogListen();
@@ -790,7 +715,6 @@ default {
     //----------------------------------------
     dataserver(key query_id, string data) {
 
-        // Reading notecard DataAppearance (JSON list of appearance settings)
         if (query_id == nameRequest) {
             key uuid = llList2Key(uuidList, 0);
             string name = data;
@@ -986,9 +910,6 @@ default {
                         lmSendConfig("controllers", llDumpList2String(controllers, "|"));
                         lmSendToAgent("You are no longer a controller of this Dolly.", id);
                     }
-                    //else {
-                    //    llSay(DEBUG_CHANNEL, "Drop Control option triggered by non-controller!");
-                    //}
                 }
                 else if (beforeSpace == CROSS || beforeSpace == CHECK) {
                     // Could be Option or Ability:
@@ -1063,16 +984,16 @@ default {
                                 isFeature = 1; // Maybe it'a a features menu item
                                      if (afterSpace == "Type Text")  lmSendConfig("hoverTextOn",      (string)isX);
                                 else if (afterSpace == "Quiet Key")  lmSendConfig("quiet",       (string)(quiet = isX));
-                                else if (afterSpace == "Carryable")  lmSendConfig("canCarry",    (string)(canCarry = isX));
-                                else if (afterSpace == "Outfitable") lmSendConfig("canDress",    (string)(canDress = isX));
+                                else if (afterSpace == "Carryable")  lmSendConfig("allowCarry",    (string)(allowCarry = isX));
+                                else if (afterSpace == "Outfitable") lmSendConfig("allowDress",    (string)(allowDress = isX));
                                 else if (afterSpace == "Phrases")    lmSendConfig("showPhrases", (string)(showPhrases = isX));
-                                else if (afterSpace == "Poseable")   lmSendConfig("canPose",     (string)(canPose = isX));
+                                else if (afterSpace == "Poseable")   lmSendConfig("allowPose",     (string)(allowPose = isX));
                                 else if (afterSpace == "Warnings")   lmSendConfig("doWarnings",  (string)isX);
 
                                 // if is not Doll, they can set and unset these options...
                                 // if is Doll, these abilities can only be removed (X)
                                 else if (afterSpace == "Rpt Wind") {
-                                    if (!isX || !isDoll || isController) lmSendConfig("canRepeatWind", (string)isX);
+                                    if (!isX || !isDoll || isController) lmSendConfig("allowRepeatWind", (string)isX);
                                     else if (isDoll) llOwnerSay("The Repeat Wind option cannot be re-enabled by you.");
                                 }
                                 else if (afterSpace == "Allow AFK") {
@@ -1126,10 +1047,6 @@ default {
                 else if (cdIsController(id)) lmInternalCommand("remMistress", (string)uuid + "|" + name, id);
             }
         }
-
-        // Every call to llDialog should be preceded by cdDialogListen
-        //cdListenerActivate(dialogHandle);
-        //llSetTimerEvent(MENU_TIMEOUT);
     }
 }
 

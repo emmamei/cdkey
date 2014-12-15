@@ -24,6 +24,15 @@
 #define RLV_RESET 350
 #define MENU_SELECTION 500
 
+#define cdSetHovertext(x,c) if(primText!=x)llSetText(x,c,1.0)
+#define RED    <1.0,0.0,0.0>
+#define YELLOW <1.0,1.0,0.0>
+#define WHITE  <1.0,1.0,1.0>
+
+#define CRITICAL RED
+#define WARN YELLOW
+#define INFO WHITE
+
 #define VSTR  + "\nScript Date: " + PACKAGE_VERSION
 #define MAIN "~Main Menu~"
 // Collapse animation - and documentation
@@ -39,7 +48,7 @@
 // Dolls home landmark name
 #define LANDMARK_HOME "Home"
 // Name of the Community Dolls Room landmark
-#define LANDMARK_CDROOM "Community Dolls at BDSM Pasha Desires"
+#define LANDMARK_CDHOME "Community Dolls at BDSM Pasha Desires"
 // Name of the help notecard
 #define NOTECARD_HELP "Community Dolls Key Help and Manual"
 // Name of the key object
