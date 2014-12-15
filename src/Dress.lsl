@@ -428,210 +428,212 @@ default {
 
             //debugSay(6, "DEBUG-DRESS", (string)tempWearLock + " " + choice);
 
-            if (choice == "Outfits..." && !tempWearLock) {
-                if (!isDresser(id)) return;
-
-                if (wearLock) {
-                    cdDialogListen();
-                    llDialog(dresserID, "Clothing was just changed; cannot change right now.", ["OK"], dialogChannel);
-                    return;
-                }
-
-                if (outfitsFolder != "") {
-                    if (useTypeFolder) clothingFolder = typeFolder;
-                    else clothingFolder = "";
-
-                    lmSendConfig("clothingFolder", clothingFolder);
-                    listInventoryOn("2666");
-                }
-                else {
-                    string msgx = "You look in " + llToLower(pronounHerDoll) + " closet, and see no outfits for Dolly to wear.";
-                    cdDialogListen();
-                    llDialog(dresserID, msgx, ["OK"], dialogChannel);
-                    return;
-                }
-            }
-            else {
-                msgx = "You may choose any outfit for " + llToLower(pronounHerDoll) + " to wear.\n\n";
-                if (dresserID == dollID) msgx = "See " + WEB_DOMAIN + outfits_url + " for more information on outfits.\n\n";
-                msgx += folderStatus();
-
-                integer select = (integer)llGetSubString(choice, 0, llSubStringIndex(choice, ".") - 1);
-                if (select != 0) choice = cdListElement(outfitsList, select - 1);
-
-                if (choice == "OK") {
-                    ; // No outfits: only OK is available
-                }
-                else if (llGetSubString(choice, 0, 6) == "Outfits") {
+            if (choice == "Outfits...") {
+                if (!tempWearLock) {
                     if (!isDresser(id)) return;
 
-                    if (choice == "Outfits Next") {
-                        debugSay(6, "DEBUG", ">>> Dress Menu: " + choice);
-                        outfitPage++;
-
-                    } else if (choice == "Outfits Prev") {
-                        debugSay(6, "DEBUG", ">>> Dress Menu: " + choice);
-                        outfitPage--;
-
-                    } else if ("Outfits Parent") {
-                        debugSay(6, "DEBUG", ">>> Dress Menu: " + choice);
-
-                        if (clothingFolder != "") { // Return to the parent folder
-                            list pathParts = llParseString2List(clothingFolder, [ "/" ], []);
-
-                            clothingFolder = llDumpList2String(llDeleteSubList(pathParts, -1, -1), "/");
-                            lmSendConfig("clothingFolder", clothingFolder);
-                            setActiveFolder();
-
-                            debugSay(6, "DEBUG-DRESS", "Trying the " + activeFolder + " folder.");
-
-                            listInventoryOn("2666");
-                            return;
-                        }
-                        else lmMenuReply(MAIN, name, id); // No parent folder to return to, go to main menu instead
-                    }
-
-                    string UpMain = "Outfits Parent";
-                    if (outfitsFolder == "") UpMain = MAIN;
-
-                    cdDialogListen();
-                    llDialog(dresserID, msgx, ["Outfits Prev", "Outfits Next", UpMain ] + outfitsPage(outfitsList), dialogChannel);
-                    llSetTimerEvent(60.0);
-
-                } else if (cdListElementP(outfitsList, choice) != NOT_FOUND) {
-                    // This could be entered via a menu injection by a random dress choice
-                    // No standard user should be entering this way anyway
-                    //if (!isDresser(id)) return;
-
-                    if (isParentFolder(cdGetFirstChar(choice))) {
-                        if (clothingFolder == "") clothingFolder = choice;
-                        else clothingFolder += "/" + choice;
-
-                        lmSendConfig("clothingFolder", clothingFolder);
-                        setActiveFolder();
-                        listInventoryOn("2666"); // recursion
-
-                        llSetTimerEvent(60.0);
+                    if (wearLock) {
+                        cdDialogListen();
+                        llDialog(dresserID, "Clothing was just changed; cannot change right now.", ["OK"], dialogChannel);
                         return;
                     }
-                    else if ((outfitsFolder != "") && (choice != newoutfitname)) {
-#ifdef DEVELOPER_MODE
-                        // If we are in developer mode we are in danger of the key being ripped
-                        // off here.  We therefore will use a temporary @detach=n restriction.
-                        llOwnerSay("Developer key locked in place to prevent accidental detachment during dressing.");
-                        lmRunRLV("attachthis=y,detachthis=n,detach=n,touchall=n,showinv=n");
-#else
-                        lmRunRLV("touchall=n,showinv=n");
-#endif
-                        tempWearLock = TRUE;
 
-                        dressingFailures = 0;
-                        dressTries = 0;
-                        change = 1;
+                    if (outfitsFolder != "") {
+                        if (useTypeFolder) clothingFolder = typeFolder;
+                        else clothingFolder = "";
 
-                        lmSendConfig("oldoutfitname",   (  oldoutfitname = newoutfitname));
-                        lmSendConfig("oldoutfitfolder", (oldoutfitfolder = newoutfitfolder));
-                        lmSendConfig("oldoutfitpath",   (  oldoutfitpath = newoutfitpath));
-                        lmSendConfig("oldoutfit",       (      oldoutfit = newoutfit));
-
-                          newoutfitname = choice;
-                        newoutfitfolder = outfitsFolder;
-                          newoutfitpath = clothingFolder;
-
-                        newoutfit = newoutfitfolder + "/";
-                        if (clothingFolder != "")
-                            newoutfit += clothingFolder + "/";
-                        newoutfit += newoutfitname;
-
-                        lmSendConfig("newoutfitname",   (newoutfitname));
-                        lmSendConfig("newoutfitfolder", (newoutfitfolder));
-                        lmSendConfig("newoutfitpath",   (newoutfitpath));
-                        lmSendConfig("newoutfit",       (newoutfit));
+                        lmSendConfig("clothingFolder", clothingFolder);
+                        listInventoryOn("2666");
                     }
+                    else {
+                        string msgx = "You look in " + llToLower(pronounHerDoll) + " closet, and see no outfits for Dolly to wear.";
+                        cdDialogListen();
+                        llDialog(dresserID, msgx, ["OK"], dialogChannel);
+                        return;
+                    }
+                }
+                else {
+                    msgx = "You may choose any outfit for " + llToLower(pronounHerDoll) + " to wear.\n\n";
+                    if (dresserID == dollID) msgx = "See " + WEB_DOMAIN + outfits_url + " for more information on outfits.\n\n";
+                    msgx += folderStatus();
 
-                    newoutfitwordend = llStringLength(newoutfit)  - 1;
-                    debugSay(6, "DEBUG", ">>>newoutfit = " + newoutfit);
+                    integer select = (integer)llGetSubString(choice, 0, llSubStringIndex(choice, ".") - 1);
+                    if (select != 0) choice = cdListElement(outfitsList, select - 1);
 
-                    //llOwnerSay("newoutfit is: " + newoutfit);
-                    //llOwnerSay("newoutfitname is: " + newoutfitname);
-                    //llOwnerSay("choice is: " + choice);
-                    //llOwnerSay("clothingFolder is: " + clothingFolder);
+                    if (choice == "OK") {
+                        ; // No outfits: only OK is available
+                    }
+                    else if (llGetSubString(choice, 0, 6) == "Outfits") {
+                        if (!isDresser(id)) return;
 
-                    // Four steps to dressing avi:
-                    //
-                    // 1) Replace every item that can be replaced (using the
-                    //    command @attachall)
-                    // 2) Add every item that didnt get put on the first time
-                    //    (using the @attachallover command)
-                    // 3) Remove the remaining portions of the old outfit
-                    // 4) Add items that are required for all outfits
-                    //    (using the @attach command)
+                        if (choice == "Outfits Next") {
+                            debugSay(6, "DEBUG", ">>> Dress Menu: " + choice);
+                            outfitPage++;
 
-                    llOwnerSay("New outfit chosen: " + newoutfitname);
+                        } else if (choice == "Outfits Prev") {
+                            debugSay(6, "DEBUG", ">>> Dress Menu: " + choice);
+                            outfitPage--;
 
-                    // Get the path of whatever outfit is being worn, and save
-                    // it for later to be able to remove an outfit - not just
-                    // one we know about
-                    //
-                    // Go through a litany of clothing, in order to find the path
-                    // to the clothing worn. If there is no clothing on these points
-                    // for this outift, then this does not work.
-                    //
-                    // This also assumes that a complete outfit is being used,
-                    // and that all parts are contained in a single folder.
-                    // This also assumes that the new outfit does not also
-                    // exist in this folder - such as one outfit using certain
-                    // items and another outfit using other items - such as
-                    // one outfit using a miniskirt and one a long dress.
-                    //
-                    // This is unnessary we can do the same job with locking and @detachallthis
-                    //if (RLVok) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|getpathnew:pants=2670," +
-                    //                                           "getpathnew:shirt=2670," +
-                    //                                           "getpathnew:jacket=2670," +
-                    //                                           "getpathnew:skirt=2670," +
-                    //                                           "getpathnew:underpants=2670," +
-                    //                                           "getpathnew:undershirt=2670", NULL_KEY);
+                        } else if ("Outfits Parent") {
+                            debugSay(6, "DEBUG", ">>> Dress Menu: " + choice);
 
-                    // Original outfit was a complete avi reset....
-                    // Restore our usual look from the ~normalself
-                    // folder...
+                            if (clothingFolder != "") { // Return to the parent folder
+                                list pathParts = llParseString2List(clothingFolder, [ "/" ], []);
 
-                    if (RLVok) {
-                        lmRunRLV("attachallover:" + normalselfFolder + "=force,detachallthis:" + normalselfFolder + "=n");
-                        llSleep(1.0);
+                                clothingFolder = llDumpList2String(llDeleteSubList(pathParts, -1, -1), "/");
+                                lmSendConfig("clothingFolder", clothingFolder);
+                                setActiveFolder();
 
-                        lmRunRLV("attachallover:" + nudeFolder + "=force");
-                        llSleep(1.0);
+                                debugSay(6, "DEBUG-DRESS", "Trying the " + activeFolder + " folder.");
 
-                        lmRunRLV("attachallover:" + newoutfit + "=force,detachallthis:" + newoutfit + "=n," +
-                                 "detachallthis:" + nudeFolder + "=n");
-                        llSleep(1.0);
-
-                        // Remove rest of old outfit (using path from attachments)
-                        if (oldoutfitpath != "") {
-                            lmRunRLV("detachall:" + oldoutfitpath + "=force");
-                            llSleep(1.0);
-                            oldoutfitpath = "";
+                                listInventoryOn("2666");
+                                return;
+                            }
+                            else lmMenuReply(MAIN, name, id); // No parent folder to return to, go to main menu instead
                         }
 
-                        lmRunRLV("detachall:" + outfitsFolder + "=force");
-                        llSleep(1.0);
+                        string UpMain = "Outfits Parent";
+                        if (outfitsFolder == "") UpMain = MAIN;
 
-                        lmRunRLV("attachall:" + newoutfit + "=force");
-                        llSleep(2.0);
+                        cdDialogListen();
+                        llDialog(dresserID, msgx, ["Outfits Prev", "Outfits Next", UpMain ] + outfitsPage(outfitsList), dialogChannel);
+                        llSetTimerEvent(60.0);
 
-                        // And now send an attempt to clean up any remaining stray pieces
-                        string parts = "gloves|jacket|pants|shirt|shoes|skirt|socks|underpants|undershirt|alpha|pelvis|left foot|right foot|r lower leg|l lower leg|r forearm|l forearm|r upper arm|l upper arm|r upper leg|l upper leg";
-                        lmRunRLV("detachallthis:" + llDumpList2String(llParseString2List(parts, [ "|" ], []), "=force,detachallthis:") + "=force");
+                    } else if (cdListElementP(outfitsList, choice) != NOT_FOUND) {
+                        // This could be entered via a menu injection by a random dress choice
+                        // No standard user should be entering this way anyway
+                        //if (!isDresser(id)) return;
+
+                        if (isParentFolder(cdGetFirstChar(choice))) {
+                            if (clothingFolder == "") clothingFolder = choice;
+                            else clothingFolder += "/" + choice;
+
+                            lmSendConfig("clothingFolder", clothingFolder);
+                            setActiveFolder();
+                            listInventoryOn("2666"); // recursion
+
+                            llSetTimerEvent(60.0);
+                            return;
+                        }
+                        else if ((outfitsFolder != "") && (choice != newoutfitname)) {
+    #ifdef DEVELOPER_MODE
+                            // If we are in developer mode we are in danger of the key being ripped
+                            // off here.  We therefore will use a temporary @detach=n restriction.
+                            llOwnerSay("Developer key locked in place to prevent accidental detachment during dressing.");
+                            lmRunRLV("attachthis=y,detachthis=n,detach=n,touchall=n,showinv=n");
+    #else
+                            lmRunRLV("touchall=n,showinv=n");
+    #endif
+                            tempWearLock = TRUE;
+
+                            dressingFailures = 0;
+                            dressTries = 0;
+                            change = 1;
+
+                            lmSendConfig("oldoutfitname",   (  oldoutfitname = newoutfitname));
+                            lmSendConfig("oldoutfitfolder", (oldoutfitfolder = newoutfitfolder));
+                            lmSendConfig("oldoutfitpath",   (  oldoutfitpath = newoutfitpath));
+                            lmSendConfig("oldoutfit",       (      oldoutfit = newoutfit));
+
+                              newoutfitname = choice;
+                            newoutfitfolder = outfitsFolder;
+                              newoutfitpath = clothingFolder;
+
+                            newoutfit = newoutfitfolder + "/";
+                            if (clothingFolder != "")
+                                newoutfit += clothingFolder + "/";
+                            newoutfit += newoutfitname;
+
+                            lmSendConfig("newoutfitname",   (newoutfitname));
+                            lmSendConfig("newoutfitfolder", (newoutfitfolder));
+                            lmSendConfig("newoutfitpath",   (newoutfitpath));
+                            lmSendConfig("newoutfit",       (newoutfit));
+                        }
+
+                        newoutfitwordend = llStringLength(newoutfit)  - 1;
+                        debugSay(6, "DEBUG", ">>>newoutfit = " + newoutfit);
+
+                        //llOwnerSay("newoutfit is: " + newoutfit);
+                        //llOwnerSay("newoutfitname is: " + newoutfitname);
+                        //llOwnerSay("choice is: " + choice);
+                        //llOwnerSay("clothingFolder is: " + clothingFolder);
+
+                        // Four steps to dressing avi:
+                        //
+                        // 1) Replace every item that can be replaced (using the
+                        //    command @attachall)
+                        // 2) Add every item that didnt get put on the first time
+                        //    (using the @attachallover command)
+                        // 3) Remove the remaining portions of the old outfit
+                        // 4) Add items that are required for all outfits
+                        //    (using the @attach command)
+
+                        llOwnerSay("New outfit chosen: " + newoutfitname);
+
+                        // Get the path of whatever outfit is being worn, and save
+                        // it for later to be able to remove an outfit - not just
+                        // one we know about
+                        //
+                        // Go through a litany of clothing, in order to find the path
+                        // to the clothing worn. If there is no clothing on these points
+                        // for this outift, then this does not work.
+                        //
+                        // This also assumes that a complete outfit is being used,
+                        // and that all parts are contained in a single folder.
+                        // This also assumes that the new outfit does not also
+                        // exist in this folder - such as one outfit using certain
+                        // items and another outfit using other items - such as
+                        // one outfit using a miniskirt and one a long dress.
+                        //
+                        // This is unnessary we can do the same job with locking and @detachallthis
+                        //if (RLVok) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|getpathnew:pants=2670," +
+                        //                                           "getpathnew:shirt=2670," +
+                        //                                           "getpathnew:jacket=2670," +
+                        //                                           "getpathnew:skirt=2670," +
+                        //                                           "getpathnew:underpants=2670," +
+                        //                                           "getpathnew:undershirt=2670", NULL_KEY);
+
+                        // Original outfit was a complete avi reset....
+                        // Restore our usual look from the ~normalself
+                        // folder...
+
+                        if (RLVok) {
+                            lmRunRLV("attachallover:" + normalselfFolder + "=force,detachallthis:" + normalselfFolder + "=n");
+                            llSleep(1.0);
+
+                            lmRunRLV("attachallover:" + nudeFolder + "=force");
+                            llSleep(1.0);
+
+                            lmRunRLV("attachallover:" + newoutfit + "=force,detachallthis:" + newoutfit + "=n," +
+                                     "detachallthis:" + nudeFolder + "=n");
+                            llSleep(1.0);
+
+                            // Remove rest of old outfit (using path from attachments)
+                            if (oldoutfitpath != "") {
+                                lmRunRLV("detachall:" + oldoutfitpath + "=force");
+                                llSleep(1.0);
+                                oldoutfitpath = "";
+                            }
+
+                            lmRunRLV("detachall:" + outfitsFolder + "=force");
+                            llSleep(1.0);
+
+                            lmRunRLV("attachall:" + newoutfit + "=force");
+                            llSleep(2.0);
+
+                            // And now send an attempt to clean up any remaining stray pieces
+                            string parts = "gloves|jacket|pants|shirt|shoes|skirt|socks|underpants|undershirt|alpha|pelvis|left foot|right foot|r lower leg|l lower leg|r forearm|l forearm|r upper arm|l upper arm|r upper leg|l upper leg";
+                            lmRunRLV("detachallthis:" + llDumpList2String(llParseString2List(parts, [ "|" ], []), "=force,detachallthis:") + "=force");
+                        }
+
+                        xfolder = normalselfFolder;
+                        rlvRequest("getinvworn:" + xfolder + "=", 2668);
+
+                        yfolder = oldoutfitpath;
+                        if (yfolder != "") rlvRequest("getinvworn:" + yfolder + "=", 2669);
+
+                        llSetTimerEvent(10.0);
                     }
-
-                    xfolder = normalselfFolder;
-                    rlvRequest("getinvworn:" + xfolder + "=", 2668);
-
-                    yfolder = oldoutfitpath;
-                    if (yfolder != "") rlvRequest("getinvworn:" + yfolder + "=", 2669);
-
-                    llSetTimerEvent(10.0);
                 }
             }
         }
@@ -870,17 +872,29 @@ default {
                 }
             }
 
-            if (!llGetListLength(outfitsList) && clothingFolder != "") {
-                list pathParts = llParseString2List(clothingFolder, [ "/" ], []);
+            // we've gone through and cleaned up the list - but is anything left?
+            if (llGetListLength(outfitsList) == 0) {
+                string msgx = "You look in " + llToLower(pronounHerDoll) + " closet, and see nothing for Dolly to wear.";
 
-                clothingFolder = llDumpList2String(llDeleteSubList(pathParts, -1, -1), "/");
-                lmSendConfig("clothingFolder", clothingFolder);
-                setActiveFolder();
-
-                llOwnerSay("Trying the " + activeFolder + " folder.");
-
-                listInventoryOn("2666"); // recursion
+                cdDialogListen();
+                llDialog(dresserID, msgx, ["OK"], dialogChannel);
                 return;
+            }
+            else {
+                if (clothingFolder != "") {
+                    list pathParts = llParseString2List(clothingFolder, [ "/" ], []);
+
+                    clothingFolder = llDumpList2String(llDeleteSubList(pathParts, -1, -1), "/");
+                    lmSendConfig("clothingFolder", clothingFolder);
+                    setActiveFolder();
+
+#ifdef DEVELOPER_MODE
+                    llOwnerSay("Trying the " + activeFolder + " folder.");
+#endif
+
+                    listInventoryOn("2666"); // recursion
+                    return;
+                }
             }
 
             // Sort: slow bubble sort
@@ -896,12 +910,12 @@ default {
             if (llGetListLength(outfitsList) < 10) newoutfits2 = [ "-", "-" ] + newoutfits2;
             else newoutfits2 = [ "Outfits Prev", "Outfits Next" ] + newoutfits2;
 
-            msgx = "You may choose any outfit.\n";
-            if (dresserID == dollID) msgx = "See " + WEB_DOMAIN + outfits_url + " for more information on outfits.\n";
+            msgx = "You may choose any outfit. ";
+            if (dresserID == dollID) msgx = "See " + WEB_DOMAIN + outfits_url + " for more information on outfits. ";
 #ifdef DEVELOPER_MODE
             msgx += "Numbers match outfit names in chat, using chat history (CTRL+H) may help.\n\n" + folderStatus();
 #else
-            msgx += "Numbers match outfit names in chat, using chat history (CTRL+H) may help.";
+            msgx += "Numbers match outfit names in chat, using chat history (CTRL+H) may help. ";
 #endif
 
             // Provide a dialog to user to choose new outfit
