@@ -449,6 +449,8 @@ default {
 #ifdef DEVELOPER_MODE
                 myPath = "";
 #endif
+                lmRunRLVas("Base", "clear");
+                lmRunRLVas("Core", "clear");
                 lmSendConfig("RLVok",(string)RLVok);
             }
             else if (choice == "RLV On") {
