@@ -346,7 +346,7 @@ default
             }
 
             lmInternalCommand("getTimeUpdates","",NULL_KEY);
-            debugSay(5,"CHAT-DEBUG",("Got a chat channel message: " + name + "/" + (string)id + "/" + msg));
+            debugSay(5,"DEBUG-CHAT",("Got a chat channel message: " + name + "/" + (string)id + "/" + msg));
             //msg = llToLower(msg);
             string prefix = cdGetFirstChar(msg);
 
@@ -479,7 +479,8 @@ default
 
                     // wind command changes sense when others use it
                     if (isDoll) {
-                        help +=
+                        if (!hardcore)
+                            help +=
 "
     wind ........... trigger emergency autowind";
                     }
@@ -584,10 +585,6 @@ default
                         return;
                     }
                     else if (choice == "stat") {
-                        //debugSay(6, "DEBUG", "timeLeftOnKey = " + (string)timeLeftOnKey);
-                        //debugSay(6, "DEBUG", "effectiveLimit = " + (string)effectiveLimit);
-                        //debugSay(6, "DEBUG", "displayWindRate = " + (string)displayWindRate);
-
                         float t1 = timeLeftOnKey / (SEC_TO_MIN * windRate);
                         float t2 = effectiveLimit / (SEC_TO_MIN * windRate);
                         float p = t1 * 100.0 / t2;
@@ -595,7 +592,6 @@ default
                         string msg = "Time: " + (string)llRound(t1) + "/" +
                                     (string)llRound(t2) + " min (" + formatFloat(p, 2) + "% capacity)";
 
-                        debugSay(3, "DEBUG", "windingDown = " + (string)windingDown);
                         if (windingDown) {
                             msg += " unwinding at a ";
 
@@ -614,12 +610,6 @@ default
                         return;
                     }
                     else if (choice == "stats") {
-                        //debugSay(6, "DEBUG", "timeLeftOnKey = " + (string)timeLeftOnKey);
-                        //debugSay(6, "DEBUG", "effectiveLimit = " + (string)effectiveLimit);
-                        //debugSay(6, "DEBUG", "windRate = " + (string)windRate);
-
-                        //windRate;
-
                         lmSendToAgent("Time remaining: " + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * windRate)) + " minutes of " +
                                     (string)llRound(effectiveLimit / (SEC_TO_MIN * windRate)) + " minutes.", id);
 
@@ -719,6 +709,7 @@ default
                     // if a Tester - it is a normal wind (Emergency Winder not available!)
 
                     if (isDoll) {
+                        if (hardcore) return;
                         if (collapsed) {
                             if ((llGetUnixTime() - collapseTime) > TIME_BEFORE_EMGWIND) {
                                 cdMenuInject("Wind Emg", dollName, dollID);

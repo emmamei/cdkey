@@ -374,7 +374,6 @@ default {
                 string msg;
                 list menu;
                 string manpage;
-                debugSay(5,"CHAT-MENU","Main Menu Triggered");
 
                 // Cache access test results
                 hasCarrier      = cdCarried();
@@ -554,7 +553,7 @@ default {
 #ifdef ADULT_MODE
                         // Is doll strippable?
                         if (RLVok == 1) {
-                            if (pleasureDoll || dollType == "Slut") {
+                            if (pleasureDoll || dollType == "Slut" || hardcore) {
                                 if (isController || isCarrier) {
                                     if (simRating == "MATURE" || simRating == "ADULT") menu += "Strip...";
                                 }
@@ -777,7 +776,7 @@ default {
 
         integer space = llSubStringIndex(choice, " ");
 
-        debugSay(5,"CHAT-MENU","Menu choice = " + choice + ", space = " + (string)space);
+        //debugSay(5,"DEBUG-MENUHANDLER","Menu choice = " + choice + ", space = " + (string)space);
         lmMenuReply(choice, name, id);
 
         menuID = id;
@@ -922,11 +921,11 @@ default {
                         lmSetConfig("controllers", llDumpList2String(controllers, "|"));
                         lmSendToAgent("You are no longer a controller of this Dolly.", id);
                         llOwnerSay("Your controller " + name + " has relinquished control.");
-                        debugSay(5,"MENU-DROP","id " + (string)id + " dropped from " + llDumpList2String(controllers,","));
+                        debugSay(5,"DEBUG-MENUHANDLER","id " + (string)id + " dropped from " + llDumpList2String(controllers,","));
                     }
 #ifdef DEVELOPER_MODE
                     else {
-                        debugSay(5,"MENU-DROP","id " + (string)id + " not found in " + llDumpList2String(controllers,","));
+                        debugSay(5,"DEBUG-MENUHANDLER","id " + (string)id + " not found in " + llDumpList2String(controllers,","));
                     }
 #endif
                 }

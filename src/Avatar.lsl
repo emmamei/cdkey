@@ -312,7 +312,7 @@ oneAnimation() {
         }
     }
 
-    debugSay(4, "DEBUG", "Animation Refresh Rate: " + formatFloat(animRefreshRate,2));
+    debugSay(4, "DEBUG-ANIM", "Animation Refresh Rate: " + formatFloat(animRefreshRate,2));
 }
 
 ifPermissions() {
@@ -376,8 +376,6 @@ ifPermissions() {
     isFrozen = (collapsed || keyAnimation != "");
 
     if (permMask & PERMISSION_TAKE_CONTROLS) {
-
-        //debugSay(2,"DEBUG-AVATAR","haveControls = " + (string)haveControls + "; collapsed = " + (string)collapsed);
 
         if (isFrozen)
             // Dolly is "frozen": either collapsed or posed
@@ -892,7 +890,6 @@ default {
 
                         poseList = poseList + [ "Poses " + (string)prevPage, "Poses " + (string)nextPage ];
                     }
-                    //debugSay(2,"DEBUG-POSES","Poses menu size = " + (string)llGetListLength(poseList));
 
                     poseList += [ MAIN ];
 

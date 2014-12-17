@@ -169,7 +169,7 @@ collapse(integer newCollapseState) {
     //
     if (collapsed == newCollapseState) return; // Make repeated calls fast and unnecessary
 
-    debugSay(3,"DEBUG-COLLAPSE","Entering new collapse state (" + (string)newCollapseState + ") with time left of " + (string)timeLeftOnKey);
+    debugSay(3,"DEBUG-MAIN","Entering new collapse state (" + (string)newCollapseState + ") with time left of " + (string)timeLeftOnKey);
 
     string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
     setWindRate();
@@ -368,7 +368,7 @@ default {
 
             if (cdLowScriptTrigger) {
                 // lowScriptMode continues...
-                debugSay(2,"DEBUG-LOWSCRIPT", "Low Script Mode active and bumped");
+                debugSay(2,"DEBUG-MAIN", "Low Script Mode active and bumped");
                 lastLowScriptTime = llGetUnixTime();
                 lmSendConfig("lowScriptMode",(string)(lowScriptMode = 1));
                 //lowScriptTimer = 1;
@@ -382,7 +382,7 @@ default {
                 integer timeSpan = llGetUnixTime() - lastLowScriptTime;
 
                 if (timeSpan > 600) {
-                    debugSay(2,"DEBUG-LOWSCRIPT", "Low Script Mode active but environment good - disabling");
+                    debugSay(2,"DEBUG-MAIN", "Low Script Mode active but environment good - disabling");
                     lastLowScriptTime = 0;
                     llOwnerSay("Restoring Key to normal operation.");
 
@@ -391,7 +391,7 @@ default {
                 }
 #ifdef DEVELOPER_MODE
                 else {
-                    debugSay(2,"DEBUG-LOWSCRIPT", "Low Script Mode active but environment good - not yet time (time elapsed " + (string)timeSpan + "s)");
+                    debugSay(2,"DEBUG-MAIN", "Low Script Mode active but environment good - not yet time (time elapsed " + (string)timeSpan + "s)");
                 }
 #endif
             }
@@ -451,8 +451,8 @@ default {
         //----------------------------------------
         // CHECK COLLAPSE STATE
 
-        debugSay(3,"DEBUG-TIME","Time left on key before checking collapse: " + (string)timeLeftOnKey);
-        debugSay(3,"DEBUG-TIME","Collapse state is " + (string)collapsed);
+        //debugSay(3,"DEBUG-TIME","Time left on key before checking collapse: " + (string)timeLeftOnKey);
+        //debugSay(3,"DEBUG-MAIN","Collapse state is " + (string)collapsed);
 
         // False collapse? Collapsed = 1 while timeLeftOnKey is positive is an invalid condition
         if (collapsed == NO_TIME)
@@ -515,7 +515,7 @@ default {
         if (windingDown && (timeSpan != 0)) {
             timeLeftOnKey -= timeSpan * windRate;
 
-            debugSay(3,"DEBUG-TIME","Time left on key at unwinding: " + (string)timeLeftOnKey);
+            //debugSay(3,"DEBUG-MAIN","Time left on key at unwinding: " + (string)timeLeftOnKey);
             if (timeLeftOnKey > 0) {
 
                 minsLeft = llRound(timeLeftOnKey / (SEC_TO_MIN * windRate));
@@ -883,7 +883,7 @@ default {
                     }
 
 #ifdef DEVELOPER_MODE
-                    debugSay(3,"DEBUG-TIME","Time left on key just before winding: " + (string)timeLeftOnKey);
+                    //debugSay(3,"DEBUG-MAIN","Time left on key just before winding: " + (string)timeLeftOnKey);
 #endif
 
                 }
@@ -982,7 +982,7 @@ default {
 
                 setWindRate();
                 lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
-                debugSay(3,"DEBUG-TIME","Time left on key at start: " + (string)timeLeftOnKey);
+                //debugSay(3,"DEBUG-MAIN","Time left on key at start: " + (string)timeLeftOnKey);
                 llOwnerSay("You have " + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * windRate)) + " minutes of life remaining.");
 
                 clearAnim = 1;

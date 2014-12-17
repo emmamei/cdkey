@@ -284,24 +284,8 @@ default {
     state_entry() {
         dollID =   llGetOwner();
         dollName = llGetDisplayName(dollID);
-        //dollType = "Regular";
 
         cdInitializeSeq();
-
-#ifdef WAKESCRIPT
-        // Stop myself: stop this script from running
-        cdStopScript(cdMyScriptName());
-#endif
-        debugSay(2,"DEBUG-TRANSFORM","Done with state_entry...");
-    }
-
-    //----------------------------------------
-    // ON REZ
-    //----------------------------------------
-    on_rez(integer iParam) {
-        //dbConfig = 0;
-        //startup = 2;
-        debugSay(2,"DEBUG-TRANSFORM","Done with on_rez...");
     }
 
     //----------------------------------------
@@ -310,13 +294,6 @@ default {
     changed(integer change) {
         if (change & CHANGED_ALLOWED_DROP)
             reloadTypeNames();
-
-        // if CHANGED_INVENTORY
-        //    then Start.lsl will be Resetting the Key
-        //    thus: ignore and wait for reset
-        //
-        //if (change & CHANGED_INVENTORY)
-        //    reloadTypeNames();
     }
 
     //----------------------------------------
@@ -677,9 +654,11 @@ default {
                         // If the doll is still down after 1800 seconds (30 minutes) and their
                         // emergency winder is recharged; add a button for it
 
-                        if (timeCollapsed > TIME_BEFORE_EMGWIND) {
-                            if (winderRechargeTime <= llGetUnixTime())
-                                menu += ["Wind Emg"];
+                        if (!hardcore) {
+                            if (timeCollapsed > TIME_BEFORE_EMGWIND) {
+                                if (winderRechargeTime <= llGetUnixTime())
+                                    menu += ["Wind Emg"];
+                            }
                         }
                     }
 

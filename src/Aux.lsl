@@ -216,8 +216,6 @@ default {
             string choice = llList2String(split, 0);
             string avatar = llList2String(split, 1);
 
-            debugSay(5, "DEBUG-AUXMENU", "choice = " + choice);
-
             if (choice == "Help...") {
                 msg = "Here you can find various options to get help with your key and to connect with the community.";
                 list plusList = [ "Join Group", "Visit Dollhouse", "Visit Website", "Visit Blog", "Visit Development", "Help Notecard" ];
@@ -260,7 +258,6 @@ default {
                 lmSendToAgent("Here is your link to the Community Dolls group profile: " + WEB_GROUP, id);
 
             else if (choice == "Access...") {
-                //debugSay(5, "DEBUG-AUX", "Dialog channel: " + (string)dialogChannel);
                 msg = "Key Access Menu.\n\n" +
                              "These are powerful options allowing you to give someone total control of your key or block someone from touch or even winding your key. Good dollies should read their key help before adjusting these options.
                              
@@ -302,17 +299,17 @@ Controller - Take care choosing your controllers; they have great control over D
                 if (RLVok) {
 
                     // One-way options
-                    plusList += cdGetButton("Detachable", id, detachable, 1);
+                    if (!hardcore) {
+                        plusList += cdGetButton("Detachable", id, detachable, 1);
+                        plusList += cdGetButton("Silent Pose", id, poseSilence, 1);
+                    }
+
                     plusList += cdGetButton("Flying", id, canFly, 1);
                     plusList += cdGetButton("Sitting", id, canSit, 1);
                     plusList += cdGetButton("Standing", id, canStand, 1);
                     plusList += cdGetButton("Self Dress", id, canDressSelf, 1);
                     plusList += cdGetButton("Self TP", id, canSelfTP, 1);
                     plusList += cdGetButton("Force TP", id, autoTP, 1);
-
-                    if (allowPose) { // Option to silence the doll while posed this this option is a no-op when allowPose == 0
-                        plusList += cdGetButton("Silent Pose", id, poseSilence, 1);
-                    }
                 }
                 else {
                     string p = llToLower(pronounHerDoll);
@@ -330,15 +327,17 @@ Controller - Take care choosing your controllers; they have great control over D
                 msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
                 list plusList = [];
 
-                debugSay(5, "DEBUG-AUXMENU", "choice = " + choice + "; id = " + (string)id);
-
-                plusList += cdGetButton("Carryable", id, allowCarry, 0);
-                plusList += cdGetButton("Outfitable", id, allowDress, 0);
-#ifdef ADULT_MODE
-                plusList += cdGetButton("Pleasure", id, pleasureDoll, 0);
-#endif
-                if (dollType != "Display" && !hardcore)
+                if (dollType != "Display" && !hardcore) {
                     plusList += cdGetButton("Poseable", id, allowPose, 0);
+                }
+
+                if (!hardcore) {
+                    plusList += cdGetButton("Carryable", id, allowCarry, 0);
+                    plusList += cdGetButton("Outfitable", id, allowDress, 0);
+#ifdef ADULT_MODE
+                    plusList += cdGetButton("Pleasure", id, pleasureDoll, 0);
+#endif
+                }
 
                 plusList += cdGetButton("Quiet Key", id, quiet, 0);
 
@@ -353,8 +352,6 @@ Controller - Take care choosing your controllers; they have great control over D
 
                     plusList = llListInsertList(plusList, cdGetButton("Rpt Wind", id, allowRepeatWind, 1), 6);
                 }
-
-                debugSay(5, "DEBUG-AUXMENU", "choice = " + choice + "; id = " + (string)id);
 
                 cdDialogListen();
                 llDialog(id, msg, dialogSort(plusList + MAIN), dialogChannel);
@@ -419,8 +416,6 @@ Controller - Take care choosing your controllers; they have great control over D
             if ((code == 11) || (code == 12)) {
                 msg = llList2String(split, 0);
 
-                //debugSay(5, "DEBUG", "Code #" + (string)code + ": message = " + msg);
-
                 sendMsg(id, msg);
 
                 if (code == 12)
@@ -437,8 +432,6 @@ Controller - Take care choosing your controllers; they have great control over D
                 while (n--) {
                     targetName = llList2String(controllers, (n << 1) + 1);
                     targetKey = llList2Key(controllers, n << 1);
-
-                    debugSay(7, "DEBUG", "MistressMsg To: " + targetName + " (" + (string)targetKey + ")\n" + msg);
 
                     sendMsg(targetKey, msg);
                 }
@@ -481,8 +474,6 @@ Controller - Take care choosing your controllers; they have great control over D
                     if ((json != "") && (json != JSON_INVALID)) {
 
                         memData = cdSetValue(memData, [script], json);
-                        //debugSay(5, "DEBUG-CHAT", "memData: " + memData);
-
                         i = llListFindList(memWait, [script]);
 
                         if ((i != -1) || ((memTime < llGetTime()) && (code == 135))) {

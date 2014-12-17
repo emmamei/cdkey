@@ -184,7 +184,6 @@ rlvRequest(string rlv, integer channel) {
     else if (channel == 2669) listen_id_2669 = cdListenMine(rlvBaseChannel + 2669);
 
     if (RLVok) {
-        debugSay(6, "DEBUG", "cmd = " + rlv + (string)(rlvBaseChannel + channel));
         lmRunRLV(rlv + (string)(rlvBaseChannel + channel));
     }
 
@@ -214,7 +213,7 @@ integer isDresser(key id) {
 
         dresserID = id;
         dresserName = llGetDisplayName(dresserID);
-        debugSay(4, "DEBUG-DRESS", "looking at dress menu: " + (string)dresserID);
+        //debugSay(4, "DEBUG-DRESS", "looking at dress menu: " + (string)dresserID);
 
         if (!cdIsDoll(dresserID))
             llOwnerSay("secondlife:///app/agent/" + (string)dresserID + "/about is looking at your dress menu");
@@ -260,16 +259,16 @@ doDebug(string src) {
     string exists = "not found";
     if (useTypeFolder) exists = "found";
 
-    debugSay(5, "DEBUG", ">  on " + src);
-    debugSay(5, "DEBUG", ">> outfitsFolder = " + outfitsFolder);
-    debugSay(5, "DEBUG", ">> clothingFolder = " + clothingFolder);
-    debugSay(5, "DEBUG", ">> typeFolder = " + typeFolder + " (" + exists + ")");
+    //debugSay(5, "DEBUG-DRESS", ">  on " + src);
+    //debugSay(5, "DEBUG-DRESS", ">> outfitsFolder = " + outfitsFolder);
+    //debugSay(5, "DEBUG-DRESS", ">> clothingFolder = " + clothingFolder);
+    //debugSay(5, "DEBUG-DRESS", ">> typeFolder = " + typeFolder + " (" + exists + ")");
 
     //setActiveFolder();
 
-    debugSay(5, "DEBUG", ">> activeFolder = " + activeFolder);
-    debugSay(5, "DEBUG", ">> normalselfFolder = " + normalselfFolder);
-    debugSay(5, "DEBUG", ">> nudeFolder = " + nudeFolder);
+    //debugSay(5, "DEBUG-DRESS", ">> activeFolder = " + activeFolder);
+    //debugSay(5, "DEBUG-DRESS", ">> normalselfFolder = " + normalselfFolder);
+    //debugSay(5, "DEBUG-DRESS", ">> nudeFolder = " + nudeFolder);
 }
 
 string folderStatus() {
@@ -410,7 +409,7 @@ default {
             //
             if (cmd == "randomDress") {
 #ifdef DEVELOPER_MODE
-                debugSay(6, "DEBUG-DRESS", "random dress chosen");
+                debugSay(6, "DEBUG-DRESS", "Random dress outfit chosen automatically");
 #endif
                 if (tempWearLock) {
                     string s = llToLower(pronounSheDoll);
@@ -422,8 +421,8 @@ default {
 
                     lmSendConfig("clothingFolder", clothingFolder);
 #ifdef DEVELOPER_MODE
-                    debugSay(6, "DEBUG-DRESS", "clothingFolder = " + clothingFolder);
-                    debugSay(6, "DEBUG-DRESS", "listing inventory on 2665...");
+                    //debugSay(6, "DEBUG-DRESS", "clothingFolder = " + clothingFolder);
+                    //debugSay(6, "DEBUG-DRESS", "listing inventory on 2665...");
 #endif
                     listInventoryOn("2665");
                 }
@@ -492,7 +491,7 @@ default {
                 integer cdOutfitRating = cdOutfitRating(newoutfitname);
                 integer regionRating = cdRating2Integer(simRating);
 
-                debugSay(3, "DEBUG", "Region rating " + llToLower(simRating) + " outfit " + newoutfitname + " cdOutfitRating: " + (string)cdOutfitRating +
+                debugSay(3, "DEBUG-DRESS", "Region rating " + llToLower(simRating) + " outfit " + newoutfitname + " cdOutfitRating: " + (string)cdOutfitRating +
                             " regionRating: " + (string)regionRating);
 
                 if (RLVok) {
@@ -526,7 +525,7 @@ default {
     listen(integer channel, string name, key id, string choice) {
         // We have our answer so now we can turn the listener off until our next request
 
-        debugSay(6, "DEBUG", "Channel: " + (string)channel + "\n" + choice);
+        //debugSay(6, "DEBUG-DRESS", "Channel: " + (string)channel + "\n" + choice);
 
         llSetMemoryLimit(65536);
 
@@ -556,18 +555,18 @@ default {
                 if (!isDresser(id)) return;
 
                 if (choice == "Outfits Next") {
-                    debugSay(6, "DEBUG", ">>> Dress Menu: " + choice);
+                    //debugSay(6, "DEBUG-DRESS", ">>> Dress Menu: " + choice);
                     outfitPage++;
 
                 }
                 else if (choice == "Outfits Prev") {
-                    debugSay(6, "DEBUG", ">>> Dress Menu: " + choice);
+                    //debugSay(6, "DEBUG-DRESS", ">>> Dress Menu: " + choice);
                     outfitPage--;
 
                 }
 #ifdef PARENT
                 else if ("Outfits Parent") {
-                    debugSay(6, "DEBUG", ">>> Dress Menu: " + choice);
+                    //debugSay(6, "DEBUG-DRESS", ">>> Dress Menu: " + choice);
 
                     // Strip off the end of clothingFolder and update everyone
                     //
@@ -603,7 +602,6 @@ default {
                 cdDialogListen();
                 outfitsHandle = cdListenMine(outfitsChannel);
                 // outfitsMessage was built by the initial call to listener2666
-                debugSay(6, "DEBUG-DRESSMENU", "Putting up secondary menu");
                 llDialog(dresserID, outfitsMessage, dialogSort(outfitsPage(outfitsList) + dialogItems), outfitsChannel);
                 llSetTimerEvent(60.0);
 
@@ -618,14 +616,12 @@ default {
                 // This could be entered via a menu injection by a random dress choice
                 // No standard user should be entering this way anyway
                 //if (!isDresser(id)) return;
-                debugSay(6, "DEBUG-CLOTHING", " -- choice = " + choice);
 
                 if (isParentFolder(cdGetFirstChar(choice))) {
 
                     // if a Folder was chosen, we have to descend into it by
                     // adding the choice to the currently active folder
 
-                    debugSay(6, "DEBUG-CLOTHING", " isParentFolder() resolved to TRUE");
                     if (clothingFolder == "") clothingFolder = choice;
                     else clothingFolder += ("/" + choice);
 
@@ -671,7 +667,6 @@ default {
                 }
 
                 newoutfitwordend = llStringLength(newoutfit)  - 1;
-                debugSay(6, "DEBUG", ">>>newoutfit = " + newoutfit);
 
                 //llOwnerSay("newoutfit is: " + newoutfit);
                 //llOwnerSay("newoutfitname is: " + newoutfitname);
@@ -770,15 +765,10 @@ default {
         //
         else if (channel == (rlvBaseChannel + 2665)) { // list of inventory items from the current prefix
 
-            debugSay(6, "DEBUG-DRESS", "inventory listed on 2665...");
-
             llListenRemove(listen_id_2665);
             outfitsList = llParseString2List(choice, [","], []);
 
             integer iStop = llGetListLength(outfitsList);
-
-            debugSay(6, "DEBUG", "> RLV message type 2665");
-            debugSay(6, "DEBUG", ">> " + choice);
 
             integer n;
 
@@ -815,9 +805,6 @@ default {
                 for (n = 0; n < iStop; ++n) {
                     itemname = cdListElement(outfitsList, n);
                     prefix = llGetSubString(itemname,0,0);
-
-                    debugSay(6, "DEBUG", ">itemname = " + itemname);
-                    debugSay(6, "DEBUG", ">prefix = " + prefix);
 
                     // skip hidden files/directories and skip
                     // Doll Type (Transformation) folders...
@@ -867,8 +854,6 @@ default {
                 // Folders are marked with an initial ">" character
                 if (llGetSubString(nextoutfitname, 0, 0) != ">") {
 
-                    debugSay(6, "DEBUG", ">nextoutfitname = " + nextoutfitname);
-
                     lmMenuReply(nextoutfitname, llGetObjectName(), llGetKey());
                     llOwnerSay("You are being dressed in this outfit: " + nextoutfitname);
                 }
@@ -904,9 +889,6 @@ default {
             string itemname;
             string prefix;
 
-            debugSay(6, "DEBUG", "> RLV message type 2666");
-            debugSay(6, "DEBUG", ">> " + choice);
-
             // Collect names of possible new outfits, removing folders (items)
             // longer than 23 characters, those that start with "~" (hidden) or
             // with "*" (outfit folder). Also do not count current outfit name
@@ -936,10 +918,9 @@ default {
                 llDialog(dresserID, "You look in " + llToLower(pronounHerDoll) + " closet, and see nothing for Dolly to wear.", ["OK"], dialogChannel);
                 return;
             }
-#ifdef GOING_UP
+#ifdef PARENT
             // This looks like a complete bug but just comment it out for now
             else {
-                debugSay(5,"DEBUG-CLOTHING","Clothing Folder = " + clothingFolder);
                 if (clothingFolder != "") {
                     list pathParts = llParseString2List(clothingFolder, [ "/" ], []);
 
@@ -955,7 +936,6 @@ default {
             }
 #endif
 
-            debugSay(5,"DEBUG-CLOTHING","Prepping clothing menu");
             // Sort: slow bubble sort
             outfitsList = llListSort(outfitsList, 1, TRUE);
 
@@ -964,23 +944,21 @@ default {
             outfitPage = 0;
             integer newOutfitCount = llGetListLength(outfitsList);
 
-            debugSay(5,"DEBUG-CLOTHING","newoutfits2 >>");
-            list newoutfits2 = [ MAIN ] + outfitsPage(outfitsList);
+            list newoutfits2 = outfitsPage(outfitsList);
 
             if (llGetListLength(outfitsList) < 10) newoutfits2 = [ "-", "-" ] + newoutfits2;
-            else newoutfits2 = [ "Outfits Prev", "Outfits Next" ] + newoutfits2;
+            else newoutfits2 += [ "Outfits Prev", "Outfits Next" ];
+            newoutfits2 += [ MAIN ];
 
-            debugSay(5,"DEBUG-CLOTHING","outfitsMessage >>");
             outfitsMessage = "You may choose any outfit for dolly to wear. ";
             if (dresserID == dollID) outfitsMessage = "See " + WEB_DOMAIN + outfits_url + " for more detailed information on outfits. ";
             outfitsMessage += "\n\n" + folderStatus();
 
-            debugSay(5,"DEBUG-CLOTHING","get select >> choice = " + choice);
             // Build outfit menu
             integer select = (integer)llGetSubString(choice, 0, llSubStringIndex(choice, ".") - 1);
             if (select != 0) choice = cdListElement(outfitsList, select - 1);
 
-            debugSay(5,"DEBUG-CLOTHING","Checking choice: " + choice + " - id> " + (string)id);
+#ifdef NO_PAGER
             if (llGetSubString(choice, 0, 6) == "Outfits") {
                 // Choice was one of:
                 //
@@ -988,19 +966,18 @@ default {
                 // Outfits Prev
                 // Outfits Parent
 
-                debugSay(5,"DEBUG-CLOTHING","Inside Outfits selections");
                 if (!isDresser(id)) return;
 
                 if (choice == "Outfits Next") {
-                    debugSay(6, "DEBUG", ">>> Dress Menu: " + choice);
                     outfitPage++;
 
-                } else if (choice == "Outfits Prev") {
-                    debugSay(6, "DEBUG", ">>> Dress Menu: " + choice);
+                }
+                else if (choice == "Outfits Prev") {
                     outfitPage--;
 
-                } else if ("Outfits Parent") {
-                    debugSay(6, "DEBUG", ">>> Dress Menu: " + choice);
+                }
+#ifdef PARENT
+                else if ("Outfits Parent") {
 
                     if (clothingFolder != "") { // Return to the parent folder
                         list pathParts = llParseString2List(clothingFolder, [ "/" ], []);
@@ -1018,14 +995,17 @@ default {
                         lmMenuReply(MAIN, name, id); // No parent folder to return to, go to main menu instead
                     }
                 }
+#endif
             }
+#endif
 
+#ifdef PARENT
             string UpMain = "Outfits Parent";
-
+#endif
             // Provide a dialog to user to choose new outfit
             debugSay(3, "DEBUG-CLOTHING", "Putting up Primary Menu in new directory");
             cdListenMine(outfitsChannel);
-            llDialog(dresserID, outfitsMessage, newoutfits2, outfitsChannel);
+            llDialog(dresserID, outfitsMessage, dialogSort(newoutfits2), outfitsChannel);
             candresstimeout = 1;
             llSetTimerEvent(60.0);
         }

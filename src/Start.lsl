@@ -217,7 +217,7 @@ processConfiguration(string name, string value) {
         }
 
         // FIXME: Note the lack of validation here (!)
-        debugSay(2, "DEBUG-CONFIG", "Sending message " + cdListElement(sendName,i) + " with value " + (string)value);
+        debugSay(2, "DEBUG-START", "Sending message " + cdListElement(sendName,i) + " with value " + (string)value);
 
         // Do both ways for now, just until all are converted or handled
         lmSetConfig(cdListElement(sendName,i), value);
@@ -326,7 +326,7 @@ readPreferences() {
         ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ncLine);
     } else {
         // File missing - report for debugging only
-        debugSay(1, "DEBUG", "No configuration found (" + NOTECARD_PREFERENCES + ")");
+        debugSay(1, "DEBUG-START", "No configuration found (" + NOTECARD_PREFERENCES + ")");
 
         prefsRead = PREFS_NOT_READ;
         lmInitState(101);
@@ -372,7 +372,6 @@ doneConfiguration(integer prefsRead) {
 
     if (isAttached) cdSetKeyName(dollDisplayName + "'s Key");
 
-    debugSay(3,"DEBUG-START","doneConfiguration done - starting init code 110");
     lmInitState(110);
 
     if (cdNotecardExists(APPEARANCE_NC)) {
@@ -381,7 +380,6 @@ doneConfiguration(integer prefsRead) {
         ncRequestAppearance = llGetNotecardLine(APPEARANCE_NC, ncLine++);
     }
 
-    //llSetTimerEvent(10.0);
     debugSay(3,"DEBUG-START","doneConfiguration done - exiting");
 
     string msg = "Initialization completed" +
@@ -401,17 +399,14 @@ doRestart() {
     integer n;
     string script;
 
-    debugSay(2,"DEBUG-RESET","Resetting Key scripts");
-
     // Set all other scripts to run state and reset them
     n = llGetInventoryNumber(INVENTORY_SCRIPT);
     while(n--) {
         script = llGetInventoryName(INVENTORY_SCRIPT, n);
         if (script != "Start") {
 
-            debugSay(5,"DEBUG-RESET","========>> Resetting #" + (string)n + ": '" + script + "'");
+            debugSay(5,"DEBUG-START","====> Resetting script: '" + script + "'");
 
-            //cdRunScript(script);
             llResetOtherScript(script);
         }
     }
@@ -506,9 +501,9 @@ default {
                 collapsed = (integer)value;
                 doVisibility();
 
-                debugSay(2, "DEBUG-START", "Collapsed = " + (string)collapsed);
-                debugSay(2, "DEBUG-START", "defaultCollapseRLVcmd = " + defaultCollapseRLVcmd);
-                debugSay(2, "DEBUG-START", "userCollapseRLVcmd = " + userCollapseRLVcmd);
+                //debugSay(2, "DEBUG-START", "Collapsed = " + (string)collapsed);
+                //debugSay(2, "DEBUG-START", "defaultCollapseRLVcmd = " + defaultCollapseRLVcmd);
+                //debugSay(2, "DEBUG-START", "userCollapseRLVcmd = " + userCollapseRLVcmd);
 
                 if (collapsed) {
                     // We are collapsed: activate RLV restrictions
@@ -765,7 +760,7 @@ default {
                     string value =          llStringTrim(llGetSubString(data, index + 1, -1),STRING_TRIM) ;
 
                     // this is the heart of preferences processing
-                    debugSay(2, "DEBUG-CONFIG", "Processing configuration: name = " + name + "; value = " + value);
+                    debugSay(2, "DEBUG-START", "Processing configuration: name = " + name + "; value = " + value);
                     processConfiguration(name, value);
                 }
 
