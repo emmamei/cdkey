@@ -209,12 +209,14 @@ default {
             }
 #endif
         }
-        else if (code == 350) {
+        else if (code == RLV_RESET) {
             RLVok = (llList2Integer(split, 1) == 1);
         }
         else if (code == MENU_SELECTION) {
             string choice = llList2String(split, 0);
             string avatar = llList2String(split, 1);
+
+            debugSay(5, "DEBUG-AUXMENU", "choice = " + choice);
 
             if (choice == "Help...") {
                 msg = "Here you can find various options to get help with your key and to connect with the community.";
@@ -238,9 +240,10 @@ default {
             }
             else if (choice == "Help Notecard")
                 llGiveInventory(id,NOTECARD_HELP);
-            else if (choice == "Get Key")
+            else if (choice == "Get Key") {
                 if (llGetInventoryType(OBJECT_KEY) == INVENTORY_OBJECT)
                     llGiveInventory(id,OBJECT_KEY);
+            }
             else if (choice == "Visit Dollhouse") {
                 // If is Dolly, whisk Dolly away to Location of Landmark
                 // If is someone else, give Landmark to them
@@ -327,6 +330,8 @@ Controller - Take care choosing your controllers; they have great control over D
                 msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
                 list plusList = [];
 
+                debugSay(5, "DEBUG-AUXMENU", "choice = " + choice + "; id = " + (string)id);
+
                 plusList += cdGetButton("Carryable", id, allowCarry, 0);
                 plusList += cdGetButton("Outfitable", id, allowDress, 0);
 #ifdef ADULT_MODE
@@ -348,6 +353,8 @@ Controller - Take care choosing your controllers; they have great control over D
 
                     plusList = llListInsertList(plusList, cdGetButton("Rpt Wind", id, allowRepeatWind, 1), 6);
                 }
+
+                debugSay(5, "DEBUG-AUXMENU", "choice = " + choice + "; id = " + (string)id);
 
                 cdDialogListen();
                 llDialog(id, msg, dialogSort(plusList + MAIN), dialogChannel);

@@ -502,7 +502,7 @@ default {
                             if (isDoll) if (canDressSelf) menu += "Outfits...";
                             else        if (allowDress || isController)     menu += "Outfits...";
 
-                            if (isController) menu += "RLV Off";
+                            if (isController) if (!hardcore) menu += "RLV Off";
                         } else {
                             // Note this section is valid if RLV == 0 (no RLV)
                             // but ALSO if RLVok == -1 (unset)
@@ -608,7 +608,7 @@ default {
             string name = llList2String(split, 0);
 
             if (name == "Options...") {
-                lmInternalCommand("optionsMenu", "", NULL_KEY);
+                lmInternalCommand("optionsMenu", "", id);
             }
         }
         else if (code == RLV_RESET) {
@@ -777,6 +777,7 @@ default {
         if (channel == dialogChannel) {
 
             if (space == NOT_FOUND) {
+                // no space was found in the Menu button selection
                 if (choice == "Options...") {
                     cdMenuInject("Options...");
                 }
@@ -785,6 +786,7 @@ default {
                 else if (choice == "Decline") ; // do nothing
             }
             else {
+                // A space WAS found in the Menu button selection
                 if (choice == "TP Home") {
                     lmInternalCommand("TP", LANDMARK_HOME, id);
                     return;
