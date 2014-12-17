@@ -559,40 +559,59 @@ default {
                     debugSay(6, "DEBUG", ">>> Dress Menu: " + choice);
                     outfitPage++;
 
-                } else if (choice == "Outfits Prev") {
+                }
+                else if (choice == "Outfits Prev") {
                     debugSay(6, "DEBUG", ">>> Dress Menu: " + choice);
                     outfitPage--;
 
-                } else if ("Outfits Parent") {
+                }
+#ifdef PARENT
+                else if ("Outfits Parent") {
                     debugSay(6, "DEBUG", ">>> Dress Menu: " + choice);
 
-                    if (clothingFolder != "") { // Return to the parent folder
+                    // Strip off the end of clothingFolder and update everyone
+                    //
+                    // This is complicated because there is no "search from end" function
+                    // in LSL. So we hack it.
+                    list pathParts = llParseString2List(clothingFolder, [ "/" ], []);
 
-                        // Strip off the end of clothingFolder and update everyone
-                        list pathParts = llParseString2List(clothingFolder, [ "/" ], []);
-                        clothingFolder = llDumpList2String(llDeleteSubList(pathParts, -1, -1), "/");
-                        lmSendConfig("clothingFolder", clothingFolder);
+                    if (llGetListLength(pathParts) > 1)
+                        clothingFolder = llDumpList2String(llList2List(pathParts, 0, -2), "/");
+                    else
+                        clothingFolder = "";
 
-                        debugSay(6, "DEBUG-DRESS", "Moving up to the " + activeFolder + " folder.");
+                    lmSendConfig("clothingFolder", clothingFolder);
 
-                        listInventoryOn("2666");
-                        return;
-                    }
-                    else lmMenuReply(MAIN, name, id); // No parent folder to return to, go to main menu instead
+#ifdef DEVELOPER_MODE
+                    setActiveFolder();
+                    debugSay(6, "DEBUG-DRESS", "Moving up to the " + activeFolder + " folder.");
+#endif
+                    listInventoryOn("2666");
+                    return;
                 }
 
                 string UpMain = "Outfits Parent";
-                if (outfitsFolder == "") UpMain = MAIN;
+#endif
+                list dialogItems = [ "Outfits Prev", "Outfits Next" ];
+#ifdef PARENT
+                if (clothingFolder != "")
+                    dialogItems += "Outfits Parent";
+#endif
+                dialogItems += MAIN;
 
                 // We only get here if we are wandering about in the same directory...
                 cdDialogListen();
                 outfitsHandle = cdListenMine(outfitsChannel);
                 // outfitsMessage was built by the initial call to listener2666
                 debugSay(6, "DEBUG-DRESSMENU", "Putting up secondary menu");
-                llDialog(dresserID, outfitsMessage, ["Outfits Prev", "Outfits Next", UpMain ] + outfitsPage(outfitsList), outfitsChannel);
+                llDialog(dresserID, outfitsMessage, dialogSort(outfitsPage(outfitsList) + dialogItems), outfitsChannel);
                 llSetTimerEvent(60.0);
 
-            } else if (cdListElementP(outfitsList, choice) != NOT_FOUND) {
+            }
+            else if (choice == MAIN) {
+                lmMenuReply(MAIN,"",id);
+            }
+            else if (cdListElementP(outfitsList, choice) != NOT_FOUND) {
                 // This is the actual processing of an Outfit Menu entry -
                 // either a folder or a single outfit item.
                 //
