@@ -390,6 +390,7 @@ default {
             else if (name == "collapsed")     {    collapsed = (integer)value; activateRLVBase(); }
             else if (name == "wearLock")      {     wearLock = (integer)value; activateRLVBase(); }
             else if (name == "afk")           {          afk = (integer)value; activateRLVBase(); }
+            else if (name == "controllers")   {  controllers = split; }
 
             else if (name == "dialogChannel") {
                 dialogChannel = (integer)value;
@@ -445,6 +446,13 @@ default {
                 RLVok = 0;
                 rlvAPIversion = "";
                 RLVstarted = 0;
+
+                i = llGetListLength(controllers) + 2;
+                if (i > 0) {
+                    while (i -= 2) {
+                        lmSendToAgent("Doll " + name + " has turned off RLV.",llList2Key(controllers, i - 2));
+                    }
+                }
 
 #ifdef DEVELOPER_MODE
                 myPath = "";
