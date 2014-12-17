@@ -751,6 +751,7 @@ default {
 
         else if (code == RLV_RESET) {
             RLVok = ((integer)choice == 1);
+            if (dollType == "") setDollType("Regular", AUTOMATED);
 
             outfitsFolder = "";
             typeFolder = "";
@@ -926,7 +927,6 @@ default {
                 llSetTimerEvent(30.0);
 
                 // Might have been set in Prefs, so do this late
-                if (dollType == "") setDollType("Regular", AUTOMATED);
             }
 
             //else if (code == 105) {
