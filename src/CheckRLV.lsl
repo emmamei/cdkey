@@ -249,6 +249,8 @@ activateRLV() {
 #endif
         cdListenerDeactivate(rlvHandle);
         lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
+
+        // This generates a 350 link message
         lmRLVreport(RLVok, rlvAPIversion, 0);
     }
 
@@ -460,10 +462,12 @@ default {
                 lmRunRLVas("Base", "clear");
                 lmRunRLVas("Core", "clear");
                 lmSendConfig("RLVok",(string)RLVok);
+                lmMenuReply(MAIN,"",id);
             }
             else if (choice == "RLV On") {
                 doCheckRLV();
                 if (RLVok) activateRLV();
+                lmMenuReply(MAIN,"",id);
             }
         }
         else if (code < 200) {
