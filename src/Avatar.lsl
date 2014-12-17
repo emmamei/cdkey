@@ -9,6 +9,7 @@
 #include "include/GlobalDefines.lsl"
 #include "include/Json.lsl"
 
+#define ROLLOVER 1
 //#define DEBUG_BADRLV
 #define cdSayQuietly(x) { string z = x; if (quiet) llOwnerSay(z); else llSay(0,z); }
 #define NOT_IN_REGION ZERO_VECTOR
@@ -875,20 +876,31 @@ default {
                         integer prevPage;
                         integer nextPage;
 
-                        if (prevPage < 1)     prevPage = 1;
-                        if (nextPage > pages) nextPage = pages;
+#ifdef ROLLOVER
+                        if (page != 1) prevPage = page - 1;
+                        else prevPage = pages;
 
-                        poseList = dialogSort(PoseList) + [ "Poses " + (string)prevPage, "Poses " + (string)nextPage ];
+                        if (page != pages) nextPage = page + 1;
+                        else nextPage = 1;
+#else
+                        if (page != 1) prevPage = page - 1;
+                        else prevPage = 1;
+
+                        if (page != pages) nextPage = page + 1;
+                        else nextPage = pages;
+#endif
+
+                        poseList = poseList + [ "Poses " + (string)prevPage, "Poses " + (string)nextPage ];
                     }
                     //debugSay(2,"DEBUG-POSES","Poses menu size = " + (string)llGetListLength(poseList));
 
-                    poseList += [ MAIN ]);
+                    poseList += [ MAIN ];
 
                     msg = "Select the pose to put dolly into";
                     if (keyAnimation) msg += " (current pose is " + keyAnimation + ")";
 
                     cdDialogListen();
-                    llDialog(id, msg, poseList, dialogChannel);
+                    llDialog(id, msg, dialogSort(poseList), dialogChannel);
                 }
             }
         }
