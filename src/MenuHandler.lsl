@@ -514,11 +514,24 @@ default {
                         if (keyAnimation != "") {
                             msg += "Doll is currently posed. ";
 
-                            if (isController || (isDoll && poserID == dollID))
-                                menu += [ "Poses...", "Unpose" ];
-                            else if (!isDoll) {
-                                if (allowPose) menu += [ "Poses...", "Unpose" ];
-                                else if (poserID == dollID) menu += [ "Unpose" ];
+                            // If accessor is Dolly... allow Dolly to pose and unpose,
+                            // but NOT when posed by someone else.
+
+                            if (isDoll) {
+                                if (poserID == dollID)
+                                    menu += [ "Poses...", "Unpose" ];
+                            }
+
+                            // If accessor is NOT Dolly... allow the public access if
+                            // permitted by Dolly, and allow access to all Controllers
+                            // (NOT Dolly by virtue of ruling out Doll previously).
+                            // Also allow anyone to Unpose Dolly if Dolly self posed.
+
+                            else {
+                                if (isController || allowPose)
+                                    menu += [ "Poses...", "Unpose" ];
+                                else if (poserID == dollID)
+                                    menu += [ "Unpose" ];
                             }
                         }
                         else {
@@ -909,7 +922,13 @@ default {
                         lmSetConfig("controllers", llDumpList2String(controllers, "|"));
                         lmSendToAgent("You are no longer a controller of this Dolly.", id);
                         llOwnerSay("Your controller " + name + " has relinquished control.");
+                        debugSay(5,"MENU-DROP","id " + (string)id + " dropped from " + llDumpList2String(controllers,","));
                     }
+#ifdef DEVELOPER_MODE
+                    else {
+                        debugSay(5,"MENU-DROP","id " + (string)id + " not found in " + llDumpList2String(controllers,","));
+                    }
+#endif
                 }
                 else if (beforeSpace == CROSS || beforeSpace == CHECK) {
                     // Could be Option or Ability:
