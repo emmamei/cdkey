@@ -556,6 +556,7 @@ default {
                 dollType = value;
             }
             else if ((name == "RLVok") || (name == "dialogChannel")) {
+                integer oldRLVok = RLVok;
 
                 if (name == "RLVok") RLVok = (integer)value;
                 else if (name == "dialogChannel") {
@@ -565,39 +566,11 @@ default {
                     outfitSearchChannel = rlvChannel + 2;
                 }
 
-
-                // If RLV is ok AND rlvChannel is set... then reset
-                // the rlvChannel and search for OutfitsFolder
-
-                if (RLVok) {
-                    if (rlvChannel) {
-                        //
-                        // Now we have a result of RLV checks - and if it is Ok,
-                        // startup the RLV channels and search for folders
-                        //
-                        //if (!rlvHandle) llListenRemove(rlvHandle);
-                        //rlvHandle = cdListenMine(rlvChannel);
-                        //if (!typeSearchHandle) llListenRemove(typeSearchHandle);
-                        typeSearchHandle = cdListenMine(typeSearchChannel);
-                        //if (!outfitSearchHandle) llListenRemove(outfitSearchHandle);
-                        outfitSearchHandle = cdListenMine(outfitSearchChannel);
-
-                        if (outfitsFolder == "" && !outfitSearching) {
-                            outfitSearching++;
-
-                            if (outfitSearching < 2) {
-                                debugSay(2,"DEBUG-RLVOK","Searching for Outfits and Typefolders");
-                                outfitsFolder = "";
-                                typeFolder = "";
-                                useTypeFolder = 0;
-                                typeSearchTries = 0;
-                                outfitSearchTries = 0;
-
-                                outfitsSearchTimer = llGetTime();
-                                folderSearch(outfitsFolder,outfitSearchChannel);
-                            }
-                        }
-                    }
+                // This makes the RLV activation only happen during
+                // an RLV Off to On transition... and speeds things up too
+                if (!oldRLVok) {
+                    if (RLVok && rlvChannel)
+                        lmRLVreport();
                 }
             }
 #ifdef DEVELOPER_MODE
