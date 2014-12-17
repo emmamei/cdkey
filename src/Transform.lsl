@@ -760,14 +760,11 @@ default {
 
             if (RLVok) {
                 if (rlvChannel) {
-                    //if (rlvHandle) llListenRemove(rlvHandle);
-                    //rlvHandle = cdListenMine(rlvChannel);
-                    //if (typeSearchHandle) llListenRemove(typeSearchHandle);
                     typeSearchHandle = cdListenMine(typeSearchChannel);
-                    //if (!outfitSearchHandle) llListenRemove(outfitSearchHandle);
                     outfitSearchHandle = cdListenMine(outfitSearchChannel);
 
                     if (outfitsFolder == "" && !outfitSearching) {
+                        // No outfit folder: let's search.
                         outfitSearching++;
                         if (outfitSearching < 2) {
 
@@ -779,6 +776,7 @@ default {
                             outfitSearchTries = 0;
 
                             outfitsSearchTimer = llGetTime();
+                            // Start the search
                             folderSearch(outfitsFolder,outfitSearchChannel);
                         }
                     }
@@ -1018,7 +1016,6 @@ default {
             llListenRemove(typeSearchHandle);
             if (lowScriptMode) llSetTimerEvent(LOW_RATE);
             else llSetTimerEvent(STD_RATE);
-
 
             // if there is no outfits folder we mark the type folder search
             // as "failed" and don't use a type folder...
