@@ -641,12 +641,14 @@ default {
 
         // WHen this script (Start.lsl) resets... EVERYONE resets...
         doRestart();
+        llSleep(1.0);
 
         // Set the debug level for all scripts early
 #ifdef DEVELOPER_MODE
         lmSendConfig("debugLevel",(string)debugLevel);
 #endif
         readPreferences();
+        llSleep(1.0);
     }
 
     //----------------------------------------
@@ -722,6 +724,7 @@ default {
                 doVisibility();
                 configured = 1;
                 ncRequestAppearance = NULL_KEY;
+                llSleep(1.0);
             }
             else {
                 data = llStringTrim(data,STRING_TRIM);
