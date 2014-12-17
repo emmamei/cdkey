@@ -8,7 +8,7 @@
 
 #include "include/GlobalDefines.lsl"
 
-//#define DEBUG_BADRLV
+//#define FAKE_NORLV
 #define cdSayQuietly(x) { string z = x; if (quiet) llOwnerSay(z); else llSay(0,z); }
 #define NOT_IN_REGION ZERO_VECTOR
 #define cdLockMeisterCmd(a) llWhisper(LOCKMEISTER_CHANNEL,(string)dollID+a)
@@ -105,7 +105,7 @@ checkRLV() {
     if (RLVck < MAX_RLVCHECK_TRIES) {
         // Check RLV again: give it several tries
 
-        // Setting the DEBUG_BADRLV flag causes the listener to not be open for the check
+        // Setting the FAKE_NORLV flag causes the listener to not be open for the check
         // This makes the viewer appear to have no RLV support as no reply will be heard
         // from the check; all other code works normally.
 
@@ -119,7 +119,7 @@ checkRLV() {
         }
         else RLVck++;
 
-#ifdef DEBUG_BADRLV
+#ifdef FAKE_NORLV
         // Make viewer act is if there is no RLV support
         cdListenerDeactivate(rlvHandle);
 #else
