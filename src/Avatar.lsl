@@ -875,13 +875,14 @@ default {
                         integer prevPage;
                         integer nextPage;
 
-                        if (prevPage != 1)     prevPage = page - 1;
-                        if (nextPage != pages) nextPage = page + 1;
+                        if (prevPage < 1)     prevPage = 1;
+                        if (nextPage > pages) nextPage = pages;
 
-                        poseList = [ "Poses " + (string)prevPage, "Poses " + (string)nextPage, MAIN ] + poseList;
+                        poseList = dialogSort(PoseList) + [ "Poses " + (string)prevPage, "Poses " + (string)nextPage ];
                     }
+                    //debugSay(2,"DEBUG-POSES","Poses menu size = " + (string)llGetListLength(poseList));
 
-                    poseList = dialogSort(poseList + [ MAIN ]);
+                    poseList += [ MAIN ]);
 
                     msg = "Select the pose to put dolly into";
                     if (keyAnimation) msg += " (current pose is " + keyAnimation + ")";
@@ -897,7 +898,7 @@ default {
                 //doCheckRLV();
 
                 debugSay(2,"DEBUG-AVATAR","ifPermissions (link_message 110)");
-                if (dollType == "Display" && keyAnimation != "" && keyAnimation != "collapse")
+                //if ((dollType == "Display" || hardcore) && keyAnimation != "" && keyAnimation != "collapse")
 
                 ifPermissions();
                 oneAnimation();

@@ -158,7 +158,7 @@ default {
             else if (name == "gemColour")                curGemColour = value;
             else if (name == "dollType") {
                 if (configured && (keyAnimation != "") && (keyAnimation != ANIMATION_COLLAPSED) && (poserID != dollID)) {
-                    if (value == "Display")
+                    if (value == "Display" || hardcore)
                         llOwnerSay("You feel yourself transform and know you will soon be free of your pose when the timer ends.");
                     else if (dollType == "Display")
                         llOwnerSay("As you feel yourself become a display doll you feel a sense of helplessness knowing you will remain posed until released.");
@@ -337,7 +337,7 @@ Controller - Take care choosing your controllers; they have great control over D
 #ifdef ADULT_MODE
                 plusList += cdGetButton("Pleasure", id, pleasureDoll, 0);
 #endif
-                if (dollType != "Display")
+                if (dollType != "Display" && !hardcore)
                     plusList += cdGetButton("Poseable", id, allowPose, 0);
 
                 plusList += cdGetButton("Quiet Key", id, quiet, 0);
