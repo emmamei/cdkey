@@ -502,11 +502,11 @@ default {
 #ifdef DEVELOPER_MODE
         // This is a way to watch the messages coming over the wire...
         // no need for a separate script to do it
-        if ((debugLevel > 4 && code != 11 && code != 12 && code != 15) || (debugLevel > 8)) {
+        if ((debugLevel > 4 && code != 11 && code != 12 && code != 15) || debugLevel > 5) {
             string s = "Transform Link Msg:" + script + ":" + (string)code + ":choice/name";
             string t = choice + "/" + name;
 
-            if (id != NULL_KEY) debugSay(5,"DEBUG-LINK",s + "/id = " + t + "/" + (string)id);
+            if (id != NULL_KEY || debugLevel > 6) debugSay(5,"DEBUG-LINK",s + "/id = " + t + "/" + (string)id);
             else debugSay(5,"DEBUG-LINK",s + " = " + t);
         }
 #endif
@@ -715,8 +715,6 @@ default {
                 }
             }
             else if (cmd == "optionsMenu") {
-                debugSay(5,"CHAT-MENU","Options Menu Triggered");
-
                 list pluslist;
 
                 if (cdIsDoll(id)) {
