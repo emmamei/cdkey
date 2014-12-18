@@ -76,6 +76,7 @@ default
             else if (name == "lastWinderID")             lastWinderID = (key)value;
             else if (name == "lastWinderName")         lastWinderName = value;
             else if (name == "collapsed")                   collapsed = (integer)value;
+            else if (name == "hardcore")                     hardcore = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")           timeReporting = (integer)value;
 #endif
@@ -676,6 +677,11 @@ default
                         llOwnerSay(s);
                         return;
                     }
+#ifdef ADULT_MODE
+                    else if (choice == "hardcore" && isDoll && !hardcore) {
+                        lmSendConfig("hardcore",(string)hardcore = !hardcore);
+                    }
+#endif
 #ifdef DEVELOPER_MODE
                     else if (choice == "collapse" && isDoll) {
                         lmSetConfig("timeLeftOnKey","10");

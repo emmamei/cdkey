@@ -573,18 +573,11 @@ default {
 // would not normally be reflected as a doll state.
 //#define CHANGED_OTHER 0x80000000
 
-            //integer oldState = dollState;              // Used to determine if a refresh of RLV state is needed
-
-            // if (name == "autoTP")                        autoTP = (integer)value;
             if (name == "carrierID") {
                 carrierID = (key)value;
                 hasCarrier = cdCarried();
             }
             else if (name == "afk")                         afk = (integer)value;
-            //else if (name == "canFly")                   canFly = (integer)value;
-            //else if (name == "canSit")                   canSit = (integer)value;
-            //else if (name == "canStand")               canStand = (integer)value;
-            //else if (name == "canDressSelf")       canDressSelf = (integer)value;
             else if (name == "collapsed") {
                     collapsed = (integer)value;
 
@@ -594,8 +587,8 @@ default {
                     debugSay(2,"DEBUG-AVATAR","ifPermissions (link_message 300/collapsed)");
                     ifPermissions();
             }
-            //else if (name == "tpLureOnly")           tpLureOnly = (integer)value;
             else if (name == "poseSilence")         poseSilence = (integer)value;
+            else if (name == "hardcore")               hardcore = (integer)value;
             else if (name == "userBaseRLVcmd")   userBaseRLVcmd = value;
 #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")     timeReporting = (integer)value;

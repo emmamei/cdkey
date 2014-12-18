@@ -496,25 +496,33 @@ default {
             string value = name;
             string name = choice;
 
-                 if (name == "timeLeftOnKey")                          timeLeftOnKey = (float)value;
-            else if (name == "afk")                                              afk = (integer)value;
-            else if (name == "autoAFK")                                      autoAFK = (integer)value;
+                 if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
+            else if (name == "afk")                               afk = (integer)value;
+            else if (name == "autoAFK")                       autoAFK = (integer)value;
 #ifdef DEVELOPER_MODE
-            else if (name == "timeReporting")                          timeReporting = (integer)value;
+            else if (name == "timeReporting")           timeReporting = (integer)value;
 #endif
             else if (name == "lowScriptMode") {
                 if (lowScriptMode = (integer)value) llSetTimerEvent(LOW_RATE);
                 else llSetTimerEvent(STD_RATE);
             }
-            else if (name == "collapsed")                                  collapsed = (integer)value;
-            else if (name == "simRating")                                  simRating = value;
-            else if (name == "quiet")                                          quiet = (integer)value;
-            else if (name == "hoverTextOn")                              hoverTextOn = (integer)value;
-            else if (name == "busyIsAway")                                busyIsAway = (integer)value;
-            else if (name == "canAFK")                                        canAFK = (integer)value;
-            else if (name == "mustAgreeToType")                      mustAgreeToType = (integer)value;
-            else if (name == "winderRechargeTime")                winderRechargeTime = (integer)value;
-            else if (name == "collapseTime")                            collapseTime = (integer)value;
+            else if (name == "collapsed")                   collapsed = (integer)value;
+            else if (name == "simRating")                   simRating = value;
+            else if (name == "quiet")                           quiet = (integer)value;
+            else if (name == "hardcore")                     hardcore = (integer)value;
+            else if (name == "hoverTextOn")               hoverTextOn = (integer)value;
+            else if (name == "busyIsAway")                 busyIsAway = (integer)value;
+            else if (name == "canAFK")                         canAFK = (integer)value;
+            else if (name == "mustAgreeToType")       mustAgreeToType = (integer)value;
+            else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
+            else if (name == "collapseTime")             collapseTime = (integer)value;
+            else if (name == "stateName")                    dollType = value;
+#ifdef DEVELOPER_MODE
+            else if (name == "debugLevel")                 debugLevel = (integer)value;
+#endif
+#ifdef WEAR_AT_LOGIN
+            else if (name == "wearAtLogin")               wearAtLogin = (integer)value;
+#endif
             else if (name == "showPhrases") {
                 showPhrases = (integer)value;
                 currentPhrases = [];
@@ -525,12 +533,6 @@ default {
                         kQuery = llGetNotecardLine(typeNotecard,readLine);
                     }
                 }
-            }
-#ifdef WEAR_AT_LOGIN
-            else if (name == "wearAtLogin")                              wearAtLogin = (integer)value;
-#endif
-            else if (name == "stateName") {
-                dollType = value;
             }
             else if ((name == "RLVok") || (name == "dialogChannel")) {
                 integer oldRLVok = RLVok;
@@ -550,11 +552,6 @@ default {
                         lmRLVreport();
                 }
             }
-#ifdef DEVELOPER_MODE
-            else if (name == "debugLevel") {
-                                                                          debugLevel = (integer)value;
-            }
-#endif
         }
 
         else if (code == SET_CONFIG) {
