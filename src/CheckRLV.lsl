@@ -93,6 +93,7 @@ checkRLV() {
     if (RLVok == 1) {
         RLVck = 0;
         llSetTimerEvent(0.0);
+        lmInternalCommand("refreshRLV","",NULL_KEY);
         return;
     }
 
@@ -328,9 +329,9 @@ default {
                 nextRLVcheck = 0.0;
                 RLVok = 1;
                 lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
-                lmRLVreport(RLVok, rlvAPIversion, 0);
                 cdListenerDeactivate(rlvHandle);
                 activateRLV();
+                lmRLVreport(RLVok, rlvAPIversion, 0);
 #endif
             }
 #ifdef DEVELOPER_MODE
@@ -343,9 +344,9 @@ default {
                 lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
                 //debugSay(2, "DEBUG-RLV", "RLV set to " + (string)RLVok + " and message sent on link channel");
                 llOwnerSay("RLV check completed in " + formatFloat((llGetTime() - rlvTimer),1) + "s");
-                lmRLVreport(RLVok, rlvAPIversion, 0);
                 cdListenerDeactivate(rlvHandle);
                 activateRLV();
+                lmRLVreport(RLVok, rlvAPIversion, 0);
             }
 #endif
         }
@@ -356,7 +357,8 @@ default {
     //----------------------------------------
     attach(key id) {
 
-        if (id) doCheckRLV();
+        if (id)
+            doCheckRLV();
     }
 
     //----------------------------------------

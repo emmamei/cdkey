@@ -800,7 +800,7 @@ default {
             else {
                 // A space WAS found in the Menu button selection
                 if (choice == "TP Home") {
-                    lmInternalCommand("TP", LANDMARK_HOME, id);
+                    lmInternalCommand("teleport", LANDMARK_HOME, id);
                     return;
                 }
 

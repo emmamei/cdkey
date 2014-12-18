@@ -52,24 +52,19 @@ default {
     // STATE ENTRY
     //----------------------------------------
     state_entry() {
-        dollID = llGetOwner();
-        scriptName = llGetScriptName();
+        //dollID = llGetOwner();
+        //scriptName = llGetScriptName();
 
         cdInitializeSeq();
         scaleMem();
-
-#ifdef WAKESCRIPT
-        llSetScriptState("StatusRLV",0);
-#endif
     }
 
     //----------------------------------------
     // ON REZ
     //----------------------------------------
     on_rez(integer start) {
-        // This converts the "on_rez" event to a "state_entry" event
-        debugSay(1,"DEBUG-STATUSRLV","Resetting (on_rez complete)");
-        llResetScript();
+        cdInitializeSeq();
+        scaleMem();
     }
 
     //----------------------------------------
@@ -115,13 +110,26 @@ default {
 
             if (cmd == "refreshRLV") {
                 list rlvCommands = llList2ListStrided(rlvStatus, 0, -1, 2);
+                llOwnerSay("Reactivating RLV restrictions");
 
                 i = llGetListLength(rlvCommands);
                 while (i--) {
-                    // Note: no fanciness, no checks, no nothing... probably
-                    // should be more
-                    llOwnerSay("@" + llList2String(rlvCommands, i));
-                    debugSay(4,"DEBUG-STATUSRLV","rlvCommand (refresh): " + llList2String(rlvCommands, i));
+                    string cmd = llList2String(rlvCommands, i);
+
+                    if (cdGetFirstChar(cmd) == ",") {
+                        cmd = llGetSubString(cmd,1,-1);
+                        rlvCommands[i] = cmd;
+                    }
+
+                    if (llSubStringIndex(cmd,"=") != NOT_FOUND) {
+                        ;
+                    }
+                    else {
+                        cmd += "=n";
+                    }
+
+                    debugSay(4,"DEBUG-STATUSRLV","rlvCommand (refresh): " + cmd);
+                    llOwnerSay("@" + cmd);
                 }
             }
         }
@@ -370,6 +378,10 @@ default {
         else if (code == RLV_RESET) {
             RLVok = (cdListIntegerElement(split, 0) == 1);
             RLVstarted = 1;
+
+            debugSay(4,"DEBUG-STATUSRLV","rlvCommand (refresh) activated");
+            if (RLVok)
+                lmInternalCommand("refreshRLV","",NULL_KEY);
         }
         else if (code < 200) {
             if (code == 135) {

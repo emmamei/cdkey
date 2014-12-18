@@ -247,7 +247,9 @@ default {
             else if (choice == "Visit Dollhouse") {
                 // If is Dolly, whisk Dolly away to Location of Landmark
                 // If is someone else, give Landmark to them
-                if (cdIsDoll(id)) llMessageLinked(LINK_THIS, 305, "Aux|TP|" + LANDMARK_CDHOME, id);
+                if (cdIsDoll(id))
+                    //llMessageLinked(LINK_THIS, 305, "Aux|TP|" + LANDMARK_CDHOME, id);
+                    lmInternalCommand("teleport", LANDMARK_CDHOME, id);
                 else llGiveInventory(id, LANDMARK_CDHOME);
             }
             else if (choice == "Visit Development")

@@ -665,7 +665,7 @@ default {
                 if (RLVok) llOwnerSay("@clear,detachme=force");
                 else llDetachFromAvatar();
             }
-            else if (cmd == "TP") {
+            else if (cmd == "teleport") {
                 string lm = llList2String(split, 0);
                 llRegionSayTo(id, 0, "Teleporting dolly " + dollName + " to  landmark " + lm + ".");
                 rlvTPrequest = llRequestInventoryData(lm);
