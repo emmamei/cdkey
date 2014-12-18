@@ -4,7 +4,8 @@
 //
 // vim:sw=4 et nowrap:
 //
-// DATE: 27 October 2014
+// DATE: 18 December 2014
+
 #include "include/GlobalDefines.lsl"
 //
 // As of 23 January 2014 this script is now state tracking only
@@ -96,11 +97,8 @@ default {
 
         scaleMem();
 
-        // quick return for often ignored codes
-             if (code == 305) return;
-        else if (code == 136) return;
+        if (code == CONFIG) {
 
-        else if (code == CONFIG) {
             string name = cdListElement(split, 0);
             string value = cdListElement(split, 1);
 
@@ -111,15 +109,23 @@ default {
             return;
         }
 
-        else if (code == 135) {
-            float delay = cdListFloatElement(split, 0);
+        else if (code == INTERNAL_CMD) {
+            string cmd = llList2String(split, 0);
+            split = llDeleteSubList(split, 0, 0);
 
-            memReport(cdMyScriptName(),delay);
-        }
-        else if (code == 142) {
+            if (cmd == "refreshRLV") {
+                list rlvCommands = llList2ListStrided(rlvStatus, 0, -1, 2);
 
-            cdConfigureReport();
+                i = llGetListLength(rlvCommands);
+                while (i--) {
+                    // Note: no fanciness, no checks, no nothing... probably
+                    // should be more
+                    llOwnerSay("@" + llList2String(rlvCommands, i));
+                    debugSay(4,"DEBUG-STATUSRLV","rlvCommand (refresh): " + llList2String(rlvCommands, i));
+                }
+            }
         }
+
         else if (code == 315) {
             //string realScript = script;
             //string script = cdListElement(split, 0);
@@ -364,6 +370,17 @@ default {
         else if (code == RLV_RESET) {
             RLVok = (cdListIntegerElement(split, 0) == 1);
             RLVstarted = 1;
+        }
+        else if (code < 200) {
+            if (code == 135) {
+                float delay = cdListFloatElement(split, 0);
+
+                memReport(cdMyScriptName(),delay);
+            }
+            else if (code == 142) {
+
+                cdConfigureReport();
+            }
         }
     }
 }
