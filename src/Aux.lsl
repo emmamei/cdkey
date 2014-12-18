@@ -292,7 +292,7 @@ Controller - Take care choosing your controllers; they have great control over D
                 plusList +=  "List Controller";
 
                 cdDialogListen();
-                llDialog(id, msg, dialogSort(plusList + MAIN), dialogChannel);
+                llDialog(id, msg, dialogSort(plusList + "Options..."), dialogChannel);
             }
             else if (choice == "Abilities...") {
                 msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
@@ -312,6 +312,7 @@ Controller - Take care choosing your controllers; they have great control over D
                     plusList += cdGetButton("Self Dress", id, canDressSelf, 1);
                     plusList += cdGetButton("Self TP", id, canSelfTP, 1);
                     plusList += cdGetButton("Force TP", id, autoTP, 1);
+                    plusList += "Options...";
                 }
                 else {
                     string p = llToLower(pronounHerDoll);
@@ -323,7 +324,7 @@ Controller - Take care choosing your controllers; they have great control over D
                 }
 
                 cdDialogListen();
-                llDialog(id, msg, dialogSort(plusList + MAIN), dialogChannel);
+                llDialog(id, msg, dialogSort(plusList), dialogChannel);
             }
             else if (choice == "Features...") {
                 msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
@@ -356,7 +357,7 @@ Controller - Take care choosing your controllers; they have great control over D
                 }
 
                 cdDialogListen();
-                llDialog(id, msg, dialogSort(plusList + MAIN), dialogChannel);
+                llDialog(id, msg, dialogSort(plusList + "Options..."), dialogChannel);
             }
             else if (choice == "Key...") {
 
@@ -364,7 +365,7 @@ Controller - Take care choosing your controllers; they have great control over D
 
                 if (cdIsController(id)) plusList += [ "Max Time...", "Wind Time..." ];
                 cdDialogListen();
-                llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(plusList, 1, 1) + cdGetButton("Key Glow", id, primGlow, 0) + cdGetButton("Gem Light", id, primLight, 0) + MAIN), dialogChannel);
+                llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(plusList, 1, 1) + cdGetButton("Key Glow", id, primGlow, 0) + cdGetButton("Gem Light", id, primLight, 0) + "Options..."), dialogChannel);
             }
             else if (llGetSubString(choice,0,6) == "Gender:") {
                 string s = llGetSubString(choice,7,-1);
@@ -382,7 +383,7 @@ Controller - Take care choosing your controllers; they have great control over D
                 msg = "Here you can choose your own gem colour.";
 
                 cdDialogListen();
-                llDialog(id, msg, dialogSort(COLOR_NAMES + MAIN), dialogChannel);
+                llDialog(id, msg, dialogSort(COLOR_NAMES + "Key..."), dialogChannel);
             }
             else if (llListFindList(COLOR_NAMES, [ choice ]) != NOT_FOUND) {
                 integer index = llListFindList(COLOR_NAMES, [ choice ]);

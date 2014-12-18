@@ -436,7 +436,7 @@ default {
             string choice = cdListElement(split, 0);
             string name = cdListElement(split, 1);
 
-            //debugSay(6, "DEBUG-DRESS", (string)tempWearLock + " " + choice);
+            debugSay(6, "DEBUG-DRESS", "Menu Selection: " + choice + ": tempWearLock = " + (string)tempWearLock);
 
             if (choice == "Outfits..." && !tempWearLock) {
                 if (!isDresser(id)) return;
@@ -946,7 +946,7 @@ default {
 
             list newoutfits2 = outfitsPage(outfitsList);
 
-            if (llGetListLength(outfitsList) < 10) newoutfits2 = [ "-", "-" ] + newoutfits2;
+            if (llGetListLength(outfitsList) < 10) newoutfits2 += [ "-", "-" ];
             else newoutfits2 += [ "Outfits Prev", "Outfits Next" ];
             newoutfits2 += [ MAIN ];
 

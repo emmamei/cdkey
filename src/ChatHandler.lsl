@@ -678,9 +678,22 @@ default
                         return;
                     }
 #ifdef ADULT_MODE
-                    else if (choice == "hardcore" && isDoll && !hardcore) {
-                        lmSendConfig("hardcore",(string)hardcore = !hardcore);
+                    else if (choice == "hardcore") {
+
+                        // if hardcore is set, only a controller other than
+                        // Dolly can clear it. If hardcore is clear - only
+                        // Dolly can set it.
+
+                        if (hardcore) {
+                            if (isController && !isDoll)
+                                lmSendConfig("hardcore",(string)(hardcore = 0));
+                        }
+                        else {
+                            if (isDoll)
+                                lmSendConfig("hardcore",(string)(hardcore = 1));
+                        }
                     }
+
 #endif
 #ifdef DEVELOPER_MODE
                     else if (choice == "collapse" && isDoll) {

@@ -809,9 +809,10 @@ default {
 
                 // Space Found in Menu Selection
                 if (afterSpace == "Visible") {
-                     lmSendConfig("isVisible", (string)(visible = (beforeSpace == CROSS)));
-                     if (visible) lmSendToAgentPlusDoll("You watch as the Key fades away...",id);
-                     else lmSendToAgentPlusDoll("The Key magically reappears",id);
+                    lmSendConfig("isVisible", (string)(visible = (beforeSpace == CROSS)));
+                    if (visible) lmSendToAgentPlusDoll("You watch as the Key fades away...",id);
+                    else lmSendToAgentPlusDoll("The Key magically reappears",id);
+                    lmMenuReply(MAIN, name, id);
                 }
                 else if (afterSpace == "AFK") {
 

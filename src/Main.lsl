@@ -910,6 +910,7 @@ default {
                 if (windMins * SEC_TO_MIN > keyLimit) lmSendConfig("windMins", (string)(windMins = 30));
                 else lmSendConfig("windMins", (string)(windMins = (integer)choice));
                 lmSendToAgent("Winding now set to " + (string)windMins + " minutes",id);
+                lmMenuReply("Key...","",id);
             }
 
             else if ((choice ==  "45m") ||
@@ -934,6 +935,7 @@ default {
                 lmSendConfig("keyLimit", (string)keyLimit);
                 lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
                 //lmSendConfig("effectiveLimit", (string)effectiveLimit);
+                lmMenuReply("Key...","",id);
             }
             else if (choice == "Wind Time...") {
                 list windChoices;

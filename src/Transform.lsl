@@ -547,10 +547,10 @@ default {
 
                 // This makes the RLV activation only happen during
                 // an RLV Off to On transition... and speeds things up too
-                if (!oldRLVok) {
-                    if (RLVok && rlvChannel)
-                        lmRLVreport();
-                }
+//              if (!oldRLVok) {
+//                  if (RLVok && rlvChannel)
+//                      lmRLVreport(RLVok, rlvAPIversion, 0);
+//              }
             }
         }
 
@@ -778,7 +778,7 @@ default {
 #endif
 
                 cdDialogListen();
-                llDialog(dollID, "Options", dialogSort(choices + MAIN), dialogChannel);
+                llDialog(dollID, "Options", dialogSort(choices + "Options..."), dialogChannel);
             }
 
             // Choose a Transformation
