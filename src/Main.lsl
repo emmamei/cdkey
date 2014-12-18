@@ -14,6 +14,7 @@
 #define cdTimeSet(a) (a!=0)
 #define cdResetKey() llResetOtherScript("Start")
 #define UNSET -1
+#define lmCollapse(a) lmInternalCommand("collapse",(string)(a),NULL_KEY)
 
 //#define debugPrint(a) llSay(DEBUG_CHANNEL,(a))
 
@@ -185,6 +186,8 @@ collapse(integer newCollapseState) {
         // Entering a collapsed state
         if (newCollapseState == NO_TIME) {
             lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0));
+
+            // Direct call to set Hovertext
             cdSetHovertext("Disabled Dolly!",CRITICAL);
         }
         else if (newCollapseState == JAMMED) {
@@ -842,7 +845,11 @@ default {
                 lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey += windAmount));
 
                 if (collapsed == NO_TIME) {
-                    collapse(NOT_COLLAPSED);
+                    // We could call the code directly - but by doing this,
+                    // it's an asynchronous event, and not a function that
+                    // slows down the user.
+                    //
+                    lmCollapse(0);
                     llSleep(1.0); // Make sure that the uncollapse RLV runs before sending the message containing winder name.
                 }
 

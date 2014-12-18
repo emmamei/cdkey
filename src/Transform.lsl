@@ -454,7 +454,6 @@ default {
                 }
 
                 //displayWindRate = setWindRate();
-                //lmInternalCommand("setAFK", (string)afk + "|1|" + formatFloat(windRate, 1) + "|" + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * displayWindRate)), NULL_KEY);
             }
         }
     }
