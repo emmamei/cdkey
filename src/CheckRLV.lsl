@@ -451,10 +451,10 @@ default {
                 rlvAPIversion = "";
                 RLVstarted = 0;
 
-                i = llGetListLength(controllers) + 2;
+                i = llGetListLength(controllers);
                 if (i > 0) {
-                    while (i -= 2) {
-                        lmSendToAgent("Doll " + name + " has turned off RLV.",llList2Key(controllers, i - 2));
+                    while (i--) {
+                        lmSendToAgent("Doll " + name + " has turned off RLV.",llList2Key(controllers, --i));
                     }
                 }
 

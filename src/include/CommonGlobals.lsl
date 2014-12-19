@@ -16,6 +16,7 @@ list BuiltinControllers     = BUILTIN_CONTROLLERS;
 list controllers            = [];
 list split                  = [];
 
+string backMenu             = MAIN;
 string carrierName;
 string chatPrefix;
 string dollGender           = "Female";

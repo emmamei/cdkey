@@ -129,6 +129,7 @@ default {
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "poserID")                       poserID = (key)value;
             else if (name == "keyLimit")                      maxMins = llRound((float)value / 60.0);
+            else if (name == "backMenu")                     backMenu = value;
             else if (name == "quiet")                           quiet = (integer)value;
             else if (name == "RLVok")                           RLVok = (integer)value;
             else if (name == "autoTP")                         autoTP = (integer)value;
@@ -293,8 +294,9 @@ Controller - Take care choosing your controllers; they have great control over D
 
                 plusList +=  "List Controller";
 
+                lmSendConfig("backMenu",(backMenu = "Options..."));
                 cdDialogListen();
-                llDialog(id, msg, dialogSort(plusList + "Options..."), dialogChannel);
+                llDialog(id, msg, dialogSort(plusList + "Back..."), dialogChannel);
             }
             else if (choice == "Abilities...") {
                 msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
@@ -358,16 +360,22 @@ Controller - Take care choosing your controllers; they have great control over D
                     plusList = llListInsertList(plusList, cdGetButton("Rpt Wind", id, allowRepeatWind, 1), 6);
                 }
 
+                lmSendConfig("backMenu",(backMenu = "Options..."));
                 cdDialogListen();
-                llDialog(id, msg, dialogSort(plusList + "Options..."), dialogChannel);
+                llDialog(id, msg, dialogSort(plusList + "Back..."), dialogChannel);
+            }
+            else if (choice == "Back...") {
+                lmMenuReply(backMenu, llGetDisplayName(id), id);
+                lmSendConfig("backMenu",(backMenu = MAIN));
             }
             else if (choice == "Key...") {
 
                 list plusList = ["Dolly Name...","Gem Colour...","Gender:" + dollGender];
 
+                lmSendConfig("backMenu",(backMenu = "Options..."));
                 if (cdIsController(id)) plusList += [ "Max Time...", "Wind Time..." ];
                 cdDialogListen();
-                llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(plusList, 1, 1) + cdGetButton("Key Glow", id, primGlow, 0) + cdGetButton("Gem Light", id, primLight, 0) + "Options..."), dialogChannel);
+                llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(plusList, 1, 1) + cdGetButton("Key Glow", id, primGlow, 0) + cdGetButton("Gem Light", id, primLight, 0) + "Back..."), dialogChannel);
             }
             else if (llGetSubString(choice,0,6) == "Gender:") {
                 string s = llGetSubString(choice,7,-1);

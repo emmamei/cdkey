@@ -274,6 +274,7 @@ folderSearch(string folder, integer channel) {
     // The next stage is the listener, while we create a time
     // out to timeout the RLV call...
     //
+    debugSay(2,"DEBUG-LOWSCRIPT","timer set to " + (string)RLV_TIMEOUT);
     llSetTimerEvent(RLV_TIMEOUT);
 }
 
@@ -418,6 +419,9 @@ default {
         //----------------------------------------
         // SET TIMER INTERVAL
 
+        if (lowScriptMode) debugSay(2,"DEBUG-LOWSCRIPT","lowScript generates a rate of " + (string)LOW_RATE + "s.");
+        else debugSay(2,"DEBUG-LOWSCRIPT","lowScript generates a rate of " + (string)STD_RATE + "s.");
+
         if (lowScriptMode) llSetTimerEvent(LOW_RATE);
         else llSetTimerEvent(STD_RATE);
 
@@ -502,13 +506,16 @@ default {
             else if (name == "timeReporting")           timeReporting = (integer)value;
 #endif
             else if (name == "lowScriptMode") {
-                if (lowScriptMode = (integer)value) llSetTimerEvent(LOW_RATE);
+                debugSay(2,"DEBUG-LOWSCRIPT","lowScript set to " + (string)lowScriptMode + " via link message");
+                lowScriptMode = (integer)value;
+                if (lowScriptMode) llSetTimerEvent(LOW_RATE);
                 else llSetTimerEvent(STD_RATE);
             }
             else if (name == "collapsed")                   collapsed = (integer)value;
             else if (name == "simRating")                   simRating = value;
             else if (name == "quiet")                           quiet = (integer)value;
             else if (name == "hardcore")                     hardcore = (integer)value;
+            else if (name == "backMenu")                     backMenu = value;
             else if (name == "hoverTextOn")               hoverTextOn = (integer)value;
             else if (name == "busyIsAway")                 busyIsAway = (integer)value;
             else if (name == "canAFK")                         canAFK = (integer)value;
@@ -664,6 +671,7 @@ default {
             }
             else if (cmd == "optionsMenu") {
                 list pluslist;
+                lmSendConfig("backMenu",(backMenu = MAIN));
 
                 if (cdIsDoll(id)) {
                     msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. ";
@@ -693,7 +701,7 @@ default {
                 else return;
 
                 cdDialogListen();
-                llDialog(id, msg, dialogSort(pluslist + MAIN), dialogChannel);
+                llDialog(id, msg, dialogSort(pluslist + "Back..."), dialogChannel);
             }
         }
 
@@ -776,8 +784,9 @@ default {
                 choices += cdGetButton("Wear @ Login", id, wearAtLogin, 0);
 #endif
 
+                lmSendConfig("backMenu",(backMenu = "Options..."));
                 cdDialogListen();
-                llDialog(dollID, "Options", dialogSort(choices + "Options..."), dialogChannel);
+                llDialog(dollID, "Options", dialogSort(choices + "Back..."), dialogChannel);
             }
 
             // Choose a Transformation

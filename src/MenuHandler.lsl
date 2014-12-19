@@ -183,6 +183,7 @@ default {
             }
             else if (name == "baseWindRate")             baseWindRate = (float)value;
             else if (name == "windRate")                     windRate = (float)value;
+            else if (name == "backMenu")                     backMenu = value;
             else if (name == "windingDown")               windingDown = (integer)value;
             else if (name == "lowScriptMode")           lowScriptMode = (integer)value;
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
@@ -714,7 +715,7 @@ default {
         }
 
         cdDialogListen();
-        llDialog(dollID, "Select the avatar to be added to the " + type + ".", dialogSort(dialogButtons + MAIN), channel);
+        llDialog(dollID, "Select the avatar to be added to the " + type + ".", dialogSort(dialogButtons + "Back..."), channel);
     }
 
     //----------------------------------------
@@ -722,7 +723,7 @@ default {
     //----------------------------------------
     no_sensor() {
         cdDialogListen();
-        llDialog(dollID, "No avatars detected within chat range", [MAIN], dialogChannel);
+        llDialog(dollID, "No avatars detected within chat range", [ "Back..." ], dialogChannel);
     }
 
     //----------------------------------------
@@ -777,6 +778,8 @@ default {
         integer space = llSubStringIndex(choice, " ");
 
         //debugSay(5,"DEBUG-MENUHANDLER","Menu choice = " + choice + ", space = " + (string)space);
+
+        // This sends out the reply that generates a menu
         lmMenuReply(choice, name, id);
 
         menuID = id;
@@ -790,10 +793,7 @@ default {
 
             if (space == NOT_FOUND) {
                 // no space was found in the Menu button selection
-                if (choice == "Options...") {
-                    cdMenuInject("Options...");
-                }
-                else if (choice == "Detach") lmInternalCommand("detach", "", id);
+                     if (choice == "Detach") lmInternalCommand("detach", "", id);
                 else if (choice == "Accept") lmInternalCommand("addMistress", (string)id + "|" + name, id);
                 else if (choice == "Decline") ; // do nothing
             }
@@ -828,6 +828,7 @@ default {
                 }
                 else if ((afterSpace == "Blacklist") || (afterSpace == "Controller")) {
                     integer activeChannel; string msg;
+                    lmSendConfig("backMenu",(backMenu = "Access..."));
 
                     if (afterSpace == "Blacklist") {
                         if (controlHandle) {
@@ -926,7 +927,7 @@ default {
                     }
 #ifdef DEVELOPER_MODE
                     else {
-                        debugSay(5,"DEBUG-MENUHANDLER","id " + (string)id + " not found in " + llDumpList2String(controllers,","));
+                        llSay(DEBUG_CHANNEL,"id " + (string)id + " not found in Controllers List: " + llDumpList2String(controllers,","));
                     }
 #endif
                 }
