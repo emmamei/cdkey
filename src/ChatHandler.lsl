@@ -381,8 +381,14 @@ default
                     prefix = llGetSubString(msg, 0, n - 1);
                     msg = llGetSubString(msg, n, -1);
                 }
-                // We could have a message for a different dolly than us, or
-                // a valid command, or an invalid command: be quiet
+                else
+                    // we didn't get a valid prefix - so exit. Either it's
+                    // for another dolly, or it was invalid. If we act on a general
+                    // command - then every dolly in range with this key will respond.
+                    // Can't have that...
+
+                    return;
+
             }
 
             // If we get here, we know this:
