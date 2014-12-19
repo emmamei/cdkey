@@ -322,17 +322,17 @@ default {
         // typeFolderExpected = Computed but untested typeFolder
 
 #ifdef DEVELOPER_MODE
-        string s;
-        //if (timeReporting) llOwnerSay("Transform Timer fired, interval " + formatFloat(llGetTime() - lastTimerEvent,3) + "s. (lowScriptMode ");
+        if (timeReporting) {
+            string s;
 
-        s = "Transform Timer fired, interval " + formatFloat(llGetTime() - lastTimerEvent,3) + "s. (lowScriptMode ";
+            s = "Transform Timer fired, interval " + formatFloat(llGetTime() - lastTimerEvent,3) + "s. (lowScriptMode ";
+            if (lowScriptMode) s += "is active).";
+            else s += "is not active).";
 
-        lastTimerEvent = llGetTime();
+            llOwnerSay(s);
 
-        if (lowScriptMode) s += "is active).";
-        else s += "is not active).";
-
-        if (timeReporting) llOwnerSay(s);
+            lastTimerEvent = llGetTime();
+        }
 #endif
         // transform lock: check time
         if (transformLockExpire) {
@@ -343,11 +343,11 @@ default {
         }
 
         if (RLVok) {
-            if (outfitsSearchTimer) {
-                debugSay(2,"DEBUG-SEARCHING","Search aborted after " + formatFloat(llGetTime() - outfitsSearchTimer,1) + "s");
-                outfitsSearchTimer = 0.0; // reset
 
-            }
+//            if (outfitsSearchTimer) {
+//                debugSay(2,"DEBUG-SEARCHING","Search aborted after " + formatFloat(llGetTime() - outfitsSearchTimer,1) + "s");
+//                outfitsSearchTimer = 0.0; // reset
+//            }
 
             if (outfitSearching) {
                 // Note carefully - if the search tries is maxed,
@@ -381,6 +381,9 @@ default {
             }
         }
 
+        //----------------------------------------
+        // SHOW PHRASES
+
         if (showPhrases) {
             if (phraseCount) {
 
@@ -412,6 +415,9 @@ default {
             }
         }
 
+        //----------------------------------------
+        // SET TIMER INTERVAL
+
         if (lowScriptMode) llSetTimerEvent(LOW_RATE);
         else llSetTimerEvent(STD_RATE);
 
@@ -420,12 +426,6 @@ default {
 
         // Update sign if appropriate
         string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
-
-//#define cdSetHovertext(x,c) if(primText!=x)llSetText(x,c,1.0)
-
-//#define RED    <1.0,0.0,0.0>
-//#define YELLOW <1.0,1.0,0.0>
-//#define WHITE  <1.0,1.0,1.0>
 
              if (collapsed)   { cdSetHovertext("Disabled Dolly!",        ( RED    )); }
         else if (afk)         { cdSetHovertext(dollType + " Doll (AFK)", ( YELLOW )); }
@@ -453,7 +453,7 @@ default {
                     llOwnerSay("Entering AFK mode; Key subsystems slowing...");
                 }
 
-                //displayWindRate = setWindRate();
+                setWindRate();
             }
         }
     }
@@ -962,8 +962,8 @@ default {
 
             // Note that, unlike the dialog channel, the type search channel is removed and recreated... maybe it should not be
             llListenRemove(typeSearchHandle);
-            if (lowScriptMode) llSetTimerEvent(LOW_RATE);
-            else llSetTimerEvent(STD_RATE);
+            //if (lowScriptMode) llSetTimerEvent(LOW_RATE);
+            //else llSetTimerEvent(STD_RATE);
 
             // if there is no outfits folder we mark the type folder search
             // as "failed" and don't use a type folder...
@@ -1014,8 +1014,8 @@ default {
                 lmSendConfig("outfitsFolder", outfitsFolder);
                 lmSendConfig("useTypeFolder", (string)useTypeFolder);
                 lmSendConfig("typeFolder", typeFolder);
-                if (lowScriptMode) llSetTimerEvent(LOW_RATE);
-                else llSetTimerEvent(STD_RATE);
+                //if (lowScriptMode) llSetTimerEvent(LOW_RATE);
+                //else llSetTimerEvent(STD_RATE);
 
                 // at this point we've either found the typeFolder or not,
                 // and the outfitsFolder is set
