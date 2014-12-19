@@ -155,10 +155,6 @@ setAfk(integer setting) {
     lmSendConfig("autoAFK", (string)autoAFK);
 }
 
-#define NOT_COLLAPSED 0
-#define NO_TIME 1
-#define JAMMED 2
-
 collapse(integer newCollapseState) {
 
     // newCollapseState describes state being entered;
@@ -173,12 +169,10 @@ collapse(integer newCollapseState) {
     debugSay(3,"DEBUG-MAIN","Entering new collapse state (" + (string)newCollapseState + ") with time left of " + (string)timeLeftOnKey);
 
     string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
-    setWindRate();
 
     if (newCollapseState == NOT_COLLAPSED) {
         lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
         lmSendConfig("collapseTime", (string)(collapseTime = 0));
-        lmInternalCommand("setHovertext", "", llGetKey());
     }
     else {
         lmSendConfig("lastWinderID", (string)(lastWinderID = NULL_KEY));
@@ -236,6 +230,12 @@ collapse(integer newCollapseState) {
     // changes
     //
     //llSetTimerEvent(15);
+
+    // Among other things, this will set the Key's turn rate
+    setWindRate();
+
+    // Set hovertext
+    lmInternalCommand("setHovertext", "", llGetKey());
 }
 
 //========================================

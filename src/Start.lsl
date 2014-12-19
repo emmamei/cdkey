@@ -644,6 +644,7 @@ default {
 #endif
         readPreferences();
         llSleep(1.0);
+        lmInternalCommand("collapse", (string)NOT_COLLAPSED, llGetKey());
     }
 
     //----------------------------------------
@@ -701,7 +702,8 @@ default {
         //lowScriptMode = 0;
         //lmSendConfig("lowScriptMode", "0");
 
-        // reset collapse environment if needed
+        // reset collapse environment
+        if (collapsed == JAMMED) collapsed = NOT_COLLAPSED;
         lmInternalCommand("collapse", (string)collapsed, llGetKey());
 
         lastAttachPoint = cdAttached();

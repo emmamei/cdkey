@@ -17,6 +17,7 @@
 // #define F 12
 // #define G 15
 #define MEM_REPORT 135
+#define CONFIG_RPT 142
 #define CONFIG 300
 #define SET_CONFIG 301
 #define INTERNAL_CMD 305
@@ -153,8 +154,9 @@ list BuiltinControllers = BUILTIN_CONTROLLERS;
 #define cdButFirstChar(a) llGetSubString(a, 1, STRING_END)
 #define cdChat(a) llSay(0, a)
 #define cdStopTimer() llSetTimerEvent(0.0)
-#define cdListenAll(a) llListen(a, NO_FILTER, NO_FILTER, NO_FILTER)
 #define cdPause() llSleep(0.5)
+#define cdListenAll(a) llListen(a, NO_FILTER, NO_FILTER, NO_FILTER)
+#define cdListenMine(a)   llListen(a, NO_FILTER, dollID, NO_FILTER)
 
 #define CHECK "✔"
 #define CROSS "✘"
@@ -178,6 +180,10 @@ list BuiltinControllers = BUILTIN_CONTROLLERS;
 // Max Controllers - Set a limit on the number of user defined controllers so the list
 // cannot grow to arbitrary lengths and consume all memory.
 #define MAX_ACCESS_ITEMS 11
+
+#define NOT_COLLAPSED 0
+#define NO_TIME 1
+#define JAMMED 2
 
 #define cdControllerCount()		llFloor(llGetListLength(USER_CONTROLLERS) / 2)
 #define cdAttached()			llGetAttached()
