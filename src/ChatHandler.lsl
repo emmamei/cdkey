@@ -928,8 +928,29 @@ default
                 //   * collapse
                 //
                 if (isDoll) {
+                    if (choice == "gname") {
+                        string doubledSymbols = "♫♫✿✿▫▫▪▪♬♬♩♩♪♪♬♬‘‘°°ººةة..,,==--++^^**˜˜••..  ¤¤øø””ﺴﺴ☊☊☩☩´´⇝⇝⁘⁘⁙⁙⁚⁚⁛⁛↑↑↓↓☆☆★★··..¸¸❤❤";
+                        string pairedSymbols = "<>()[]{}?؟\/";
+                        string allSymbols;
+                        string s1;
+                        string s2;
+                        integer n;
+                        string c;
+                        integer i;
+
+                        allSymbols = doubledSymbols + pairedSymbols;
+                        i = 8;
+                        while (i--) {
+                            n = (integer)(llFrand(llStringLength(allSymbols)));
+                            s1 = s1 + llGetSubString(allSymbols,n,n);
+
+                            n = n ^ 1;
+                            s2 = llGetSubString(allSymbols,n,n) + s2;
+                        }
+                        llSay(PUBLIC_CHANNEL,s1 + " " + param + " " + s2);
+                    }
 #ifdef DEVELOPER_MODE
-                    if (choice == "debug") {
+                    else if (choice == "debug") {
                         lmSendConfig("debugLevel", (string)(debugLevel = (integer)param));
                         llOwnerSay("Debug level set to " + (string)debugLevel);
                         return;
