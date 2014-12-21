@@ -508,8 +508,8 @@ default {
             else if (name == "lowScriptMode") {
                 debugSay(2,"DEBUG-LOWSCRIPT","lowScript set to " + (string)lowScriptMode + " via link message");
                 lowScriptMode = (integer)value;
-                if (lowScriptMode) llSetTimerEvent(LOW_RATE);
-                else llSetTimerEvent(STD_RATE);
+                //if (lowScriptMode) llSetTimerEvent(LOW_RATE);
+                //else llSetTimerEvent(STD_RATE);
             }
             else if (name == "collapsed")                   collapsed = (integer)value;
             else if (name == "simRating")                   simRating = value;
@@ -824,8 +824,9 @@ default {
                     }
 
                     debugSay(5,"DEBUG-TYPES","Generating unlocked dialog");
+                    lmSendConfig("backMenu",(backMenu = MAIN));
                     cdDialogListen();
-                    llDialog(id, msg, dialogSort(llListSort(choices, 1, 1) + MAIN), dialogChannel);
+                    llDialog(id, msg, dialogSort(llListSort(choices, 1, 1) + "Back..."), dialogChannel);
                 }
                 debugSay(5,"DEBUG-TYPES","Transform complete");
             }

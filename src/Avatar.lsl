@@ -884,7 +884,8 @@ default {
                         poseList = poseList + [ "Poses " + (string)prevPage, "Poses " + (string)nextPage ];
                     }
 
-                    poseList += [ MAIN ];
+                    lmSendConfig("backMenu",(backMenu = MAIN));
+                    poseList += [ "Back..." ];
 
                     msg = "Select the pose to put dolly into";
                     if (keyAnimation) msg += " (current pose is " + keyAnimation + ")";

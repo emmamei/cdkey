@@ -178,6 +178,9 @@ processConfiguration(string name, string value) {
                      "can dress", "detachable", "doll type", "pleasure doll", "pose silence",
                      "auto tp", "outfitable", "max time", "chat channel", "dolly name", "demo mode",
                      "afk rlv", "base rlv", "collapse rlv", "pose rlv" , "show phrases",
+#ifdef DEVELOPER_MODE
+                     "debug level",
+#endif
                      "dressable", "carryable", "repeatable wind"
                    ];
 
@@ -186,6 +189,9 @@ processConfiguration(string name, string value) {
                       "canDressSelf", "detachable", "dollType", "pleasureDoll", "poseSilence",
                       "autoTP", "allowDress", "keyLimit", "chatChannel", "dollDisplayName", "demoMode",
                       "userAfkRLVcmd", "userBaseRLVcmd", "userCollapseRLVcmd", "userPoseRLVcmd" , "showPhrases",
+#ifdef DEVELOPER_MODE
+                     "debugLevel",
+#endif
                       "allowDress", "allowCarry", "allowRepeatWind"
                     ];
 
@@ -459,15 +465,18 @@ default {
 
                     if (cdPoseAnim()) {
                         // keyAnimation is a pose of some sort
-                        lmRunRLV(defaultPoseRLVcmd);
-                        if (userPoseRLVcmd != "") lmRunRLVas("UserPose", userPoseRLVcmd);
+                        if (defaultPoseRLVcmd)
+                            lmRunRLV(defaultPoseRLVcmd);
+                        if (userPoseRLVcmd)
+                            lmRunRLVas("UserPose", userPoseRLVcmd);
                     }
                     else {
                         // either animation is null, or animation
                         // is the collapse animation but we're not collapsed
                         // (the latter should be an error)
                         lmRunRLV("clear");
-                        if (userPoseRLVcmd != "") lmRunRLVas("UserPose", "clear");
+                        if (userPoseRLVcmd)
+                            lmRunRLVas("UserPose", "clear");
                     }
                 }
             }
@@ -478,11 +487,13 @@ default {
                     // a collapse overrides AFK - ignore AFK if we are collapsed
                     if (afk) {
                         lmRunRLV(defaultAfkRLVcmd);
-                        if (userAfkRLVcmd != "") lmRunRLVas("UserAfk", userAfkRLVcmd);
+                        if (userAfkRLVcmd)
+                            lmRunRLVas("UserAfk", userAfkRLVcmd);
                     }
                     else {
                         lmRunRLV("clear");
-                        if (userAfkRLVcmd != "") lmRunRLVas("UserAfk", "clear");
+                        if (userAfkRLVcmd)
+                            lmRunRLVas("UserAfk", "clear");
                     }
                 }
             }
@@ -800,6 +811,7 @@ default {
         // since Start.lsl is reset immediately - and upon reset,
         // resets the entire key.
 
+#ifdef ZZZZ
         else if (change & CHANGED_INVENTORY) {
             if (cdNotecardExists(NOTECARD_PREFERENCES)) {
                 string ncKey = (string)llGetInventoryKey(NOTECARD_PREFERENCES);
@@ -832,6 +844,7 @@ default {
             }
 #endif
         }
+#endif
     }
 
     //----------------------------------------

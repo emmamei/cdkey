@@ -596,7 +596,8 @@ default {
                 if (clothingFolder != "")
                     dialogItems += "Outfits Parent";
 #endif
-                dialogItems += MAIN;
+                backMenu = "Options...";
+                dialogItems += "Back...";
 
                 // We only get here if we are wandering about in the same directory...
                 cdDialogListen();
@@ -605,6 +606,10 @@ default {
                 llDialog(dresserID, outfitsMessage, dialogSort(outfitsPage(outfitsList) + dialogItems), outfitsChannel);
                 llSetTimerEvent(60.0);
 
+            }
+            else if (choice == "Back...") {
+                lmMenuReply(backMenu, llGetDisplayName(id), id);
+                lmSendConfig("backMenu",(backMenu = MAIN));
             }
             else if (choice == MAIN) {
                 lmMenuReply(MAIN,"",id);
@@ -948,7 +953,7 @@ default {
 
             if (llGetListLength(outfitsList) < 10) newoutfits2 += [ "-", "-" ];
             else newoutfits2 += [ "Outfits Prev", "Outfits Next" ];
-            newoutfits2 += [ MAIN ];
+            newoutfits2 += [ "Back..." ];
 
             outfitsMessage = "You may choose any outfit for dolly to wear. ";
             if (dresserID == dollID) outfitsMessage = "See " + WEB_DOMAIN + outfits_url + " for more detailed information on outfits. ";
@@ -1005,6 +1010,7 @@ default {
             // Provide a dialog to user to choose new outfit
             debugSay(3, "DEBUG-CLOTHING", "Putting up Primary Menu in new directory");
             cdListenMine(outfitsChannel);
+            lmSendConfig("backMenu",(backMenu = MAIN));
             llDialog(dresserID, outfitsMessage, dialogSort(newoutfits2), outfitsChannel);
             candresstimeout = 1;
             llSetTimerEvent(60.0);

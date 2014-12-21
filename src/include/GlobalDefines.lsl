@@ -248,7 +248,8 @@ integer cdIsBuiltinController(key id) {
     // Did we find the id in the list of User Controllers?
     if (cdIsUserController(id))
 
-        // A User Controller will never act like a Builtin Controller
+        // A User Controller will never act like a Builtin Controller...
+        // even if they ARE a Buitin Controller
         return FALSE;
 
     else {
@@ -262,14 +263,6 @@ integer cdIsBuiltinController(key id) {
 }
 
 integer cdGetControllerStatus(key id) {
-//  if (cdIsBuiltinController(id)) {
-//      return TRUE;
-//  }
-//  else {
-//      if (cdIsDoll(id)) return (!cdControllerCount());
-//      else return (cdIsUserController(id));
-//  }
-//  return FALSE;
 
     // If the Dolly is a Builtin Controller, it makes
     // no difference: they are still normal to the Key here.

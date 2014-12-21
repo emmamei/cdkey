@@ -131,18 +131,18 @@ default {
 
             debugSay(7,"DEBUG-STATUSRLV","Got Link Message 315 from script " + script + ": " + commandString);
 
-            // This can happen...
-            if (commandString == "" || commandString == "0") {
-                llSay(DEBUG_CHANNEL,"command empty! :" + script);
-                return;
-            }
-
-            if (llStringLength(commandString) > CHATMSG_MAXLEN) {
-                llSay(DEBUG_CHANNEL,"command string too long! :" + script + ":(" + commandString + ")");
-                return;
-            }
-
             if (RLVok) {
+                // This can happen...
+                if (commandString == "" || commandString == "0") {
+                    llSay(DEBUG_CHANNEL,"command empty! :" + script);
+                    return;
+                }
+
+                if (llStringLength(commandString) > CHATMSG_MAXLEN) {
+                    llSay(DEBUG_CHANNEL,"command string too long! :" + script + ":(" + commandString + ")");
+                    return;
+                }
+
                 llOwnerSay("@" + commandString);
 
                 statusHandle = cdListenMine(statusChannel);
@@ -154,7 +154,7 @@ default {
             // and needs to be sent to the user as an error to be reported.
 
             else {
-                debugSay(2,"DEBUG-STATUSRLV","Received RLV with no RLV active: " + commandString);
+                llSay(DEBUG_CHANNEL,"Received RLV with no RLV active: " + commandString);
             }
 #endif
         }

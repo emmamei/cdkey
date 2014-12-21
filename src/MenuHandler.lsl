@@ -499,8 +499,12 @@ default {
                             // Note that this means Carriers cannot change Dolly unless
                             // permitted: this is appropriate.
 
-                            if (isDoll) if (canDressSelf) menu += "Outfits...";
-                            else        if (allowDress || isController)     menu += "Outfits...";
+                            if (isDoll) {
+                                if (canDressSelf) menu += "Outfits...";
+                            }
+                            else {
+                                if (allowDress || isController) menu += "Outfits...";
+                            }
 
                             if (isController) if (!hardcore) menu += "RLV Off";
                         } else {
@@ -913,6 +917,7 @@ default {
                                 msg += "\n" + (string)(n - i) + ". " + llList2String(dialogNames, n - i - 1);
                         }
                         llRegionSayTo(id, 0, msg);
+                        cdMenuInject("Access...");
                     }
                 }
                 else if (choice == "Drop Control") {

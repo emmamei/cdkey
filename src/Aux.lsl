@@ -264,10 +264,11 @@ default {
 
             else if (choice == "Access...") {
                 msg = "Key Access Menu.\n\n" +
-                             "These are powerful options allowing you to give someone total control of your key or block someone from touch or even winding your key. Good dollies should read their key help before adjusting these options.
+                             "These are powerful options allowing you to give someone total control of your key or block someone from touch or even winding your key. Good dollies should read their key help before adjusting these options. You have " + (string)cdControllerCount() + " and " + llGetListLength(blacklist) + " people on the blacklist.
                              
 Blacklist - Block a person from using the key entirely (even winding!)
 Controller - Take care choosing your controllers; they have great control over Dolly and cannot be removed by you";
+
                 list plusList;
 
                 // This complicated setup really isnt: it follows these rules:
@@ -288,6 +289,9 @@ Controller - Take care choosing your controllers; they have great control over D
                     plusList += [ "⊕ Blacklist", "List Blacklist" ];
 
                     if (llGetListLength(blacklist)) plusList += [ "⊖ Blacklist" ];
+#ifdef DEVELOPER_MODE
+                    debugSay(5,"DEBUG-AUX","Blacklist length: " + (string)llGetListLength(blacklist) + " >> " + llDumpList2String(blacklist,","));
+#endif
 
                     plusList += [ "⊕ Controller" ];
                 }
@@ -309,6 +313,7 @@ Controller - Take care choosing your controllers; they have great control over D
                         plusList += cdGetButton("Detachable", id, detachable, 1);
                         plusList += cdGetButton("Silent Pose", id, poseSilence, 1);
                     }
+                    lmSendConfig("backMenu",(backMenu = "Options..."));
 
                     plusList += cdGetButton("Flying", id, canFly, 1);
                     plusList += cdGetButton("Sitting", id, canSit, 1);
@@ -316,7 +321,7 @@ Controller - Take care choosing your controllers; they have great control over D
                     plusList += cdGetButton("Self Dress", id, canDressSelf, 1);
                     plusList += cdGetButton("Self TP", id, canSelfTP, 1);
                     plusList += cdGetButton("Force TP", id, autoTP, 1);
-                    plusList += "Options...";
+                    plusList += "Back...";
                 }
                 else {
                     string p = llToLower(pronounHerDoll);
@@ -463,11 +468,13 @@ Controller - Take care choosing your controllers; they have great control over D
                 // This is the bulk of 136/135 message processing
                 //
                 if ((code == 135) && (!memCollecting)) {
-                    i = 0;
-                    for (i = 0; i < llGetInventoryNumber(10); i++) {
-                        string script = llGetInventoryName(10, i);
+                    i = llGetInventoryNumber(INVENTORY_SCRIPT);
+                    string script;
 
-                        if (script != cdMyScriptName()) {
+                    while (i--) {
+                        script = llGetInventoryName(INVENTORY_SCRIPT, i);
+
+                        if (script != "Aux") {
                             if (llGetScriptState(script)) memWait += script;
                         }
                     }
@@ -506,52 +513,51 @@ Controller - Take care choosing your controllers; they have great control over D
                                    available_memory = free_memory;
                                 }
 
-                                memData = cdSetValue(memData,[cdMyScriptName()],llList2Json(JSON_ARRAY, [used_memory, memory_limit, free_memory, available_memory]));
+                                memData = cdSetValue(memData,["Aux"],llList2Json(JSON_ARRAY, [used_memory, memory_limit, free_memory, available_memory]));
 
                                 float totUsed; float totLimit; float totFree; float totAvail; integer warnFlag;
                                 i = 0; string scriptName; list statList;
                                 string output = "Script Memory Status:";
                                 string type;
 
-                                for (i = 0; i < llGetInventoryNumber(10); i++) {
+                                integer numScripts;
+                                numScripts = llGetInventoryNumber(INVENTORY_SCRIPT);
 
-                                    scriptName = llGetInventoryName(10, i);
+                                i = numScripts;
+                                while (i--) {
 
-#ifdef UPDATE_SCRIPT
-                                    if (scriptName != "UpdateScript") {
-#endif
-                                        if (( type = cdGetElementType(memData, ([scriptName]))) != JSON_INVALID) {
+                                    scriptName = llGetInventoryName(INVENTORY_SCRIPT, i);
 
-                                            totUsed  += used_memory      = (float)cdGetValue(memData, ([scriptName,0]));
-                                            totLimit += memory_limit     = (float)cdGetValue(memData, ([scriptName,1]));
-                                            totFree  += free_memory      = (float)cdGetValue(memData, ([scriptName,2]));
-                                            totAvail += available_memory = (float)cdGetValue(memData, ([scriptName,3]));
+                                    if (( type = cdGetElementType(memData, ([scriptName]))) != JSON_INVALID) {
 
-                                            if (memRequested || (available_memory < 6144)) {
-                                                if (!memRequested && !warnFlag) {
-                                                    output += "\nOnly showing individual scripts with less than 6kB available.";
-                                                    warnFlag = 1;
-                                                }
-                                                output += "\n" + scriptName + ":\t" + formatFloat(used_memory / 1024.0, 2) + "/" + (string)llRound(memory_limit / 1024.0) + "kB (" +
-                                                          formatFloat(free_memory / 1024.0, 2) + "kB free, " + formatFloat(available_memory / 1024.0, 2) + "kB available)";
+                                        totUsed  += used_memory      = (float)cdGetValue(memData, ([scriptName,0]));
+                                        totLimit += memory_limit     = (float)cdGetValue(memData, ([scriptName,1]));
+                                        //totFree  += free_memory      = (float)cdGetValue(memData, ([scriptName,2]));
+                                        //totAvail += available_memory = (float)cdGetValue(memData, ([scriptName,3]));
+
+#define WARN_MEM 6144
+                                        if (memRequested || (available_memory < WARN_MEM)) {
+                                            if (!memRequested && !warnFlag) {
+                                                output += "\nOnly showing individual scripts with less than " + (string)llRound(WARN_MEM / 1024.0) + "kB available.";
+                                                warnFlag = 1;
                                             }
+                                            output += "\n" + scriptName + ":\t" + formatFloat(used_memory / 1024.0, 2) + "/" + (string)llRound(memory_limit / 1024.0) + "kB (" +
+                                                      formatFloat(free_memory / 1024.0, 2) + "kB free, " + formatFloat(available_memory / 1024.0, 2) + "kB available)";
                                         }
-                                        else {
-                                            if (memRequested) {
-                                                output += "\n" + scriptName + ":\tNo report available";
-
-                                                if (!llGetScriptState(scriptName)) {
-                                                    output += " (seems to have stopped)";
-                                                }
-                                            }
-                                        }
-#ifdef UPDATE_SCRIPT
                                     }
-#endif
+                                    else {
+                                        if (memRequested) {
+                                            output += "\n" + scriptName + ":\tNo report available";
+
+                                            if (!llGetScriptState(scriptName)) {
+                                                output += " (seems to have stopped)";
+                                            }
+                                        }
+                                    }
                                 }
 
-                                output += "\nTotals:\t" + formatFloat(totUsed / 1024.0, 2) + "/" + (string)llRound(totLimit / 1024.0) + "kB (" +
-                                           formatFloat(totFree / 1024.0, 2) + "kB free, " + formatFloat(totAvail / 1024.0, 2) + "kB available)";
+                                output += "\nTotal memory usage: " + formatFloat(totUsed / 1024.0, 2) + "kB out of a total possible of " + (string)llRound(totLimit / 1024.0) + "kB (" +
+                                           formatFloat(totUsed * 100.0 / totLimit, 2) + "%) - " + (string)numScripts  + " scripts total";
 
                                 if (warnFlag) output += "\nYou have some scripts with very low memory, you may begin to suffer script crashes if memory runs out.  ";
                                                         "Please see the manual for tips how to keep memory usage low.";
