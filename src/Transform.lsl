@@ -518,6 +518,7 @@ default {
             else if (name == "backMenu")                     backMenu = value;
             else if (name == "hoverTextOn")               hoverTextOn = (integer)value;
             else if (name == "busyIsAway")                 busyIsAway = (integer)value;
+            else if (name == "controllers")               controllers = llDeleteSubList(split,0,0);
             else if (name == "canAFK")                         canAFK = (integer)value;
             else if (name == "mustAgreeToType")       mustAgreeToType = (integer)value;
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
@@ -672,6 +673,11 @@ default {
             else if (cmd == "optionsMenu") {
                 list pluslist;
                 lmSendConfig("backMenu",(backMenu = MAIN));
+                debugSay(2,"DEBUG-OPTIONS","Building Options menu...");
+                debugSay(2,"DEBUG-OPTIONS","isDoll = " + (string)cdIsDoll(id));
+                debugSay(2,"DEBUG-OPTIONS","isCarrier = " + (string)cdIsCarrier(id));
+                debugSay(2,"DEBUG-OPTIONS","isBuiltinController = " + (string)cdIsBuiltinController(id));
+                debugSay(2,"DEBUG-OPTIONS","isUserController = " + (string)cdIsUserController(id));
 
                 if (cdIsDoll(id)) {
                     msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. ";
@@ -700,6 +706,7 @@ default {
                 // someone who shouldn't see the Options menu did.
                 else return;
 
+                debugSay(2,"DEBUG-OPTIONS","Options menu built; presenting to " + (string)id);
                 cdDialogListen();
                 llDialog(id, msg, dialogSort(pluslist + "Back..."), dialogChannel);
             }
@@ -785,8 +792,9 @@ default {
 #endif
 
                 lmSendConfig("backMenu",(backMenu = "Options..."));
+                backMenu = MAIN;
                 cdDialogListen();
-                llDialog(dollID, "Options", dialogSort(choices + "Back..."), dialogChannel);
+                llDialog(id, "Options", dialogSort(choices + "Back..."), dialogChannel);
             }
 
             // Choose a Transformation

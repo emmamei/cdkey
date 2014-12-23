@@ -76,8 +76,6 @@ list dialogKeys;
 list dialogNames;
 list dialogButtons;
 
-key nameRequest;
-
 //========================================
 // FUNCTIONS
 //========================================
@@ -188,99 +186,8 @@ default {
             else if (name == "lowScriptMode")           lowScriptMode = (integer)value;
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
 
-#ifdef NAME4KEY
-            // This name4key function becomes "dead code" unless a companion script
-            // with the ability to look up names offline is added.
-            //
-            // This script sends a name2key link message 300 and name4key handles the
-            // response.
-            //
-            // The function assumes that a null key response means that there is no
-            // key found.
-            else if (name == "name4key") {
-                string name = llList2String(split, 0);
-                key uuid = llList2Key(split, 1);
-
-                if (uuid) {
-                    if ((i = llListFindList(controllers, [ name ] )) != NOT_FOUND)
-                        controllers = llListReplaceList(controllers, [ uuid, name ], i - 1, i);
-                    if ((i = llListFindList(blacklist, [ name ] )) != NOT_FOUND)
-                        blacklist = llListReplaceList(blacklist, [ uuid, name ], i - 1, i);
-                    lmSendConfig("controllers", llDumpList2String(controllers, "|"));
-                    lmSendConfig("blacklist", llDumpList2String(blacklist, "|"));
-                }
-            }
-#endif
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "afk")                               afk = (integer)value;
-
-#ifdef KEY2NAME
-            // have to test before shortcut "c" because of compound conditional: "controllers"
-            else if ((name == "controllers") || (name == "blacklist") && script != "MenuHandler") {
-                integer i = llGetListLength(split) - 1;
-                string name;
-                key uuid;
-
-                while (i >= 0) {
-                    name = llList2String(split, i);
-                    uuid = llList2Key(split, i - 1);
-                    uuidList = [];
-
-                    if (name == "") {
-                        if (uuid == NULL_KEY)
-                            llDeleteSubList(split, i - 1, i);
-
-                        // Try llKey2Name first - for case when they
-                        // are present: this makes the assumption that
-                        // llKey2Name is faster and easier than
-                        // llRequestAgentData.... but is it?
-                        //
-                        else if ((name = llKey2Name(uuid)) == "") {
-                            uuid = llList2String(split, i - 1);
-                            uuidList += uuid;
-
-                            // if the nameRequest is unset, start it up.
-                            // The dataserver nameRequest event will be
-                            // reading from the uuidList and getting the data put
-                            // into the list.
-                            if (nameRequest == NULL_KEY)
-                                nameRequest = llRequestAgentData(uuid, DATA_NAME);
-                        }
-                    }
-                    else {
-                        if (uuid == NULL_KEY) {
-                            if (name == "")
-                                llDeleteSubList(split, i - 1, i);
-                            else
-                                // This may or may not succeed... put it out there
-                                lmSendConfig("name2key", name);
-                        }
-                    }
-
-                    i--;
-                }
-
-                // We test to see if there was a change: we only need to propogate
-                // the new list if it has changed. In this way we prevent endless
-                // loops through this code. If there is no change - even if not
-                // all names or uuids are set - then the loop stops and we continue
-                // onwards
-                if (name == "controllers") {
-                    if (!listCompare(controllers,split)) {
-                        controllers = split;
-                        lmSendConfig("controllers", llDumpList2String(controllers, "|"));
-                        //if (!startup) lmInternalCommand("updateExceptions", "", NULL_KEY);
-                        lmInternalCommand("updateExceptions", "", NULL_KEY);
-                    }
-                }
-                else {
-                    if (!listCompare(blacklist,split)) {
-                        blacklist = split;
-                        lmSendConfig("blacklist", llDumpList2String(blacklist, "|"));
-                    }
-                }
-            }
-#endif
 
             // shortcut: c
             else if (c == "c") {
@@ -338,11 +245,15 @@ default {
             string value = llList2String(split, 1);
             split = llDeleteSubList(split, 0, 0);
 
+            debugSay(5,"DEBUG-LIST","Split = " + llDumpList2String(split,"|"));
+
                  if (name == "blacklist") {
+                    debugSay(5,"DEBUG-LIST","Blacklist = " + llDumpList2String(blacklist,"|"));
                     blacklist = split;
                     lmSendConfig("blacklist",llDumpList2String(split,"|"));
             }
             else if (name == "controllers") {
+                    debugSay(5,"DEBUG-LIST","Controllers = " + llDumpList2String(controllers,"|"));
                     controllers = split;
                     lmSendConfig("controllers",llDumpList2String(split,"|"));
             }
@@ -624,8 +535,9 @@ default {
         else if (code == MENU_SELECTION) {
             string name = llList2String(split, 0);
 
+            //debugSay(5,"DEBUG-MENUHANDLER","Menu choice = " + choice + ", space = " + (string)space);
             if (name == "Options...") {
-                lmInternalCommand("optionsMenu", "", id);
+                lmInternalCommand("optionsMenu", llGetDisplayName(id), id);
             }
         }
         else if (code == RLV_RESET) {
@@ -731,30 +643,6 @@ default {
     }
 
     //----------------------------------------
-    // DATASERVER
-    //----------------------------------------
-    dataserver(key query_id, string data) {
-
-        if (query_id == nameRequest) {
-            key uuid = llList2Key(uuidList, 0);
-            string name = data;
-
-            if (uuid) {
-                if ((i = llListFindList(controllers, [ uuid ] )) != NOT_FOUND)
-                    controllers = llListReplaceList(controllers, [ uuid, name ], i, i + 1);
-                if ((i = llListFindList(blacklist, [ uuid ] )) != NOT_FOUND)
-                    blacklist = llListReplaceList(blacklist, [ uuid, name ], i, i + 1);
-                lmSendConfig("controllers", llDumpList2String(controllers, "|"));
-                lmSendConfig("blacklist", llDumpList2String(blacklist, "|"));
-                uuidList = llDeleteSubList(uuidList, 0, 1);
-            }
-
-            if (uuidList != []) nameRequest = llRequestAgentData(llList2Key(uuidList, 0), DATA_NAME);
-            else nameRequest = NULL_KEY;
-        }
-    }
-
-    //----------------------------------------
     // LISTEN
     //----------------------------------------
     listen(integer channel, string name, key id, string choice) {
@@ -842,7 +730,7 @@ default {
 
                         activeChannel = blacklistChannel;
                         msg = "blacklist";
-                        if (blacklist == []) {
+                        if (blacklist != []) {
                             dialogKeys  = cdList2ListStrided(blacklist, 0, -1, 2);
                             dialogNames = cdList2ListStrided(blacklist, 1, -1, 2);
                         }
@@ -861,9 +749,12 @@ default {
 
                         activeChannel = controlChannel;
                         msg = "controller list";
-                        if (controllers == []) {
+                        debugSay(5,"DEBUG-MENUHANDLER","controllers = " + llDumpList2String(controllers,",") + " (" + (string)llGetListLength(controllers) + ")");
+                        if (controllers != []) {
                             dialogKeys  = cdList2ListStrided(controllers, 0, -1, 2);
                             dialogNames = cdList2ListStrided(controllers, 1, -1, 2);
+                            debugSay(5,"DEBUG-MENUHANDLER","dialogKeys = " + llDumpList2String(dialogKeys,","));
+                            debugSay(5,"DEBUG-MENUHANDLER","dialogNames = " + llDumpList2String(dialogNames,","));
                         }
                         else {
                             dialogKeys  = [];
@@ -923,16 +814,18 @@ default {
                 else if (choice == "Drop Control") {
                     integer index;
 
-                    if ((index = llListFindList(controllers, [ id ])) != NOT_FOUND) {
+                    if ((index = llListFindList(controllers, [ (string)id ])) != NOT_FOUND) {
                         controllers = llDeleteSubList(controllers, index, index + 1);
-                        lmSetConfig("controllers", llDumpList2String(controllers, "|"));
+                        lmSendConfig("controllers", llDumpList2String(controllers, "|"));
                         lmSendToAgent("You are no longer a controller of this Dolly.", id);
                         llOwnerSay("Your controller " + name + " has relinquished control.");
-                        debugSay(5,"DEBUG-MENUHANDLER","id " + (string)id + " dropped from " + llDumpList2String(controllers,","));
+                        //debugSay(5,"DEBUG-MENUHANDLER","id " + (string)id + " dropped from " + llDumpList2String(controllers,","));
+                        debugSay(5,"DEBUG-MENUHANDLER","controllers = " + llDumpList2String(controllers,",") + " (" + (string)llGetListLength(controllers) + ")");
                     }
 #ifdef DEVELOPER_MODE
                     else {
-                        llSay(DEBUG_CHANNEL,"id " + (string)id + " not found in Controllers List: " + llDumpList2String(controllers,","));
+                        llSay(DEBUG_CHANNEL,"id " + (string)id + " not found in Controllers List: " + llDumpList2String(controllers,",") +
+                            " - index= = " + (string)index + " - search = " + (string)llListFindList(controllers, [ id ]));
                     }
 #endif
                 }

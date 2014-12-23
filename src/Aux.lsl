@@ -264,7 +264,7 @@ default {
 
             else if (choice == "Access...") {
                 msg = "Key Access Menu.\n\n" +
-                             "These are powerful options allowing you to give someone total control of your key or block someone from touch or even winding your key. Good dollies should read their key help before adjusting these options. You have " + (string)cdControllerCount() + " and " + llGetListLength(blacklist) + " people on the blacklist.
+                             "These are powerful options allowing you to give someone total control of your key or block someone from touch or even winding your key. Good dollies should read their key help before adjusting these options. You have " + (string)cdControllerCount() + " and " + (string)llGetListLength(blacklist) + " people on the blacklist.
                              
 Blacklist - Block a person from using the key entirely (even winding!)
 Controller - Take care choosing your controllers; they have great control over Dolly and cannot be removed by you";

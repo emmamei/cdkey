@@ -267,18 +267,18 @@ processConfiguration(string name, string value) {
         else if (value == "male" || value == "man" || value == "boy") setGender("male");
         else setGender("female");
     }
-    else if (name == "blacklist key") {
-        if (llList2Key([ value ], 0) != NULL_KEY) {
-            if (llListFindList(blacklist, [ value ]) == NOT_FOUND)
-                lmSendConfig("blacklist", llDumpList2String((blacklist += [ "", value ]), "|"));
-        }
-    }
-    else if (name == "controller key") {
-        if (llList2Key([ value ], 0) != NULL_KEY) {
-            if (llListFindList(controllers, [ value ]) == NOT_FOUND)
-                lmSendConfig("controllers", llDumpList2String((controllers += [ "", value ]), "|"));
-        }
-    }
+    //else if (name == "blacklist key") {
+    //    if (llList2Key([ value ], 0) != NULL_KEY) {
+    //        if (llListFindList(blacklist, [ value ]) == NOT_FOUND)
+    //            lmSendConfig("blacklist", llDumpList2String((blacklist += [ "", value ]), "|"));
+    //    }
+    //}
+    //else if (name == "controller key") {
+    //    if (llList2Key([ value ], 0) != NULL_KEY) {
+    //        if (llListFindList(controllers, [ value ]) == NOT_FOUND)
+    //            lmSendConfig("controllers", llDumpList2String((controllers += [ "", value ]), "|"));
+    //    }
+    //}
     //--------------------------------------------------------------------------
     // Disabled for future use, allows for extention scripts to add support for
     // their own peferences by using names starting with the prefix 'ext'. These
@@ -453,7 +453,7 @@ default {
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                  debugLevel = (integer)value;
 #endif
-            else if (name == "controllers")                controllers = split;
+            else if (name == "controllers")                controllers = llDeleteSubList(split,0,0);
             else if (name == "blacklist")                    blacklist = split;
             else if (name == "keyLimit")                      keyLimit = (float)value;
             else if (name == "keyAnimation") {

@@ -99,7 +99,7 @@ default
                 else if (name == "canStand")                 canStand = (integer)value;
                 else if (name == "allowRepeatWind")       allowRepeatWind = (integer)value;
                 else if (name == "configured")             configured = (integer)value;
-                else if (name == "controllers")           controllers = split;
+                else if (name == "controllers")           controllers = llDeleteSubList(split,0,0);
                 else if (name == "chatEnable") {
                     chatEnable = (integer)value;
                     if (chatEnable) cdListenerActivate(chatHandle);
@@ -234,6 +234,9 @@ default
                 // forces a refresh in any case
                 lmSetConfig("blacklist",   llDumpList2String(blacklist,   "|") );
                 lmSetConfig("controllers", llDumpList2String(controllers, "|") );
+
+                debugSay(5,"DEBUG-ADDMISTRESS",   "blacklist >> " + llDumpList2String(blacklist,   ",") + " (" + (string)llGetListLength(blacklist  ) + ")");
+                debugSay(5,"DEBUG-ADDMISTRESS", "controllers >> " + llDumpList2String(controllers, ",") + " (" + (string)llGetListLength(controllers) + ")");
             }
             else if ((cmd == "remMistress") ||
                      (cmd == "remBlacklist")) {
@@ -929,7 +932,7 @@ default
                 //
                 if (isDoll) {
                     if (choice == "gname") {
-                        string doubledSymbols = "♫♫✿✿▫▫▪▪♬♬♩♩♪♪♬♬‘‘°°ººةة..,,==--++^^**˜˜••..  ¤¤øø””ﺴﺴ☊☊☩☩´´⇝⇝⁘⁘⁙⁙⁚⁚⁛⁛↑↑↓↓☆☆★★··..¸¸❤❤";
+                        string doubledSymbols = "✰✰++₪קק¤¤øøღღ°°♫♫✿✿▫▫▪▪♬♬♩♩♪♪♬♬‘‘°°ººةة..,,==--++^^**˜˜••..  ¤¤øø””ﺴﺴ☊☊☩☩´´⇝⇝⁘⁘⁙⁙⁚⁚⁛⁛↑↑↓↓☆☆★★··..¸¸❤❤";
                         string pairedSymbols = "<>()[]{}?؟\/";
                         string allSymbols;
                         string s1;
