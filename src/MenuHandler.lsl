@@ -297,8 +297,9 @@ default {
                 //if (startup) lmSendToAgent("Dolly's key is still establishing connections with " + llToLower(pronounHerDoll) + " systems please try again in a few minutes.", id);
 
                 if (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND) {
-                    msg = "You are not permitted any access to this dolly's key.";
-                    menu = ["Leave Alone"];
+                    //msg = "You are not permitted any access to this dolly's key.";
+                    //menu = ["Leave Alone"];
+                    return;
                 }
                 else {
                     //----------------------------------------
@@ -618,10 +619,10 @@ default {
             current = blacklist;
         }
 
-        i = num + 1;
-        while ((--i) && (llGetListLength(dialogButtons) < 12)) {
-            foundKey = llDetectedKey(i - 1);
-            foundName = llDetectedName(i - 1);
+        i = num;
+        while ((i--) && (llGetListLength(dialogButtons) < 12)) {
+            foundKey = llDetectedKey(i);
+            foundName = llDetectedName(i);
 
             if (llListFindList(current, [ (string)foundKey] ) == NOT_FOUND) { // Don't list existing users
                 dialogKeys += foundKey;
@@ -768,7 +769,11 @@ default {
                     dialogButtons = [];
                     n = llGetListLength(dialogKeys);
 
-                    for (i = 0; i < n; i++) dialogButtons += llGetSubString((string)(i+1) + ". " + llList2String(dialogNames, i), 0, 23);
+                    //for (i = 0; i < n; i++) dialogButtons += llGetSubString((string)(i+1) + ". " + llList2String(dialogNames, i), 0, 23);
+
+                    i = n;
+                    while (i--)
+                        dialogButtons += llGetSubString((string)(i + 1) + ". " + llList2String(dialogNames, i), 0, 23);
 
                     if (beforeSpace == CIRCLE_PLUS) {
                         if (n < 11) {

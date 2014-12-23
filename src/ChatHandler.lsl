@@ -345,7 +345,7 @@ default
         if (channel == chatChannel) {
             // Deny access to the menus when the command was recieved from blacklisted avatar
             if (!isDoll && (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND)) {
-                lmSendToAgent("You are not permitted to access this key.", id);
+                //lmSendToAgent("You are not permitted to access this key.", id);
                 return;
             }
 

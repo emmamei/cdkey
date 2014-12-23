@@ -592,7 +592,7 @@ Controller - Take care choosing your controllers; they have great control over D
     listen(integer channel, string name, key id, string choice) {
         // Deny access to the key when the command was recieved from blacklisted avatar
         if (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND) {
-            lmSendToAgent("You are not permitted to access this key.", id);
+            //lmSendToAgent("You are not permitted to access this key.", id);
             return;
         }
 
