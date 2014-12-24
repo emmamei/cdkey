@@ -243,19 +243,24 @@ default {
         else if (code == SET_CONFIG) {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
-            split = llDeleteSubList(split, 0, 0);
 
-            debugSay(5,"DEBUG-LIST","Split = " + llDumpList2String(split,"|"));
+            debugSay(5,"DEBUG-LIST","=====>> name = " + name);
+            debugSay(5,"DEBUG-LIST","Split = " + llDumpList2String(split,"|") + " (" + (string)llGetListLength(split) + ")");
+            split = llDeleteSubList(split, 0, 0);
+            debugSay(5,"DEBUG-LIST","Split = " + llDumpList2String(split,"|") + " (" + (string)llGetListLength(split) + ")");
 
                  if (name == "blacklist") {
-                    debugSay(5,"DEBUG-LIST","Blacklist = " + llDumpList2String(blacklist,"|"));
-                    blacklist = split;
-                    lmSendConfig("blacklist",llDumpList2String(split,"|"));
+
+                    debugSay(5,"DEBUG-LIST","Blacklist = " + llDumpList2String(blacklist,"|") + " (" + (string)llGetListLength(blacklist) + ")");
+                    if (split == [""]) blacklist = [];
+                    else blacklist = split;
+                    debugSay(5,"DEBUG-LIST","Blacklist = " + llDumpList2String(blacklist,"|") + " (" + (string)llGetListLength(blacklist) + ")");
+                    lmSendConfig("blacklist",llDumpList2String(blacklist,"|"));
             }
             else if (name == "controllers") {
-                    debugSay(5,"DEBUG-LIST","Controllers = " + llDumpList2String(controllers,"|"));
-                    controllers = split;
-                    lmSendConfig("controllers",llDumpList2String(split,"|"));
+                    if (split == [""]) controllers = [];
+                    else controllers = split;
+                    lmSendConfig("controllers",llDumpList2String(controllers,"|"));
             }
         }
         else if (code == INTERNAL_CMD) {

@@ -644,7 +644,10 @@ default {
                 else if (name == "barefeet")                   barefeet = value;
                 //else if (name == "wearLock")                   wearLock = (integer)value;
                 else if (name == "dollType")                   dollType = value;
-                else if (name == "controllers")             controllers = llDeleteSubList(split, 0, 0);
+                else if (name == "controllers") {
+                    if (split == [""]) controllers = [];
+                    else controllers = split;
+                }
                 else if (name == "pronounHerDoll")       pronounHerDoll = value;
                 else if (name == "pronounSheDoll")       pronounSheDoll = value;
                 else if (name == "dialogChannel")         dialogChannel = (integer)value;

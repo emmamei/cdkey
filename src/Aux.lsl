@@ -122,7 +122,10 @@ default {
 
             split = llDeleteSubList(split, 0, 0);
 
-                 if (name == "controllers")               controllers = split;
+                 if (name == "controllers") {
+                    if (split == [""]) controllers = [];
+                    else controllers = split;
+            }
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
@@ -154,11 +157,14 @@ default {
             else if (name == "pleasureDoll")             pleasureDoll = (integer)value;
             else if (name == "windMins")                     windMins = (integer)value;
             else if (name == "wearLock")                     wearLock = (integer)value;
-            else if (name == "blacklist")                   blacklist = split;
             else if (name == "primLight")                   primLight = (integer)value;
             else if (name == "primGlow")                     primGlow = (integer)value;
             else if (name == "isVisible")                     visible = (integer)value;
             else if (name == "gemColour")                curGemColour = value;
+            else if (name == "blacklist") {
+                if (split == [""]) blacklist = [];
+                else blacklist = split;
+            }
             else if (name == "dollType") {
                 if (configured && (keyAnimation != "") && (keyAnimation != ANIMATION_COLLAPSED) && (poserID != dollID)) {
                     if (value == "Display" || hardcore)

@@ -443,8 +443,9 @@ default {
         if (code == CONFIG) {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
+            split = llDeleteSubList(split,0,0);
 
-                 if (name == "ncPrefsLoadedUUID")    ncPrefsLoadedUUID = llDeleteSubList(split,0,0);
+                 if (name == "ncPrefsLoadedUUID")    ncPrefsLoadedUUID = split;
             else if (name == "lowScriptMode")            lowScriptMode = (integer)value;
             else if (name == "dialogChannel")            dialogChannel = (integer)value;
             else if (name == "timeLeftOnKey")            timeLeftOnKey = (float)value;
@@ -453,8 +454,11 @@ default {
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                  debugLevel = (integer)value;
 #endif
-            else if (name == "controllers")                controllers = llDeleteSubList(split,0,0);
-            else if (name == "blacklist")                    blacklist = split;
+            else if (name == "controllers")                controllers = split;
+            else if (name == "blacklist") {
+                if (split == [""]) blacklist = [];
+                else blacklist = split;
+            }
             else if (name == "keyLimit")                      keyLimit = (float)value;
             else if (name == "keyAnimation") {
                 keyAnimation = value;

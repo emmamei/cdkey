@@ -498,6 +498,7 @@ default {
 
             string value = name;
             string name = choice;
+            split = llDeleteSubList(split,0,0);
 
                  if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
             else if (name == "afk")                               afk = (integer)value;
@@ -518,7 +519,10 @@ default {
             else if (name == "backMenu")                     backMenu = value;
             else if (name == "hoverTextOn")               hoverTextOn = (integer)value;
             else if (name == "busyIsAway")                 busyIsAway = (integer)value;
-            else if (name == "controllers")               controllers = llDeleteSubList(split,0,0);
+            else if (name == "controllers") {
+                if (split == [""]) controllers = [];
+                else controllers = split;
+            }
             else if (name == "canAFK")                         canAFK = (integer)value;
             else if (name == "mustAgreeToType")       mustAgreeToType = (integer)value;
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;

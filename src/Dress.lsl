@@ -439,7 +439,9 @@ default {
             debugSay(6, "DEBUG-DRESS", "Menu Selection: " + choice + ": tempWearLock = " + (string)tempWearLock);
 
             if (choice == "Outfits..." && !tempWearLock) {
-                if (!isDresser(id)) return;
+                if (id) {
+                    if (!isDresser(id)) return;
+                }
 
                 if (wearLock) {
                     cdDialogListen();
@@ -596,7 +598,7 @@ default {
                 if (clothingFolder != "")
                     dialogItems += "Outfits Parent";
 #endif
-                backMenu = "Options...";
+                backMenu = MAIN;
                 dialogItems += "Back...";
 
                 // We only get here if we are wandering about in the same directory...
@@ -971,7 +973,9 @@ default {
                 // Outfits Prev
                 // Outfits Parent
 
-                if (!isDresser(id)) return;
+                if (id) {
+                    if (!isDresser(id)) return;
+                }
 
                 if (choice == "Outfits Next") {
                     outfitPage++;

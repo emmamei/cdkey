@@ -394,7 +394,10 @@ default {
             else if (name == "collapsed")     {    collapsed = (integer)value; activateRLVBase(); }
             else if (name == "wearLock")      {     wearLock = (integer)value; activateRLVBase(); }
             else if (name == "afk")           {          afk = (integer)value; activateRLVBase(); }
-            else if (name == "controllers")   {  controllers = split; }
+            else if (name == "controllers") {
+                if (split == [""]) controllers = [];
+                else controllers = split;
+            }
 
             else if (name == "dialogChannel") {
                 dialogChannel = (integer)value;

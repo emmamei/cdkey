@@ -69,6 +69,7 @@ default
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
             string c = cdGetFirstChar(name); // for speedup
+            split = llDeleteSubList(split,0,0);
 
                  if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
             else if (name == "collapseTime")             collapseTime = llGetUnixTime() + (float)value;
@@ -84,7 +85,10 @@ default
             else if (name == "afk")                               afk = (integer)value;
             else if (name == "autoAFK")                       autoAFK = (integer)value;
             else if (name == "autoTP")                         autoTP = (integer)value;
-            else if (name == "blacklist")                   blacklist = split;
+            else if (name == "blacklist") {
+                if (split == [""]) blacklist = [];
+                else blacklist = split;
+            }
             else if (name == "busyIsAway")                 busyIsAway = (integer)value;
 
             // Shortcut: c
@@ -99,7 +103,10 @@ default
                 else if (name == "canStand")                 canStand = (integer)value;
                 else if (name == "allowRepeatWind")       allowRepeatWind = (integer)value;
                 else if (name == "configured")             configured = (integer)value;
-                else if (name == "controllers")           controllers = llDeleteSubList(split,0,0);
+                else if (name == "controllers") {
+                    if (split == [""]) controllers = [];
+                    else controllers = split;
+                }
                 else if (name == "chatEnable") {
                     chatEnable = (integer)value;
                     if (chatEnable) cdListenerActivate(chatHandle);
@@ -171,6 +178,7 @@ default
 
                 string uuid = llList2String(split, 1);
                 string name = llList2String(split, 2);
+                debugSay(5,"DEBUG-ADDMISTRESS","Blacklist = " + llDumpList2String(blacklist,"|") + " (" + (string)llGetListLength(blacklist) + ")");
 
                 integer type;
                 string typeString;
@@ -232,7 +240,9 @@ default
 
                 // we may or may not have changed either of these - but this code
                 // forces a refresh in any case
+                debugSay(5,"DEBUG-ADDMISTRESS","Blacklist = " + llDumpList2String(blacklist,"|") + " (" + (string)llGetListLength(blacklist) + ")");
                 lmSetConfig("blacklist",   llDumpList2String(blacklist,   "|") );
+                debugSay(5,"DEBUG-ADDMISTRESS","Blacklist = " + llDumpList2String(blacklist,"|") + " (" + (string)llGetListLength(blacklist) + ")");
                 lmSetConfig("controllers", llDumpList2String(controllers, "|") );
 
                 debugSay(5,"DEBUG-ADDMISTRESS",   "blacklist >> " + llDumpList2String(blacklist,   ",") + " (" + (string)llGetListLength(blacklist  ) + ")");
@@ -259,12 +269,12 @@ default
                     tmpList = blacklist;
                 }
 
-                if (split = []) {
-                    lmSendToAgentPlusDoll("The " + typeString + " list is empty!", id);
-                    lmSetConfig("blacklist",   llDumpList2String(blacklist,   "|") );
-                    lmSetConfig("controllers", llDumpList2String(controllers, "|") );
-                    return;
-                }
+                //if (split = []) {
+                //    lmSendToAgentPlusDoll("The " + typeString + " list is empty!", id);
+                //    lmSetConfig("blacklist",   llDumpList2String(blacklist,   "|") );
+                //    lmSetConfig("controllers", llDumpList2String(controllers, "|") );
+                //    return;
+                //}
 
                 // Test for the presence of the UUID in the existing list
                 //
