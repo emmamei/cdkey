@@ -308,7 +308,7 @@ Controller - Take care choosing your controllers; they have great control over D
                 cdDialogListen();
                 llDialog(id, msg, dialogSort(plusList + "Back..."), dialogChannel);
             }
-            else if (choice == "Abilities...") {
+            else if (choice == "Restrictions...") {
                 msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
                 list plusList;
 
@@ -341,8 +341,8 @@ Controller - Take care choosing your controllers; they have great control over D
                 cdDialogListen();
                 llDialog(id, msg, dialogSort(plusList), dialogChannel);
             }
-            else if (choice == "Features...") {
-                msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
+            else if (choice == "Public...") {
+                msg = "These are options for controlling what a member of the public can do with Dolly.";
                 list plusList = [];
 
                 if (dollType != "Display" && !hardcore) {
@@ -356,6 +356,13 @@ Controller - Take care choosing your controllers; they have great control over D
                     plusList += cdGetButton("Pleasure", id, pleasureDoll, 0);
 #endif
                 }
+                lmSendConfig("backMenu",(backMenu = "Options..."));
+                cdDialogListen();
+                llDialog(id, msg, dialogSort(plusList + "Back..."), dialogChannel);
+            }
+            else if (choice == "Operation...") {
+                msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
+                list plusList = [];
 
                 plusList += cdGetButton("Quiet Key", id, quiet, 0);
 

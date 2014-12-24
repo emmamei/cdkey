@@ -685,25 +685,25 @@ default {
 
                 if (cdIsDoll(id)) {
                     msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. ";
-                    pluslist += [ "Features...", "Key..." ];
+                    pluslist += [ "Operation...", "Public...", "Key..." ];
 
                     if (cdCarried() || cdControllerCount() > 0) {
                         pluslist += [ "Access..." ];
                     }
                     else {
-                        pluslist += [ "Type...", "Access...", "Abilities..." ];
+                        pluslist += [ "Type...", "Access...", "Restrictions..." ];
                     }
                 }
                 else if (cdIsCarrier(id)) {
-                    pluslist += [ "Type...", "Abilities..." ];
+                    pluslist += [ "Type...", "Restrictions..." ];
                 }
                 else if (cdIsBuiltinController(id)) {
-                    pluslist += [ "Type...", "Access...", "Abilities..." ];
+                    pluslist += [ "Type...", "Access...", "Restrictions..." ];
                 }
                 else if (cdIsUserController(id)) {
 
                     msg = "See " + WEB_DOMAIN + "controller.htm. Choose what you want to happen.";
-                    pluslist += [ "Type...", "Access...", "Abilities...", "Drop Control" ];
+                    pluslist += [ "Type...", "Access...", "Restrictions...", "Drop Control" ];
 
                 }
                 // This section should never be triggered: it means that
