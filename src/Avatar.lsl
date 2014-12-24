@@ -811,7 +811,8 @@ default {
                 if (llGetInventoryType(choice) == INVENTORY_ANIMATION) {
                     lmSendConfig("keyAnimation", (string)(keyAnimation = choice));
                     lmSendConfig("poserID", (string)(poserID = id));
-                    lmSetConfig("poseExpire", (string)300.0);
+                    if (dollType != "Display" && !hardcore)
+                        lmSetConfig("poseExpire", (string)300.0);
 
                     if (cdAnimated()) oneAnimation();
                     if (poseSilence) lmRunRLV("sendchat=n");
