@@ -417,7 +417,7 @@ default {
                             // permitted: this is appropriate.
 
                             if (isDoll) {
-                                if (canDressSelf) menu += "Outfits...";
+                                if (canDressSelf && keyAnimation == "") menu += "Outfits...";
                             }
                             else {
                                 if (allowDress || isController) menu += "Outfits...";
@@ -430,7 +430,7 @@ default {
                             if (isDoll || isController) menu += "RLV On";
                         }
 
-                        if (allowDress) menu += "Types...";
+                        if (allowDress && keyAnimation == "") menu += "Types...";
 
                         if (keyAnimation != "") {
                             msg += "Doll is currently posed. ";
@@ -488,7 +488,10 @@ default {
                     // whether Dolly is collapsed, carried, or whatnot.
 
                     if (isDoll) {
-                        if (!collapsed) menu += [ "Options...","Help..." ];
+                        if (!collapsed) {
+                            if (keyAnimation == "") menu += [ "Options..." ];
+                            menu += [ "Help..." ];
+                        }
                     }
                     else {
                         // this includes any Controller that is NOT Dolly
