@@ -492,7 +492,7 @@ default {
         // Has the clothing lock - wear lock - run its course? If so, reset lock
         if (wearLockExpire) {
             if (wearLockExpire <= timerMark) {
-                //lmInternalCommand("wearLock", "0", NULL_KEY);
+                // wearLock has expired...
                 lmSendConfig("wearLock", (string)(wearLock = 0));
                 lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0));
             }
@@ -656,8 +656,11 @@ default {
                 lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
                 }
             else if (name == "wearLock") {
+                // Internal command: remove?
                 lmSendConfig("wearLock", (string)(wearLock = (integer)value));
-                lmSendConfig("wearLockExpire",(string)WEAR_LOCK_TIME);
+                lmSendConfig("wearLockExpire",(string)(WEAR_LOCK_TIME));
+                if (wearLock) wearLockExpire = llGetUnixTime() + WEAR_LOCK_TIME;
+                else wearLockExpire = 0;
                 }
             else if (name == "lowScriptMode") {
                 lmSendConfig("lowScriptMode",(string)(lowScriptMode = (integer)value));
@@ -725,20 +728,20 @@ default {
 //              lmSendConfig("windMins", (string)(windMins));
 //          }
             else if (cmd == "collapse") collapse(llList2Integer(split, 0));
-            else if (cmd == "wearLock") {
-                // This either primes the wearLockExpire or resets it
-                wearLock = llList2Integer(split, 0);
+//          else if (cmd == "wearLock") {
+//              // This either primes the wearLockExpire or resets it
+//              wearLock = llList2Integer(split, 0);
 
-                lmSendConfig("wearLock", (string)(wearLock));
+//              lmSendConfig("wearLock", (string)(wearLock));
 
-                if (wearLock) {
-                    wearLockExpire = llGetUnixTime() + WEAR_LOCK_TIME;
-                    lmSendConfig("wearLockExpire", (string)(WEAR_LOCK_TIME));
-                }
-                else {
-                    lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0));
-                }
-            }
+//              if (wearLock) {
+//                  wearLockExpire = llGetUnixTime() + WEAR_LOCK_TIME;
+//                  lmSendConfig("wearLockExpire", (string)(WEAR_LOCK_TIME));
+//              }
+//              else {
+//                  lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0));
+//              }
+//          }
         }
         else if (code == RLV_RESET) {
             RLVok = (llList2Integer(split, 0) == 1);

@@ -234,13 +234,23 @@ changeComplete(integer success) {
     lmRunRLV("clear");
 #endif
 
-    if (change) llOwnerSay("Change to new outfit " + newoutfitname + " complete.");
+    if (success) {
+        if (change) llOwnerSay("Change to new outfit " + newoutfitname + " complete.");
 
-    // Note: if wearLock is already set, it STAYS set with this setting
-    //
-    // This triggers Main and sets wearLockExpire
-    lmSetConfig("wearLock", (string)(wearLock = (wearLock || ((dresserID != NULL_KEY) && (dresserID != dollID)))));
-    //lmSendConfig("wearLock", (string)(wearLock));
+        // Note: if wearLock is already set, it STAYS set with this setting
+        //
+        // This triggers Main and sets wearLockExpire
+        //
+        // This setting is thus: if dresser is anyone except Dolly, wearLock is set.
+        // If wearLock is already set, it stays set..
+        wearLock = (wearLock || ((dresserID != NULL_KEY) && (dresserID != dollID)));
+    }
+    else {
+        llOwnerSay("Change to new outfit " + newoutfitname + " unsuccessful.");
+        wearLock = 0;
+    }
+
+    lmSetConfig("wearLock", (string)wearLock);
 
     candresstimeout = 0;
     change = 0;
