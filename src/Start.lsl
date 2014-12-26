@@ -37,9 +37,7 @@
 //=======================================
 string msg;
 float delayTime = 15.0; // in seconds
-#ifdef DEVELOPER_MODE
 float initTimer;
-#endif
 
 key MistressID = NULL_KEY;
 
@@ -564,7 +562,7 @@ default {
             if (RLVok) {
                 // If RLV is ok, then trigger all of the necessary RLV restrictions
                 // (collapse is managed by Main)
-                if (!collapsed)
+                if (!collapsed) {
                     // Not collapsed: clear any user collapse RLV restrictions
                     lmRunRLV("clear");
                     if (userCollapseRLVcmd != "") lmRunRLVas("UserCollapse", "clear");
@@ -636,9 +634,7 @@ default {
     //----------------------------------------
     state_entry() {
 
-#ifdef DEVELOPER_MODE
         initTimer = llGetTime();
-#endif
 
         dollID = llGetOwner();
         dollName = llGetDisplayName(dollID);
