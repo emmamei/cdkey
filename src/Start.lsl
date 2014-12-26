@@ -395,17 +395,6 @@ doneConfiguration(integer prefsRead) {
     }
 
     debugSay(3,"DEBUG-START","doneConfiguration done - exiting");
-
-    string msg = "Initialization completed" +
-#ifdef DEVELOPER_MODE
-                 " in " + formatFloat((llGetTime() - initTimer), 1) + "s" +
-#endif
-                 "; key ready";
-
-    sendMsg(dollID, msg);
-
-    if (newAttach && !quiet && isAttached)
-        llSay(0, llGetDisplayName(llGetOwner()) + " is now a dolly - anyone may play with their Key.");
 }
 
 doRestart() {
@@ -557,7 +546,7 @@ default {
                 }
             }
         }
-        else if (code == INTERNAL_CMD) {
+        else if (code == RLV_RESET) {
             RLVok = (llList2Integer(split, 0) == 1);
             rlvWait = 0;
 
@@ -623,13 +612,24 @@ default {
             else if (code == 102) {
                 ;
             }
+            else if (code == 110) {
+                
+                msg = "Initialization completed in " +
+                      formatFloat((llGetTime() - initTimer), 1) + "s" +
+                      "; key ready";
+
+                sendMsg(dollID, msg);
+
+                if (newAttach && !quiet && isAttached)
+                    llSay(0, llGetDisplayName(llGetOwner()) + " is now a dolly - anyone may play with their Key.");
+            }
             else if (code == 135) {
                 if (script == cdMyScriptName()) return;
 
                 float delay = llList2Float(split, 0);
                 memReport(cdMyScriptName(),delay);
             }
-            else if (code == 135) {
+            else if (code == 142) {
                 cdConfigureReport();
             }
         }

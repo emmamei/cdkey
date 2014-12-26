@@ -899,6 +899,9 @@ default {
                 }
             }
         }
+        else if (code == RLV_RESET) {
+            RLVok = (llList2Integer(split, 1) == 1);
+        }
         else if (code < 200) {
             if (code == 110) {
                 //configured = 1;

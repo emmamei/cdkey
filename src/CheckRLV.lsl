@@ -249,7 +249,7 @@ activateRLV() {
         }
 #endif
         cdListenerDeactivate(rlvHandle);
-        lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
+        //lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
 
         // This generates a 350 link message
         lmRLVreport(RLVok, rlvAPIversion, 0);
@@ -328,7 +328,7 @@ default {
 #else
                 nextRLVcheck = 0.0;
                 RLVok = 1;
-                lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
+                //lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
                 cdListenerDeactivate(rlvHandle);
                 activateRLV();
                 lmRLVreport(RLVok, rlvAPIversion, 0);
@@ -341,7 +341,7 @@ default {
 
                 nextRLVcheck = 0.0;
                 RLVok = 1;
-                lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
+                //lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
                 //debugSay(2, "DEBUG-RLV", "RLV set to " + (string)RLVok + " and message sent on link channel");
                 llOwnerSay("RLV check completed in " + formatFloat((llGetTime() - rlvTimer),1) + "s");
                 cdListenerDeactivate(rlvHandle);
@@ -466,7 +466,8 @@ default {
 #endif
                 lmRunRLVas("Base", "clear");
                 lmRunRLVas("Core", "clear");
-                lmSendConfig("RLVok",(string)RLVok);
+                //lmSendConfig("RLVok",(string)RLVok);
+                lmRLVreport(RLVok, rlvAPIversion, 0);
                 lmMenuReply(MAIN,"",id);
             }
             else if (choice == "RLV On") {

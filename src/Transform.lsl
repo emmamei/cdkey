@@ -545,23 +545,12 @@ default {
                     }
                 }
             }
-            else if ((name == "RLVok") || (name == "dialogChannel")) {
-                integer oldRLVok = RLVok;
+            else if (name == "dialogChannel") {
 
-                if (name == "RLVok") RLVok = (integer)value;
-                else if (name == "dialogChannel") {
-                    dialogChannel = (integer)value;
-                    rlvChannel = ~dialogChannel + 1;
-                    typeSearchChannel = rlvChannel + 1;
-                    outfitSearchChannel = rlvChannel + 2;
-                }
-
-                // This makes the RLV activation only happen during
-                // an RLV Off to On transition... and speeds things up too
-//              if (!oldRLVok) {
-//                  if (RLVok && rlvChannel)
-//                      lmRLVreport(RLVok, rlvAPIversion, 0);
-//              }
+                dialogChannel = (integer)value;
+                rlvChannel = ~dialogChannel + 1;
+                typeSearchChannel = rlvChannel + 1;
+                outfitSearchChannel = rlvChannel + 2;
             }
         }
 

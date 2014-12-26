@@ -27,7 +27,6 @@ float effectiveLimit          = 10800.0;
 //float wearLockExpire;
 //flaot winderLockExpire;
 
-string RLVver               = "";
 string msg;
 integer chatEnable           = TRUE;
 string chatFilter           = "";
@@ -301,7 +300,7 @@ default
         }
         else if (code == RLV_RESET) {
             RLVok = llList2Integer(split, 0);
-            RLVver = llList2String(split, 1);
+            rlvAPIversion = llList2String(split, 1);
         }
         else if (code < 200) {
             if (code == 110) {
@@ -596,7 +595,7 @@ default
                         else s += "Key is not winding down.\n";
 
                         if (RLVok == UNSET) s += "RLV status is unknown.\n";
-                        else if (RLVok == 1) s += "RLV is active.\nRLV version: " + RLVver;
+                        else if (RLVok == 1) s += "RLV is active.\nRLV version: " + rlvAPIversion;
                         else s += "RLV is not active.\n";
 
                         if (lastWinderID) s += "Last winder was " + cdProfileURL(lastWinderID);

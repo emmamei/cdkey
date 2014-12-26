@@ -202,7 +202,6 @@ default {
                 else if (name == "configured")                 configured = (integer)value;
                 else if (name == "showPhrases")               showPhrases = (integer)value;
             }
-            else if (name == "RLVok")                               RLVok = (integer)value;
 
             // shortcut: d
             else if (c == "d") {

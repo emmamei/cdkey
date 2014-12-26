@@ -100,12 +100,11 @@ default {
 
         if (code == CONFIG) {
 
+#ifdef DEVELOPER_MODE
             string name = cdListElement(split, 0);
             string value = cdListElement(split, 1);
 
-            if (name == "RLVok")    RLVok = (integer)value;
-#ifdef DEVELOPER_MODE
-            else if (name == "debugLevel") debugLevel = (integer)cdListElement(split, 1);
+                 if (name == "debugLevel") debugLevel = (integer)cdListElement(split, 1);
 #endif
             return;
         }
