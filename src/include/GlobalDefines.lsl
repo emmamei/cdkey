@@ -233,7 +233,7 @@ list BuiltinControllers = BUILTIN_CONTROLLERS;
 // Tests of id
 #define cdIsDoll(id)                    (id == dollID)
 #define cdIsCarrier(id)                 (id == carrierID)
-#define cdDollyIsBuiltinController(id)  (id == dollID && llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1)
+#define cdDollyIsBuiltinController(id)  (id == dollID && (llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1))
 #define cdIsUserController(id)          (llListFindList(USER_CONTROLLERS, [ (string)id ]) != -1)
 #define cdIsController(id)              cdGetControllerStatus(id)
 
@@ -269,11 +269,15 @@ integer cdGetControllerStatus(key id) {
     // If the id belongs to a Builtin Controller who is
     // NOT the Dolly, then is ok
     //
+    // Rules:
+    //   Dolly is a Controller only if there aren't any User Controllers
+    //   A User is a Controller if they are in the user controller list or
+    //      in the Builtin Controller list
+    //
     if (cdIsDoll(id))
-        return (!cdControllerCount());
+        return (USER_CONTROLLERS == []);
     else {
-        if (cdIsUserController(id)) return TRUE;
-        else return (llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1);
+        return (llListFindList(USER_CONTROLLERS + BUILTIN_CONTROLLERS, [ (string)id ]) != -1);
     }
 }
 
