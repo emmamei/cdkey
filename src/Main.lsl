@@ -278,7 +278,7 @@ default {
             lmRating(simRating);
 
 #ifdef ADULT_MODE
-            if (pleasureDoll || (dollType == "Slut")) {
+            if (allowStrip || (dollType == "Slut")) {
 
                 if (cdRating2Integer(simRating) < 2) {
                     llOwnerSay("Entered " + llGetRegionName() + "; rating is " + llToLower(simRating) + " - so stripping disabled.");
@@ -598,6 +598,9 @@ default {
             else if (name == "baseWindRate")             baseWindRate = (float)value;
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "dollType")                     dollType = value;
+#ifdef ADULT_MODE
+            else if (name == "allowStrip")                 allowStrip = (integer)value;
+#endif
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
             else if (name == "dialogChannel")           dialogChannel = (integer)value;

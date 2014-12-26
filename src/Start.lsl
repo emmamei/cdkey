@@ -175,7 +175,11 @@ processConfiguration(string name, string value) {
     integer i;
     list configs = [ "barefeet path", "quiet key", "outfits path",
                      "busy is away", "can afk", "can fly", "poseable", "can sit", "can stand",
-                     "can dress", "detachable", "doll type", "pleasure doll", "pose silence",
+                     "can dress", "detachable", "doll type",
+#ifdef ADULT_MODE
+                     "strippable",
+#endif
+                     "pose silence",
                      "auto tp", "outfitable", "max time", "chat channel", "dolly name", "demo mode",
                      "afk rlv", "base rlv", "collapse rlv", "pose rlv" , "show phrases",
 #ifdef DEVELOPER_MODE
@@ -186,7 +190,11 @@ processConfiguration(string name, string value) {
 
     list sendName = [ "barefeet", "quiet", "outfitsFolder",
                       "busyIsAway", "canAfk", "canFly", "allowPose", "canSit", "canStand",
-                      "canDressSelf", "detachable", "dollType", "pleasureDoll", "poseSilence",
+                      "canDressSelf", "detachable", "dollType",
+#ifdef ADULT_MODE
+                      "allowStrip",
+#endif
+                      "poseSilence",
                       "autoTP", "allowDress", "keyLimit", "chatChannel", "dollDisplayName", "demoMode",
                       "userAfkRLVcmd", "userBaseRLVcmd", "userCollapseRLVcmd", "userPoseRLVcmd" , "showPhrases",
 #ifdef DEVELOPER_MODE

@@ -154,7 +154,7 @@ default {
             else if (name == "poseSilence")               poseSilence = (integer)value;
             else if (name == "detachable")                 detachable = (integer)value;
             else if (name == "canSelfTP")                   canSelfTP = (integer)value;
-            else if (name == "pleasureDoll")             pleasureDoll = (integer)value;
+            else if (name == "allowStrip")             allowStrip = (integer)value;
             else if (name == "windMins")                     windMins = (integer)value;
             else if (name == "wearLock")                     wearLock = (integer)value;
             else if (name == "primLight")                   primLight = (integer)value;
@@ -354,7 +354,7 @@ Controller - Take care choosing your controllers; they have great control over D
                     plusList += cdGetButton("Carryable", id, allowCarry, 0);
                     plusList += cdGetButton("Outfitable", id, allowDress, 0);
 #ifdef ADULT_MODE
-                    plusList += cdGetButton("Strippable", id, pleasureDoll, 0);
+                    plusList += cdGetButton("Strippable", id, allowStrip, 0);
 #endif
                 }
                 lmSendConfig("backMenu",(backMenu = "Options..."));

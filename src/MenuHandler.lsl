@@ -228,7 +228,7 @@ default {
                     lmInternalCommand("setGemColour", (string)gemColour, NULL_KEY);
                 }
 #ifdef ADULT_MODE
-                else if (name == "pleasureDoll")             pleasureDoll = (integer)value;
+                else if (name == "allowStrip")             allowStrip = (integer)value;
 #endif
                 else if (name == "pronounHerDoll")         pronounHerDoll = value;
                 else if (name == "pronounSheDoll")         pronounSheDoll = value;
@@ -475,7 +475,7 @@ default {
 #ifdef ADULT_MODE
                         // Is doll strippable?
                         if (RLVok == 1) {
-                            if (pleasureDoll || dollType == "Slut" || hardcore) {
+                            if (allowStrip || dollType == "Slut" || hardcore) {
                                 if (isController || isCarrier) {
                                     if (simRating == "MATURE" || simRating == "ADULT") menu += "Strip...";
                                 }
@@ -850,7 +850,7 @@ default {
                                 else if (afterSpace == "Outfitable") lmSendConfig("allowDress",    (string)(allowDress = isX));
                                 else if (afterSpace == "Poseable")   lmSendConfig("allowPose",     (string)(allowPose = isX));
 #ifdef ADULT_MODE
-                                else if (afterSpace == "Strippable") lmSendConfig("pleasureDoll", (string)(pleasureDoll = isX));
+                                else if (afterSpace == "Strippable") lmSendConfig("allowStrip", (string)(allowStrip = isX));
 #endif
                                 else isPublic = 0;
                             }

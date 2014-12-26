@@ -145,7 +145,9 @@ default
             // Shortcut: p
             else if (c == "p") {
                      if (name == "poseSilence")           poseSilence = (integer)value;
-                else if (name == "pleasureDoll")         pleasureDoll = (integer)value;
+#ifdef ADULT_MODE
+                else if (name == "allowStrip")             allowStrip = (integer)value;
+#endif
                 else if (name == "poserID")                   poserID = (key)value;
                 else if (name == "poserName")               poserName = value;
                 else if (name == "pronounHerDoll")     pronounHerDoll = value;
@@ -163,7 +165,7 @@ default
                     else effectiveLimit = DEMO_LIMIT;
                 }
             }
-            else if (name == "canSelfTP")                 canSelfTP = (integer)value;
+            else if (name == "canSelfTP")                   canSelfTP = (integer)value;
             else if (name == "windMins")                     windMins = (integer)value;
             //else if (name == "wearLockExpire")         wearLockExpire = (float)value;
             else if (name == "wearLock")                     wearLock = (integer)value;
