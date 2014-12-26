@@ -422,22 +422,28 @@ default {
 
                 // Exempt builtin or user specified controllers from TP restictions
 
-                list allow = BUILTIN_CONTROLLERS + cdList2ListStrided(controllers, 0, -1, 2);
+                list exceptions = BUILTIN_CONTROLLERS + cdList2ListStrided(controllers, 0, -1, 2);
+                integer i;
 
-                // Also exempt the carrier StatusRLV will ignore the duplicate if carrier is a controller so save work
+                if cdCarried() {
+                    if (llListFindList(exceptions, (list)carrierID) != NOT_FOUND) exceptions += carrierID;
+                }
 
-                if cdCarried() allow += carrierID;
+                // Dolly not allowed to be on this list
+                //
+                // Most likely, Dolly might be in Builtin Controllers list...
 
-                // Directly dump the list using the static parts of the RLV command as a seperator no looping
+                if ((i = llListFindList(exceptions, (list)dollID)) != NOT_FOUND)
+                    llDeleteSubList(exceptions, i, i);
 
-                lmRunRLVas("Base", "clear=tplure:,tplure:"          + llDumpList2String(allow, "=add,tplure:")    + "=add");
-                lmRunRLVas("Base", "clear=accepttp:,accepttp:"      + llDumpList2String(allow, "=add,accepttp:")  + "=add");
-                lmRunRLVas("Base", "clear=sendim:,sendim:"          + llDumpList2String(allow, "=add,sendim:")    + "=add");
-                lmRunRLVas("Base", "clear=recvim:,recvim:"          + llDumpList2String(allow, "=add,recvim:")    + "=add");
-                lmRunRLVas("Base", "clear=recvchat:,recvchat:"      + llDumpList2String(allow, "=add,recvchat:")  + "=add");
-                lmRunRLVas("Base", "clear=recvemote:,recvemote:"    + llDumpList2String(allow, "=add,recvemote:") + "=add");
+                // Directly dump the list using the static parts of the RLV command as a seperator; no looping needed
 
-                // Apply exemptions to base RLV
+                lmRunRLVas("Base", "clear=tplure:,tplure:"          + llDumpList2String(exceptions, "=add,tplure:")    + "=add");
+                lmRunRLVas("Base", "clear=accepttp:,accepttp:"      + llDumpList2String(exceptions, "=add,accepttp:")  + "=add");
+                lmRunRLVas("Base", "clear=sendim:,sendim:"          + llDumpList2String(exceptions, "=add,sendim:")    + "=add");
+                lmRunRLVas("Base", "clear=recvim:,recvim:"          + llDumpList2String(exceptions, "=add,recvim:")    + "=add");
+                lmRunRLVas("Base", "clear=recvchat:,recvchat:"      + llDumpList2String(exceptions, "=add,recvchat:")  + "=add");
+                lmRunRLVas("Base", "clear=recvemote:,recvemote:"    + llDumpList2String(exceptions, "=add,recvemote:") + "=add");
             }
         }
         else if (code == MENU_SELECTION) {
