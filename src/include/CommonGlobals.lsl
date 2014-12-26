@@ -45,6 +45,9 @@ integer allowCarry          = 1;
 integer allowDress          = 1;
 integer allowPose           = 1;
 integer allowRepeatWind     = 1;
+#ifdef ADULT_MODE
+integer allowStrip          = 1;
+#endif
 integer autoAFK             = 1;
 integer autoTP;
 integer busyIsAway;
