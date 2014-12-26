@@ -30,6 +30,7 @@ float effectiveLimit          = 10800.0;
 string msg;
 integer chatEnable           = TRUE;
 string chatFilter           = "";
+string rlvAPIversion;
 
 integer chatChannel         = 75;
 integer chatHandle          = 0;
