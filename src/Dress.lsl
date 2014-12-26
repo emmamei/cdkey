@@ -235,7 +235,7 @@ changeComplete(integer success) {
 #endif
 
     if (success) {
-        if (change) llOwnerSay("Change to new outfit " + newoutfitname + " complete.");
+        if (change) lmSendToAgentPlusDoll("Change to new outfit " + newoutfitname + " complete.", dresserID);
 
         // Note: if wearLock is already set, it STAYS set with this setting
         //
@@ -246,7 +246,13 @@ changeComplete(integer success) {
         wearLock = (wearLock || ((dresserID != NULL_KEY) && (dresserID != dollID)));
     }
     else {
-        llOwnerSay("Change to new outfit " + newoutfitname + " unsuccessful.");
+        if (dressingFailures > MAX_DRESS_FAILURES)
+            llOwnerSay("Too many dressing failures.");
+
+        if (candresstimeout)
+            llOwnerSay("Dressing timed out.");
+
+        lmSendToAgentPlusDoll("Change to new outfit " + newoutfitname + " unsuccessful.", dresserID);
         wearLock = 0;
     }
 
@@ -337,7 +343,6 @@ default {
     //----------------------------------------
     timer() {
         if (candresstimeout) {
-            candresstimeout = 0;
 
             //llListenRemove(listen_id_2555);
             llListenRemove(listen_id_2665);
@@ -346,6 +351,7 @@ default {
             llListenRemove(listen_id_2669);
 
             changeComplete(FALSE);
+            candresstimeout = 0;
         }
     }
 
@@ -556,6 +562,7 @@ default {
             integer select = (integer)llGetSubString(choice, 0, llSubStringIndex(choice, ".") - 1);
             if (select != 0) choice = cdListElement(outfitsList, select - 1);
             // if (select == 0) then what?
+            debugSay(6, "DEBUG-DRESS", "Secondary outfits menu: choice = " + choice + "; select = " + (string)select);
 
             if (llGetSubString(choice, 0, 6) == "Outfits") {
                 // Choice was one of:
@@ -615,6 +622,7 @@ default {
                 cdDialogListen();
                 outfitsHandle = cdListenMine(outfitsChannel);
                 // outfitsMessage was built by the initial call to listener2666
+                debugSay(6, "DEBUG-DRESS", "Secondary outfits menu invoked.");
                 llDialog(dresserID, outfitsMessage, dialogSort(outfitsPage(outfitsList) + dialogItems), outfitsChannel);
                 llSetTimerEvent(60.0);
 
@@ -634,6 +642,7 @@ default {
                 // No standard user should be entering this way anyway
                 //if (!isDresser(id)) return;
 
+                debugSay(6, "DEBUG-DRESS", "choice = " + choice + "; isParent = " + (string)(isParentFolder(cdGetFirstChar(choice))));
                 if (isParentFolder(cdGetFirstChar(choice))) {
 
                     // if a Folder was chosen, we have to descend into it by

@@ -850,7 +850,7 @@ default {
                                 else if (afterSpace == "Outfitable") lmSendConfig("allowDress",    (string)(allowDress = isX));
                                 else if (afterSpace == "Poseable")   lmSendConfig("allowPose",     (string)(allowPose = isX));
 #ifdef ADULT_MODE
-                                else if (afterSpace == "Pleasure") lmSendConfig("pleasureDoll", (string)(pleasureDoll = isX));
+                                else if (afterSpace == "Strippable") lmSendConfig("pleasureDoll", (string)(pleasureDoll = isX));
 #endif
                                 else isPublic = 0;
                             }

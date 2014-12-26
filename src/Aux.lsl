@@ -354,7 +354,7 @@ Controller - Take care choosing your controllers; they have great control over D
                     plusList += cdGetButton("Carryable", id, allowCarry, 0);
                     plusList += cdGetButton("Outfitable", id, allowDress, 0);
 #ifdef ADULT_MODE
-                    plusList += cdGetButton("Pleasure", id, pleasureDoll, 0);
+                    plusList += cdGetButton("Strippable", id, pleasureDoll, 0);
 #endif
                 }
                 lmSendConfig("backMenu",(backMenu = "Options..."));
@@ -546,8 +546,8 @@ Controller - Take care choosing your controllers; they have great control over D
 
                                         totUsed  += used_memory      = (float)cdGetValue(memData, ([scriptName,0]));
                                         totLimit += memory_limit     = (float)cdGetValue(memData, ([scriptName,1]));
-                                        //totFree  += free_memory      = (float)cdGetValue(memData, ([scriptName,2]));
-                                        //totAvail += available_memory = (float)cdGetValue(memData, ([scriptName,3]));
+                                        totFree  += free_memory      = (float)cdGetValue(memData, ([scriptName,2]));
+                                        totAvail += available_memory = (float)cdGetValue(memData, ([scriptName,3]));
 
 #define WARN_MEM 6144
                                         if (memRequested || (available_memory < WARN_MEM)) {
