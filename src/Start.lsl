@@ -563,12 +563,8 @@ default {
 
             if (RLVok) {
                 // If RLV is ok, then trigger all of the necessary RLV restrictions
-                if (collapsed) {
-                    // Dolly collapse overrides all others
-                    lmRunRLV(defaultCollapseRLVcmd);
-                    if (userCollapseRLVcmd != "") lmRunRLVas("UserCollapse", userCollapseRLVcmd);
-                }
-                else {
+                // (collapse is managed by Main)
+                if (!collapsed)
                     // Not collapsed: clear any user collapse RLV restrictions
                     lmRunRLV("clear");
                     if (userCollapseRLVcmd != "") lmRunRLVas("UserCollapse", "clear");

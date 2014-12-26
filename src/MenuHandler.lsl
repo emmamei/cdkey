@@ -549,10 +549,10 @@ default {
             }
         }
         else if (code == RLV_RESET) {
-            string script = llList2String(split, 0);
             RLVok = llList2Integer(split, 1);
 
-            lmInternalCommand("updateExceptions", "", NULL_KEY);
+            if (RLVok)
+                lmInternalCommand("updateExceptions", "", NULL_KEY);
         }
         else if (code < 200) {
             if (code == 102) {

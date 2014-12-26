@@ -164,7 +164,9 @@ collapse(integer newCollapseState) {
     // processing can be repeated and nothing bad should happen - and
     // that is how things acted before. Leave this code commented for now.
     //
-    if (collapsed == newCollapseState) return; // Make repeated calls fast and unnecessary
+    // We might have a situation where a collapse state needs to be refreshed:
+    // so allow repeated calls
+    //if (collapsed == newCollapseState) return; // Make repeated calls fast and unnecessary
 
     debugSay(3,"DEBUG-MAIN","Entering new collapse state (" + (string)newCollapseState + ") with time left of " + (string)timeLeftOnKey);
 
@@ -750,14 +752,15 @@ default {
             RLVok = (llList2Integer(split, 0) == 1);
             rlvAPIversion = llList2String(split, 1);
 
-            // When rlv confirmed....vefify collapse state... no escape!
-            if (collapsed == NO_TIME && timeLeftOnKey > 0) {
-                llSay(DEBUG_CHANNEL, "(RLV Confirmed): Dolly collapsed with time on Key!");
-                collapse(NOT_COLLAPSED);
-            }
-            else if (!collapsed && timeLeftOnKey <= 0) collapse(NOT_COLLAPSED);
+            // refresh collapse state... no escape!
+            collapse(collapsed);
 
-            if (!allowDress) llOwnerSay("The public cannot outfit you.");
+            if (RLVok) {
+                if (!allowDress) llOwnerSay("The public cannot dress you.");
+            }
+            else {
+                llOwnerSay("Without RLV, you cannot be dressed in new outfits.");
+            }
 
             simRating = "";
             simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
