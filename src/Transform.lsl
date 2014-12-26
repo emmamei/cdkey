@@ -475,11 +475,12 @@ default {
         code              =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
-        string choice = cdListElement(split, 0);
-        string name = cdListElement(split, 1);
         transformerId = id;
 
 #ifdef DEVELOPER_MODE
+        string choice = cdListElement(split, 0);
+        string name = cdListElement(split, 1);
+
         // This is a way to watch the messages coming over the wire...
         // no need for a separate script to do it
         if ((debugLevel > 4 && code != 11 && code != 12 && code != 15) || debugLevel > 5) {
@@ -496,8 +497,9 @@ default {
 
         if (code == CONFIG) {
 
-            string value = name;
-            string name = choice;
+            string name = cdListElement(split, 0);
+            string value = cdListElement(split, 1);
+
             split = llDeleteSubList(split,0,0);
 
                  if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
@@ -556,8 +558,8 @@ default {
 
         else if (code == SET_CONFIG) {
 
-            string value = name;
-            string name = choice;
+            string name = cdListElement(split, 0);
+            string value = cdListElement(split, 1);
 
             if (name == "dollType") {
                 setDollType(value, AUTOMATED);
@@ -680,20 +682,29 @@ default {
                         pluslist += [ "Access..." ];
                     }
                     else {
-                        pluslist += [ "Type...", "Access...", "Restrictions..." ];
+                        pluslist += [ "Type...", "Access..." ];
+                        if (RLVok) pluslist += [ "Restrictions..." ];
                     }
                 }
                 else if (cdIsCarrier(id)) {
-                    pluslist += [ "Type...", "Restrictions..." ];
+                    pluslist += [ "Type..." ];
+                    if (RLVok) pluslist += [ "Restrictions..." ];
                 }
-                else if (cdIsBuiltinController(id)) {
-                    pluslist += [ "Type...", "Access...", "Restrictions..." ];
-                }
+                // Test for User Controller first: that way, a User Controller that
+                // is also in a Builtin Controller is treated as a normal User
+                // Controller
                 else if (cdIsUserController(id)) {
 
                     msg = "See " + WEB_DOMAIN + "controller.htm. Choose what you want to happen.";
-                    pluslist += [ "Type...", "Access...", "Restrictions...", "Drop Control" ];
 
+                    pluslist += [ "Type...", "Access..." ];
+                    if (RLVok) pluslist += [ "Restrictions..." ];
+                    pluslist += [ "Drop Control" ];
+
+                }
+                else if (cdIsBuiltinController(id)) {
+                    pluslist += [ "Type...", "Access..." ];
+                    if (RLVok) pluslist += [ "Restrictions..." ];
                 }
                 // This section should never be triggered: it means that
                 // someone who shouldn't see the Options menu did.

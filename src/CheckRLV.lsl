@@ -165,6 +165,8 @@ checkRLV() {
 }
 
 activateRLVBase() {
+    if (!RLVok) return;
+
     string baseRLV;
 
     if (userBaseRLVcmd != "") lmRunRLVas("UserBase", userBaseRLVcmd);
@@ -235,7 +237,8 @@ activateRLV() {
         // rid of the menu item to unlock it
 
         if (mainCreator != dollID) {
-            lmRunRLVas("Base", "detach=n,permissive=n");  //locks key
+            if (RLVok)
+                lmRunRLVas("Base", "detach=n,permissive=n");  //locks key
 
             locked = 1; // Note the locked variable also remains false for developer mode keys
                         // This way controllers are still informed of unauthorized detaching so developer dolls are still accountable
@@ -372,7 +375,6 @@ default {
         remoteSeq = (i & 0xFFFF0000) >> 16;
         optHeader = (i & 0x00000C00) >> 10;
         code      =  i & 0x000003FF;
-
         split     = llDeleteSubList(split, 0, 0 + optHeader);
 
         scaleMem();

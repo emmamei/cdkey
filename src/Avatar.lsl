@@ -559,7 +559,6 @@ default {
         remoteSeq = (i & 0xFFFF0000) >> 16;
         optHeader = (i & 0x00000C00) >> 10;
         code      =  i & 0x000003FF;
-
         split     = llDeleteSubList(split, 0, 0 + optHeader);
 
         scaleMem();

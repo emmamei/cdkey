@@ -568,6 +568,8 @@ default {
         code              =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
+        scaleMem();
+
         if (code == CONFIG) {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);

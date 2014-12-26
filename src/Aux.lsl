@@ -116,6 +116,8 @@ default {
         code      =  i & 0x000003FF;
         split     = llDeleteSubList(split, 0, 0 + optHeader);
 
+        scaleMem();
+
         if (code == CONFIG) {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
@@ -351,10 +353,12 @@ Controller - Take care choosing your controllers; they have great control over D
 
                 if (!hardcore) {
                     plusList += cdGetButton("Carryable", id, allowCarry, 0);
-                    plusList += cdGetButton("Outfitable", id, allowDress, 0);
+                    if (RLVok) {
+                        plusList += cdGetButton("Outfitable", id, allowDress, 0);
 #ifdef ADULT_MODE
-                    plusList += cdGetButton("Strippable", id, allowStrip, 0);
+                        plusList += cdGetButton("Strippable", id, allowStrip, 0);
 #endif
+                    }
                 }
                 lmSendConfig("backMenu",(backMenu = "Options..."));
                 cdDialogListen();

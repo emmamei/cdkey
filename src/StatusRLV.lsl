@@ -86,16 +86,6 @@ default {
         code              =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
-        // Link Messages Handled:
-        //
-        // 104: Initialization
-        // 105: Initialization
-        // 110: Initialization
-        // 135: Memory Report
-        // 300: Commands? ("debugLevel")
-        // 315: RLV Commands
-        // 350: RLVok Yes/No Notification
-
         scaleMem();
 
         if (code == CONFIG) {
