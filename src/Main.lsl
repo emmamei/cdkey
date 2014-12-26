@@ -188,7 +188,8 @@ collapse(integer newCollapseState) {
         }
         else if (newCollapseState == JAMMED) {
             // Time span (random) = 120.0 (two minutes) to 300.0 (five minutes)
-            jamExpire = llGetUnixTime() + ((integer)llFrand(180) + 120);
+            if (collapsed != JAMMED)
+                jamExpire = llGetUnixTime() + ((integer)llFrand(180) + 120);
         }
 
         // If not already collapsed, mark the start time
