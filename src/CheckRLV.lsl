@@ -52,8 +52,6 @@ string userBaseRLVcmd;
 integer i;
 integer rlvChannel;
 integer rlvHandle;
-#ifdef SIM_FRIENDLY
-#endif
 integer RLVck = 0;
 integer RLVstarted;
 integer chatChannel = 75;
@@ -113,10 +111,6 @@ checkRLV() {
         // Increase number of check - RLVck is check number
         if (RLVck <= 0) {
             RLVck = 1;
-#ifdef WAKESCRIPT
-            cdWakeScript("StatusRLV");
-            cdWakeScript("Transform");
-#endif
         }
         else RLVck++;
 
@@ -147,20 +141,8 @@ checkRLV() {
         debugSay(2,"DEBUG-RLV","RLV check failed...");
         RLVok = 0;
 
-        //if (!RLVstarted) {
-            // if (rlvAPIversion != "") llOwnerSay("Reattached Community Doll Key with " + rlvAPIversion + " active...");
-            //else
-            llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
-            //debugSay(5,"DEBUG-RLV","myPath = " + (string)myPath + " and rlvAPIversion = " + rlvAPIversion);
-            nextRLVcheck = 0.0;
-        //}
-
-#ifdef DEVELOPER_MODE
-        //if ((rlvAPIversion != "") && (myPath == "")) { // Dont enable RLV on devs if @getpath is returning no usable result to avoid lockouts.
-        //    llSay(DEBUG_CHANNEL, "WARNING: Sanity check failure developer key not found in #RLV see README.dev for more information.");
-        //    return;
-        //}
-#endif
+        llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
+        nextRLVcheck = 0.0;
     }
 }
 
@@ -312,6 +294,9 @@ default {
     listen(integer chan, string name, key id, string msg) {
 
         //debugSay(2, "DEBUG-AVATAR", "Listener tripped....");
+
+        // Initial RLV Check results are being processed here
+        //
         if (chan == rlvChannel) {
             //debugSay(2, "DEBUG-RLV", "RLV Message received: " + msg);
 
@@ -331,7 +316,9 @@ default {
 #else
                 nextRLVcheck = 0.0;
                 RLVok = 1;
+
                 //lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
+
                 cdListenerDeactivate(rlvHandle);
                 activateRLV();
                 lmRLVreport(RLVok, rlvAPIversion, 0);
@@ -344,9 +331,11 @@ default {
 
                 nextRLVcheck = 0.0;
                 RLVok = 1;
+
                 //lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
                 //debugSay(2, "DEBUG-RLV", "RLV set to " + (string)RLVok + " and message sent on link channel");
                 llOwnerSay("RLV check completed in " + formatFloat((llGetTime() - rlvTimer),1) + "s");
+
                 cdListenerDeactivate(rlvHandle);
                 activateRLV();
                 lmRLVreport(RLVok, rlvAPIversion, 0);
@@ -480,8 +469,9 @@ default {
             }
             else if (choice == "RLV On") {
                 doCheckRLV();
-                if (RLVok) activateRLV();
-                lmMenuReply(MAIN,"",id);
+                llOwnerSay("Checking for RLV now...");
+                //if (RLVok) activateRLV();
+                //lmMenuReply(MAIN,"",id);
             }
         }
         else if (code < 200) {
@@ -527,7 +517,8 @@ default {
         }
 
         // Doesn't matter if RLVok is TRUE, FALSE, or UNSET: propogate the value
-        lmSendConfig("RLVok",(string)RLVok);
+        //lmSendConfig("RLVok",(string)RLVok);
+        lmRLVreport(RLVok, rlvAPIversion, 0);
     }
 }
 

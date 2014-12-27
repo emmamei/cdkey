@@ -221,7 +221,7 @@ default {
 #endif
         }
         else if (code == RLV_RESET) {
-            RLVok = (llList2Integer(split, 1) == 1);
+            RLVok = llList2Integer(split, 0);
         }
         else if (code == MENU_SELECTION) {
             string choice = llList2String(split, 0);

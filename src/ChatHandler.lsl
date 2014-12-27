@@ -845,7 +845,7 @@ default
                     return;
                 }
                 else if (choice == "carry") {
-                    if (!isDoll) cdMenuInject("Carry", name, id);
+                    if (!isDoll && allowCarry) cdMenuInject("Carry", name, id);
                     return;
                 }
                 else if (choice == "uncarry") {
@@ -944,7 +944,7 @@ default
                 //
                 if (isDoll) {
                     if (choice == "gname") {
-                        string doubledSymbols = "⌘⌘ѽѽ☄☄✰✰++₪₪קק¤¤øøღღ°°♫♫✿✿▫▫▪▪♬♬♩♩♪♪♬♬‘‘°°ººةة..,,==--++^^**˜˜••..  ¤¤øø””ﺴﺴ☊☊☩☩´´⇝⇝⁘⁘⁙⁙⁚⁚⁛⁛↑↑↓↓☆☆★★··..¸¸❤❤";
+                        string doubledSymbols = "❦❦⌘⌘ѽѽ☄☄✰✰++₪₪קק¤¤øøღღ°°♫♫✿✿▫▫▪▪♬♬♩♩♪♪♬♬‘‘°°ººةة..,,==--++^^**˜˜••..  ¤¤øø””ﺴﺴ☊☊☩☩´´⇝⇝⁘⁘⁙⁙⁚⁚⁛⁛↑↑↓↓☆☆★★··..¸¸❤❤";
                         string pairedSymbols = "<>()[]{}?؟\/";
                         string allSymbols;
                         string s1;

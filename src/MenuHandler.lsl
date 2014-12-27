@@ -551,7 +551,7 @@ default {
             }
         }
         else if (code == RLV_RESET) {
-            RLVok = llList2Integer(split, 1);
+            RLVok = llList2Integer(split, 0);
 
             if (RLVok)
                 lmInternalCommand("updateExceptions", "", NULL_KEY);

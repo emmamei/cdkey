@@ -548,7 +548,10 @@ default {
             RLVok = (llList2Integer(split, 0) == 1);
             rlvWait = 0;
 
-            if (!newAttach) {
+            if (newAttach) {
+
+                newAttach = 0;
+
                 if (cdAttached()) {
                     string msg = dollName + " has logged in with";
 
@@ -587,8 +590,6 @@ default {
                         if (userPoseRLVcmd != "") lmRunRLVas("UserPose", "clear");
                     }
                 }
-
-                newAttach = 0;
             }
         }
 #ifdef DEVELOPER_MODE
