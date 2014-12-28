@@ -615,6 +615,20 @@ default {
 
                 sendMsg(dollID, msg);
 
+                msg = "This is " +
+#ifdef DEVELOPER_MODE
+                      "a Developer" +
+#else
+#ifdef ADULT_MODE
+                      "an Adult" +
+#else
+                      "a Child" +
+#endif
+#endif
+                      " Key. Treat it with tender loving care: polish once a week, and oil four times a year.";
+
+                sendMsg(dollID, msg);
+
                 if (newAttach && !quiet && isAttached)
                     llSay(0, llGetDisplayName(llGetOwner()) + " is now a dolly - anyone may play with their Key.");
             }

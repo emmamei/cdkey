@@ -831,6 +831,7 @@ default {
                 for (n = 0; n < iStop; ++n) {
                     itemname = cdListElement(outfitsList, n);
                     prefix = llGetSubString(itemname,0,0);
+                    debugSay(6, "DEBUG-CLOTHING", "Checking prefix: " + prefix + " with " + itemname);
 
                     // skip hidden files/directories and skip
                     // Doll Type (Transformation) folders...
@@ -856,6 +857,8 @@ default {
                 }
 
                 if (!total) {
+                    // Nothing received (total == 0); try another
+                    // folder, if any
 
                     if (pushRandom && clothingFolder != "") {
 
@@ -875,16 +878,18 @@ default {
 
                 // Pick outfit at random
                 integer i = (integer) llFrand(total);
-                string nextoutfitname = cdListElement(outfitsList, i);
+                string nextOutfitName = cdListElement(outfitsList, i);
+
+                debugSay(5,"DEBUG-CLOTHING","Outfits to choose from randomly: " + llDumpList2String(outfitsList, ","));
 
                 // Folders are marked with an initial ">" character
-                if (llGetSubString(nextoutfitname, 0, 0) != ">") {
+                if (llGetSubString(nextOutfitName, 0, 0) != ">") {
 
-                    lmMenuReply(nextoutfitname, llGetObjectName(), llGetKey());
-                    llOwnerSay("You are being dressed in this outfit: " + nextoutfitname);
+                    lmMenuReply(nextOutfitName, llGetObjectName(), llGetKey());
+                    llOwnerSay("You are being dressed in this outfit: " + nextOutfitName);
                 }
                 else {
-                    clothingFolder += "/" + nextoutfitname;
+                    clothingFolder += "/" + nextOutfitName;
                     listInventoryOn("2665"); // recursion
                 }
 
