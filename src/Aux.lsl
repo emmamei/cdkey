@@ -155,7 +155,9 @@ default {
             else if (name == "poseSilence")               poseSilence = (integer)value;
             else if (name == "detachable")                 detachable = (integer)value;
             else if (name == "canSelfTP")                   canSelfTP = (integer)value;
+#ifdef ADULT_MODE
             else if (name == "allowStrip")             allowStrip = (integer)value;
+#endif
             else if (name == "windMins")                     windMins = (integer)value;
             else if (name == "wearLock")                     wearLock = (integer)value;
             else if (name == "primLight")                   primLight = (integer)value;

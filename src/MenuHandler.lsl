@@ -481,6 +481,9 @@ default {
                                     if (simRating == "MATURE" || simRating == "ADULT") menu += "Strip...";
                                 }
                             }
+                            else if (isDoll) {
+                                if (simRating == "MATURE" || simRating == "ADULT") menu += "Strip...";
+                            }
                         }
 #endif
                     }

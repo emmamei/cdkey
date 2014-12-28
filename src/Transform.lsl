@@ -477,9 +477,9 @@ default {
 
         transformerId = id;
 
-#ifdef DEVELOPER_MODE
         string choice = cdListElement(split, 0);
         string name = cdListElement(split, 1);
+#ifdef DEVELOPER_MODE
 
         // This is a way to watch the messages coming over the wire...
         // no need for a separate script to do it

@@ -696,9 +696,10 @@ default {
                     // Generate the Strip Menu and display
                     list buttons = llListSort(["Strip Top", "Strip Bra", "Strip Bottom", "Strip Panties", "Strip Shoes", "Strip ALL"], 1, 1);
 
+                    backMenu = MAIN;
                     cdDialogListen();
                     llDialog(id, "Note that it doesn't make much sense to strip underwear or bras without stripping the top first.\n\nTake off:",
-                        dialogSort(buttons + MAIN), dialogChannel); // Do strip menu
+                        dialogSort(buttons + "Back..."), dialogChannel); // Do strip menu
                     return;
                 }
 
