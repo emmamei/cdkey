@@ -119,10 +119,12 @@ doVisibility() {
             string typeName;
             integer typeLen = llGetListLength(types)/2;
 
-            for (; type < typeLen; ++type) {
+            type = typeLen;
+            while (type--) {
                 typeName = llList2String(types, type * 2);
 
-                for (i = 1; i < llGetNumberOfPrims(); i++) {
+                i = llGetNumberOfPrims();
+                while (i--) {
 
                     name = llGetLinkName(i);
                     params += [ PRIM_LINK_TARGET, i ];
