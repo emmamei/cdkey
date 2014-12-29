@@ -17,7 +17,7 @@
 // #define F 12
 // #define G 15
 #define MEM_REPORT 135
-#define CONFIG_RPT 142
+#define CONFIG_REPORT 142
 #define CONFIG 300
 #define SET_CONFIG 301
 #define INTERNAL_CMD 305
@@ -171,6 +171,7 @@ list BuiltinControllers = BUILTIN_CONTROLLERS;
 #define isStandAloneItem(c)   ((c) == "=")
 #define isTransformingItem(c) ((c) == "*")
 #define isParentFolder(c)     ((c) == ">")
+#define isRated(c)            ((c) == "{")
 #define isChrootFolder(f)     (llGetSubString(f,0,1) == "!>")
 
 #define CORE_SCRIPTS [ "Aux", "Avatar", "ChatHandler", "Dress", "Main", "MenuHandler", "ServiceRequester", "ServiceReceiver", "Start", "StatusRLV", "Transform" ]
