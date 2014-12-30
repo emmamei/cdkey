@@ -223,6 +223,8 @@ changeComplete(integer success) {
 #ifdef DEVELOPER_MODE
     llOwnerSay("Your key is now unlocked again as you are a developer.");
     lmRunRLV("clear");
+#else
+    lmRunRLV("clear=attachall,clear=detachall");
 #endif
 
     if (success) {

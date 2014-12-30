@@ -34,10 +34,41 @@
 //
 list rlvStatus;
 list rlvRestrict;
+list rlvRestrictions;
 
 string scriptName;
 integer statusChannel = 55117;
 integer statusHandle;
+
+//========================================
+// FUNCTIONS
+//========================================
+
+clearCommand(string commandString) {
+    list rlvList;
+    integer i;
+    string x;
+    integer index;
+
+    rlvList = llParseString2List(split, [","], []);
+
+    i = llGetListLength(rlvList);
+    while (i--) {
+        x = cdListElement(rlvList,i);
+        llOwnerSay("@clear=" + x);
+    }
+}
+
+refreshCommands() {
+    integer i;
+    string rlvCmd;
+
+    i = llGetRestrictionsLength(rlvRestrictions);
+    while (i--) {
+        rlvCmd = cdListElement(rlvRestrictions,i);
+        llOwnerSay("@" + rlvCmd);
+    }
+}
 
 //========================================
 // STATES
@@ -113,6 +144,31 @@ default {
                     llOwnerSay("@" + cmd + "=n");
                 }
             }
+            else if (cmd == "clearRLV") {
+                integer n;
+                debugSay(4,"DEBUG-STATUSRLV","clearRLV command issued for " + cdListElement(split, 0));
+
+                n = llGetListLength(rlvRestrictions);
+                while (n--) {
+                    n--;
+                    if (cdListElement(rlvRestrictions,n) == script) {
+                        clearCommand(cdListElement(rlvRestrictions,n + 1));
+                    }
+                    rlvRestrictions = llDeleteSubList(rlvRestrictions, n, n + 1);
+                }
+            }
+            else if (cmd == "storeRLV") {
+                script = cdListElement(split,0);
+                string commandString = cdListElement(split, 1);
+                list tmpList;
+
+                //tmpList = llParseString2List(split, [","], []);
+                rlvRestrictions += [ script, commandString ];
+
+                // Here we're just getting current RLV restrictions
+                statusHandle = cdListenMine(statusChannel);
+                llOwnerSay("@getstatus=" + (string)statusChannel);
+            }
         }
 
         else if (code == RLV_CMD) {
@@ -121,6 +177,12 @@ default {
             debugSay(7,"DEBUG-STATUSRLV","Got Link Message 315 from script " + script + ": " + commandString);
 
             if (RLVok) {
+                // Note that this does NOT handle "clear=..."
+                if (commandString == "clear") {
+                    lmInternalCommand("clearRLV",script,NULL_KEY);
+                    return;
+                }
+
                 // This can happen...
                 if (commandString == "" || commandString == "0") {
                     llSay(DEBUG_CHANNEL,"command empty! :" + script);
@@ -133,9 +195,7 @@ default {
                 }
 
                 llOwnerSay("@" + commandString);
-
-                statusHandle = cdListenMine(statusChannel);
-                llOwnerSay("@getstatus=" + (string)statusChannel);
+                lmInternalCommand("storeRLV",script + "|" + commandString,NULL_KEY);
             }
 #ifdef DEVELOPER_MODE
 
