@@ -31,7 +31,7 @@ string outfitsMessage;
 
 string prefix;
 
-integer tempWearLock = FALSE;
+integer tempDressingLock = FALSE;
 integer candresstimeout;
 integer dressTries;
 
@@ -39,6 +39,7 @@ key setupID = NULL_KEY;
 
 string newoutfitname;
 string newoutfitpath;
+string oldoutfitname;
 string oldoutfitpath;
 
 string newoutfitfolder;
@@ -64,7 +65,6 @@ string oldoutfit;
 string xfolder;
 string yfolder;
 
-string oldoutfitname;
 list outfitsList;
 integer useTypeFolder;
 
@@ -101,31 +101,31 @@ list outfitsPage(list outfitList) {
 
     // GLOBAL: outfitPage
 
-    // compute start index
+    // compute indexes
     integer currentIndex = outfitPage * outfitPageSize;
+    integer endIndex = currentIndex + outfitPageSize - 1;
 
     // If reaching beyond the end...
     if (currentIndex > newOutfitCount) {
         // Wrap to start...
-        //outfitPage = 0;
-        //currentIndex = 0;
+        outfitPage = 0;
+        currentIndex = 0;
 
         // Halt at end
-        outfitPage--;
-        currentIndex = outfitPage * outfitPageSize;
+        //outfitPage--;
+        //currentIndex = outfitPage * outfitPageSize;
     }
     // If reaching beyond the beginning...
     else if (currentIndex < 0) {
         // Wrap to end
-        //currentIndex = newOutfitCount % outfitPageSize;
-        //outfitPage = currentIndex % outfitPageSize;
+        currentIndex = newOutfitCount % outfitPageSize;
+        outfitPage = currentIndex % outfitPageSize;
 
         // Halt at start
-        outfitPage = 0;
-        currentIndex = 0;
+        //outfitPage = 0;
+        //currentIndex = 0;
     }
 
-    integer endIndex = currentIndex + outfitPageSize - 1;
     if (endIndex > newOutfitCount) {
         endIndex = newOutfitCount;
     }
@@ -133,34 +133,26 @@ list outfitsPage(list outfitList) {
     // Print the page contents - note that this happens even before
     // any dialog is put up
     list pageOutfits = llList2List(outfitsList, currentIndex, endIndex);
-    integer n; string chat; list output;
+    integer n = currentIndex; string chat; list output;
     string itemname;
-    for (n = currentIndex; n <= endIndex; n++) {
-        itemname = (string)(n + 1) + ". " + cdListElement(outfitsList, n);
+
+    while (n++ <= endIndex) {
+        itemname = (string)(n) + ". " + cdListElement(outfitsList, n - 1);
         chat += "\n" + itemname;
         output += [ llGetSubString(itemname, 0, 23) ];
     }
 
     llRegionSayTo(dresserID, 0, chat);
 
-    // Use sort function to reverse order: this makes the sort
-    // read top to bottom in dialog
-    return llListSort(output, 3, 0);
-    //return (llList2List(outfitsList, currentIndex, endIndex));
+    return output;
 }
 
 // Set the folder to use for clothing attach and detach
 // Should be current clothing folder
 
 setActiveFolder() {
-    // outfitsFolder is set by a search in the Transform script
-    //
-    //if (outfitsFolder == "") {
-    //    outfitsFolder = "> Outfits";
-    //    lmSendConfig("outfitsFolder", outfitsFolder);
-    //}
 
-    // activeFolder is the folder we are looking at with our Menu
+    // activeFolder is the folder (full path) we are looking at with our Menu
     // outfitsFolder is where all outfits are stored, including
     //     ~normalself, ~nude, and all the type folders
     // clothingFolder is the current folder for clothing, relative
@@ -170,8 +162,6 @@ setActiveFolder() {
     if (clothingFolder == "") activeFolder = outfitsFolder;
     else activeFolder = outfitsFolder + "/" + clothingFolder;
 
-    // if activeFolder changed, update configuration
-    //if (activeFolder != oldActive) lmSendConfig("activeFolder", activeFolder);
     lmSendConfig("activeFolder", activeFolder);
 }
 
@@ -187,7 +177,7 @@ rlvRequest(string rlv, integer channel) {
         lmRunRLV(rlv + (string)(rlvBaseChannel + channel));
     }
 
-    llSetTimerEvent(10.0);
+    llSetTimerEvent(15.0);
 }
 
 listInventoryOn(string channel) {
@@ -261,7 +251,7 @@ changeComplete(integer success) {
     candresstimeout = 0;
     change = 0;
 
-    tempWearLock = FALSE;
+    tempDressingLock = FALSE;
     llSetTimerEvent(0.0);
 
     dresserID = NULL_KEY;
@@ -424,10 +414,14 @@ default {
             // Choose an (appropriate) random outfit and put it on
             //
             if (cmd == "randomDress") {
+                // this makes it easier, and we don't have to be "afraid" to call the
+                // randomDress function.
+                if (!RLVok) return;
+
 #ifdef DEVELOPER_MODE
                 debugSay(6, "DEBUG-DRESS", "Random dress outfit chosen automatically");
 #endif
-                if (tempWearLock) {
+                if (tempDressingLock) {
                     string s = llToLower(pronounSheDoll);
                     llRegionSayTo(dresserID, 0, "Dolly cannot be dressed right now; " + s + " is already dressing");
                 }
@@ -452,9 +446,9 @@ default {
             string choice = cdListElement(split, 0);
             string name = cdListElement(split, 1);
 
-            debugSay(6, "DEBUG-DRESS", "Menu Selection: " + choice + ": tempWearLock = " + (string)tempWearLock);
+            debugSay(6, "DEBUG-DRESS", "Menu Selection: " + choice + ": tempDressingLock = " + (string)tempDressingLock);
 
-            if (choice == "Outfits..." && !tempWearLock) {
+            if (choice == "Outfits..." && !tempDressingLock) {
                 if (id) {
                     if (!isDresser(id)) return;
                 }
@@ -506,14 +500,14 @@ default {
             }
             else if (code == 150) {
                 simRating = cdListElement(split, 0);
-                integer cdOutfitRating = cdOutfitRating(newoutfitname);
+                integer outfitRating = cdOutfitRating(newoutfitname);
                 integer regionRating = cdRating2Integer(simRating);
 
-                debugSay(3, "DEBUG-DRESS", "Region rating " + llToLower(simRating) + " outfit " + newoutfitname + " cdOutfitRating: " + (string)cdOutfitRating +
+                debugSay(3, "DEBUG-DRESS", "Region rating " + llToLower(simRating) + " outfit " + newoutfitname + " outfitRating: " + (string)outfitRating +
                             " regionRating: " + (string)regionRating);
 
                 if (RLVok) {
-                    if (cdOutfitRating > regionRating) {
+                    if (outfitRating > regionRating) {
                         pushRandom = 1;
                         clothingFolder = newoutfitpath;
                         listInventoryOn("2665");
@@ -663,10 +657,13 @@ default {
                     // off here.  We therefore will use a temporary @detach=n restriction.
                     llOwnerSay("Developer key locked in place to prevent accidental detachment during dressing.");
                     lmRunRLV("attachthis=y,detachthis=n,detach=n,touchall=n,showinv=n");
+
 #else
-                    lmRunRLV("touchall=n,showinv=n");
+                    // This locks down a (Normal) Dolly's touch and inventory - but
+                    // there is no restore from this setting
+//                  lmRunRLV("touchall=n,showinv=n");
 #endif
-                    tempWearLock = TRUE;
+                    tempDressingLock = TRUE;
 
                     dressingFailures = 0;
                     dressTries = 0;
@@ -773,14 +770,14 @@ default {
                 yfolder = oldoutfitpath;
                 if (yfolder != "") rlvRequest("getinvworn:" + yfolder + "=", 2669);
 
-                llSetTimerEvent(10.0);
+                llSetTimerEvent(15.0);
             }
         }
 
         // channels:
         //
-        // 2665: random outfit
-        // 2666: manual choosing of outfit
+        // 2665: choose outfit at Random
+        // 2666: choose outfit Manually (by user)
         // 2668:
         // 2669:
 
@@ -794,14 +791,12 @@ default {
             llListenRemove(listen_id_2665);
             outfitsList = llParseString2List(choice, [","], []);
 
-            integer iStop = llGetListLength(outfitsList);
-
             integer n;
 
             // May never occur: other directories, hidden directories and files,
             // and hidden UNIX files all take up space here.
 
-            if (iStop == 0) {   // folder is bereft of files, switching to regular folder
+            if (outfitsList = []) {   // folder is bereft of files, switching to regular folder
 
                 // No files found; leave the prefix alone and don't change
                 llOwnerSay("There are no outfits in your " + activeFolder + " folder.");
@@ -810,15 +805,13 @@ default {
                 // "extended" folder containing (we hope) outfits....
 
                 if (outfitsFolder != "" && clothingFolder != "") {
+
+                    // Go up one folder: this assumes there is a valid folder to go up to
                     list pathParts = llParseString2List(clothingFolder, [ "/" ], []);
                     clothingFolder = llDumpList2String(llList2List(pathParts, 0, -2), "/");
                     lmSendConfig("clothingFolder", clothingFolder);
                     return;
                 }
-                //else {
-                //    clothingFolder = "";
-                //    llOwnerSay("Trying the main #RLV folder.");
-                //}
             }
             else {
                 // Outfits (theoretically) found: change to one
@@ -827,8 +820,18 @@ default {
                 string prefix;
                 integer total;
                 integer simrating = cdRating2Integer(simRating);
+                list tmpList;
 
-                for (n = 0; n < iStop; ++n) {
+                // Filter directory contents
+                //
+                // Rule out the following:
+                //     ~item - Hidden item (including ~nude and ~normalself)
+                //     *item - Clothing for transformed doll of a particular type
+                //     #item - Group items
+                //     {x}item - Rated item: filter by rating
+                //
+                n = llGetListLength(outfitsList);
+                while (n--) {
                     itemname = cdListElement(outfitsList, n);
                     prefix = llGetSubString(itemname,0,0);
                     debugSay(6, "DEBUG-CLOTHING", "Checking prefix: " + prefix + " with " + itemname);
@@ -840,30 +843,36 @@ default {
                     //
                     // This (sort of) odd sequence imposes short-cut operations
 
-                    //     if (llToLower(itemname) == "~normalself") lmSendConfig("normalselfFolder", (normalselfFolder = activeFolder + "/~normalself"));
-                    //else if (llToLower(itemname) == "~nude")       lmSendConfig("nudeFolder",       (nudeFolder =       activeFolder + "/~nude"));
-                    //else
-                    if (!isHiddenItem(prefix)) {
-                             if (!isTransformingItem(prefix)) {
-                                 if (!isGroupItem(prefix)) {
-                                     if (!(cdOutfitRating(itemname) > simrating)) {
-
-                                         ++total;
-                                         outfitsList += itemname;
+                    if (!isHiddenItem(prefix)) {            // ~foo
+                        if (!isTransformingItem(prefix)) { // *foo
+                            if (!isGroupItem(prefix)) {    // #foo
+                                if (isRated(prefix)) {     // {x}foo -- this test avoids function call
+                                    if (!(cdOutfitRating(itemname) > simrating)) {
+                                        tmpList += itemname;
+                                    }
+                                }
+                                else {
+                                    tmpList += itemname;
                                 }
                             }
                         }
                     }
                 }
 
-                if (!total) {
+                outfitsList = tmpList;
+                tmpList = []; // free memory
+
+                if (outfitsList == []) {
                     // Nothing received (total == 0); try another
-                    // folder, if any
+                    // folder, if any; note that the total includes
+                    // "marked" folders (with ">") as well as "normal"
+                    // folders (containing clothing)
 
                     if (pushRandom && clothingFolder != "") {
 
                         list pathParts = llParseString2List(clothingFolder, [ "/" ], []);
 
+                        // This sequence takes the clothingFolder, and "goes up" one level
                         clothingFolder = llDumpList2String(llDeleteSubList(pathParts, -1, -1), "/");
                         lmSendConfig("clothingFolder", clothingFolder);
                         setActiveFolder();
@@ -876,15 +885,22 @@ default {
                     return;
                 }
 
-                // Pick outfit at random
+                if (outfitsList == []) {
+                    llOwnerSay("There are no outfits in your closet to wear! Time to go shopping!");
+                    return;
+                }
+
+                // Pick outfit (or directory) at random
                 integer i = (integer) llFrand(total);
                 string nextOutfitName = cdListElement(outfitsList, i);
 
                 debugSay(5,"DEBUG-CLOTHING","Outfits to choose from randomly: " + llDumpList2String(outfitsList, ","));
+                debugSay(5,"DEBUG-CLOTHING","Chosen outfit #" + (string)i + ": " + nextOutfitName);
 
                 // Folders are marked with an initial ">" character
                 if (llGetSubString(nextOutfitName, 0, 0) != ">") {
 
+                    // The (randomly) chosen outfit is pushed as a menu reply
                     lmMenuReply(nextOutfitName, llGetObjectName(), llGetKey());
                     llOwnerSay("You are being dressed in this outfit: " + nextOutfitName);
                 }
@@ -912,39 +928,48 @@ default {
 
             llListenRemove(listen_id_2666);
 
+            // Did we get anything at all?
+            if (choice == "") {
+                cdDialogListen();
+                llDialog(dresserID, "You gaze into " + llToLower(pronounHerDoll) + " closet, and see no outfits for Dolly to wear.", ["OK"], dialogChannel);
+                return;
+            }
+
             fallbackFolder = 0;
-            outfitsList = llParseString2List(choice, [","], []); //what are brackets at end?
+            outfitsList = llParseString2List(choice, [","], []);
 
             integer n;
-            integer iStop = llGetListLength(outfitsList);
             string itemname;
             string prefix;
+            list tmpList;
 
-            // Collect names of possible new outfits, removing folders (items)
-            // longer than 23 characters, those that start with "~" (hidden) or
-            // with "*" (outfit folder). Also do not count current outfit name
-
-            for (n = 0; n < iStop; n++) {
+            // Filter list of outfits (directories) to choose
+            n = llGetListLength(outfitsList);
+            while (n--) {
                 itemname = cdListElement(outfitsList, n);
                 prefix = cdGetFirstChar(itemname);
 
-                //     if (llToLower(itemname) == "~normalself") lmSendConfig("normalselfFolder", (normalselfFolder = activeFolder + "/normalself"));
-                //else if (llToLower(itemname) == "~nude")       lmSendConfig("nudeFolder",       (nudeFolder       = activeFolder + "/nude"));
+                if (itemname != newoutfitname) {
+                    if (!isHiddenItem(prefix) &&
+                        !isGroupItem(prefix) &&
+                        !isTransformingItem(prefix)) {
 
-                if (isHiddenItem(prefix) ||
-                    isGroupItem(prefix) ||
-                    isTransformingItem(prefix) ||
-                    (cdOutfitRating(itemname) > cdRating2Integer(simRating)) ||
-                    itemname == newoutfitname) {
-
-                    outfitsList = llDeleteSubList(outfitsList, n, n--);
-                    iStop--;
+                        if (isRated(prefix)) {
+                            if (cdOutfitRating(itemname) <= cdRating2Integer(simRating)) {
+                                tmpList += itemname;
+                            }
+                        }
+                        else {
+                            tmpList += itemname;
+                        }
+                    }
                 }
             }
 
-            // we've gone through and cleaned up the list - but is anything left?
-            if (llGetListLength(outfitsList) == 0) {
+            outfitsList = tmpList;
 
+            // we've gone through and cleaned up the list - but is anything left?
+            if (outfitsList == []) {
                 cdDialogListen();
                 llDialog(dresserID, "You look in " + llToLower(pronounHerDoll) + " closet, and see nothing for Dolly to wear.", ["OK"], dialogChannel);
                 return;
@@ -966,20 +991,18 @@ default {
                 }
             }
 #endif
-
             // Sort: slow bubble sort
             outfitsList = llListSort(outfitsList, 1, TRUE);
 
             // Now create appropriate menu page from full outfits list
             integer total = 0;
             outfitPage = 0;
-            integer newOutfitCount = llGetListLength(outfitsList);
 
-            list newoutfits2 = outfitsPage(outfitsList);
+            list newOutfitsList = outfitsPage(outfitsList);
 
-            if (llGetListLength(outfitsList) < 10) newoutfits2 += [ "-", "-" ];
-            else newoutfits2 += [ "Outfits Prev", "Outfits Next" ];
-            newoutfits2 += [ "Back..." ];
+            if (llGetListLength(outfitsList) < 10) newOutfitsList += [ "-", "-" ];
+            else newOutfitsList += [ "Outfits Prev", "Outfits Next" ];
+            newOutfitsList += [ "Back..." ];
 
             outfitsMessage = "You may choose any outfit for dolly to wear. ";
             if (dresserID == dollID) outfitsMessage = "See " + WEB_DOMAIN + outfits_url + " for more detailed information on outfits. ";
@@ -1039,7 +1062,7 @@ default {
             debugSay(3, "DEBUG-CLOTHING", "Putting up Primary Menu in new directory");
             cdListenMine(outfitsChannel);
             lmSendConfig("backMenu",(backMenu = MAIN));
-            llDialog(dresserID, outfitsMessage, dialogSort(newoutfits2), outfitsChannel);
+            llDialog(dresserID, outfitsMessage, dialogSort(newOutfitsList), outfitsChannel);
             candresstimeout = 1;
             llSetTimerEvent(60.0);
         }
