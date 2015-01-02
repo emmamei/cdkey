@@ -712,7 +712,7 @@ default {
                 //
                 //   * timeLeftOnKey (seconds) - positive seconds remaining (adjusted elsewhere)
                 //   * {wear|jam|pose|carry}Expire (seconds) - positive seconds remaining
-                //   * collapseTime (seconds) - negative seconds remaining
+                //   * collapseTime (seconds) - seconds since collapse (negative number)
                 //
                 // Internally they are:
                 //
