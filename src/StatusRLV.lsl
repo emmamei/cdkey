@@ -50,7 +50,7 @@ clearCommand(string commandString) {
     string x;
     integer index;
 
-    rlvList = llParseString2List(split, [","], []);
+    rlvList = llParseString2List(commandString, [","], []);
 
     i = llGetListLength(rlvList);
     while (i--) {
