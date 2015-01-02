@@ -312,22 +312,22 @@ default {
                     // Build message for Main Menu display
 
                     // Compute "time remaining" message for mainMenu/windMenu
-                    string timeleft;
+                    string timeLeft;
 
                     integer minsLeft = llRound(timeLeftOnKey / (60.0 * windRate));
 
                     if (minsLeft > 0) {
-                        timeleft = "Dolly has " + (string)minsLeft + " minutes remaining. ";
+                        timeLeft = "Dolly has " + (string)minsLeft + " minutes remaining. ";
 
-                        timeleft += "Key is ";
+                        timeLeft += "Key is ";
                         if (windingDown) {
-                            if (windRate == 1) timeleft += "winding down at a normal rate. ";
-                            else if (windRate > 1) timeleft += "winding down at an accelerated rate. ";
-                            else if (windRate < 1) timeleft += "winding down at a slowed rate. ";
+                            if (windRate == 1) timeLeft += "winding down at a normal rate. ";
+                            else if (windRate > 1) timeLeft += "winding down at an accelerated rate. ";
+                            else if (windRate < 1) timeLeft += "winding down at a slowed rate. ";
                         }
-                        else timeleft += "not winding down. ";
+                        else timeLeft += "not winding down. ";
                     }
-                    else timeleft = "Dolly has no time left. ";
+                    else timeLeft = "Dolly has no time left. ";
 
                     //----------------------------------------
                     // Start building menu
@@ -367,7 +367,7 @@ default {
                     // key functions with a few exceptions
 
                     else if (collapsed && isDoll) {
-                        lmInternalCommand("collapsedMenu", timeleft, NULL_KEY);
+                        lmInternalCommand("collapsedMenu", timeLeft, NULL_KEY);
                     }
 
                     // Two types of folks will never get here: 1) a collapsed Dolly who
@@ -534,8 +534,8 @@ default {
                     if ((i = llListFindList(menu, ["AFK"]))     != NOT_FOUND) menu = llListReplaceList(menu, cdGetButton("AFK",     id, afk,     0), i, i);
                     if ((i = llListFindList(menu, ["Visible"])) != NOT_FOUND) menu = llListReplaceList(menu, cdGetButton("Visible", id, visible, 0), i, i);
 
-                    msg = timeleft + msg;
-                    timeleft = "";
+                    msg = timeLeft + msg;
+                    timeLeft = "";
                 }
 
                 cdListenerActivate(dialogHandle);
