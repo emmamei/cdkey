@@ -634,19 +634,21 @@ default {
                 llDialog(id, msg, [ "OK" ], dialogChannel);
             }
             else if (cmd == "collapsedMenu") {
-                string timeleft = llList2String(split, 0);
+                float timeLeft = (float)llList2String(split, 0);
                 list menu;
 
                 // is it possible to be collapsed but collapseTime be equal to 0.0?
-                if (collapseTime != 0.0) {
-                    float timeCollapsed = llGetUnixTime() - collapseTime;
+                if (collapseTime != 0.0 || collapsed) {
+                    //float timeCollapsed = llGetUnixTime() - collapseTime;
                     msg = "You need winding. ";
-                    msg += "You have been collapsed for " + (string)llFloor(timeCollapsed / SEC_TO_MIN) + " minutes. ";
+#ifdef DEVELOPER_MODE
+                    msg += "You have been collapsed for " + (string)llFloor(timeLeft / SEC_TO_MIN) + " minutes. ";
+#endif
 
                     // Only present the TP home option for the doll if they have been collapsed
                     // for at least 900 seconds (15 minutes) - Suggested by Christina
 
-                    if (timeCollapsed > TIME_BEFORE_TP) {
+                    if (timeLeft > TIME_BEFORE_TP) {
                         if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK)
                             menu = ["TP Home"];
 
@@ -654,7 +656,7 @@ default {
                         // emergency winder is recharged; add a button for it
 
                         if (!hardcore) {
-                            if (timeCollapsed > TIME_BEFORE_EMGWIND) {
+                            if (timeLeft > TIME_BEFORE_EMGWIND) {
                                 if (winderRechargeTime <= llGetUnixTime())
                                     menu += ["Wind Emg"];
                             }
@@ -662,7 +664,7 @@ default {
                     }
 
                     cdDialogListen();
-                    llDialog(id, timeleft + msg, [ "OK" ], dialogChannel);
+                    llDialog(id, msg, [ "OK" ], dialogChannel);
                 }
             }
             else if (cmd == "optionsMenu") {
