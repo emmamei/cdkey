@@ -383,6 +383,7 @@ ifPermissions() {
             // When collapsed or posed the doll should not be able to move at all; so the key will
             // accept their controls, but no need to pass on: ignore all input.
             llTakeControls(ALL_CONTROLS, TRUE, FALSE);
+
 #ifdef SLOW_WALK
         else if (afk)
             // Dolly is AFK
@@ -394,32 +395,10 @@ ifPermissions() {
         else {
             // Dolly is not AFK nor collapsed nor posed
 
-#ifdef NO_RELEASECONTROLS
-            if (isNoScript)
-#endif
-                // We do not want to release the controls if the land is noScript; doing so
-                // would effectively shut down the key until one entered Script-enabled
-                // land again
-
-                // Dont release controls... we're in a NoScript zone...
-                llTakeControls(ALL_CONTROLS, FALSE, TRUE);
-
-#ifdef NO_RELEASECONTROLS
-            else {
-
-                // Release controls drops the PERMISSIONS_TAKE_CONTROLS flag and permissions
-                // so we have to ask for them again
-
-                llReleaseControls();
-
-                //haveControls = 0;
-                //refreshControls = 0;
-
-                // This code is contained in the run_event - so this function
-                // repeats the function we are in.
-                llRequestPermissions(dollID, PERMISSION_MASK); // get TAKE_CONTROLS perm back
-            }
-#endif
+            // We do not want to release the controls if the land is noScript; doing so
+            // would effectively shut down the key until one entered Script-enabled
+            // land again
+            llTakeControls(ALL_CONTROLS, FALSE, TRUE);
         }
     }
 
@@ -530,6 +509,7 @@ default {
 
         locked = 0;
 
+        llSetStatus(STATUS_PHYSICS,TRUE);
         llStopMoveToTarget();
         llTargetRemove(targetHandle);
 
@@ -1021,6 +1001,16 @@ default {
     // a doll when in AFK mode.  This will work regardless of whether the
     // doll is in RLV or not though RLV is a bonus as it allows us to prevent
     // running.
+    //
+    // In any case, the slowdown will affect running as much as walking,
+    // if running is allowed.
+    //
+    // If there is a way to slow down flying, we'd have to know these
+    // things: 1) is the agent moving? 2) what direction is the agent moving
+    // in? 3) is the agent falling? There doesn't seem to be any way to
+    // get all of that. The reason for the last is that a free fall should
+    // not be slowed down except by Dolly flying - it is Dolly's exertions
+    // that are slowed, not gravity.
 
     control(key id, integer level, integer edge) {
 
@@ -1028,16 +1018,20 @@ default {
         // currently held and integer edge representing keys which have
         // been pressed or released in this period (Since last control event).
 
-        if (llGetAgentInfo(llGetOwner()) & AGENT_WALKING) {
+        if (id == dollID) {
             if (afk) {
-                if ((keyAnimation == "") && (id == dollID)) {
-                         if (level & ~edge & CONTROL_FWD)  llApplyImpulse(<-1, 0, 0> * afkSlowWalkSpeed, TRUE);
-                    else if (level & ~edge & CONTROL_BACK) llApplyImpulse(< 1, 0, 0> * afkSlowWalkSpeed, TRUE);
+                if (keyAnimation == "") {
+                    if (llGetAgentInfo(dollID) & (AGENT_WALKING | AGENT_ALWAYS_RUN)) {
+                        //     if (level & ~edge & CONTROL_FWD)  llApplyImpulse(<-1, 0, 0> * afkSlowWalkSpeed, TRUE);
+                        //else if (level & ~edge & CONTROL_BACK) llApplyImpulse(< 1, 0, 0> * afkSlowWalkSpeed, TRUE);
+                             if (level & ~edge & CONTROL_FWD)  llSetForce(<-1, 0, 0> * afkSlowWalkSpeed, TRUE);
+                        else if (level & ~edge & CONTROL_BACK) llSetForce(< 1, 0, 0> * afkSlowWalkSpeed, TRUE);
+                    }
+                    else
+                        llSetForce(<0, 0, 0>, TRUE);
                 }
             }
         }
-        else
-            llApplyImpulse(<0, 0, 0>, TRUE);
     }
 #endif
 
