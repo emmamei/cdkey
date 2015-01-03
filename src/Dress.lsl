@@ -35,7 +35,7 @@ string prefix;
 
 integer tempDressingLock = FALSE;
 integer canDressTimeout;
-integer dressTries;
+integer dressingSteps;
 
 //key setupID = NULL_KEY;
 
@@ -670,8 +670,13 @@ default {
 #endif
                     tempDressingLock = TRUE;
 
+                    // dressingSteps is used to track whether all listener code paths
+                    // for dressing have been done: that is, normalself attached,
+                    // new outfit attached, and old outfit removed. (It does NOT include
+                    // nude folder.)
+                    dressingSteps = 0;
+
                     dressingFailures = 0;
-                    dressTries = 0;
                     change = 1;
 
                     // Send a message to ourself, generate an event, and save the
@@ -1116,7 +1121,7 @@ default {
             }
             else {
                 // Everything was attached successfully...
-                dressTries++;
+                dressingSteps++;
 
                 // If we just attached all our normalself, then attach all of our
                 // new outfit
@@ -1125,9 +1130,9 @@ default {
 
                 // Do the new outfit folder (with full path)
                 if (xFolder != "") rlvRequest("getinvworn:" + xFolder + "=", 2668);
-                else if (dressTries >= 3) changeComplete(TRUE);
+                else if (dressingSteps >= 3) changeComplete(TRUE);
             }
-            debugSay(6, "DEBUG", "canDressTimeout = " + (string)canDressTimeout + ", dressTries = " + (string)dressTries);
+            debugSay(6, "DEBUG", "canDressTimeout = " + (string)canDressTimeout + ", dressingSteps = " + (string)dressingSteps);
         }
 
         //----------------------------------------
@@ -1165,11 +1170,11 @@ default {
             }
             else {
                 // all items successfully removed
-                dressTries++;
-                if (dressTries >= 3) changeComplete(TRUE);
+                dressingSteps++;
+                if (dressingSteps >= 3) changeComplete(TRUE);
             }
 
-            debugSay(6, "DEBUG", "canDressTimeout = " + (string)canDressTimeout + ", dressTries = " + (string)dressTries);
+            debugSay(6, "DEBUG", "canDressTimeout = " + (string)canDressTimeout + ", dressingSteps = " + (string)dressingSteps);
         }
 
         scaleMem();
