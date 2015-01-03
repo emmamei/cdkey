@@ -402,10 +402,10 @@ default {
 
             else if (c == "o") {
                      if (name == "outfitsFolder")              outfitsFolder = value;
-//              else if (name == "oldOutfitFolder")          oldOutfitFolder = value;
-//              else if (name == "oldOutfitPath")              oldOutfitPath = value;
-//              else if (name == "oldOutfitName")              oldOutfitName = value;
-//              else if (name == "oldOutfit")                      oldOutfit = value;
+                else if (name == "oldOutfitFolder")          oldOutfitFolder = value;
+                else if (name == "oldOutfitPath")              oldOutfitPath = value;
+                else if (name == "oldOutfitName")              oldOutfitName = value;
+                else if (name == "oldOutfit")                      oldOutfit = value;
             }
 
             else if (name == "typeFolder")                    typeFolder = value;
