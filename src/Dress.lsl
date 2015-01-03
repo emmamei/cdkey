@@ -19,6 +19,8 @@
 #define cdListenMine(a) llListen(a, NO_FILTER, dollID, NO_FILTER)
 #define isKnownTypeFolder(a) (llListFindList(typeFolders, [ a ]) != NOT_FOUND)
 
+#define nothingWorn(c,d) ((c) != "0") && ((c) != "1") && ((d) != "0") && ((d) != "1")
+
 //========================================
 // VARIABLES
 //========================================
@@ -1101,24 +1103,27 @@ default {
                  (c2 != "0" && c2 != "3")) &&
                 ++dressingFailures <= MAX_DRESS_FAILURES) {
 
-                llSleep(4.0);
+                // Try to attach again
+                if (!canDressSelf || afk || collapsed || wearLock) lmRunRLV("attachallthis:=y,detachallthis:" + outfitsFolder + "=n,attachallover:" + xFolder + "=force,attachallthis:=n");
+                else lmRunRLV("detachallthis:" + outfitsFolder + "=n,attachallover:" + xFolder + "=force");
 
-                if (RLVok) {
-                    if (!canDressSelf || afk || collapsed || wearLock) lmRunRLV("attachallthis:=y,detachallthis:" + outfitsFolder + "=n,attachallover:" + xFolder + "=force,attachallthis:=n");
-                    else lmRunRLV("detachallthis:" + outfitsFolder + "=n,attachallover:" + xFolder + "=force");
-
-                    rlvRequest("getinvworn:" + xFolder + "=", 2668);
-                    canDressTimeout++;
-                }
+                rlvRequest("getinvworn:" + xFolder + "=", 2668);
+                canDressTimeout++;
             }
             else if (dressingFailures > MAX_DRESS_FAILURES) {
+                llSay(DEBUG_CHANNEL,"Some things in " + xFolder + " failed to attach");
                 changeComplete(FALSE);
             }
             else {
+                // Everything was attached successfully...
                 dressTries++;
+
+                // If we just attached all our normalself, then attach all of our
+                // new outfit
                 if (xFolder == normalselfFolder && newOutfitPath != "") xFolder = newOutfit;
                 else xFolder = "";
 
+                // Do the new outfit folder (with full path)
                 if (xFolder != "") rlvRequest("getinvworn:" + xFolder + "=", 2668);
                 else if (dressTries >= 3) changeComplete(TRUE);
             }
@@ -1159,6 +1164,7 @@ default {
                 changeComplete(FALSE);
             }
             else {
+                // all items successfully removed
                 dressTries++;
                 if (dressTries >= 3) changeComplete(TRUE);
             }
