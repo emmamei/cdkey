@@ -38,12 +38,12 @@ integer dressTries;
 //key setupID = NULL_KEY;
 
 string newOutfitName;
-string newOutfitPath;
 string newOutfitFolder;
+string newOutfitPath;
 
-string oldOutfitName;
+//string oldOutfitName;
+//string oldOutfitFolder;
 string oldOutfitPath;
-string oldOutfitFolder;
 
 // New simple listener setup we only
 // listen to rlvChannel directly the
@@ -541,6 +541,7 @@ default {
 
         //debugSay(6, "DEBUG-DRESS", "Channel: " + (string)channel + "\n" + choice);
 
+        // Request max memory to avoid constant having to bump things up and down
         llSetMemoryLimit(65536);
 
         if (channel == outfitsChannel) {
@@ -671,10 +672,21 @@ default {
                     dressTries = 0;
                     change = 1;
 
-//                  lmSendConfig("oldOutfitName",   (  oldOutfitName = newOutfitName));
-//                  lmSendConfig("oldOutfitFolder", (oldOutfitFolder = newOutfitFolder));
-//                  lmSendConfig("oldOutfitPath",   (  oldOutfitPath = newOutfitPath));
-//                  lmSendConfig("oldOutfit",       (      oldOutfit = newOutfit));
+                    // Send a message to ourself, generate an event, and save the
+                    // previous values of newOutfit* into oldOutfit* - can we do
+                    // this without using a link message?
+                    //
+                    // *OutfitName       choice           - name of outfit
+                    // *OutfitFolder     outfitsFolder    - name of main outfits folder
+                    // *OutfitPath       clothingFolder   - name of folder with outfit, relative to outfitsFolder
+                    // *Outfit           -new-            - full path of outfit (outfitsFolder + "/" + clothingFolder + "/" + choice)
+
+                    lmSendConfig("oldOutfitName",   (  oldOutfitName = newOutfitName));
+                    lmSendConfig("oldOutfitFolder", (oldOutfitFolder = newOutfitFolder));
+                    lmSendConfig("oldOutfitPath",   (  oldOutfitPath = newOutfitPath));
+                    lmSendConfig("oldOutfit",       (      oldOutfit = newOutfit));
+
+                    // Build the newOutfit* variables - but do they get used?
 
                       newOutfitName = choice;
                     newOutfitFolder = outfitsFolder;
@@ -724,51 +736,52 @@ default {
                 // exist in this folder - such as one outfit using certain
                 // items and another outfit using other items - such as
                 // one outfit using a miniskirt and one a long dress.
-                //
-                // This is unnessary we can do the same job with locking and @detachallthis
-                //if (RLVok) llMessageLinked(LINK_THIS, 315, SCRIPT_NAME + "|getpathnew:pants=2670," +
-                //                                           "getpathnew:shirt=2670," +
-                //                                           "getpathnew:jacket=2670," +
-                //                                           "getpathnew:skirt=2670," +
-                //                                           "getpathnew:underpants=2670," +
-                //                                           "getpathnew:undershirt=2670", NULL_KEY);
 
                 // Original outfit was a complete avi reset....
                 // Restore our usual look from the ~normalself
                 // folder...
 
-                if (RLVok) {
-                    lmRunRLV("attachallover:" + normalselfFolder + "=force,detachallthis:" + normalselfFolder + "=n");
-                    llSleep(1.0);
+                // This attaches ~normalself and locks it
+                lmRunRLV("attachallover:" + normalselfFolder + "=force,detachallthis:" + normalselfFolder + "=n");
 
-                    lmRunRLV("attachallover:" + nudeFolder + "=force");
-                    llSleep(1.0);
+                if (nudeFolder != "") {
+                    // this attaches the ~nude folder
+                    lmRunRLV("attachallover:" + nudeFolder + "=force,detachallthis:" + nudeFolder + "=n");
+                }
+                    
+                // attach the new folder and lock it down - and prevent nude
+                lmRunRLV("attachallover:" + newOutfit + "=force,detachallthis:" + newOutfit + "=n");
+                llSleep(2.0);
 
-                    lmRunRLV("attachallover:" + newOutfit + "=force,detachallthis:" + newOutfit + "=n," +
-                             "detachallthis:" + nudeFolder + "=n");
-                    llSleep(1.0);
+                // At this point, all of ~normalself, ~nude, and newOutfit have been added and locked
+                // We should be fully clothed and set with every thing we need - BUT we have to
+                // remove the old...
 
-                    // Remove rest of old outfit (using path from attachments)
-                    if (oldOutfitPath != "") {
-                        lmRunRLV("detachall:" + oldOutfitPath + "=force");
-                        llSleep(1.0);
-                        oldOutfitPath = "";
-                    }
-
-                    lmRunRLV("detachall:" + outfitsFolder + "=force");
-                    llSleep(1.0);
-
-                    lmRunRLV("attachall:" + newOutfit + "=force");
-                    llSleep(2.0);
-
-                    // And now send an attempt to clean up any remaining stray pieces
-                    string parts = "gloves|jacket|pants|shirt|shoes|skirt|socks|underpants|undershirt|alpha|pelvis|left foot|right foot|r lower leg|l lower leg|r forearm|l forearm|r upper arm|l upper arm|r upper leg|l upper leg";
-                    lmRunRLV("detachallthis:" + llDumpList2String(llParseString2List(parts, [ "|" ], []), "=force,detachallthis:") + "=force");
+                // Remove rest of old outfit (using saved path)
+                if (oldOutfitPath != "") {
+                    lmRunRLV("detachall:" + oldOutfitPath + "=force");
+                    oldOutfitPath = "";
                 }
 
+                // Now remove everything in the outfits folder (typeically "> Outfits") except
+                // that which is locked down - and then attach everything in the new outfit
+                // again
+                lmRunRLV("detachall:" + outfitsFolder + "=force");
+                lmRunRLV("attachall:" + newOutfit + "=force");
+                llSleep(2.0);
+
+                // And now send an attempt to clean up any remaining stray pieces: remove rest of
+                // clothing not otherwise locked
+                string parts = "gloves|jacket|pants|shirt|shoes|skirt|socks|underpants|undershirt|alpha|pelvis|left foot|right foot|r lower leg|l lower leg|r forearm|l forearm|r upper arm|l upper arm|r upper leg|l upper leg";
+                lmRunRLV("detachallthis:" + llDumpList2String(llParseString2List(parts, [ "|" ], []), "=force,detachallthis:") + "=force");
+
+                // check to see that everything in the ~normalself folder is
+                // actually worn
                 xFolder = normalselfFolder;
                 rlvRequest("getinvworn:" + xFolder + "=", 2668);
 
+                // check to see that everything in the old Outfit folder is
+                // actually removed
                 yFolder = oldOutfitPath;
                 if (yFolder != "") rlvRequest("getinvworn:" + yFolder + "=", 2669);
 
@@ -1126,21 +1139,23 @@ default {
             debugSay(6, "DEBUG", ">> @getinvworn:" + yFolder);
             debugSay(6, "DEBUG", ">>> " + choice);
 
+            // @getinv worn returns a coded message: test to see that
+            // nothing in the folder or any subfolders is being worn:
+            // that is, ALL have been removed...
+
             if (((c1 != "0" && c1 != "1") ||
                  (c2 != "0" && c2 != "1")) &&
                 ++dressingFailures <= MAX_DRESS_FAILURES) {
 
-                llSleep(4.0);
+                // Try again: attach stuff in the outfitsFolder, and remove things in yFolder
+                if (!canDressSelf || afk || collapsed || wearLock) lmRunRLV("detachallthis:=y,attachallthis:" + outfitsFolder + "=n,detachallthis:" + yFolder + "=force,detachallthis:=n");
+                else lmRunRLV("attachallthis:" + outfitsFolder + "=n,detachall:" + yFolder + "=force");
 
-                if (RLVok) {
-                    if (!canDressSelf || afk || collapsed || wearLock) lmRunRLV("detachallthis:=y,attachallthis:" + outfitsFolder + "=n,detachallthis:" + yFolder + "=force,detachallthis:=n");
-                    else lmRunRLV("attachallthis:" + outfitsFolder + "=n,detachall:" + yFolder + "=force");
-
-                    rlvRequest("getinvworn:" + yFolder + "=", 2669);
-                    canDressTimeout++;
-                }
+                rlvRequest("getinvworn:" + yFolder + "=", 2669);
+                canDressTimeout++;
             }
             else if (dressingFailures > MAX_DRESS_FAILURES) {
+                llSay(DEBUG_CHANNEL,"Some things in " + yFolder + " failed to remove");
                 changeComplete(FALSE);
             }
             else {
@@ -1151,7 +1166,6 @@ default {
             debugSay(6, "DEBUG", "canDressTimeout = " + (string)canDressTimeout + ", dressTries = " + (string)dressTries);
         }
 
-        llSleep(1.0);
         scaleMem();
     }
 }
