@@ -48,7 +48,7 @@ integer i;
 //string stateName;
 list types;
 float menuTime;
-key transformerId;
+key transformerID;
 integer readLine;
 integer readingNC;
 string typeNotecard;
@@ -165,7 +165,7 @@ setDollType(string stateName, integer automated) {
     else llOwnerSay("You have become a " + dollType + " Doll.");
 
     // This is being done too early...
-    //if (!RLVok) { lmSendToAgentPlusDoll("Because RLV is disabled, Dolly does not have the capability to change outfit.",transformerId); };
+    //if (!RLVok) { lmSendToAgentPlusDoll("Because RLV is disabled, Dolly does not have the capability to change outfit.",transformerID); };
 
     // The Key Dolly is not allowed to have outfits so
     // no search for Type is warranted; note that
@@ -235,9 +235,9 @@ reloadTypeNames() {
     if (simRating == "MATURE" || simRating == "ADULT")
         if (llListFindList(types, (list)"Slut") == NOT_FOUND) types += [ "Slut" ];
 #endif
-    if (cdDollyIsBuiltinController(transformerId)) { types += [ "Builder" ]; showPhrases = 0; }
+    if (cdDollyIsBuiltinController(transformerID)) { types += [ "Builder" ]; showPhrases = 0; }
 #ifdef KEY_TYPE
-    if (cdIsBuiltinController(transformerId))      { types += [ "Key" ];     showPhrases = 0; }
+    if (cdIsBuiltinController(transformerID))      { types += [ "Key" ];     showPhrases = 0; }
 #endif
 }
 
@@ -475,7 +475,7 @@ default {
         code              =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
-        transformerId = id;
+        transformerID = id;
 
         string choice = cdListElement(split, 0);
         string name = cdListElement(split, 1);
@@ -528,7 +528,7 @@ default {
             else if (name == "canAFK")                         canAFK = (integer)value;
             else if (name == "mustAgreeToType")       mustAgreeToType = (integer)value;
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
-            else if (name == "collapseTime")             collapseTime = (integer)value;
+            else if (name == "collapseTime")             collapseTime = llGetUnixTime() + (integer)value;
             else if (name == "stateName")                    dollType = value;
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                 debugLevel = (integer)value;
@@ -634,29 +634,33 @@ default {
                 llDialog(id, msg, [ "OK" ], dialogChannel);
             }
             else if (cmd == "collapsedMenu") {
-                float timeLeft = (float)llList2String(split, 0);
-                list menu;
+                // this is only called for Dolly - so...
+                string timeLeft = llList2String(split, 0);
+                list menu = [ "Ok" ];
 
+                debugSay(2,"DEBUG-TRANSFORM","Building collapsedMenu...");
                 // is it possible to be collapsed but collapseTime be equal to 0.0?
                 if (collapseTime != 0.0 || collapsed) {
-                    //float timeCollapsed = llGetUnixTime() - collapseTime;
+                    float timeCollapsed = llGetUnixTime() - collapseTime;
                     msg = "You need winding. ";
 #ifdef DEVELOPER_MODE
-                    msg += "You have been collapsed for " + (string)llFloor(timeLeft / SEC_TO_MIN) + " minutes. ";
+                    if (timeCollapsed >= 60) {
+                        msg += "You have been collapsed for " + (string)llFloor(timeCollapsed / SEC_TO_MIN) + " minutes. ";
+                    }
 #endif
 
                     // Only present the TP home option for the doll if they have been collapsed
                     // for at least 900 seconds (15 minutes) - Suggested by Christina
 
-                    if (timeLeft > TIME_BEFORE_TP) {
+                    if (timeCollapsed > TIME_BEFORE_TP) {
                         if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK)
-                            menu = ["TP Home"];
+                            menu += ["TP Home"];
 
                         // If the doll is still down after 1800 seconds (30 minutes) and their
                         // emergency winder is recharged; add a button for it
 
                         if (!hardcore) {
-                            if (timeLeft > TIME_BEFORE_EMGWIND) {
+                            if (timeCollapsed > TIME_BEFORE_EMGWIND) {
                                 if (winderRechargeTime <= llGetUnixTime())
                                     menu += ["Wind Emg"];
                             }
@@ -664,7 +668,9 @@ default {
                     }
 
                     cdDialogListen();
-                    llDialog(id, msg, [ "OK" ], dialogChannel);
+                    debugSay(2,"DEBUG-TRANSFORM","Done building collapsedMenu: msg = \"" + msg  + "\"; menu = [ " + llDumpList2String(menu, ",") + " ]");
+                    debugSay(2,"DEBUG-TRANSFORM","Done building collapsedMenu: id = " + (string)id);
+                    llDialog(dollID, msg, menu, dialogChannel);
                 }
             }
             else if (cmd == "optionsMenu") {

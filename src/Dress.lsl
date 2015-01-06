@@ -43,8 +43,8 @@ string newOutfitName;
 string newOutfitFolder;
 string newOutfitPath;
 
-//string oldOutfitName;
-//string oldOutfitFolder;
+string oldOutfitName;
+string oldOutfitFolder;
 string oldOutfitPath;
 
 // New simple listener setup we only
@@ -176,11 +176,8 @@ rlvRequest(string rlv, integer channel) {
     else if (channel == 2668)    listen_id_2668 = cdListenMine(rlvBaseChannel + 2668);
     else if (channel == 2669)    listen_id_2669 = cdListenMine(rlvBaseChannel + 2669);
 
-    if (RLVok) {
-        lmRunRLV(rlv + (string)(rlvBaseChannel + channel));
-    }
-
-    llSetTimerEvent(15.0);
+    lmRunRLV(rlv + (string)(rlvBaseChannel + channel));
+    llSetTimerEvent(30.0);
 }
 
 listInventoryOn(string channel) {
@@ -226,7 +223,8 @@ changeComplete(integer success) {
     llOwnerSay("Your key is now unlocked again as you are a developer.");
     lmRunRLV("clear");
 #else
-    lmRunRLV("clear=attachall,clear=detachall");
+    // if we used "detach" then the Key would be unlocked
+    lmRunRLV("clear=attach,clear=detachall");
 #endif
 
     if (success) {

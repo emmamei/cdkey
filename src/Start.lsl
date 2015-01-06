@@ -476,8 +476,6 @@ default {
                         // is the collapse animation but we're not collapsed
                         // (the latter should be an error)
                         lmRunRLV("clear");
-                        if (userPoseRLVcmd)
-                            lmRunRLVas("UserPose", "clear");
                     }
                 }
             }
@@ -493,8 +491,6 @@ default {
                     }
                     else {
                         lmRunRLV("clear");
-                        if (userAfkRLVcmd)
-                            lmRunRLVas("UserAfk", "clear");
                     }
                 }
             }
@@ -526,7 +522,6 @@ default {
                     if (wasCollapsed) {
                         // We were collapsed but aren't now... so clear RLV restrictions
                         lmRunRLV("clear");
-                        if (userCollapseRLVcmd != "") lmRunRLVas("UserCollapse", "clear");
                     }
                 }
             }
@@ -570,7 +565,6 @@ default {
                 if (!collapsed) {
                     // Not collapsed: clear any user collapse RLV restrictions
                     lmRunRLV("clear");
-                    if (userCollapseRLVcmd != "") lmRunRLVas("UserCollapse", "clear");
 
                     // Is Dolly AFK? Trigger RLV restrictions as appropriate
                     if (afk) {
@@ -579,7 +573,6 @@ default {
                     }
                     else {
                         lmRunRLV("clear");
-                        if (userAfkRLVcmd != "") lmRunRLVas("UserAfk", "clear");
                     }
 
                     // Are we posed? Trigger RLV restrictions for being posed
@@ -589,7 +582,6 @@ default {
                     }
                     else {
                         lmRunRLV("clear");
-                        if (userPoseRLVcmd != "") lmRunRLVas("UserPose", "clear");
                     }
                 }
             }

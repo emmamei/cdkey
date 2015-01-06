@@ -47,15 +47,16 @@ integer statusHandle;
 clearCommand(string commandString) {
     list rlvList;
     integer i;
-    string x;
+    string rlvCmd;
     integer index;
 
     rlvList = llParseString2List(commandString, [","], []);
 
     i = llGetListLength(rlvList);
     while (i--) {
-        x = cdListElement(rlvList,i);
-        llOwnerSay("@clear=" + x);
+        rlvCmd = cdListElement(rlvList,i);
+        debugSay(4,"DEBUG-STATUSRLV","clearing RLV: " + rlvCmd);
+        llOwnerSay("@clear=" + rlvCmd);
     }
 }
 
@@ -66,6 +67,7 @@ refreshCommands() {
     i = llGetRestrictionsLength(rlvRestrictions);
     while (i--) {
         rlvCmd = cdListElement(rlvRestrictions,i);
+        debugSay(4,"DEBUG-STATUSRLV","refreshing RLV: " + rlvCmd);
         llOwnerSay("@" + rlvCmd);
     }
 }
@@ -120,12 +122,13 @@ default {
         scaleMem();
 
         if (code == CONFIG) {
-
-#ifdef DEVELOPER_MODE
             string name = cdListElement(split, 0);
             string value = cdListElement(split, 1);
 
                  if (name == "debugLevel") debugLevel = (integer)cdListElement(split, 1);
+#ifdef DEVELOPER_MODE
+
+            else if (name == "debugLevel") debugLevel = (integer)cdListElement(split, 1);
 #endif
             return;
         }
@@ -147,6 +150,7 @@ default {
             else if (cmd == "clearRLV") {
                 integer n;
                 debugSay(4,"DEBUG-STATUSRLV","clearRLV command issued for " + cdListElement(split, 0));
+                debugSay(4,"DEBUG-STATUSRLV","rlvRestrictions = " + llDumpList2String(rlvRestrictions,","));
 
                 n = llGetListLength(rlvRestrictions);
                 while (n--) {
@@ -179,8 +183,16 @@ default {
             if (RLVok) {
                 // Note that this does NOT handle "clear=..."
                 if (commandString == "clear") {
-                    lmInternalCommand("clearRLV",script,NULL_KEY);
-                    return;
+#ifdef LOCKON
+                    // this is a blanket clear, but it doesn't mean to us what
+                    // it means normally: we have a base RLV set
+                    commandString += ",permissive=n,detach=n";
+                    if (userBaseRLVcmd) commandString += "," + userBaseRLVcmd;
+#else
+                    llSay(DEBUG_CHANNEL,"blanket clear issued from " + script);
+#endif
+                    //lmInternalCommand("clearRLV",script,NULL_KEY);
+                    //return;
                 }
 
                 // This can happen...

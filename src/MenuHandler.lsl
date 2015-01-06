@@ -24,6 +24,7 @@
 #define cdListenerActivate(a) llListenControl(a, 1)
 #define cdMenuInject(a) lmMenuReply((a),name,id);
 #define cdResetKey() llResetOtherScript("Start")
+#define lmCollapse(a) lmInternalCommand("collapse",(string)(a),NULL_KEY)
 
 // Wait for the user for 5 minutes - but for a program, only
 // wait 60s. The request for a dialog menu should happen before then -
@@ -338,8 +339,17 @@ default {
                     // 2. Doll is collapsed and is accessing their menu
                     // 3. Doll is not collapsed and either has no carrier, or carrier is accessor
 
+                    // When the doll is collapsed they lose their access to most
+                    // key functions with a few exceptions; note too, that the
+                    // collapsedMenu handles ALL aspects...
+
+                    if (collapsed && isDoll) {
+                        lmInternalCommand("collapsedMenu", timeLeft, NULL_KEY);
+                        return;
+                    }
+
                     // When the doll is carried the carrier has exclusive control
-                    if (hasCarrier) {
+                    else if (hasCarrier) {
                         // Doll has carrier - but who clicked her key?
                         //
                         // ...Carrier?
@@ -362,13 +372,6 @@ default {
                     }
 
                     // The Dolly has no carrier... continue...
-                    //
-                    // When the doll is collapsed they lose their access to most
-                    // key functions with a few exceptions
-
-                    else if (collapsed && isDoll) {
-                        lmInternalCommand("collapsedMenu", timeLeft, NULL_KEY);
-                    }
 
                     // Two types of folks will never get here: 1) a collapsed Dolly who
                     // clicked on her Key, and 2) Dolly or a member of the public who clicked on

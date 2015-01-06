@@ -149,12 +149,16 @@ checkRLV() {
 activateRLVBase() {
     if (!RLVok) return;
 
-    string baseRLV;
+#ifdef DEVELOPER_MODE
+    string baseRLV = "permissive=n";
+#else
+    string baseRLV = "detach=n,permissive=n";
+#endif
 
     if (userBaseRLVcmd != "") lmRunRLVas("UserBase", userBaseRLVcmd);
 
     //lmRunRLVas("Core", baseRLV + restrictionList + "sendchannel:" + (string)chatChannel + "=rem");
-    lmRunRLVas("Core", baseRLV + ",sendchannel:" + (string)chatChannel + "=rem");
+    baseRLV += ",sendchannel:" + (string)chatChannel + "=rem";
 
     if (userBaseRLVcmd != "")
         lmRunRLVas("User:Base", userBaseRLVcmd);
@@ -412,6 +416,7 @@ default {
             else if (cmd == "updateExceptions") {
 
                 // Exempt builtin or user specified controllers from TP restictions
+                if (!RLVok) return;
 
                 list exceptions = BUILTIN_CONTROLLERS + cdList2ListStrided(controllers, 0, -1, 2);
                 integer i;
@@ -461,17 +466,17 @@ default {
 #ifdef DEVELOPER_MODE
                 myPath = "";
 #endif
-                lmRunRLVas("Base", "clear");
-                lmRunRLVas("Core", "clear");
-                //lmSendConfig("RLVok",(string)RLVok);
-                lmRLVreport(RLVok, rlvAPIversion, 0);
+                // This clears all RLV the Key is responsible for
+                lmRunRLV("clear");
+
                 lmMenuReply(MAIN,"",id);
             }
             else if (choice == "RLV On") {
                 doCheckRLV();
                 llOwnerSay("Checking for RLV now...");
                 //if (RLVok) activateRLV();
-                //lmMenuReply(MAIN,"",id);
+                //lmRLVreport(RLVok, rlvAPIversion, 0);
+                lmMenuReply(MAIN,"",id);
             }
         }
         else if (code < 200) {
