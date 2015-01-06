@@ -3,19 +3,13 @@
 #ifdef ADULT_MODE
 #define ADULT ["Adult"]
 #else
-#define ADULT []
+#define ADULT ["Child"]
 #endif
 
 #ifdef DEVELOPER_MODE
 #define DEV ["Devel"]
 #else
 #define DEV []
-#endif
-
-#ifdef LINK_320
-#define L320 ["Link320"]
-#else
-#define L320 []
 #endif
 
 #ifdef UPDATE_METHOD_CDKEY
@@ -42,7 +36,7 @@
 #define KEY_MODE ["Mode=Normal"]
 #endif
 
-#define BUILD_REPORT llListSort(ADULT + KEY_MODE + DEV + L320 + UPCDKEY + BADRLV + DEBUG, 1, 1)
+#define BUILD_REPORT llListSort(ADULT + KEY_MODE + DEV + UPCDKEY + BADRLV + DEBUG, 1, 1)
 
 #define lmConfigReport() llMessageLinked(LINK_THIS, 142, cdMyScriptName(), NULL_KEY)
 
