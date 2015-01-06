@@ -736,6 +736,22 @@ default {
 //              lmSendConfig("windMins", (string)(windMins));
 //          }
             else if (cmd == "collapse") collapse(llList2Integer(split, 0));
+            else if (cmd == "windMsg") {
+                integer windAmount = llList2Integer(split, 0);
+                string name = llList2String(split, 1);
+
+                if (id == dollID) {
+                    llOwnerSay("Your key has been turned by " + name + " giving you " +
+                        (string)llFloor(windAmount / SEC_TO_MIN) + " more minutes of life (" +
+                        formatFloat((float)timeLeftOnKey * 100.0 / (float)effectiveLimit, 2) + "% capacity).");
+                }
+                else {
+                    lmSendToAgent("You turn " + dollName + "'s Key, and " + llToLower(pronounSheDoll) + " receives " +
+                        (string)llFloor(windAmount / SEC_TO_MIN) + " more minutes of life (" +
+                        formatFloat((float)timeLeftOnKey * 100.0 / (float)effectiveLimit, 2) + "% capacity).", id);
+                }
+            }
+
 //          else if (cmd == "wearLock") {
 //              // This either primes the wearLockExpire or resets it
 //              wearLock = llList2Integer(split, 0);
@@ -862,7 +878,6 @@ default {
                     // slows down the user.
                     //
                     lmCollapse(0);
-                    llSleep(1.0); // Make sure that the uncollapse RLV runs before sending the message containing winder name.
                 }
 
                 // Time value of 60s is somewhat arbitrary; it is however less than 1m
@@ -880,8 +895,8 @@ default {
                     //
                     // Note that this has the side effect of notifying us to be thankful at the beginning of a repeat wind,
                     // not at the end...
-                    if ((lastWinderID != id) && (id != dollID))
-                        llOwnerSay("Have you remembered to thank " + name + " for winding you?");
+                    //if ((lastWinderID != id) && (id != dollID))
+                    //    llOwnerSay("Have you remembered to thank " + name + " for winding you?");
 
                     //if (effectiveWindTime > 0) lmSendToAgent("You have given " + dollName + " " + (string)llFloor(effectiveWindTime / SEC_TO_MIN) + " more minutes of life.", id);
                     lmSendConfig("lastWinderID", (string)(lastWinderID = id));
@@ -894,17 +909,12 @@ default {
                         else lmSendToAgent(dollName + " is now fully wound. Thanks for winding Dolly!", id);
 
                     } else {
-
-                        lmSendToAgent("You turn " + dollName + "'s Key, and " + llToLower(pronounSheDoll) + " receives " +
-                            (string)llFloor(windAmount / SEC_TO_MIN) + " more minutes of life (" +
-                            formatFloat((float)timeLeftOnKey * 100.0 / (float)effectiveLimit, 2) + "% capacity).", id);
+                        // by making the wind message an internal command (event), it helps
+                        // to make the (client) system stop hiding names before we use it
+                        // (based on RLV settings)
+                        lmInternalCommand("windMsg", "|" + (string)windAmount + "|" + name, id);
                         lmInternalCommand("mainMenu", "|" + name, id);
                     }
-
-#ifdef DEVELOPER_MODE
-                    //debugSay(3,"DEBUG-MAIN","Time left on key just before winding: " + (string)timeLeftOnKey);
-#endif
-
                 }
             }
 
