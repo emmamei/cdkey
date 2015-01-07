@@ -405,8 +405,8 @@ default {
                 rlvHandle = llListen(rlvChannel, "", "", "");
                 cdListenerDeactivate(rlvHandle);
 
-                // as soon as rlvHandle is valid - we can check for RLV
-                //if (RLVok == UNSET) checkRLV();
+                // As soon as rlvHandle is valid - we can check for RLV:
+                // Note this puts an event in, but does NOT execute until its turn
                 if (RLVok == UNSET) lmInternalCommand("doCheckRLV","",NULL_KEY);
             }
         }
@@ -444,15 +444,12 @@ default {
                 lmRunRLVas("Base", "clear=recvemote:,recvemote:"    + llDumpList2String(exceptions, "=add,recvemote:") + "=add");
             }
         }
+#ifdef RLV_ON_OFF
         else if (code == MENU_SELECTION) {
             string choice = llList2String(split, 0);
             string name = llList2String(split, 1);
 
-            // First: Quick ignores
-            if (llGetSubString(choice,0,3) == "Wind") return;
-            else if (choice == MAIN) return;
-
-            else if (choice == "RLV Off") {
+            if (choice == "RLV Off") {
                 RLVck = 0;
                 RLVok = 0;
                 rlvAPIversion = "";
@@ -481,6 +478,7 @@ default {
                 lmMenuReply(MAIN,"",id);
             }
         }
+#endif
         else if (code < 200) {
             if (code == 135) {
                 float delay = llList2Float(split, 0);
@@ -514,6 +512,7 @@ default {
         if (RLVok == UNSET) {
             // this makes sure that enough time has elapsed - and prevents
             // the check from being missed...
+            RLVok = FALSE;
             if (nextRLVcheck < llGetTime()) checkRLV();
         }
         else {

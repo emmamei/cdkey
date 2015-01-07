@@ -255,6 +255,7 @@ default {
     // This should set up generic defaults
     // not specific to owner
     state_entry() {
+        RLVok = UNSET;
         dollID = llGetOwner();
         dollName = llGetDisplayName(dollID);
         if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
@@ -266,6 +267,7 @@ default {
     // ON REZ
     //----------------------------------------
     on_rez(integer start) {
+        RLVok = UNSET;
         timerStarted = 1;
         configured = 1;
         lmInternalCommand("setHovertext", "", llGetKey());

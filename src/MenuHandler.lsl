@@ -426,13 +426,17 @@ default {
                             else {
                                 if (allowDress || isController) menu += "Outfits...";
                             }
-
+#ifdef RLV_ON_OFF
                             if (isController) if (!hardcore) menu += "RLV Off";
-                        } else {
+#endif
+                        }
+#ifdef RLV_ON_OFF
+                        else {
                             // Note this section is valid if RLV == 0 (no RLV)
                             // but ALSO if RLVok == -1 (unset)
                             if (isDoll || isController) menu += "RLV On";
                         }
+#endif
 
                         if (allowDress && keyAnimation == "") menu += "Types...";
 
@@ -514,10 +518,12 @@ default {
                     if (lowScriptMode)
                         msg += "Key is in power-saving mode. ";
 
+#ifdef DEVELOPER_MODE
                     if (RLVok == UNSET) msg += "Still checking for RLV support some features unavailable. ";
-                    else if (RLVok == 0) {
-                        msg += "No RLV detected some features unavailable. ";
-                        //if (cdIsDoll(id) || cdIsController(id)) menu += "RLV On";
+                    else
+#endif
+                    if (RLVok != 1) {
+                        msg += "No RLV detected; therefore, some features are unavailable. ";
                     }
 
                     msg += "See " + WEB_DOMAIN + manpage + " for more information. "
