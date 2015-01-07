@@ -161,7 +161,7 @@ activateRLVBase() {
     baseRLV += ",sendchannel:" + (string)chatChannel + "=rem";
 
     if (userBaseRLVcmd != "")
-        lmRunRLVas("User:Base", userBaseRLVcmd);
+        lmRunRLVas("UserBase", userBaseRLVcmd);
 
     if (autoTP) baseRLV += "accepttp=n,";
     else baseRLV += "accepttp=y,";
@@ -177,10 +177,12 @@ activateRLVBase() {
     lmRunRLVas("Base", baseRLV);
 
     if (!canDressSelf || collapsed || wearLock || afk) {
-#ifdef DEVELOPER_MODE
-        lmRunRLVas("Dress", "unsharedwear=y,unsharedunwear=y,attachallthis:=y,detachallthis:=y");
-#else
+#ifdef LOCKON
+        // Lock outfit down tight
         lmRunRLVas("Dress", "unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
+#else
+        // Don't lock on developers
+        lmRunRLVas("Dress", "unsharedwear=y,unsharedunwear=y,attachallthis:=y,detachallthis:=y");
 #endif
     }
     else {
