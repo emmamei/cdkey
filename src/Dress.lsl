@@ -934,6 +934,7 @@ default {
 
                     // The (randomly) chosen outfit is pushed as a menu reply
                     //lmMenuReply(nextOutfitName, llGetObjectName(), llGetKey());
+                    outfitsHandle = cdListenMine(outfitsChannel);
                     llSay(outfitsChannel,nextOutfitName);
                     llOwnerSay("You are being dressed in this outfit: " + nextOutfitName);
                 }
