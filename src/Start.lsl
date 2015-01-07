@@ -173,6 +173,9 @@ processConfiguration(string name, string value) {
              value = "0";
 
     integer i;
+
+    // Configuration entries: these are the actual configuration
+    // commands; they must match with a sendName below
     list configs = [ "barefeet path", "quiet key", "outfits path",
                      "busy is away", "can afk", "can fly", "poseable", "can sit", "can stand",
                      "can dress", "detachable", "doll type",
@@ -181,13 +184,15 @@ processConfiguration(string name, string value) {
 #endif
                      "pose silence",
                      "auto tp", "outfitable", "max time", "chat channel", "dolly name", "demo mode",
-                     "afk rlv", "base rlv", "collapse rlv", "pose rlv" , "show phrases",
+                     "afk rlv", "collapse rlv", "pose rlv" , "show phrases",
 #ifdef DEVELOPER_MODE
                      "debug level",
 #endif
                      "dressable", "carryable", "repeatable wind"
                    ];
 
+    // "Send Names": these are the configuration variable names;
+    // they must be matched with a configs entry above
     list sendName = [ "barefeet", "quiet", "outfitsFolder",
                       "busyIsAway", "canAfk", "canFly", "allowPose", "canSit", "canStand",
                       "canDressSelf", "detachable", "dollType",
