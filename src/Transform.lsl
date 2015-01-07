@@ -159,7 +159,7 @@ setDollType(string stateName, integer automated) {
     // We dont respond to this: we don't have to
     lmSendConfig("dollType", (dollType = stateName));
 
-    cdPause();
+    //cdPause();
 
     if (!quiet) cdChat(dollName + " has become a " + dollType + " Doll.");
     else llOwnerSay("You have become a " + dollType + " Doll.");
@@ -529,7 +529,7 @@ default {
             else if (name == "mustAgreeToType")       mustAgreeToType = (integer)value;
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
             else if (name == "collapseTime")             collapseTime = llGetUnixTime() + (integer)value;
-            else if (name == "stateName")                    dollType = value;
+            else if (name == "dollType")                     dollType = value;
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
@@ -811,15 +811,27 @@ default {
 
             // Choose a Transformation
             else if (choice == "Types...") {
+                string msg3 = " cannot be transformed right now, as ";
+                string msg4 = " recently transformed into a " + dollType + " doll. ";
+
+                integer i;
+
                 debugSay(5,"DEBUG-TYPES","Types selected");
                 // Doll must remain in a type for a period of time
                 if (transformLockExpire) {
                     debugSay(5,"DEBUG-TYPES","Transform locked");
-                    if (cdIsDoll(id)) {
-                        llDialog(id,"You cannot be transformed right now, as you were recently transformed into a " + dollType + " doll. You can be transformed in " + (string)llFloor((transformLockExpire - llGetUnixTime()) / SEC_TO_MIN) + " minutes.",["OK"], DISCARD_CHANNEL);
-                    } else {
-                        llDialog(id,dollName + " cannot be transformed right now. The Doll was recently transformed into a " + dollType + " doll. Dolly can be transformed in " + (string)llFloor((transformLockExpire - llGetUnixTime()) / SEC_TO_MIN) + " minutes.",["OK"], DISCARD_CHANNEL);
+
+                    if (cdIsDoll(id)) msg = "You " + msg3 + " you were " + msg4;
+                    else msg = dollName + msg3 + " Dolly was " + msg4;
+
+                    // This conditional is needed in case the timing is off...
+                    if ((i = llFloor((transformLockExpire - llGetUnixTime()) / SEC_TO_MIN)) > 0) {
+                        if (cdIsDoll(id)) msg += "You ";
+                        else msg += "Dolly ";
+                        msg += " can be transformed in " + (string)i + " minutes. ";
                     }
+
+                    llDialog(id, msg, ["OK"], DISCARD_CHANNEL);
                 }
                 else {
                     // Transformation lock time has expired: transformations (type changes) now allowed
