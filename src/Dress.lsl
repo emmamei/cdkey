@@ -20,6 +20,8 @@
 #define isKnownTypeFolder(a) (llListFindList(typeFolders, [ a ]) != NOT_FOUND)
 
 #define nothingWorn(c,d) ((c) != "0") && ((c) != "1") && ((d) != "0") && ((d) != "1")
+#define dressingViaMenu() listInventoryOn("2666")
+#define dressingViaRandom() listInventoryOn("2665")
 
 //========================================
 // VARIABLES
@@ -33,9 +35,9 @@ string outfitsMessage;
 
 string prefix;
 
-integer tempDressingLock = FALSE;
+integer tempDressingLock = FALSE;  // allow only one dressing going on at a time
 integer canDressTimeout;
-integer dressingSteps;
+integer dressingSteps;             // are all attempts to dress complete?
 
 //key setupID = NULL_KEY;
 
@@ -171,8 +173,8 @@ setActiveFolder() {
 rlvRequest(string rlv, integer channel) {
     canDressTimeout = 1;
 
-         if (channel == 2665) randomDressHandle = cdListenMine(rlvBaseChannel + 2665);
-    else if (channel == 2666)   menuDressHandle = cdListenMine(rlvBaseChannel + 2666);
+         if (channel == 2665) randomDressHandle = cdListenMine(randomDressChannel);
+    else if (channel == 2666)   menuDressHandle = cdListenMine(menuDressChannel);
     else if (channel == 2668)    listen_id_2668 = cdListenMine(rlvBaseChannel + 2668);
     else if (channel == 2669)    listen_id_2669 = cdListenMine(rlvBaseChannel + 2669);
 
@@ -243,7 +245,7 @@ changeComplete(integer success) {
             llOwnerSay("Too many dressing failures.");
 
         if (canDressTimeout)
-            llOwnerSay("Dressing timed out.");
+            llSay(DEBUG_CHANNEL,"Dressing sequence (with outfit " + newOutfitName + ") timed out.");
 
         lmSendToAgentPlusDoll("Change to new outfit " + newOutfitName + " unsuccessful.", dresserID);
         wearLock = 0;
@@ -376,6 +378,9 @@ default {
                 dialogChannel = (integer)value;
                 rlvBaseChannel = dialogChannel ^ 0x80000000; // Xor with the sign bit forcing the positive channel needed by RLV spec.
                 outfitsChannel = dialogChannel + 15; // arbitrary offset
+
+                randomDressChannel = rlvBaseChannel + 2665;
+                  menuDressChannel = rlvBaseChannel + 2666;
             }
             else if (name == "afk")                                  afk = (integer)value;
             else if (name == "pronounHerDoll")            pronounHerDoll = value;
@@ -424,8 +429,7 @@ default {
                 debugSay(6, "DEBUG-DRESS", "Random dress outfit chosen automatically");
 #endif
                 if (tempDressingLock) {
-                    string s = llToLower(pronounSheDoll);
-                    llRegionSayTo(dresserID, 0, "Dolly cannot be dressed right now; " + s + " is already dressing");
+                    llRegionSayTo(dresserID, 0, "Dolly cannot be dressed right now; " + pronounSheDoll + " is already dressing");
                 }
                 else {
                     if (useTypeFolder) clothingFolder = typeFolder;
@@ -436,7 +440,7 @@ default {
                     //debugSay(6, "DEBUG-DRESS", "clothingFolder = " + clothingFolder);
                     //debugSay(6, "DEBUG-DRESS", "listing inventory on 2665...");
 #endif
-                    listInventoryOn("2665");
+                    dressViaRandom();
                 }
             }
         }
@@ -466,7 +470,7 @@ default {
                     else clothingFolder = "";
 
                     lmSendConfig("clothingFolder", clothingFolder);
-                    listInventoryOn("2666");
+                    dressViaMenu();
                 }
                 else {
                     cdDialogListen();
@@ -512,7 +516,7 @@ default {
                     if (outfitRating > regionRating) {
                         pushRandom = 1;
                         clothingFolder = newOutfitPath;
-                        listInventoryOn("2665");
+                        dressViaRandom();
                     }
                 }
             }
@@ -601,7 +605,7 @@ default {
                     setActiveFolder();
                     debugSay(6, "DEBUG-DRESS", "Moving up to the " + activeFolder + " folder.");
 #endif
-                    listInventoryOn("2666");
+                    dressViaMenu();
                     return;
                 }
 
@@ -649,7 +653,7 @@ default {
                     else clothingFolder += ("/" + choice);
 
                     lmSendConfig("clothingFolder", clothingFolder);
-                    listInventoryOn("2666"); // recursion: put up a new Primary menu
+                    dressViaMenu(); // recursion: put up a new Primary menu
 
                     llSetTimerEvent(60.0);
                     return;
@@ -806,17 +810,18 @@ default {
         //
         // Switched doll types: grab a new (appropriate) outfit at random and change to it
         //
-        else if (channel == (rlvBaseChannel + 2665)) { // list of inventory items from the current prefix
+        else if (channel == randomDressChannel) { // list of inventory items from the current prefix
 
             llListenRemove(randomDressHandle);
             outfitsList = llParseString2List(choice, [","], []);
+            debugSay(6, "DEBUG-CLOTHING", "Choosing random outfit (from: " + choice + ")");
 
             integer n;
 
             // May never occur: other directories, hidden directories and files,
             // and hidden UNIX files all take up space here.
 
-            if (outfitsList = []) {   // folder is bereft of files, switching to regular folder
+            if (outfitsList == []) {   // folder is bereft of files, switching to regular folder
 
                 // No files found; leave the prefix alone and don't change
                 llOwnerSay("There are no outfits in your " + activeFolder + " folder.");
@@ -851,10 +856,11 @@ default {
                 //     {x}item - Rated item: filter by rating
                 //
                 n = llGetListLength(outfitsList);
+                debugSay(6, "DEBUG-CLOTHING", "Length of parsed outfits list is " + (string)n);
                 while (n--) {
                     itemName = cdListElement(outfitsList, n);
                     prefix = llGetSubString(itemName,0,0);
-                    debugSay(6, "DEBUG-CLOTHING", "Checking prefix: " + prefix + " with " + itemName);
+                    debugSay(6, "DEBUG-CLOTHING", "Checking prefix #" + (string)n + ": " + prefix + " with " + itemName);
 
                     // skip hidden files/directories and skip
                     // Doll Type (Transformation) folders...
@@ -881,7 +887,10 @@ default {
 
                 outfitsList = tmpList;
                 tmpList = []; // free memory
+                debugSay(6, "DEBUG-CLOTHING", "Outfit list selected and filtered...");
+                debugSay(6, "DEBUG-CLOTHING", "Outfits List: " + llDumpList2String(outfitsList, ",") + " (" + (string)llGetListLength(outfitsList) + ")");
 
+                // check the filtered list...
                 if (outfitsList == []) {
                     // Nothing received (total == 0); try another
                     // folder, if any; note that the total includes
@@ -899,34 +908,38 @@ default {
 
                         debugSay(6, "DEBUG-DRESS", "Trying the " + activeFolder + " folder.");
 
-                        listInventoryOn("2665"); // recursion
+                        dressViaRandom(); // recursion
                     }
                     else pushRandom = 0;
                     return;
                 }
 
-                if (outfitsList == []) {
-                    llOwnerSay("There are no outfits in your closet to wear! Time to go shopping!");
-                    return;
-                }
+                //if (outfitsList == []) {
+                //    debugSay(6, "DEBUG-CLOTHING","No outfits found!");
+                //    llOwnerSay("There are no outfits in your closet to wear! Time to go shopping!");
+                //    return;
+                //}
 
                 // Pick outfit (or directory) at random
-                integer i = (integer) llFrand(total);
-                string nextOutfitName = cdListElement(outfitsList, i);
+                string nextOutfitName;
 
-                debugSay(5,"DEBUG-CLOTHING","Outfits to choose from randomly: " + llDumpList2String(outfitsList, ","));
-                debugSay(5,"DEBUG-CLOTHING","Chosen outfit #" + (string)i + ": " + nextOutfitName);
+                nextOutfitName = cdListElement(outfitsList, (integer)llFrand(total));
 
-                // Folders are marked with an initial ">" character
+                debugSay(5,"DEBUG-CLOTHING","Chosen item (outfit?) #" + (string)i + ": " + nextOutfitName);
+                //debugSay(5,"DEBUG-CLOTHING","Outfits to choose from randomly: " + llDumpList2String(outfitsList, ","));
+
+                // Folders are NOT filtered out; this is so we can descend into sub-directories
+                // and select items within them. Directories are marked with an initial ">" character
                 if (llGetSubString(nextOutfitName, 0, 0) != ">") {
 
                     // The (randomly) chosen outfit is pushed as a menu reply
-                    lmMenuReply(nextOutfitName, llGetObjectName(), llGetKey());
+                    //lmMenuReply(nextOutfitName, llGetObjectName(), llGetKey());
+                    llSay(outfitsChannel,nextOutfitName);
                     llOwnerSay("You are being dressed in this outfit: " + nextOutfitName);
                 }
                 else {
                     clothingFolder += "/" + nextOutfitName;
-                    listInventoryOn("2665"); // recursion
+                    dressViaRandom(); // recursion
                 }
 
                 pushRandom = 0;
@@ -939,7 +952,7 @@ default {
         // Choosing a new outfit normally and manually: create a paged dialog with an
         // alphabetical list of available outfits, and let the user choose one
         //
-        else if (channel == (rlvBaseChannel + 2666)) {
+        else if (channel == menuDressChannel) {
 
             // Choose an outfit
             //
@@ -1006,7 +1019,7 @@ default {
 
                     debugSay(5,"DEBUG-CLOTHING","Trying the " + activeFolder + " folder.");
 
-                    listInventoryOn("2666"); // recursion
+                    dressViaRandom(); // recursion
                     return;
                 }
             }
@@ -1064,7 +1077,7 @@ default {
 
                         debugSay(6, "DEBUG-DRESS", "Trying the " + activeFolder + " folder.");
 
-                        listInventoryOn("2666");
+                        dressViaMenu();
                         return;
                     }
                     else {
@@ -1107,8 +1120,9 @@ default {
                 ++dressingFailures <= MAX_DRESS_FAILURES) {
 
                 // Try to attach again
-                if (!canDressSelf || afk || collapsed || wearLock) lmRunRLV("attachallthis:=y,detachallthis:" + outfitsFolder + "=n,attachallover:" + xFolder + "=force,attachallthis:=n");
-                else lmRunRLV("detachallthis:" + outfitsFolder + "=n,attachallover:" + xFolder + "=force");
+                string rlvCmd = "detachallthis:" + outfitsFolder + "=n,attachallover:" + xFolder + "=force";
+                if (!canDressSelf || afk || collapsed || wearLock) rlvCmd = "attachallthis:=y," + rlvCmd + ",attachallthis:=n";
+                lmRunRLV(rlvCmd);
 
                 rlvRequest("getinvworn:" + xFolder + "=", 2668);
                 canDressTimeout++;
@@ -1155,9 +1169,10 @@ default {
                  (c2 != "0" && c2 != "1")) &&
                 ++dressingFailures <= MAX_DRESS_FAILURES) {
 
+                string rlvCmd = "attachallthis:" + outfitsFolder + "=n,detachall:" + yFolder + "=force";
                 // Try again: attach stuff in the outfitsFolder, and remove things in yFolder
-                if (!canDressSelf || afk || collapsed || wearLock) lmRunRLV("detachallthis:=y,attachallthis:" + outfitsFolder + "=n,detachallthis:" + yFolder + "=force,detachallthis:=n");
-                else lmRunRLV("attachallthis:" + outfitsFolder + "=n,detachall:" + yFolder + "=force");
+                if (!canDressSelf || afk || collapsed || wearLock) rlvCmd = "detachallthis:=y," + rlvCmd + "detachallthis:=n");
+                lmRunRLV(rlvCmd);
 
                 rlvRequest("getinvworn:" + yFolder + "=", 2669);
                 canDressTimeout++;
