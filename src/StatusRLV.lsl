@@ -187,7 +187,7 @@ default {
                     // this is a blanket clear, but it doesn't mean to us what
                     // it means normally: we have a base RLV set
                     commandString += ",permissive=n,detach=n";
-                    if (userBaseRLVcmd) commandString += "," + userBaseRLVcmd;
+                    //if (userBaseRLVcmd) commandString += "," + userBaseRLVcmd;
 #else
                     llSay(DEBUG_CHANNEL,"blanket clear issued from " + script);
 #endif

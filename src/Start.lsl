@@ -76,7 +76,7 @@ integer isAttached;
 
 // These RLV commands are set by the user
 string userAfkRLVcmd;
-string userBaseRLVcmd;
+//string userBaseRLVcmd;
 string userCollapseRLVcmd;
 string userPoseRLVcmd;
 
@@ -196,7 +196,7 @@ processConfiguration(string name, string value) {
 #endif
                       "poseSilence",
                       "autoTP", "allowDress", "keyLimit", "chatChannel", "dollDisplayName", "demoMode",
-                      "userAfkRLVcmd", "userBaseRLVcmd", "userCollapseRLVcmd", "userPoseRLVcmd" , "showPhrases",
+                      "userAfkRLVcmd", "userCollapseRLVcmd", "userPoseRLVcmd" , "showPhrases",
 #ifdef DEVELOPER_MODE
                      "debugLevel",
 #endif
@@ -494,7 +494,6 @@ default {
                     }
                 }
             }
-            else if (name == "userBaseRLVcmd")          userBaseRLVcmd = value;
             else if (name == "userCollapseRLVcmd")  userCollapseRLVcmd = value;
             else if (name == "userPoseRLVcmd")          userPoseRLVcmd = value;
             else if (name == "userAfkRLVcmd")            userAfkRLVcmd = value;
@@ -571,17 +570,11 @@ default {
                         lmRunRLV(defaultAfkRLVcmd);
                         if (userAfkRLVcmd != "") lmRunRLVas("UserAfk", userAfkRLVcmd);
                     }
-                    else {
-                        lmRunRLV("clear");
-                    }
 
                     // Are we posed? Trigger RLV restrictions for being posed
                     if (cdPoseAnim()) {
                         lmRunRLV(defaultPoseRLVcmd);
                         if (userPoseRLVcmd != "") lmRunRLVas("UserPose", userPoseRLVcmd);
-                    }
-                    else {
-                        lmRunRLV("clear");
                     }
                 }
             }
