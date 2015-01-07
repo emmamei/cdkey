@@ -20,8 +20,8 @@
 #define isKnownTypeFolder(a) (llListFindList(typeFolders, [ a ]) != NOT_FOUND)
 
 #define nothingWorn(c,d) ((c) != "0") && ((c) != "1") && ((d) != "0") && ((d) != "1")
-#define dressingViaMenu() listInventoryOn("2666")
-#define dressingViaRandom() listInventoryOn("2665")
+#define dressViaMenu() listInventoryOn("2666")
+#define dressViaRandom() listInventoryOn("2665")
 
 //========================================
 // VARIABLES
@@ -925,7 +925,7 @@ default {
 
                 nextOutfitName = cdListElement(outfitsList, (integer)llFrand(total));
 
-                debugSay(5,"DEBUG-CLOTHING","Chosen item (outfit?) #" + (string)i + ": " + nextOutfitName);
+                debugSay(5,"DEBUG-CLOTHING","Chosen item (outfit?): " + nextOutfitName);
                 //debugSay(5,"DEBUG-CLOTHING","Outfits to choose from randomly: " + llDumpList2String(outfitsList, ","));
 
                 // Folders are NOT filtered out; this is so we can descend into sub-directories
@@ -1171,7 +1171,7 @@ default {
 
                 string rlvCmd = "attachallthis:" + outfitsFolder + "=n,detachall:" + yFolder + "=force";
                 // Try again: attach stuff in the outfitsFolder, and remove things in yFolder
-                if (!canDressSelf || afk || collapsed || wearLock) rlvCmd = "detachallthis:=y," + rlvCmd + "detachallthis:=n");
+                if (!canDressSelf || afk || collapsed || wearLock) rlvCmd = "detachallthis:=y," + rlvCmd + "detachallthis:=n";
                 lmRunRLV(rlvCmd);
 
                 rlvRequest("getinvworn:" + yFolder + "=", 2669);
