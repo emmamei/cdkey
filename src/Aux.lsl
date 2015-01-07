@@ -47,14 +47,14 @@ string msg;
 setGender(string gender) {
 
     if (gender == "male") {
-        lmSendConfig("dollGender",     (dollGender     = "Male"));
-        lmSendConfig("pronounHerDoll", (pronounHerDoll = "His"));
-        lmSendConfig("pronounSheDoll", (pronounSheDoll = "He"));
+        lmSendConfig("dollGender",     (dollGender     = "male"));
+        lmSendConfig("pronounHerDoll", (pronounHerDoll = "his"));
+        lmSendConfig("pronounSheDoll", (pronounSheDoll = "he"));
     }
     else {
-        lmSendConfig("dollGender", (dollGender = "Female"));
-        lmSendConfig("pronounHerDoll", (pronounHerDoll = "Her"));
-        lmSendConfig("pronounSheDoll", (pronounSheDoll = "She"));
+        lmSendConfig("dollGender", (dollGender = "female"));
+        lmSendConfig("pronounHerDoll", (pronounHerDoll = "her"));
+        lmSendConfig("pronounSheDoll", (pronounSheDoll = "she"));
     }
 }
 
