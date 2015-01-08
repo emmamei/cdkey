@@ -524,15 +524,15 @@ default {
             //     initState = 105;
             // }
 
-            else if (code == 135) {
+            else if (code == MEM_REPORT) {
                 memReport(cdMyScriptName(),cdListFloatElement(split, 0));
             }
-            else if (code == 142) {
+            else if (code == CONFIG_REPORT) {
 
                 cdConfigureReport();
 
             }
-            else if (code == 150) {
+            else if (code == SIM_RATING_CHG) {
                 simRating = cdListElement(split, 0);
                 integer outfitRating = cdOutfitRating(newOutfitName);
                 integer regionRating = cdRating2Integer(simRating);

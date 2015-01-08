@@ -932,11 +932,10 @@ default {
                 ;
             }
 
-            else if (code == 135) {
-                float delay = (float)choice;
-                memReport(cdMyScriptName(),delay);
+            else if (code == MEM_REPORT) {
+                memReport(cdMyScriptName(),(float)choice);
             }
-            else if (code == 142) {
+            else if (code == CONFIG_REPORT) {
                 cdConfigureReport();
             }
         }

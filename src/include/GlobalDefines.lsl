@@ -8,22 +8,23 @@
 #include "config.h"
 
 // Link message codes
-#define INIT_STAGE1 101
-#define INIT_STAGE2 102
-#define INIT_STAGE3 104
-#define INIT_STAGE4 105
-#define INIT_STAGE5 110
+#define INIT_STAGE1       101
+#define INIT_STAGE2       102
+#define INIT_STAGE3       104
+#define INIT_STAGE4       105
+#define INIT_STAGE5       110
 // #define E 11
 // #define F 12
 // #define G 15
-#define MEM_REPORT 135
-#define CONFIG_REPORT 142
-#define CONFIG 300
-#define SET_CONFIG 301
-#define INTERNAL_CMD 305
-#define RLV_CMD 315
-#define RLV_RESET 350
-#define MENU_SELECTION 500
+#define MEM_REPORT        135
+#define CONFIG_REPORT     142
+#define SIM_RATING_CHG    150
+#define CONFIG            300
+#define SET_CONFIG        301
+#define INTERNAL_CMD      305
+#define RLV_CMD           315
+#define RLV_RESET         350
+#define MENU_SELECTION    500
 
 #define cdSetHovertext(x,c) if(primText!=x)llSetText(x,c,1.0)
 #define RED    <1.0,0.0,0.0>
