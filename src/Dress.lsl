@@ -383,6 +383,7 @@ default {
                   menuDressChannel = rlvBaseChannel + 2666;
             }
             else if (name == "afk")                                  afk = (integer)value;
+            else if (name == "RLVok")                              RLVok = (integer)value;
             else if (name == "pronounHerDoll")            pronounHerDoll = value;
             else if (name == "pronounSheDoll")            pronounSheDoll = value;
             else if (c == "c") {
@@ -423,7 +424,12 @@ default {
             if (cmd == "randomDress") {
                 // this makes it easier, and we don't have to be "afraid" to call the
                 // randomDress function.
-                if (!RLVok) return;
+                if (!RLVok) {
+#ifdef DEVELOPER_MODE
+                    llSay(DEBUG_CHANNEL,"randomDress rejected: no RLV set");
+#endif
+                    return;
+                }
 
 #ifdef DEVELOPER_MODE
                 debugSay(6, "DEBUG-DRESS", "Random dress outfit chosen automatically");
