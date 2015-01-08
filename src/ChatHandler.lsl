@@ -944,7 +944,7 @@ default
                 //
                 if (isDoll) {
                     if (choice == "gname") {
-                        string doubledSymbols = "٩٩●̮̮̃●̮̮̃•̃•̃۶۶✣✣✱✱✧✧✦✦❦❦⌘⌘ѽѽ☄☄✰✰++₪₪קק¤¤øøღღ°°♫♫✿✿▫▫▪▪♬♬♩♩♪♪♬♬‘‘°°ººةة..,,==--++^^**˜˜••..¤¤øø””ﺴﺴ☊☊☩☩´´⇝⇝⁘⁘⁙⁙⁚⁚⁛⁛↑↑↓↓☆☆★★··..¸¸❤❤";
+                        string doubledSymbols = "⁂⁂••٩٩●̮̮̃●̮̮̃•̃•̃۶۶✣✣✱✱✧✧✦✦❦❦⌘⌘ѽѽ☄☄✰✰++₪₪קק¤¤øøღღ°°♫♫✿✿▫▫▪▪♬♬♩♩♪♪♬♬‘‘°°ººةة..,,==--++^^**˜˜••..¤¤øø””ﺴﺴ☊☊☩☩´´⇝⇝⁘⁘⁙⁙⁚⁚⁛⁛↑↑↓↓☆☆★★··..¸¸❤❤";
                         string pairedSymbols = "<>()[]{}?؟\\/";
                         string allSymbols;
                         string s1;
@@ -954,7 +954,7 @@ default
                         integer i;
 
                         allSymbols = doubledSymbols + pairedSymbols;
-                        i = 8;
+                        i = 12;
                         while (i--) {
                             n = (integer)(llFrand(llStringLength(allSymbols)));
                             s1 = s1 + llGetSubString(allSymbols,n,n);
