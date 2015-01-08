@@ -152,6 +152,28 @@ list outfitsPage(list outfitList) {
     return output;
 }
 
+retryDirSearch() {
+
+    // Nowhere to retry to
+    if (clothingFolder == "") return;
+
+#ifdef RETRY_PARENT
+    // Go up one folder: this assumes there is a valid folder to go up to
+    list pathParts = llParseString2List(clothingFolder, [ "/" ], []);
+    clothingFolder = llDumpList2String(llList2List(pathParts, 0, -2), "/");
+    lmSendConfig("clothingFolder", clothingFolder);
+#else
+    // Retry at Outfits top level
+    lmSendConfig("clothingFolder", (clothingFolder = ""));
+#endif
+
+    setActiveFolder();
+
+    debugSay(6, "DEBUG-DRESS", "Trying the " + activeFolder + " folder.");
+
+    dressViaRandom(); // recursion
+}
+
 // Set the folder to use for clothing attach and detach
 // Should be current clothing folder
 
@@ -836,11 +858,7 @@ default {
                 // "extended" folder containing (we hope) outfits....
 
                 if (outfitsFolder != "" && clothingFolder != "") {
-
-                    // Go up one folder: this assumes there is a valid folder to go up to
-                    list pathParts = llParseString2List(clothingFolder, [ "/" ], []);
-                    clothingFolder = llDumpList2String(llList2List(pathParts, 0, -2), "/");
-                    lmSendConfig("clothingFolder", clothingFolder);
+                    retryDirSearch();
                     return;
                 }
             }
@@ -904,17 +922,7 @@ default {
                     // folders (containing clothing)
 
                     if (pushRandom && clothingFolder != "") {
-
-                        list pathParts = llParseString2List(clothingFolder, [ "/" ], []);
-
-                        // This sequence takes the clothingFolder, and "goes up" one level
-                        clothingFolder = llDumpList2String(llDeleteSubList(pathParts, -1, -1), "/");
-                        lmSendConfig("clothingFolder", clothingFolder);
-                        setActiveFolder();
-
-                        debugSay(6, "DEBUG-DRESS", "Trying the " + activeFolder + " folder.");
-
-                        dressViaRandom(); // recursion
+                        retryDirSearch();
                     }
                     else pushRandom = 0;
                     return;

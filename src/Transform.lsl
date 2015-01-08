@@ -1002,10 +1002,9 @@ default {
             // much earlier... However.... if we are here, then the outfits search
             // must have run before, but not necessarily immediately before...
 
-            // Note that, unlike the dialog channel, the type search channel is removed and recreated... maybe it should not be
+            // Note that, unlike the dialog channel, the type search channel is
+            // removed and recreated... maybe it should not be
             llListenRemove(typeSearchHandle);
-            //if (lowScriptMode) llSetTimerEvent(LOW_RATE);
-            //else llSetTimerEvent(STD_RATE);
 
             // if there is no outfits folder we mark the type folder search
             // as "failed" and don't use a type folder...
@@ -1032,9 +1031,8 @@ default {
                 // if the typeFolderExpected is contained in the string
                 if (llSubStringIndex(choice,typeFolderExpected) >= 0) {
 
-                    // This is exact check:
+                    // This is the exact check:
                     if (~llListFindList(folderList, (list)typeFolderExpected)) {
-
                         useTypeFolder = YES;
                         typeFolder = typeFolderExpected;
                         typeFolderExpected = "";
@@ -1056,8 +1054,6 @@ default {
                 lmSendConfig("outfitsFolder", outfitsFolder);
                 lmSendConfig("useTypeFolder", (string)useTypeFolder);
                 lmSendConfig("typeFolder", typeFolder);
-                //if (lowScriptMode) llSetTimerEvent(LOW_RATE);
-                //else llSetTimerEvent(STD_RATE);
 
                 // at this point we've either found the typeFolder or not,
                 // and the outfitsFolder is set
@@ -1065,6 +1061,11 @@ default {
                 // are we doing the initial complete search? or is this just
                 // a type change?
                 if (outfitSearching) {
+
+                    debugSay(2,"DEBUG-SEARCHING","Ending an outfit Search...");
+
+                    // we finished our outfit search: so end the search and
+                    // put out results
                     outfitSearching = 0;
                     llOwnerSay("Outfits search completed in " + formatFloat(llGetTime() - outfitsSearchTimer,1) + "s");
                     outfitsSearchTimer = 0.0;
@@ -1078,17 +1079,25 @@ default {
                     // will override any inside of the same
 
                     if (~llListFindList(folderList, (list)"~nude")) nudeFolder = outfitsFolder + "/~nude";
-                    else
+                    else {
                         llOwnerSay("WARN: No nude (~nude) folder found in your outfits folder (\"" + outfitsFolder + "\")...");
+#ifdef DEVELOPER_MODE
+                        llSay(DEBUG_CHANNEL,"No ~nude folder found in \"" + outfitsFolder + "\"");
+#endif
+                    }
 
                     if (~llListFindList(folderList, (list)"~normalself")) normalselfFolder = outfitsFolder + "/~normalself";
-                    else
+                    else {
                         llOwnerSay("ERROR: No normal self (~normalself) folder found in your outfits folder (\"" + outfitsFolder + "\")... this folder is necessary for proper operation");
+                        llSay(DEBUG_CHANNEL,"No ~normalself folder found in \"" + outfitsFolder + "\": this folder is required for proper Key operation");
+                    }
 
                     lmSendConfig("nudeFolder",nudeFolder);
                     lmSendConfig("normalselfFolder",normalselfFolder);
                 }
-                else lmInternalCommand("randomDress","",NULL_KEY);
+
+                debugSay(2,"DEBUG-SEARCHING","Random dress being chosen");
+                lmInternalCommand("randomDress","",NULL_KEY);
             }
         }
     }
