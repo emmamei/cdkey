@@ -242,9 +242,11 @@ scaleMem() {
    integer newlimit;
    //integer short = 1024;
 
-   if ((free + used) <= (limit * 1.05)) {
-      // If this fails it is probably an LSL2 compiled script not mono and the
-      // rest can't apply.
+   // If this fails it is probably an LSL2 compiled script not mono and the
+   // rest can't apply.
+   //if ((free + used) <= (limit * 1.05)) {
+
+      // note carefully: "limit" is the CURRENT memory limit, not Max
       newlimit = llCeil((float)(limit - (free - 6144)) / 1024.0) * 1024;
 
       // Bump up a minimum of 4k
@@ -271,6 +273,10 @@ scaleMem() {
             llSetMemoryLimit(newlimit);
 #ifdef DEVELOPER_MODE
             debugSay(5, "DEBUG", (s + "increased " + formatFloat((float)(newlimit - limit) / 1024.0, 2) + "kB to " + formatFloat((float)newlimit / 1024.0, 2) + "kB"));
+            if (newlimit == MAX_LIMIT)
+                debugSay(2, "DEBUG", "WARNING! Maximum reached in script " + cdMyScriptName());
+            else if (MAX_LIMIT - newlimit <= 6144)
+                debugSay(2, "DEBUG", "WARNING! Low memory (" + formatFloat((float)(MAX_LIMIT - newlimit) / 1024.0, 2) + "kB) reached in script " + cdMyScriptName());
 #endif
          }
          else if (limit - newlimit > 4096) {
@@ -280,7 +286,7 @@ scaleMem() {
 #endif
          }
       }
-   }
+   //}
 }
 #endif // UTILITY_LSL
 
