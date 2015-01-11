@@ -44,6 +44,7 @@ integer statusHandle;
 // FUNCTIONS
 //========================================
 
+#ifdef NOT_USED
 clearCommand(string commandString) {
     list rlvList;
     integer i;
@@ -71,6 +72,7 @@ refreshCommands() {
         llOwnerSay("@" + rlvCmd);
     }
 }
+#endif
 
 //========================================
 // STATES
@@ -97,7 +99,7 @@ default {
     }
 
     //----------------------------------------
-    // ON REZ
+    // LISTEN
     //----------------------------------------
     listen(integer channel, string name, key id, string data) {
 
@@ -138,7 +140,7 @@ default {
             split = llDeleteSubList(split, 0, 0);
 
             if (cmd == "refreshRLV") {
-                llOwnerSay("Reactivating RLV restrictions");
+                //llOwnerSay("Reactivating RLV restrictions");
 
                 i = llGetListLength(rlvRestrict);
                 while (i--) {
@@ -147,6 +149,7 @@ default {
                     llOwnerSay("@" + cmd + "=n");
                 }
             }
+#ifdef NOT_USED
             else if (cmd == "clearRLV") {
                 integer n;
                 debugSay(4,"DEBUG-STATUSRLV","clearRLV command issued for " + cdListElement(split, 0));
@@ -161,13 +164,14 @@ default {
                     rlvRestrictions = llDeleteSubList(rlvRestrictions, n, n + 1);
                 }
             }
+#endif
             else if (cmd == "storeRLV") {
                 script = cdListElement(split,0);
                 string commandString = cdListElement(split, 1);
                 list tmpList;
 
                 //tmpList = llParseString2List(split, [","], []);
-                rlvRestrictions += [ script, commandString ];
+                //rlvRestrictions += [ script, commandString ];
 
                 // Here we're just getting current RLV restrictions
                 statusHandle = cdListenMine(statusChannel);
@@ -190,6 +194,7 @@ default {
                     //if (userBaseRLVcmd) commandString += "," + userBaseRLVcmd;
 #else
                     llSay(DEBUG_CHANNEL,"blanket clear issued from " + script);
+                    commandString += ",permissive=y,detach=y";
 #endif
                     //lmInternalCommand("clearRLV",script,NULL_KEY);
                     //return;
