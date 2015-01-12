@@ -893,11 +893,11 @@ default {
                 ifPermissions();
                 oneAnimation();
             }
-            else if (code == 135) {
+            else if (code == MEM_REPORT) {
                 float delay = llList2Float(split, 0);
                 memReport(cdMyScriptName(),delay);
             }
-            else if (code == 142) {
+            else if (code == CONFIG_REPORT) {
                 cdConfigureReport();
             }
         }

@@ -1030,12 +1030,12 @@ default {
                 timerStarted = 1;
             }
 
-            else if (code == 135) {
+            else if (code == MEM_REPORT) {
                 float delay = llList2Float(split, 0);
                 scaleMem();
                 memReport(cdMyScriptName(),delay);
             }
-            else if (code == 142) {
+            else if (code == CONFIG_REPORT) {
                 cdConfigureReport();
             }
         }

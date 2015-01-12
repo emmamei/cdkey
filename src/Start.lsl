@@ -625,13 +625,13 @@ default {
                 if (newAttach && !quiet && isAttached)
                     llSay(0, llGetDisplayName(llGetOwner()) + " is now a dolly - anyone may play with their Key.");
             }
-            else if (code == 135) {
+            else if (code == MEM_REPORT) {
                 if (script == cdMyScriptName()) return;
 
                 float delay = llList2Float(split, 0);
                 memReport(cdMyScriptName(),delay);
             }
-            else if (code == 142) {
+            else if (code == CONFIG_REPORT) {
                 cdConfigureReport();
             }
         }

@@ -579,16 +579,16 @@ default {
                 //startup = 0;
                 lmInternalCommand("setGemColour", (string)gemColour, NULL_KEY);
             }
-            else if (code == 135) {
+            else if (code == MEM_REPORT) {
                 float delay = llList2Float(split, 0);
                 memReport(cdMyScriptName(),delay);
             }
-            else if (code == 142) {
+            else if (code == CONFIG_REPORT) {
 
                 cdConfigureReport();
 
             }
-            else if (code == 150) {
+            else if (code == SIM_RATING_CHG) {
                 simRating = llList2String(split, 0);
             }
         }

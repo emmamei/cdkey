@@ -318,10 +318,10 @@ default
 
                 llOwnerSay("Setting up chat commands on channel " + (string)chatChannel + " with prefix \"" + llToLower(chatPrefix) + "\"");
             }
-            else if (code == 135) {
+            else if (code == MEM_REPORT) {
                 memReport(cdMyScriptName(),llList2Float(split, 0));
             }
-            else if (code == 142) {
+            else if (code == CONFIG_REPORT) {
 
                 cdConfigureReport();
             }

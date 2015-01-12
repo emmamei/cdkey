@@ -480,11 +480,11 @@ default {
         }
 #endif
         else if (code < 200) {
-            if (code == 135) {
+            if (code == MEM_REPORT) {
                 float delay = llList2Float(split, 0);
                 memReport(cdMyScriptName(),delay);
             }
-            else if (code == 142) {
+            else if (code == CONFIG_REPORT) {
 
                 cdConfigureReport();
             }

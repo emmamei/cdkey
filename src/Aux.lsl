@@ -482,11 +482,11 @@ Controller - Take care choosing your controllers; they have great control over D
                 llSleep(5.0);
                 lmMemReport(0.5, 0);
             }
-            else if ((code == 135) || (code == 136)) {
+            else if ((code == MEM_REPORT) || (code == 136)) {
 
                 // This is the bulk of 136/135 message processing
                 //
-                if ((code == 135) && (!memCollecting)) {
+                if ((code == MEM_REPORT) && (!memCollecting)) {
                     i = llGetInventoryNumber(INVENTORY_SCRIPT);
                     string script;
 
@@ -507,7 +507,7 @@ Controller - Take care choosing your controllers; they have great control over D
                     memRequested = llList2Integer(split, 1);
 #endif
                 }
-                else if ((code == 136) || ((memTime < llGetTime()) && (code == 135))) {
+                else if ((code == 136) || ((memTime < llGetTime()) && (code == MEM_REPORT))) {
                     string json = llList2String(split, 0);
 
                     if ((json != "") && (json != JSON_INVALID)) {
@@ -515,10 +515,10 @@ Controller - Take care choosing your controllers; they have great control over D
                         memData = cdSetValue(memData, [script], json);
                         i = llListFindList(memWait, [script]);
 
-                        if ((i != -1) || ((memTime < llGetTime()) && (code == 135))) {
+                        if ((i != -1) || ((memTime < llGetTime()) && (code == MEM_REPORT))) {
                             memWait = llDeleteSubList(memWait, i, i);
 
-                            if (!llGetListLength(memWait) || ((memTime < llGetTime()) && (code == 135))) {
+                            if (!llGetListLength(memWait) || ((memTime < llGetTime()) && (code == MEM_REPORT))) {
                                 llSetTimerEvent(0.0);
 
                                 float memory_limit = (float)llGetMemoryLimit();
@@ -591,11 +591,11 @@ Controller - Take care choosing your controllers; they have great control over D
                 }
             }
 
-            else if (code == 142) {
+            else if (code == CONFIG_REPORT) {
                 cdConfigureReport();
             }
 
-            else if (code == 150) {
+            else if (code == SIM_RATING_CHG) {
                 simRating = llList2String(split, 0);
             }
             // HippoUPDATE reply
