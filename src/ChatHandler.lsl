@@ -76,6 +76,7 @@ default
             else if (name == "windingDown")               windingDown = (integer)value;
             else if (name == "lastWinderID")             lastWinderID = (key)value;
             else if (name == "lastWinderName")         lastWinderName = value;
+            else if (name == "dollDisplayName")       dollDisplayName = value;
             else if (name == "collapsed")                   collapsed = (integer)value;
             else if (name == "hardcore")                     hardcore = (integer)value;
 #ifdef DEVELOPER_MODE
@@ -573,7 +574,8 @@ default
                         string s = "Extended stats:\n\nDoll is a " + dollType + " Doll.\nAFK time factor: " +
                                    formatFloat(RATE_AFK, 1) + "x\nWind amount: " + (string)windMins + " (mins)\n";
 
-                        if (demoMode) s += "Demo mode is enabled";
+                        if (demoMode) s += "Demo mode is enabled\n";
+                        if (lastWinderName) s += "Last winder was: " + lastWinderName + "\n";
 
                         string p = llToLower(pronounHerDoll);
 
@@ -952,17 +954,33 @@ default
                         integer n;
                         string c;
                         integer i;
+                        integer j;
+                        string oldName = llGetObjectName();
 
+                        llSetObjectName(dollDisplayName);
                         allSymbols = doubledSymbols + pairedSymbols;
-                        i = 12;
+                        i = 10;
                         while (i--) {
                             n = (integer)(llFrand(llStringLength(allSymbols)));
-                            s1 = s1 + llGetSubString(allSymbols,n,n);
+                            c = llGetSubString(allSymbols,n,n);
+
+                            j = (integer)llFrand(3) + 1;
+
+                                 if (j == 1) s1 = s1 + c;
+                            else if (j == 2) s1 = s1 + c + c;
+                            else if (j == 3) s1 = s1 + c + c + c;
+                            else if (j == 4) s1 = s1 + c + c + c + c;
 
                             n = n ^ 1;
-                            s2 = llGetSubString(allSymbols,n,n) + s2;
+                            c = llGetSubString(allSymbols,n,n);
+
+                                 if (j == 1) s2 =             c + s2;
+                            else if (j == 2) s2 =         c + c + s2;
+                            else if (j == 3) s2 =     c + c + c + s2;
+                            else if (j == 4) s2 = c + c + c + c + s2;
                         }
                         llSay(PUBLIC_CHANNEL,s1 + " " + param + " " + s2);
+                        llSetObjectName(oldName);
                     }
 #ifdef DEVELOPER_MODE
                     else if (choice == "debug") {
