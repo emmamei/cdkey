@@ -41,7 +41,6 @@ float initTimer;
 
 key MistressID = NULL_KEY;
 
-string dollDisplayName;
 string appearanceData;
 string chatFilter = "";
 integer chatEnable = TRUE;
@@ -484,7 +483,7 @@ default {
                 }
             }
             else if (name == "afk") {
-                string oldAfk = afk;
+                integer oldAfk = afk;
                 afk = (integer)value;
 
                 if (!collapsed) {

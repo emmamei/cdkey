@@ -127,10 +127,9 @@ default {
             string name = cdListElement(split, 0);
             string value = cdListElement(split, 1);
 
-                 if (name == "debugLevel") debugLevel = (integer)cdListElement(split, 1);
 #ifdef DEVELOPER_MODE
-
-            else if (name == "debugLevel") debugLevel = (integer)cdListElement(split, 1);
+                 if (name == "debugLevel") debugLevel = (integer)cdListElement(split, 1);
+            //else if (name == "debugLevel") debugLevel = (integer)cdListElement(split, 1);
 #endif
             return;
         }

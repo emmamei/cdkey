@@ -27,7 +27,6 @@ string memData;
 string minsLeft;
 //string windRate;
 integer windMins;
-string dollDisplayName;
 string curGemColour;
 integer maxMins;
 integer ncLine;

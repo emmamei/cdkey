@@ -21,6 +21,7 @@ string carrierName;
 string chatPrefix;
 string dollGender           = "Female";
 string dollName;
+string dollDisplayName;
 // dollType has a default, but don't set it here'
 string dollType;
 string dresserName;

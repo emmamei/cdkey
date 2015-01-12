@@ -223,9 +223,6 @@ rlvRequest(string rlv, integer channel) {
 listInventoryOn(integer channel) {
 
     setActiveFolder();
-#ifdef DEVELOPER_MODE
-    doDebug(channel);
-#endif
 
     if (outfitsFolder == "") {
         llOwnerSay("No suitable outfits folder found, so unfortunately you will not be able to be dressed");
@@ -301,25 +298,6 @@ changeComplete(integer success) {
 }
 
 #ifdef DEVELOPER_MODE
-doDebug(string src) {
-    //integer level = 5;
-    //if (startup != 0) level = 6;
-
-    string exists = "not found";
-    if (useTypeFolder) exists = "found";
-
-    //debugSay(5, "DEBUG-DRESS", ">  on " + src);
-    //debugSay(5, "DEBUG-DRESS", ">> outfitsFolder = " + outfitsFolder);
-    //debugSay(5, "DEBUG-DRESS", ">> clothingFolder = " + clothingFolder);
-    //debugSay(5, "DEBUG-DRESS", ">> typeFolder = " + typeFolder + " (" + exists + ")");
-
-    //setActiveFolder();
-
-    //debugSay(5, "DEBUG-DRESS", ">> activeFolder = " + activeFolder);
-    //debugSay(5, "DEBUG-DRESS", ">> normalselfFolder = " + normalselfFolder);
-    //debugSay(5, "DEBUG-DRESS", ">> nudeFolder = " + nudeFolder);
-}
-
 string folderStatus() {
     string typeFolderExists;
 
