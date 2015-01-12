@@ -463,6 +463,7 @@ default {
             }
             else if (name == "keyLimit")                      keyLimit = (float)value;
             else if (name == "keyAnimation") {
+                string oldKeyAnimation = keyAnimation;
                 keyAnimation = value;
 
                 if (!collapsed) {
@@ -476,15 +477,14 @@ default {
                         if (userPoseRLVcmd)
                             lmRunRLVas("UserPose", userPoseRLVcmd);
                     }
-                    else {
-                        // either animation is null, or animation
-                        // is the collapse animation but we're not collapsed
-                        // (the latter should be an error)
+                    else if (oldKeyAnimation != keyAnimation) {
+                        // animation just became null
                         lmRunRLV("clear");
                     }
                 }
             }
             else if (name == "afk") {
+                string oldAfk = afk;
                 afk = (integer)value;
 
                 if (!collapsed) {
@@ -494,7 +494,8 @@ default {
                         if (userAfkRLVcmd)
                             lmRunRLVas("UserAfk", userAfkRLVcmd);
                     }
-                    else {
+                    else if (oldAfk != afk) {
+                        // just became zero
                         lmRunRLV("clear");
                     }
                 }
