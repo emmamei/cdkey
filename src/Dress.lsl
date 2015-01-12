@@ -66,8 +66,8 @@ integer wearAtLogin;
 //string lastFolder;
 string newOutfit;
 string oldOutfit;
-string xFolder;
-string yFolder;
+string wearFolder;
+string unwearFolder;
 
 list outfitsList;
 integer useTypeFolder;
@@ -817,13 +817,13 @@ default {
 
                 // check to see that everything in the ~normalself folder is
                 // actually worn
-                xFolder = normalselfFolder;
-                rlvRequest("getinvworn:" + xFolder + "=", 2668);
+                wearFolder = normalselfFolder;
+                rlvRequest("getinvworn:" + wearFolder + "=", 2668);
 
                 // check to see that everything in the old Outfit folder is
                 // actually removed
-                yFolder = oldOutfitPath;
-                if (yFolder != "") rlvRequest("getinvworn:" + yFolder + "=", 2669);
+                unwearFolder = oldOutfitPath;
+                if (unwearFolder != "") rlvRequest("getinvworn:" + unwearFolder + "=", 2669);
                 else dressingSteps += 2;
 
                 llSetTimerEvent(15.0);
@@ -1137,7 +1137,7 @@ default {
 
             llListenRemove(listen_id_2668);
 
-            debugSay(6, "DEBUG-DRESS", "Checking for fully worn: " + xFolder);
+            debugSay(6, "DEBUG-DRESS", "Checking for fully worn: " + wearFolder);
 
             string c1 = llGetSubString(choice,1,1);
             string c2 = llGetSubString(choice,2,2);
@@ -1147,15 +1147,15 @@ default {
                 ++dressingFailures <= MAX_DRESS_FAILURES) {
 
                 // Try to attach again
-                string rlvCmd = "detachallthis:" + outfitsFolder + "=n,attachallover:" + xFolder + "=force";
+                string rlvCmd = "detachallthis:" + outfitsFolder + "=n,attachallover:" + wearFolder + "=force";
                 if (!canDressSelf || afk || collapsed || wearLock) rlvCmd = "attachallthis:=y," + rlvCmd + ",attachallthis:=n";
                 lmRunRLV(rlvCmd);
 
-                rlvRequest("getinvworn:" + xFolder + "=", 2668);
+                rlvRequest("getinvworn:" + wearFolder + "=", 2668);
                 canDressTimeout++;
             }
             else if (dressingFailures > MAX_DRESS_FAILURES) {
-                llSay(DEBUG_CHANNEL,"Some things in " + xFolder + " failed to attach");
+                llSay(DEBUG_CHANNEL,"Some things in " + wearFolder + " failed to attach");
                 changeComplete(FALSE);
             }
             else {
@@ -1164,11 +1164,11 @@ default {
 
                 // If we just attached all our normalself, then attach all of our
                 // new outfit
-                if (xFolder == normalselfFolder && newOutfitPath != "") xFolder = newOutfit;
-                else xFolder = "";
+                if (wearFolder == normalselfFolder && newOutfitPath != "") wearFolder = newOutfit;
+                else wearFolder = "";
 
                 // Do the new outfit folder (with full path)
-                if (xFolder != "") rlvRequest("getinvworn:" + xFolder + "=", 2668);
+                if (wearFolder != "") rlvRequest("getinvworn:" + wearFolder + "=", 2668);
                 else if (dressingSteps >= 3) changeComplete(TRUE);
             }
             debugSay(6, "DEBUG", "canDressTimeout = " + (string)canDressTimeout + ", dressingSteps = " + (string)dressingSteps);
@@ -1185,7 +1185,7 @@ default {
 
             llListenRemove(listen_id_2669);
 
-            debugSay(6, "DEBUG-DRESS", "Checking for fully removed: " + yFolder);
+            debugSay(6, "DEBUG-DRESS", "Checking for fully removed: " + unwearFolder);
 
 
             // @getinv worn returns a coded message: test to see that
@@ -1196,16 +1196,16 @@ default {
                  (c2 != "0" && c2 != "1")) &&
                 ++dressingFailures <= MAX_DRESS_FAILURES) {
 
-                string rlvCmd = "attachallthis:" + outfitsFolder + "=n,detachall:" + yFolder + "=force";
-                // Try again: attach stuff in the outfitsFolder, and remove things in yFolder
+                string rlvCmd = "attachallthis:" + outfitsFolder + "=n,detachall:" + unwearFolder + "=force";
+                // Try again: attach stuff in the outfitsFolder, and remove things in unwearFolder
                 if (!canDressSelf || afk || collapsed || wearLock) rlvCmd = "detachallthis:=y," + rlvCmd + "detachallthis:=n";
                 lmRunRLV(rlvCmd);
 
-                rlvRequest("getinvworn:" + yFolder + "=", 2669);
+                rlvRequest("getinvworn:" + unwearFolder + "=", 2669);
                 canDressTimeout++;
             }
             else if (dressingFailures > MAX_DRESS_FAILURES) {
-                llSay(DEBUG_CHANNEL,"Some things in " + yFolder + " failed to remove");
+                llSay(DEBUG_CHANNEL,"Some things in " + unwearFolder + " failed to remove");
                 changeComplete(FALSE);
             }
             else {
