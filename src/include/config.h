@@ -7,7 +7,7 @@
 #define WIND_DEFAULT 1800.0
 
 /* adds wear at login feature: choose new outfit every login */
-/* #define WEAR_AT_LOGIN 1 */
+#define WEAR_AT_LOGIN 1
 
 /* adds slowed walking during AFK */
 #define SLOW_WALK 1

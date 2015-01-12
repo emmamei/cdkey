@@ -1093,10 +1093,15 @@ default {
 
                     lmSendConfig("nudeFolder",nudeFolder);
                     lmSendConfig("normalselfFolder",normalselfFolder);
+#ifdef WEAR_AT_LOGIN
+                    if (wearAtLogin)
+                        lmInternalCommand("randomDress","",NULL_KEY);
+#endif
                 }
-
-                debugSay(2,"DEBUG-SEARCHING","Random dress being chosen");
-                lmInternalCommand("randomDress","",NULL_KEY);
+                else {
+                    debugSay(2,"DEBUG-SEARCHING","Random dress being chosen");
+                    lmInternalCommand("randomDress","",NULL_KEY);
+                }
             }
         }
     }
