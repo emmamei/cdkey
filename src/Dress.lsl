@@ -20,10 +20,10 @@
 #define isKnownTypeFolder(a) (llListFindList(typeFolders, [ a ]) != NOT_FOUND)
 
 #define nothingWorn(c,d) ((c) != "0") && ((c) != "1") && ((d) != "0") && ((d) != "1")
-#define dressViaMenu() listInventoryOn("2666")
-#define dressViaRandom() listInventoryOn("2665")
-#define checkWornItems(c) rlvRequest("getinvworn:" + (c) + "=", 2668)
-#define checkRemovedItems(c) rlvRequest("getinvworn:" + (c) + "=", 2669)
+#define dressViaMenu() listInventoryOn(menuDressChannel)
+#define dressViaRandom() listInventoryOn(randomDressChannel)
+#define checkWornItems(c) rlvRequest("getinvworn:" + (c) + "=", confirmWearChannel)
+#define checkRemovedItems(c) rlvRequest("getinvworn:" + (c) + "=", confirmUnwearChannel)
 
 //========================================
 // VARIABLES
@@ -199,16 +199,28 @@ setActiveFolder() {
 rlvRequest(string rlv, integer channel) {
     canDressTimeout = 1;
 
-         if (channel == 2665)   randomDressHandle = cdListenMine(  randomDressChannel);
-    else if (channel == 2666)     menuDressHandle = cdListenMine(    menuDressChannel);
-    else if (channel == 2668)   confirmWearHandle = cdListenMine(  confirmWearChannel);
-    else if (channel == 2669) confirmUnwearHandle = cdListenMine(confirmUnwearChannel);
+    if (channel < 2670) {
+        llSay(DEBUG_CHANNEL,"rlvRequest called with old channel numbers");
+             if (channel == 2665)   randomDressHandle = cdListenMine(  randomDressChannel);
+        else if (channel == 2666)     menuDressHandle = cdListenMine(    menuDressChannel);
+        else if (channel == 2668)   confirmWearHandle = cdListenMine(  confirmWearChannel);
+        else if (channel == 2669) confirmUnwearHandle = cdListenMine(confirmUnwearChannel);
 
-    lmRunRLV(rlv + (string)(rlvBaseChannel + channel));
+        lmRunRLV(rlv + (string)(rlvBaseChannel + channel));
+    }
+    else {
+             if (channel ==   randomDressChannel)   randomDressHandle = cdListenMine(  randomDressChannel);
+        else if (channel ==     menuDressChannel)     menuDressHandle = cdListenMine(    menuDressChannel);
+        else if (channel ==   confirmWearChannel)   confirmWearHandle = cdListenMine(  confirmWearChannel);
+        else if (channel == confirmUnwearChannel) confirmUnwearHandle = cdListenMine(confirmUnwearChannel);
+
+        lmRunRLV(rlv + (string)channel);
+    }
+
     llSetTimerEvent(30.0);
 }
 
-listInventoryOn(string channel) {
+listInventoryOn(integer channel) {
 
     setActiveFolder();
 #ifdef DEVELOPER_MODE
@@ -220,7 +232,7 @@ listInventoryOn(string channel) {
     }
     else {
         setActiveFolder();
-        rlvRequest("getinv:" + activeFolder + "=", (integer)channel);
+        rlvRequest("getinv:" + activeFolder + "=", channel);
     }
 }
 
