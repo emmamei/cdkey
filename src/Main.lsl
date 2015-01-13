@@ -424,7 +424,7 @@ default {
                 //    lowScriptTimer = 0;
                 //    lastLowScriptTime = 0;
                 //}
-                debugSay(4,"DEBUG-LOWSCRIPT", "Low Script Mode disabled and running normally");
+                //debugSay(4,"DEBUG-LOWSCRIPT", "Low Script Mode disabled and running normally");
 
                 lmSendConfig("lowScriptMode",(string)(lowScriptMode = 0));
                 llSetTimerEvent(STD_RATE);

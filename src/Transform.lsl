@@ -42,6 +42,7 @@
 string nudeFolder;
 string normalselfFolder;
 integer phraseCount;
+integer changeOutfit;
 string msg;
 integer i;
 list types;
@@ -271,7 +272,7 @@ folderSearch(string folder, integer channel) {
     // The next stage is the listener, while we create a time
     // out to timeout the RLV call...
     //
-    debugSay(2,"DEBUG-LOWSCRIPT","timer set to " + (string)RLV_TIMEOUT);
+    //debugSay(2,"DEBUG-LOWSCRIPT","timer set to " + (string)RLV_TIMEOUT);
     llSetTimerEvent(RLV_TIMEOUT);
 }
 
@@ -416,8 +417,8 @@ default {
         //----------------------------------------
         // SET TIMER INTERVAL
 
-        if (lowScriptMode) debugSay(2,"DEBUG-LOWSCRIPT","lowScript generates a rate of " + (string)LOW_RATE + "s.");
-        else debugSay(2,"DEBUG-LOWSCRIPT","lowScript generates a rate of " + (string)STD_RATE + "s.");
+        //if (lowScriptMode) debugSay(2,"DEBUG-LOWSCRIPT","lowScript generates a rate of " + (string)LOW_RATE + "s.");
+        //else debugSay(2,"DEBUG-LOWSCRIPT","lowScript generates a rate of " + (string)STD_RATE + "s.");
 
         if (lowScriptMode) llSetTimerEvent(LOW_RATE);
         else llSetTimerEvent(STD_RATE);
@@ -506,7 +507,7 @@ default {
             else if (name == "timeReporting")           timeReporting = (integer)value;
 #endif
             else if (name == "lowScriptMode") {
-                debugSay(2,"DEBUG-LOWSCRIPT","lowScript set to " + (string)lowScriptMode + " via link message");
+                //debugSay(2,"DEBUG-LOWSCRIPT","lowScript set to " + (string)lowScriptMode + " via link message");
                 lowScriptMode = (integer)value;
                 //if (lowScriptMode) llSetTimerEvent(LOW_RATE);
                 //else llSetTimerEvent(STD_RATE);
@@ -711,6 +712,7 @@ default {
             typeFolder = "";
             outfitSearchTries = 0;
             typeSearchTries = 0;
+            changeOutfit = 1;
 
             if (RLVok) {
                 if (rlvChannel) {
@@ -1073,8 +1075,12 @@ default {
                     lmSendConfig("nudeFolder",nudeFolder);
                     lmSendConfig("normalselfFolder",normalselfFolder);
 #ifdef WEAR_AT_LOGIN
-                    if (wearAtLogin)
-                        lmInternalCommand("randomDress","",NULL_KEY);
+                    if (changeOutfit) {
+                        //llSay(DEBUG_CHANNEL,"Outfit search complete: new random outfit being put on");
+                        if (wearAtLogin)
+                            lmInternalCommand("randomDress","",NULL_KEY);
+                        changeOutfit = 0;
+                    }
 #endif
                 }
                 else {

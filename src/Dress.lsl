@@ -436,6 +436,7 @@ default {
             else if (name == "wearLock")                        wearLock = (integer)value;
         }
         else if (code == INTERNAL_CMD) {
+            debugSay(5,"DEBUG-DRESS",">>> split = " + llDumpList2String(split, ","));
             string cmd = cdListElement(split, 0);
             split = llDeleteSubList(split, 0, 0);
 
@@ -827,6 +828,7 @@ default {
                     return;
                 }
 
+                //llSay(DEBUG_CHANNEL,"Calling wear outfit with " + choice);
                 lmInternalCommand("wearOutfit", choice, NULL_KEY);
             }
         }
@@ -962,7 +964,8 @@ default {
                     // The (randomly) chosen outfit is used in a dialog - to generate a menu reply
                     // GET RID OF THIS....
                     //llDialog(dollID, "You are being dressed in this outfit.", (list)randomOutfitName, outfitsChannel);
-                    lmInternalCommand("wearOutfit", newOutfitName, NULL_KEY);
+                    //llSay(DEBUG_CHANNEL,"Calling wear outfit with " + randomOutfitName);
+                    lmInternalCommand("wearOutfit", randomOutfitName, NULL_KEY);
 
                     llOwnerSay("You are being dressed in this outfit: " + randomOutfitName);
                 }
