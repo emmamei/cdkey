@@ -68,8 +68,6 @@ integer blacklistHandle;
 integer controlHandle;
 string isDollName;
 
-vector gemColour;
-
 string mistressName;
 string menuName;
 

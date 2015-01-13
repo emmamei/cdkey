@@ -36,6 +36,7 @@
 // FIXME: This should be in a notecard so it can be changed without mangling the scripts.
 string outfitsURL = "outfits.htm";
 string outfitsMessage;
+string msg;
 
 string prefix;
 
@@ -397,6 +398,7 @@ default {
             }
             else if (name == "afk")                                  afk = (integer)value;
             else if (name == "RLVok")                              RLVok = (integer)value;
+            else if (name == "hoverTextOn")                  hoverTextOn = (integer)value;
             else if (name == "pronounHerDoll")            pronounHerDoll = value;
             else if (name == "pronounSheDoll")            pronounSheDoll = value;
             else if (c == "c") {
@@ -610,6 +612,26 @@ default {
                 llSetTimerEvent(15.0);
             }
 #endif
+            else if (cmd == "setHovertext") {
+                string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
+
+                     if (collapsed)   { cdSetHovertext("Disabled Dolly!",        ( RED    )); }
+                else if (afk)         { cdSetHovertext(dollType + " Doll (AFK)", ( YELLOW )); }
+                else if (hoverTextOn) { cdSetHovertext(dollType + " Doll",       ( WHITE  )); }
+                else                  { cdSetHovertext("",                       ( WHITE  )); }
+            }
+            else if (cmd == "carriedMenu") {
+                string carrierName = llList2String(split, 0);
+
+                if (cdIsDoll(id)) {
+                    msg = "You are being carried by " + carrierName + ". ";
+                    if (collapsed) msg += "You need winding, too. ";
+                }
+                else msg = dollName + " is currently being carried by " + carrierName + ". They have full control over this doll. ";
+
+                cdDialogListen();
+                llDialog(id, msg, [ "OK" ], dialogChannel);
+            }
         }
         else if (code == RLV_RESET) {
             RLVok = (cdListIntegerElement(split, 0) == 1);
@@ -932,7 +954,8 @@ default {
 
                     // The (randomly) chosen outfit is used in a dialog - to generate a menu reply
                     // GET RID OF THIS....
-                    llDialog(dollID, "You are being dressed in this outfit.", (list)randomOutfitName, outfitsChannel);
+                    //llDialog(dollID, "You are being dressed in this outfit.", (list)randomOutfitName, outfitsChannel);
+                    lmInternalCommand("wearOutfit", newOutfitName, NULL_KEY);
 
                     llOwnerSay("You are being dressed in this outfit: " + randomOutfitName);
                 }

@@ -89,6 +89,8 @@ integer debugLevel          = DEBUG_LEVEL;
 
 integer dialogChannel;
 integer dialogHandle;
+
+vector gemColour;
 #endif // COMMON_GLOBALS
 
 

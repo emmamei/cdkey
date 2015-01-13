@@ -39,13 +39,11 @@
 //========================================
 // VARIABLES
 //========================================
-vector gemColour;
 string nudeFolder;
 string normalselfFolder;
 integer phraseCount;
 string msg;
 integer i;
-//string stateName;
 list types;
 float menuTime;
 key transformerID;
@@ -61,7 +59,6 @@ integer outfitSearching;
 
 integer findTypeFolder;
 
-//integer rlvHandle;
 integer typeSearchHandle;
 integer outfitSearchHandle;
 integer useTypeFolder;
@@ -573,6 +570,7 @@ default {
             string cmd = llList2String(split, 0);
             split = llDeleteSubList(split, 0, 0);
 
+#ifdef SPACE_TEST
             if (cmd == "setGemColour") {
                 vector newColour = (vector)llList2String(split, 0);
                 integer j; integer s; list params; list colourParams;
@@ -612,26 +610,6 @@ default {
                     lmSendConfig("gemColour", (string)(gemColour = newColour));
                 }
                 params = [];
-            }
-            else if (cmd == "setHovertext") {
-                string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
-
-                     if (collapsed)   { cdSetHovertext("Disabled Dolly!",        ( RED    )); }
-                else if (afk)         { cdSetHovertext(dollType + " Doll (AFK)", ( YELLOW )); }
-                else if (hoverTextOn) { cdSetHovertext(dollType + " Doll",       ( WHITE  )); }
-                else                  { cdSetHovertext("",                       ( WHITE  )); }
-            }
-            else if (cmd == "carriedMenu") {
-                string carrierName = llList2String(split, 0);
-
-                if (cdIsDoll(id)) {
-                    msg = "You are being carried by " + carrierName + ". ";
-                    if (collapsed) msg += "You need winding, too. ";
-                }
-                else msg = dollName + " is currently being carried by " + carrierName + ". They have full control over this doll. ";
-
-                cdDialogListen();
-                llDialog(id, msg, [ "OK" ], dialogChannel);
             }
             else if (cmd == "collapsedMenu") {
                 // this is only called for Dolly - so...
@@ -673,7 +651,8 @@ default {
                     llDialog(dollID, msg, menu, dialogChannel);
                 }
             }
-            else if (cmd == "optionsMenu") {
+#endif
+            if (cmd == "optionsMenu") {
                 list pluslist;
                 lmSendConfig("backMenu",(backMenu = MAIN));
                 debugSay(2,"DEBUG-OPTIONS","Building Options menu...");

@@ -67,8 +67,6 @@ integer primGlow = YES;
 integer primLight = YES;
 integer dbConfigCount;
 
-vector gemColour;
-
 string barefeet;
 string attachName;
 integer isAttached;

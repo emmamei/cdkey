@@ -220,6 +220,86 @@ default {
                 else llOwnerSay("You have stripped off your own " + llToLower(part) + ".");
             }
 #endif
+            else if (cmd == "setGemColour") {
+                vector newColour = (vector)llList2String(split, 0);
+                integer j; integer s; list params; list colourParams;
+                integer n; integer m;
+
+                n = llGetNumberOfPrims();
+                for (i = 1; i < n; i++) {
+                    params += [ PRIM_LINK_TARGET, i ];
+                    if (llGetSubString(llGetLinkName(i), 0, 4) == "Heart") {
+                        if (gemColour != newColour) {
+                            if (!s) {
+                                m = llGetLinkNumberOfSides(i);
+                                for (j = 0; j < m; j++) {
+                                    vector shade = <llFrand(0.2) - 0.1 + newColour.x,
+                                                    llFrand(0.2) - 0.1 + newColour.y,
+                                                    llFrand(0.2) - 0.1 + newColour.z>  * (1.0 + (llFrand(0.2) - 0.1));
+
+                                    if (shade.x < 0.0) shade.x = 0.0;
+                                    if (shade.y < 0.0) shade.y = 0.0;
+                                    if (shade.z < 0.0) shade.z = 0.0;
+
+                                    if (shade.x > 1.0) shade.x = 1.0;
+                                    if (shade.y > 1.0) shade.y = 1.0;
+                                    if (shade.z > 1.0) shade.z = 1.0;
+
+                                    colourParams += [ PRIM_COLOR, j, shade, 1.0 ];
+                                }
+                                params += colourParams;
+                                s = 1;
+                            }
+                            else params += colourParams;
+                        }
+                    }
+                }
+                llSetLinkPrimitiveParamsFast(0, params);
+                if (gemColour != newColour) {
+                    lmSendConfig("gemColour", (string)(gemColour = newColour));
+                }
+                params = [];
+            }
+            else if (cmd == "collapsedMenu") {
+                // this is only called for Dolly - so...
+                string timeLeft = llList2String(split, 0);
+                list menu = [ "Ok" ];
+
+                debugSay(2,"DEBUG-TRANSFORM","Building collapsedMenu...");
+                // is it possible to be collapsed but collapseTime be equal to 0.0?
+                if (collapseTime != 0.0 || collapsed) {
+                    float timeCollapsed = llGetUnixTime() - collapseTime;
+                    msg = "You need winding. ";
+#ifdef DEVELOPER_MODE
+                    if (timeCollapsed >= 60) {
+                        msg += "You have been collapsed for " + (string)llFloor(timeCollapsed / SEC_TO_MIN) + " minutes. ";
+                    }
+#endif
+
+                    // Only present the TP home option for the doll if they have been collapsed
+                    // for at least 900 seconds (15 minutes) - Suggested by Christina
+
+                    if (timeCollapsed > TIME_BEFORE_TP) {
+                        if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK)
+                            menu += ["TP Home"];
+
+                        // If the doll is still down after 1800 seconds (30 minutes) and their
+                        // emergency winder is recharged; add a button for it
+
+                        if (!hardcore) {
+                            if (timeCollapsed > TIME_BEFORE_EMGWIND) {
+                                if (winderRechargeTime <= llGetUnixTime())
+                                    menu += ["Wind Emg"];
+                            }
+                        }
+                    }
+
+                    cdDialogListen();
+                    debugSay(2,"DEBUG-TRANSFORM","Done building collapsedMenu: msg = \"" + msg  + "\"; menu = [ " + llDumpList2String(menu, ",") + " ]");
+                    debugSay(2,"DEBUG-TRANSFORM","Done building collapsedMenu: id = " + (string)id);
+                    llDialog(dollID, msg, menu, dialogChannel);
+                }
+            }
         }
         else if (code == RLV_RESET) {
             RLVok = llList2Integer(split, 0);
