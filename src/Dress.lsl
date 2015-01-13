@@ -15,6 +15,8 @@
 
 #include "include/GlobalDefines.lsl"
 
+#define WEAR_MOVED 1
+
 #define NO_FILTER ""
 #define cdListenMine(a) llListen(a, NO_FILTER, dollID, NO_FILTER)
 #define isKnownTypeFolder(a) (llListFindList(typeFolders, [ a ]) != NOT_FOUND)
@@ -161,15 +163,8 @@ retryDirSearch() {
     // Nowhere to retry to
     if (clothingFolder == "") return;
 
-#ifdef RETRY_PARENT
-    // Go up one folder: this assumes there is a valid folder to go up to
-    list pathParts = llParseString2List(clothingFolder, [ "/" ], []);
-    clothingFolder = llDumpList2String(llList2List(pathParts, 0, -2), "/");
-    lmSendConfig("clothingFolder", clothingFolder);
-#else
     // Retry at Outfits top level
     lmSendConfig("clothingFolder", (clothingFolder = ""));
-#endif
 
     setActiveFolder();
 
@@ -436,6 +431,7 @@ default {
         }
         else if (code == INTERNAL_CMD) {
             string cmd = cdListElement(split, 0);
+            split = llDeleteSubList(split, 0, 0);
 
             // Choose an (appropriate) random outfit and put it on
             //
@@ -467,6 +463,153 @@ default {
                     dressViaRandom();
                 }
             }
+            else if (cmd == "wearOutfit") {
+                // Overriting a script global here... not kosher, but works.
+                // Note that the value may or may NOT come from this script:
+                // ergo, the reason this overwrite is here.
+                newOutfitName = cdListElement(split, 0);
+
+#ifdef WEAR_MOVED
+                if (outfitsFolder != "") {
+#ifdef DEVELOPER_MODE
+                    // If we are in developer mode we are in danger of the key being ripped
+                    // off here.  We therefore will use a temporary @detach=n restriction.
+                    llOwnerSay("Developer key locked in place to prevent accidental detachment during dressing.");
+                    lmRunRLV("attachthis=y,detachthis=n,detach=n,touchall=n,showinv=n");
+
+#else
+                    // This locks down a (Normal) Dolly's touch and inventory - but
+                    // there is no restore from this setting
+//                  lmRunRLV("touchall=n,showinv=n");
+#endif
+                    tempDressingLock = TRUE;
+
+                    // dressingSteps is used to track whether all listener code paths
+                    // for dressing have been done: that is, normalself attached,
+                    // new outfit attached, and old outfit removed. (It does NOT include
+                    // nude folder.)
+                    dressingSteps = 0;
+
+                    dressingFailures = 0;
+                    change = 1;
+
+                    // Send a message to ourself, generate an event, and save the
+                    // previous values of newOutfit* into oldOutfit* - can we do
+                    // this without using a link message?
+                    //
+                    // *OutfitName       choice           - name of outfit
+                    // *OutfitFolder     outfitsFolder    - name of main outfits folder
+                    // *OutfitPath       clothingFolder   - name of folder with outfit, relative to outfitsFolder
+                    // *Outfit           -new-            - full path of outfit (outfitsFolder + "/" + clothingFolder + "/" + choice)
+
+                    lmSendConfig("oldOutfitName",   (  oldOutfitName = newOutfitName));
+                    lmSendConfig("oldOutfitFolder", (oldOutfitFolder = newOutfitFolder));
+                    lmSendConfig("oldOutfitPath",   (  oldOutfitPath = newOutfitPath));
+                    lmSendConfig("oldOutfit",       (      oldOutfit = newOutfit));
+
+                    // Build the newOutfit* variables - but do they get used?
+
+                    //  newOutfitName = choice;
+                    newOutfitFolder = outfitsFolder;
+                      newOutfitPath = clothingFolder;
+
+                    newOutfit = newOutfitFolder + "/";
+                    if (clothingFolder != "")
+                        newOutfit += clothingFolder + "/";
+                    newOutfit += newOutfitName;
+
+//                  lmSendConfig("newOutfitName",   (newOutfitName));
+//                  lmSendConfig("newOutfitFolder", (newOutfitFolder));
+//                  lmSendConfig("newOutfitPath",   (newOutfitPath));
+//                  lmSendConfig("newOutfit",       (newOutfit));
+                }
+
+                //newOutfitWordEnd = llStringLength(newOutfit)  - 1;
+
+                //llOwnerSay("newOutfit is: " + newOutfit);
+                //llOwnerSay("newOutfitName is: " + newOutfitName);
+                //llOwnerSay("choice is: " + choice);
+                //llOwnerSay("clothingFolder is: " + clothingFolder);
+
+                // Four steps to dressing avi:
+                //
+                // 1) Replace every item that can be replaced (using the
+                //    command @attachall)
+                // 2) Add every item that didnt get put on the first time
+                //    (using the @attachallover command)
+                // 3) Remove the remaining portions of the old outfit
+                // 4) Add items that are required for all outfits
+                //    (using the @attach command)
+
+                llOwnerSay("New outfit chosen: " + newOutfitName);
+
+                // Get the path of whatever outfit is being worn, and save
+                // it for later to be able to remove an outfit - not just
+                // one we know about
+                //
+                // Go through a litany of clothing, in order to find the path
+                // to the clothing worn. If there is no clothing on these points
+                // for this outift, then this does not work.
+                //
+                // This also assumes that a complete outfit is being used,
+                // and that all parts are contained in a single folder.
+                // This also assumes that the new outfit does not also
+                // exist in this folder - such as one outfit using certain
+                // items and another outfit using other items - such as
+                // one outfit using a miniskirt and one a long dress.
+
+                // Original outfit was a complete avi reset....
+                // Restore our usual look from the ~normalself
+                // folder...
+
+                // This attaches ~normalself and locks it
+                lmRunRLV("attachallover:" + normalselfFolder + "=force,detachallthis:" + normalselfFolder + "=n");
+
+                if (nudeFolder != "") {
+                    // this attaches the ~nude folder
+                    lmRunRLV("attachallover:" + nudeFolder + "=force,detachallthis:" + nudeFolder + "=n");
+                }
+                    
+                // attach the new folder and lock it down - and prevent nude
+                lmRunRLV("attachallover:" + newOutfit + "=force,detachallthis:" + newOutfit + "=n");
+                llSleep(2.0);
+
+                // At this point, all of ~normalself, ~nude, and newOutfit have been added and locked
+                // We should be fully clothed and set with every thing we need - BUT we have to
+                // remove the old...
+
+                // Remove rest of old outfit (using saved path)
+                if (oldOutfitPath != "") {
+                    lmRunRLV("detachall:" + oldOutfitPath + "=force");
+                    oldOutfitPath = "";
+                }
+
+                // Now remove everything in the outfits folder (typeically "> Outfits") except
+                // that which is locked down - and then attach everything in the new outfit
+                // again
+                lmRunRLV("detachall:" + outfitsFolder + "=force");
+                lmRunRLV("attachall:" + newOutfit + "=force");
+                llSleep(2.0);
+
+                // And now send an attempt to clean up any remaining stray pieces: remove rest of
+                // clothing not otherwise locked
+                string parts = "gloves|jacket|pants|shirt|shoes|skirt|socks|underpants|undershirt|alpha|pelvis|left foot|right foot|r lower leg|l lower leg|r forearm|l forearm|r upper arm|l upper arm|r upper leg|l upper leg";
+                lmRunRLV("detachallthis:" + llDumpList2String(llParseString2List(parts, [ "|" ], []), "=force,detachallthis:") + "=force");
+
+                // check to see that everything in the ~normalself folder is
+                // actually worn
+                wearFolder = normalselfFolder;
+                checkWornItems(wearFolder);
+
+                // check to see that everything in the old Outfit folder is
+                // actually removed
+                unwearFolder = oldOutfitPath;
+                if (unwearFolder != "") checkRemovedItems(unwearFolder);
+                else dressingSteps += 2;
+
+                llSetTimerEvent(15.0);
+            }
+#endif
         }
         else if (code == RLV_RESET) {
             RLVok = (cdListIntegerElement(split, 0) == 1);
@@ -610,38 +753,8 @@ default {
                     outfitPage--;
 
                 }
-#ifdef PARENT
-                else if ("Outfits Parent") {
-                    //debugSay(6, "DEBUG-DRESS", ">>> Dress Menu: " + choice);
 
-                    // Strip off the end of clothingFolder and update everyone
-                    //
-                    // This is complicated because there is no "search from end" function
-                    // in LSL. So we hack it.
-                    list pathParts = llParseString2List(clothingFolder, [ "/" ], []);
-
-                    if (llGetListLength(pathParts) > 1)
-                        clothingFolder = llDumpList2String(llList2List(pathParts, 0, -2), "/");
-                    else
-                        clothingFolder = "";
-
-                    lmSendConfig("clothingFolder", clothingFolder);
-
-#ifdef DEVELOPER_MODE
-                    setActiveFolder();
-                    debugSay(6, "DEBUG-DRESS", "Moving up to the " + activeFolder + " folder.");
-#endif
-                    dressViaMenu();
-                    return;
-                }
-
-                string UpMain = "Outfits Parent";
-#endif
                 list dialogItems = [ "Outfits Prev", "Outfits Next" ];
-#ifdef PARENT
-                if (clothingFolder != "")
-                    dialogItems += "Outfits Parent";
-#endif
                 backMenu = MAIN;
                 dialogItems += "Back...";
 
@@ -685,144 +798,7 @@ default {
                     return;
                 }
 
-                if ((outfitsFolder != "") && (choice != newOutfitName)) {
-#ifdef DEVELOPER_MODE
-                    // If we are in developer mode we are in danger of the key being ripped
-                    // off here.  We therefore will use a temporary @detach=n restriction.
-                    llOwnerSay("Developer key locked in place to prevent accidental detachment during dressing.");
-                    lmRunRLV("attachthis=y,detachthis=n,detach=n,touchall=n,showinv=n");
-
-#else
-                    // This locks down a (Normal) Dolly's touch and inventory - but
-                    // there is no restore from this setting
-//                  lmRunRLV("touchall=n,showinv=n");
-#endif
-                    tempDressingLock = TRUE;
-
-                    // dressingSteps is used to track whether all listener code paths
-                    // for dressing have been done: that is, normalself attached,
-                    // new outfit attached, and old outfit removed. (It does NOT include
-                    // nude folder.)
-                    dressingSteps = 0;
-
-                    dressingFailures = 0;
-                    change = 1;
-
-                    // Send a message to ourself, generate an event, and save the
-                    // previous values of newOutfit* into oldOutfit* - can we do
-                    // this without using a link message?
-                    //
-                    // *OutfitName       choice           - name of outfit
-                    // *OutfitFolder     outfitsFolder    - name of main outfits folder
-                    // *OutfitPath       clothingFolder   - name of folder with outfit, relative to outfitsFolder
-                    // *Outfit           -new-            - full path of outfit (outfitsFolder + "/" + clothingFolder + "/" + choice)
-
-                    lmSendConfig("oldOutfitName",   (  oldOutfitName = newOutfitName));
-                    lmSendConfig("oldOutfitFolder", (oldOutfitFolder = newOutfitFolder));
-                    lmSendConfig("oldOutfitPath",   (  oldOutfitPath = newOutfitPath));
-                    lmSendConfig("oldOutfit",       (      oldOutfit = newOutfit));
-
-                    // Build the newOutfit* variables - but do they get used?
-
-                      newOutfitName = choice;
-                    newOutfitFolder = outfitsFolder;
-                      newOutfitPath = clothingFolder;
-
-                    newOutfit = newOutfitFolder + "/";
-                    if (clothingFolder != "")
-                        newOutfit += clothingFolder + "/";
-                    newOutfit += newOutfitName;
-
-//                  lmSendConfig("newOutfitName",   (newOutfitName));
-//                  lmSendConfig("newOutfitFolder", (newOutfitFolder));
-//                  lmSendConfig("newOutfitPath",   (newOutfitPath));
-//                  lmSendConfig("newOutfit",       (newOutfit));
-                }
-
-                //newOutfitWordEnd = llStringLength(newOutfit)  - 1;
-
-                //llOwnerSay("newOutfit is: " + newOutfit);
-                //llOwnerSay("newOutfitName is: " + newOutfitName);
-                //llOwnerSay("choice is: " + choice);
-                //llOwnerSay("clothingFolder is: " + clothingFolder);
-
-                // Four steps to dressing avi:
-                //
-                // 1) Replace every item that can be replaced (using the
-                //    command @attachall)
-                // 2) Add every item that didnt get put on the first time
-                //    (using the @attachallover command)
-                // 3) Remove the remaining portions of the old outfit
-                // 4) Add items that are required for all outfits
-                //    (using the @attach command)
-
-                llOwnerSay("New outfit chosen: " + newOutfitName);
-
-                // Get the path of whatever outfit is being worn, and save
-                // it for later to be able to remove an outfit - not just
-                // one we know about
-                //
-                // Go through a litany of clothing, in order to find the path
-                // to the clothing worn. If there is no clothing on these points
-                // for this outift, then this does not work.
-                //
-                // This also assumes that a complete outfit is being used,
-                // and that all parts are contained in a single folder.
-                // This also assumes that the new outfit does not also
-                // exist in this folder - such as one outfit using certain
-                // items and another outfit using other items - such as
-                // one outfit using a miniskirt and one a long dress.
-
-                // Original outfit was a complete avi reset....
-                // Restore our usual look from the ~normalself
-                // folder...
-
-                // This attaches ~normalself and locks it
-                lmRunRLV("attachallover:" + normalselfFolder + "=force,detachallthis:" + normalselfFolder + "=n");
-
-                if (nudeFolder != "") {
-                    // this attaches the ~nude folder
-                    lmRunRLV("attachallover:" + nudeFolder + "=force,detachallthis:" + nudeFolder + "=n");
-                }
-                    
-                // attach the new folder and lock it down - and prevent nude
-                lmRunRLV("attachallover:" + newOutfit + "=force,detachallthis:" + newOutfit + "=n");
-                llSleep(2.0);
-
-                // At this point, all of ~normalself, ~nude, and newOutfit have been added and locked
-                // We should be fully clothed and set with every thing we need - BUT we have to
-                // remove the old...
-
-                // Remove rest of old outfit (using saved path)
-                if (oldOutfitPath != "") {
-                    lmRunRLV("detachall:" + oldOutfitPath + "=force");
-                    oldOutfitPath = "";
-                }
-
-                // Now remove everything in the outfits folder (typeically "> Outfits") except
-                // that which is locked down - and then attach everything in the new outfit
-                // again
-                lmRunRLV("detachall:" + outfitsFolder + "=force");
-                lmRunRLV("attachall:" + newOutfit + "=force");
-                llSleep(2.0);
-
-                // And now send an attempt to clean up any remaining stray pieces: remove rest of
-                // clothing not otherwise locked
-                string parts = "gloves|jacket|pants|shirt|shoes|skirt|socks|underpants|undershirt|alpha|pelvis|left foot|right foot|r lower leg|l lower leg|r forearm|l forearm|r upper arm|l upper arm|r upper leg|l upper leg";
-                lmRunRLV("detachallthis:" + llDumpList2String(llParseString2List(parts, [ "|" ], []), "=force,detachallthis:") + "=force");
-
-                // check to see that everything in the ~normalself folder is
-                // actually worn
-                wearFolder = normalselfFolder;
-                checkWornItems(wearFolder);
-
-                // check to see that everything in the old Outfit folder is
-                // actually removed
-                unwearFolder = oldOutfitPath;
-                if (unwearFolder != "") checkRemovedItems(unwearFolder);
-                else dressingSteps += 2;
-
-                llSetTimerEvent(15.0);
+                lmInternalCommand("wearOutfit", newOutfitName, NULL_KEY);
             }
         }
 
@@ -1030,23 +1006,7 @@ default {
                 llDialog(dresserID, "You look in " + llToLower(pronounHerDoll) + " closet, and see nothing for Dolly to wear.", ["OK"], dialogChannel);
                 return;
             }
-#ifdef PARENT
-            // This looks like a complete bug but just comment it out for now
-            else {
-                if (clothingFolder != "") {
-                    list pathParts = llParseString2List(clothingFolder, [ "/" ], []);
 
-                    clothingFolder = llDumpList2String(llDeleteSubList(pathParts, -1, -1), "/");
-                    lmSendConfig("clothingFolder", clothingFolder);
-                    setActiveFolder();
-
-                    debugSay(5,"DEBUG-CLOTHING","Trying the " + activeFolder + " folder.");
-
-                    dressViaRandom(); // recursion
-                    return;
-                }
-            }
-#endif
             // Sort: slow bubble sort
             outfitsList = llListSort(outfitsList, 1, TRUE);
 
@@ -1088,31 +1048,7 @@ default {
                     outfitPage--;
 
                 }
-#ifdef PARENT
-                else if ("Outfits Parent") {
-
-                    if (clothingFolder != "") { // Return to the parent folder
-                        list pathParts = llParseString2List(clothingFolder, [ "/" ], []);
-
-                        clothingFolder = llDumpList2String(llDeleteSubList(pathParts, -1, -1), "/");
-                        lmSendConfig("clothingFolder", clothingFolder);
-                        setActiveFolder();
-
-                        debugSay(6, "DEBUG-DRESS", "Trying the " + activeFolder + " folder.");
-
-                        dressViaMenu();
-                        return;
-                    }
-                    else {
-                        lmMenuReply(MAIN, name, id); // No parent folder to return to, go to main menu instead
-                    }
-                }
-#endif
             }
-#endif
-
-#ifdef PARENT
-            string UpMain = "Outfits Parent";
 #endif
             // Provide a dialog to user to choose new outfit
             debugSay(3, "DEBUG-CLOTHING", "Putting up Primary Menu in new directory");
