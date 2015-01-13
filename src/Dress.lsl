@@ -15,8 +15,6 @@
 
 #include "include/GlobalDefines.lsl"
 
-#define WEAR_MOVED 1
-
 #define NO_FILTER ""
 #define cdListenMine(a) llListen(a, NO_FILTER, dollID, NO_FILTER)
 #define isKnownTypeFolder(a) (llListFindList(typeFolders, [ a ]) != NOT_FOUND)
@@ -275,8 +273,14 @@ changeComplete(integer success) {
         if (dressingFailures > MAX_DRESS_FAILURES)
             llOwnerSay("Too many dressing failures.");
 
-        if (canDressTimeout)
-            llSay(DEBUG_CHANNEL,"Dressing sequence (with outfit " + newOutfitName + ") timed out.");
+        if (canDressTimeout) {
+            if (newOutfitName) {
+                llSay(DEBUG_CHANNEL,"Dressing sequence (with outfit " + newOutfitName + ") timed out.");
+            }
+            else {
+                llSay(DEBUG_CHANNEL,"Dressing sequence (with no outfit?!) timed out.");
+            }
+        }
 
         lmSendToAgentPlusDoll("Change to new outfit " + newOutfitName + " unsuccessful.", dresserID);
         wearLock = 0;
@@ -471,7 +475,11 @@ default {
                 // ergo, the reason this overwrite is here.
                 newOutfitName = cdListElement(split, 0);
 
-#ifdef WEAR_MOVED
+                if (newOutfitName == "") {
+                    llSay(DEBUG_CHANNEL, "No outfit chosen to wear!");
+                    return;
+                }
+
                 if (outfitsFolder != "") {
 #ifdef DEVELOPER_MODE
                     // If we are in developer mode we are in danger of the key being ripped
@@ -611,7 +619,6 @@ default {
 
                 llSetTimerEvent(15.0);
             }
-#endif
             else if (cmd == "setHovertext") {
                 string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
 
@@ -820,7 +827,7 @@ default {
                     return;
                 }
 
-                lmInternalCommand("wearOutfit", newOutfitName, NULL_KEY);
+                lmInternalCommand("wearOutfit", choice, NULL_KEY);
             }
         }
 
