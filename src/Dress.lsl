@@ -951,12 +951,11 @@ default {
 
                     // Here.....
                     //outfitsHandle = cdListenMine(outfitsChannel);
-                    outfitsHandle = llListen(outfitsChannel, "", "", "");
+                    outfitsHandle = cdListenMine(outfitsChannel);
                     //llSay(outfitsChannel,randomOutfitName);
 
-                    // The (randomly) chosen outfit is pushed as a menu reply
-                    //lmMenuReply(randomOutfitName, llGetObjectName(), llGetKey());
-                    //lmMenuReply(randomOutfitName, llGetObjectName(), dresserID);
+                    // The (randomly) chosen outfit is used in a dialog - to generate a menu reply
+                    // GET RID OF THIS....
                     llDialog(dollID, "You are being dressed in this outfit.", (list)randomOutfitName, outfitsChannel);
 
                     llOwnerSay("You are being dressed in this outfit: " + randomOutfitName);
