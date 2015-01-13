@@ -192,7 +192,7 @@ default {
                     commandString += ",permissive=n,detach=n";
                     //if (userBaseRLVcmd) commandString += "," + userBaseRLVcmd;
 #else
-                    llSay(DEBUG_CHANNEL,"blanket clear issued from " + script);
+                    //llSay(DEBUG_CHANNEL,"blanket clear issued from " + script);
                     commandString += ",permissive=y,detach=y";
 #endif
                     //lmInternalCommand("clearRLV",script,NULL_KEY);
