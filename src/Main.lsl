@@ -283,11 +283,9 @@ default {
             lmRating(simRating);
 
 #ifdef ADULT_MODE
-            if (allowStrip || (dollType == "Slut")) {
-
-                if (cdRating2Integer(simRating) < 2) {
-                    llOwnerSay("Entered " + llGetRegionName() + "; rating is " + llToLower(simRating) + " - so stripping disabled.");
-                }
+            if (allowStrip || (dollType == "Slut") || hardCore) {
+                if (simRating == "PG")
+                    llOwnerSay("This region is rated G - so stripping is disabled.");
             }
 #endif
         }
