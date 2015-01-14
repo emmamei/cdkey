@@ -135,6 +135,9 @@ default {
             else if (name == "keyLimit")                      maxMins = llRound((float)value / 60.0);
             else if (name == "backMenu")                     backMenu = value;
             else if (name == "quiet")                           quiet = (integer)value;
+            else if (name == "homingBeacon")             homingBeacon = (integer)value;
+            else if (name == "collapseTime")             collapseTime = (integer)value;
+            else if (name == "collapsed")                   collapsed = (integer)value;
             else if (name == "autoTP")                         autoTP = (integer)value;
             else if (name == "autoTP")                         autoTP = (integer)value;
             else if (name == "showPhrases")               showPhrases = (integer)value;
@@ -280,8 +283,11 @@ default {
                     // for at least 900 seconds (15 minutes) - Suggested by Christina
 
                     if (timeCollapsed > TIME_BEFORE_TP) {
-                        if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK)
-                            menu += ["TP Home"];
+#ifdef HOMING_BEACON
+                        if (!homingBeacon)
+#endif
+                            if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK)
+                                menu += ["TP Home"];
 
                         // If the doll is still down after 1800 seconds (30 minutes) and their
                         // emergency winder is recharged; add a button for it
@@ -295,8 +301,8 @@ default {
                     }
 
                     cdDialogListen();
-                    debugSay(2,"DEBUG-TRANSFORM","Done building collapsedMenu: msg = \"" + msg  + "\"; menu = [ " + llDumpList2String(menu, ",") + " ]");
-                    debugSay(2,"DEBUG-TRANSFORM","Done building collapsedMenu: id = " + (string)id);
+                    //debugSay(2,"DEBUG-TRANSFORM","Done building collapsedMenu: msg = \"" + msg  + "\"; menu = [ " + llDumpList2String(menu, ",") + " ]");
+                    //debugSay(2,"DEBUG-TRANSFORM","Done building collapsedMenu: id = " + (string)id);
                     llDialog(dollID, msg, menu, dialogChannel);
                 }
             }
@@ -450,10 +456,12 @@ Controller - Take care choosing your controllers; they have great control over D
                 list plusList = [];
 
                 plusList += cdGetButton("Quiet Key", id, quiet, 0);
-
                 plusList += cdGetButton("Type Text", id, hoverTextOn, 0);
                 plusList += cdGetButton("Warnings", id, doWarnings, 0);
                 plusList += cdGetButton("Phrases", id, showPhrases, 0);
+#ifdef HOMING_BEACON
+                plusList += cdGetButton("Homing Beacon", id, homingBeacon, 0);
+#endif
 
                 // One-way options
                 if (cdIsController(id)) {

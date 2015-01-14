@@ -743,11 +743,14 @@ default {
                 integer windAmount = llList2Integer(split, 0);
                 string name = llList2String(split, 1);
                 string mins = (string)llFloor(windAmount / SEC_TO_MIN);
-                string percent = formatFloat((float)timeLeftOnKey * 100.0 / (float)effectiveLimit, 2);
+                string percent = formatFloat((float)timeLeftOnKey * 100.0 / (float)effectiveLimit, 1);
 
                 llOwnerSay("Your key has been turned by " + name + " giving you " +
                     mins + " more minutes of life (" + percent + "% capacity).");
 
+#ifdef DEVELOPER_MODE
+                llSay(DEBUG_CHANNEL, "Wind: " + mins + " (" + percent + ") by " + name)
+#endif
                 lmSendToAgent("You turn " + dollDisplayName + "'s Key, and " + pronounSheDoll + " receives " +
                     mins + " more minutes of life (" + percent + "% capacity).", id);
             }

@@ -832,10 +832,13 @@ default {
                             else {
                                 //----------------------------------------
                                 // Operations
-                                     if (afterSpace == "Type Text")  lmSendConfig("hoverTextOn",      (string)isX);
-                                else if (afterSpace == "Quiet Key")  lmSendConfig("quiet",       (string)(quiet = isX));
-                                else if (afterSpace == "Phrases")    lmSendConfig("showPhrases", (string)(showPhrases = isX));
-                                else if (afterSpace == "Warnings")   lmSendConfig("doWarnings",  (string)isX);
+                                     if (afterSpace == "Type Text")     lmSendConfig("hoverTextOn",   (string)isX);
+                                else if (afterSpace == "Quiet Key")     lmSendConfig("quiet",         (string)(quiet = isX));
+                                else if (afterSpace == "Phrases")       lmSendConfig("showPhrases",   (string)(showPhrases = isX));
+#ifdef HOMING_BEACON
+                                else if (afterSpace == "Homing Beacon") lmSendConfig("homingBeacon",  (string)isX);
+#endif
+                                else if (afterSpace == "Warnings")      lmSendConfig("doWarnings",    (string)isX);
 
                                 // if is not Doll, they can set and unset these options...
                                 // if is Doll, these abilities can only be removed (X)

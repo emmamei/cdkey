@@ -323,6 +323,20 @@ default {
             else lmSendConfig("transformLockExpire",(string)(transformLockExpire - llGetUnixTime()));
         }
 
+#ifdef HOMING_BEACON
+        if (homingBeacon) {
+            string timeLeft = llList2String(split, 0);
+
+            // is it possible to be collapsed but collapseTime be equal to 0.0?
+            if (collapseTime != 0.0 || collapsed) {
+                float timeCollapsed = llGetUnixTime() - collapseTime;
+
+                if (timeCollapsed > TIME_BEFORE_TP)
+                    if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK)
+                        lmInternalCommand("teleport", LANDMARK_HOME, id);
+            }
+        }
+#endif
         if (RLVok) {
             if (outfitSearching) {
                 // Note carefully - if the search tries is maxed,
@@ -486,6 +500,10 @@ default {
             else if (name == "hardcore")                     hardcore = (integer)value;
             else if (name == "backMenu")                     backMenu = value;
             else if (name == "hoverTextOn")               hoverTextOn = (integer)value;
+#ifdef HOMING_BEACON
+            else if (name == "homingBeacon")             homingBeacon = (integer)value;
+#endif
+            else if (name == "collapsed")                   collapsed = (integer)value;
             else if (name == "busyIsAway")                 busyIsAway = (integer)value;
             else if (name == "controllers") {
                 if (split == [""]) controllers = [];
