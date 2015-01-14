@@ -946,8 +946,8 @@ default
                 //
                 if (isDoll) {
                     if (choice == "gname") {
-                        string doubledSymbols = "⁂⁂••٩٩●̮̮̃●̮̮̃•̃•̃۶۶✣✣✱✱✧✧✦✦❦❦⌘⌘ѽѽ☄☄✰✰++₪₪קק¤¤øøღღ°°♫♫✿✿▫▫▪▪♬♬♩♩♪♪♬♬‘‘°°ººةة..,,==--++^^**˜˜••..¤¤øø””ﺴﺴ☊☊☩☩´´⇝⇝⁘⁘⁙⁙⁚⁚⁛⁛↑↑↓↓☆☆★★··..¸¸❤❤";
-                        string pairedSymbols = "<>()[]{}?؟\\/";
+                        string doubledSymbols = "∆∆☀☀✵✵██▓▓▒▒░░❂❂××××⊹⊹××⊙⊙웃웃⚛⚛☠☠ҳ̸ҳ̸Ҳ̸Ҳ̸ҳҳ░░♡♡♫♫♬♬♀♀❤❤☮☮ﭚﭚ☆☆※※✴✴❇❇ﭕﭕةةثث¨¨ϟϟღღ⁂⁂٩٩۶۶✣✣✱✱✧✧✦✦❦❦⌘⌘ѽѽ☄☄✰✰++₪₪קק¤¤øøღღ°°♫♫✿✿▫▫▪▪♬♬♩♩♪♪♬♬°°ººةة==--++^^**˜˜¤¤øø☊☊☩☩´´⇝⇝⁘⁘⁙⁙⁚⁚⁛⁛↑↑↓↓☆☆★★··❤❤";
+                        string pairedSymbols = "⊰⊱«»☾☽<>()[]{}\\/";
                         string allSymbols;
                         string s1;
                         string s2;
@@ -964,7 +964,8 @@ default
                             n = (integer)(llFrand(llStringLength(allSymbols)));
                             c = llGetSubString(allSymbols,n,n);
 
-                            j = (integer)llFrand(3) + 1;
+                            if ((integer)(llFrand(4)) == 0) j = (integer)llFrand(3) + 1;
+                            else j = 1;
 
                                  if (j == 1) s1 = s1 + c;
                             else if (j == 2) s1 = s1 + c + c;
