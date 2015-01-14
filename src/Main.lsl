@@ -851,14 +851,14 @@ default {
                 // Test and reject winding of jammed dollies
                 if (collapsed == JAMMED) {
                     cdDialogListen();
-                    llDialog(id, "The Dolly cannot be wound while " + llToLower(pronounHerDoll) + " key is being held.", ["Help...", "OK"], dialogChannel);
+                    llDialog(id, "The Dolly cannot be wound while " + pronounHerDoll + " key is being held.", ["Help...", "OK"], dialogChannel);
                     return;
                 }
 
                 // Test and reject repeat winding as appropriate - Controllers and Carriers are not limited
                 if (!(cdIsController(id) || cdIsCarrier(id))) {
                     if (!allowRepeatWind && (id == lastWinderID)) {
-                        lmSendToAgent("Dolly needs to be wound by someone else before you can wind " + llToLower(pronounHerDoll) + " again.", id);
+                        lmSendToAgent("Dolly needs to be wound by someone else before you can wind " + pronounHerDoll + " again.", id);
                         return;
                     }
                 }

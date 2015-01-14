@@ -206,7 +206,8 @@ default {
             // Note that this section will be empty except in Adult Mode...
 #ifdef ADULT_MODE
             if (cmd == "strip") {
-                string part = llList2String(split, 0);
+                // llToLower() may be superfluous here
+                string part = llToLower(llList2String(split, 0));
 
                 if (id != dollID) {
 
@@ -217,10 +218,10 @@ default {
                     //lmSendConfig("wearLock", (string)(wearLock = 1));
                     lmSetConfig("wearLock", "1");
 
-                    if (!quiet) llSay(0, "The dolly " + dollName + " has " + llToLower(pronounHerDoll) + " " + llToLower(part) + " stripped off " + llToLower(pronounHerDoll) + " and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes.");
-                    else llOwnerSay("You have had your " + llToLower(part) + " stripped off you and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes");
+                    if (!quiet) llSay(0, "The dolly " + dollName + " has " + pronounHerDoll + " " + part + " stripped off " + pronounHerDoll + " and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes.");
+                    else llOwnerSay("You have had your " + part + " stripped off you and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes");
                 }
-                else llOwnerSay("You have stripped off your own " + llToLower(part) + ".");
+                else llOwnerSay("You have stripped off your own " + part + ".");
             }
 #endif
             else if (cmd == "setGemColour") {
@@ -419,8 +420,8 @@ Controller - Take care choosing your controllers; they have great control over D
                     plusList += "Back...";
                 }
                 else {
-                    string p = llToLower(pronounHerDoll);
-                    string s = llToLower(pronounSheDoll);
+                    string p = pronounHerDoll;
+                    string s = pronounSheDoll;
 
                     msg += "Either Dolly does not have an RLV capable viewer, or " + s + " has RLV turned off in " + p + " viewer settings.  There are no usable options available.";
 

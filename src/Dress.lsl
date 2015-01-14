@@ -671,7 +671,7 @@ default {
                 }
                 else {
                     cdDialogListen();
-                    llDialog(dresserID, "You look in " + llToLower(pronounHerDoll) + " closet, and see no outfits for Dolly to wear.", ["OK"], dialogChannel);
+                    llDialog(dresserID, "You look in " + pronounHerDoll + " closet, and see no outfits for Dolly to wear.", ["OK"], dialogChannel);
                     return;
                 }
             }
@@ -706,7 +706,7 @@ default {
                 integer outfitRating = cdOutfitRating(newOutfitName);
                 integer regionRating = cdRating2Integer(simRating);
 
-                debugSay(3, "DEBUG-DRESS", "Region rating " + llToLower(simRating) + " outfit " + newOutfitName + " outfitRating: " + (string)outfitRating +
+                debugSay(3, "DEBUG-DRESS", "Region rating " + simRating + " outfit " + newOutfitName + " outfitRating: " + (string)outfitRating +
                             " regionRating: " + (string)regionRating);
 
                 if (RLVok) {
@@ -753,7 +753,7 @@ default {
             //
             // We just got a selected Outfit or new folder to go into
 
-            //outfitsMessage = "You may choose any outfit for " + llToLower(pronounHerDoll) + " to wear. ";
+            //outfitsMessage = "You may choose any outfit for " + pronounHerDoll + " to wear. ";
             //if (dresserID == dollID) outfitsMessage += "See " + WEB_DOMAIN + outfitsURL + " for more information on outfits. ";
             //outfitsMessage += "\n\n" + folderStatus();
 
@@ -996,7 +996,7 @@ default {
             // Did we get anything at all?
             if (choice == "") {
                 cdDialogListen();
-                llDialog(dresserID, "You gaze into " + llToLower(pronounHerDoll) + " closet, and see no outfits for Dolly to wear.", ["OK"], dialogChannel);
+                llDialog(dresserID, "You gaze into " + pronounHerDoll + " closet, and see no outfits for Dolly to wear.", ["OK"], dialogChannel);
                 return;
             }
 
@@ -1036,7 +1036,7 @@ default {
             // we've gone through and cleaned up the list - but is anything left?
             if (outfitsList == []) {
                 cdDialogListen();
-                llDialog(dresserID, "You look in " + llToLower(pronounHerDoll) + " closet, and see nothing for Dolly to wear.", ["OK"], dialogChannel);
+                llDialog(dresserID, "You look in " + pronounHerDoll + " closet, and see nothing for Dolly to wear.", ["OK"], dialogChannel);
                 return;
             }
 

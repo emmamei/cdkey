@@ -299,7 +299,7 @@ default {
                 isDoll          = cdIsDoll(id);
                 numControllers  = cdControllerCount();
 
-                //if (startup) lmSendToAgent("Dolly's key is still establishing connections with " + llToLower(pronounHerDoll) + " systems please try again in a few minutes.", id);
+                //if (startup) lmSendToAgent("Dolly's key is still establishing connections with " + pronounHerDoll + " systems please try again in a few minutes.", id);
 
                 if (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND) {
                     //msg = "You are not permitted any access to this dolly's key.";

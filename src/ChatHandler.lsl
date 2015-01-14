@@ -577,7 +577,7 @@ default
                         if (demoMode) s += "Demo mode is enabled\n";
                         if (lastWinderName) s += "Last winder was: " + lastWinderName + "\n";
 
-                        string p = llToLower(pronounHerDoll);
+                        string p = pronounHerDoll;
 
                         cdCapability(autoTP,         "Doll can", "be force teleported");
                         cdCapability(detachable,     "Doll can", "detach " + p + " key");
@@ -665,8 +665,8 @@ default
                         return;
                     }
                     else if (choice == "release") {
-                        string p = llToLower(pronounHerDoll);
-                        string s = llToLower(pronounSheDoll);
+                        string p = pronounHerDoll;
+                        string s = pronounSheDoll;
 
                         if ((poserID != NULL_KEY) && (poserID != dollID)) llOwnerSay("Dolly tries to wrest control of " + p + " body from the pose but " + s + " is no longer in control of " + p + " form.");
                         else lmMenuReply("Unpose", dollName, dollID);
