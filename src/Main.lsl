@@ -741,17 +741,14 @@ default {
             else if (cmd == "windMsg") {
                 integer windAmount = llList2Integer(split, 0);
                 string name = llList2String(split, 1);
+                string mins = (string)llFloor(windAmount / SEC_TO_MIN);
+                string percent = formatFloat((float)timeLeftOnKey * 100.0 / (float)effectiveLimit, 2);
 
-                if (id == dollID) {
-                    llOwnerSay("Your key has been turned by " + name + " giving you " +
-                        (string)llFloor(windAmount / SEC_TO_MIN) + " more minutes of life (" +
-                        formatFloat((float)timeLeftOnKey * 100.0 / (float)effectiveLimit, 2) + "% capacity).");
-                }
-                else {
-                    lmSendToAgent("You turn " + dollName + "'s Key, and " + llToLower(pronounSheDoll) + " receives " +
-                        (string)llFloor(windAmount / SEC_TO_MIN) + " more minutes of life (" +
-                        formatFloat((float)timeLeftOnKey * 100.0 / (float)effectiveLimit, 2) + "% capacity).", id);
-                }
+                llOwnerSay("Your key has been turned by " + name + " giving you " +
+                    mins + " more minutes of life (" + percent + "% capacity).");
+
+                lmSendToAgent("You turn " + dollName + "'s Key, and " + pronounSheDoll + " receives " +
+                    mins + " more minutes of life (" + percent + "% capacity).", id);
             }
 
 //          else if (cmd == "wearLock") {
