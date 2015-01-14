@@ -97,16 +97,6 @@ list currentPhrases;
 #define NOT_AUTOMATED 0
 
 setDollType(string stateName, integer automated) {
-    // This is BAD: it shows a knowledge of how we
-    // were called outside of the function - and ties
-    // the function to data outside the function without any
-    // gatekeeper or documentation
-    //if (choice == "Transform") stateName = transform;
-    //else stateName = choice;
-
-    //debugSay(2,"DEBUG-DOLLTYPE","Transforming to " + stateName);
-    //llOwnerSay("Transforming into a " + stateName + " dolly");
-
     // Convert state name to Title case
     stateName = cdGetFirstChar(llToUpper(stateName)) + cdButFirstChar(llToLower(stateName));
 
@@ -157,13 +147,8 @@ setDollType(string stateName, integer automated) {
     // We dont respond to this: we don't have to
     lmSendConfig("dollType", (dollType = stateName));
 
-    //cdPause();
-
     if (!quiet) cdChat(dollName + " has become a " + dollType + " Doll.");
     else llOwnerSay("You have become a " + dollType + " Doll.");
-
-    // This is being done too early...
-    //if (!RLVok) { lmSendToAgentPlusDoll("Because RLV is disabled, Dolly does not have the capability to change outfit.",transformerID); };
 
     // The Key Dolly is not allowed to have outfits so
     // no search for Type is warranted; note that
@@ -263,7 +248,6 @@ folderSearch(string folder, integer channel) {
 
     // The folder search starts as a RLV @getinv call...
     //
-    //handle = cdListenMine(channel);
     if (folder == "")
         lmRunRLV("getinv=" + (string)channel);
     else
@@ -271,8 +255,6 @@ folderSearch(string folder, integer channel) {
 
     // The next stage is the listener, while we create a time
     // out to timeout the RLV call...
-    //
-    //debugSay(2,"DEBUG-LOWSCRIPT","timer set to " + (string)RLV_TIMEOUT);
     llSetTimerEvent(RLV_TIMEOUT);
 }
 
@@ -342,12 +324,6 @@ default {
         }
 
         if (RLVok) {
-
-//            if (outfitsSearchTimer) {
-//                debugSay(2,"DEBUG-SEARCHING","Search aborted after " + formatFloat(llGetTime() - outfitsSearchTimer,1) + "s");
-//                outfitsSearchTimer = 0.0; // reset
-//            }
-
             if (outfitSearching) {
                 // Note carefully - if the search tries is maxed,
                 // that means that the attempted RLV call failed
@@ -416,9 +392,6 @@ default {
 
         //----------------------------------------
         // SET TIMER INTERVAL
-
-        //if (lowScriptMode) debugSay(2,"DEBUG-LOWSCRIPT","lowScript generates a rate of " + (string)LOW_RATE + "s.");
-        //else debugSay(2,"DEBUG-LOWSCRIPT","lowScript generates a rate of " + (string)STD_RATE + "s.");
 
         if (lowScriptMode) llSetTimerEvent(LOW_RATE);
         else llSetTimerEvent(STD_RATE);
@@ -506,12 +479,7 @@ default {
 #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")           timeReporting = (integer)value;
 #endif
-            else if (name == "lowScriptMode") {
-                //debugSay(2,"DEBUG-LOWSCRIPT","lowScript set to " + (string)lowScriptMode + " via link message");
-                lowScriptMode = (integer)value;
-                //if (lowScriptMode) llSetTimerEvent(LOW_RATE);
-                //else llSetTimerEvent(STD_RATE);
-            }
+            else if (name == "lowScriptMode")           lowScriptMode = (integer)value;
             else if (name == "collapsed")                   collapsed = (integer)value;
             else if (name == "simRating")                   simRating = value;
             else if (name == "quiet")                           quiet = (integer)value;
@@ -561,7 +529,6 @@ default {
 
             if (name == "dollType") {
                 setDollType(value, AUTOMATED);
-                //lmSendConfig("dollType",dollType);
             }
             else if (name == "transformLockExpire") {
                 lmSendConfig("transformLockExpire",(string)(transformLockExpire = (integer)value));
@@ -571,88 +538,6 @@ default {
             string cmd = llList2String(split, 0);
             split = llDeleteSubList(split, 0, 0);
 
-#ifdef SPACE_TEST
-            if (cmd == "setGemColour") {
-                vector newColour = (vector)llList2String(split, 0);
-                integer j; integer s; list params; list colourParams;
-                integer n; integer m;
-
-                n = llGetNumberOfPrims();
-                for (i = 1; i < n; i++) {
-                    params += [ PRIM_LINK_TARGET, i ];
-                    if (llGetSubString(llGetLinkName(i), 0, 4) == "Heart") {
-                        if (gemColour != newColour) {
-                            if (!s) {
-                                m = llGetLinkNumberOfSides(i);
-                                for (j = 0; j < m; j++) {
-                                    vector shade = <llFrand(0.2) - 0.1 + newColour.x,
-                                                    llFrand(0.2) - 0.1 + newColour.y,
-                                                    llFrand(0.2) - 0.1 + newColour.z>  * (1.0 + (llFrand(0.2) - 0.1));
-
-                                    if (shade.x < 0.0) shade.x = 0.0;
-                                    if (shade.y < 0.0) shade.y = 0.0;
-                                    if (shade.z < 0.0) shade.z = 0.0;
-
-                                    if (shade.x > 1.0) shade.x = 1.0;
-                                    if (shade.y > 1.0) shade.y = 1.0;
-                                    if (shade.z > 1.0) shade.z = 1.0;
-
-                                    colourParams += [ PRIM_COLOR, j, shade, 1.0 ];
-                                }
-                                params += colourParams;
-                                s = 1;
-                            }
-                            else params += colourParams;
-                        }
-                    }
-                }
-                llSetLinkPrimitiveParamsFast(0, params);
-                if (gemColour != newColour) {
-                    lmSendConfig("gemColour", (string)(gemColour = newColour));
-                }
-                params = [];
-            }
-            else if (cmd == "collapsedMenu") {
-                // this is only called for Dolly - so...
-                string timeLeft = llList2String(split, 0);
-                list menu = [ "Ok" ];
-
-                debugSay(2,"DEBUG-TRANSFORM","Building collapsedMenu...");
-                // is it possible to be collapsed but collapseTime be equal to 0.0?
-                if (collapseTime != 0.0 || collapsed) {
-                    float timeCollapsed = llGetUnixTime() - collapseTime;
-                    msg = "You need winding. ";
-#ifdef DEVELOPER_MODE
-                    if (timeCollapsed >= 60) {
-                        msg += "You have been collapsed for " + (string)llFloor(timeCollapsed / SEC_TO_MIN) + " minutes. ";
-                    }
-#endif
-
-                    // Only present the TP home option for the doll if they have been collapsed
-                    // for at least 900 seconds (15 minutes) - Suggested by Christina
-
-                    if (timeCollapsed > TIME_BEFORE_TP) {
-                        if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK)
-                            menu += ["TP Home"];
-
-                        // If the doll is still down after 1800 seconds (30 minutes) and their
-                        // emergency winder is recharged; add a button for it
-
-                        if (!hardcore) {
-                            if (timeCollapsed > TIME_BEFORE_EMGWIND) {
-                                if (winderRechargeTime <= llGetUnixTime())
-                                    menu += ["Wind Emg"];
-                            }
-                        }
-                    }
-
-                    cdDialogListen();
-                    debugSay(2,"DEBUG-TRANSFORM","Done building collapsedMenu: msg = \"" + msg  + "\"; menu = [ " + llDumpList2String(menu, ",") + " ]");
-                    debugSay(2,"DEBUG-TRANSFORM","Done building collapsedMenu: id = " + (string)id);
-                    llDialog(dollID, msg, menu, dialogChannel);
-                }
-            }
-#endif
             if (cmd == "optionsMenu") {
                 list pluslist;
                 lmSendConfig("backMenu",(backMenu = MAIN));
@@ -741,11 +626,8 @@ default {
         }
 
         else if (code == MENU_SELECTION) {
-            // string name = cdListElement(split, 2);
             string optName = llGetSubString(choice, 2, STRING_END);
             string curState = cdGetFirstChar(choice);
-
-            // llOwnerSay("DEBUG:500: ** name = " + name); // DEBUG
 
             // for timing out the Menu
             menuTime = llGetTime();
@@ -848,7 +730,6 @@ default {
             else if (choice == "Transform") {
                 // We get here because dolly had to confirm the change
                 // of type - and chose "Transform" from the menu
-                //choice = transform; // Type name saved from Transform confirmation
                 transformedViaMenu = YES;
                 setDollType(transform, NOT_AUTOMATED);
             }
@@ -882,26 +763,14 @@ default {
         }
         else if (code < 200) {
             if (code == 102) {
-                // FIXME: Is this relevant?
-                // Trigger Transforming Key setting
-                // if (!isTransformingKey) lmSendConfig("isTransformingKey", (string)(isTransformingKey = 1));
-                // lmSendConfig("isTransformingKey", (string)(isTransformingKey = 1));
-
                 configured = 1;
-                //if (stateName != dollType) setDollType(stateName, AUTOMATED);
             }
-
             else if (code == 104) {
                 reloadTypeNames();
                 llSetTimerEvent(30.0);
 
                 // Might have been set in Prefs, so do this late
             }
-
-            //else if (code == 105) {
-            //    if (script != "Start") return;
-            //}
-
             else if (code == 110) {
                 //initState = 105;
                 //
@@ -909,10 +778,7 @@ default {
                 // this is bad form but allows us to defer the subroutine
                 // until now in the startup process
                 setDollType(dollType, AUTOMATED);
-                //startup = 0;
-                ;
             }
-
             else if (code == MEM_REPORT) {
                 memReport(cdMyScriptName(),(float)choice);
             }
@@ -1076,7 +942,6 @@ default {
                     lmSendConfig("normalselfFolder",normalselfFolder);
 #ifdef WEAR_AT_LOGIN
                     if (changeOutfit) {
-                        //llSay(DEBUG_CHANNEL,"Outfit search complete: new random outfit being put on");
                         if (wearAtLogin)
                             lmInternalCommand("randomDress","",NULL_KEY);
                         changeOutfit = 0;
