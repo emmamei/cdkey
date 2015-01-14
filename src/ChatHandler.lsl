@@ -71,7 +71,10 @@ default
             split = llDeleteSubList(split,0,0);
 
                  if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
-            else if (name == "collapseTime")             collapseTime = llGetUnixTime() + (float)value;
+            else if (name == "collapseTime") {
+                collapseTime = (float)value;
+                if (collapseTime != 0.0) collapseTime += llGetTime();
+            }
             else if (name == "windingDown")               windingDown = (integer)value;
             else if (name == "lastWinderID")             lastWinderID = (key)value;
             else if (name == "lastWinderName")         lastWinderName = value;

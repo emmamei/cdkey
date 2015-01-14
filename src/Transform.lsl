@@ -498,7 +498,10 @@ default {
             else if (name == "canAFK")                         canAFK = (integer)value;
             else if (name == "mustAgreeToType")       mustAgreeToType = (integer)value;
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
-            else if (name == "collapseTime")             collapseTime = llGetUnixTime() + (integer)value;
+            else if (name == "collapseTime") {
+                collapseTime = (float)value;
+                if (collapseTime != 0.0) collapseTime += llGetTime();
+            }
             else if (name == "dollType")                     dollType = value;
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                 debugLevel = (integer)value;

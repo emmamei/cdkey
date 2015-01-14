@@ -136,7 +136,10 @@ default {
             else if (name == "backMenu")                     backMenu = value;
             else if (name == "quiet")                           quiet = (integer)value;
             else if (name == "homingBeacon")             homingBeacon = (integer)value;
-            else if (name == "collapseTime")             collapseTime = (integer)value;
+            else if (name == "collapseTime") {
+                collapseTime = (float)value;
+                if (collapseTime != 0.0) collapseTime += llGetTime();
+            }
             else if (name == "collapsed")                   collapsed = (integer)value;
             else if (name == "autoTP")                         autoTP = (integer)value;
             else if (name == "autoTP")                         autoTP = (integer)value;
