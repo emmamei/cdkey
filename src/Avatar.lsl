@@ -384,12 +384,14 @@ ifPermissions() {
             llTakeControls(ALL_CONTROLS, TRUE, FALSE);
 
 #ifdef SLOW_WALK
-        else if (afk)
+        else if (afk) {
             // Dolly is AFK
 
             // To slow movement during AFK, we do not want to lock the doll's controls completely; we
             // want to instead respond to the input, so we need ACCEPT=TRUE, PASS_ON=TRUE
+            //debugSay(2,"DEBUG-AVATAR","Controls taken for AFK Dolly");
             llTakeControls(ALL_CONTROLS, TRUE, TRUE);
+        }
 #endif
         else {
             // Dolly is not AFK nor collapsed nor posed
@@ -1017,16 +1019,19 @@ default {
         // currently held and integer edge representing keys which have
         // been pressed or released in this period (Since last control event).
 
+        //debugSay(2,"DEBUG-AVATAR","Control hit for AFK Dolly");
         if (id == dollID) {
             if (afk) {
                 if (keyAnimation == "") {
                     if (llGetAgentInfo(dollID) & (AGENT_WALKING | AGENT_ALWAYS_RUN)) {
+                        //debugSay(2,"DEBUG-AVATAR","Slowing Dolly");
                         //     if (level & ~edge & CONTROL_FWD)  llApplyImpulse(<-1, 0, 0> * afkSlowWalkSpeed, TRUE);
                         //else if (level & ~edge & CONTROL_BACK) llApplyImpulse(< 1, 0, 0> * afkSlowWalkSpeed, TRUE);
                              if (level & ~edge & CONTROL_FWD)  llSetForce(<-1, 0, 0> * afkSlowWalkSpeed, TRUE);
                         else if (level & ~edge & CONTROL_BACK) llSetForce(< 1, 0, 0> * afkSlowWalkSpeed, TRUE);
                     }
                     else
+                        //debugSay(2,"DEBUG-AVATAR","Not slowing Dolly");
                         llSetForce(<0, 0, 0>, TRUE);
                 }
             }
