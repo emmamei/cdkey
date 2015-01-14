@@ -593,7 +593,8 @@ default {
             else if (name == "autoAFK")                       autoAFK = (integer)value;
             //else if (name == "autoTP")                         autoTP = (integer)value;
             else if (name == "canAFK")                         canAFK = (integer)value;
-            else if (name == "allowRepeatWind")           allowRepeatWind = (integer)value;
+            else if (name == "allowRepeatWind")       allowRepeatWind = (integer)value;
+            else if (name == "dollDisplayName")       dollDisplayName = value;
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
@@ -747,7 +748,7 @@ default {
                 llOwnerSay("Your key has been turned by " + name + " giving you " +
                     mins + " more minutes of life (" + percent + "% capacity).");
 
-                lmSendToAgent("You turn " + dollName + "'s Key, and " + pronounSheDoll + " receives " +
+                lmSendToAgent("You turn " + dollDisplayName + "'s Key, and " + pronounSheDoll + " receives " +
                     mins + " more minutes of life (" + percent + "% capacity).", id);
             }
 
