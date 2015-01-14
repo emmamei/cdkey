@@ -44,35 +44,6 @@ integer statusHandle;
 // FUNCTIONS
 //========================================
 
-#ifdef NOT_USED
-clearCommand(string commandString) {
-    list rlvList;
-    integer i;
-    string rlvCmd;
-    integer index;
-
-    rlvList = llParseString2List(commandString, [","], []);
-
-    i = llGetListLength(rlvList);
-    while (i--) {
-        rlvCmd = cdListElement(rlvList,i);
-        debugSay(4,"DEBUG-STATUSRLV","clearing RLV: " + rlvCmd);
-        llOwnerSay("@clear=" + rlvCmd);
-    }
-}
-
-refreshCommands() {
-    integer i;
-    string rlvCmd;
-
-    i = llGetRestrictionsLength(rlvRestrictions);
-    while (i--) {
-        rlvCmd = cdListElement(rlvRestrictions,i);
-        debugSay(4,"DEBUG-STATUSRLV","refreshing RLV: " + rlvCmd);
-        llOwnerSay("@" + rlvCmd);
-    }
-}
-#endif
 
 //========================================
 // STATES
@@ -148,22 +119,6 @@ default {
                     llOwnerSay("@" + cmd + "=n");
                 }
             }
-#ifdef NOT_USED
-            else if (cmd == "clearRLV") {
-                integer n;
-                debugSay(4,"DEBUG-STATUSRLV","clearRLV command issued for " + cdListElement(split, 0));
-                debugSay(4,"DEBUG-STATUSRLV","rlvRestrictions = " + llDumpList2String(rlvRestrictions,","));
-
-                n = llGetListLength(rlvRestrictions);
-                while (n--) {
-                    n--;
-                    if (cdListElement(rlvRestrictions,n) == script) {
-                        clearCommand(cdListElement(rlvRestrictions,n + 1));
-                    }
-                    rlvRestrictions = llDeleteSubList(rlvRestrictions, n, n + 1);
-                }
-            }
-#endif
             else if (cmd == "storeRLV") {
                 script = cdListElement(split,0);
                 string commandString = cdListElement(split, 1);

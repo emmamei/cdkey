@@ -131,12 +131,7 @@ setDollType(string stateName, integer automated) {
     }
 
     // Dont lock if transformation is automated (or is a Builder or Key type)
-    if (!automated
-         && stateName != "Builder"
-#ifdef KEY_TYPE
-         && stateName != "Key"
-#endif
-    ) {
+    if (!automated && stateName != "Builder") {
         transformLockExpire = llGetUnixTime() + TRANSFORM_LOCK_TIME;
         lmSendConfig("transformLockExpire",(string)TRANSFORM_LOCK_TIME);
     }
@@ -155,23 +150,17 @@ setDollType(string stateName, integer automated) {
     // the Builder can have outfits if they like.
     typeFolder = "";
 
-#ifdef KEY_TYPE
-    if (dollType != "Key") {
-#endif
-        outfitSearchTries = 0;
-        typeSearchTries = 0;
+    outfitSearchTries = 0;
+    typeSearchTries = 0;
 
-        // if RLV is non-functional, dont search for a Type Folder
-        if (RLVok) {
-            debugSay(2,"DEBUG-DOLLTYPE","Searching for " + typeFolderExpected);
-            //outfitsSearchTimer = llGetTime();
-            typeSearchHandle = cdListenMine(typeSearchChannel);
-            folderSearch(outfitsFolder,typeSearchChannel);
-        }
-    // if NOT RLVok then we have a DollType with no associated typeFolder...
-#ifdef KEY_TYPE
+    // if RLV is non-functional, dont search for a Type Folder
+    if (RLVok) {
+        debugSay(2,"DEBUG-DOLLTYPE","Searching for " + typeFolderExpected);
+        //outfitsSearchTimer = llGetTime();
+        typeSearchHandle = cdListenMine(typeSearchChannel);
+        folderSearch(outfitsFolder,typeSearchChannel);
     }
-#endif
+    // if NOT RLVok then we have a DollType with no associated typeFolder...
 }
 
 reloadTypeNames() {
@@ -219,9 +208,6 @@ reloadTypeNames() {
         if (llListFindList(types, (list)"Slut") == NOT_FOUND) types += [ "Slut" ];
 #endif
     if (cdDollyIsBuiltinController(transformerID)) { types += [ "Builder" ]; showPhrases = 0; }
-#ifdef KEY_TYPE
-    if (cdIsBuiltinController(transformerID))      { types += [ "Key" ];     showPhrases = 0; }
-#endif
 }
 
 // Folders need to be searched for: the outfits folder, and the

@@ -8,7 +8,6 @@
 
 #include "include/GlobalDefines.lsl"
 
-//#define FAKE_NORLV
 #define cdSayQuietly(x) { string z = x; if (quiet) llOwnerSay(z); else llSay(0,z); }
 #define NOT_IN_REGION ZERO_VECTOR
 #define cdLockMeisterCmd(a) llWhisper(LOCKMEISTER_CHANNEL,(string)dollID+a)

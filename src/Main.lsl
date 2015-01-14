@@ -62,9 +62,6 @@ integer lastTimerMark;
 integer timeSpan;
 
 key lastWinderID = NULL_KEY;
-#ifdef KEY_HANDLER
-key keyHandler = NULL_KEY;
-#endif
 //float displayRate;
 
 integer targetHandle;
@@ -283,7 +280,7 @@ default {
             lmRating(simRating);
 
 #ifdef ADULT_MODE
-            if (allowStrip || (dollType == "Slut") || hardCore) {
+            if (allowStrip || (dollType == "Slut") || hardcore) {
                 if (simRating == "PG")
                     llOwnerSay("This region is rated G - so stripping is disabled.");
             }
@@ -295,12 +292,8 @@ default {
     // CHANGED
     //----------------------------------------
     changed(integer change) {
-        if (change & CHANGED_REGION) {
+        if (change & CHANGED_REGION)
             simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
-#ifdef KEY_HANDLER
-            lmSendConfig("keyHandler", (string)(keyHandler = NULL_KEY));
-#endif
-        }
     }
 
     //----------------------------------------
@@ -747,7 +740,7 @@ default {
                     mins + " more minutes of life (" + percent + "% capacity).");
 
 #ifdef DEVELOPER_MODE
-                llSay(DEBUG_CHANNEL, "Wind: " + mins + " (" + percent + ") by " + name)
+                llSay(DEBUG_CHANNEL, "Wind: " + mins + " (" + percent + ") by " + name);
 #endif
                 lmSendToAgent("You turn " + dollDisplayName + "'s Key, and " + pronounSheDoll + " receives " +
                     mins + " more minutes of life (" + percent + "% capacity).", id);

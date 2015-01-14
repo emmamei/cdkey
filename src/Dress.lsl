@@ -1061,28 +1061,6 @@ default {
             integer select = (integer)llGetSubString(choice, 0, llSubStringIndex(choice, ".") - 1);
             if (select != 0) choice = cdListElement(outfitsList, select - 1);
 
-#ifdef NO_PAGER
-            if (llGetSubString(choice, 0, 6) == "Outfits") {
-                // Choice was one of:
-                //
-                // Outfits Next
-                // Outfits Prev
-                // Outfits Parent
-
-                if (id) {
-                    if (!isDresser(id)) return;
-                }
-
-                if (choice == "Outfits Next") {
-                    outfitPage++;
-
-                }
-                else if (choice == "Outfits Prev") {
-                    outfitPage--;
-
-                }
-            }
-#endif
             // Provide a dialog to user to choose new outfit
             debugSay(3, "DEBUG-CLOTHING", "Putting up Primary Menu in new directory");
             cdListenMine(outfitsChannel);

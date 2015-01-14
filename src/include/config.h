@@ -4,8 +4,17 @@
 // COMPILE CONFIGURATION
 //========================================
 
-/* adds a homing beacon */
+/* Fake out not having RLV */
+// #define FAKE_NORLV 1
+
+/* adds a homing beacon: an automatic TP home for collapsed dollies */
 // #define HOMING_BEACON 1
+
+/* make the outfits paging rollover from end to beginning and vice versa - or stop */
+#define ROLLOVER 1
+
+/* add a "Hold" button to freeze dolly but without stealing minutes */
+// #define HOLD_KEY
 
 /* Defines the Default wind amount */
 #define WIND_DEFAULT 1800.0

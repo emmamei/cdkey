@@ -6,7 +6,6 @@
 //
 // DATE: 27 October 2014
 
-#define POSES_CMD 1
 #include "include/GlobalDefines.lsl"
 #define cdMenuInject(a,b,c) lmMenuReply(a,b,c)
 
@@ -1021,7 +1020,6 @@ default
                 }
             }
 
-#ifdef POSES_CMD
             // Is the "msg" an animation? (and skip the "collapse" animation entirely)
             if (msg != "collapse") {
                 if (llGetInventoryType(msg) == INVENTORY_ANIMATION) {
@@ -1042,7 +1040,6 @@ default
                     return;
                 }
             }
-#endif
         }
     }
 }

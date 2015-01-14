@@ -819,41 +819,6 @@ default {
         // Note that if Start.lsl is modified, this does not get run,
         // since Start.lsl is reset immediately - and upon reset,
         // resets the entire key.
-
-#ifdef ZZZZ
-        else if (change & CHANGED_INVENTORY) {
-            if (cdNotecardExists(NOTECARD_PREFERENCES)) {
-                string ncKey = (string)llGetInventoryKey(NOTECARD_PREFERENCES);
-
-                // Did Notecard change? (that is, did its UUID change?)
-                if (llListFindList(ncPrefsLoadedUUID,[ncKey]) == NOT_FOUND) {
-                    resetState = RESET_NORMAL;
-
-                    sendMsg(dollID, "Reloading preferences card");
-                    ncStart = llGetTime();
-                    // Start reading from first line (which is 0)
-                    ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, (ncLine = 0));
-                    return;
-                }
-            }
-#ifdef DEVELOPER_MODE
-            // if we get here, it was NOT the Preferences Notecard that
-            // changed - it was something else...
-
-            // What if inventory changes several times in a row?
-            llOwnerSay("Key contents modified; restarting in 120 seconds.");
-            llSetTimerEvent(120.0);
-
-            // In the unlikely event that we are due to expire before
-            // resetting - bump the time up to allow us to reset BEFORE
-            // expiring... (which avoids the expire completely)
-            if (timeLeftOnKey < 120.0) {
-                lmSetConfig("timeLeftOnKey", (string)(timeLeftOnKey = 150.0));
-                //lmInternalCommand("getTimeUpdates","",NULL_KEY);
-            }
-#endif
-        }
-#endif
     }
 
     //----------------------------------------
