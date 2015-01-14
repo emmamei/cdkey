@@ -65,6 +65,7 @@ integer demoMode;
 integer detachable          = 1;
 integer doWarnings;
 integer hardcore;
+integer homingBeacon;
 integer hoverTextOn;
 integer isTransformingKey   = 1;
 integer lowScriptMode;
