@@ -740,7 +740,7 @@ default {
                     mins + " more minutes of life (" + percent + "% capacity).");
 
 #ifdef DEVELOPER_MODE
-                llSay(DEBUG_CHANNEL, "Wind: " + mins + " (" + percent + ") by " + name);
+                llSay(DEBUG_CHANNEL, "Wind: " + mins + " mins (" + percent + "%) by \"" + name + "\"");
 #endif
                 lmSendToAgent("You turn " + dollDisplayName + "'s Key, and " + pronounSheDoll + " receives " +
                     mins + " more minutes of life (" + percent + "% capacity).", id);
