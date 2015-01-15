@@ -35,12 +35,13 @@ list dialogSort(list srcButtons) {
 memReport(string script, float delay) {
     if (delay != 0.0) llSleep(delay);
 
-    float memoryLimit = (float)llGetMemoryLimit();
-    float freeMemory = (float)llGetFreeMemory();
-    float availMemory = freeMemory + (65536 - memoryLimit);
+    integer usedMemory = llGetUsedMemory();
+    integer memoryLimit = llGetMemoryLimit();
+    integer freeMemory = memoryLimit - usedMemory;
+    integer availMemory = freeMemory + (65536 - memoryLimit);
 
     cdLinkMessage(LINK_THIS,0,136,
-        (string)llGetUsedMemory() + "|" +
+        (string)usedMemory + "|" +
         (string)memoryLimit + "|" +
         (string)freeMemory + "|" +
         (string)availMemory,llGetKey());
@@ -232,9 +233,9 @@ integer dateTime2Unix(integer year, integer month, integer day, integer hour, in
  * ----------------------------------------
  */
 scaleMem() {
-   integer free = llGetFreeMemory();
    integer used = llGetUsedMemory();
    integer limit = llGetMemoryLimit();
+   integer free = limit - used;
    integer newlimit;
    //integer short = 1024;
 
