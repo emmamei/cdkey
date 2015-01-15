@@ -23,7 +23,9 @@
 #define dressViaMenu() listInventoryOn(menuDressChannel)
 #define dressViaRandom() listInventoryOn(randomDressChannel)
 #define checkWornItems(c) rlvRequest("getinvworn:" + (c) + "=", confirmWearChannel)
+#ifdef CONFIRM_UNWEAR
 #define checkRemovedItems(c) rlvRequest("getinvworn:" + (c) + "=", confirmUnwearChannel)
+#endif
 
 //========================================
 // VARIABLES
@@ -88,8 +90,10 @@ integer menuDressHandle;
 integer menuDressChannel;
 integer confirmWearHandle;
 integer confirmWearChannel;
+#ifdef CONFIRM_UNWEAR
 integer confirmUnwearHandle;
 integer confirmUnwearChannel;
+#endif
 
 //integer fallbackFolder;
 
@@ -142,7 +146,7 @@ list outfitsPage(list outfitList) {
 
     // Print the page contents - note that this happens even before
     // any dialog is put up
-    list pageOutfits = llList2List(outfitsList, currentIndex, endIndex);
+    //list pageOutfits = llList2List(outfitsList, currentIndex, endIndex);
     integer n = currentIndex; string chat; list output;
     string itemName;
 
@@ -198,7 +202,9 @@ rlvRequest(string rlv, integer channel) {
              if (channel == 2665)   randomDressHandle = cdListenMine(  randomDressChannel);
         else if (channel == 2666)     menuDressHandle = cdListenMine(    menuDressChannel);
         else if (channel == 2668)   confirmWearHandle = cdListenMine(  confirmWearChannel);
+#ifdef CONFIRM_UNWEAR
         else if (channel == 2669) confirmUnwearHandle = cdListenMine(confirmUnwearChannel);
+#endif
 
         lmRunRLV(rlv + (string)(rlvBaseChannel + channel));
     }
@@ -206,7 +212,9 @@ rlvRequest(string rlv, integer channel) {
              if (channel ==   randomDressChannel)   randomDressHandle = cdListenMine(  randomDressChannel);
         else if (channel ==     menuDressChannel)     menuDressHandle = cdListenMine(    menuDressChannel);
         else if (channel ==   confirmWearChannel)   confirmWearHandle = cdListenMine(  confirmWearChannel);
+#ifdef CONFIRM_UNWEAR
         else if (channel == confirmUnwearChannel) confirmUnwearHandle = cdListenMine(confirmUnwearChannel);
+#endif
 
         lmRunRLV(rlv + (string)channel);
     }
@@ -240,7 +248,7 @@ integer isDresser(key id) {
             llOwnerSay("secondlife:///app/agent/" + (string)dresserID + "/about is looking at your dress menu");
     }
     else if (dresserID != id) {
-        lmSendToAgent("You look in Dolly's closet for clothes, and notice that " + dresserName + " is already there looking", id);
+        lmSendToAgent("You go to look in Dolly's closet for clothes, and find that " + dresserName + " is already there looking", id);
         return FALSE;
     }
 
@@ -358,7 +366,9 @@ default {
             llListenRemove(randomDressHandle);
             llListenRemove(menuDressHandle);
             llListenRemove(confirmWearHandle);
+#ifdef CONFIRM_UNWEAR
             llListenRemove(confirmUnwearHandle);
+#endif
 
             changeComplete(FALSE);
             canDressTimeout = 0;
@@ -398,7 +408,9 @@ default {
                 randomDressChannel = rlvBaseChannel + 2665;
                   menuDressChannel = rlvBaseChannel + 2666;
                 confirmWearChannel = rlvBaseChannel + 2668;
+#ifdef CONFIRM_UNWEAR
               confirmUnwearChannel = rlvBaseChannel + 2669;
+#endif
             }
             else if (name == "afk")                                  afk = (integer)value;
             else if (name == "RLVok")                              RLVok = (integer)value;
@@ -612,12 +624,15 @@ default {
                 wearFolder = normalselfFolder;
                 checkWornItems(wearFolder);
 
+#ifdef CONFIRM_UNWEAR
                 // check to see that everything in the old Outfit folder is
                 // actually removed
                 unwearFolder = oldOutfitPath;
                 if (unwearFolder != "") checkRemovedItems(unwearFolder);
                 else dressingSteps += 2;
-
+#else
+                dressingSteps += 2;
+#endif
                 llSetTimerEvent(15.0);
             }
             else if (cmd == "setHovertext") {
@@ -671,7 +686,8 @@ default {
                 }
                 else {
                     cdDialogListen();
-                    llDialog(dresserID, "You look in " + pronounHerDoll + " closet, and see no outfits for Dolly to wear.", ["OK"], dialogChannel);
+                    llDialog(dresserID, "No outfits in this directory.", [ "OK", "Options...", MAIN ], dialogChannel);
+                    //llDialog(dresserID, "You look in " + pronounHerDoll + " closet, and see no outfits for Dolly to wear.", ["OK"], dialogChannel);
                     return;
                 }
             }
@@ -771,7 +787,10 @@ default {
                 // Outfits Prev
                 // Outfits Parent
 
-                if (!isDresser(id)) return;
+                if (!isDresser(id)) {
+                    outfitsList = [];
+                    return;
+                }
 
                 if (choice == "Outfits Next") {
                     //debugSay(6, "DEBUG-DRESS", ">>> Dress Menu: " + choice);
@@ -798,10 +817,12 @@ default {
 
             }
             else if (choice == "Back...") {
+                outfitsList = [];
                 lmMenuReply(backMenu, llGetDisplayName(id), id);
                 lmSendConfig("backMenu",(backMenu = MAIN));
             }
             else if (choice == MAIN) {
+                outfitsList = [];
                 lmMenuReply(MAIN,"",id);
             }
             else if (cdListElementP(outfitsList, choice) != NOT_FOUND) {
@@ -812,6 +833,7 @@ default {
                 // No standard user should be entering this way anyway
                 //if (!isDresser(id)) return;
 
+                outfitsList = [];
                 debugSay(6, "DEBUG-DRESS", "choice = " + choice + "; isParent = " + (string)(isParentFolder(cdGetFirstChar(choice))));
                 if (isParentFolder(cdGetFirstChar(choice))) {
 
@@ -845,7 +867,7 @@ default {
         //
         // Switched doll types: grab a new (appropriate) outfit at random and change to it
         //
-        else if (channel == randomDressChannel) { // list of inventory items from the current prefix
+        else if (channel == randomDressChannel) {
 
             llListenRemove(randomDressHandle);
             outfitsList = llParseString2List(choice, [","], []);
@@ -927,6 +949,7 @@ default {
                     // "marked" folders (with ">") as well as "normal"
                     // folders (containing clothing)
 
+                    outfitsList = []; // make sure to remove ref and clear memory
                     if (pushRandom && clothingFolder != "") {
                         retryDirSearch();
                     }
@@ -996,7 +1019,8 @@ default {
             // Did we get anything at all?
             if (choice == "") {
                 cdDialogListen();
-                llDialog(dresserID, "You gaze into " + pronounHerDoll + " closet, and see no outfits for Dolly to wear.", ["OK"], dialogChannel);
+                //llDialog(dresserID, "You gaze into " + pronounHerDoll + " closet, and see no outfits for Dolly to wear.", ["OK"], dialogChannel);
+                llDialog(dresserID, "No outfits to wear in this directory.", [ "OK", MAIN ], dialogChannel);
                 return;
             }
 
@@ -1035,8 +1059,10 @@ default {
 
             // we've gone through and cleaned up the list - but is anything left?
             if (outfitsList == []) {
+                outfitsList = []; // free memory
                 cdDialogListen();
-                llDialog(dresserID, "You look in " + pronounHerDoll + " closet, and see nothing for Dolly to wear.", ["OK"], dialogChannel);
+                //llDialog(dresserID, "You look in " + pronounHerDoll + " closet, and see nothing for Dolly to wear.", ["OK"], dialogChannel);
+                llDialog(dresserID, "No wearable outfits in this directory.", [ "OK", MAIN ], dialogChannel);
                 return;
             }
 
@@ -1058,8 +1084,8 @@ default {
             outfitsMessage += "\n\n" + folderStatus();
 
             // Build outfit menu
-            integer select = (integer)llGetSubString(choice, 0, llSubStringIndex(choice, ".") - 1);
-            if (select != 0) choice = cdListElement(outfitsList, select - 1);
+            //integer select = (integer)llGetSubString(choice, 0, llSubStringIndex(choice, ".") - 1);
+            //if (select != 0) choice = cdListElement(outfitsList, select - 1);
 
             // Provide a dialog to user to choose new outfit
             debugSay(3, "DEBUG-CLOTHING", "Putting up Primary Menu in new directory");
@@ -1068,6 +1094,7 @@ default {
             llDialog(dresserID, outfitsMessage, dialogSort(newOutfitsList), outfitsChannel);
             canDressTimeout = 1;
             llSetTimerEvent(60.0);
+            newOutfitsList = [];
         }
 
         //----------------------------------------
@@ -1116,6 +1143,7 @@ default {
             debugSay(6, "DEBUG", "canDressTimeout = " + (string)canDressTimeout + ", dressingSteps = " + (string)dressingSteps);
         }
 
+#ifdef CONFIRM_UNWEAR
         //----------------------------------------
         // Channel: 2669
         //
@@ -1143,7 +1171,9 @@ default {
                 if (!canDressSelf || afk || collapsed || wearLock) rlvCmd = "detachallthis:=y," + rlvCmd + "detachallthis:=n";
                 lmRunRLV(rlvCmd);
 
+#ifdef CONFIRM_UNWEAR
                 checkRemovedItems(unwearFolder);
+#endif
                 canDressTimeout++;
             }
             else if (dressingFailures > MAX_DRESS_FAILURES) {
@@ -1158,6 +1188,7 @@ default {
 
             debugSay(6, "DEBUG-DRESS", "canDressTimeout = " + (string)canDressTimeout + ", dressingSteps = " + (string)dressingSteps);
         }
+#endif
 #ifdef DEVELOPER_MODE
         else {
             debugSay(6, "DEBUG-DRESS", "unrecognized channel seen in listener: " + (string)channel + "," + name + ",id," + choice);
