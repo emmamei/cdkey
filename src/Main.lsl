@@ -906,7 +906,7 @@ default {
                         // by making the wind message an internal command (event), it helps
                         // to make the (client) system stop hiding names before we use it
                         // (based on RLV settings)
-                        lmInternalCommand("windMsg", "|" + (string)windAmount + "|" + name, id);
+                        lmInternalCommand("windMsg", (string)windAmount + "|" + name, id);
                         lmInternalCommand("mainMenu", "|" + name, id);
                     }
                 }
