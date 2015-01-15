@@ -593,13 +593,16 @@ Controller - Take care choosing your controllers; they have great control over D
                 float freeMemory  = llList2Float(split, 2);
                 float availMemory = llList2Float(split, 3);
 
-#ifndef DEVELOPER_MODE
-                if (availableMemory < WARN_MEM) {
-#endif
+#ifdef DEVELOPER_MODE
+                // In Developer Keys we want to see the works: all the details
+                memList += "\n" + script + ":\t" +
+                    formatFloat(usedMemory / 1024.0, 2) + "/" + (string)llRound(memoryLimit / 1024.0) + "kB (" +
+                    formatFloat(freeMemory / 1024.0, 2) + "kB free, " + formatFloat(availMemory / 1024.0, 2) + "kB available)";
+#else
+                // The user only cares about free memory when things are going south
+                if (availMemory < WARN_MEM) {
                     memList += "\n" + script + ":\t" +
-                        formatFloat(usedMemory / 1024.0, 2) + "/" + (string)llRound(memoryLimit / 1024.0) + "kB (" +
-                        formatFloat(freeMemory / 1024.0, 2) + "kB free, " + formatFloat(availMemory / 1024.0, 2) + "kB available)";
-#ifndef DEVELOPER_MODE
+                        formatFloat(availMemory / 1024.0, 2) + "kB available";
                 }
 #endif
             }
@@ -692,17 +695,20 @@ Controller - Take care choosing your controllers; they have great control over D
                 }
             }
 
-            llListSort(memList,1,1);
-            i = llGetListLength(memList);
-            debugSay(2,"DEBUG-AUX","memory List (" + (string)i + ")= " + llDumpList2String(memList,","));
-            while (i--) {
-                memOutput += llList2String(memList,i);
+#ifndef DEVELOPER_MODE
+            if (memList == []) {
+                memList = (list)"No problems to report.";
             }
-            
-            lmSendToAgent(memOutput + "\n",memReportID);
+            else
+#endif
+            memList = llListSort(memList,1,1);
+
+            lmSendToAgent(memOutput + llDumpList2String(memList,""),memReportID);
+
             memOutput = "Script Memory Status:";
             memReporting = 0;
             memList = [];
+            memReportID = NULL_KEY;
         }
         else if (textboxHandle) {
             if (listenTime < llGetTime()) {
