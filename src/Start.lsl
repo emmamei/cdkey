@@ -78,10 +78,13 @@ string userCollapseRLVcmd;
 string userPoseRLVcmd;
 
 // These are hardcoded and should never change during normal operation
-string defaultAfkRLVcmd = "";
+string defaultAfkRLVcmd = "fly=n,sendchat=n,tplm=n,tplure=n,tploc=n,sittp=n,fartouch=n,alwaysrun=n";
 string defaultBaseRLVcmd = "";
 string defaultCollapseRLVcmd = "fly=n,sendchat=n,tplm=n,tplure=n,tploc=n,showinv=n,edit=n,sit=n,sittp=n,fartouch=n,showworldmap=n,showminimap=n,showloc=n,shownames=n,showhovertextall=n";
-string defaultPoseRLVcmd = "";
+
+// Default PoseRLV does not include silence: that is optional
+// Also allow touch - for Dolly to access Key
+string defaultPoseRLVcmd = "fly=n,tplm=n,tplure=n,tploc=n,sittp=n,fartouch=n";
 
 integer introLine;
 integer introLines;
@@ -492,7 +495,7 @@ default {
                             lmRunRLVas("UserAfk", userAfkRLVcmd);
                     }
                     else if (oldAfk != afk) {
-                        // just became zero
+                        // afk value JUST became zero
                         lmRunRLV("clear");
                     }
                 }
