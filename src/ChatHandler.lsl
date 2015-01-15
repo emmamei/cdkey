@@ -663,7 +663,7 @@ default
                             llOwnerSay("Doll is posed.");
                         }
 
-                        lmMemReport(1.0, 1);
+                        lmMemReport(1.0,id);
                         return;
                     }
                     else if (choice == "release") {

@@ -17,6 +17,7 @@
 // #define F 12
 // #define G 15
 #define MEM_REPORT        135
+#define MEM_REPLY         136
 #define CONFIG_REPORT     142
 #define SIM_RATING_CHG    150
 #define CONFIG            300

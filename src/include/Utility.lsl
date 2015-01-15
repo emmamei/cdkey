@@ -13,13 +13,12 @@
  * ========================================
  */
 string wwGetSLUrl() {
-    string region = llGetRegionName();
     vector pos = llGetPos();
     string posx = (string)llRound(pos.x);
     string posy = (string)llRound(pos.y);
     string posz = (string)llRound(pos.z);
 
-    return ("secondlife://" + llEscapeURL(region) +"/" + posx + "/" + posy + "/" + posz);
+    return ("secondlife://" + llEscapeURL(llGetRegionName()) +"/" + posx + "/" + posy + "/" + posz);
 }
 
 list dialogSort(list srcButtons) {
@@ -36,18 +35,15 @@ list dialogSort(list srcButtons) {
 memReport(string script, float delay) {
     if (delay != 0.0) llSleep(delay);
 
-    float memory_limit = (float)llGetMemoryLimit();
-    float free_memory = (float)llGetFreeMemory();
-    float used_memory = (float)llGetUsedMemory();
-    float max_memory = free_memory + (65536 - memory_limit);
+    float memoryLimit = (float)llGetMemoryLimit();
+    float freeMemory = (float)llGetFreeMemory();
+    float availMemory = freeMemory + (65536 - memoryLimit);
 
-    if (((used_memory + free_memory) > (memory_limit * 1.05)) && (memory_limit <= 16384)) { // LSL2 compiled script
-       memory_limit = 16384;
-       used_memory = 16384 - free_memory;
-       max_memory = free_memory;
-    }
-
-    cdLinkMessage(LINK_THIS,0,136,llList2Json(JSON_ARRAY, [used_memory, memory_limit, free_memory, max_memory]),NULL_KEY);
+    cdLinkMessage(LINK_THIS,0,136,
+        (string)llGetUsedMemory() + "|" +
+        (string)memoryLimit + "|" +
+        (string)freeMemory + "|" +
+        (string)availMemory,llGetKey());
 }
 
 #ifdef DEVELOPER_MODE

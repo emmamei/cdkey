@@ -10,6 +10,7 @@
 #include "include/GlobalDefines.lsl"
 #include "include/Json.lsl"
 
+#define WARN_MEM 6144
 #define NO_FILTER ""
 #define cdListenUser(a,b) llListen(a, NO_FILTER,         b, NO_FILTER)
 #define cdResetKey() llResetOtherScript("Start")
@@ -17,8 +18,10 @@
 
 #define HIPPO_UPDATE -2948813
 
+key memReportID;
 key lmRequest;
 list memWait;
+list memList;
 float rezTime;
 float timerEvent;
 float listenTime;
@@ -28,9 +31,11 @@ string minsLeft;
 //string windRate;
 integer windMins;
 string curGemColour;
+string memOutput = "Script Memory Status:";
 integer maxMins;
 integer ncLine;
 integer memCollecting;
+integer memReporting;
 integer memRequested;
 integer rezzed;
 integer primGlow = 1;
@@ -272,7 +277,7 @@ default {
                 string timeLeft = llList2String(split, 0);
                 list menu = [ "Ok" ];
 
-                debugSay(2,"DEBUG-TRANSFORM","Building collapsedMenu...");
+                debugSay(2,"DEBUG-AUX","Building collapsedMenu...");
                 // is it possible to be collapsed but collapseTime be equal to 0.0?
                 if (collapseTime != 0.0 || collapsed) {
                     float timeCollapsed = llGetUnixTime() - collapseTime;
@@ -305,8 +310,8 @@ default {
                     }
 
                     cdDialogListen();
-                    //debugSay(2,"DEBUG-TRANSFORM","Done building collapsedMenu: msg = \"" + msg  + "\"; menu = [ " + llDumpList2String(menu, ",") + " ]");
-                    //debugSay(2,"DEBUG-TRANSFORM","Done building collapsedMenu: id = " + (string)id);
+                    //debugSay(2,"DEBUG-AUX","Done building collapsedMenu: msg = \"" + msg  + "\"; menu = [ " + llDumpList2String(menu, ",") + " ]");
+                    //debugSay(2,"DEBUG-AUX","Done building collapsedMenu: id = " + (string)id);
                     llDialog(dollID, msg, menu, dialogChannel);
                 }
             }
@@ -568,120 +573,36 @@ Controller - Take care choosing your controllers; they have great control over D
                 configured = 1;
                 scaleMem();
             }
-            else if (code == 110) {
-                if (script != "Start") return;
-                llSleep(5.0);
-                lmMemReport(0.5, 0);
-            }
-            else if ((code == MEM_REPORT) || (code == 136)) {
-
-                // This is the bulk of 136/135 message processing
-                //
-                if ((code == MEM_REPORT) && (!memCollecting)) {
-                    i = llGetInventoryNumber(INVENTORY_SCRIPT);
-                    string script;
-
-                    while (i--) {
-                        script = llGetInventoryName(INVENTORY_SCRIPT, i);
-
-                        if (script != "Aux") {
-                            if (llGetScriptState(script)) memWait += script;
-                        }
-                    }
-                    memCollecting = 1;
-                    memData = "";
-                    memTime = llGetTime() + 5.0;
-                    llSetTimerEvent(4.0);
 #ifdef DEVELOPER_MODE
-                    memRequested = 1;
-#else
-                    memRequested = llList2Integer(split, 1);
+            else if (code == 110) {
+                llSleep(5.0);
+                lmMemReport(0.5, dollID);
+            }
 #endif
-                }
-                else if ((code == 136) || ((memTime < llGetTime()) && (code == MEM_REPORT))) {
-                    string json = llList2String(split, 0);
-
-                    if ((json != "") && (json != JSON_INVALID)) {
-
-                        memData = cdSetValue(memData, [script], json);
-                        i = llListFindList(memWait, [script]);
-
-                        if ((i != -1) || ((memTime < llGetTime()) && (code == MEM_REPORT))) {
-                            memWait = llDeleteSubList(memWait, i, i);
-
-                            if (!llGetListLength(memWait) || ((memTime < llGetTime()) && (code == MEM_REPORT))) {
-                                llSetTimerEvent(0.0);
-
-                                float memory_limit = (float)llGetMemoryLimit();
-                                float free_memory = (float)llGetFreeMemory();
-                                float used_memory = (float)llGetUsedMemory();
-                                float available_memory = free_memory + (65536 - memory_limit);
-
-                                if (((used_memory + free_memory) > (memory_limit * 1.05)) && (memory_limit <= 16384)) { // LSL2 compiled script
-                                   memory_limit = 16384;
-                                   used_memory = 16384 - free_memory;
-                                   available_memory = free_memory;
-                                }
-
-                                memData = cdSetValue(memData,["Aux"],llList2Json(JSON_ARRAY, [used_memory, memory_limit, free_memory, available_memory]));
-
-                                float totUsed; float totLimit; float totFree; float totAvail; integer warnFlag;
-                                i = 0; string scriptName; list statList;
-                                string output = "Script Memory Status:";
-                                string type;
-
-                                integer numScripts;
-                                numScripts = llGetInventoryNumber(INVENTORY_SCRIPT);
-
-                                i = numScripts;
-                                while (i--) {
-
-                                    scriptName = llGetInventoryName(INVENTORY_SCRIPT, i);
-
-                                    if (( type = cdGetElementType(memData, ([scriptName]))) != JSON_INVALID) {
-
-                                        totUsed  += used_memory      = (float)cdGetValue(memData, ([scriptName,0]));
-                                        totLimit += memory_limit     = (float)cdGetValue(memData, ([scriptName,1]));
-                                        totFree  += free_memory      = (float)cdGetValue(memData, ([scriptName,2]));
-                                        totAvail += available_memory = (float)cdGetValue(memData, ([scriptName,3]));
-
-#define WARN_MEM 6144
-                                        if (memRequested || (available_memory < WARN_MEM)) {
-                                            if (!memRequested && !warnFlag) {
-                                                output += "\nOnly showing individual scripts with less than " + (string)llRound(WARN_MEM / 1024.0) + "kB available.";
-                                                warnFlag = 1;
-                                            }
-                                            output += "\n" + scriptName + ":\t" + formatFloat(used_memory / 1024.0, 2) + "/" + (string)llRound(memory_limit / 1024.0) + "kB (" +
-                                                      formatFloat(free_memory / 1024.0, 2) + "kB free, " + formatFloat(available_memory / 1024.0, 2) + "kB available)";
-                                        }
-                                    }
-                                    else {
-                                        if (memRequested) {
-                                            output += "\n" + scriptName + ":\tNo report available";
-
-                                            if (!llGetScriptState(scriptName)) {
-                                                output += " (seems to have stopped)";
-                                            }
-                                        }
-                                    }
-                                }
-
-                                output += "\nTotal memory usage: " + formatFloat(totUsed / 1024.0, 2) + "kB out of a total possible of " + (string)llRound(totLimit / 1024.0) + "kB (" +
-                                           formatFloat(totUsed * 100.0 / totLimit, 2) + "%) - " + (string)numScripts  + " scripts total";
-
-                                if (warnFlag) output += "\nYou have some scripts with very low memory, you may begin to suffer script crashes if memory runs out.  ";
-                                                        "Please see the manual for tips how to keep memory usage low.";
-
-                                llOwnerSay(output);
-                                memCollecting = 0;
-                                memRequested = 0;
-                                memTime = 0.0;
-                            }
-                        }
-                    }
-                }
+            else if (code == MEM_REPORT) {
+                float delay  = llList2Float(split, 0);
+                memReportID = id;
+                memReport("Aux",1.0);
             }
 
+            else if (code == MEM_REPLY) {
+                memReporting = 1;
+                llSetTimerEvent(5.0); // when timer goes off, we assume completion
+                float usedMemory  = llList2Float(split, 0);
+                float memoryLimit = llList2Float(split, 1);
+                float freeMemory  = llList2Float(split, 2);
+                float availMemory = llList2Float(split, 3);
+
+#ifndef DEVELOPER_MODE
+                if (availableMemory < WARN_MEM) {
+#endif
+                    memList += "\n" + script + ":\t" +
+                        formatFloat(usedMemory / 1024.0, 2) + "/" + (string)llRound(memoryLimit / 1024.0) + "kB (" +
+                        formatFloat(freeMemory / 1024.0, 2) + "kB free, " + formatFloat(availMemory / 1024.0, 2) + "kB available)";
+#ifndef DEVELOPER_MODE
+                }
+#endif
+            }
             else if (code == CONFIG_REPORT) {
                 cdConfigureReport();
             }
@@ -757,7 +678,32 @@ Controller - Take care choosing your controllers; they have great control over D
     // TIMER
     //----------------------------------------
     timer() {
-        if (memCollecting) lmMemReport(0.0, memRequested);
+        if (memReporting) {
+
+            integer i = llGetInventoryNumber(INVENTORY_SCRIPT);
+            string script;
+
+            while (i--) {
+                script = llGetInventoryName(INVENTORY_SCRIPT, i);
+
+                if (script != "Aux" && (llListFindList(memList,(list)script) == NOT_FOUND)) {
+                    if (!llGetScriptState(script))
+                        memList += "\n" + script + ":\t" + "---- script not running! ----";
+                }
+            }
+
+            llListSort(memList,1,1);
+            i = llGetListLength(memList);
+            debugSay(2,"DEBUG-AUX","memory List (" + (string)i + ")= " + llDumpList2String(memList,","));
+            while (i--) {
+                memOutput += llList2String(memList,i);
+            }
+            
+            lmSendToAgent(memOutput + "\n",memReportID);
+            memOutput = "Script Memory Status:";
+            memReporting = 0;
+            memList = [];
+        }
         else if (textboxHandle) {
             if (listenTime < llGetTime()) {
                 llListenRemove(textboxHandle);
