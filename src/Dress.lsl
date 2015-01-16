@@ -22,7 +22,9 @@
 #define nothingWorn(c,d) ((c) != "0") && ((c) != "1") && ((d) != "0") && ((d) != "1")
 #define dressViaMenu() listInventoryOn(menuDressChannel)
 #define dressViaRandom() listInventoryOn(randomDressChannel)
+#ifdef CONFIRM_WEAR
 #define checkWornItems(c) rlvRequest("getinvworn:" + (c) + "=", confirmWearChannel)
+#endif
 #ifdef CONFIRM_UNWEAR
 #define checkRemovedItems(c) rlvRequest("getinvworn:" + (c) + "=", confirmUnwearChannel)
 #endif
@@ -84,8 +86,10 @@ integer randomDressHandle;
 integer randomDressChannel;
 integer menuDressHandle;
 integer menuDressChannel;
+#ifdef CONFIRM_WEAR
 integer confirmWearHandle;
 integer confirmWearChannel;
+#endif
 #ifdef CONFIRM_UNWEAR
 integer confirmUnwearHandle;
 integer confirmUnwearChannel;
@@ -197,7 +201,9 @@ rlvRequest(string rlv, integer channel) {
         llSay(DEBUG_CHANNEL,"rlvRequest called with old channel numbers");
              if (channel == 2665)   randomDressHandle = cdListenMine(  randomDressChannel);
         else if (channel == 2666)     menuDressHandle = cdListenMine(    menuDressChannel);
+#ifdef CONFIRM_WEAR
         else if (channel == 2668)   confirmWearHandle = cdListenMine(  confirmWearChannel);
+#endif
 #ifdef CONFIRM_UNWEAR
         else if (channel == 2669) confirmUnwearHandle = cdListenMine(confirmUnwearChannel);
 #endif
@@ -207,7 +213,9 @@ rlvRequest(string rlv, integer channel) {
     else {
              if (channel ==   randomDressChannel)   randomDressHandle = cdListenMine(  randomDressChannel);
         else if (channel ==     menuDressChannel)     menuDressHandle = cdListenMine(    menuDressChannel);
+#ifdef CONFIRM_WEAR
         else if (channel ==   confirmWearChannel)   confirmWearHandle = cdListenMine(  confirmWearChannel);
+#endif
 #ifdef CONFIRM_UNWEAR
         else if (channel == confirmUnwearChannel) confirmUnwearHandle = cdListenMine(confirmUnwearChannel);
 #endif
@@ -361,7 +369,9 @@ default {
 
             llListenRemove(randomDressHandle);
             llListenRemove(menuDressHandle);
+#ifdef CONFIRM_WEAR
             llListenRemove(confirmWearHandle);
+#endif
 #ifdef CONFIRM_UNWEAR
             llListenRemove(confirmUnwearHandle);
 #endif
@@ -403,7 +413,9 @@ default {
 
                 randomDressChannel = rlvBaseChannel + 2665;
                   menuDressChannel = rlvBaseChannel + 2666;
+#ifdef CONFIRM_WEAR
                 confirmWearChannel = rlvBaseChannel + 2668;
+#endif
 #ifdef CONFIRM_UNWEAR
               confirmUnwearChannel = rlvBaseChannel + 2669;
 #endif
@@ -615,11 +627,13 @@ default {
                 string parts = "gloves|jacket|pants|shirt|shoes|skirt|socks|underpants|undershirt|alpha|pelvis|left foot|right foot|r lower leg|l lower leg|r forearm|l forearm|r upper arm|l upper arm|r upper leg|l upper leg";
                 lmRunRLV("detachallthis:" + llDumpList2String(llParseString2List(parts, [ "|" ], []), "=force,detachallthis:") + "=force");
 
+#ifdef CONFIRM_WEAR
                 // check to see that everything in the ~normalself folder is
                 // actually worn
                 wearFolder = normalselfFolder;
                 checkWornItems(wearFolder);
 
+#endif
 #ifdef CONFIRM_UNWEAR
                 // check to see that everything in the old Outfit folder is
                 // actually removed
@@ -1093,6 +1107,7 @@ default {
             newOutfitsList = [];
         }
 
+#ifdef CONFIRM_WEAR
         //----------------------------------------
         // Channel: 2668
         //
@@ -1139,6 +1154,7 @@ default {
             debugSay(6, "DEBUG", "canDressTimeout = " + (string)canDressTimeout + ", dressingSteps = " + (string)dressingSteps);
         }
 
+#endif
 #ifdef CONFIRM_UNWEAR
         //----------------------------------------
         // Channel: 2669
@@ -1167,9 +1183,7 @@ default {
                 if (!canDressSelf || afk || collapsed || wearLock) rlvCmd = "detachallthis:=y," + rlvCmd + "detachallthis:=n";
                 lmRunRLV(rlvCmd);
 
-#ifdef CONFIRM_UNWEAR
                 checkRemovedItems(unwearFolder);
-#endif
                 canDressTimeout++;
             }
             else if (dressingFailures > MAX_DRESS_FAILURES) {
