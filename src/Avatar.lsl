@@ -399,6 +399,9 @@ ifPermissions() {
             // We do not want to release the controls if the land is noScript; doing so
             // would effectively shut down the key until one entered Script-enabled
             // land again
+#ifdef SLOW_WALK
+            llSetForce(<0, 0, 0>, TRUE);
+#endif
             llTakeControls(ALL_CONTROLS, FALSE, TRUE);
         }
     }
@@ -1035,9 +1038,6 @@ default {
                         llSetForce(<0, 0, 0>, TRUE);
                 }
             }
-            else
-                //debugSay(2,"DEBUG-AVATAR","Not slowing Dolly");
-                llSetForce(<0, 0, 0>, TRUE);
         }
     }
 #endif
