@@ -75,7 +75,9 @@ integer warned;
 
 integer wearLockExpire;
 integer carryExpire;
+#ifdef JAMMABLE
 integer jamExpire;
+#endif
 integer poseExpire;
 // Note that unlike the others, we do not maintain
 // transformLockExpire in this script
@@ -183,11 +185,13 @@ collapse(integer newCollapseState) {
             // Direct call to set Hovertext
             cdSetHovertext("Disabled Dolly!",CRITICAL); // uses primText
         }
+#ifdef JAMMABLE
         else if (newCollapseState == JAMMED) {
             // Time span (random) = 120.0 (two minutes) to 300.0 (five minutes)
             if (collapsed != JAMMED)
                 jamExpire = llGetUnixTime() + ((integer)llFrand(180) + 120);
         }
+#endif
 
         // If not already collapsed, mark the start time
         if (collapsed == NOT_COLLAPSED) {
@@ -198,6 +202,7 @@ collapse(integer newCollapseState) {
         }
     }
 
+#ifdef JAMMABLE
     // If not jammed, reset time to Jam Repair
     if (newCollapseState != JAMMED) {
         if (jamExpire) {
@@ -205,6 +210,7 @@ collapse(integer newCollapseState) {
             lmSendConfig("jamExpire", (string)jamExpire);
         }
     }
+#endif
 
     // The three (four) pillars of being collapsed:
     //     1. collapsed != 0
@@ -456,8 +462,10 @@ default {
         // False collapse? Collapsed = 1 while timeLeftOnKey is positive is an invalid condition
         if (collapsed == NO_TIME)
             if (timeLeftOnKey > 0) collapse(NOT_COLLAPSED);
+#ifdef JAMMABLE
         else if (collapsed == JAMMED)
             if (jamExpire <= timerMark) collapse(NOT_COLLAPSED);
+#endif
 
         //----------------------------------------
         // POSE TIMED OUT?
@@ -672,7 +680,9 @@ default {
             else if (
                      (name == "wearLockExpire")  ||
                      (name == "poseExpire")      ||
+#ifdef JAMMABLE
                      (name == "jamExpire")       ||
+#endif
                      (name == "carryExpire")     ||
                      (name == "collapseTime")) {
 
@@ -689,7 +699,9 @@ default {
 
                      if (name == "wearLockExpire")    wearLockExpire = timeSet;
                 else if (name == "poseExpire")            poseExpire = timeSet;
+#ifdef JAMMABLE
                 else if (name == "jamExpire")              jamExpire = timeSet;
+#endif
                 else if (name == "carryExpire")          carryExpire = timeSet;
                 else if (name == "collapseTime")        collapseTime = timeSet;
             }
@@ -719,7 +731,9 @@ default {
                 if (cdTimeSet(timeLeftOnKey))        lmSendConfig("timeLeftOnKey",         (string) timeLeftOnKey);
                 if (cdTimeSet(wearLockExpire))       lmSendConfig("wearLockExpire",        (string)(wearLockExpire - t));
                 if (cdTimeSet(transformLockExpire))  lmSendConfig("transformLockExpire",   (string)(transformLockExpire - t));
+#ifdef JAMMABLE
                 if (cdTimeSet(jamExpire))            lmSendConfig("jamExpire",             (string)(jamExpire - t));
+#endif
                 if (cdTimeSet(poseExpire))           lmSendConfig("poseExpire",            (string)(poseExpire - t));
                 if (cdTimeSet(carryExpire))          lmSendConfig("carryExpire",           (string)(carryExpire - t));
                 if (cdTimeSet(collapseTime))         lmSendConfig("collapseTime",          (string)(collapseTime - t));
@@ -812,10 +826,12 @@ default {
 
                         llOwnerSay("With an electical sound the motor whirrs into life and gives you " + (string)llRound(windAmount / SEC_TO_MIN) + " minutes of life. The recharger requires " + (string)llRound(EMERGENCY_LIMIT_TIME / 3600) + " hours to recharge.");
                     }
+#ifdef JAMMABLE
                     else {
                         if (collapsed == JAMMED) { llOwnerSay("The emergency winder motor whirrs, splutters and then falls silent, unable to budge your jammed mechanism."); }
                         else { llOwnerSay("The failsafe trigger fires with a soft click preventing the motor engaging while your mechanism is running."); }
                     }
+#endif
                 }
                 else {
                    float rechargeMins = ((winderRechargeTime - llGetUnixTime()) / SEC_TO_MIN);
@@ -839,12 +855,14 @@ default {
                 //   3. Send out new timeLeftOnKey
                 //   4. React to wind (including uncollapse)
 
+#ifdef JAMMABLE
                 // Test and reject winding of jammed dollies
                 if (collapsed == JAMMED) {
                     cdDialogListen();
                     llDialog(id, "The Dolly cannot be wound while " + pronounHerDoll + " key is being held.", ["Help...", "OK"], dialogChannel);
                     return;
                 }
+#endif
 
                 // Test and reject repeat winding as appropriate - Controllers and Carriers are not limited
                 if (!(cdIsController(id) || cdIsCarrier(id))) {
@@ -975,10 +993,12 @@ default {
                 llDialog(id, "You can set the amount of time in each wind.\nDolly currently winds " + (string)windMins + " mins.",
                     dialogSort(windChoices + [ MAIN ]), dialogChannel);
             }
+#ifdef JAMMABLE
             else if (choice == "Hold") {
                 collapse(JAMMED);
                 lmSendToAgentPlusDoll("Dolly freezes, " + pronounHerDoll + " key kept from turning",id);
             }
+#endif
             else if (choice == "Unwind") {
                 collapse(NO_TIME);
                 lmSendToAgentPlusDoll("Dolly collapses, " + pronounHerDoll + " key unwound",id);
