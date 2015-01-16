@@ -1024,18 +1024,27 @@ default {
 
         //debugSay(2,"DEBUG-AVATAR","Control hit for AFK Dolly");
         if (id == dollID) {
+
+            // If a key was just pressed, stop: we could be going in a different
+            // direction.   If a key was released, then no going anywhere: full stop.
+            // This relates to the force against Dolly - NOT Dolly herself.
+            if (edge & (CONTROL_FWD | CONTROL_BACK | CONTROL_RIGHT | CONTROL_LEFT | CONTROL_UP | CONTROL_DOWN))
+                llSetForce(<0, 0, 0>, TRUE);
+
             if (afk) {
                 if (keyAnimation == "") {
-                    if (llGetAgentInfo(dollID) & (AGENT_WALKING | AGENT_ALWAYS_RUN)) {
+                    if (llGetAgentInfo(dollID) & (AGENT_WALKING | AGENT_ALWAYS_RUN | AGENT_FLYING)) {
+                        // This will run the appropriate llSetForce command repeatedly as long as
+                        // the key is held down. This may or may not be desired, but it should not
+                        // lead to erroneous operation.
                         //debugSay(2,"DEBUG-AVATAR","Slowing Dolly");
-                        //     if (level & ~edge & CONTROL_FWD)  llApplyImpulse(<-1, 0, 0> * afkSlowWalkSpeed, TRUE);
-                        //else if (level & ~edge & CONTROL_BACK) llApplyImpulse(< 1, 0, 0> * afkSlowWalkSpeed, TRUE);
-                             if (level & ~edge & CONTROL_FWD)  llSetForce(<-1, 0, 0> * afkSlowWalkSpeed, TRUE);
-                        else if (level & ~edge & CONTROL_BACK) llSetForce(< 1, 0, 0> * afkSlowWalkSpeed, TRUE);
+                             if (level & CONTROL_FWD)   llSetForce(<-1, 0, 0> * afkSlowWalkSpeed, TRUE);
+                        else if (level & CONTROL_BACK)  llSetForce(< 1, 0, 0> * afkSlowWalkSpeed, TRUE);
+                        else if (level & CONTROL_RIGHT) llSetForce(< 0, 1, 0> * afkSlowWalkSpeed, TRUE);
+                        else if (level & CONTROL_LEFT)  llSetForce(< 0,-1, 0> * afkSlowWalkSpeed, TRUE);
+                        else if (level & CONTROL_UP)    llSetForce(< 0, 0, 1> * afkSlowWalkSpeed, TRUE);
+                        else if (level & CONTROL_DOWN)  llSetForce(< 0, 0,-1> * afkSlowWalkSpeed, TRUE);
                     }
-                    else
-                        //debugSay(2,"DEBUG-AVATAR","Not slowing Dolly");
-                        llSetForce(<0, 0, 0>, TRUE);
                 }
             }
         }
