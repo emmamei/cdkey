@@ -63,10 +63,6 @@ integer outfitsHandle;
 integer change;
 integer pushRandom;
 
-#ifdef WEAR_AT_LOGIN
-integer wearAtLogin;
-#endif
-
 // These are the paths of the outfits relative to #RLV
 //string lastFolder;
 string newOutfit;

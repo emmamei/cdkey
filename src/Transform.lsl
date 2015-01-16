@@ -79,9 +79,6 @@ integer transformLockExpire;
 
 integer dbConfig;
 integer mustAgreeToType;
-#ifdef WEAR_AT_LOGIN
-integer wearAtLogin;
-#endif
 //integer isTransformingKey;
 string typeFolderExpected;
 
@@ -506,9 +503,6 @@ default {
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
-#ifdef WEAR_AT_LOGIN
-            else if (name == "wearAtLogin")               wearAtLogin = (integer)value;
-#endif
             else if (name == "showPhrases") {
                 showPhrases = (integer)value;
                 currentPhrases = [];
@@ -643,9 +637,6 @@ default {
             if ((choice == "Type...")        ||
                 (optName == "Verify Type")   ||
                 (optName == "Show Phrases")
-#ifdef WEAR_AT_LOGIN
-                || (optName == "Wear @ Login")
-#endif
                 ) {
 
                 if (optName == "Verify Type") {
@@ -658,20 +649,10 @@ default {
                     if (showPhrases) llOwnerSay("Hypnotic phrases will be displayed.");
                     else llOwnerSay("No hypnotic phrases will be displayed.");
                 }
-#ifdef WEAR_AT_LOGIN
-                else if (optName == "Wear @ Login") {
-                    lmSendConfig("wearAtLogin", (string)(wearAtLogin = (curState == CROSS)));
-                    if (wearAtLogin) llOwnerSay("If you are not a Regular Doll, a new outfit will be chosen each login.");
-                    else llOwnerSay("A new outfit will not be worn at each login.");
-                }
-#endif
                 list choices;
 
                 choices += cdGetButton("Verify Type", id, mustAgreeToType, 0);
                 choices += cdGetButton("Show Phrases", id, showPhrases, 0);
-#ifdef WEAR_AT_LOGIN
-                choices += cdGetButton("Wear @ Login", id, wearAtLogin, 0);
-#endif
 
                 lmSendConfig("backMenu",(backMenu = "Options..."));
                 backMenu = MAIN;
@@ -947,13 +928,6 @@ default {
 
                     lmSendConfig("nudeFolder",nudeFolder);
                     lmSendConfig("normalselfFolder",normalselfFolder);
-#ifdef WEAR_AT_LOGIN
-                    if (changeOutfit) {
-                        if (wearAtLogin)
-                            lmInternalCommand("randomDress","",NULL_KEY);
-                        changeOutfit = 0;
-                    }
-#endif
                 }
                 else {
                     debugSay(2,"DEBUG-SEARCHING","Random dress being chosen");
