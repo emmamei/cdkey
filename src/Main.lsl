@@ -975,12 +975,10 @@ default {
                 llDialog(id, "You can set the amount of time in each wind.\nDolly currently winds " + (string)windMins + " mins.",
                     dialogSort(windChoices + [ MAIN ]), dialogChannel);
             }
-#ifdef HOLD_KEY
             else if (choice == "Hold") {
                 collapse(JAMMED);
                 lmSendToAgentPlusDoll("Dolly freezes, " + pronounHerDoll + " key kept from turning",id);
             }
-#endif
             else if (choice == "Unwind") {
                 collapse(NO_TIME);
                 lmSendToAgentPlusDoll("Dolly collapses, " + pronounHerDoll + " key unwound",id);

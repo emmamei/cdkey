@@ -13,9 +13,6 @@
 /* make the outfits paging rollover from end to beginning and vice versa - or stop */
 #define ROLLOVER 1
 
-/* add a "Hold" button to freeze dolly but without stealing minutes */
-// #define HOLD_KEY
-
 /* Defines the Default wind amount */
 #define WIND_DEFAULT 1800.0
 

@@ -403,11 +403,7 @@ default {
                                    "a doll. So feel free to use these options. ";
 
                             if (isCarrier || isController)
-#ifdef HOLD_KEY
                                 menu += [ "Hold", "Unwind" ];
-#else
-                                menu += [ "Unwind" ];
-#endif
                         }
 
                         if (RLVok == 1) {
