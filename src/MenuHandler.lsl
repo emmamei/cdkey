@@ -424,17 +424,7 @@ default {
                             else {
                                 if (allowDress || isController) menu += "Outfits...";
                             }
-#ifdef RLV_ON_OFF
-                            if (isController) if (!hardcore) menu += "RLV Off";
-#endif
                         }
-#ifdef RLV_ON_OFF
-                        else {
-                            // Note this section is valid if RLV == 0 (no RLV)
-                            // but ALSO if RLVok == -1 (unset)
-                            if (isDoll || isController) menu += "RLV On";
-                        }
-#endif
 
                         if (allowDress && keyAnimation == "") menu += "Types...";
 

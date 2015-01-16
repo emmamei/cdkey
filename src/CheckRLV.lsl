@@ -443,41 +443,6 @@ default {
                 lmRunRLVas("Base", "clear=recvemote:,recvemote:"    + llDumpList2String(exceptions, "=add,recvemote:") + "=add");
             }
         }
-#ifdef RLV_ON_OFF
-        else if (code == MENU_SELECTION) {
-            string choice = llList2String(split, 0);
-            string name = llList2String(split, 1);
-
-            if (choice == "RLV Off") {
-                RLVck = 0;
-                RLVok = 0;
-                rlvAPIversion = "";
-                RLVstarted = 0;
-
-                i = llGetListLength(controllers);
-                if (i > 0) {
-                    while (i--) {
-                        lmSendToAgent("Doll " + name + " has turned off RLV.",llList2Key(controllers, --i));
-                    }
-                }
-
-#ifdef DEVELOPER_MODE
-                myPath = "";
-#endif
-                // This clears all RLV the Key is responsible for
-                lmRunRLV("clear");
-
-                lmMenuReply(MAIN,"",id);
-            }
-            else if (choice == "RLV On") {
-                doCheckRLV();
-                llOwnerSay("Checking for RLV now...");
-                //if (RLVok) activateRLV();
-                //lmRLVreport(RLVok, rlvAPIversion, 0);
-                lmMenuReply(MAIN,"",id);
-            }
-        }
-#endif
         else if (code < 200) {
             if (code == MEM_REPORT) {
                 float delay = llList2Float(split, 0);
