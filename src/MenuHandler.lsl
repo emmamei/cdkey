@@ -753,11 +753,11 @@ default {
                     else if (afterSpace == "AFK") {
 
                         if (beforeSpace == CROSS) {
-                            lmSetConfig("afk", "1");
+                            lmSetConfig("afk", MENU_AFK);
                             lmSendToAgentPlusDoll("AFK Mode manually triggered; Key subsystems slowing...",id);
                         }
                         else {
-                            lmSetConfig("afk", "0");
+                            lmSetConfig("afk", NOT_AFK);
                             lmSendToAgentPlusDoll("You hear the Key whir back to full power",id);
                         }
                         lmMenuReply(MAIN, name, id);

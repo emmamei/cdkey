@@ -36,6 +36,11 @@
 #define WARN YELLOW
 #define INFO WHITE
 
+// Afk settings
+#define NOT_AFK "0"
+#define MENU_AFK "1"
+#define AUTO_AFK "2"
+
 #define VSTR  + "\nScript Date: " + PACKAGE_VERSION
 #define MAIN "~Main Menu~"
 // Collapse animation - and documentation
@@ -59,7 +64,7 @@
 // Name of the preferences notecard
 #define NOTECARD_PREFERENCES "Preferences"
 // Name of the intro text notecard
-#define NOTECARD_INTRO "IntroText"
+//#define NOTECARD_INTRO "IntroText"
 // Wind down rate factor in AFK mode
 #define RATE_AFK 0.5
 // Wind down rate factor in standard mode

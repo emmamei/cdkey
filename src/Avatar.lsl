@@ -1035,6 +1035,9 @@ default {
                         llSetForce(<0, 0, 0>, TRUE);
                 }
             }
+            else
+                //debugSay(2,"DEBUG-AVATAR","Not slowing Dolly");
+                llSetForce(<0, 0, 0>, TRUE);
         }
     }
 #endif

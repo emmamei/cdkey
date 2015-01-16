@@ -181,7 +181,7 @@ collapse(integer newCollapseState) {
             lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0));
 
             // Direct call to set Hovertext
-            cdSetHovertext("Disabled Dolly!",CRITICAL);
+            cdSetHovertext("Disabled Dolly!",CRITICAL); // uses primText
         }
         else if (newCollapseState == JAMMED) {
             // Time span (random) = 120.0 (two minutes) to 300.0 (five minutes)

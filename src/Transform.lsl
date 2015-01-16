@@ -411,7 +411,7 @@ default {
         // AUTO AFK TRIGGERS
 
         // if we can AFK, check for auto AFK triggers
-        if (canAFK) {
+        if (canAFK && !afk) {
             integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0);
 
             // When Dolly is "away" - enter AFK
@@ -420,12 +420,12 @@ default {
             if (autoAFK && (afk != dollAway)) {
 
                 if (dollAway) {
-                    lmSetConfig("afk", "2");
+                    lmSetConfig("afk", AUTO_AFK);
                     llOwnerSay("Automatically entering AFK mode; Key subsystems slowing...");
                 }
                 else {
-                    lmSetConfig("afk", "0");
-                    llOwnerSay("Entering AFK mode; Key subsystems slowing...");
+                    lmSetConfig("afk", NOT_AFK);
+                    llOwnerSay("You hear the Key whir back to full power");
                 }
 
                 setWindRate();

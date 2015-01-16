@@ -48,7 +48,7 @@ integer chatEnable = TRUE;
 #define APPEARANCE_NC "DataAppearance"
 key ncPrefsKey;
 list ncPrefsLoadedUUID;
-key ncIntroKey;
+//key ncIntroKey;
 key ncResetAttach;
 key ncRequestAppearance;
 integer prefsRead;
@@ -86,8 +86,8 @@ string defaultCollapseRLVcmd = "fly=n,sendchat=n,tplm=n,tplure=n,tploc=n,showinv
 // Also allow touch - for Dolly to access Key
 string defaultPoseRLVcmd = "fly=n,tplm=n,tplure=n,tploc=n,sittp=n,fartouch=n";
 
-integer introLine;
-integer introLines;
+//integer introLine;
+//integer introLines;
 
 integer resetState;
 #define RESET_NONE 0
@@ -719,7 +719,7 @@ default {
         }
 
         // when attaching key, user is NOT AFK...
-        lmSetConfig("afk", "0");
+        lmSetConfig("afk", NOT_AFK);
 
         // when attaching we're not in lowScriptMode
         //lowScriptMode = 0;
