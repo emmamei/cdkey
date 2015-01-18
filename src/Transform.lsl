@@ -929,10 +929,9 @@ default {
                     lmSendConfig("nudeFolder",nudeFolder);
                     lmSendConfig("normalselfFolder",normalselfFolder);
                 }
-                else {
-                    debugSay(2,"DEBUG-SEARCHING","Random dress being chosen");
-                    lmInternalCommand("randomDress","",NULL_KEY);
-                }
+
+                debugSay(2,"DEBUG-SEARCHING","Random dress being chosen");
+                lmInternalCommand("randomDress","",NULL_KEY);
             }
         }
     }
