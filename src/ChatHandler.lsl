@@ -71,41 +71,48 @@ default
             split = llDeleteSubList(split,0,0);
 
                  if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
-            else if (name == "collapseTime") {
-                collapseTime = (float)value;
-                if (collapseTime != 0.0) collapseTime += llGetTime();
-            }
-            else if (name == "windingDown")               windingDown = (integer)value;
-            else if (name == "lastWinderID")             lastWinderID = (key)value;
-            else if (name == "lastWinderName")         lastWinderName = value;
-            else if (name == "dollDisplayName")       dollDisplayName = value;
-            else if (name == "collapsed")                   collapsed = (integer)value;
-            else if (name == "hardcore")                     hardcore = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")           timeReporting = (integer)value;
 #endif
-
-            else if (name == "afk")                               afk = (integer)value;
-            else if (name == "autoAFK")                       autoAFK = (integer)value;
-            else if (name == "autoTP")                         autoTP = (integer)value;
+            else if (name == "hardcore")                     hardcore = (integer)value;
+            else if (name == "isVisible")                     visible = (integer)value;
             else if (name == "blacklist") {
                 if (split == [""]) blacklist = [];
                 else blacklist = split;
             }
             else if (name == "busyIsAway")                 busyIsAway = (integer)value;
+            else if (name == "quiet")                           quiet = (integer)value;
 
+            //----------------------------------------
+            // Shortcut: a
+            else if (c == "a") {
+                     if (name == "afk")                           afk = (integer)value;
+#ifdef ADULT_MODE
+                else if (name == "allowStrip")             allowStrip = (integer)value;
+#endif
+                else if (name == "autoAFK")                   autoAFK = (integer)value;
+                else if (name == "allowRepeatWind")   allowRepeatWind = (integer)value;
+                else if (name == "allowCarry")             allowCarry = (integer)value;
+                else if (name == "allowDress")             allowDress = (integer)value;
+                else if (name == "allowPose")               allowPose = (integer)value;
+                else if (name == "autoTP")                     autoTP = (integer)value;
+            }
+
+            //----------------------------------------
             // Shortcut: c
             else if (c == "c") {
                      if (name == "canAFK")                     canAFK = (integer)value;
-                else if (name == "allowCarry")                 allowCarry = (integer)value;
-                else if (name == "allowDress")                 allowDress = (integer)value;
-                else if (name == "allowPose")                   allowPose = (integer)value;
+                else if (name == "collapsed")               collapsed = (integer)value;
                 else if (name == "canDressSelf")         canDressSelf = (integer)value;
                 else if (name == "canFly")                     canFly = (integer)value;
                 else if (name == "canSit")                     canSit = (integer)value;
                 else if (name == "canStand")                 canStand = (integer)value;
-                else if (name == "allowRepeatWind")       allowRepeatWind = (integer)value;
+                else if (name == "canSelfTP")               canSelfTP = (integer)value;
                 else if (name == "configured")             configured = (integer)value;
+                else if (name == "collapseTime") {
+                    collapseTime = (float)value;
+                    if (collapseTime != 0.0) collapseTime += llGetTime();
+                }
                 else if (name == "controllers") {
                     if (split == [""]) controllers = [];
                     else controllers = split;
@@ -128,11 +135,13 @@ default
                 }
             }
 
+            //----------------------------------------
             // Shortcut: d
             else if (c == "d") {
                      if (name == "detachable")             detachable = (integer)value;
                 else if (name == "dollType")                 dollType = value;
                 else if (name == "dollGender")             dollGender = value;
+                else if (name == "dollDisplayName")   dollDisplayName = value;
                 else if (name == "demoMode") {
                     demoMode = (integer)value;
                     if (demoMode) effectiveLimit = DEMO_LIMIT;
@@ -142,23 +151,25 @@ default
                 else if (name == "debugLevel")             debugLevel = (integer)value;
 #endif
             }
-            else if (name == "isVisible")                     visible = (integer)value;
-            //else if (name == "listID")                         listID = (key)value;
 
+            //----------------------------------------
+            // Shortcut: l
+            else if (c == "l") {
+                     if (name == "lastWinderID")         lastWinderID = (key)value;
+                else if (name == "lastWinderName")     lastWinderName = value;
+            }
+
+            //----------------------------------------
             // Shortcut: p
             else if (c == "p") {
                      if (name == "poseSilence")           poseSilence = (integer)value;
-#ifdef ADULT_MODE
-                else if (name == "allowStrip")             allowStrip = (integer)value;
-#endif
                 else if (name == "poserID")                   poserID = (key)value;
                 else if (name == "poserName")               poserName = value;
                 else if (name == "pronounHerDoll")     pronounHerDoll = value;
                 else if (name == "pronounSheDoll")     pronounSheDoll = value;
             }
-            else if (name == "quiet")                           quiet = (integer)value;
-//          else if (name == "offlineMode")               offlineMode = (integer)value;
 
+            //----------------------------------------
             // Shortcut: k
             else if (c == "k") {
                      if (name == "keyAnimation")         keyAnimation = value;
@@ -168,11 +179,16 @@ default
                     else effectiveLimit = DEMO_LIMIT;
                 }
             }
-            else if (name == "canSelfTP")                   canSelfTP = (integer)value;
-            else if (name == "windMins")                     windMins = (integer)value;
-            //else if (name == "wearLockExpire")         wearLockExpire = (float)value;
-            else if (name == "wearLock")                     wearLock = (integer)value;
-            else if (name == "windRate")                     windRate = (float)value;
+
+            //----------------------------------------
+            // Shortcut: w
+            else if (c == "w") {
+                     if (name == "windMins")                 windMins = (integer)value;
+                //else if (name == "wearLockExpire")     wearLockExpire = (float)value;
+                else if (name == "wearLock")                 wearLock = (integer)value;
+                else if (name == "windRate")                 windRate = (float)value;
+                else if (name == "windingDown")           windingDown = (integer)value;
+            }
         }
 
         else if (code == INTERNAL_CMD) {
