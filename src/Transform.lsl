@@ -153,7 +153,7 @@ setDollType(string stateName, integer automated) {
     // if RLV is non-functional, dont search for a Type Folder
     if (RLVok) {
         debugSay(2,"DEBUG-DOLLTYPE","Searching for " + typeFolderExpected);
-        //outfitsSearchTimer = llGetTime();
+        outfitsSearchTimer = llGetTime();
         typeSearchHandle = cdListenMine(typeSearchChannel);
         folderSearch(outfitsFolder,typeSearchChannel);
     }

@@ -95,6 +95,7 @@ checkRLV() {
     }
 
     debugSay(2,"DEBUG-RLV","checking for RLV - try " + (string)RLVck + " of " + (string)MAX_RLVCHECK_TRIES);
+    rlvTimer = llGetTime();
 
     // rlvAPIversion is set by the listener when a message is received
     // myPath is set by the listener if a message is received that is not
@@ -340,6 +341,7 @@ default {
                 //lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
                 //debugSay(2, "DEBUG-RLV", "RLV set to " + (string)RLVok + " and message sent on link channel");
                 llOwnerSay("RLV check completed in " + formatFloat((llGetTime() - rlvTimer),1) + "s");
+                rlvTimer = 0;
 
                 cdListenerDeactivate(rlvHandle);
                 activateRLV();
