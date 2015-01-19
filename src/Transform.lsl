@@ -127,7 +127,7 @@ setDollType(string stateName, integer automated) {
         }
     }
 
-    // Dont lock if transformation is automated (or is a Builder or Key type)
+    // Dont lock if transformation is automated (or is a Builder Dolly)
     if (!automated && stateName != "Builder") {
         transformLockExpire = llGetUnixTime() + TRANSFORM_LOCK_TIME;
         lmSendConfig("transformLockExpire",(string)TRANSFORM_LOCK_TIME);

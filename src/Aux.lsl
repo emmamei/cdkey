@@ -8,7 +8,7 @@
 
 #define DEBUG_HANDLER 1
 #include "include/GlobalDefines.lsl"
-#include "include/Json.lsl"
+// #include "include/Json.lsl"
 
 #define WARN_MEM 6144
 #define NO_FILTER ""

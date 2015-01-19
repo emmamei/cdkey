@@ -7,7 +7,7 @@
 // DATE: 27 October 2014
 
 #include "include/GlobalDefines.lsl"
-#include "include/Json.lsl"
+// #include "include/Json.lsl"
 
 //#define DEBUG_BADRLV
 #define cdSayQuietly(x) { string z = x; if (quiet) llOwnerSay(z); else llSay(0,z); }
