@@ -18,6 +18,7 @@
 #define cdListenerDeactivate(a) llListenControl(a, 0)
 #define cdListenerActivate(a) llListenControl(a, 1)
 #define cdResetKey() llResetOtherScript("Start")
+#define lmDoCheckRLV() lmInternalCommand("doCheckRLV","",NULL_KEY)
 
 // Could set allControls to -1 for quick full bit set -
 // but that would set fields with undefined values: this is more
@@ -64,7 +65,9 @@ integer chatChannel = 75;
 
 // Check for RLV support from user's viewer
 //
-// This is the starter function
+// This is the starter function. Notice that
+// even if RLV has already been checked, this WILL
+// run again...
 
 doCheckRLV() {
     rlvTimer = llGetTime();
@@ -95,7 +98,7 @@ checkRLV() {
     }
 
     debugSay(2,"DEBUG-RLV","checking for RLV - try " + (string)RLVck + " of " + (string)MAX_RLVCHECK_TRIES);
-    rlvTimer = llGetTime();
+    //rlvTimer = llGetTime();
 
     // rlvAPIversion is set by the listener when a message is received
     // myPath is set by the listener if a message is received that is not
@@ -402,15 +405,17 @@ default {
             else if (name == "dialogChannel") {
                 dialogChannel = (integer)value;
 
-                llListenRemove(rlvHandle);
-                // Calculate positive (RLV compatible) rlvChannel
-                rlvChannel = ~dialogChannel + 1;
-                rlvHandle = cdListenMine(rlvChannel);
-                cdListenerDeactivate(rlvHandle);
+                if (rlvHandle == 0 || RLVok == UNSET) {
+                    llListenRemove(rlvHandle);
+                    // Calculate positive (RLV compatible) rlvChannel
+                    rlvChannel = ~dialogChannel + 1;
+                    rlvHandle = cdListenMine(rlvChannel);
+                    cdListenerDeactivate(rlvHandle);
 
-                // As soon as rlvHandle is valid - we can check for RLV:
-                // Note this puts an event in, but does NOT execute until its turn
-                if (RLVok == UNSET) lmInternalCommand("doCheckRLV","",NULL_KEY);
+                    // As soon as rlvHandle is valid - we can check for RLV:
+                    // Note this puts an event in, but does NOT execute until its turn
+                    lmInternalCommand("doCheckRLV","",NULL_KEY);
+                }
             }
             else if (name == "wearLock")      {     wearLock = (integer)value; activateRLVBase(); }
         }
