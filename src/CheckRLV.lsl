@@ -357,7 +357,8 @@ default {
     attach(key id) {
 
         if (id)
-            doCheckRLV();
+            // this triggers a dialogChannel event
+            cdDialogListen();
     }
 
     //----------------------------------------
@@ -379,22 +380,23 @@ default {
             name = llList2String(split, 0);
             split = llDeleteSubList(split, 0, 0);
             value = llList2String(split, 0);
+            integer c = llGetSubString(name, 0, 0);
 
-            // Like to be soemthing here before long... so mark it
-            ;
+            if (llListFindList(c, [ "a", "c", "d", "w" ]) == NOT_FOUND) return;
 
                  if (name == "autoTP")        {       autoTP = (integer)value; activateRLVBase(); }
-            else if (name == "canSelfTP")     {    canSelfTP = (integer)value; activateRLVBase(); }
-            else if (name == "canDressSelf")  { canDressSelf = (integer)value; activateRLVBase(); }
-            else if (name == "canFly")        {       canFly = (integer)value; activateRLVBase(); }
-            else if (name == "canStand")      {     canStand = (integer)value; activateRLVBase(); }
-            else if (name == "canSit")        {       canSit = (integer)value; activateRLVBase(); }
-            else if (name == "collapsed")     {    collapsed = (integer)value; activateRLVBase(); }
-            else if (name == "wearLock")      {     wearLock = (integer)value; activateRLVBase(); }
             else if (name == "afk")           {          afk = (integer)value; activateRLVBase(); }
-            else if (name == "controllers") {
-                if (split == [""]) controllers = [];
-                else controllers = split;
+            else if (c == "c") {
+                     if (name == "canSelfTP")     {    canSelfTP = (integer)value; activateRLVBase(); }
+                else if (name == "canDressSelf")  { canDressSelf = (integer)value; activateRLVBase(); }
+                else if (name == "canFly")        {       canFly = (integer)value; activateRLVBase(); }
+                else if (name == "canStand")      {     canStand = (integer)value; activateRLVBase(); }
+                else if (name == "canSit")        {       canSit = (integer)value; activateRLVBase(); }
+                else if (name == "collapsed")     {    collapsed = (integer)value; activateRLVBase(); }
+                else if (name == "controllers") {
+                    if (split == [""]) controllers = [];
+                    else controllers = split;
+                }
             }
 
             else if (name == "dialogChannel") {
@@ -403,19 +405,20 @@ default {
                 llListenRemove(rlvHandle);
                 // Calculate positive (RLV compatible) rlvChannel
                 rlvChannel = ~dialogChannel + 1;
-                rlvHandle = llListen(rlvChannel, "", "", "");
+                rlvHandle = cdListenMine(rlvChannel);
                 cdListenerDeactivate(rlvHandle);
 
                 // As soon as rlvHandle is valid - we can check for RLV:
                 // Note this puts an event in, but does NOT execute until its turn
                 if (RLVok == UNSET) lmInternalCommand("doCheckRLV","",NULL_KEY);
             }
+            else if (name == "wearLock")      {     wearLock = (integer)value; activateRLVBase(); }
         }
         else if (code == INTERNAL_CMD) {
             string cmd = llList2String(split, 0);
             split = llDeleteSubList(split, 0, 0);
 
-            if (cmd == "doCheckRLV") doCheckRLV();
+                 if (cmd == "doCheckRLV") doCheckRLV();
             else if (cmd == "updateExceptions") {
 
                 // Exempt builtin or user specified controllers from TP restictions
