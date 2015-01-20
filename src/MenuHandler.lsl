@@ -402,8 +402,11 @@ default {
                             msg =  dollName + " is a doll and likes to be treated like " +
                                    "a doll. So feel free to use these options. ";
 
-                            if (isCarrier || isController)
-                                menu += [ "Hold", "Unwind" ];
+                            menu += [
+#ifdef JAMMABLE
+                                "Hold",
+#endif
+                                "Unwind" ];
                         }
 
                         if (RLVok == 1) {
