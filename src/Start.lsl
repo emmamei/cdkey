@@ -667,7 +667,7 @@ default {
 #endif
         readPreferences();
         llSleep(1.0);
-        lmInternalCommand("collapse", (string)NOT_COLLAPSED, llGetKey());
+        lmInternalCommand("collapse", "0", llGetKey());
     }
 
     //----------------------------------------
