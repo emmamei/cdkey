@@ -15,6 +15,7 @@
 #define cdResetKey() llResetOtherScript("Start")
 #define UNSET -1
 #define lmCollapse(a) lmInternalCommand("collapse",(string)(a),NULL_KEY)
+#define lmUncollapse() lmInternalCommand("collapse","0",NULL_KEY)
 
 //#define debugPrint(a) llSay(DEBUG_CHANNEL,(a))
 
@@ -154,6 +155,31 @@ setAfk(integer setting) {
     lmSendConfig("autoAFK", (string)autoAFK);
 }
 
+uncollapse() {
+    string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
+    cdSetHovertext("",NORMAL); // uses primText
+
+    lmSendConfig("collapseTime", (string)(collapseTime = 0));
+
+    // This configuration triggers RLV release
+    lmSendConfig("collapsed", (string)(collapsed = 0));
+
+    lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
+
+    // queued up: broadcast new times
+    lmInternalCommand("getTimeUpdates", "", llGetKey());
+
+    // Set hovertext
+    lmInternalCommand("setHovertext", "", llGetKey());
+
+#ifdef JAMMABLE
+    lmSendConfig("jamExpire", (string)(jamExpire = 0));
+#endif
+
+    // Among other things, this will set the Key's turn rate
+    setWindRate();
+}
+
 collapse(integer newCollapseState) {
 
     // newCollapseState describes state being entered;
@@ -166,40 +192,38 @@ collapse(integer newCollapseState) {
     // We might have a situation where a collapse state needs to be refreshed:
     // so allow repeated calls
     //if (collapsed == newCollapseState) return; // Make repeated calls fast and unnecessary
+    if (newCollapseState == 0) {
+        uncollapse();
+        return;
+    }
 
     debugSay(3,"DEBUG-MAIN","Entering new collapse state (" + (string)newCollapseState + ") with time left of " + (string)timeLeftOnKey);
 
     string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
 
-    if (newCollapseState == NOT_COLLAPSED) {
-        lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
-        lmSendConfig("collapseTime", (string)(collapseTime = 0));
+    lmSendConfig("lastWinderID", (string)(lastWinderID = NULL_KEY));
+
+    // Entering a collapsed state
+    if (newCollapseState == NO_TIME) {
+        lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0));
+
+        // Direct call to set Hovertext
+        cdSetHovertext("Disabled Dolly!",CRITICAL); // uses primText
     }
-    else {
-        lmSendConfig("lastWinderID", (string)(lastWinderID = NULL_KEY));
-
-        // Entering a collapsed state
-        if (newCollapseState == NO_TIME) {
-            lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0));
-
-            // Direct call to set Hovertext
-            cdSetHovertext("Disabled Dolly!",CRITICAL); // uses primText
-        }
 #ifdef JAMMABLE
-        else if (newCollapseState == JAMMED) {
-            // Time span (random) = 120.0 (two minutes) to 300.0 (five minutes)
-            if (collapsed != JAMMED)
-                jamExpire = llGetUnixTime() + ((integer)llFrand(180) + 120);
-        }
+    else if (newCollapseState == JAMMED) {
+        // Time span (random) = 120.0 (two minutes) to 300.0 (five minutes)
+        if (collapsed != JAMMED)
+            jamExpire = llGetUnixTime() + ((integer)llFrand(180) + 120);
+    }
 #endif
 
-        // If not already collapsed, mark the start time
-        if (collapsed == NOT_COLLAPSED) {
-            collapseTime = llGetUnixTime();
-            // A relative time of zero would be misunderstood - so fake up
-            // a "1" (1s) time - a second's inaccuracy isn't bad
-            lmSendConfig("collapseTime", "1");
-        }
+    // If not already collapsed, mark the start time
+    if (collapsed == NOT_COLLAPSED) {
+        collapseTime = llGetUnixTime();
+        // A relative time of zero would be misunderstood - so fake up
+        // a "1" (1s) time - a second's inaccuracy isn't bad
+        lmSendConfig("collapseTime", "1");
     }
 
 #ifdef JAMMABLE
@@ -226,16 +250,6 @@ collapse(integer newCollapseState) {
 
     // queued up: broadcast new times
     lmInternalCommand("getTimeUpdates", "", llGetKey());
-
-    // Current code ignores this utterly... and calls this function
-    // we're in anyway
-    //lmInternalCommand("collapse", (string)collapsed, llGetKey());
-
-    // note that this means a delay between when the
-    // timer triggers and when the state of collapse
-    // changes
-    //
-    //llSetTimerEvent(15);
 
     // Among other things, this will set the Key's turn rate
     setWindRate();
@@ -461,10 +475,10 @@ default {
 
         // False collapse? Collapsed = 1 while timeLeftOnKey is positive is an invalid condition
         if (collapsed == NO_TIME)
-            if (timeLeftOnKey > 0) collapse(NOT_COLLAPSED);
+            if (timeLeftOnKey > 0) lmUncollapse();
 #ifdef JAMMABLE
         else if (collapsed == JAMMED)
-            if (jamExpire <= timerMark) collapse(NOT_COLLAPSED);
+            if (jamExpire <= timerMark) lmUncollapse();
 #endif
 
         //----------------------------------------
@@ -743,12 +757,19 @@ default {
 //              if (windMins <= 0 || windMins > 120) windMins = 30;
 //              lmSendConfig("windMins", (string)(windMins));
 //          }
-            else if (cmd == "collapse") collapse(llList2Integer(split, 0));
+            else if (cmd == "collapse") {
+                if (collapse) collapse(llList2Integer(split, 0));
+                else uncollapse();
+            }
             else if (cmd == "windMsg") {
                 integer windAmount = llList2Integer(split, 0);
                 string name = llList2String(split, 1);
                 string mins = (string)llFloor(windAmount / SEC_TO_MIN);
                 string percent = formatFloat((float)timeLeftOnKey * 100.0 / (float)effectiveLimit, 1);
+
+                // We're trying to avoid having name obliterated by RLV viewers
+                // Note this makes no difference to waiting events, just other scripts
+                if (collapse == 0) llSleep(0.5);
 
                 llOwnerSay("Your key has been turned by " + name + " giving you " +
                     mins + " more minutes of life (" + percent + "% capacity).");
@@ -822,7 +843,7 @@ default {
 
                         lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = windAmount));
                         lmSendConfig("winderRechargeTime", (string)(winderRechargeTime = (llGetUnixTime() + EMERGENCY_LIMIT_TIME)));
-                        collapse(NOT_COLLAPSED);
+                        lmUncollapse();
 
                         llOwnerSay("With an electical sound the motor whirrs into life and gives you " + (string)llRound(windAmount / SEC_TO_MIN) + " minutes of life. The recharger requires " + (string)llRound(EMERGENCY_LIMIT_TIME / 3600) + " hours to recharge.");
                     }
@@ -882,6 +903,9 @@ default {
                 if (timeLeftOnKey + effectiveWindTime > effectiveLimit) windAmount = effectiveLimit - timeLeftOnKey;
                 else windAmount = effectiveWindTime;
 
+                // The "winding" takes place here. Note that while timeLeftOnKey might
+                // be set - collapse is set a short time later - thus, timeLeftOnKey is greater
+                // than zero, but collapse is still true.
                 lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey += windAmount));
 
                 if (collapsed == NO_TIME) {
@@ -889,11 +913,15 @@ default {
                     // it's an asynchronous event, and not a function that
                     // slows down the user.
                     //
+                    lmSendConfig("collapsed", (string)(collapsed = 0));
+                    lmSendConfig("collapseTime", (string)(collapseTime = 0));
                     lmCollapse(0);
                 }
 
                 // Time value of 60s is somewhat arbitrary; it is however less than 1m
                 // So it really would not show up in minute based calculations
+                // Note that no matter how many seconds there were left, the limit has
+                // been reached and set.
                 if (windAmount < 60) {
 
                     // note that this message might go out even if we "wound" Dolly with 30 seconds
