@@ -47,7 +47,7 @@ integer chatEnable = TRUE;
 
 #define APPEARANCE_NC "DataAppearance"
 key ncPrefsKey;
-list ncPrefsLoadedUUID;
+//list ncPrefsLoadedUUID;
 //key ncIntroKey;
 key ncResetAttach;
 key ncRequestAppearance;
@@ -59,8 +59,6 @@ integer failedReset;
 float ncStart;
 integer lastAttachPoint;
 key lastAttachAvatar;
-
-list recentDilation;
 
 integer newAttach = YES;
 integer primGlow = YES;
@@ -765,7 +763,7 @@ default {
         // Read notecard: Preferences
         else if (query_id == ncPrefsKey) {
             if (data == EOF) {
-                lmSendConfig("ncPrefsLoadedUUID", llDumpList2String(llList2List((string)llGetInventoryKey(NOTECARD_PREFERENCES) + ncPrefsLoadedUUID, 0, 9),"|"));
+                //lmSendConfig("ncPrefsLoadedUUID", llDumpList2String(llList2List((string)llGetInventoryKey(NOTECARD_PREFERENCES) + ncPrefsLoadedUUID, 0, 9),"|"));
                 lmInternalCommand("getTimeUpdates","",NULL_KEY);
 
 
