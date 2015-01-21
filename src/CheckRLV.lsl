@@ -395,7 +395,7 @@ default {
             value = llList2String(split, 0);
             string c = llGetSubString(name, 0, 0);
 
-            if (llListFindList((list)c, [ "a", "c", "d", "w" ]) == NOT_FOUND) return;
+            if (llListFindList([ "a", "c", "d", "w" ],(list)c) == NOT_FOUND) return;
 
                  if (name == "autoTP")        {       autoTP = (integer)value; activateRLVBase(); }
             else if (name == "afk")           {          afk = (integer)value; activateRLVBase(); }
