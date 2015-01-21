@@ -233,7 +233,7 @@ list BuiltinControllers = BUILTIN_CONTROLLERS;
 #define timerNextFrame() llSetTimerEvent(0.01 * mainTimerEnable)
 
 #define uncarry() lmInternalCommand("uncarry", "", NULL_KEY)
-#define uncollapse(old) lmInternalCommand("uncollapse", "0", NULL_KEY)
+//#define uncollapse(old) lmInternalCommand("uncollapse", "0", NULL_KEY)
 
 #define NORMAL_TIMER_RATE 0.5 * mainTimerEnable
 #define REDUCED_TIMER_RATE 5.0 * mainTimerEnable

@@ -759,7 +759,6 @@ default {
                 }
 
                 appearanceData += data;
-                data = [];
                 ncRequestAppearance = llGetNotecardLine(APPEARANCE_NC, ncLine++);
             }
         }

@@ -294,7 +294,8 @@ default {
 #ifdef DEVELOPER_MODE
         myPath = "";
 #endif
-        //doCheckRLV();
+        // Note this happens only at the very beginning
+        doCheckRLV();
     }
 
     //----------------------------------------
@@ -360,8 +361,7 @@ default {
     attach(key id) {
 
         if (id)
-            // this triggers a dialogChannel event
-            cdDialogListen();
+            doCheckRLV();
     }
 
     //----------------------------------------
@@ -383,9 +383,9 @@ default {
             name = llList2String(split, 0);
             split = llDeleteSubList(split, 0, 0);
             value = llList2String(split, 0);
-            integer c = llGetSubString(name, 0, 0);
+            string c = llGetSubString(name, 0, 0);
 
-            if (llListFindList(c, [ "a", "c", "d", "w" ]) == NOT_FOUND) return;
+            if (llListFindList((list)c, [ "a", "c", "d", "w" ]) == NOT_FOUND) return;
 
                  if (name == "autoTP")        {       autoTP = (integer)value; activateRLVBase(); }
             else if (name == "afk")           {          afk = (integer)value; activateRLVBase(); }

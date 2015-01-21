@@ -157,7 +157,7 @@ setAfk(integer setting) {
 
 uncollapse() {
     string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
-    cdSetHovertext("",NORMAL); // uses primText
+    cdSetHovertext("",INFO); // uses primText
 
     lmSendConfig("collapseTime", (string)(collapseTime = 0));
 
@@ -758,8 +758,8 @@ default {
 //              lmSendConfig("windMins", (string)(windMins));
 //          }
             else if (cmd == "collapse") {
-                if (collapse) collapse(llList2Integer(split, 0));
-                else uncollapse();
+                if (collapsed) uncollapse();
+                else collapse(llList2Integer(split, 0));
             }
             else if (cmd == "windMsg") {
                 integer windAmount = llList2Integer(split, 0);
@@ -769,7 +769,7 @@ default {
 
                 // We're trying to avoid having name obliterated by RLV viewers
                 // Note this makes no difference to waiting events, just other scripts
-                if (collapse == 0) llSleep(0.5);
+                if (collapsed == 0) llSleep(0.5);
 
                 llOwnerSay("Your key has been turned by " + name + " giving you " +
                     mins + " more minutes of life (" + percent + "% capacity).");
