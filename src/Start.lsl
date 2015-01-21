@@ -445,8 +445,8 @@ default {
             string value = llList2String(split, 1);
             split = llDeleteSubList(split,0,0);
 
-                 if (name == "ncPrefsLoadedUUID")    ncPrefsLoadedUUID = split;
-            else if (name == "lowScriptMode")            lowScriptMode = (integer)value;
+                 if (name == "lowScriptMode")            lowScriptMode = (integer)value;
+            //else if (name == "ncPrefsLoadedUUID")    ncPrefsLoadedUUID = split;
             else if (name == "dialogChannel")            dialogChannel = (integer)value;
             else if (name == "timeLeftOnKey")            timeLeftOnKey = (float)value;
             else if (name == "demoMode")                      demoMode = (integer)value;
