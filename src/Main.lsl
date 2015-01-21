@@ -678,19 +678,24 @@ default {
                 if (timeLeftOnKey > effectiveLimit) timeLeftOnKey = effectiveLimit;
 
                 lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
-                }
+            }
             else if (name == "wearLock") {
                 // Internal command: remove?
                 lmSendConfig("wearLock", (string)(wearLock = (integer)value));
-                lmSendConfig("wearLockExpire",(string)(WEAR_LOCK_TIME));
-                if (wearLock) wearLockExpire = llGetUnixTime() + WEAR_LOCK_TIME;
-                else wearLockExpire = 0;
+                if (wearLock) {
+                    wearLockExpire = llGetUnixTime() + WEAR_LOCK_TIME;
+                    lmSendConfig("wearLockExpire",(string)(WEAR_LOCK_TIME));
                 }
+                else {
+                    wearLockExpire = 0;
+                    lmSendConfig("wearLockExpire","0");
+                }
+            }
             else if (name == "lowScriptMode") {
                 lmSendConfig("lowScriptMode",(string)(lowScriptMode = (integer)value));
                 if (lowScriptMode) lastLowScriptTime = llGetUnixTime();
                 else lastLowScriptTime = 0;
-                }
+            }
             else if (
                      (name == "wearLockExpire")  ||
                      (name == "poseExpire")      ||

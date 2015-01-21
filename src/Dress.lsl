@@ -241,7 +241,6 @@ integer isDresser(key id) {
 
 changeComplete(integer success) {
     // And remove the temp locks we used
-    // RLV.lsl knows which are ours and that is all this clears
 #ifdef DEVELOPER_MODE
     llOwnerSay("Your key is now unlocked again as you are a developer.");
     lmRunRLV("clear");
