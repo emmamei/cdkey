@@ -341,6 +341,7 @@ default {
     }
 
 
+#ifdef NOT_USED
     //----------------------------------------
     // TIMER
     //----------------------------------------
@@ -359,6 +360,7 @@ default {
             canDressTimeout = 0;
         }
     }
+#endif
 
     //----------------------------------------
     // LINK_MESSAGE
@@ -380,7 +382,7 @@ default {
             string value = cdListElement(split, 1);
             string c = cdGetFirstChar(name);
 
-            if (llListFindList((list)c, [ "a", "R", "h", "p", "c", "d", "n", "t", "w", "o", "u" ]) == NOT_FOUND) return;
+            if (llListFindList([ "a", "R", "h", "p", "c", "d", "n", "t", "w", "o", "u" ], (list)c) == NOT_FOUND) return;
 
             if (name == "dialogChannel") {
                 dialogChannel = (integer)value;
@@ -699,9 +701,9 @@ default {
             }
         }
         else if (code < 200) {
-            if (code == 102) {
-                ;
-            }
+            //if (code == 102) {
+            //    ;
+            //}
 
             // else if (code == 104) {
             //     if (script != "Start") return;
@@ -715,7 +717,7 @@ default {
             //     initState = 105;
             // }
 
-            else if (code == MEM_REPORT) {
+                 if (code == MEM_REPORT) {
                 memReport(cdMyScriptName(),cdListFloatElement(split, 0));
             }
             else if (code == CONFIG_REPORT) {
@@ -741,20 +743,6 @@ default {
             }
         }
     }
-
-// First, all clothes are taken off except for skull and anything that might be revealing.
-//
-// Then the new outfit is put on. It uses replace, so it should take off any old clothes.
-//
-// Then there is an 8 second wait and then the new outfit is put on again! In case something
-// was locked. This I think explains the double put-on.
-//
-// Then the places are checked where there could be old clothes still on. If anything is there,
-// according to whatever is returned, the id is checked and it is taken off if they are old.
-//
-// This last step takes off all the clothes that weren't replaced.
-
-// There is one place where the old outfit is removed.
 
     //----------------------------------------
     // LISTEN
@@ -807,20 +795,18 @@ default {
 #else
                     if ((outfitPage + 1) * OUTFIT_PAGE_SIZE < llGetListLength(outfitsList))
                         outfitPage++;
-#end
-                    }
-
+#endif
                 }
                 else if (choice == "Outfits Prev") {
                     //debugSay(6, "DEBUG-DRESS", ">>> Dress Menu: " + choice);
 #ifdef ROLLOVER
                     outfitPage--;
                     if (outfitPage < 0)
-                        outfitPage = (llFloor(llGetListLength(outfitsList) / OUTFIT_PAGE_SIZE));
+                        outfitPage = (llFloor((llGetListLength(outfitsList)) / (float)OUTFIT_PAGE_SIZE));
 #else
                     if (outfitPage != 0)
                         outfitPage--;
-#end
+#endif
                 }
 
                 list dialogItems = [ "Outfits Prev", "Outfits Next" ];
@@ -977,37 +963,17 @@ default {
                     return;
                 }
 
-                //if (outfitsList == []) {
-                //    debugSay(6, "DEBUG-CLOTHING","No outfits found!");
-                //    llOwnerSay("There are no outfits in your closet to wear! Time to go shopping!");
-                //    return;
-                //}
-
                 // Pick outfit (or directory) at random
-                //string nextOutfitName;
-                integer total;
-                integer n;
                 string randomOutfitName;
 
-                total = llGetListLength(outfitsList);
-                n = (integer)llFrand(total);
-
-                randomOutfitName = cdListElement(outfitsList, n);
-                debugSay(5,"DEBUG-CLOTHING","Chosen item (outfit?) #" + (string)n + " out of a total of " + (string)total + ": " + randomOutfitName);
+                randomOutfitName = cdListElement(outfitsList, (integer)llFrand(llGetListLength(outfitsList)));
 
                 // Folders are NOT filtered out; this is so we can descend into sub-directories
                 // and select items within them. Directories are marked with an initial ">" character
                 if (llGetSubString(randomOutfitName, 0, 0) != ">") {
 
                     // Here.....
-                    //outfitsHandle = cdListenMine(outfitsChannel);
                     outfitsHandle = cdListenMine(outfitsChannel);
-                    //llSay(outfitsChannel,randomOutfitName);
-
-                    // The (randomly) chosen outfit is used in a dialog - to generate a menu reply
-                    // GET RID OF THIS....
-                    //llDialog(dollID, "You are being dressed in this outfit.", (list)randomOutfitName, outfitsChannel);
-                    //llSay(DEBUG_CHANNEL,"Calling wear outfit with " + randomOutfitName);
                     lmInternalCommand("wearOutfit", randomOutfitName, NULL_KEY);
 
                     llOwnerSay("You are being dressed in this outfit: " + randomOutfitName);
@@ -1078,12 +1044,12 @@ default {
             }
 
             outfitsList = tmpList;
+            tmpList = [];
 
             // we've gone through and cleaned up the list - but is anything left?
             if (outfitsList == []) {
                 outfitsList = []; // free memory
                 cdDialogListen();
-                //llDialog(dresserID, "You look in " + pronounHerDoll + " closet, and see nothing for Dolly to wear.", ["OK"], dialogChannel);
                 llDialog(dresserID, "No wearable outfits in this directory.", [ "OK", MAIN, "Outfits..." ], dialogChannel);
                 return;
             }
@@ -1092,7 +1058,6 @@ default {
             outfitsList = llListSort(outfitsList, 1, TRUE);
 
             // Now create appropriate menu page from full outfits list
-            integer total = 0;
             outfitPage = 0;
 
             list newOutfitsList = outfitsPage(outfitsList);
@@ -1101,9 +1066,14 @@ default {
             else newOutfitsList += [ "Outfits Prev", "Outfits Next" ];
             newOutfitsList += [ "Back..." ];
 
-            outfitsMessage = "You may choose any outfit for dolly to wear.";
-            if (totalOutfits > 0) outfitsMessage += " There are " + totalOutfits + " outfits to choose from. ";
-            if (dresserID == dollID) outfitsMessage = "See " + WEB_DOMAIN + outfitsURL + " for more detailed information on outfits. ";
+            if (dresserID == dollID) outfitsMessage = "You may choose any outfit to wear. ";
+            else outfitsMessage = "You may choose any outfit for dolly to wear. ";
+
+            if (totalOutfits > 0) outfitsMessage += ("There are " + (string)totalOutfits + " outfits to choose from. ");
+#ifdef DEVELOPER_MODE
+            else llSay(DEBUG_CHANNEL,"No outfits in this directory?");
+#endif
+            if (dresserID == dollID) outfitsMessage += "See " + WEB_DOMAIN + outfitsURL + " for more detailed information on outfits. ";
             outfitsMessage += "\n\n" + folderStatus();
 
             // Provide a dialog to user to choose new outfit
@@ -1206,11 +1176,6 @@ default {
             }
 
             debugSay(6, "DEBUG-DRESS", "canDressTimeout = " + (string)canDressTimeout + ", dressingSteps = " + (string)dressingSteps);
-        }
-#endif
-#ifdef DEVELOPER_MODE
-        else {
-            debugSay(6, "DEBUG-DRESS", "unrecognized channel seen in listener: " + (string)channel + "," + name + ",id," + choice);
         }
 #endif
 
