@@ -640,8 +640,8 @@ default {
                 llListenRemove(randomDressHandle);
                 llListenRemove(menuDressHandle);
 
-                changeComplete(TRUE);
                 canDressTimeout = 0;
+                changeComplete(TRUE);
             }
             else if (cmd == "setHovertext") {
                 string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
