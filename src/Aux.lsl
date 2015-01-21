@@ -20,13 +20,10 @@
 
 key memReportID;
 key lmRequest;
-list memWait;
 list memList;
-float rezTime;
 float timerEvent;
 float listenTime;
 float memTime;
-string memData;
 string minsLeft;
 //string windRate;
 integer windMins;
@@ -34,10 +31,7 @@ string curGemColour;
 string memOutput = "Script Memory Status:";
 integer maxMins;
 integer ncLine;
-integer memCollecting;
 integer memReporting;
-integer memRequested;
-integer rezzed;
 integer primGlow = 1;
 integer primLight = 1;
 integer textboxChannel;
@@ -92,10 +86,7 @@ default {
     // ON REZ
     //----------------------------------------
     on_rez(integer start) {
-        //lmSendXonfig("debugLevel", (string)debugLevel);
-        rezTime = llGetTime();
         configured = 0;
-        rezzed = 1;
     }
 
 //  //----------------------------------------
