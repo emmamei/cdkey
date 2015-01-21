@@ -44,7 +44,9 @@ string prefix;
 
 integer tempDressingLock = FALSE;  // allow only one dressing going on at a time
 integer canDressTimeout;
+#ifdef NOT_USED
 integer dressingSteps;             // are all attempts to dress complete?
+#endif
 
 //key setupID = NULL_KEY;
 
@@ -353,7 +355,6 @@ default {
 #ifdef CONFIRM_UNWEAR
             llListenRemove(confirmUnwearHandle);
 #endif
-
             changeComplete(FALSE);
             canDressTimeout = 0;
         }
@@ -379,10 +380,7 @@ default {
             string value = cdListElement(split, 1);
             string c = cdGetFirstChar(name);
 
-            //if (value == RECORD_DELETE) {
-            //    value = "";
-            //    split = [];
-            //}
+            if (llListFindList((list)c, [ "a", "R", "h", "p", "c", "d", "n", "t", "w", "o", "u" ]) == NOT_FOUND) return;
 
             if (name == "dialogChannel") {
                 dialogChannel = (integer)value;
@@ -493,11 +491,13 @@ default {
 #endif
                     tempDressingLock = TRUE;
 
+#ifdef NOT_USED
                     // dressingSteps is used to track whether all listener code paths
                     // for dressing have been done: that is, normalself attached,
                     // new outfit attached, and old outfit removed. (It does NOT include
                     // nude folder.)
                     dressingSteps = 0;
+#endif
 
                     dressingFailures = 0;
                     change = 1;
@@ -540,48 +540,57 @@ default {
                 //llOwnerSay("choice is: " + choice);
                 //llOwnerSay("clothingFolder is: " + clothingFolder);
 
-                // Four steps to dressing avi:
+                //----------------------------------------
+                // DRESSING
+                //----------------------------------------
+
+                // Steps to dressing avi:
                 //
-                // 1) Replace every item that can be replaced (using the
-                //    command @attachall)
-                // 2) Add every item that didnt get put on the first time
-                //    (using the @attachallover command)
-                // 3) Remove the remaining portions of the old outfit
-                // 4) Add items that are required for all outfits
-                //    (using the @attach command)
+                // Overview: Attach everything we need, and lock them afterwards. Next, detach the old outfit - then detach
+                // the entire outfitsFolder just in case (everything we want should be locked on). Next, go through all
+                // clothing parts and detach them if possible. Finally, Attach everything in the outfitsFolder just in case.
+                //
+                // Attach and Lock:
+                //
+                // 1) Attach everything in the normalselfFolder (using @attachallover:=force followed by @detachallthis:=n )
+                // 2) Attach everything in the nudeFolder (using @attachallover:=force followed by @detachallthis:=n )
+                // 3) Attach everything in the newOutfitFolder (using @attachallover:=force followed by @detachallthis:=n )
+                // 4) Attach everything in the newOutfitFolder a second time (using @attachallover:=force followed by @detachallthis:=n )
+                //
+                // Force Detach:
+                //
+                // 5) Detach oldOutfitFolder (using @detachall:=force )
+                // 6) Detach entire outfitsFolder (using @detachall:=force )
+                // 7) Go through clothing parts and detach (using @detachallthis:=force on each part)
+                //
+                // Attach outfit again:
+                //
+                // 8) Attach everything in the newOutfitFolder a third time (using @attachallover:=force followed by @detachallthis:=n )
 
                 llOwnerSay("New outfit chosen: " + newOutfitName);
 
-                // Get the path of whatever outfit is being worn, and save
-                // it for later to be able to remove an outfit - not just
-                // one we know about
-                //
-                // Go through a litany of clothing, in order to find the path
-                // to the clothing worn. If there is no clothing on these points
-                // for this outift, then this does not work.
-                //
-                // This also assumes that a complete outfit is being used,
-                // and that all parts are contained in a single folder.
-                // This also assumes that the new outfit does not also
-                // exist in this folder - such as one outfit using certain
-                // items and another outfit using other items - such as
-                // one outfit using a miniskirt and one a long dress.
-
-                // Original outfit was a complete avi reset....
-                // Restore our usual look from the ~normalself
-                // folder...
+                // Restore our usual look from the ~normalself folder...
+#define cdAttachAndLock(a) lmRunRLV("attachallover:"+(a)+"=force,detachallthis:"+(a)+"=n")
 
                 // This attaches ~normalself and locks it
-                lmRunRLV("attachallover:" + normalselfFolder + "=force,detachallthis:" + normalselfFolder + "=n");
+                cdAttachAndLock(normalselfFolder);
 
                 if (nudeFolder != "") {
                     // this attaches the ~nude folder
-                    lmRunRLV("attachallover:" + nudeFolder + "=force,detachallthis:" + nudeFolder + "=n");
+                    cdAttachAndLock(nudeFolder);
                 }
+#ifdef DEVELOPER_MODE
+                else {
+                    llSay(DEBUG_CHANNEL,"nudeFolder is empty! (no nude folder attached)");
+                }
+#endif
                     
                 // attach the new folder and lock it down - and prevent nude
-                lmRunRLV("attachallover:" + newOutfit + "=force,detachallthis:" + newOutfit + "=n");
-                llSleep(2.0);
+                cdAttachAndLock(newOutfit);
+                llSleep(5.0);
+
+                // repeat for good measure
+                cdAttachAndLock(newOutfit);
 
                 // At this point, all of ~normalself, ~nude, and newOutfit have been added and locked
                 // We should be fully clothed and set with every thing we need - BUT we have to
@@ -592,18 +601,23 @@ default {
                     lmRunRLV("detachall:" + oldOutfitPath + "=force");
                     oldOutfitPath = "";
                 }
-
-                // Now remove everything in the outfits folder (typeically "> Outfits") except
-                // that which is locked down - and then attach everything in the new outfit
+#ifdef DEVELOPER_MODE
+                else {
+                    llSay(DEBUG_CHANNEL,"no old outfit path!");
+                }
+#endif
+                // Now remove everything in the outfits folder (typeically "> Outfits")
+                // which is not locked down - and then attach everything in the new outfit
                 // again
                 lmRunRLV("detachall:" + outfitsFolder + "=force");
-                lmRunRLV("attachall:" + newOutfit + "=force");
-                llSleep(2.0);
 
                 // And now send an attempt to clean up any remaining stray pieces: remove rest of
                 // clothing not otherwise locked
                 string parts = "gloves|jacket|pants|shirt|shoes|skirt|socks|underpants|undershirt|alpha|pelvis|left foot|right foot|r lower leg|l lower leg|r forearm|l forearm|r upper arm|l upper arm|r upper leg|l upper leg";
                 lmRunRLV("detachallthis:" + llDumpList2String(llParseString2List(parts, [ "|" ], []), "=force,detachallthis:") + "=force");
+
+                // Attach everything one last time - in case we knocked something off we need
+                lmRunRLV("attachall:" + newOutfit + "=force");
 
 #ifdef CONFIRM_WEAR
                 // check to see that everything in the ~normalself folder is
@@ -618,10 +632,14 @@ default {
                 unwearFolder = oldOutfitPath;
                 if (unwearFolder != "") checkRemovedItems(unwearFolder);
                 else dressingSteps += 2;
-#else
-                dressingSteps += 2;
 #endif
-                llSetTimerEvent(15.0);
+                //llSetTimerEvent(15.0);
+
+                llListenRemove(randomDressHandle);
+                llListenRemove(menuDressHandle);
+
+                changeComplete(TRUE);
+                canDressTimeout = 0;
             }
             else if (cmd == "setHovertext") {
                 string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
@@ -1033,6 +1051,7 @@ default {
             string itemName;
             string prefix;
             list tmpList;
+            integer totalOutfits;
 
             // Filter list of outfits (directories) to choose
             n = llGetListLength(outfitsList);
@@ -1051,6 +1070,7 @@ default {
                             }
                         }
                         else {
+                            if (!isParentFolder(prefix)) totalOutfits++;
                             tmpList += itemName;
                         }
                     }
@@ -1064,7 +1084,7 @@ default {
                 outfitsList = []; // free memory
                 cdDialogListen();
                 //llDialog(dresserID, "You look in " + pronounHerDoll + " closet, and see nothing for Dolly to wear.", ["OK"], dialogChannel);
-                llDialog(dresserID, "No wearable outfits in this directory.", [ "OK", MAIN ], dialogChannel);
+                llDialog(dresserID, "No wearable outfits in this directory.", [ "OK", MAIN, "Outfits..." ], dialogChannel);
                 return;
             }
 
@@ -1081,7 +1101,8 @@ default {
             else newOutfitsList += [ "Outfits Prev", "Outfits Next" ];
             newOutfitsList += [ "Back..." ];
 
-            outfitsMessage = "You may choose any outfit for dolly to wear. There are " + (string)llGetListLength(outfitList) + " outfits to choose from. ";
+            outfitsMessage = "You may choose any outfit for dolly to wear.";
+            if (totalOutfits > 0) outfitsMessage += " There are " + totalOutfits + " outfits to choose from. ";
             if (dresserID == dollID) outfitsMessage = "See " + WEB_DOMAIN + outfitsURL + " for more detailed information on outfits. ";
             outfitsMessage += "\n\n" + folderStatus();
 
