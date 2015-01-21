@@ -56,6 +56,8 @@ integer RLVck = 0;
 integer RLVstarted;
 integer chatChannel = 75;
 
+#define MAX_INT DEBUG_CHANNEL
+
 //========================================
 // FUNCTIONS
 //========================================
@@ -70,6 +72,14 @@ integer chatChannel = 75;
 // run again...
 
 doCheckRLV() {
+    if (rlvChannel == 0) {
+        // Calculate positive (RLV compatible) rlvChannel
+        rlvChannel = MAX_INT - (integer)llFrand(5000);
+        rlvHandle = cdListenMine(rlvChannel);
+
+        cdListenerDeactivate(rlvHandle);
+    }
+
     rlvTimer = llGetTime();
     RLVck = 0;
     RLVok = UNSET;
@@ -278,6 +288,7 @@ default {
 #endif
 
         cdInitializeSeq();
+        lmDoCheckRLV();
     }
 
     //----------------------------------------
@@ -295,7 +306,15 @@ default {
         myPath = "";
 #endif
         // Note this happens only at the very beginning
-        doCheckRLV();
+        //doCheckRLV();
+    }
+
+    //----------------------------------------
+    // ATTACH
+    //----------------------------------------
+    attach(key id) {
+
+        if (id) lmDoCheckRLV();
     }
 
     //----------------------------------------
@@ -356,15 +375,6 @@ default {
     }
 
     //----------------------------------------
-    // ATTACH
-    //----------------------------------------
-    attach(key id) {
-
-        if (id)
-            doCheckRLV();
-    }
-
-    //----------------------------------------
     // LINK MESSAGE
     //----------------------------------------
     link_message(integer sender, integer i, string data, key id) {
@@ -405,17 +415,12 @@ default {
             else if (name == "dialogChannel") {
                 dialogChannel = (integer)value;
 
-                if (rlvHandle == 0 || RLVok == UNSET) {
-                    llListenRemove(rlvHandle);
-                    // Calculate positive (RLV compatible) rlvChannel
-                    rlvChannel = ~dialogChannel + 1;
-                    rlvHandle = cdListenMine(rlvChannel);
-                    cdListenerDeactivate(rlvHandle);
+                llListenRemove(rlvHandle);
 
-                    // As soon as rlvHandle is valid - we can check for RLV:
-                    // Note this puts an event in, but does NOT execute until its turn
-                    lmInternalCommand("doCheckRLV","",NULL_KEY);
-                }
+                // Calculate positive (RLV compatible) rlvChannel
+                rlvChannel = ~dialogChannel + 1;
+                rlvHandle = cdListenMine(rlvChannel);
+                cdListenerDeactivate(rlvHandle);
             }
             else if (name == "wearLock")      {     wearLock = (integer)value; activateRLVBase(); }
         }
