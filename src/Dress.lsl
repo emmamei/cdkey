@@ -105,7 +105,8 @@ integer outfitPage;
 //string oldattachmentpoints;
 //string oldclothespoints;
 //integer newOutfitWordEnd;
-integer outfitPageSize = 9;
+
+#define OUTFIT_PAGE_SIZE 9
 
 //========================================
 // FUNCTIONS
@@ -116,44 +117,21 @@ list outfitsPage(list outfitList) {
     // GLOBAL: outfitPage
 
     // compute indexes
-    integer currentIndex = outfitPage * outfitPageSize;
-    integer endIndex = currentIndex + outfitPageSize - 1;
+    integer currentIndex = outfitPage * OUTFIT_PAGE_SIZE;
+    integer endIndex = currentIndex + OUTFIT_PAGE_SIZE - 1;
 
-    // If reaching beyond the end...
-    if (currentIndex > newOutfitCount) {
-        // Wrap to start...
-        outfitPage = 0;
-        currentIndex = 0;
-
-        // Halt at end
-        //outfitPage--;
-        //currentIndex = outfitPage * outfitPageSize;
-    }
-    // If reaching beyond the beginning...
-    else if (currentIndex < 0) {
-        // Wrap to end
-        currentIndex = newOutfitCount % outfitPageSize;
-        outfitPage = currentIndex % outfitPageSize;
-
-        // Halt at start
-        //outfitPage = 0;
-        //currentIndex = 0;
-    }
-
-    if (endIndex > newOutfitCount) {
-        endIndex = newOutfitCount;
-    }
+    if (endIndex > newOutfitCount) endIndex = newOutfitCount;
 
     // Print the page contents - note that this happens even before
     // any dialog is put up
     //list pageOutfits = llList2List(outfitsList, currentIndex, endIndex);
     integer n = currentIndex; string chat; list output;
-    string itemName;
+    string outfitName;
 
     while (n++ <= endIndex) {
-        itemName = (string)(n) + ". " + cdListElement(outfitsList, n - 1);
-        chat += "\n" + itemName;
-        output += [ llGetSubString(itemName, 0, 23) ];
+        outfitName = (string)(n) + ". " + cdListElement(outfitsList, n - 1);
+        chat += "\n" + outfitName;
+        output += [ llGetSubString(outfitName, 0, 23) ];
     }
 
     llRegionSayTo(dresserID, 0, chat);
@@ -804,13 +782,27 @@ default {
 
                 if (choice == "Outfits Next") {
                     //debugSay(6, "DEBUG-DRESS", ">>> Dress Menu: " + choice);
+#ifdef ROLLOVER
                     outfitPage++;
+                    if (outfitPage * OUTFIT_PAGE_SIZE > llGetListLength(outfitsList))
+                        outfitPage = 0;
+#else
+                    if ((outfitPage + 1) * OUTFIT_PAGE_SIZE < llGetListLength(outfitsList))
+                        outfitPage++;
+#end
+                    }
 
                 }
                 else if (choice == "Outfits Prev") {
                     //debugSay(6, "DEBUG-DRESS", ">>> Dress Menu: " + choice);
+#ifdef ROLLOVER
                     outfitPage--;
-
+                    if (outfitPage < 0)
+                        outfitPage = (llFloor(llGetListLength(outfitsList) / OUTFIT_PAGE_SIZE));
+#else
+                    if (outfitPage != 0)
+                        outfitPage--;
+#end
                 }
 
                 list dialogItems = [ "Outfits Prev", "Outfits Next" ];
@@ -1089,13 +1081,9 @@ default {
             else newOutfitsList += [ "Outfits Prev", "Outfits Next" ];
             newOutfitsList += [ "Back..." ];
 
-            outfitsMessage = "You may choose any outfit for dolly to wear. ";
+            outfitsMessage = "You may choose any outfit for dolly to wear. There are " + (string)llGetListLength(outfitList) + " outfits to choose from. ";
             if (dresserID == dollID) outfitsMessage = "See " + WEB_DOMAIN + outfitsURL + " for more detailed information on outfits. ";
             outfitsMessage += "\n\n" + folderStatus();
-
-            // Build outfit menu
-            //integer select = (integer)llGetSubString(choice, 0, llSubStringIndex(choice, ".") - 1);
-            //if (select != 0) choice = cdListElement(outfitsList, select - 1);
 
             // Provide a dialog to user to choose new outfit
             debugSay(3, "DEBUG-CLOTHING", "Putting up Primary Menu in new directory");
