@@ -17,8 +17,6 @@
 #define lmCollapse(a) lmInternalCommand("collapse",(string)(a),NULL_KEY)
 #define lmUncollapse() lmInternalCommand("collapse","0",NULL_KEY)
 
-//#define debugPrint(a) llSay(DEBUG_CHANNEL,(a))
-
 // Note that some doll types are special....
 //    - regular: used for standard Dolls, including non-transformable
 //    - slut: can be stripped (like Pleasure Dolls)
@@ -29,20 +27,6 @@
 //========================================
 // VARIABLES
 //========================================
-
-// Transforming Keys:
-//
-// A TransformingKey is - or was - set by the presence of a
-// Transform.lsl script in the Key. It makes a call into this
-// script, thus:
-//
-//     llMessageLinked(LINK_THIS, 18, "here");
-//
-// and triggers a setting of the following variable,
-// making this a transforming key:
-//
-// All other settings of this variable have been removed,
-// including the SetDefaults and the NCPrefs.
 
 string msg;
 integer minsLeft;
@@ -63,12 +47,10 @@ integer lastTimerMark;
 integer timeSpan;
 
 key lastWinderID = NULL_KEY;
-//float displayRate;
 
 integer targetHandle;
 integer lowScriptTimer;
 integer lastLowScriptTime;
-//integer ticks;
 
 integer clearAnim;
 integer RLVck = 1;
@@ -89,7 +71,6 @@ integer windMins = 30;
 float effectiveWindTime = 30.0;
 
 string mistressName;
-//key mistressQuery;
 
 key simRatingQuery;
 
@@ -110,13 +91,6 @@ ifPermissions() {
         llRequestPermissions(dollID, PERMISSION_MASK);
         return;
     }
-
-//  if (perm & PERMISSION_ATTACH && !cdAttached()) llAttachToAvatar(ATTACH_BACK);
-//  else if (!cdAttached() && llGetTime() > 120.0) {
-//      llOwnerSay("@acceptpermission=add");
-//      llRequestPermissions(dollID, PERMISSION_ATTACH);
-//  }
-
 }
 #endif
 
@@ -132,22 +106,6 @@ setAfk(integer setting) {
         if (dollAway != afk) autoAFK = 0;
         else autoAFK = 1;
     }
-
-    // This code makes for too much blather, and we shouldn't be blabbering from the
-    // AFK setting code anyway: make talk at the originating point, which makes it
-    // simpler to put the right message out - or no message.
-    //
-    //if (afk) {
-    //    if (autoSet) msg = "Automatically entering AFK mode.";
-    //    else msg = "You are now away from keyboard (AFK).";
-    //    msg += " Your Key has slowed to " + formatFloat(windRate,2) + "x its normal rate, and your movements and abilities are hindered as a result.";
-    //}
-    //else msg = "You are now no longer away from keyboard (AFK). Your key has been restored to normal operation, and winds down once again at its normal rate.";
-    //llOwnerSay(msg + " You have " + (string)minsLeft + " minutes of life left.");
-
-    // These are redundant: setWindRate does this
-    //lmSendConfig("windRate", (string)(windRate));
-    //lmSendConfig("windingDown", (string)(windingDown));
 
     // The odd code for setting AFK folds values 1 and 2 into
     // a single value
@@ -430,13 +388,6 @@ default {
                 llSetTimerEvent(LOW_RATE);
             }
             else {
-                //if (lowScriptTimer) {
-                //    llOwnerSay("lowScriptMode reset outside of timer!");
-                //    lowScriptTimer = 0;
-                //    lastLowScriptTime = 0;
-                //}
-                //debugSay(4,"DEBUG-LOWSCRIPT", "Low Script Mode disabled and running normally");
-
                 lmSendConfig("lowScriptMode",(string)(lowScriptMode = 0));
                 llSetTimerEvent(STD_RATE);
             }
@@ -464,14 +415,8 @@ default {
 
         lastTimerMark = timerMark;
 
-        // Increment a counter
-        //ticks++;
-
         //----------------------------------------
         // CHECK COLLAPSE STATE
-
-        //debugSay(3,"DEBUG-TIME","Time left on key before checking collapse: " + (string)timeLeftOnKey);
-        //debugSay(3,"DEBUG-MAIN","Collapse state is " + (string)collapsed);
 
         // False collapse? Collapsed = 1 while timeLeftOnKey is positive is an invalid condition
         if (collapsed == NO_TIME)
@@ -543,9 +488,7 @@ default {
 
                 if (doWarnings && !warned) {
                     if (minsLeft == 30 || minsLeft == 15 || minsLeft == 10 || minsLeft ==  5 || minsLeft ==  2) {
-                        // FIXME: This can be seen as a spammy message - especially if there are too many warnings
-                        // FIXME: What do we think about this being gated by the quiet key option?  Should we just leave it without as
-                        // it has it's own option, though quiet version still warns the doll so perhaps still of use to some?
+
                         if (!quiet) llSay(0, dollName + " has " + (string)minsLeft + " minutes left before they run down!");
                         else llOwnerSay("You have " + (string)minsLeft + " minutes left before winding down!");
                         warned = 1; // have warned now: dont repeat same warning
@@ -785,21 +728,6 @@ default {
                 lmSendToAgent("You turn " + dollDisplayName + "'s Key, and " + pronounSheDoll + " receives " +
                     mins + " more minutes of life (" + percent + "% capacity).", id);
             }
-
-//          else if (cmd == "wearLock") {
-//              // This either primes the wearLockExpire or resets it
-//              wearLock = llList2Integer(split, 0);
-
-//              lmSendConfig("wearLock", (string)(wearLock));
-
-//              if (wearLock) {
-//                  wearLockExpire = llGetUnixTime() + WEAR_LOCK_TIME;
-//                  lmSendConfig("wearLockExpire", (string)(WEAR_LOCK_TIME));
-//              }
-//              else {
-//                  lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0));
-//              }
-//          }
         }
         else if (code == RLV_RESET) {
             RLVok = (llList2Integer(split, 0) == 1);
@@ -914,10 +842,11 @@ default {
                 lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey += windAmount));
 
                 if (collapsed == NO_TIME) {
+
                     // We could call the code directly - but by doing this,
                     // it's an asynchronous event, and not a function that
                     // slows down the user.
-                    //
+
                     lmSendConfig("collapsed", (string)(collapsed = 0));
                     lmSendConfig("collapseTime", (string)(collapseTime = 0));
                     lmCollapse(0);
@@ -936,14 +865,6 @@ default {
                     llDialog(id, "Dolly is already fully wound.", [MAIN], dialogChannel);
                 }
                 else {
-                    // As we are storing lastWinderID for repeat wind, only give the thankfulness reminder when winder is new.
-                    //
-                    // Note that this has the side effect of notifying us to be thankful at the beginning of a repeat wind,
-                    // not at the end...
-                    //if ((lastWinderID != id) && (id != dollID))
-                    //    llOwnerSay("Have you remembered to thank " + name + " for winding you?");
-
-                    //if (effectiveWindTime > 0) lmSendToAgent("You have given " + dollName + " " + (string)llFloor(effectiveWindTime / SEC_TO_MIN) + " more minutes of life.", id);
                     lmSendConfig("lastWinderID", (string)(lastWinderID = id));
                     lmSendConfig("lastWinderName", name);
 
@@ -1058,7 +979,6 @@ default {
 
                 setWindRate();
                 lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
-                //debugSay(3,"DEBUG-MAIN","Time left on key at start: " + (string)timeLeftOnKey);
                 llOwnerSay("You have " + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * windRate)) + " minutes of life remaining.");
 
                 clearAnim = 1;
