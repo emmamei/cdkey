@@ -20,19 +20,10 @@
 #define cdResetKey() llResetOtherScript("Start")
 #define lmDoCheckRLV() lmInternalCommand("doCheckRLV","",NULL_KEY)
 
-// Could set allControls to -1 for quick full bit set -
-// but that would set fields with undefined values: this is more
-// accurate
-//#define ALL_CONTROLS (CONTROL_FWD|CONTROL_BACK|CONTROL_LEFT|CONTROL_RIGHT|CONTROL_ROT_LEFT|CONTROL_ROT_RIGHT|CONTROL_UP|CONTROL_DOWN|CONTROL_LBUTTON|CONTROL_ML_LBUTTON)
-//integer allControls = ALL_CONTROLS;
-
 #ifdef DEVELOPER_MODE
 float lastTimerEvent;
 float thisTimerEvent;
 float timerInterval;
-#else
-key mainCreator;
-integer locked;
 #endif
 
 float rlvTimer;
@@ -170,22 +161,16 @@ activateRLVBase() {
 
     if (userBaseRLVcmd != "") lmRunRLVas("UserBase", userBaseRLVcmd);
 
-    //lmRunRLVas("Core", baseRLV + restrictionList + "sendchannel:" + (string)chatChannel + "=rem");
     baseRLV += ",sendchannel:" + (string)chatChannel + "=rem";
 
     if (userBaseRLVcmd != "")
         lmRunRLVas("UserBase", userBaseRLVcmd);
 
-    if (autoTP) baseRLV += "accepttp=n,";
-    else baseRLV += "accepttp=y,";
-    if (!canSelfTP) baseRLV += "tplm=n,tploc=n,";
-    else baseRLV += "tplm=y,tploc=y,";
-    if (!canFly) baseRLV += "fly=n,";
-    else baseRLV += "fly=y,";
-    if (!canStand) baseRLV += "unsit=n,";
-    else baseRLV += "unsit=y,";
-    if (!canSit) baseRLV += "sit=n";
-    else baseRLV += "sit=y";
+    if  (autoTP)    baseRLV += "accepttp=n,";       else baseRLV += "accepttp=y,";
+    if (!canSelfTP) baseRLV += "tplm=n,tploc=n,";   else baseRLV += "tplm=y,tploc=y,";
+    if (!canFly)    baseRLV += "fly=n,";            else baseRLV += "fly=y,";
+    if (!canStand)  baseRLV += "unsit=n,";          else baseRLV += "unsit=y,";
+    if (!canSit)    baseRLV += "sit=n";             else baseRLV += "sit=y";
 
     lmRunRLVas("Base", baseRLV);
 
@@ -199,7 +184,6 @@ activateRLVBase() {
 #endif
     }
     else {
-        // lmRunRLVas("Dress", "clear");
         lmRunRLVas("Dress", "unsharedwear=y,unsharedunwear=y,attachallthis:=y,detachallthis:=y");
     }
 }
@@ -222,35 +206,18 @@ activateRLV() {
 #ifndef LOCKON
         // if Doll is one of the developers... dont lock:
         // prevents inadvertent lock-in during development
-
-        //cdSayQuietly("Developer Key not locked");
-
         baseRLV += "attachallthis_except:" + myPath + "=add,detachallthis_except:" + myPath + "=add,";
 #endif
         llOwnerSay("Enabling RLV mode");
 
 #ifdef LOCKON
-        mainCreator = llGetInventoryCreator("Main");
-
         // We lock the key on here - but in the menu system, it appears
         // unlocked and detachable: this is because it can be detached
         // via the menu. To make the key truly "undetachable", we get
         // rid of the menu item to unlock it
 
-        if (mainCreator != dollID) {
-            if (RLVok)
-                lmRunRLVas("Base", "detach=n,permissive=n");  //locks key
-
-            locked = 1; // Note the locked variable also remains false for developer mode keys
-                        // This way controllers are still informed of unauthorized detaching so developer dolls are still accountable
-                        // With this is the implicit assumption that controllers of developer dolls will be understanding and accepting of
-                        // the occasional necessity of detaching during active development if this proves false we may need to fudge this
-                        // in the section below.
-        }
-        else {
-            if (!RLVstarted) llSay(DEBUG_CHANNEL, "Backup protection mechanism activated not locking on creator");
-            lmRunRLVas("Base", "clear=unshared,clear=attachallthis");
-        }
+        if (RLVok)
+            lmRunRLVas("Base", "detach=n,permissive=n");  //locks key
 #endif
         cdListenerDeactivate(rlvHandle);
         //lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
@@ -361,8 +328,6 @@ default {
                 nextRLVcheck = 0.0;
                 RLVok = 1;
 
-                //lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
-                //debugSay(2, "DEBUG-RLV", "RLV set to " + (string)RLVok + " and message sent on link channel");
                 llOwnerSay("RLV check completed in " + formatFloat((llGetTime() - rlvTimer),1) + "s");
                 rlvTimer = 0;
 
@@ -502,7 +467,6 @@ default {
         }
 
         // Doesn't matter if RLVok is TRUE, FALSE, or UNSET: propogate the value
-        //lmSendConfig("RLVok",(string)RLVok);
         lmRLVreport(RLVok, rlvAPIversion, 0);
     }
 }
