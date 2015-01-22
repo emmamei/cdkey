@@ -203,27 +203,7 @@ default {
             split = llDeleteSubList(split, 0, 0);
 
             // Note that this section will be empty except in Adult Mode...
-#ifdef ADULT_MODE
-            if (cmd == "strip") {
-                // llToLower() may be superfluous here
-                string part = llToLower(llList2String(split, 0));
-
-                if (id != dollID) {
-
-                    // if Dolly is stripped by someone else, Dolly cannot
-                    // dress for a time: wearLock is activated
-
-                    //lmInternalCommand("wearLock", (string)(wearLock = 1), NULL_KEY);
-                    //lmSendConfig("wearLock", (string)(wearLock = 1));
-                    lmSetConfig("wearLock", "1");
-
-                    if (!quiet) llSay(0, "The dolly " + dollName + " has " + pronounHerDoll + " " + part + " stripped off " + pronounHerDoll + " and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes.");
-                    else llOwnerSay("You have had your " + part + " stripped off you and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes");
-                }
-                else llOwnerSay("You have stripped off your own " + part + ".");
-            }
-#endif
-            else if (cmd == "setGemColour") {
+            if (cmd == "setGemColour") {
                 vector newColour = (vector)llList2String(split, 0);
                 integer j; integer s; list params; list colourParams;
                 integer n; integer m;
@@ -263,6 +243,26 @@ default {
                 }
                 params = [];
             }
+#ifdef ADULT_MODE
+            else if (cmd == "strip") {
+                // llToLower() may be superfluous here
+                string part = llToLower(llList2String(split, 0));
+
+                if (id != dollID) {
+
+                    // if Dolly is stripped by someone else, Dolly cannot
+                    // dress for a time: wearLock is activated
+
+                    //lmInternalCommand("wearLock", (string)(wearLock = 1), NULL_KEY);
+                    //lmSendConfig("wearLock", (string)(wearLock = 1));
+                    lmSetConfig("wearLock", "1");
+
+                    if (!quiet) llSay(0, "The dolly " + dollName + " has " + pronounHerDoll + " " + part + " stripped off " + pronounHerDoll + " and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes.");
+                    else llOwnerSay("You have had your " + part + " stripped off you and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes");
+                }
+                else llOwnerSay("You have stripped off your own " + part + ".");
+            }
+#endif
             else if (cmd == "collapsedMenu") {
                 // this is only called for Dolly - so...
                 string timeLeft = llList2String(split, 0);
