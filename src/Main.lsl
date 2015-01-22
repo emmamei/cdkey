@@ -568,10 +568,7 @@ default {
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
             else if (name == "dialogChannel")           dialogChannel = (integer)value;
-            else if (name == "transformLockExpire") {
-                if ((integer)value) transformLockExpire = llGetUnixTime() + (integer)value;
-                else transformLockExpire = 0;
-            }
+            else if (name == "transformLockExpire")   transformLockExpire = (float)value;
 
             // This keeps the timers up to date - via a GetTimeUpdates internal command
             else if (name == "windMins") {
@@ -692,7 +689,7 @@ default {
 
                 if (cdTimeSet(timeLeftOnKey))        lmSendConfig("timeLeftOnKey",         (string) timeLeftOnKey);
                 if (cdTimeSet(wearLockExpire))       lmSendConfig("wearLockExpire",        (string)(wearLockExpire - t));
-                if (cdTimeSet(transformLockExpire))  lmSendConfig("transformLockExpire",   (string)(transformLockExpire - t));
+                if (cdTimeSet(transformLockExpire))  lmSendConfig("transformLockExpire",   (string)(transformLockExpire));
 #ifdef JAMMABLE
                 if (cdTimeSet(jamExpire))            lmSendConfig("jamExpire",             (string)(jamExpire - t));
 #endif

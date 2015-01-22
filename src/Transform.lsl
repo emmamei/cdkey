@@ -130,7 +130,7 @@ setDollType(string stateName, integer automated) {
     // Dont lock if transformation is automated (or is a Builder Dolly)
     if (!automated && stateName != "Builder") {
         transformLockExpire = llGetUnixTime() + TRANSFORM_LOCK_TIME;
-        lmSendConfig("transformLockExpire",(string)TRANSFORM_LOCK_TIME);
+        lmSendConfig("transformLockExpire",(string)transformLockExpire);
     }
     else {
         lmSendConfig("transformLockExpire",(string)(transformLockExpire = 0));
@@ -303,7 +303,7 @@ default {
             if (transformLockExpire  <= llGetUnixTime()) {
                 lmSendConfig("transformLockExpire",(string)(transformLockExpire = 0));
             }
-            else lmSendConfig("transformLockExpire",(string)(transformLockExpire - llGetUnixTime()));
+            else lmSendConfig("transformLockExpire",(string)(transformLockExpire));
         }
 
 #ifdef HOMING_BEACON
