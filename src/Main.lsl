@@ -536,8 +536,7 @@ default {
                 if (carrierID) {
                     // Send the carryExpire out as a relative value, then convert it
                     // internally to a fixed time value
-                    lmSendConfig("carryExpire", (string)(carryExpire = CARRY_TIMEOUT));
-                    carryExpire += llGetUnixTime();
+                    lmSendConfig("carryExpire", (string)(carryExpire = llGetUnixTime + CARRY_TIMEOUT));
                 }
             }
             else if (name == "carrierName")               carrierName = value;
@@ -633,12 +632,11 @@ default {
             }
             else if (name == "collapseTime")     collapseTime = value;
             else if (name == "poseExpire")         poseExpire = value;
-            else if (
-                     (name == "wearLockExpire")  ||
+            else if (name == "carryExpire")       carryExpire = value;
 #ifdef JAMMABLE
-                     (name == "jamExpire")       ||
+            else if (name == "jamExpire")           jamExpire = value;
 #endif
-                     (name == "carryExpire")) {
+            else if (name == "wearLockExpire") {
 
                 integer timeSet;
 
@@ -652,10 +650,6 @@ default {
                 // is being set as a time in the past
 
                      if (name == "wearLockExpire")    wearLockExpire = timeSet;
-#ifdef JAMMABLE
-                else if (name == "jamExpire")              jamExpire = timeSet;
-#endif
-                else if (name == "carryExpire")          carryExpire = timeSet;
             }
         }
         else if (code == INTERNAL_CMD) {
@@ -684,10 +678,10 @@ default {
                 if (cdTimeSet(wearLockExpire))       lmSendConfig("wearLockExpire",        (string)(wearLockExpire - t));
                 if (cdTimeSet(transformLockExpire))  lmSendConfig("transformLockExpire",   (string)(transformLockExpire));
 #ifdef JAMMABLE
-                if (cdTimeSet(jamExpire))            lmSendConfig("jamExpire",             (string)(jamExpire - t));
+                if (cdTimeSet(jamExpire))            lmSendConfig("jamExpire",             (string)(jamExpire));
 #endif
                 if (cdTimeSet(poseExpire))           lmSendConfig("poseExpire",            (string)(poseExpire));
-                if (cdTimeSet(carryExpire))          lmSendConfig("carryExpire",           (string)(carryExpire - t));
+                if (cdTimeSet(carryExpire))          lmSendConfig("carryExpire",           (string)(carryExpire));
                 if (cdTimeSet(collapseTime))         lmSendConfig("collapseTime",          (string)(collapseTime));
             }
             else if (cmd == "collapse") {
