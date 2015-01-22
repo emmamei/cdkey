@@ -824,8 +824,6 @@ default {
 
 
         }
-        else if (channel == typeChannel) {
-        }
         else if (channel == typeSearchChannel) {
 
             // Note that we may have gotten here *without* having run through
