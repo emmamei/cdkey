@@ -70,6 +70,7 @@ string typeFolder;
 integer rlvChannel;
 integer typeSearchChannel;
 integer outfitSearchChannel;
+integer typeChannel;
 
 integer transformLockExpire;
 
@@ -515,6 +516,7 @@ default {
                 rlvChannel = ~dialogChannel + 1;
                 typeSearchChannel = rlvChannel + 1;
                 outfitSearchChannel = rlvChannel + 2;
+                typeChannel = dialogChannel - 778;
             }
         }
 
@@ -620,7 +622,6 @@ default {
                 }
             }
         }
-
         else if (code == MENU_SELECTION) {
             string optName = llGetSubString(choice, 2, STRING_END);
             string curState = cdGetFirstChar(choice);
@@ -701,10 +702,9 @@ default {
                         llOwnerSay(cdProfileURL(id) + " is looking at your doll types.");
                     }
 
-                    debugSay(5,"DEBUG-TYPES","Generating unlocked dialog");
                     lmSendConfig("backMenu",(backMenu = MAIN));
                     cdDialogListen();
-                    llDialog(id, msg, dialogSort(llListSort(choices, 1, 1) + "Back..."), dialogChannel);
+                    llDialog(id, msg, dialogSort(llListSort(choices, 1, 1) + "Back..."), typeChannel);
                 }
                 debugSay(5,"DEBUG-TYPES","Transform complete");
             }
@@ -716,32 +716,32 @@ default {
                 transformedViaMenu = YES;
                 setDollType(transform, NOT_AUTOMATED);
             }
-            else if (cdListElementP(types, choice) != NOT_FOUND) {
-                // "choice" is a valid Type: change to it as appropriate
-                transform = "";
+        }
+        else if (code == TYPE_SELECTION) {
+            // "choice" is a valid Type: change to it as appropriate
+            transform = "";
 
-                if (cdIsDoll(id) || cdIsController(id) || !mustAgreeToType) {
-                    // Doll (or a Controller) chose a Type - or no confirmation needed: just do it
-                    transformedViaMenu = YES;
-                    setDollType(choice, NOT_AUTOMATED);
-                }
-                else {
-                    // This section is executed when:
-                    //
-                    // 1. Accessor is NOT Dolly, AND
-                    // 2. Accessor is NOT a Controller, AND
-                    // 3. Dolly must agree to Type...
+            if (cdIsDoll(id) || cdIsController(id) || !mustAgreeToType) {
+                // Doll (or a Controller) chose a Type - or no confirmation needed: just do it
+                transformedViaMenu = YES;
+                setDollType(choice, NOT_AUTOMATED);
+            }
+            else {
+                // This section is executed when:
+                //
+                // 1. Accessor is NOT Dolly, AND
+                // 2. Accessor is NOT a Controller, AND
+                // 3. Dolly must agree to Type...
 
-                    // A member of the public chose a Type and confirmation is required
-                    lmSendToAgent("Getting confirmation from Doll...",id);
+                // A member of the public chose a Type and confirmation is required
+                lmSendToAgent("Getting confirmation from Doll...",id);
 
-                    transform = choice; // save transformation Type
-                    list choices = ["Transform", "Dont Transform", MAIN ];
-                    string msg = "Do you wish to be transformed to a " + choice + " Doll?";
+                transform = choice; // save transformation Type
+                list choices = ["Transform", "Dont Transform", MAIN ];
+                string msg = "Do you wish to be transformed to a " + choice + " Doll?";
 
-                    cdDialogListen();
-                    llDialog(dollID, msg, choices, dialogChannel); // this starts a new choice on this channel
-                }
+                cdDialogListen();
+                llDialog(dollID, msg, choices, dialogChannel); // this starts a new choice on this channel
             }
         }
         else if (code < 200) {
@@ -823,6 +823,8 @@ default {
             }
 
 
+        }
+        else if (channel == typeChannel) {
         }
         else if (channel == typeSearchChannel) {
 

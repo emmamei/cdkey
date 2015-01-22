@@ -57,6 +57,8 @@ cdLinkMessage(integer target, integer opt, integer code, string data, key id) {
 //#define lmUpdateStatistic(name,value)                 cdLinkMessage(LINK_THIS,0,399,name+"|"+value,llGetKey())
 #define lmMenuReply(choice,name,id)                     cdLinkMessage(LINK_THIS,0,500,choice+"|"+name,id)
 #define lmTextboxReply(type,name,choice,id)             cdLinkMessage(LINK_THIS,0,501,(string)type+"|"+name+"|"+choice,id)
+#define lmPoseReply(choice,name,id)                     cdLinkMessage(LINK_THIS,0,502,choice+"|"+name,id)
+#define lmTypeReply(choice,name,id)                     cdLinkMessage(LINK_THIS,0,503,choice+"|"+name,id)
 #define lmBroadcastReceived(name,msg,id)                cdLinkMessage(LINK_THIS,0,800,name+"|"+llGetOwnerKey(id)+"|"+msg,id)
 //#define lmServiceMessage(type,data,id)			cdLinkMessage(LINK_THIS,0,850,type+"|"+data,id)
 #define lmPluginSend(msg)                               cdLinkMessage(LINK_THIS,0,307,msg,NULL_KEY)

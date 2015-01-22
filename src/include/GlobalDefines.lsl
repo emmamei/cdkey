@@ -26,6 +26,8 @@
 #define RLV_CMD           315
 #define RLV_RESET         350
 #define MENU_SELECTION    500
+#define POSE_SELECTION    502
+#define TYPE_SELECTION    503
 
 #define cdSetHovertext(x,c) if(primText!=x)llSetText(x,c,1.0)
 #define RED    <1.0,0.0,0.0>

@@ -34,6 +34,8 @@
 
 #define BLACKLIST_CHANNEL_OFFSET 666
 #define CONTROL_CHANNEL_OFFSET 888
+#define POSE_CHANNEL_OFFSET 777
+#define TYPE_CHANNEL_OFFSET 778
 
 #define UNSET -1
 
@@ -63,9 +65,13 @@ integer isDoll;
 integer numControllers;
 
 integer blacklistChannel;
-integer controlChannel;
 integer blacklistHandle;
+integer controlChannel;
 integer controlHandle;
+integer poseChannel;
+integer poseHandle;
+integer typeChannel;
+integer typeHandle;
 string isDollName;
 
 string mistressName;
@@ -109,8 +115,12 @@ doDialogChannel() {
     dialogChannel = generateChannel;
     blacklistChannel = dialogChannel - BLACKLIST_CHANNEL_OFFSET;
     controlChannel = dialogChannel - CONTROL_CHANNEL_OFFSET;
+    poseChannel = dialogChannel - POSE_CHANNEL_OFFSET;
+    typeChannel = dialogChannel - TYPE_CHANNEL_OFFSET;
 
     dialogHandle = cdListenAll(dialogChannel);
+    poseHandle = cdListenAll(poseChannel);
+    typeHandle = cdListenAll(typeChannel);
     //llSleep(1); // settling time?
 
     // Dont announce the channel until its open
@@ -581,6 +591,7 @@ default {
 
         if (blacklistHandle) { llListenRemove(blacklistHandle); blacklistHandle = 0; }
         if (controlHandle)   { llListenRemove(controlHandle);     controlHandle = 0; }
+        if (poseHandle)      { llListenRemove(poseHandle);           poseHandle = 0; }
 
         if (dialogHandle) cdListenerDeactivate(dialogHandle);
 
@@ -670,19 +681,19 @@ default {
 
         integer space = llSubStringIndex(choice, " ");
 
-        //debugSay(5,"DEBUG-MENUHANDLER","Menu choice = " + choice + ", space = " + (string)space);
-
-        // This sends out the reply that generates a menu
-        lmMenuReply(choice, name, id);
-
         menuID = id;
         menuName = name;
 
-        // Answer to one of three channels:
+        // Answer to one of these channels:
         //    * dialogChannel
         //    * blacklistChannel
-        //    * controllerChannel
+        //    * controlChannel
+        //    * poseChannel
+        //    * typeChannel
         if (channel == dialogChannel) {
+            // This is what starts the Menu process: a reply sent out
+            // via Link Message to be responded to by the appropriate script
+            lmMenuReply(choice, name, id);
 
             if (space == NOT_FOUND) {
                 // no space was found in the Menu button selection
@@ -957,7 +968,17 @@ default {
                 }
             }
         }
+        else if (channel == poseChannel) {
+            lmPoseReply(choice, name, id);
+        }
+        else if (channel == typeChannel) {
+            lmTypeReply(choice, name, id);
+        }
         else if ((channel == blacklistChannel) || (channel == controlChannel)) {
+            // This is what starts the Menu process: a reply sent out
+            // via Link Message to be responded to by the appropriate script
+            //lmMenuReply(choice, name, id);
+
             if (choice == MAIN) {
                 llSetTimerEvent(MENU_TIMEOUT);
                 lmMenuReply(MAIN, name, id);
