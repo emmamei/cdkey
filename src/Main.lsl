@@ -430,6 +430,7 @@ default {
                 lmMenuReply("Unpose", "", llGetKey());
                 lmSendConfig("poseExpire", (string)(poseExpire = 0));
             }
+            lmSendConfig("poseExpire", (string)poseExpire);
         }
 
         //----------------------------------------
@@ -536,7 +537,7 @@ default {
                 if (carrierID) {
                     // Send the carryExpire out as a relative value, then convert it
                     // internally to a fixed time value
-                    lmSendConfig("carryExpire", (string)(carryExpire = llGetUnixTime + CARRY_TIMEOUT));
+                    lmSendConfig("carryExpire", (string)(carryExpire = llGetUnixTime() + CARRY_TIMEOUT));
                 }
             }
             else if (name == "carrierName")               carrierName = value;
@@ -562,7 +563,7 @@ default {
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
             else if (name == "dialogChannel")           dialogChannel = (integer)value;
-            else if (name == "transformLockExpire")   transformLockExpire = (float)value;
+            else if (name == "transformLockExpire")   transformLockExpire = (integer)value;
 
             // This keeps the timers up to date - via a GetTimeUpdates internal command
             else if (name == "windMins") {
@@ -627,13 +628,13 @@ default {
                 if (lowScriptMode) lastLowScriptTime = llGetUnixTime();
                 else lastLowScriptTime = 0;
             }
-            else if (name == "collapseTime")     collapseTime = value;
-            else if (name == "poseExpire")         poseExpire = value;
-            else if (name == "carryExpire")       carryExpire = value;
+            else if (name == "collapseTime")     collapseTime = (integer)value;
+            else if (name == "poseExpire")         poseExpire = (integer)value;
+            else if (name == "carryExpire")       carryExpire = (integer)value;
 #ifdef JAMMABLE
-            else if (name == "jamExpire")           jamExpire = value;
+            else if (name == "jamExpire")           jamExpire = (integer)value;
 #endif
-            else if (name == "wearLockExpire") wearLockExpire = value;
+            else if (name == "wearLockExpire") wearLockExpire = (integer)value;
         }
         else if (code == INTERNAL_CMD) {
             string cmd = llList2String(split, 0);
