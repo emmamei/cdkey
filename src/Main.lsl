@@ -170,9 +170,9 @@ collapse(integer newCollapseState) {
     }
 #ifdef JAMMABLE
     else if (newCollapseState == JAMMED) {
-        // Time span (random) = 120.0 (two minutes) to 300.0 (five minutes)
+        // Default time span (random) = 120.0 (two minutes) to 300.0 (five minutes)
         if (collapsed != JAMMED)
-            jamExpire = llGetUnixTime() + ((integer)llFrand(180) + 120);
+            jamExpire = llGetUnixTime() + JAM_TIMEOUT;
     }
 #endif
 
@@ -617,7 +617,7 @@ default {
                 // Internal command: remove?
                 lmSendConfig("wearLock", (string)(wearLock = (integer)value));
 
-                if (wearLock) wearLockExpire = llGetUnixTime() + WEAR_LOCK_TIME;
+                if (wearLock) wearLockExpire = llGetUnixTime() + WEAR_LOCK_TIMEOUT;
                 else wearLockExpire = 0;
 
                 lmSendConfig("wearLockExpire",(string)(wearLockExpire));

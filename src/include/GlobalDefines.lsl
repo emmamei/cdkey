@@ -87,11 +87,11 @@
 // This defines the config settings that we never expedite HTTP POST for
 #define SKIP_EXPEDITE [ "poseExpire", "timeLeftOnKey", "timeToJamRepair", "wearLockExpire", "winderRechargeTime" ]
 // Timeouts
-#define WEAR_LOCK_TIME 600
+#define WEAR_LOCK_TIMEOUT 600
 #define DEMO_LIMIT 300
-#define POSE_LIMIT 300
+#define POSE_TIMEOUT 300
 #define CARRY_TIMEOUT 300
-#define JAM_DEFAULT_TIME 90
+#define JAM_TIMEOUT ((integer)llFrand(180) + 120)
 #define TIME_BEFORE_TP 900
 #define TIME_BEFORE_EMGWIND 1800
 

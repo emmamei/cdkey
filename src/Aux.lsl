@@ -256,8 +256,8 @@ default {
                     //lmSendConfig("wearLock", (string)(wearLock = 1));
                     lmSetConfig("wearLock", "1");
 
-                    if (!quiet) llSay(0, "The dolly " + dollName + " has " + pronounHerDoll + " " + part + " stripped off " + pronounHerDoll + " and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes.");
-                    else llOwnerSay("You have had your " + part + " stripped off you and may not redress for " + (string)llRound(WEAR_LOCK_TIME / 60.0) + " minutes");
+                    if (!quiet) llSay(0, "The dolly " + dollName + " has " + pronounHerDoll + " " + part + " stripped off " + pronounHerDoll + " and may not redress for " + (string)llRound(WEAR_LOCK_TIMEOUT / 60.0) + " minutes.");
+                    else llOwnerSay("You have had your " + part + " stripped off you and may not redress for " + (string)llRound(WEAR_LOCK_TIMEOUT / 60.0) + " minutes");
                 }
                 else llOwnerSay("You have stripped off your own " + part + ".");
             }

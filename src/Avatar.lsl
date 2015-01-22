@@ -796,7 +796,7 @@ default {
                     lmSendConfig("keyAnimation", (string)(keyAnimation = choice));
                     lmSendConfig("poserID", (string)(poserID = id));
                     if (dollType != "Display" && !hardcore)
-                        lmSetConfig("poseExpire", (string)(llGetUnixTime() + 300.0);
+                        lmSetConfig("poseExpire", (string)(llGetUnixTime() + POSE_TIMEOUT);
 
                     if (cdAnimated()) oneAnimation();
                     if (poseSilence) lmRunRLV("sendchat=n");
