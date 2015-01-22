@@ -221,6 +221,8 @@ listInventoryOn(integer channel) {
 
 integer isDresser(key id) {
     if (dresserID == NULL_KEY) {
+        // No dresser currently: set it to id
+
         // check if id is something other than an avatar: and fake up TRUE val if so
         if (llGetAgentSize(id) == ZERO_VECTOR) return TRUE;
 
@@ -236,6 +238,7 @@ integer isDresser(key id) {
         return FALSE;
     }
 
+    // dresserID == id .... therefore, id IS the dresser...
     return TRUE;
 }
 
@@ -286,6 +289,7 @@ changeComplete(integer success) {
     llSetTimerEvent(0.0);
 
     dresserID = NULL_KEY;
+    dresserName = "";
 }
 
 #ifdef DEVELOPER_MODE
