@@ -131,11 +131,10 @@ default {
             else if (name == "keyLimit")                      maxMins = llRound((float)value / 60.0);
             else if (name == "backMenu")                     backMenu = value;
             else if (name == "quiet")                           quiet = (integer)value;
+#ifdef HOMING_BEACON
             else if (name == "homingBeacon")             homingBeacon = (integer)value;
-            else if (name == "collapseTime") {
-                collapseTime = (float)value;
-                if (collapseTime != 0.0) collapseTime += llGetTime();
-            }
+#endif
+            else if (name == "collapseTime")             collapseTime = (float)value;
             else if (name == "collapsed")                   collapsed = (integer)value;
             else if (name == "autoTP")                         autoTP = (integer)value;
             else if (name == "autoTP")                         autoTP = (integer)value;

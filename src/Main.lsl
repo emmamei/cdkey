@@ -179,9 +179,7 @@ collapse(integer newCollapseState) {
     // If not already collapsed, mark the start time
     if (collapsed == NOT_COLLAPSED) {
         collapseTime = llGetUnixTime();
-        // A relative time of zero would be misunderstood - so fake up
-        // a "1" (1s) time - a second's inaccuracy isn't bad
-        lmSendConfig("collapseTime", "1");
+        lmSendConfig("collapseTime", (string)collapseTime);
     }
 
 #ifdef JAMMABLE
@@ -202,9 +200,6 @@ collapse(integer newCollapseState) {
 
     if (collapsed != newCollapseState)
         lmSendConfig("collapsed", (string)(collapsed = newCollapseState));
-
-    //if (collapsed) collapseTime = llGetUnixTime();
-    //else           collapseTime = 0;
 
     // queued up: broadcast new times
     lmInternalCommand("getTimeUpdates", "", llGetKey());
@@ -636,20 +631,20 @@ default {
                 if (lowScriptMode) lastLowScriptTime = llGetUnixTime();
                 else lastLowScriptTime = 0;
             }
+            else if (name == "collapseTime")     collapseTime = value;
             else if (
                      (name == "wearLockExpire")  ||
                      (name == "poseExpire")      ||
 #ifdef JAMMABLE
                      (name == "jamExpire")       ||
 #endif
-                     (name == "carryExpire")     ||
-                     (name == "collapseTime")) {
+                     (name == "carryExpire")) {
 
                 integer timeSet;
 
                 // The value parameter is supposed to be positive, except collapseTime
                 // which should be negative
-                if ((integer)value) timeSet = llGetUnixTime() + (integer)value;
+                if ((integer)value) timeSet = llGetUnixTime() + (float)value;
 
                 // Note that the Link Message contents were an offset from
                 // the current time, but here the variables are being set
@@ -662,7 +657,6 @@ default {
                 else if (name == "jamExpire")              jamExpire = timeSet;
 #endif
                 else if (name == "carryExpire")          carryExpire = timeSet;
-                else if (name == "collapseTime")        collapseTime = timeSet;
             }
         }
         else if (code == INTERNAL_CMD) {
@@ -695,7 +689,7 @@ default {
 #endif
                 if (cdTimeSet(poseExpire))           lmSendConfig("poseExpire",            (string)(poseExpire - t));
                 if (cdTimeSet(carryExpire))          lmSendConfig("carryExpire",           (string)(carryExpire - t));
-                if (cdTimeSet(collapseTime))         lmSendConfig("collapseTime",          (string)(collapseTime - t));
+                if (cdTimeSet(collapseTime))         lmSendConfig("collapseTime",          (string)(collapseTime));
             }
             else if (cmd == "collapse") {
                 if (collapsed) uncollapse();

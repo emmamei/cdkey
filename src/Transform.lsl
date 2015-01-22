@@ -495,10 +495,7 @@ default {
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
 #ifdef HOMING_BEACON
             else if (name == "homingBeacon")             homingBeacon = (integer)value;
-            else if (name == "collapseTime") {
-                collapseTime = (float)value;
-                if (collapseTime != 0.0) collapseTime += llGetTime();
-            }
+            else if (name == "collapseTime")             collapseTime = (float)value;
 #endif
             else if (name == "dollType")                     dollType = value;
             else if (name == "showPhrases") {
