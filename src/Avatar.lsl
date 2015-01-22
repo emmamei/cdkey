@@ -712,12 +712,15 @@ default {
                 // These two parts DO have replicated code, but creating a function
                 // would use up more space probably - and more time.
                 if (part == "ALL") {
-                    n = 5;
+                    n = llGetListLength(layers);
                     while (n--) {
-                        rlv = "detach:" + llDumpList2String(llCSV2List(llList2String(attachments,n)), "=force,detach:") + "=force" +
-                              ",remoutfit:" + llDumpList2String(llCSV2List(llList2String(layers,n)), "=force,remoutfit:") + "=force";
+                        rlv = "";
+                        if (llList2String(attachments,n) != "")
+                            rlv = "detach:" + llDumpList2String(llCSV2List(llList2String(attachments,n)), "=force,detach:") + "=force,";
+                        rlv += "remoutfit:" + llDumpList2String(llCSV2List(llList2String(layers,n)), "=force,remoutfit:") + "=force";
                         lmRunRLVas("Dress", rlv);
                     }
+                    lmRunRLVas("Dress","remoutfit:alpha=force");
                 }
                 else {
                     if (part == "Top")           partN = RLV_STRIP_TOP;
@@ -726,10 +729,11 @@ default {
                     else if (part == "Panties")  partN = RLV_STRIP_PANTIES;
                     else if (part == "Shoes")    partN = RLV_STRIP_SHOES;
 
-                    rlv = "detach:" + llDumpList2String(llCSV2List(llList2String(attachments,partN)), "=force,detach:") + "=force" +
-                          ",remoutfit:" + llDumpList2String(llCSV2List(llList2String(layers,partN)), "=force,remoutfit:") + "=force";
+                    if (llList2String(attachments,n) != "")
+                        rlv = "detach:" + llDumpList2String(llCSV2List(llList2String(attachments,partN)), "=force,detach:") + "=force,";
+                    rlv += "remoutfit:" + llDumpList2String(llCSV2List(llList2String(layers,partN)), "=force,remoutfit:") + "=force";
 
-                    lmRunRLVas("Dress", rlv);
+                    lmRunRLVas("Dress", rlv + ",remoutfit:alpha=force");
                 }
 
                 // We separate this out for two reasones: a) saves space; b) separates the RLV
@@ -796,7 +800,7 @@ default {
                     lmSendConfig("keyAnimation", (string)(keyAnimation = choice));
                     lmSendConfig("poserID", (string)(poserID = id));
                     if (dollType != "Display" && !hardcore)
-                        lmSetConfig("poseExpire", (string)(llGetUnixTime() + POSE_TIMEOUT);
+                        lmSetConfig("poseExpire", (string)(llGetUnixTime() + POSE_TIMEOUT));
 
                     if (cdAnimated()) oneAnimation();
                     if (poseSilence) lmRunRLV("sendchat=n");
