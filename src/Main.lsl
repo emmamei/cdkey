@@ -632,9 +632,9 @@ default {
                 else lastLowScriptTime = 0;
             }
             else if (name == "collapseTime")     collapseTime = value;
+            else if (name == "poseExpire")         poseExpire = value;
             else if (
                      (name == "wearLockExpire")  ||
-                     (name == "poseExpire")      ||
 #ifdef JAMMABLE
                      (name == "jamExpire")       ||
 #endif
@@ -652,7 +652,6 @@ default {
                 // is being set as a time in the past
 
                      if (name == "wearLockExpire")    wearLockExpire = timeSet;
-                else if (name == "poseExpire")            poseExpire = timeSet;
 #ifdef JAMMABLE
                 else if (name == "jamExpire")              jamExpire = timeSet;
 #endif
@@ -687,7 +686,7 @@ default {
 #ifdef JAMMABLE
                 if (cdTimeSet(jamExpire))            lmSendConfig("jamExpire",             (string)(jamExpire - t));
 #endif
-                if (cdTimeSet(poseExpire))           lmSendConfig("poseExpire",            (string)(poseExpire - t));
+                if (cdTimeSet(poseExpire))           lmSendConfig("poseExpire",            (string)(poseExpire));
                 if (cdTimeSet(carryExpire))          lmSendConfig("carryExpire",           (string)(carryExpire - t));
                 if (cdTimeSet(collapseTime))         lmSendConfig("collapseTime",          (string)(collapseTime));
             }
