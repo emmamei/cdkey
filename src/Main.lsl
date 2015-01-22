@@ -616,14 +616,11 @@ default {
             else if (name == "wearLock") {
                 // Internal command: remove?
                 lmSendConfig("wearLock", (string)(wearLock = (integer)value));
-                if (wearLock) {
-                    wearLockExpire = llGetUnixTime() + WEAR_LOCK_TIME;
-                    lmSendConfig("wearLockExpire",(string)(WEAR_LOCK_TIME));
-                }
-                else {
-                    wearLockExpire = 0;
-                    lmSendConfig("wearLockExpire","0");
-                }
+
+                if (wearLock) wearLockExpire = llGetUnixTime() + WEAR_LOCK_TIME;
+                else wearLockExpire = 0;
+
+                lmSendConfig("wearLockExpire",(string)(wearLockExpire));
             }
             else if (name == "lowScriptMode") {
                 lmSendConfig("lowScriptMode",(string)(lowScriptMode = (integer)value));
@@ -636,21 +633,7 @@ default {
 #ifdef JAMMABLE
             else if (name == "jamExpire")           jamExpire = value;
 #endif
-            else if (name == "wearLockExpire") {
-
-                integer timeSet;
-
-                // The value parameter is supposed to be positive, except collapseTime
-                // which should be negative
-                if ((integer)value) timeSet = llGetUnixTime() + (float)value;
-
-                // Note that the Link Message contents were an offset from
-                // the current time, but here the variables are being set
-                // as a specific time in the future, except collapseTime which
-                // is being set as a time in the past
-
-                     if (name == "wearLockExpire")    wearLockExpire = timeSet;
-            }
+            else if (name == "wearLockExpire") wearLockExpire = value;
         }
         else if (code == INTERNAL_CMD) {
             string cmd = llList2String(split, 0);
@@ -658,31 +641,22 @@ default {
             integer isController = cdIsController(id);
 
             if (cmd == "getTimeUpdates") {
-                integer t = llGetUnixTime();
 
-                // Internal variables are sent on the wire in various ways:
-                //
-                //   * timeLeftOnKey (seconds) - positive seconds remaining (adjusted elsewhere)
-                //   * {wear|jam|pose|carry}Expire (seconds) - positive seconds remaining
-                //   * collapseTime (seconds) - seconds since collapse (negative number)
-                //
-                // Internally they are:
+                // The time variables are set this way:
                 //
                 //   * timeLeftOnKey (seconds) - positive seconds remaining (adjusted elsewhere)
                 //   * {wear|jam|pose|carry}Expire (time) - time of expiration
                 //   * collapseTime (time) - time of collapse
-                //
-                // The reasons for this disparity are not immediately clear.
 
-                if (cdTimeSet(timeLeftOnKey))        lmSendConfig("timeLeftOnKey",         (string) timeLeftOnKey);
-                if (cdTimeSet(wearLockExpire))       lmSendConfig("wearLockExpire",        (string)(wearLockExpire - t));
-                if (cdTimeSet(transformLockExpire))  lmSendConfig("transformLockExpire",   (string)(transformLockExpire));
 #ifdef JAMMABLE
-                if (cdTimeSet(jamExpire))            lmSendConfig("jamExpire",             (string)(jamExpire));
+                if (cdTimeSet(jamExpire))            lmSendConfig("jamExpire",             (string)jamExpire);
 #endif
-                if (cdTimeSet(poseExpire))           lmSendConfig("poseExpire",            (string)(poseExpire));
-                if (cdTimeSet(carryExpire))          lmSendConfig("carryExpire",           (string)(carryExpire));
-                if (cdTimeSet(collapseTime))         lmSendConfig("collapseTime",          (string)(collapseTime));
+                if (cdTimeSet(timeLeftOnKey))        lmSendConfig("timeLeftOnKey",         (string)timeLeftOnKey);
+                if (cdTimeSet(wearLockExpire))       lmSendConfig("wearLockExpire",        (string)wearLockExpire);
+                if (cdTimeSet(transformLockExpire))  lmSendConfig("transformLockExpire",   (string)transformLockExpire);
+                if (cdTimeSet(poseExpire))           lmSendConfig("poseExpire",            (string)poseExpire);
+                if (cdTimeSet(carryExpire))          lmSendConfig("carryExpire",           (string)carryExpire);
+                if (cdTimeSet(collapseTime))         lmSendConfig("collapseTime",          (string)collapseTime);
             }
             else if (cmd == "collapse") {
                 if (collapsed) uncollapse();
