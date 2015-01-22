@@ -646,6 +646,19 @@ default {
                 canDressTimeout = 0;
                 changeComplete(TRUE);
             }
+            else if (cmd == "stripAll") {
+                if (nudeFolder)
+                    lmRunRLV("@detachallthis:" + nudeFolder + "=n");
+                if (normalselfFolder)
+                    lmRunRLV("@detachallthis:" + normalselfFolder + "=n");
+
+                lmRunRLV("@detachallthis:" + outfitsFolder + "=force");
+
+                if (nudeFolder)
+                    lmRunRLV("@attachallthis:" + nudeFolder + "=force,@detachallthis:" + nudeFolder + "=y");
+                if (normalselfFolder)
+                    lmRunRLV("@attachallthis:" + normalselfFolder + "=force,@detachallthis:" + normalselfFolder + "=y");
+            }
             else if (cmd == "setHovertext") {
                 string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
 
