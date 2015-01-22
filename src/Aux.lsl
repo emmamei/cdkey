@@ -270,7 +270,7 @@ default {
 
                 debugSay(2,"DEBUG-AUX","Building collapsedMenu...");
                 // is it possible to be collapsed but collapseTime be equal to 0.0?
-                if (collapseTime != 0.0 || collapsed) {
+                if (collapsed) {
                     float timeCollapsed = llGetUnixTime() - collapseTime;
                     msg = "You need winding. ";
 #ifdef DEVELOPER_MODE

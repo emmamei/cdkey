@@ -311,7 +311,7 @@ default {
             string timeLeft = llList2String(split, 0);
 
             // is it possible to be collapsed but collapseTime be equal to 0.0?
-            if (collapseTime != 0.0 || collapsed) {
+            if (collapsed) {
                 float timeCollapsed = llGetUnixTime() - collapseTime;
 
                 if (timeCollapsed > TIME_BEFORE_TP)
@@ -475,6 +475,7 @@ default {
             else if (name == "autoAFK")                       autoAFK = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")           timeReporting = (integer)value;
+            else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
             else if (name == "lowScriptMode")           lowScriptMode = (integer)value;
             else if (name == "collapsed")                   collapsed = (integer)value;
@@ -483,9 +484,6 @@ default {
             else if (name == "hardcore")                     hardcore = (integer)value;
             else if (name == "backMenu")                     backMenu = value;
             else if (name == "hoverTextOn")               hoverTextOn = (integer)value;
-#ifdef HOMING_BEACON
-            else if (name == "homingBeacon")             homingBeacon = (integer)value;
-#endif
             else if (name == "collapsed")                   collapsed = (integer)value;
             else if (name == "busyIsAway")                 busyIsAway = (integer)value;
             else if (name == "controllers") {
@@ -495,14 +493,14 @@ default {
             else if (name == "canAFK")                         canAFK = (integer)value;
             else if (name == "mustAgreeToType")       mustAgreeToType = (integer)value;
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
+#ifdef HOMING_BEACON
+            else if (name == "homingBeacon")             homingBeacon = (integer)value;
             else if (name == "collapseTime") {
                 collapseTime = (float)value;
                 if (collapseTime != 0.0) collapseTime += llGetTime();
             }
-            else if (name == "dollType")                     dollType = value;
-#ifdef DEVELOPER_MODE
-            else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
+            else if (name == "dollType")                     dollType = value;
             else if (name == "showPhrases") {
                 showPhrases = (integer)value;
                 currentPhrases = [];

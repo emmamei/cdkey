@@ -172,14 +172,6 @@ default {
             string c = cdGetFirstChar(name);
 
                  if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
-            else if (name == "collapseTime") {
-                // value from the wire is the amount of time the Dolly has been down (in negative s)
-                // value to us is the actual UNIX time Dolly went down - we use the UNIX time because
-                // when Dolly expires, they might log out and back in but we want to preserve the
-                // collapse time - and not lose it
-                if ((float)value != 0.0)                 collapseTime = (llGetUnixTime() + (float)value);
-                else                                     collapseTime = 0.0;
-            }
             else if (name == "baseWindRate")             baseWindRate = (float)value;
             else if (name == "windRate")                     windRate = (float)value;
             else if (name == "backMenu")                     backMenu = value;

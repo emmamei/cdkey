@@ -23,8 +23,6 @@ key lastWinderID;
 string lastWinderName;
 
 float effectiveLimit          = 10800.0;
-//float wearLockExpire;
-//flaot winderLockExpire;
 
 string msg;
 integer chatEnable           = TRUE;
@@ -184,7 +182,6 @@ default
             // Shortcut: w
             else if (c == "w") {
                      if (name == "windMins")                 windMins = (integer)value;
-                //else if (name == "wearLockExpire")     wearLockExpire = (float)value;
                 else if (name == "wearLock")                 wearLock = (integer)value;
                 else if (name == "windRate")                 windRate = (float)value;
                 else if (name == "windingDown")           windingDown = (integer)value;

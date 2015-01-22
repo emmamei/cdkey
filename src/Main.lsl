@@ -700,11 +700,6 @@ default {
                 if (cdTimeSet(carryExpire))          lmSendConfig("carryExpire",           (string)(carryExpire - t));
                 if (cdTimeSet(collapseTime))         lmSendConfig("collapseTime",          (string)(collapseTime - t));
             }
-//          else if (cmd == "getWindTime") {
-//              windMins = llList2Integer(split, 0);
-//              if (windMins <= 0 || windMins > 120) windMins = 30;
-//              lmSendConfig("windMins", (string)(windMins));
-//          }
             else if (cmd == "collapse") {
                 if (collapsed) uncollapse();
                 else collapse(llList2Integer(split, 0));
