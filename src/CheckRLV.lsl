@@ -159,12 +159,14 @@ activateRLVBase() {
     string baseRLV = "detach=n,permissive=n";
 #endif
 
-    if (userBaseRLVcmd != "") lmRunRLVas("UserBase", userBaseRLVcmd);
+    //if (userBaseRLVcmd != "") lmRunRLVas("UserBase", userBaseRLVcmd);
 
     baseRLV += ",sendchannel:" + (string)chatChannel + "=rem";
+    lmRunRLVas("Base", baseRLV);
+    baseRLV = "";
 
-    if (userBaseRLVcmd != "")
-        lmRunRLVas("UserBase", userBaseRLVcmd);
+    //if (userBaseRLVcmd != "")
+    //    lmRunRLVas("UserBase", userBaseRLVcmd);
 
     if  (autoTP)    baseRLV += "accepttp=n,";       else baseRLV += "accepttp=y,";
     if (!canSelfTP) baseRLV += "tplm=n,tploc=n,";   else baseRLV += "tplm=y,tploc=y,";
