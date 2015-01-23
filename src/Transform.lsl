@@ -60,16 +60,17 @@ integer outfitSearching;
 
 integer findTypeFolder;
 
-integer typeSearchHandle;
-integer outfitSearchHandle;
 integer useTypeFolder;
 integer transformedViaMenu;
 string transform;
 string typeFolder;
 
 integer rlvChannel;
+integer typeSearchHandle;
 integer typeSearchChannel;
+integer outfitSearchHandle;
 integer outfitSearchChannel;
+
 integer typeChannel;
 
 integer transformLockExpire;
@@ -128,14 +129,10 @@ setDollType(string stateName, integer automated) {
         }
     }
 
-    // Dont lock if transformation is automated (or is a Builder Dolly)
-    if (!automated && stateName != "Builder") {
-        transformLockExpire = llGetUnixTime() + TRANSFORM_LOCK_TIME;
-        lmSendConfig("transformLockExpire",(string)transformLockExpire);
-    }
-    else {
-        lmSendConfig("transformLockExpire",(string)(transformLockExpire = 0));
-    }
+    // Dont lock transformation if is automated (or is a Builder Dolly)
+    if (!automated && stateName != "Builder") transformLockExpire = llGetUnixTime() + TRANSFORM_LOCK_TIME;
+    else transformLockExpire = 0;
+    lmSendConfig("transformLockExpire",(string)transformLockExpire);
 
     // We dont respond to this: we don't have to
     lmSendConfig("dollType", (dollType = stateName));
@@ -232,10 +229,8 @@ folderSearch(string folder, integer channel) {
 
     // The folder search starts as a RLV @getinv call...
     //
-    if (folder == "")
-        lmRunRLV("getinv=" + (string)channel);
-    else
-        lmRunRLV("getinv:" + folder + "=" + (string)channel);
+    if (folder == "") lmRunRLV("getinv=" + (string)channel);
+    else lmRunRLV("getinv:" + folder + "=" + (string)channel);
 
     // The next stage is the listener, while we create a time
     // out to timeout the RLV call...
@@ -322,6 +317,7 @@ default {
         }
 #endif
         if (RLVok) {
+            // if we get here then the search RLV timed out
             if (outfitSearching) {
                 // Note carefully - if the search tries is maxed,
                 // that means that the attempted RLV call failed
@@ -604,20 +600,19 @@ default {
 
                     if (outfitsFolder == "" && !outfitSearching) {
                         // No outfit folder: let's search.
-                        outfitSearching++;
-                        if (outfitSearching < 2) {
 
-                            debugSay(2,"DEBUG-RLVOK","Searching for Outfits and Typefolders");
-                            outfitsFolder = "";
-                            typeFolder = "";
-                            useTypeFolder = 0;
-                            typeSearchTries = 0;
-                            outfitSearchTries = 0;
+                        debugSay(2,"DEBUG-RLVOK","Searching for Outfits and Typefolders");
 
-                            outfitsSearchTimer = llGetTime();
-                            // Start the search
-                            folderSearch(outfitsFolder,outfitSearchChannel);
-                        }
+                        outfitSearching = 1;
+                        outfitsFolder = "";
+                        typeFolder = "";
+                        useTypeFolder = 0;
+                        typeSearchTries = 0;
+                        outfitSearchTries = 0;
+
+                        outfitsSearchTimer = llGetTime();
+                        // Start the search
+                        folderSearch(outfitsFolder,outfitSearchChannel);
                     }
                 }
             }
@@ -783,6 +778,7 @@ default {
         if (channel == outfitSearchChannel) {
             llListenRemove(outfitSearchHandle);
             debugSay(2,"DEBUG-SEARCHING","Channel #1 received (outfitsFolder = \"" + outfitsFolder + "\"): " + choice);
+            outfitSearching = 1; // if we get here - well, we're outfit searchiung ja?
 
             list folderList = llCSV2List(choice);
             nudeFolder = "";
@@ -925,9 +921,10 @@ default {
                     lmSendConfig("nudeFolder",nudeFolder);
                     lmSendConfig("normalselfFolder",normalselfFolder);
                 }
-
-                debugSay(2,"DEBUG-SEARCHING","Random dress being chosen");
-                lmInternalCommand("randomDress","",NULL_KEY);
+                else {
+                    debugSay(2,"DEBUG-SEARCHING","Random dress being chosen");
+                    lmInternalCommand("randomDress","",NULL_KEY);
+                }
             }
         }
     }
