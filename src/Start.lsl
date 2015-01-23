@@ -687,6 +687,7 @@ default {
 
         RLVok = UNSET;
 
+        setWindRate();
         llResetTime();
     }
 
@@ -695,6 +696,7 @@ default {
     //----------------------------------------
     attach(key id) {
 
+        setWindRate();
         if (id == NULL_KEY) {
 
             if(!llGetAttached()) cdResetKeyName();
