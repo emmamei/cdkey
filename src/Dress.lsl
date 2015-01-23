@@ -618,8 +618,14 @@ default {
 
                 // And now send an attempt to clean up any remaining stray pieces: remove rest of
                 // clothing not otherwise locked
-                string parts = "gloves|jacket|pants|shirt|shoes|skirt|socks|underpants|undershirt|alpha|pelvis|left foot|right foot|r lower leg|l lower leg|r forearm|l forearm|r upper arm|l upper arm|r upper leg|l upper leg";
-                lmRunRLV("detachallthis:" + llDumpList2String(llParseString2List(parts, [ "|" ], []), "=force,detachallthis:") + "=force");
+                list parts = [ "gloves","jacket","pants","shirt",
+                               "shoes","skirt","socks","underpants",
+                               "undershirt","alpha","pelvis","left foot",
+                               "right foot","r lower leg","l lower leg",
+                               "r forearm","l forearm","r upper arm",
+                               "l upper arm","r upper leg","l upper leg" ];
+
+                lmRunRLV("detachallthis:" + llDumpList2String(parts, "=force,detachallthis:") + "=force");
 
                 // Attach everything one last time - in case we knocked something off we need
                 lmRunRLV("attachall:" + newOutfit + "=force");
