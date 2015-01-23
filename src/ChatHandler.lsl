@@ -576,6 +576,7 @@ default
                         return;
                     }
                     else if (choice == "detach") {
+                        if (isDoll && hardcore) return;
 
                         if (detachable || isController) lmInternalCommand("detach", "", NULL_KEY);
                         else lmSendToAgent("Key can't be detached...", id);
@@ -583,6 +584,7 @@ default
                         return;
                     }
                     else if (choice == "xstats") {
+                        if (isDoll && hardcore) return;
                         string s = "Extended stats:\n\nDoll is a " + dollType + " Doll.\nAFK time factor: " +
                                    formatFloat(RATE_AFK, 1) + "x\nWind amount: " + (string)windMins + " (mins)\n";
 
@@ -621,6 +623,7 @@ default
                         return;
                     }
                     else if (choice == "stat") {
+                        if (isDoll && hardcore) return;
                         float t1 = timeLeftOnKey / (SEC_TO_MIN * windRate);
                         float t2 = effectiveLimit / (SEC_TO_MIN * windRate);
                         float p = t1 * 100.0 / t2;
@@ -646,6 +649,7 @@ default
                         return;
                     }
                     else if (choice == "stats") {
+                        if (isDoll && hardcore) return;
                         lmSendToAgent("Time remaining: " + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * windRate)) + " minutes of " +
                                     (string)llRound(effectiveLimit / (SEC_TO_MIN * windRate)) + " minutes.", id);
 
@@ -677,6 +681,7 @@ default
                         return;
                     }
                     else if (choice == "release") {
+                        if (isDoll && hardcore) return;
                         string p = pronounHerDoll;
                         string s = pronounSheDoll;
 
@@ -863,7 +868,7 @@ default
                     return;
                 }
                 else if (choice == "uncarry") {
-                    if (!isDoll) cdMenuInject("Uncarry", name, id);
+                    if (isController || cdIsCarrier(id)) cdMenuInject("Uncarry", name, id);
                     return;
                 }
             }

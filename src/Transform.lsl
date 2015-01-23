@@ -482,7 +482,7 @@ default {
             else if (name == "collapsed")                   collapsed = (integer)value;
             else if (name == "simRating")                   simRating = value;
             else if (name == "quiet")                           quiet = (integer)value;
-            //else if (name == "hardcore")                     hardcore = (integer)value;
+            else if (name == "hardcore")                     hardcore = (integer)value;
             else if (name == "backMenu")                     backMenu = value;
             else if (name == "hoverTextOn")               hoverTextOn = (integer)value;
             else if (name == "collapsed")                   collapsed = (integer)value;
@@ -699,7 +699,8 @@ default {
                     if (cdIsDoll(id)) msg += "What type of doll do you want to be?";
                     else {
                         msg += "What type of doll do you want the Doll to be?";
-                        llOwnerSay(cdProfileURL(id) + " is looking at your doll types.");
+                        if (!hardcore)
+                            llOwnerSay(cdProfileURL(id) + " is looking at your doll types.");
                     }
 
                     lmSendConfig("backMenu",(backMenu = MAIN));

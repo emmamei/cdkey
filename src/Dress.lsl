@@ -231,7 +231,8 @@ integer isDresser(key id) {
         //debugSay(4, "DEBUG-DRESS", "looking at dress menu: " + (string)dresserID);
 
         if (!cdIsDoll(dresserID))
-            llOwnerSay("secondlife:///app/agent/" + (string)dresserID + "/about is looking at your dress menu");
+            if (!hardcore)
+                llOwnerSay("secondlife:///app/agent/" + (string)dresserID + "/about is looking at your dress menu");
     }
     else if (dresserID != id) {
         lmSendToAgent("You go to look in Dolly's closet for clothes, and find that " + dresserName + " is already there looking", id);
@@ -435,6 +436,7 @@ default {
             else if (name == "typeFolder")                    typeFolder = value;
             else if (name == "useTypeFolder")              useTypeFolder = (integer)value;
             else if (name == "wearLock")                        wearLock = (integer)value;
+            else if (name == "hardcore")                        hardcore = (integer)value;
         }
         else if (code == INTERNAL_CMD) {
             debugSay(5,"DEBUG-DRESS",">>> split = " + llDumpList2String(split, ","));
