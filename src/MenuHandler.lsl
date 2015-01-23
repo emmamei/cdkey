@@ -474,11 +474,11 @@ default {
                         if (RLVok == 1) {
                             if (allowStrip || dollType == "Slut" || hardcore) {
                                 if (isController || isCarrier) {
-                                    if (simRating == "MATURE" || simRating == "ADULT") menu += "Strip...";
+                                    if (simRating == "MATURE" || simRating == "ADULT") menu += "Strip";
                                 }
                             }
                             else if (isDoll) {
-                                if (simRating == "MATURE" || simRating == "ADULT") menu += "Strip...";
+                                if (simRating == "MATURE" || simRating == "ADULT") menu += "Strip";
                             }
                         }
 #endif

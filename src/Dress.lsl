@@ -648,16 +648,16 @@ default {
             }
             else if (cmd == "stripAll") {
                 if (nudeFolder)
-                    lmRunRLV("@detachallthis:" + nudeFolder + "=n");
+                    lmRunRLV("detachthis:" + nudeFolder + "=n");
                 if (normalselfFolder)
-                    lmRunRLV("@detachallthis:" + normalselfFolder + "=n");
+                    lmRunRLV("detachthis:" + normalselfFolder + "=n");
 
-                lmRunRLV("@detachallthis:" + outfitsFolder + "=force");
+                lmRunRLV("detachall:" + outfitsFolder + "=force");
 
                 if (nudeFolder)
-                    lmRunRLV("@attachallthis:" + nudeFolder + "=force,@detachallthis:" + nudeFolder + "=y");
+                    lmRunRLV("detachthis:" + nudeFolder + "=y,attachall:" + nudeFolder + "=force");
                 if (normalselfFolder)
-                    lmRunRLV("@attachallthis:" + normalselfFolder + "=force,@detachallthis:" + normalselfFolder + "=y");
+                    lmRunRLV("detachthis:" + normalselfFolder + "=y,attachall:" + normalselfFolder + "=force");
             }
             else if (cmd == "setHovertext") {
                 string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
