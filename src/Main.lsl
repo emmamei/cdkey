@@ -529,51 +529,57 @@ default {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
             split = llDeleteSubList(split, 0, 0);
+            string c = cdGetFirstChar(name);
 
-             if (name == "carrierID") {
-                carrierID = (key)value;
+            if (c == "c") {
+                if (name == "carrierID") {
+                    carrierID = (key)value;
 
-                // If we get a carrierID, it means we need to start the carry timer
-                if (carrierID) {
-                    // Send the carryExpire out as a relative value, then convert it
-                    // internally to a fixed time value
-                    lmSendConfig("carryExpire", (string)(carryExpire = llGetUnixTime() + CARRY_TIMEOUT));
+                    // If we get a carrierID, it means we need to start the carry timer
+                    if (carrierID) {
+                        // Send the carryExpire out as a relative value, then convert it
+                        // internally to a fixed time value
+                        lmSendConfig("carryExpire", (string)(carryExpire = llGetUnixTime() + CARRY_TIMEOUT));
+                    }
                 }
+                else if (name == "carrierName")               carrierName = value;
+                else if (name == "canAFK")                         canAFK = (integer)value;
+                else if (name == "configured")                 configured = (integer)value;
+                else if (name == "collapsed")                    collapsed = (integer)value;
             }
-            else if (name == "carrierName")               carrierName = value;
-            else if (name == "autoAFK")                       autoAFK = (integer)value;
-            //else if (name == "autoTP")                         autoTP = (integer)value;
-            else if (name == "canAFK")                         canAFK = (integer)value;
             else if (name == "allowRepeatWind")       allowRepeatWind = (integer)value;
-            else if (name == "dollDisplayName")       dollDisplayName = value;
-#ifdef DEVELOPER_MODE
-            else if (name == "debugLevel")                 debugLevel = (integer)value;
-#endif
-            else if (name == "configured")                 configured = (integer)value;
-            else if (name == "busyIsAway")                 busyIsAway = (integer)value;
-            else if (name == "quiet")                           quiet = (integer)value;
-            else if (name == "hoverTextOn")               hoverTextOn = (integer)value;
-            else if (name == "windAmount")                 windAmount = (float)value;
-            else if (name == "baseWindRate")             baseWindRate = (float)value;
-            else if (name == "keyAnimation")             keyAnimation = value;
-            else if (name == "dollType")                     dollType = value;
+            else if (name == "autoAFK")                       autoAFK = (integer)value;
 #ifdef ADULT_MODE
             else if (name == "allowStrip")                 allowStrip = (integer)value;
 #endif
+            //else if (name == "autoTP")                         autoTP = (integer)value;
+            else if (c == "d") {
+                     if (name == "dollDisplayName")       dollDisplayName = value;
+                else if (name == "dialogChannel")           dialogChannel = (integer)value;
+                else if (name == "demoMode") {
+                    if (demoMode = (integer)value) effectiveLimit = DEMO_LIMIT;
+                    else effectiveLimit = keyLimit;
+                }
+                else if (name == "dollType")                     dollType = value;
+#ifdef DEVELOPER_MODE
+                else if (name == "debugLevel")                 debugLevel = (integer)value;
+#endif
+            }
+            else if (name == "quiet")                           quiet = (integer)value;
+            else if (name == "hardcore")                     hardcore = (integer)value;
+            else if (name == "hoverTextOn")               hoverTextOn = (integer)value;
+            else if (name == "busyIsAway")                 busyIsAway = (integer)value;
+            else if (name == "baseWindRate")             baseWindRate = (float)value;
+            else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
-            else if (name == "dialogChannel")           dialogChannel = (integer)value;
             else if (name == "transformLockExpire")   transformLockExpire = (integer)value;
 
+            else if (name == "windAmount")                 windAmount = (float)value;
             // This keeps the timers up to date - via a GetTimeUpdates internal command
             else if (name == "windMins") {
                 //if (script != "Main") llOwnerSay("windMins LinkMessage sent by " + script + " with value " + value);
                 windMins = (integer)value;
-            }
-            else if (name == "collapsed")                    collapsed = (integer)value;
-            else if (name == "demoMode") {
-                if (demoMode = (integer)value) effectiveLimit = DEMO_LIMIT;
-                else effectiveLimit = keyLimit;
             }
 #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")           timeReporting = (integer)value;

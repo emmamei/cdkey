@@ -185,6 +185,7 @@ default {
             else if (name == "baseWindRate")             baseWindRate = (float)value;
             else if (name == "windRate")                     windRate = (float)value;
             else if (name == "backMenu")                     backMenu = value;
+            else if (name == "hardcore")                     hardcore = (integer)value;
             else if (name == "windingDown")               windingDown = (integer)value;
             else if (name == "lowScriptMode")           lowScriptMode = (integer)value;
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;

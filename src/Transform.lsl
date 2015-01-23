@@ -482,7 +482,7 @@ default {
             else if (name == "collapsed")                   collapsed = (integer)value;
             else if (name == "simRating")                   simRating = value;
             else if (name == "quiet")                           quiet = (integer)value;
-            else if (name == "hardcore")                     hardcore = (integer)value;
+            //else if (name == "hardcore")                     hardcore = (integer)value;
             else if (name == "backMenu")                     backMenu = value;
             else if (name == "hoverTextOn")               hoverTextOn = (integer)value;
             else if (name == "collapsed")                   collapsed = (integer)value;
