@@ -102,7 +102,7 @@ integer confirmUnwearChannel;
 //integer startup = 1;
 integer dressingFailures;
 
-integer outfitPage;
+integer outfitPage; // zero-indexed
 
 //string oldattachmentpoints;
 //string oldclothespoints;
@@ -122,7 +122,7 @@ list outfitsPage(list outfitList) {
     integer currentIndex = outfitPage * OUTFIT_PAGE_SIZE;
     integer endIndex = currentIndex + OUTFIT_PAGE_SIZE - 1;
 
-    if (endIndex > newOutfitCount) endIndex = newOutfitCount;
+    if (endIndex > newOutfitCount - 1) endIndex = newOutfitCount;
 
     // Print the page contents - note that this happens even before
     // any dialog is put up
