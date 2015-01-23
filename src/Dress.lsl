@@ -115,23 +115,17 @@ integer outfitPage; // zero-indexed
 //========================================
 list outfitsPage(list outfitList) {
     integer newOutfitCount = llGetListLength(outfitList) - 1;
-
-    // GLOBAL: outfitPage
-
-    // compute indexes
-    integer currentIndex = outfitPage * OUTFIT_PAGE_SIZE;
-    integer endIndex = currentIndex + OUTFIT_PAGE_SIZE - 1;
-
-    if (endIndex > newOutfitCount - 1) endIndex = newOutfitCount;
+    integer currentIndex = (outfitPage - 1) * OUTFIT_PAGE_SIZE;
 
     // Print the page contents - note that this happens even before
     // any dialog is put up
-    //list pageOutfits = llList2List(outfitsList, currentIndex, endIndex);
-    integer n = currentIndex; string chat; list output;
+    integer n = 9;
+    string chat;
+    list output;
     string outfitName;
 
-    while (n++ <= endIndex) {
-        outfitName = (string)(n) + ". " + cdListElement(outfitsList, n - 1);
+    while (n--) {
+        outfitName = (string)(currentIndex + 8 - n) + ". " + cdListElement(outfitsList, currentIndex + 8 - n);
         chat += "\n" + outfitName;
         output += [ llGetSubString(outfitName, 0, 23) ];
     }
@@ -815,7 +809,7 @@ default {
 #ifdef ROLLOVER
                     outfitPage++;
                     if (outfitPage * OUTFIT_PAGE_SIZE > llGetListLength(outfitsList))
-                        outfitPage = 0;
+                        outfitPage = 1;
 #else
                     if ((outfitPage + 1) * OUTFIT_PAGE_SIZE < llGetListLength(outfitsList))
                         outfitPage++;
@@ -825,10 +819,10 @@ default {
                     //debugSay(6, "DEBUG-DRESS", ">>> Dress Menu: " + choice);
 #ifdef ROLLOVER
                     outfitPage--;
-                    if (outfitPage < 0)
+                    if (outfitPage < 1)
                         outfitPage = (llFloor((llGetListLength(outfitsList)) / (float)OUTFIT_PAGE_SIZE));
 #else
-                    if (outfitPage != 0)
+                    if (outfitPage != 1)
                         outfitPage--;
 #endif
                 }
@@ -1082,7 +1076,7 @@ default {
             outfitsList = llListSort(outfitsList, 1, TRUE);
 
             // Now create appropriate menu page from full outfits list
-            outfitPage = 0;
+            outfitPage = 1;
 
             list newOutfitsList = outfitsPage(outfitsList);
 
