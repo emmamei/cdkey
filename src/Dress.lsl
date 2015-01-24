@@ -123,9 +123,15 @@ list outfitsPage(list outfitList) {
     string chat;
     list output;
     string outfitName;
+    list tmpList;
+
+    tmpList = llList2List(outfitsList, currentIndex, currentIndex + 8);
+    n = llGetListLength(tmpList);
+    debugSay(3, "DEBUG-DRESS", "tmpList = (" + (string)n + ")" + llDumpList2String(tmpList,","));
 
     while (n--) {
-        outfitName = (string)(currentIndex + 9 - n) + ". " + cdListElement(outfitsList, currentIndex + 8 - n);
+        outfitName = (string)(currentIndex + 9 - n) + ". " + cdListElement(tmpList, 8 - n);
+        debugSay(3, "DEBUG-DRESS", "outfitName = " + outfitName);
         chat += "\n" + outfitName;
         output += [ llGetSubString(outfitName, 0, 23) ];
     }
