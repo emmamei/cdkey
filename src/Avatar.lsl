@@ -154,7 +154,7 @@ posePageN(string choice, key id) {
         posePage--;
         if (posePage == 0) {
 #ifdef ROLLOVER
-            posePage = llFloor(poseCount / 9);
+            posePage = llFloor(poseCount / 9) + 1;
             poseIndex = (posePage - 1) * 9;
 #else
             posePage = 1;
@@ -167,6 +167,7 @@ posePageN(string choice, key id) {
     debugSay(4,"DEBUG-AVATAR","Found " + (string)poseCount + " poses");
 
     debugSay(4,"DEBUG-AVATAR","Now on page " + (string)posePage + " and index " + (string)poseIndex);
+    llListSort(tmpList, 1, 1);
     if (poseCount > 9) {
         // Get a 9-count slice from tmpList for dialog
         tmpList = llList2List(tmpList, poseIndex, poseIndex + 8) + [ "Poses Prev", "Poses Next" ];

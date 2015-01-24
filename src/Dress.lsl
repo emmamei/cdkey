@@ -125,7 +125,7 @@ list outfitsPage(list outfitList) {
     string outfitName;
 
     while (n--) {
-        outfitName = (string)(currentIndex + 8 - n) + ". " + cdListElement(outfitsList, currentIndex + 8 - n);
+        outfitName = (string)(currentIndex + 9 - n) + ". " + cdListElement(outfitsList, currentIndex + 8 - n);
         chat += "\n" + outfitName;
         output += [ llGetSubString(outfitName, 0, 23) ];
     }
