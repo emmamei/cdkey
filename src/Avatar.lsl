@@ -71,6 +71,7 @@ integer posePage;
 // This acts as a cache of
 // current poses in inventory
 list poseList;
+integer poseCount;
 
 string poseName;
 integer poseChannel;
@@ -92,7 +93,6 @@ integer chatChannel = 75;
 //========================================
 
 posePageN(string choice, key id) {
-    integer poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
     string posePrefix;
     integer poseIndex;
     list tmpList;
@@ -100,17 +100,32 @@ posePageN(string choice, key id) {
     integer isController = cdIsController(id);
     integer buildList;
 
-    i = poseCount; // loopIndex
+    poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
 
     if (poseList == []) {
         buildList = TRUE;
-        lmSendToAgent("Reading " + (string)poseCount + " poses from Dolly's internal secondary memory...",id);
+        if (poseCount > 1) lmSendToAgent("Reading " + (string)poseCount + " poses from Dolly's internal secondary memory...",id);
+        else if (poseCount == 1) {
+            llSay(DEBUG_CHANNEL, "No poses found!");
+            return;
+        }
+        else if (poseCount == 0) {
+            llSay(DEBUG_CHANNEL, "No poses found! Key won't work without collapse animation!");
+            return;
+        }
     }
 
+    debugSay(6,"DEBUG-AVATAR","Loop index initialized at " + (string)i + " poses");
+    debugSay(6,"DEBUG-AVATAR","Current pose list = " + llDumpList2String(poseList, ","));
+
+    i = poseCount; // loopIndex
     while (i--) {
         if (buildList) {
             poseName = llGetInventoryName(INVENTORY_ANIMATION, i);
-            if (poseName != ANIMATION_COLLAPSED) poseList += poseName;
+            if (poseName != ANIMATION_COLLAPSED) {
+                if (poseName == "") llSay(DEBUG_CHANNEL,"null pose entry!");
+                else poseList += poseName;
+            }
         }
         else poseName = llList2String(poseList, i);
 
@@ -122,18 +137,20 @@ posePageN(string choice, key id) {
         // * Show animations like .foo to Dolly only
         // * Show animations like foo to all
         //
-        if (poseName != ANIMATION_COLLAPSED && poseName != keyAnimation) {
+        if (poseName != ANIMATION_COLLAPSED && poseName != keyAnimation && poseName != "") {
             posePrefix = cdGetFirstChar(poseName);
 
             if (isDoll ||
                (isController && posePrefix == "!") ||
                (posePrefix != "!" && posePrefix != ".")) {
 
+                debugSay(6,"DEBUG-AVATAR","Pose #" + (string)(i+1) + " (" + poseName + ") added: " + llDumpList2String(tmpList, ","));
                 tmpList += poseName;
             }
         }
     }
 
+    debugSay(6,"DEBUG-AVATAR","Pose list contains: " + llDumpList2String(tmpList, ","));
     if (buildList)
         lmSendToAgent("Read complete: found " + (string)llGetListLength(tmpList) + " viable poses.",id);
 
@@ -163,11 +180,12 @@ posePageN(string choice, key id) {
         }
     }
 
+    debugSay(6,"DEBUG-AVATAR","Pose list contains: " + llDumpList2String(tmpList, ","));
     poseCount = llGetListLength(poseList);
     debugSay(4,"DEBUG-AVATAR","Found " + (string)poseCount + " poses");
 
     debugSay(4,"DEBUG-AVATAR","Now on page " + (string)posePage + " and index " + (string)poseIndex);
-    llListSort(tmpList, 1, 1);
+    tmpList = llListSort(tmpList, 1, 1);
     if (poseCount > 9) {
         // Get a 9-count slice from tmpList for dialog
         tmpList = llList2List(tmpList, poseIndex, poseIndex + 8) + [ "Poses Prev", "Poses Next" ];
@@ -178,6 +196,7 @@ posePageN(string choice, key id) {
 
     lmSendConfig("backMenu",(backMenu = MAIN));
     tmpList += [ "Back..." ];
+    debugSay(6,"DEBUG-AVATAR","Pose list contains: " + llDumpList2String(tmpList, ","));
 
     msg = "Select the pose to put dolly into";
     if (keyAnimation) msg += " (current pose is " + keyAnimation + ")";
@@ -599,15 +618,18 @@ default {
         }
         else if (change & CHANGED_INVENTORY) {
             poseList = [];
-            i = llGetInventoryNumber(INVENTORY_ANIMATION);
+            poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
+            i = poseCount;
             while (i--) {
                 // This takes time:
-                poseName = llGetInventoryName(INVENTORY_ANIMATION, i);
+                poseName = llGetInventoryName(INVENTORY_ANIMATION, i + 1);
+                debugSay(6,"DEBUG-AVATAR","Pose #" + (string)i + " (" + poseName + ") found: " + llDumpList2String(poseList, ","));
 
                 // Collect all viable poses: skip the collapse animation
                 if (poseName != ANIMATION_COLLAPSED)
                     poseList += poseName;
             }
+            poseList = llListSort(poseList, 1, 1);
         }
     }
 
@@ -646,15 +668,18 @@ default {
         lastAttachedID = id;
 
         poseList = [];
-        i = llGetInventoryNumber(INVENTORY_ANIMATION);
+        poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
+        i = poseCount;
         while (i--) {
             // This takes time:
-            poseName = llGetInventoryName(INVENTORY_ANIMATION, i);
+            poseName = llGetInventoryName(INVENTORY_ANIMATION, i + 1);
+            debugSay(6,"DEBUG-AVATAR","Adding pose #" + (string)i + " (" + poseName + "): " + llDumpList2String(poseList, ","));
 
             // Collect all viable poses: skip the collapse animation
             if (poseName != ANIMATION_COLLAPSED)
                 poseList += poseName;
         }
+        poseList = llListSort(poseList, 1, 1);
     }
 
     //----------------------------------------
@@ -886,14 +911,18 @@ default {
             }
 
             else {
+                debugSay(2,"DEBUG-AVATAR","pose " + choice + " selected...");
+
                 // The Real Meat: We have an animation (pose) name
                 lmSendConfig("keyAnimation", (string)(keyAnimation = choice));
                 lmSendConfig("poserID", (string)(poserID = id));
                 if (dollType != "Display" && !hardcore)
                     lmSetConfig("poseExpire", (string)(llGetUnixTime() + POSE_TIMEOUT));
+                else
+                    lmSetConfig("poseExpire", "0");
 
-                if (cdAnimated()) oneAnimation();
-                if (poseSilence) lmRunRLV("sendchat=n");
+                oneAnimation();
+                if (poseSilence || hardcore) lmRunRLV("sendchat=n");
             }
         }
         else if (code == RLV_RESET) {
