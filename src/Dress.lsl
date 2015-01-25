@@ -180,7 +180,7 @@ rlvRequest(string rlv, integer channel) {
     if (channel < 2670) {
         llSay(DEBUG_CHANNEL,"rlvRequest called with old channel numbers");
              if (channel == 2665)   randomDressHandle = cdListenMine(  randomDressChannel);
-        else if (channel == 2666)     menuDressHandle = cdListenMine(    menuDressChannel);
+        else if (channel == 2666)     menuDressHandle =  cdListenAll(    menuDressChannel);
 #ifdef CONFIRM_WEAR
         else if (channel == 2668)   confirmWearHandle = cdListenMine(  confirmWearChannel);
 #endif
@@ -192,7 +192,7 @@ rlvRequest(string rlv, integer channel) {
     }
     else {
              if (channel ==   randomDressChannel)   randomDressHandle = cdListenMine(  randomDressChannel);
-        else if (channel ==     menuDressChannel)     menuDressHandle = cdListenMine(    menuDressChannel);
+        else if (channel ==     menuDressChannel)     menuDressHandle =  cdListenAll(    menuDressChannel);
 #ifdef CONFIRM_WEAR
         else if (channel ==   confirmWearChannel)   confirmWearHandle = cdListenMine(  confirmWearChannel);
 #endif
@@ -609,9 +609,7 @@ default {
                     oldOutfitPath = "";
                 }
 #ifdef DEVELOPER_MODE
-                else {
-                    llSay(DEBUG_CHANNEL,"no old outfit path!");
-                }
+                //else llSay(DEBUG_CHANNEL,"no old outfit path!");
 #endif
                 // Now remove everything in the outfits folder (typeically "> Outfits")
                 // which is not locked down - and then attach everything in the new outfit
@@ -839,7 +837,7 @@ default {
 
                 // We only get here if we are wandering about in the same directory...
                 cdDialogListen();
-                outfitsHandle = cdListenMine(outfitsChannel);
+                outfitsHandle = cdListenAll(outfitsChannel);
                 // outfitsMessage was built by the initial call to listener2666
                 debugSay(6, "DEBUG-DRESS", "Secondary outfits menu invoked.");
                 llDialog(dresserID, outfitsMessage, dialogSort(outfitsPage(outfitsList) + dialogItems), outfitsChannel);
@@ -997,7 +995,7 @@ default {
                 if (llGetSubString(randomOutfitName, 0, 0) != ">") {
 
                     // Here.....
-                    outfitsHandle = cdListenMine(outfitsChannel);
+                    outfitsHandle = cdListenAll(outfitsChannel);
                     lmInternalCommand("wearOutfit", randomOutfitName, NULL_KEY);
 
                     llOwnerSay("You are being dressed in this outfit: " + randomOutfitName);
@@ -1095,14 +1093,14 @@ default {
 
             if (totalOutfits > 0) outfitsMessage += ("There are " + (string)totalOutfits + " outfits to choose from. ");
 #ifdef DEVELOPER_MODE
-            else llSay(DEBUG_CHANNEL,"No outfits in this directory?");
+            //else llSay(DEBUG_CHANNEL,"No outfits in this directory?");
 #endif
             if (dresserID == dollID) outfitsMessage += "See " + WEB_DOMAIN + outfitsURL + " for more detailed information on outfits. ";
             outfitsMessage += "\n\n" + folderStatus();
 
             // Provide a dialog to user to choose new outfit
             debugSay(3, "DEBUG-CLOTHING", "Putting up Primary Menu in new directory");
-            cdListenMine(outfitsChannel);
+            cdListenAll(outfitsChannel);
             lmSendConfig("backMenu",(backMenu = MAIN));
             llDialog(dresserID, outfitsMessage, dialogSort(newOutfitsList), outfitsChannel);
             canDressTimeout = 1;
