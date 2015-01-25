@@ -606,17 +606,16 @@ default {
 
                 sendMsg(dollID, msg);
 
-                msg = "This is " +
+                msg =
 #ifdef DEVELOPER_MODE
-                      "a Developer" +
+                      "This is a Developer Key. Treat it with tender loving care: polish once a week, and oil four times a year.";
 #else
 #ifdef ADULT_MODE
-                      "an Adult" +
+                      "This is an Adult Key. Treat it with tender loving care: polish once a week, and oil four times a year.";
 #else
-                      "a Child" +
+                      "This is a Child Key. Tell your Parent or Guardian or other Trusted Adult to polish it once a week, and oil it four times a year.";
 #endif
 #endif
-                      " Key. Treat it with tender loving care: polish once a week, and oil four times a year.";
 
                 sendMsg(dollID, msg);
 

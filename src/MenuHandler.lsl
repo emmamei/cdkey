@@ -870,7 +870,11 @@ default {
                 }
                 // Item before Space is NOT a Check or Cross -- so must be either
                 // a "circle plus" or "circle minus" or the word "List"
+#ifdef ADULT_MODE
                 else if ((afterSpace == "Blacklist") || (afterSpace == "Controller")) {
+#else
+                else if ((afterSpace == "Blacklist") || (afterSpace == "Parent")) {
+#endif
                     integer activeChannel; string msg;
                     lmSendConfig("backMenu",(backMenu = "Access..."));
 
@@ -937,6 +941,9 @@ default {
                     }
                     else if (beforeSpace == CIRCLE_MINUS) {
                         if (dialogKeys == []) {
+#ifndef ADULT_MODE
+                            if (msg = "controller list") msg = "parent list";
+#endif
                             msg = "Your " + msg + " is empty.";
                             llRegionSayTo(id, 0, msg);
                             return;
@@ -952,6 +959,10 @@ default {
                     }
                     else if (beforeSpace == "List") {
                         if (dialogNames == []) {
+#ifndef ADULT_MODE
+                            if (msg = "controller list") msg = "parent list";
+#endif
+
                             if (cdIsDoll(id)) msg = "Your " + msg + " is empty.";
                             else msg = "Doll's " + msg + " is empty.";
                         }

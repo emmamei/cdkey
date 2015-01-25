@@ -358,12 +358,18 @@ default {
                 lmSendToAgent("Here is your link to the Community Dolls group profile: " + WEB_GROUP, id);
 
             else if (choice == "Access...") {
-                msg = "Key Access Menu.\n\n" +
-                             "These are powerful options allowing you to give someone total control of your key or block someone from touch or even winding your key. Good dollies should read their key help before adjusting these options. You have " + (string)cdControllerCount() + " and " + (string)llGetListLength(blacklist) + " people on the blacklist.
+                msg =
+#ifdef ADULT_MODE
+                      "Key Access Menu.\n\nThese are powerful options allowing you to give someone total control of your key or to block someone from touching or even winding your key. Good dollies should read their key help before adjusting these options.
                              
 Blacklist - Block a person from using the key entirely (even winding!)
 Controller - Take care choosing your controllers; they have great control over Dolly and cannot be removed by you";
-
+#else
+                      "Key Access Menu.\n\nThese are powerful options allowing you to give someone total parental control of your key or block someone from touching or even winding your key. Good dollies should read their key help before adjusting these options.
+                             
+Blacklist - Block a person from using the key entirely (even winding!)
+Parent - Take care choosing your parents; they have great control over Dolly and cannot be removed by you";
+#endif
                 list plusList;
 
                 // This complicated setup really isnt: it follows these rules:
@@ -378,7 +384,11 @@ Controller - Take care choosing your controllers; they have great control over D
                 // Why allow listing an empty list? It is a way of confirming status to the
                 // viewer, with the appropriate message (already provided for)
                 //
+#ifdef ADULT_MODE
                 if ((cdIsController(id)) && (cdControllerCount() > 0)) plusList = [ "⊖ Controller" ];
+#else
+                if ((cdIsController(id)) && (cdControllerCount() > 0)) plusList = [ "⊖ Parent" ];
+#endif
 
                 if (cdIsDoll(id)) {
                     plusList += [ "⊕ Blacklist", "List Blacklist" ];
@@ -388,10 +398,18 @@ Controller - Take care choosing your controllers; they have great control over D
                     debugSay(5,"DEBUG-AUX","Blacklist length: " + (string)llGetListLength(blacklist) + " >> " + llDumpList2String(blacklist,","));
 #endif
 
+#ifdef ADULT_MODE
                     plusList += [ "⊕ Controller" ];
+#else
+                    plusList += [ "⊕ Parent" ];
+#endif
                 }
 
+#ifdef ADULT_MODE
                 plusList +=  "List Controller";
+#else
+                plusList +=  "List Parent";
+#endif
 
                 lmSendConfig("backMenu",(backMenu = "Options..."));
                 cdDialogListen();
