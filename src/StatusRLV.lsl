@@ -156,16 +156,17 @@ default {
 
                 // This can happen...
                 if (commandString == "" || commandString == "0") {
-                    llSay(DEBUG_CHANNEL,"command empty! :" + script);
+                    llSay(DEBUG_CHANNEL,"requested RLV command from " + script + " is empty!");
                     return;
                 }
 
                 if (llStringLength(commandString) > CHATMSG_MAXLEN) {
-                    llSay(DEBUG_CHANNEL,"command string too long! :" + script + ":(" + commandString + ")");
+                    llSay(DEBUG_CHANNEL,"requested RLV command (" + commandString + ") from " + script + " is too long!");
                     return;
                 }
 
                 llOwnerSay("@" + commandString);
+                debugSay(4,"DEBUG-STATUSRLV","rlvCommand (refresh) activated");
                 lmInternalCommand("storeRLV",script + "|" + commandString,NULL_KEY);
             }
 #ifdef DEVELOPER_MODE
