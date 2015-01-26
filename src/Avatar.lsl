@@ -986,11 +986,12 @@ default {
     // AT TARGET
     //----------------------------------------
     at_target(integer num, vector target, vector me) {
-        // Clear old targets to ensure there is only one
-        llTargetRemove(targetHandle);
-        llStopMoveToTarget();
 
         if (hasCarrier) {
+            // Clear old targets to ensure there is only one
+            llTargetRemove(targetHandle);
+            llStopMoveToTarget();
+
             if (keyAnimation == "") {
                 // Get updated position and set target
                 carrierPos = llList2Vector(llGetObjectDetails(carrierID, [OBJECT_POS]), 0);
@@ -1000,14 +1001,14 @@ default {
                 if (lockPos) lockPos = llGetPos();
                 targetHandle = llTarget(lockPos, 0.5);
             }
-        }
 
-        if (carryMoved) {
-            vector pointTo = target - llGetPos();
-            float  turnAngle = llAtan2(pointTo.x, pointTo.y);
+            if (carryMoved) {
+                vector pointTo = target - llGetPos();
+                float  turnAngle = llAtan2(pointTo.x, pointTo.y);
 
-            lmRunRLV("setrot:" + (string)(turnAngle) + "=force");
-            carryMoved = 0;
+                lmRunRLV("setrot:" + (string)(turnAngle) + "=force");
+                carryMoved = 0;
+            }
         }
     }
 
