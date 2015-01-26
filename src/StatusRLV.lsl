@@ -39,6 +39,7 @@ list rlvRestrictions;
 string scriptName;
 integer statusChannel = 55117;
 integer statusHandle;
+integer rlvCmdIssued;
 
 //========================================
 // FUNCTIONS
@@ -124,8 +125,11 @@ default {
                 string commandString = cdListElement(split, 1);
                 list tmpList;
 
-                //tmpList = llParseString2List(split, [","], []);
-                //rlvRestrictions += [ script, commandString ];
+                // if rlvCmdIssued is 0, that means that
+                // no command has gone out since we ran last....
+                // so ignore it.
+                if (rlvCmdIssued) rlvCmdIssued = 0;
+                else return;
 
                 // Here we're just getting current RLV restrictions
                 statusHandle = cdListenMine(statusChannel);
@@ -167,6 +171,7 @@ default {
 
                 llOwnerSay("@" + commandString);
                 debugSay(4,"DEBUG-STATUSRLV","rlvCommand (refresh) activated");
+                rlvCmdIssued = 1;
                 lmInternalCommand("storeRLV",script + "|" + commandString,NULL_KEY);
             }
 #ifdef DEVELOPER_MODE
