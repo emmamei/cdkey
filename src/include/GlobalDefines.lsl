@@ -206,7 +206,7 @@ list BuiltinControllers = BUILTIN_CONTROLLERS;
 #define cdPoseAnim()                    (keyAnimation != "" && keyAnimation != ANIMATION_COLLAPSED)
 #define cdPosed()			(!collapsed && keyAnimation != "")
 #define cdSelfPosed()			(poserID == dollID)
-#define cdWindDown()			(!collapsed && cdAttached() && (dollType != "Builder") && (dollType != "Key"))
+#define cdWindDown()			(!collapsed && cdAttached() && (dollType != "Builder"))
 #define cdRunTimer()			(configured && cdAttached() && RLVchecked)
 #define cdMyScriptName()		llGetScriptName()
 #define cdMyScriptLine()		(string)__LINE__
