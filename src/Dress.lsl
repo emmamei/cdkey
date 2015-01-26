@@ -116,10 +116,11 @@ integer outfitPage; // zero-indexed
 list outfitsPage(list outfitList) {
     integer newOutfitCount = llGetListLength(outfitList) - 1;
     integer currentIndex = (outfitPage - 1) * OUTFIT_PAGE_SIZE;
+    integer currentEnd;
 
     // Print the page contents - note that this happens even before
     // any dialog is put up
-    integer n = 9;
+    integer n;
     string chat;
     list output;
     string outfitName;
@@ -127,10 +128,11 @@ list outfitsPage(list outfitList) {
 
     tmpList = llList2List(outfitsList, currentIndex, currentIndex + 8);
     n = llGetListLength(tmpList);
+    currentEnd = currentIndex + n - 1;
     debugSay(3, "DEBUG-DRESS", "tmpList = (" + (string)n + ")" + llDumpList2String(tmpList,","));
 
     while (n--) {
-        outfitName = (string)(currentIndex + 9 - n) + ". " + cdListElement(tmpList, 8 - n);
+        outfitName = (string)(currentEnd - n + 1) + ". " + cdListElement(tmpList, currentEnd - n);
         debugSay(3, "DEBUG-DRESS", "outfitName = " + outfitName);
         chat += "\n" + outfitName;
         output += [ llGetSubString(outfitName, 0, 23) ];
