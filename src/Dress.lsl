@@ -116,11 +116,12 @@ integer outfitPage; // zero-indexed
 list outfitsPage(list outfitList) {
     integer newOutfitCount = llGetListLength(outfitList) - 1;
     integer currentIndex = (outfitPage - 1) * OUTFIT_PAGE_SIZE;
-    integer currentEnd;
+    integer tmpEnd;
 
     // Print the page contents - note that this happens even before
     // any dialog is put up
     integer n;
+    integer x;
     string chat;
     list output;
     string outfitName;
@@ -128,19 +129,30 @@ list outfitsPage(list outfitList) {
 
     tmpList = llList2List(outfitsList, currentIndex, currentIndex + 8);
     n = llGetListLength(tmpList);
-    currentEnd = currentIndex + n - 1;
+    tmpEnd = n - 1;
+
     debugSay(3, "DEBUG-DRESS", "tmpList = (" + (string)n + ")" + llDumpList2String(tmpList,","));
 
     while (n--) {
-        outfitName = (string)(currentEnd - n + 1) + ". " + cdListElement(tmpList, currentEnd - n);
-        debugSay(3, "DEBUG-DRESS", "outfitName = " + outfitName);
+        x = tmpEnd - n;
+
+        // The first number (shown to user) has to not only
+        // be one indexed, but be offset by the page.
+        //
+        // x ................ current list index (0 - max)
+        // +1 ............... convert to 1-index
+        // +currentIndex .... offset by currentPage index
+        outfitName = (string)(currentIndex + x + 1) + ". " + cdListElement(tmpList, x);
+
+        debugSay(3, "DEBUG-DRESS", "outfitName #" + (string)x + "= " + outfitName);
+
         chat += "\n" + outfitName;
-        output += [ llGetSubString(outfitName, 0, 23) ];
+        output += (list)llGetSubString(outfitName, 0, 23);
     }
 
     llRegionSayTo(dresserID, 0, chat);
 
-    return output;
+    return llListSort(output,1,1);
 }
 
 retryDirSearch() {
@@ -814,10 +826,10 @@ default {
                     //debugSay(6, "DEBUG-DRESS", ">>> Dress Menu: " + choice);
 #ifdef ROLLOVER
                     outfitPage++;
-                    if (outfitPage * OUTFIT_PAGE_SIZE > llGetListLength(outfitsList))
+                    if ((outfitPage - 1) * OUTFIT_PAGE_SIZE > llGetListLength(outfitsList))
                         outfitPage = 1;
 #else
-                    if ((outfitPage + 1) * OUTFIT_PAGE_SIZE < llGetListLength(outfitsList))
+                    if (outfitPage * OUTFIT_PAGE_SIZE < llGetListLength(outfitsList))
                         outfitPage++;
 #endif
                 }
@@ -1093,7 +1105,7 @@ default {
             if (dresserID == dollID) outfitsMessage = "You may choose any outfit to wear. ";
             else outfitsMessage = "You may choose any outfit for dolly to wear. ";
 
-            if (totalOutfits > 0) outfitsMessage += ("There are " + (string)totalOutfits + " outfits to choose from. ");
+            //if (totalOutfits > 0) outfitsMessage += ("There are " + (string)totalOutfits + " outfits to choose from. ");
 #ifdef DEVELOPER_MODE
             //else llSay(DEBUG_CHANNEL,"No outfits in this directory?");
 #endif
