@@ -421,14 +421,14 @@ default {
                             // permitted: this is appropriate.
 
                             if (isDoll) {
-                                if (canDressSelf && keyAnimation == "") menu += "Outfits...";
+                                if (canDressSelf && keyAnimation == "" && !hardcore) menu += "Outfits...";
                             }
                             else {
-                                if (allowDress || isController) menu += "Outfits...";
+                                if (hardcore || allowDress || isController) menu += "Outfits...";
                             }
                         }
 
-                        if (allowDress && keyAnimation == "") menu += "Types...";
+                        if ((hardcore || allowDress) && keyAnimation == "") menu += "Types...";
 
                         if (keyAnimation != "") {
                             msg += "Doll is currently posed. ";

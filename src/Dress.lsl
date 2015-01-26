@@ -1143,7 +1143,7 @@ default {
 
                 // Try to attach again
                 string rlvCmd = "detachallthis:" + outfitsFolder + "=n,attachallover:" + wearFolder + "=force";
-                if (!canDressSelf || afk || collapsed || wearLock) rlvCmd = "attachallthis:=y," + rlvCmd + ",attachallthis:=n";
+                if (!canDressSelf || hardcore || afk || collapsed || wearLock) rlvCmd = "attachallthis:=y," + rlvCmd + ",attachallthis:=n";
                 lmRunRLV(rlvCmd);
 
                 checkWornItems(wearFolder);
@@ -1195,7 +1195,7 @@ default {
 
                 string rlvCmd = "attachallthis:" + outfitsFolder + "=n,detachall:" + unwearFolder + "=force";
                 // Try again: attach stuff in the outfitsFolder, and remove things in unwearFolder
-                if (!canDressSelf || afk || collapsed || wearLock) rlvCmd = "detachallthis:=y," + rlvCmd + "detachallthis:=n";
+                if (!canDressSelf || hardcore || afk || collapsed || wearLock) rlvCmd = "detachallthis:=y," + rlvCmd + "detachallthis:=n";
                 lmRunRLV(rlvCmd);
 
                 checkRemovedItems(unwearFolder);

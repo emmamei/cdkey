@@ -176,18 +176,18 @@ activateRLVBase() {
 
     lmRunRLVas("Base", baseRLV);
 
-    if (!canDressSelf || collapsed || wearLock || afk) {
 #ifdef LOCKON
+    if (!canDressSelf || hardcore || collapsed || wearLock || afk) {
         // Lock outfit down tight
         lmRunRLVas("Dress", "unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
-#else
-        // Don't lock on developers
-        lmRunRLVas("Dress", "unsharedwear=y,unsharedunwear=y,attachallthis:=y,detachallthis:=y");
-#endif
     }
     else {
         lmRunRLVas("Dress", "unsharedwear=y,unsharedunwear=y,attachallthis:=y,detachallthis:=y");
     }
+#else
+    // Don't lock on developers
+    lmRunRLVas("Dress", "unsharedwear=y,unsharedunwear=y,attachallthis:=y,detachallthis:=y");
+#endif
 }
 
 // Activate RLV settings
@@ -415,8 +415,16 @@ default {
                 if ((i = llListFindList(exceptions, (list)dollID)) != NOT_FOUND)
                     llDeleteSubList(exceptions, i, i);
 
-                // Directly dump the list using the static parts of the RLV command as a seperator; no looping needed
+                // Restrictions (and exceptions)
+                //
+                //    TPLure: being transported to a TP sent by a friend
+                //  AcceptTP: being able to accept a TP
+                //    SendIM: being able to send an IM to someone
+                //    RecvIM: being able to recieve an IM from someone
+                //  RecvChat: being able to recieve a chat message from someone
+                // RecvEmote: being able to recieve an emote from someone
 
+                // Directly dump the list using the static parts of the RLV command as a seperator; no looping needed
                 lmRunRLVas("Base", "clear=tplure:,tplure:"          + llDumpList2String(exceptions, "=add,tplure:")    + "=add");
                 lmRunRLVas("Base", "clear=accepttp:,accepttp:"      + llDumpList2String(exceptions, "=add,accepttp:")  + "=add");
                 lmRunRLVas("Base", "clear=sendim:,sendim:"          + llDumpList2String(exceptions, "=add,sendim:")    + "=add");

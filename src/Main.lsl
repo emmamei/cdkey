@@ -705,7 +705,7 @@ default {
             collapse(collapsed);
 
             if (RLVok) {
-                if (!allowDress) llOwnerSay("The public cannot dress you.");
+                if (!allowDress && !hardcore) llOwnerSay("The public cannot dress you.");
             }
             else {
                 llOwnerSay("Without RLV, you cannot be dressed in new outfits.");
