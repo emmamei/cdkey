@@ -675,18 +675,26 @@ default {
                 string mins = (string)llFloor(windAmount / SEC_TO_MIN);
                 string percent = formatFloat((float)timeLeftOnKey * 100.0 / (float)effectiveLimit, 1);
 
-                // We're trying to avoid having name obliterated by RLV viewers
-                // Note this makes no difference to waiting events, just other scripts
-                if (collapsed == 0) llSleep(0.5);
+                // We're assuming that every winder has a non-null name, and every
+                // auto-wind has a null name... is that really true?
+                if (name != "") {
 
-                llOwnerSay("Your key has been turned by " + name + " giving you " +
-                    mins + " more minutes of life (" + percent + "% capacity).");
+                    // We're trying to avoid having name obliterated by RLV viewers
+                    // Note this makes no difference to waiting events, just other scripts
+                    if (collapsed == 0) llSleep(0.5);
+
+                    llOwnerSay("Your key has been turned by " + name + " giving you " +
+                        mins + " more minutes of life (" + percent + "% capacity).");
 
 #ifdef DEVELOPER_MODE
-                llSay(DEBUG_CHANNEL, "Wind: " + mins + " mins (" + percent + "%) by \"" + name + "\"");
+                    llSay(DEBUG_CHANNEL, "Wind: " + mins + " mins (" + percent + "%) by \"" + name + "\"");
 #endif
-                lmSendToAgent("You turn " + dollDisplayName + "'s Key, and " + pronounSheDoll + " receives " +
-                    mins + " more minutes of life (" + percent + "% capacity).", id);
+                    lmSendToAgent("You turn " + dollDisplayName + "'s Key, and " + pronounSheDoll + " receives " +
+                        mins + " more minutes of life (" + percent + "% capacity).", id);
+                }
+                else {
+                    llOwnerSay("Your key turns automatically, ggiving you an additional " + mins + " minutes of life.");
+                }
             }
         }
         else if (code == RLV_RESET) {
