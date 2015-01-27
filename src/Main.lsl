@@ -159,7 +159,7 @@ collapse(integer newCollapseState) {
     }
 
     // set gem colour to gray
-    lmInternalCommand("setGemColour", "<160.0,160.0,160.0>", NULL_KEY);
+    lmInternalCommand("setGemColour", "<0.867, 0.867, 0.867>", NULL_KEY);
     debugSay(3,"DEBUG-MAIN","Entering new collapse state (" + (string)newCollapseState + ") with time left of " + (string)timeLeftOnKey);
 
     string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
