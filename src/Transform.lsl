@@ -392,20 +392,22 @@ default {
 
         //----------------------------------------
         // UPDATE HOVERTEXT
+        //
+        // every 30s or every 60s is too slow
 
         // Update sign if appropriate
-        string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
-
-             if (collapsed)   { cdSetHovertext("Disabled Dolly!",        ( RED    )); }
-        else if (afk)         { cdSetHovertext(dollType + " Doll (AFK)", ( YELLOW )); }
-        else if (hoverTextOn) { cdSetHovertext(dollType + " Doll",       ( WHITE  )); }
-        else                  { cdSetHovertext("",                       ( WHITE  )); }
+        //string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
+        //
+        //     if (collapsed)   { cdSetHovertext("Disabled Dolly!",        ( RED    )); }
+        //else if (afk)         { cdSetHovertext(dollType + " Doll (AFK)", ( YELLOW )); }
+        //else if (hoverTextOn) { cdSetHovertext(dollType + " Doll",       ( WHITE  )); }
+        //else                  { cdSetHovertext("",                       ( WHITE  )); }
 
         //----------------------------------------
         // AUTO AFK TRIGGERS
 
         // if we can AFK, check for auto AFK triggers
-        if (canAFK && !afk) {
+        if (canAFK) {
             integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0);
 
             // When Dolly is "away" - enter AFK

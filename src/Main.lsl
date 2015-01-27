@@ -101,6 +101,7 @@ setAfk(integer setting) {
     setWindRate();
 
     if (setting != 2) {
+        // setting is either 0 (FALSE) or 1 (TRUE)
         integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0);
 
         if (dollAway != afk) autoAFK = 0;
@@ -612,7 +613,6 @@ default {
             }
             else if (name == "afk") {
                 setAfk((integer)value);
-                //lmSendConfig("afk", (string)afk);
             }
             else if (name == "timeLeftOnKey") {
                 timeLeftOnKey = (float)value;
