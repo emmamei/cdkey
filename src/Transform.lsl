@@ -111,10 +111,9 @@ setDollType(string stateName, integer automated) {
 
     // Look for Notecard for the Doll Type and start reading it if showPhrases is enabled
     //
-    // Builder and Key types don't allow for Notecard Hypno - this is also left in even
-    // if Key type is unused, as it disallows the Key Type altogether
+    // Builder types don't allow for Notecard Hypno
     if (showPhrases) {
-        if (stateName != "Builder" && stateName != "Key") {
+        if (stateName != "Builder") {
             if (llGetInventoryType(typeNotecard) == INVENTORY_NOTECARD) {
 
                 kQuery = llGetNotecardLine(typeNotecard,readLine++);
@@ -130,7 +129,12 @@ setDollType(string stateName, integer automated) {
     }
 
     // Dont lock transformation if is automated (or is a Builder Dolly)
-    if (!automated && stateName != "Builder") transformLockExpire = llGetUnixTime() + TRANSFORM_LOCK_TIME;
+    if (!automated
+#ifdef DEVELOPER_MODE
+        && stateName != "Builder"
+#endif
+        ) transformLockExpire = llGetUnixTime() + TRANSFORM_LOCK_TIME;
+
     else transformLockExpire = 0;
     lmSendConfig("transformLockExpire",(string)transformLockExpire);
 
@@ -140,9 +144,6 @@ setDollType(string stateName, integer automated) {
     if (!quiet) cdChat(dollName + " has become a " + dollType + " Doll.");
     else llOwnerSay("You have become a " + dollType + " Doll.");
 
-    // The Key Dolly is not allowed to have outfits so
-    // no search for Type is warranted; note that
-    // the Builder can have outfits if they like.
     typeFolder = "";
 
     outfitSearchTries = 0;
@@ -177,8 +178,11 @@ reloadTypeNames() {
             // The Slut model is allowed (in a normal fashion)
             // if this is an ADULT key
             //
+            // Note that the Builder type is disallowed here:
+            // if it is a valid type, it is added later; Builder
+            // types shouldn't have a notecard
+            //
             if (   (typeName != "Builder")
-                && (typeName != "Key")
 #ifndef ADULT_MODE
                 && (typeName != "Slut")
 #endif
@@ -201,7 +205,9 @@ reloadTypeNames() {
     if (simRating == "MATURE" || simRating == "ADULT")
         if (llListFindList(types, (list)"Slut") == NOT_FOUND) types += [ "Slut" ];
 #endif
-    if (cdDollyIsBuiltinController(transformerID)) { types += [ "Builder" ]; showPhrases = 0; }
+#ifdef DEVELOPER_MODE
+    types += [ "Builder" ];
+#endif
 }
 
 // Folders need to be searched for: the outfits folder, and the
