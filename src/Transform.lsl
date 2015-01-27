@@ -195,7 +195,6 @@ reloadTypeNames() {
     //   - Display: Notecard is ok but not needed
     //   - Slut: rejects type even if Notecard is present if not ADULT, else Notecard ok but not needed
     //   - Builder: rejects Notecards entirely
-    //   - Key: rejects Notecards entirely
     //
     if (llListFindList(types, (list)"Display") == NOT_FOUND) types += [ "Display" ];
 #ifdef ADULT_MODE
