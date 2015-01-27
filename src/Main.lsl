@@ -112,6 +112,7 @@ setAfk(integer setting) {
     // a single value
     lmSendConfig("afk", (string)(afk = (setting != 0)));
     lmSendConfig("autoAFK", (string)autoAFK);
+    lmInternalCommand("setHovertext", "", llGetKey());
 }
 
 uncollapse() {
