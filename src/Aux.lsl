@@ -204,43 +204,49 @@ default {
             // Note that this section will be empty except in Adult Mode...
             if (cmd == "setGemColour") {
                 vector newColour = (vector)llList2String(split, 0);
-                integer j; integer s; list params; list colourParams;
+
+                if (newColor == gemColour) return;
+
+                integer j; integer shaded; list params; list colourParams;
                 integer n; integer m;
+                integer index;
+                integer index2;
+                vector shade;
 
                 n = llGetNumberOfPrims();
-                for (i = 1; i < n; i++) {
-                    params += [ PRIM_LINK_TARGET, i ];
-                    if (llGetSubString(llGetLinkName(i), 0, 4) == "Heart") {
-                        if (gemColour != newColour) {
-                            if (!s) {
-                                m = llGetLinkNumberOfSides(i);
-                                for (j = 0; j < m; j++) {
-                                    vector shade = <llFrand(0.2) - 0.1 + newColour.x,
-                                                    llFrand(0.2) - 0.1 + newColour.y,
-                                                    llFrand(0.2) - 0.1 + newColour.z>  * (1.0 + (llFrand(0.2) - 0.1));
+                i = n;
+                while (i--) {
+                    index = n - i - 1;
+                    params += [ PRIM_LINK_TARGET, index ];
 
-                                    if (shade.x < 0.0) shade.x = 0.0;
-                                    if (shade.y < 0.0) shade.y = 0.0;
-                                    if (shade.z < 0.0) shade.z = 0.0;
+                    if (llGetSubString(llGetLinkName(index), 0, 4) == "Heart") {
+                        if (!shaded) {
+                            m = llGetLinkNumberOfSides(index);
+                            j = m;
+                            while (j--) {
+                                shade = <llFrand(0.2) - 0.1 + newColour.x,
+                                         llFrand(0.2) - 0.1 + newColour.y,
+                                         llFrand(0.2) - 0.1 + newColour.z>  * (1.0 + (llFrand(0.2) - 0.1));
 
-                                    if (shade.x > 1.0) shade.x = 1.0;
-                                    if (shade.y > 1.0) shade.y = 1.0;
-                                    if (shade.z > 1.0) shade.z = 1.0;
+                                if (shade.x < 0.0) shade.x = 0.0;
+                                if (shade.y < 0.0) shade.y = 0.0;
+                                if (shade.z < 0.0) shade.z = 0.0;
 
-                                    colourParams += [ PRIM_COLOR, j, shade, 1.0 ];
-                                }
-                                params += colourParams;
-                                s = 1;
+                                if (shade.x > 1.0) shade.x = 1.0;
+                                if (shade.y > 1.0) shade.y = 1.0;
+                                if (shade.z > 1.0) shade.z = 1.0;
+
+                                colourParams += [ PRIM_COLOR, m - j - 1, shade, 1.0 ];
                             }
-                            else params += colourParams;
+                            shaded = TRUE;
                         }
+                        params += colourParams;
                     }
                 }
+
+                // params was just built up: so now use it to set colors
                 llSetLinkPrimitiveParamsFast(0, params);
-                if (gemColour != newColour) {
-                    lmSendConfig("gemColour", (string)(gemColour = newColour));
-                }
-                params = [];
+                lmSendConfig("gemColour", (string)(gemColour = newColour));
             }
 #ifdef ADULT_MODE
             else if (cmd == "strip") {
@@ -529,6 +535,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 string choice = (string)llList2Vector(COLOR_VALUE, index);
 
                 lmInternalCommand("setGemColour", choice, id);
+                baseGemColour = choice;
                 lmMenuReply("Gem Colour...", llGetDisplayName(id), id);
             }
 

@@ -91,6 +91,7 @@ integer debugLevel          = DEBUG_LEVEL;
 integer dialogChannel;
 integer dialogHandle;
 
+vector baseGemColour;  // when we play with the Gem Colour, this marks the original
 vector gemColour;
 #endif // COMMON_GLOBALS
 
