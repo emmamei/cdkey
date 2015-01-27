@@ -569,7 +569,7 @@ default {
             }
             else if (name == "quiet")                           quiet = (integer)value;
             else if (name == "hardcore")                     hardcore = (integer)value;
-            else if (name == "hoverTextOn")               hoverTextOn = (integer)value;
+            else if (name == "hovertextOn")               hovertextOn = (integer)value;
             else if (name == "busyIsAway")                 busyIsAway = (integer)value;
             else if (name == "baseWindRate")             baseWindRate = (float)value;
             else if (name == "keyAnimation")             keyAnimation = value;

@@ -400,7 +400,7 @@ default {
         //
         //     if (collapsed)   { cdSetHovertext("Disabled Dolly!",        ( RED    )); }
         //else if (afk)         { cdSetHovertext(dollType + " Doll (AFK)", ( YELLOW )); }
-        //else if (hoverTextOn) { cdSetHovertext(dollType + " Doll",       ( WHITE  )); }
+        //else if (hovertextOn) { cdSetHovertext(dollType + " Doll",       ( WHITE  )); }
         //else                  { cdSetHovertext("",                       ( WHITE  )); }
 
         //----------------------------------------
@@ -482,7 +482,7 @@ default {
             else if (name == "quiet")                           quiet = (integer)value;
             else if (name == "hardcore")                     hardcore = (integer)value;
             else if (name == "backMenu")                     backMenu = value;
-            else if (name == "hoverTextOn")               hoverTextOn = (integer)value;
+            else if (name == "hovertextOn")               hovertextOn = (integer)value;
             else if (name == "collapsed")                   collapsed = (integer)value;
             else if (name == "busyIsAway")                 busyIsAway = (integer)value;
             else if (name == "controllers") {

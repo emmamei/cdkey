@@ -237,7 +237,7 @@ default {
                 else if (name == "pronounSheDoll")         pronounSheDoll = value;
             }
             else if (name == "quiet")                           quiet = (integer)value;
-            else if (name == "hoverTextOn")                         hoverTextOn = (integer)value;
+            else if (name == "hovertextOn")                         hovertextOn = (integer)value;
             else if (name == "isVisible") {
                 visible = (integer)value;
                 llSetLinkAlpha(LINK_SET, (float)visible, ALL_SIDES);
@@ -825,7 +825,7 @@ default {
                             else {
                                 //----------------------------------------
                                 // Operations
-                                     if (afterSpace == "Type Text")     lmSendConfig("hoverTextOn",   (string)isX);
+                                     if (afterSpace == "Type Text")     lmSendConfig("hovertextOn",   (string)isX);
                                 else if (afterSpace == "Quiet Key")     lmSendConfig("quiet",         (string)(quiet = isX));
                                 else if (afterSpace == "Phrases")       lmSendConfig("showPhrases",   (string)(showPhrases = isX));
 #ifdef HOMING_BEACON

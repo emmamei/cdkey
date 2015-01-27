@@ -474,7 +474,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 list plusList = [];
 
                 plusList += cdGetButton("Quiet Key", id, quiet, 0);
-                plusList += cdGetButton("Type Text", id, hoverTextOn, 0);
+                plusList += cdGetButton("Type Text", id, hovertextOn, 0);
                 plusList += cdGetButton("Warnings", id, doWarnings, 0);
                 plusList += cdGetButton("Phrases", id, showPhrases, 0);
 #ifdef HOMING_BEACON

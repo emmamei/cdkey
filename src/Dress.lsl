@@ -418,7 +418,7 @@ default {
             }
             else if (name == "afk")                                  afk = (integer)value;
             else if (name == "RLVok")                              RLVok = (integer)value;
-            else if (name == "hoverTextOn")                  hoverTextOn = (integer)value;
+            else if (name == "hovertextOn")                  hovertextOn = (integer)value;
             else if (name == "pronounHerDoll")            pronounHerDoll = value;
             else if (name == "pronounSheDoll")            pronounSheDoll = value;
             else if (c == "c") {
@@ -684,7 +684,7 @@ default {
 
                      if (collapsed)   { cdSetHovertext("Disabled Dolly!",        ( RED    )); }
                 else if (afk)         { cdSetHovertext(dollType + " Doll (AFK)", ( YELLOW )); }
-                else if (hoverTextOn) { cdSetHovertext(dollType + " Doll",       ( WHITE  )); }
+                else if (hovertextOn) { cdSetHovertext(dollType + " Doll",       ( WHITE  )); }
                 else                  { cdSetHovertext("",                       ( WHITE  )); }
             }
             else if (cmd == "carriedMenu") {
