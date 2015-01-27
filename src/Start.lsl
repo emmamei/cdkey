@@ -678,6 +678,7 @@ default {
     // ON REZ
     //----------------------------------------
     on_rez(integer start) {
+        llResetTime();
         dollID = llGetOwner();
         dollName = llGetDisplayName(dollID);
 
@@ -687,7 +688,7 @@ default {
         RLVok = UNSET;
 
         setWindRate();
-        llResetTime();
+        lmInternalCommand("setGemColour", (string)baseGemColour, llGetKey());
     }
 
     //----------------------------------------
