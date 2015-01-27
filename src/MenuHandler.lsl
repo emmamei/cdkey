@@ -101,33 +101,26 @@ doDialogChannelWithReset() {
 
 doDialogChannel() {
     if (dialogChannel != 0) {
-        // This assumes that if dialogChannel is set, it is open
         cdListenerActivate(dialogHandle);
-        lmSendConfig("dialogChannel", (string)(dialogChannel));
-        return;
+    }
+    else {
+        dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGenerateKey(), -7, -1));
+        dialogHandle = cdListenAll(dialogChannel);
+        cdListenerDeactivate(dialogHandle);
     }
 
-    // generate a uniqueID for dolly to use
-    lmSendConfig("uniqueID", (string)(uniqueID = llGenerateKey()));
-
-    integer generateChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)uniqueID, -7, -1));
-
-    dialogChannel = generateChannel;
     blacklistChannel = dialogChannel - BLACKLIST_CHANNEL_OFFSET;
     controlChannel = dialogChannel - CONTROL_CHANNEL_OFFSET;
+
     poseChannel = dialogChannel - POSE_CHANNEL_OFFSET;
     typeChannel = dialogChannel - TYPE_CHANNEL_OFFSET;
 
-    dialogHandle = cdListenAll(dialogChannel);
+    if (poseHandle != 0) llListenRemove(poseHandle);
+    if (typeHandle != 0) llListenRemove(typeHandle);
     poseHandle = cdListenAll(poseChannel);
     typeHandle = cdListenAll(typeChannel);
-    //llSleep(1); // settling time?
 
-    // Dont announce the channel until its open
     lmSendConfig("dialogChannel", (string)(dialogChannel));
-    //llSleep(2); // Make sure dialogChannel setting has time to propogate
-
-    cdListenerDeactivate(dialogHandle);
 }
 
 integer listCompare(list a, list b) {
@@ -593,6 +586,7 @@ default {
         if (blacklistHandle) { llListenRemove(blacklistHandle); blacklistHandle = 0; }
         if (controlHandle)   { llListenRemove(controlHandle);     controlHandle = 0; }
         if (poseHandle)      { llListenRemove(poseHandle);           poseHandle = 0; }
+        if (typeHandle)      { llListenRemove(typeHandle);           typeHandle = 0; }
 
         if (dialogHandle) cdListenerDeactivate(dialogHandle);
 
