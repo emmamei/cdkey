@@ -205,7 +205,7 @@ default {
             if (cmd == "setGemColour") {
                 vector newColour = (vector)llList2String(split, 0);
 
-                if (newColor == gemColour) return;
+                if (newColour == gemColour) return;
 
                 integer j; integer shaded; list params; list colourParams;
                 integer n; integer m;
@@ -535,7 +535,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 string choice = (string)llList2Vector(COLOR_VALUE, index);
 
                 lmInternalCommand("setGemColour", choice, id);
-                baseGemColour = choice;
+                baseGemColour = (vector)choice;
                 lmMenuReply("Gem Colour...", llGetDisplayName(id), id);
             }
 
