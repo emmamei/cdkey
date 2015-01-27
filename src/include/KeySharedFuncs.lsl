@@ -17,62 +17,39 @@ float lastTimerEvent;
 integer timerStarted;
 
 float setWindRate() {
-    //float newWindRate;
-    //vector agentPos = llList2Vector(llGetObjectDetails(dollID, [ OBJECT_POS ]), 0);
-    //integer agentInfo = llGetAgentInfo(dollID);
-
-    //newWindRate = baseWindRate;
-    //if (afk) newWindRate *= 0.5;
 
     windingDown = cdWindDown();
     windRate = baseWindRate;
 
     if (afk) windRate *= 0.5 * baseWindRate;
 
-    // There are three winding rates:
+    // There are several winding rates:
     //
     // baseWindRate is the basic rate when the Key is full-on and without
     //     restrictions or adjustments
-    //
-    // displayWindRate appears to be the rate the Key would be going at
-    //     if it was operating.
     //
     // windRate is the actual discernable Key winding rate. THIS is the
     //     amount of most importance, and the one that accounts for
     //     the Key's actual winding down - the others are "storage" to
     //     preserve other rates.
     //
-    // The difference between windRate and displayWindRate is that windRate
-    // can have a flag value of zero. The windRate value could be folded
-    // into the displayWindRate value and a flag of "windingDown" could be
-    // used instead - for clarity and simplicity and separation of meanings.
+    // Note that baseWindRate never changes in this function at all.
 
-    // This routine is not only setting the Wind Rate - but refreshing
-    // winding rate values on the wire - EVERY time. This needs to be
-    // segregated out into a different area as it is unrelated to this
-    // function.
-    //
-    // Note too that baseWindRate never changes in this function at all.
-    //
     broadcastWindRate();
 
-    // llTargetOmega: With normalized vector spinrate is equal to radians per second
+    // llTargetOmega: With normalized vector, spin rate is equal to radians per second
     // 2𝜋 radians per rotation.  This sets a normal rotation rate of 4 rpm about the
     // Z axis multiplied by the wind rate this way the key will visually run faster as
     // the dolly begins using their time faster.
+    //
     if (windingDown) llTargetOmega(<0.0, 0.0, 1.0>, windRate * TWO_PI / 8.0, 1);
     else             llTargetOmega(<0.0, 0.0, 1.0>,                     0.0, 1);
 
-    // Note that this is mostly irrelevant: this function is used to set
-    // the displayWindRate as a side effect anyway - so the return is useless,
-    // and setting the displayWindRate to the value returned is also useless.
-    //
     return windRate;
 }
 
 broadcastWindRate() {
     lmSendConfig("baseWindRate", (string)baseWindRate);
-    //lmSendConfig("displayWindRate", (string)displayWindRate);
     lmSendConfig("windRate", (string)windRate);
     lmSendConfig("windingDown", (string)windingDown);
 }
