@@ -40,7 +40,10 @@ float timerInterval;
 
 float rlvTimer;
 
-float afkSlowWalkSpeed = 5;
+// Note that this is not the "speed" nor is it a slowing factor
+// This is a vector of force applied against Dolly: headwind speed
+// is a good way to think of it
+float afkSlowWalkSpeed = 30;
 float animRefreshRate = 8.0;
 
 float nextRLVcheck;
