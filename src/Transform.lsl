@@ -651,7 +651,9 @@ default {
                 }
                 list choices;
 
-                choices += cdGetButton("Verify Type", id, mustAgreeToType, 0);
+                if (!hardcore)
+                    choices += cdGetButton("Verify Type", id, mustAgreeToType, 0);
+
                 choices += cdGetButton("Show Phrases", id, showPhrases, 0);
 
                 lmSendConfig("backMenu",(backMenu = "Options..."));
@@ -726,7 +728,7 @@ default {
             // "choice" is a valid Type: change to it as appropriate
             transform = "";
 
-            if (cdIsDoll(id) || cdIsController(id) || !mustAgreeToType) {
+            if (cdIsDoll(id) || cdIsController(id) || !mustAgreeToType || hardcore) {
                 // Doll (or a Controller) chose a Type - or no confirmation needed: just do it
                 transformedViaMenu = YES;
                 setDollType(choice, NOT_AUTOMATED);
