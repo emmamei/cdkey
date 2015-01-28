@@ -264,12 +264,6 @@ default {
             string cmd = llList2String(split, 0);
             split = llDeleteSubList(split, 0, 0);
 
-            // Deny access to the menus when the command was recieved from blacklisted avatar
-            //if (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND) {
-            //    lmSendToAgent("You are not permitted to access this key.", id);
-            //    return;
-            //}
-
             if (cmd == "dialogListen") {
 
                 doDialogChannel();
@@ -295,8 +289,6 @@ default {
                 isController    = cdIsController(id);
                 isDoll          = cdIsDoll(id);
                 numControllers  = cdControllerCount();
-
-                //if (startup) lmSendToAgent("Dolly's key is still establishing connections with " + pronounHerDoll + " systems please try again in a few minutes.", id);
 
                 if (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND) {
                     //msg = "You are not permitted any access to this dolly's key.";
@@ -665,11 +657,9 @@ default {
         //    name = filter by prim name
         //     key = filter by avatar key
         //  choice = filter by specific message
+
         // Deny access to the menus when the command was recieved from blacklisted avatar
-        if (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND) {
-            lmSendToAgent("You are not permitted to access this key.", id);
-            return;
-        }
+        if (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND) return;
 
         // Cache access test results
         integer hasCarrier      = cdCarried();
@@ -716,7 +706,7 @@ default {
                     if ((index = llListFindList(controllers, [ (string)id ])) != NOT_FOUND) {
                         controllers = llDeleteSubList(controllers, index, index + 1);
                         lmSendConfig("controllers", llDumpList2String(controllers, "|"));
-                        lmSendToAgent("You are no longer a controller of this Dolly.", id);
+                        cdSayTo("You are no longer a controller of this Dolly.", id);
                         llOwnerSay("Your controller " + name + " has relinquished control.");
                         //debugSay(5,"DEBUG-MENUHANDLER","id " + (string)id + " dropped from " + llDumpList2String(controllers,","));
                         debugSay(5,"DEBUG-MENUHANDLER","controllers = " + llDumpList2String(controllers,",") + " (" + (string)llGetListLength(controllers) + ")");

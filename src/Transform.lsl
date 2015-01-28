@@ -739,7 +739,7 @@ default {
                 // 3. Dolly must agree to Type...
 
                 // A member of the public chose a Type and confirmation is required
-                lmSendToAgent("Getting confirmation from Doll...",id);
+                cdSayTo("Getting confirmation from Doll...",id);
 
                 transform = choice; // save transformation Type
                 list choices = ["Transform", "Dont Transform", MAIN ];

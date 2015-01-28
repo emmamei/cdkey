@@ -284,7 +284,7 @@ default {
 
         if (RLVok == UNSET) {
             if (dollID != id) {
-                lmSendToAgent(dollName + "'s key clanks and clinks.... it doesn't seem to be ready yet.",id);
+                cdSayTo(dollName + "'s key clanks and clinks.... it doesn't seem to be ready yet.",id);
                 llOwnerSay(agentName + " is fiddling with your Key but the state of RLV is not yet determined.");
                 return;
             }
@@ -690,7 +690,7 @@ default {
 #ifdef DEVELOPER_MODE
                     llSay(DEBUG_CHANNEL, "Wind: " + mins + " mins (" + percent + "%) by \"" + name + "\"");
 #endif
-                    lmSendToAgent("You turn " + dollDisplayName + "'s Key, and " + pronounSheDoll + " receives " +
+                    cdSayTo("You turn " + dollDisplayName + "'s Key, and " + pronounSheDoll + " receives " +
                         mins + " more minutes of life (" + percent + "% capacity).", id);
                 }
                 else {
@@ -790,7 +790,7 @@ default {
                 // Test and reject repeat winding as appropriate - Controllers and Carriers are not limited
                 if (!(cdIsController(id) || cdIsCarrier(id))) {
                     if (!allowRepeatWind && (id == lastWinderID)) {
-                        lmSendToAgent("Dolly needs to be wound by someone else before you can wind " + pronounHerDoll + " again.", id);
+                        cdSayTo("Dolly needs to be wound by someone else before you can wind " + pronounHerDoll + " again.", id);
                         return;
                     }
                 }
@@ -841,7 +841,7 @@ default {
                         llOwnerSay("You have been fully wound by " + name + " - " + (string)llRound(effectiveLimit / (SEC_TO_MIN * windRate)) + " minutes remaining.");
 
                         if (!quiet) llSay(0, dollName + " has been fully wound by " + name + ". Thanks for winding Dolly!");
-                        else lmSendToAgent(dollName + " is now fully wound. Thanks for winding Dolly!", id);
+                        else cdSayTo(dollName + " is now fully wound. Thanks for winding Dolly!", id);
 
                     } else {
                         // by making the wind message an internal command (event), it helps
@@ -873,7 +873,7 @@ default {
 
                 if (windMins * SEC_TO_MIN > keyLimit) lmSendConfig("windMins", (string)(windMins = 30));
                 else lmSendConfig("windMins", (string)(windMins = (integer)choice));
-                lmSendToAgent("Winding now set to " + (string)windMins + " minutes",id);
+                cdSayTo("Winding now set to " + (string)windMins + " minutes",id);
                 lmMenuReply("Key...","",id);
             }
 
@@ -887,7 +887,7 @@ default {
                      (choice == "240m")) {
 
                 keyLimit = (float)choice * SEC_TO_MIN;
-                lmSendToAgent("Key limit now set to " + (string)llFloor(keyLimit / SEC_TO_MIN) + " minutes",id);
+                cdSayTo("Key limit now set to " + (string)llFloor(keyLimit / SEC_TO_MIN) + " minutes",id);
 
                 // if limit is less than time left on key, clip time remaining
                 if (timeLeftOnKey > keyLimit) timeLeftOnKey = keyLimit;
@@ -919,12 +919,12 @@ default {
 #ifdef JAMMABLE
             else if (choice == "Hold") {
                 collapse(JAMMED);
-                lmSendToAgentPlusDoll("Dolly freezes, " + pronounHerDoll + " key kept from turning",id);
+                cdSayTo("Dolly freezes, " + pronounHerDoll + " key kept from turning",id);
             }
 #endif
             else if (choice == "Unwind") {
                 collapse(NO_TIME);
-                lmSendToAgentPlusDoll("Dolly collapses, " + pronounHerDoll + " key unwound",id);
+                cdSayTo("Dolly collapses, " + pronounHerDoll + " key unwound",id);
             }
         }
         // Quick shortcut...

@@ -360,13 +360,13 @@ default {
                 else llGiveInventory(id, LANDMARK_CDHOME);
             }
             else if (choice == "Visit Development")
-                lmSendToAgent("Here is your link to the Community Doll Key development: " + WEB_DEV, id);
+                cdSayTo("Here is your link to the Community Doll Key development: " + WEB_DEV, id);
             else if (choice == "Visit Website")
-                lmSendToAgent("Here is your link to the Community Dolls blog: " + WEB_BLOG, id);
+                cdSayTo("Here is your link to the Community Dolls blog: " + WEB_BLOG, id);
             else if (choice == "Visit Blog")
-                lmSendToAgent("Here is your link to the Community Dolls website: " + WEB_DOMAIN, id);
+                cdSayTo("Here is your link to the Community Dolls website: " + WEB_DOMAIN, id);
             else if (choice == "Join Group")
-                lmSendToAgent("Here is your link to the Community Dolls group profile: " + WEB_GROUP, id);
+                cdSayTo("Here is your link to the Community Dolls group profile: " + WEB_GROUP, id);
 
             else if (choice == "Access...") {
                 msg =
@@ -647,10 +647,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
     //----------------------------------------
     listen(integer channel, string name, key id, string choice) {
         // Deny access to the key when the command was recieved from blacklisted avatar
-        if (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND) {
-            //lmSendToAgent("You are not permitted to access this key.", id);
-            return;
-        }
+        if (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND) return;
 
         name = llGetDisplayName(id);
 
@@ -725,7 +722,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
 #endif
             memList = llListSort(memList,1,1);
 
-            lmSendToAgent(memOutput + llDumpList2String(memList,""),memReportID);
+            cdSayTo(memOutput + llDumpList2String(memList,""),memReportID);
 
             memOutput = "Script Memory Status:";
             memReporting = 0;

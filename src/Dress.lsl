@@ -249,7 +249,7 @@ integer isDresser(key id) {
                 llOwnerSay("secondlife:///app/agent/" + (string)dresserID + "/about is looking at your dress menu");
     }
     else if (dresserID != id) {
-        lmSendToAgent("You go to look in Dolly's closet for clothes, and find that " + dresserName + " is already there looking", id);
+        cdSayTo("You go to look in Dolly's closet for clothes, and find that " + dresserName + " is already there looking", id);
         return FALSE;
     }
 

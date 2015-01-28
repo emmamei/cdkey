@@ -8,7 +8,6 @@
 
 #include "include/Json.lsl"
 #include "include/GlobalDefines.lsl"
-#define sendMsg(id,msg) lmSendToAgent(msg, id);
 
 #define RUNNING 1
 #define NOT_RUNNING 0
@@ -605,7 +604,7 @@ default {
                       formatFloat((llGetTime() - initTimer), 1) + "s" +
                       "; key ready";
 
-                sendMsg(dollID, msg);
+                llOwnerSay(msg);
 
                 msg =
 #ifdef DEVELOPER_MODE
@@ -618,7 +617,7 @@ default {
 #endif
 #endif
 
-                sendMsg(dollID, msg);
+                llOwnerSay(msg);
 
                 if (newAttach && !quiet && isAttached)
                     llSay(0, llGetDisplayName(llGetOwner()) + " is now a dolly - anyone may play with their Key.");
@@ -775,7 +774,7 @@ default {
                 lmSendConfig("gemColour",(string)gemColour);
                 lmInternalCommand("setGemColour",(string)gemColour,NULL_KEY);
 
-                sendMsg(dollID, "Preferences read in " + formatFloat(llGetTime() - ncStart, 2) + "s");
+                llOwnerSay("Preferences read in " + formatFloat(llGetTime() - ncStart, 2) + "s");
 
                 prefsRead = PREFS_READ;
                 lmInitState(101);

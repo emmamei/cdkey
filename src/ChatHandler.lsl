@@ -221,7 +221,7 @@ default
 
                 // Dolly can NOT be added to either list
                 if (cdIsDoll((key)uuid)) {
-                    lmSendToAgent("You can't select Dolly for this list.",(key)uuid);
+                    cdSayTo("You can't select Dolly for this list.",(key)uuid);
                     return;
                 }
 
@@ -369,10 +369,7 @@ default
 
         if (channel == chatChannel) {
             // Deny access to the menus when the command was recieved from blacklisted avatar
-            if (!isDoll && (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND)) {
-                //lmSendToAgent("You are not permitted to access this key.", id);
-                return;
-            }
+            if (!isDoll && (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND)) return;
 
             lmInternalCommand("getTimeUpdates","",NULL_KEY);
             debugSay(5,"DEBUG-CHAT",("Got a chat channel message: " + name + "/" + (string)id + "/" + msg));
@@ -540,8 +537,8 @@ default
     blacklist NN ... add to blacklist
     unblacklist NN . remove from blacklist";
                     }
-                    lmSendToAgent(help + "\n", id);
-                    lmSendToAgent(menus + "\n", id);
+                    cdSayTo(help + "\n", id);
+                    cdSayTo(menus + "\n", id);
 
 #ifdef DEVELOPER_MODE
                     if (isDoll) help =
@@ -554,7 +551,7 @@ default
     inject x#x#x ... inject a link message with \"code#data#key\"
     collapse ....... perform an immediate collapse (out of time)";
 #endif
-                    lmSendToAgent(help + "\n", id);
+                    cdSayTo(help + "\n", id);
                     return;
                 }
 
@@ -579,7 +576,7 @@ default
                         if (isDoll && hardcore) return;
 
                         if (detachable || isController) lmInternalCommand("detach", "", NULL_KEY);
-                        else lmSendToAgent("Key can't be detached...", id);
+                        else cdSayTo("Key can't be detached...", id);
 
                         return;
                     }
@@ -623,7 +620,7 @@ default
                         if (lastWinderName) s += " (" + lastWinderName + ")";
                         s += "\n";
 
-                        lmSendToAgent(s, id);
+                        cdSayTo(s, id);
                         return;
                     }
                     else if (choice == "stat") {
@@ -649,12 +646,12 @@ default
                         } else msg += " and key is currently stopped.";
                         if (demoMode) msg += " (Demo mode active.)";
 
-                        lmSendToAgent(msg, id);
+                        cdSayTo(msg, id);
                         return;
                     }
                     else if (choice == "stats") {
                         if (isDoll && hardcore) return;
-                        lmSendToAgent("Time remaining: " + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * windRate)) + " minutes of " +
+                        cdSayTo("Time remaining: " + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * windRate)) + " minutes of " +
                                     (string)llRound(effectiveLimit / (SEC_TO_MIN * windRate)) + " minutes.", id);
 
                         string msg;
@@ -673,7 +670,7 @@ default
 
                         }
 
-                        lmSendToAgent(msg, id);
+                        cdSayTo(msg, id);
 
                         if (!cdCollapsedAnim() && cdAnimated()) {
                         //    llOwnerSay(dollID, "Current pose: " + currentAnimation);
@@ -782,12 +779,12 @@ default
                                 lmSendToAgentPlusDoll("Emergency detection circuits detect developer access override; emergency winder activated",id);
                                 cdMenuInject("Wind Emg", dollName, dollID);
 #else
-                                lmSendToAgent("Emergency not detected; emergency winder is inactive",id);
+                                cdSayTo("Emergency not detected; emergency winder is inactive",id);
 #endif
                             }
                         }
                         else {
-                            lmSendToAgent("Dolly is not collapsed; emergency winder is inactive",id);
+                            cdSayTo("Dolly is not collapsed; emergency winder is inactive",id);
                         }
                     }
                     else cdMenuInject("Wind", name, id);
@@ -797,11 +794,11 @@ default
                     if (isDoll) {
                         if (hardcore) return;
                         if (canDressSelf) cdMenuInject("Outfits...", name, id);
-                        else lmSendToAgent("You are not allowed to dress yourself",id);
+                        else cdSayTo("You are not allowed to dress yourself",id);
                     }
                     else {
                         if (allowDress || hardcore) cdMenuInject("Outfits...", name, id);
-                        else lmSendToAgent("You are not allowed to dress Dolly",id);
+                        else cdSayTo("You are not allowed to dress Dolly",id);
                     }
 
                     return;
@@ -822,7 +819,7 @@ default
                     if (isDoll || isController) cdMenuInject("Poses...", name, id);
                     else {
                         if (allowPose || hardcore) cdMenuInject("Poses...", name, id);
-                        else lmSendToAgent("You are not allowed to pose Dolly", id);
+                        else cdSayTo("You are not allowed to pose Dolly", id);
                     }
                     return;
                 }
@@ -860,10 +857,10 @@ default
                                 (isController && (thisPrefix == "!")) ||
                                 (thisPrefix == "")) {
 
-                                if (keyAnimation == thisPose) lmSendToAgent("\t*\t" + thisPose, id);
-                                else lmSendToAgent("\t\t" + thisPose, id);
+                                if (keyAnimation == thisPose) cdSayTo("\t*\t" + thisPose, id);
+                                else cdSayTo("\t\t" + thisPose, id);
                             }
-                            else if (keyAnimation == thisPose) lmSendToAgent("\t*\t{private}", id);
+                            else if (keyAnimation == thisPose) cdSayTo("\t*\t{private}", id);
                         }
                     }
                     return;
@@ -902,7 +899,7 @@ default
                             integer ch = (integer) c;
 
                             if (ch > 0) lmSendConfig("chatChannel",(string)ch);
-                            else lmSendToAgent("Invalid channel (" + (string)ch + ") ignored",id);
+                            else cdSayTo("Invalid channel (" + (string)ch + ") ignored",id);
                         }
                         return;
                     }
@@ -929,7 +926,7 @@ default
                         if (n < 2 || n > 10) {
                             // Why? Two character user prefixes are standard and familiar; too much false positives with
                             // just 1 letter (~4%) with letter + letter/digit it's (~0.1%)
-                            lmSendToAgent(msg + "be between two and ten characters long.", id);
+                            cdSayTo(msg + "be between two and ten characters long.", id);
                         }
 
                         // * contain numbers and letters only
@@ -937,7 +934,7 @@ default
                         else if (newPrefix != llEscapeURL(newPrefix)) {
                             // Why? Stick to simple ascii compatible alphanumerics that are compatible with
                             // all keyboards and with mobile devices with limited input capabilities etc.
-                            lmSendToAgent(msg + "only contain letters and numbers.", id);
+                            cdSayTo(msg + "only contain letters and numbers.", id);
                         }
 
                         // * start with a letter
@@ -945,7 +942,7 @@ default
                         else if (((integer)c1) || (c1 == "0")) {
                             // Why? This one is needed to prevent the first char of prefix being merged into
                             // the channel # when commands are typed without the use of the optional space.
-                            lmSendToAgent(msg + "start with a letter.", id);
+                            cdSayTo(msg + "start with a letter.", id);
                         }
 
                         // All is good

@@ -107,7 +107,7 @@ posePageN(string choice, key id) {
 
     if (poseList == []) {
         buildList = TRUE;
-        if (poseCount > 1) lmSendToAgent("Reading " + (string)poseCount + " poses from Dolly's internal secondary memory...",id);
+        if (poseCount > 1) cdSayTo("Reading " + (string)poseCount + " poses from Dolly's internal secondary memory...",id);
         else if (poseCount == 1) {
             llSay(DEBUG_CHANNEL, "No poses found!");
             return;
@@ -155,7 +155,7 @@ posePageN(string choice, key id) {
 
     debugSay(6,"DEBUG-AVATAR","Pose list contains: " + llDumpList2String(tmpList, ","));
     if (buildList)
-        lmSendToAgent("Read complete: found " + (string)llGetListLength(tmpList) + " viable poses.",id);
+        cdSayTo("Read complete: found " + (string)llGetListLength(tmpList) + " viable poses.",id);
 
     if (choice == "Poses Next") {
         posePage++;
@@ -858,18 +858,18 @@ default {
             }
             else if (choice == "Uncarry") {
                 if (cdIsCarrier(id)) {
-                    if (quiet) lmSendToAgent("You were carrying " + dollName + " and have now placed them down.", carrierID);
+                    if (quiet) cdSayTo("You were carrying " + dollName + " and have now placed them down.", carrierID);
                     else llSay(0, "Dolly " + dollName + " has been placed down by " + carrierName);
                 }
                 else {
                     string name = llKey2Name(id);
 
                     if (name) {
-                        if (quiet) lmSendToAgent("You have wrestled Dolly away from " + carrierName + ".", id);
+                        if (quiet) cdSayTo("You have wrestled Dolly away from " + carrierName + ".", id);
                         else llSay(0, "Dolly " + dollName + " has been wrestled away from " + carrierName + " by " + llKey2Name(id));
                     }
                     else {
-                        if (quiet) lmSendToAgent("You have wrestled Dolly away from " + carrierName + ".", id);
+                        if (quiet) cdSayTo("You have wrestled Dolly away from " + carrierName + ".", id);
                         else llSay(0, "Dolly " + dollName + " has been wrestled away from " + carrierName);
                     }
                 }

@@ -166,6 +166,7 @@ list BuiltinControllers = BUILTIN_CONTROLLERS;
 #define cdPause() llSleep(0.5)
 #define cdListenAll(a) llListen(a, NO_FILTER, NO_FILTER, NO_FILTER)
 #define cdListenMine(a)   llListen(a, NO_FILTER, dollID, NO_FILTER)
+#define cdSayTo(m,i) llRegionSayTo(i, 0, m)
 
 #define CHECK "✔"
 #define CROSS "✘"
