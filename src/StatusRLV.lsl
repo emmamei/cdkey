@@ -120,6 +120,12 @@ default {
                     llOwnerSay("@" + cmd + "=n");
                 }
             }
+            else if (cmd == "instantMessage") {
+
+                // This is segregated for speed: this script (StatusRLV) doesn't have
+                // an overriding need to not have a 2s delay in it
+                llInstantMessage(id,llList2String(split,0));
+            }
             else if (cmd == "storeRLV") {
                 script = cdListElement(split,0);
                 string commandString = cdListElement(split, 1);

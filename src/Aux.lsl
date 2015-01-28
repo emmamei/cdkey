@@ -56,20 +56,6 @@ setGender(string gender) {
     }
 }
 
-// This is an ingenious function:
-//
-// If the id belongs to Dolly, then llOwnerSay
-// If the id belongs to an avi nearby, then llRegionSayTo
-// If neither of the above, then llInstantMessage
-//
-sendMsg(key id, string msg) {
-    if (id) {
-        if cdIsDoll(id) llOwnerSay(msg);
-        else if (llGetAgentSize(id)) llRegionSayTo(id, 0, msg);
-        else llInstantMessage(id, msg);
-    }
-}
-
 default {
     //----------------------------------------
     // STATE ENTRY
@@ -563,32 +549,33 @@ Parent - Take care choosing your parents; they have great control over Dolly and
             }
         }
 
-        // 11: lmSendToAgent
         // 12: lmSendToAgentPlusDoll
         // 15: lmSendToController
         //
         else if (code < 200) {
-            if ((code == 11) || (code == 12)) {
+            if (code == 12) {
+
+                //----------------------------------------
+                // lmSendToAgentPlusDoll
                 msg = llList2String(split, 0);
-
-                sendMsg(id, msg);
-
-                if (code == 12)
-                    // Don't send to Dolly if we just DID send to Dolly
-                    if (!cdIsDoll(id)) sendMsg(dollID, msg);
+                llOwnerSay(msg);
+                llRegionSayTo(id, PUBLIC_CHANNEL, msg);
             }
             else if (code == 15) {
+
+                //----------------------------------------
+                // lmSendToController
                 msg = llList2String(split, 0);
-                i = 0;
                 string targetName;
                 key targetKey;
                 integer n = llGetListLength(cdList2ListStrided(controllers, 0, -1, 2));
 
                 while (n--) {
-                    targetName = llList2String(controllers, (n << 1) + 1);
-                    targetKey = llList2Key(controllers, n << 1);
+                    i = n << 1; // Double the index
+                    targetName = llList2String(controllers, i + 1);
+                    targetKey = llList2Key(controllers, i);
 
-                    sendMsg(targetKey, msg);
+                    lmInternalCommand("instantMessage", msg, targetKey);
                 }
             }
             else if (code == 102) {
