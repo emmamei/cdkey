@@ -480,7 +480,7 @@ default
 
                         // accessor is either Doll or controller so...
                         if (isDoll) {
-                            if (canDressSelf)
+                            if (canDressSelf && !hardcore)
                                 menus += "
     outfits ........ show Outfits menu";
                         }
@@ -593,20 +593,24 @@ default
 
                         string p = pronounHerDoll;
 
-                        cdCapability(autoTP,         "Doll can", "be force teleported");
-                        cdCapability(detachable,     "Doll can", "detach " + p + " key");
-                        cdCapability(allowPose,        "Doll can", "be posed by the public");
-                        cdCapability(allowDress,       "Doll can", "be dressed by the public");
-                        cdCapability(allowCarry,       "Doll can", "be carried by the public");
-                        cdCapability(canAFK,         "Doll can", "go AFK");
-                        cdCapability(canFly,         "Doll can", "fly");
-                        cdCapability(canSit,         "Doll can", "sit");
-                        cdCapability(canStand,       "Doll can", "stand");
+                        cdCapability(autoTP,           "Doll can", "be force teleported");
+                        cdCapability(canAFK,           "Doll can", "go AFK");
+                        cdCapability(canFly,           "Doll can", "fly");
+                        cdCapability(canSit,           "Doll can", "sit");
+                        cdCapability(canStand,         "Doll can", "stand");
                         cdCapability(allowRepeatWind,  "Doll can", "be multiply wound");
-                        cdCapability(canDressSelf,   "Doll can", "dress by " + p + "self");
-                        cdCapability(poseSilence,    "Doll is",  "silenced while posing");
-                        cdCapability(wearLock,       "Doll's clothing is",  "currently locked on");
-                        cdCapability(lowScriptMode,  "Doll is",  "currently in powersave mode");
+                        cdCapability(wearLock,         "Doll's clothing is",  "currently locked on");
+                        cdCapability(lowScriptMode,    "Doll is",  "currently in powersave mode");
+
+                        cdCapability(hardcore,         "Doll is", "currently in hardcore mode");
+
+                        // These settings all are affected by hardcore
+                        cdCapability((detachable && !hardcore),    "Doll can", "detach " + p + " key");
+                        cdCapability((allowPose || hardcore),      "Doll can", "be posed by the public");
+                        cdCapability((allowDress || hardcore),     "Doll can", "be dressed by the public");
+                        cdCapability((allowCarry || hardcore),     "Doll can", "be carried by the public");
+                        cdCapability((canDressSelf && !hardcore),  "Doll can", "dress by " + p + "self");
+                        cdCapability((poseSilence || hardcore),    "Doll is",  "silenced while posing");
 
                         if (windingDown) s += "\nCurrent wind rate is " + formatFloat(windRate,2) + ".\n";
                         else s += "Key is not winding down.\n";
@@ -791,6 +795,7 @@ default
                 }
                 else if (choice == "outfits") {
                     if (isDoll) {
+                        if (hardcore) return;
                         if (canDressSelf) cdMenuInject("Outfits...", name, id);
                         else lmSendToAgent("You are not allowed to dress yourself",id);
                     }

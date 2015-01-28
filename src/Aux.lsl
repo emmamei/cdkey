@@ -436,13 +436,13 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                     if (!hardcore) {
                         plusList += cdGetButton("Detachable", id, detachable, 1);
                         plusList += cdGetButton("Silent Pose", id, poseSilence, 1);
+                        plusList += cdGetButton("Self Dress", id, canDressSelf, 1);
                     }
                     lmSendConfig("backMenu",(backMenu = "Options..."));
 
                     plusList += cdGetButton("Flying", id, canFly, 1);
                     plusList += cdGetButton("Sitting", id, canSit, 1);
                     plusList += cdGetButton("Standing", id, canStand, 1);
-                    plusList += cdGetButton("Self Dress", id, canDressSelf, 1);
                     plusList += cdGetButton("Self TP", id, canSelfTP, 1);
                     plusList += cdGetButton("Force TP", id, autoTP, 1);
                     plusList += "Back...";
