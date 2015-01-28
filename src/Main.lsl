@@ -98,8 +98,6 @@ setAfk(integer setting) {
     // afk setting 2 is special: means we automatically set AFK, in
     // contrast to the user setting AFK otherwise
 
-    setWindRate();
-
     if (setting != 2) {
         // setting is either 0 (FALSE) or 1 (TRUE)
         integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0);
@@ -113,6 +111,8 @@ setAfk(integer setting) {
     lmSendConfig("afk", (string)(afk = (setting != 0)));
     lmSendConfig("autoAFK", (string)autoAFK);
     lmInternalCommand("setHovertext", "", llGetKey());
+    setWindRate();
+
 }
 
 uncollapse() {
@@ -139,6 +139,7 @@ uncollapse() {
     // Among other things, this will set the Key's turn rate
     setWindRate();
     lmInternalCommand("setGemColour", (string)baseGemColour, NULL_KEY);
+    lmSendConfig("baseGemColour",(string)baseGemColour);
 }
 
 collapse(integer newCollapseState) {
@@ -406,11 +407,6 @@ default {
         }
 
         //----------------------------------------
-        // SET WIND RATE
-
-        setWindRate();
-
-        //----------------------------------------
         // TIME SAVED (TIMER INTERVAL)
 
         lastTimerMark = timerMark;
@@ -576,6 +572,7 @@ default {
             else if (name == "busyIsAway")                 busyIsAway = (integer)value;
             else if (name == "baseWindRate")             baseWindRate = (float)value;
             else if (name == "keyAnimation")             keyAnimation = value;
+            else if (name == "baseGemColour")           baseGemColour = (vector)value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
             else if (name == "transformLockExpire")   transformLockExpire = (integer)value;
@@ -951,7 +948,8 @@ default {
 
                 setWindRate();
                 lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
-                llOwnerSay("You have " + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * windRate)) + " minutes of life remaining.");
+                if (timeLeftOnKey)
+                    llOwnerSay("You have " + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * windRate)) + " minutes of life remaining.");
 
                 clearAnim = 1;
             }
