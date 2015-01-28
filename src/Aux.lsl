@@ -116,6 +116,7 @@ default {
             else if (name == "poserID")                       poserID = (key)value;
             else if (name == "baseGemColour")           baseGemColour = (vector)value;
             else if (name == "keyLimit")                      maxMins = llRound((float)value / 60.0);
+            else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
             else if (name == "backMenu")                     backMenu = value;
             else if (name == "quiet")                           quiet = (integer)value;
 #ifdef HOMING_BEACON
@@ -298,8 +299,6 @@ default {
                     }
 
                     cdDialogListen();
-                    //debugSay(2,"DEBUG-AUX","Done building collapsedMenu: msg = \"" + msg  + "\"; menu = [ " + llDumpList2String(menu, ",") + " ]");
-                    //debugSay(2,"DEBUG-AUX","Done building collapsedMenu: id = " + (string)id);
                     llDialog(dollID, msg, menu, dialogChannel);
                 }
             }
