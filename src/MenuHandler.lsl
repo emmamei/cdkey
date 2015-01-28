@@ -180,6 +180,7 @@ default {
             else if (name == "backMenu")                     backMenu = value;
             else if (name == "hardcore")                     hardcore = (integer)value;
             else if (name == "windingDown")               windingDown = (integer)value;
+            else if (name == "gemColour")                   gemColour = (vector)value;
             else if (name == "lowScriptMode")           lowScriptMode = (integer)value;
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
 
@@ -217,8 +218,8 @@ default {
 
             // shortcut: p
             else if (c == "p") {
-                     if (name == "poserID")                       poserID = (key)value;
-                else if (name == "poseSilence")               poseSilence = (integer)value;
+                     if (name == "poserID")                   poserID = (key)value;
+                else if (name == "poseSilence")           poseSilence = (integer)value;
                 else if (name == "primLight") {
                     primLight = (integer)value;
                     lmInternalCommand("setGemColour", (string)gemColour, NULL_KEY);
@@ -226,11 +227,11 @@ default {
 #ifdef ADULT_MODE
                 else if (name == "allowStrip")             allowStrip = (integer)value;
 #endif
-                else if (name == "pronounHerDoll")         pronounHerDoll = value;
-                else if (name == "pronounSheDoll")         pronounSheDoll = value;
+                else if (name == "pronounHerDoll")     pronounHerDoll = value;
+                else if (name == "pronounSheDoll")     pronounSheDoll = value;
             }
             else if (name == "quiet")                           quiet = (integer)value;
-            else if (name == "hovertextOn")                         hovertextOn = (integer)value;
+            else if (name == "hovertextOn")               hovertextOn = (integer)value;
             else if (name == "isVisible") {
                 visible = (integer)value;
                 llSetLinkAlpha(LINK_SET, (float)visible, ALL_SIDES);

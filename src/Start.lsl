@@ -186,7 +186,7 @@ processConfiguration(string name, string value) {
 #ifdef DEVELOPER_MODE
                      "debug level",
 #endif
-                     "dressable", "carryable", "repeatable wind"
+                     "dressable", "carryable", "repeatable wind", "gem colour", "gem color"
                    ];
 
     // "Send Names": these are the configuration variable names;
@@ -203,7 +203,7 @@ processConfiguration(string name, string value) {
 #ifdef DEVELOPER_MODE
                      "debugLevel",
 #endif
-                      "allowDress", "allowCarry", "allowRepeatWind"
+                      "allowDress", "allowCarry", "allowRepeatWind", "baseGemColour", "baseGemColour"
                     ];
 
 //  list internals = [ "wind time", "blacklist key", "controller key" ];
@@ -450,6 +450,7 @@ default {
             else if (name == "dialogChannel")            dialogChannel = (integer)value;
             else if (name == "timeLeftOnKey")            timeLeftOnKey = (float)value;
             else if (name == "demoMode")                      demoMode = (integer)value;
+            else if (name == "baseGemColour")            baseGemColour = (vector)value;
             else if (name == "quiet")                            quiet = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                  debugLevel = (integer)value;
@@ -688,7 +689,10 @@ default {
         RLVok = UNSET;
 
         setWindRate();
+        gemColour = baseGemColour;
         lmInternalCommand("setGemColour", (string)baseGemColour, llGetKey());
+        lmSendConfig("baseGemColour",(string)baseGemColour);
+        lmSendConfig("gemColour",(string)gemColour);
     }
 
     //----------------------------------------
@@ -704,13 +708,13 @@ default {
             // At this point, we know that we have a REAL detach:
             // key id is NULL_KEY and llGetAttached() == 0
 
-            llMessageLinked(LINK_SET, 106,  cdMyScriptName() + "|" + "detached" + "|" + (string)lastAttachPoint, lastAttachAvatar);
+            llMessageLinked(LINK_SET, 106,  "Start|detached|" + (string)lastAttachPoint, lastAttachAvatar);
             llOwnerSay("The key is wrenched from your back, and you double over at the unexpected pain as the tendrils are ripped out. You feel an emptiness, as if some beautiful presence has been removed.");
 
         } else {
 
             isAttached = 1;
-            llMessageLinked(LINK_SET, 106, cdMyScriptName() + "|" + "attached" + "|" + (string)cdAttached(), id);
+            llMessageLinked(LINK_SET, 106, "Start|attached|" + (string)cdAttached(), id);
 
             if (llGetPermissionsKey() == dollID && (llGetPermissions() & PERMISSION_TAKE_CONTROLS) != 0) llTakeControls(CONTROL_MOVE, 1, 1);
             else llRequestPermissions(dollID, PERMISSION_MASK);
@@ -767,7 +771,9 @@ default {
             if (data == EOF) {
                 //lmSendConfig("ncPrefsLoadedUUID", llDumpList2String(llList2List((string)llGetInventoryKey(NOTECARD_PREFERENCES) + ncPrefsLoadedUUID, 0, 9),"|"));
                 lmInternalCommand("getTimeUpdates","",NULL_KEY);
-
+                gemColour = baseGemColour;
+                lmSendConfig("gemColour",(string)gemColour);
+                lmInternalCommand("setGemColour",(string)gemColour,NULL_KEY);
 
                 sendMsg(dollID, "Preferences read in " + formatFloat(llGetTime() - ncStart, 2) + "s");
 

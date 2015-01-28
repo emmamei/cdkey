@@ -128,6 +128,7 @@ default {
 #endif
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "poserID")                       poserID = (key)value;
+            else if (name == "baseGemColour")           baseGemColour = (vector)value;
             else if (name == "keyLimit")                      maxMins = llRound((float)value / 60.0);
             else if (name == "backMenu")                     backMenu = value;
             else if (name == "quiet")                           quiet = (integer)value;
@@ -163,7 +164,7 @@ default {
             else if (name == "primLight")                   primLight = (integer)value;
             else if (name == "primGlow")                     primGlow = (integer)value;
             else if (name == "isVisible")                     visible = (integer)value;
-            else if (name == "gemColour")                curGemColour = value;
+            else if (name == "gemColour")                   gemColour = (vector)value;
             else if (name == "blacklist") {
                 if (split == [""]) blacklist = [];
                 else blacklist = split;
@@ -206,6 +207,10 @@ default {
                 vector newColour = (vector)llList2String(split, 0);
 
                 if (newColour == gemColour) return;
+                if (newColour == <0.0,0.0,0.0>) {
+                    llSay(DEBUG_CHANNEL,"Script " + script + " tried to set gem color to Black!");
+                    return;
+                }
 
                 integer j; integer shaded; list params; list colourParams;
                 integer n; integer m;
@@ -536,6 +541,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
 
                 lmInternalCommand("setGemColour", choice, id);
                 baseGemColour = (vector)choice;
+                lmSendConfig("baseGemColour",choice);
                 lmMenuReply("Gem Colour...", llGetDisplayName(id), id);
             }
 
@@ -543,7 +549,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
             else if (choice == "Custom..." || choice == "Dolly Name..." ) {
                 if (choice == "Custom...") {
                     textboxType = 1;
-                    llTextBox(id, "Here you can input a custom colour value\n\nCurrent colour: " + curGemColour + "\n\nEnter vector eg <0.900, 0.500, 0.000>\nOr Hex eg #A4B355\nOr RGB eg 240, 120, 10", textboxChannel);
+                    llTextBox(id, "Here you can input a custom colour value\n\nCurrent colour: " + (string)gemColour + "\n\nEnter vector eg <0.900, 0.500, 0.000>\nOr Hex eg #A4B355\nOr RGB eg 240, 120, 10", textboxChannel);
                 }
                 else if (choice == "Dolly Name...") {
                     textboxType = 2;
