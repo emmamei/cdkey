@@ -640,7 +640,7 @@ default {
     // ATTACH
     //----------------------------------------
     attach(key id) {
-        if (id == NULL_KEY && !detachable && !locked) {
+        if (id == NULL_KEY && (!detachable || hardcore) && !locked) {
             // Undetachable key with controller is detached while RLV lock
             // is not available inform any key controllers.
             // We send no message if the key is RLV locked as RLV will reattach
