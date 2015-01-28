@@ -883,7 +883,7 @@ default {
                 lmSetConfig("poseExpire", "0");
 
                 clearAnimations();
-                if (poseSilence) lmRunRLV("sendchat=y");
+                if (poseSilence || hardcore) lmRunRLV("sendchat=y");
                 ifPermissions();
             }
 
