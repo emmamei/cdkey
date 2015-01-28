@@ -491,12 +491,12 @@ default
                     }
                     // Not dolly OR controller...
                     else {
-                        if (allowDress) {
+                        if (allowDress || hardcore) {
                             menus += "
     outfits ........ show Outfits menu";
                         }
 
-                        if (allowPose) {
+                        if (allowPose || hardcore) {
                             menus +=
 "
     poses .......... show Poses menu";
@@ -505,7 +505,7 @@ default
     [posename] ..... activate the named pose if possible";
                         }
 
-                        if (allowCarry) {
+                        if (allowCarry || hardcore) {
                             help += "
     carry .......... pick up Dolly
     uncarry ........ drop Dolly";
@@ -800,7 +800,7 @@ default
                         else lmSendToAgent("You are not allowed to dress yourself",id);
                     }
                     else {
-                        if (allowDress) cdMenuInject("Outfits...", name, id);
+                        if (allowDress || hardcore) cdMenuInject("Outfits...", name, id);
                         else lmSendToAgent("You are not allowed to dress Dolly",id);
                     }
 
@@ -821,7 +821,7 @@ default
                 else if (choice == "poses") {
                     if (isDoll || isController) cdMenuInject("Poses...", name, id);
                     else {
-                        if (allowPose) cdMenuInject("Poses...", name, id);
+                        if (allowPose || hardcore) cdMenuInject("Poses...", name, id);
                         else lmSendToAgent("You are not allowed to pose Dolly", id);
                     }
                     return;
@@ -869,7 +869,8 @@ default
                     return;
                 }
                 else if (choice == "carry") {
-                    if (!isDoll && allowCarry) cdMenuInject("Carry", name, id);
+                    // Dolly can't carry herself... duh!
+                    if (!isDoll && (allowCarry || hardcore)) cdMenuInject("Carry", name, id);
                     return;
                 }
                 else if (choice == "uncarry") {

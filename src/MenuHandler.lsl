@@ -422,7 +422,14 @@ default {
                             }
                         }
 
-                        if ((hardcore || allowDress) && keyAnimation == "") menu += "Types...";
+                        // Only present the Types button if Dolly is not posed
+                        if (keyAnimation == "") menu += "Types...";
+
+                        // Members of the public are allowed if allowed
+                        else if (!isDoll && !isController && (hardcore || allowDress)) menu += "Types...";
+
+                        // Dolly or Controllers always can use Types
+                        else menu += "Types...";
 
                         if (keyAnimation != "") {
                             msg += "Doll is currently posed. ";
@@ -441,7 +448,7 @@ default {
                             // Also allow anyone to Unpose Dolly if Dolly self posed.
 
                             else {
-                                if (isController || allowPose)
+                                if (isController || allowPose || hardcore)
                                     menu += [ "Poses...", "Unpose" ];
                                 else if (poserID == dollID)
                                     menu += [ "Unpose" ];
@@ -457,7 +464,7 @@ default {
                             if (!hasCarrier) {
                                 // Allowing Dolly to carry herself is nonsense... others can
                                 // if Dolly allows it, but a Controller can no matter what
-                                if (allowCarry || isController) {
+                                if (allowCarry || hardcore || isController) {
                                     msg += "Carry option picks up " + dollName + " and temporarily makes the Dolly exclusively yours. ";
                                     menu += "Carry";
                                 }

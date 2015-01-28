@@ -823,10 +823,14 @@ default {
         }
         else if (code == MENU_SELECTION) {
             string choice = llList2String(split, 0);
+            string choice5 = llGetSubString(choice,0,4);
             string name = llList2String(split, 1);
 
-            string choice5 = llGetSubString(choice,0,4);
-            integer dollIsPoseable = ((!cdIsDoll(id) && allowPose) || cdSelfPosed());
+            // Dolly is poseable:
+            //    * by members of the Public IF allowed
+            //    * by herself
+            //    * by Controllers
+            integer dollIsPoseable = ((!cdIsDoll(id) && (allowPose || hardcore)) || cdIsController(id) || cdSelfPosed());
 
             // First: Quick ignores
             if (llGetSubString(choice,0,3) == "Wind") return;
