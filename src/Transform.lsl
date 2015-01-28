@@ -157,6 +157,8 @@ setDollType(string stateName, integer automated) {
         folderSearch(outfitsFolder,typeSearchChannel);
     }
     // if NOT RLVok then we have a DollType with no associated typeFolder...
+
+    setWindRate();
 }
 
 reloadTypeNames() {
