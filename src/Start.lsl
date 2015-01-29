@@ -97,52 +97,54 @@ integer rlvWait;
 // FUNCTIONS
 //=======================================
 doVisibility() {
-    vector colour = gemColour;
-
     if (cdNotecardExists(APPEARANCE_NC)) {
 
         if (!visible || !primGlow || collapsed) {
+            // Turn off glow et all when not visible or collapsed
             llSetLinkPrimitiveParamsFast(LINK_SET, [ PRIM_GLOW, ALL_SIDES, 0.0 ]);
         }
         else {
+            // Turn on glow and light using llSetLinkPrimitiveParamsFast
 
+            list params;
+            integer nPrims = llGetNumberOfPrims();
             integer i;
             integer j;
-            integer type;
-            integer typeval;
-            list params;
-            list types = [ "Light", 23, "Glow", 25 ];
             string name;
-            string typeName;
-            integer typeLen = llGetListLength(types)/2;
 
-            type = typeLen;
-            while (type--) {
-                typeName = llList2String(types, type * 2);
+            debugSay(4, "DEBUG-START", "Number of prims = " + (string)nPrims);
 
-                i = llGetNumberOfPrims();
-                while (i--) {
+            i = nPrims;
+            while (i--) {
+                name = llGetLinkName(i + 1);
+                debugSay(4, "DEBUG-START", "Name of prim #" + (string)(i + 1) + " of " + (string)nPrims + " = " + name);
+                params += [ PRIM_LINK_TARGET, i ];
 
-                    name = llGetLinkName(i);
-                    params += [ PRIM_LINK_TARGET, i ];
+                if (cdGetElementType(appearanceData, ( [ name, "Light" ] )) != JSON_INVALID) {
 
-                    if (cdGetElementType(appearanceData,([name,typeName])) != JSON_INVALID) {
+                    // Note that none of the JSON data is used here...
+                    debugSay(4, "DEBUG-START", "Found parameter for prim" + name + ": Light");
 
-                        typeval = llList2Integer(types, llListFindList(types, [typeName]) + 1);
+                    // This sets a default color: no need to make gemColour with a in-code default
+                    //if (colour == ZERO_VECTOR) {
+                    //    colour = (vector)llList2String(params, 1);
+                    //    gemColour = colour;
+                    //    baseGemColour = colour;
+                    //}
 
-                        if (typeName == "Light") {
-                            //if (colour == ZERO_VECTOR) colour = (vector)llList2String(llGetLinkPrimitiveParams(i,[PRIM_DESC]),0);
-                            if (colour == ZERO_VECTOR) colour = (vector)llList2String(params,1);
-                            params += [ typeval, (primLight & !collapsed), colour, 0.5, 2.5, 2.0 ];
-                        }
+                    params += [ PRIM_POINT_LIGHT, (primLight & !collapsed), gemColour, 0.5, 2.5, 2.0 ];
+                }
 
-                        while(cdGetElementType(appearanceData,([name,typeName,j])) != JSON_INVALID) {
-                            if (typeName == "Glow")
-                                params += [ 25 ] + llJson2List(cdGetValue(appearanceData,([name,typeName,j++])));
-                        }
+                j = 0;
+                if (cdGetElementType(appearanceData, ( [ name, "Glow" ] )) != JSON_INVALID) {
+                    while (cdGetElementType(appearanceData,( [ name, "Glow", j] )) != JSON_INVALID) {
+                        debugSay(4, "DEBUG-START", "Found parameter for prim" + name + ": Glow");
+                        params += (list)PRIM_GLOW + llJson2List(cdGetValue(appearanceData,( [ name, "Glow", j++ ] )));
                     }
                 }
             }
+
+            debugSay(4, "DEBUG-START", "Set Params list: " + llDumpList2String(params, ","));
             llSetLinkPrimitiveParamsFast(0, params);
         }
     }
@@ -752,16 +754,7 @@ default {
                 llSleep(1.0);
             }
             else {
-                data = llStringTrim(data,STRING_TRIM);
-
-                // Search for "ALL" (with quotes) in data and replace
-                // with "-1" (without quotes) - is this necessary?
-                string find = "\"ALL\""; integer index;
-                while ((index = llSubStringIndex(data, find)) != NOT_FOUND) {
-                    data = llInsertString(llDeleteSubString(data, index, index + llStringLength(find) - 1), index, "-1");
-                }
-
-                appearanceData += data;
+                appearanceData += llStringTrim(data,STRING_TRIM);
                 ncRequestAppearance = llGetNotecardLine(APPEARANCE_NC, ncLine++);
             }
         }
