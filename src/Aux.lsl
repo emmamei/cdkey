@@ -264,7 +264,7 @@ default {
                 //lmSendConfig("normalGemColour",choice);
             }
             else if (cmd == "resetGemColour") {
-                lmInternalCommand("setGemColour", normalGemColour, id);
+                lmInternalCommand("setGemColour", (string)normalGemColour, id);
             }
 #ifdef ADULT_MODE
             else if (cmd == "strip") {
