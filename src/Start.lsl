@@ -230,8 +230,8 @@ processConfiguration(string name, string value) {
 
         // Do both ways for now, just until all are converted or handled
         lmSetConfig(cdListElement(sendName,i), value);
-        llSleep(0.4);  // almost two frames worth - be nice to sims
         lmSendConfig(cdListElement(sendName,i), value);
+        llSleep(0.1);  // approx 5 frames - be nice to sim!
     }
     else if ((i = cdListElementP(internals,name)) != NOT_FOUND) {
         if (name == "wind time") {
@@ -365,9 +365,9 @@ doneConfiguration(integer prefsRead) {
     // items are are completed.
     debugSay(3,"DEBUG-START","Configuration done - starting init code 102 and 104 and 105");
     lmInitState(102);
-    llSleep(0.5);
+    llSleep(0.1);
     lmInitState(104);
-    llSleep(0.5);
+    llSleep(0.1);
     lmInitState(105);
 
     //initializationCompleted
@@ -653,14 +653,14 @@ default {
 
         // WHen this script (Start.lsl) resets... EVERYONE resets...
         doRestart();
-        llSleep(1.0);
+        llSleep(0.5);
 
         // Set the debug level for all scripts early
 #ifdef DEVELOPER_MODE
         lmSendConfig("debugLevel",(string)debugLevel);
 #endif
         readPreferences();
-        llSleep(1.0);
+        llSleep(0.1);
         lmInternalCommand("collapse", "0", llGetKey());
     }
 
@@ -788,18 +788,23 @@ default {
     // CHANGED
     //----------------------------------------
     changed(integer change) {
-        if(!cdAttached()) cdResetKeyName();
-
         if (change & CHANGED_OWNER) {
+
+            integer nCards = llGetInventoryNumber(INVENTORY_NOTECARD);
+            string name;
+
+            i = nCards;
+            while (i--) {
+                name = llGetInventoryName(i);
+                if ((llGetSubString(name,0,0) == "*") || (name == NOTECARD_PREFERENCES)) {
+                    llRemoveInventory(name);
+                }
+            }
 
             llOwnerSay("You have a new key! Congratulations!\n" +
                 "Look at PreferencesExample to see how to set the preferences for your new key.");
 
-            if (cdNotecardExists(NOTECARD_PREFERENCES)) {
-                llRemoveInventory(NOTECARD_PREFERENCES);
-            }
-
-            llSleep(5.0);
+            llSleep(1.0);
             cdResetKey(); // start over with no preferences
         }
 
@@ -811,18 +816,6 @@ default {
         // Note that if Start.lsl is modified, this does not get run,
         // since Start.lsl is reset immediately - and upon reset,
         // resets the entire key.
-    }
-
-    //----------------------------------------
-    // TIMER
-    //----------------------------------------
-    timer() {
-        // We only get here if the key was modified
-        llSetTimerEvent(0.0);
-
-        llOwnerSay("Now resetting key.");
-        llSleep(5.0);
-        cdResetKey();
     }
 
     //----------------------------------------
