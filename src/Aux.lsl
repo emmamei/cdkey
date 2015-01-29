@@ -16,6 +16,9 @@
 #define cdResetKey() llResetOtherScript("Start")
 #define UNSET -1
 
+#define GEM_COLOR_TEXTBOX 1
+#define DOLL_NAME_TEXTBOX 2
+
 #define HIPPO_UPDATE -2948813
 
 key memReportID;
@@ -114,7 +117,7 @@ default {
 #endif
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "poserID")                       poserID = (key)value;
-            else if (name == "baseGemColour")           baseGemColour = (vector)value;
+            //else if (name == "normalGemColour")           normalGemColour = (vector)value;
             else if (name == "keyLimit")                      maxMins = llRound((float)value / 60.0);
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
             else if (name == "backMenu")                     backMenu = value;
@@ -151,7 +154,13 @@ default {
             else if (name == "primLight")                   primLight = (integer)value;
             else if (name == "primGlow")                     primGlow = (integer)value;
             //else if (name == "isVisible")                   isVisible = (integer)value;
-            else if (name == "gemColour")                   gemColour = (vector)value;
+            //else if (name == "gemColour") {
+            //    vector oldGemColour = gemColour;
+            //    gemColour = (vector)value;
+            //
+            //    if (gemColour != oldGemColour || gemColour != normalGemColour)
+            //        lmInternalCommand("setGemColour", gemColour, id);
+            //}
             else if (name == "blacklist") {
                 if (split == [""]) blacklist = [];
                 else blacklist = split;
@@ -189,8 +198,10 @@ default {
             string cmd = llList2String(split, 0);
             split = llDeleteSubList(split, 0, 0);
 
-            // Note that this section will be empty except in Adult Mode...
             if (cmd == "setGemColour") {
+                // This command does NOT set normalGemColour - which is as it
+                // should be. This allows us to set the gemColour without
+                // losing the colour we "normally" use.
                 vector newColour = (vector)llList2String(split, 0);
 
                 //if (newColour == gemColour) return;
@@ -210,17 +221,21 @@ default {
                 i = n;
                 while (i--) {
                     index = n - i - 1;
-                    params += [ PRIM_LINK_TARGET, index ];
 
                     if (llGetSubString(llGetLinkName(index), 0, 4) == "Heart") {
+                        params += [ PRIM_LINK_TARGET, index ];
+
                         if (!shaded) {
                             m = llGetLinkNumberOfSides(index);
                             j = m;
                             while (j--) {
+                                // Add noise to color
                                 shade = <llFrand(0.2) - 0.1 + newColour.x,
                                          llFrand(0.2) - 0.1 + newColour.y,
-                                         llFrand(0.2) - 0.1 + newColour.z>  * (1.0 + (llFrand(0.2) - 0.1));
+                                         llFrand(0.2) - 0.1 + newColour.z>  * (0.9 + llFrand(0.2));
+                                //                                            (1.0 + (llFrand(0.2) - 0.1))
 
+                                // make sure we're in bounds
                                 if (shade.x < 0.0) shade.x = 0.0;
                                 if (shade.y < 0.0) shade.y = 0.0;
                                 if (shade.z < 0.0) shade.z = 0.0;
@@ -240,6 +255,13 @@ default {
                 // params was just built up: so now use it to set colors
                 llSetLinkPrimitiveParamsFast(0, params);
                 lmSendConfig("gemColour", (string)(gemColour = newColour));
+            }
+            else if (cmd == "setNormalGemColour") {
+                string choice = llList2String(split,0);
+                lmInternalCommand("setGemColour", choice, id);
+
+                normalGemColour = (vector)choice;
+                lmSendConfig("normalGemColour",choice);
             }
 #ifdef ADULT_MODE
             else if (cmd == "strip") {
@@ -524,20 +546,18 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 integer index = llListFindList(COLOR_NAMES, [ choice ]);
                 string choice = (string)llList2Vector(COLOR_VALUE, index);
 
-                lmInternalCommand("setGemColour", choice, id);
-                baseGemColour = (vector)choice;
-                lmSendConfig("baseGemColour",choice);
+                lmInternalCommand("setNormalGemColour", choice, id);
                 lmMenuReply("Gem Colour...", llGetDisplayName(id), id);
             }
 
             // Textbox generating menus
             else if (choice == "Custom..." || choice == "Dolly Name..." ) {
                 if (choice == "Custom...") {
-                    textboxType = 1;
+                    textboxType = GEM_COLOR_TEXTBOX;
                     llTextBox(id, "Here you can input a custom colour value\n\nCurrent colour: " + (string)gemColour + "\n\nEnter vector eg <0.900, 0.500, 0.000>\nOr Hex eg #A4B355\nOr RGB eg 240, 120, 10", textboxChannel);
                 }
                 else if (choice == "Dolly Name...") {
-                    textboxType = 2;
+                    textboxType = DOLL_NAME_TEXTBOX;
                     llTextBox(id, "Here you can change your dolly name from " + dollDisplayName + " to a name of your choice.", textboxChannel);
                 }
 
@@ -643,14 +663,19 @@ Parent - Take care choosing your parents; they have great control over Dolly and
             llListenRemove(textboxHandle);
             textboxHandle = 0;
             listenTime = 0.0;
+            string origChoice = choice;
 
             // Text box input - 4 types
             //   1: Gem Color
             //   2: Dolly Name
 
             // Type 1 = Custom Gem Color
-            if (textboxType == 1) {
+            if (textboxType == GEM_COLOR_TEXTBOX) {
                 string first = llGetSubString(choice, 0, 0);
+
+                // Note that all of these go through a vector cast at least once:
+                // so a bad entry will shake out as a ZERO_VECTOR or some unknown
+                // vector - which changes the gem color oddly.
 
                 if (first == "<") {                                             // User entry is vector
                     choice = (string)((vector)choice);
@@ -666,19 +691,25 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                     choice = (string)tmp;
                 }
 
-                lmInternalCommand("setGemColour", choice, id);
+                if (choice) {
+                    lmInternalCommand("setNormalGemColour", choice, id);
+                    lmMenuReply("Gem Colour...", name, id);
+                }
+#ifdef DEVELOPER_MODE
+                else {
+                    llSay(DEBUG_CHANNEL,"Bad color input! (" + origChoice + ")");
+                }
+#endif
             }
 
             // Type 2 = New Dolly Name
-            else if (textboxType == 2) lmSendConfig("dollDisplayName", choice);
-
-            // After processing the choice, what menu do we give back?
-            //
-            // For all types except #1 (Gem Color) give back the "Key..."
-            // Menu...
-            //
-            if (textboxType == 1) lmMenuReply("Gem Colour...", name, id);
-            else lmMenuReply("Key...", name, id);
+            else if (textboxType == DOLL_NAME_TEXTBOX) {
+                lmSendConfig("dollDisplayName", choice);
+                lmMenuReply("Key...", name, id);
+            }
+#ifdef DEVELOPER_MODE
+            else llSay(DEBUG_CHANNEL,"Unknown textbox type! (" + (string)textboxType + ")");
+#endif
         }
     }
 

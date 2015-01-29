@@ -66,6 +66,7 @@ integer dbConfigCount;
 
 string barefeet;
 string attachName;
+string prefGemColour; // use this to set gem color
 integer isAttached;
 
 // These RLV commands are set by the user
@@ -96,8 +97,8 @@ integer rlvWait;
 //=======================================
 // FUNCTIONS
 //=======================================
-doVisibility() {
-    debugSay(4, "DEBUG-START", "Color setting: " + (string)gemColour + "/" + (string)baseGemColour);
+doLuminosity() {
+    debugSay(4, "DEBUG-START", "Color setting: " + (string)gemColour);
 
     if (!visible || !primGlow || collapsed) {
         // Turn off glow et all when not visible or collapsed
@@ -110,7 +111,6 @@ doVisibility() {
         list params;
         integer nPrims = llGetNumberOfPrims();
         integer i;
-        integer j;
         string name;
         float glow;
 
@@ -130,10 +130,9 @@ doVisibility() {
                 glow = 0.08;
             }
             else if (name == "Body") glow = 0.3;
-            else if (name == "Center") glow = 0.0;
+            //else if (name == "Center") glow = 0.0;
             else if (llGetSubString(name, 0, 5) == "Mount") glow = 0.1;
 
-            debugSay(4, "DEBUG-START", "Found parameter for prim" + name + ": Glow");
             params += [ PRIM_GLOW, -1, glow ];
         }
 
@@ -179,7 +178,7 @@ processConfiguration(string name, string value) {
 #ifdef DEVELOPER_MODE
                      "debug level",
 #endif
-                     "dressable", "carryable", "repeatable wind", "gem colour", "gem color"
+                     "dressable", "carryable", "repeatable wind"
                    ];
 
     // "Send Names": these are the configuration variable names;
@@ -196,7 +195,7 @@ processConfiguration(string name, string value) {
 #ifdef DEVELOPER_MODE
                      "debugLevel",
 #endif
-                      "allowDress", "allowCarry", "allowRepeatWind", "baseGemColour", "baseGemColour"
+                      "allowDress", "allowCarry", "allowRepeatWind"
                     ];
 
 //  list internals = [ "wind time", "blacklist key", "controller key" ];
@@ -225,16 +224,13 @@ processConfiguration(string name, string value) {
             // convert to seconds and store back
             value = (string)(val * SEC_TO_MIN);
         }
-        else if (name == "gem colour" || name == "gem color") {
-            baseGemColour = (vector)value;
-            gemColour = baseGemColour;
-        }
 
         // FIXME: Note the lack of validation here (!)
         debugSay(2, "DEBUG-START", "Sending message " + cdListElement(sendName,i) + " with value " + (string)value);
 
         // Do both ways for now, just until all are converted or handled
         lmSetConfig(cdListElement(sendName,i), value);
+        llSleep(0.4);  // almost two frames worth - be nice to sims
         lmSendConfig(cdListElement(sendName,i), value);
     }
     else if ((i = cdListElementP(internals,name)) != NOT_FOUND) {
@@ -252,6 +248,11 @@ processConfiguration(string name, string value) {
             if ((float)value > (keyLimit / 2)) value = (string)llFloor(keyLimit / 6);
         }
         lmInternalCommand(cdListElement(cmdName,i), value, NULL_KEY);
+    }
+    else if (name == "gem colour" || name == "gem color") {
+        if ((vector)value != ZERO_VECTOR) {
+            prefGemColour = value;
+        }
     }
     else if (name == "chat mode") {
         chatFilter = "";
@@ -447,7 +448,6 @@ default {
             else if (name == "dialogChannel")            dialogChannel = (integer)value;
             else if (name == "timeLeftOnKey")            timeLeftOnKey = (float)value;
             else if (name == "demoMode")                      demoMode = (integer)value;
-            else if (name == "baseGemColour")            baseGemColour = (vector)value;
             else if (name == "quiet")                            quiet = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                  debugLevel = (integer)value;
@@ -500,15 +500,14 @@ default {
             else if (name == "userPoseRLVcmd")          userPoseRLVcmd = value;
             else if (name == "userAfkRLVcmd")            userAfkRLVcmd = value;
 
-            else if (name == "gemColour") {      gemColour = (vector)value; doVisibility(); }
-            else if (name == "primGlow")  {      primGlow = (integer)value; doVisibility(); }
-            else if (name == "primLight") {     primLight = (integer)value; doVisibility(); }
-            else if (name == "isVisible") {       visible = (integer)value; doVisibility(); }
+            else if (name == "gemColour") {      gemColour = (vector)value; doLuminosity(); }
+            else if (name == "primGlow")  {      primGlow = (integer)value; doLuminosity(); }
+            else if (name == "primLight") {     primLight = (integer)value; doLuminosity(); }
+            else if (name == "isVisible") {       visible = (integer)value; doLuminosity(); }
 
             else if (name == "collapsed") {
                 integer wasCollapsed = collapsed;
                 collapsed = (integer)value;
-                doVisibility();
 
                 //debugSay(2, "DEBUG-START", "Collapsed = " + (string)collapsed);
                 //debugSay(2, "DEBUG-START", "defaultCollapseRLVcmd = " + defaultCollapseRLVcmd);
@@ -740,7 +739,7 @@ default {
         // Reading notecard DataAppearance (JSON list of appearance settings)
         //if (query_id == ncRequestAppearance) {
         //    if (data == EOF) {
-        //        doVisibility();
+        //        doLuminosity();
         //        configured = 1;
         //        ncRequestAppearance = NULL_KEY;
         //        llSleep(1.0);
@@ -755,11 +754,7 @@ default {
             if (data == EOF) {
                 //lmSendConfig("ncPrefsLoadedUUID", llDumpList2String(llList2List((string)llGetInventoryKey(NOTECARD_PREFERENCES) + ncPrefsLoadedUUID, 0, 9),"|"));
                 lmInternalCommand("getTimeUpdates","",NULL_KEY);
-
-                gemColour = baseGemColour;
-                lmSendConfig("gemColour",(string)gemColour);
-                lmInternalCommand("setGemColour",(string)gemColour,NULL_KEY);
-                doVisibility();
+                lmInternalCommand("setNormalGemColour",(string)prefGemColour,NULL_KEY);
 
                 llOwnerSay("Preferences read in " + formatFloat(llGetTime() - ncStart, 2) + "s");
 

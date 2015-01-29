@@ -138,8 +138,7 @@ uncollapse() {
 
     // Among other things, this will set the Key's turn rate
     setWindRate();
-    lmInternalCommand("setGemColour", (string)baseGemColour, NULL_KEY);
-    lmSendConfig("baseGemColour",(string)baseGemColour);
+    lmInternalCommand("setGemColour", (string)normalGemColour, NULL_KEY);
 }
 
 collapse(integer newCollapseState) {
@@ -572,7 +571,7 @@ default {
             else if (name == "busyIsAway")                 busyIsAway = (integer)value;
             else if (name == "baseWindRate")             baseWindRate = (float)value;
             else if (name == "keyAnimation")             keyAnimation = value;
-            else if (name == "baseGemColour")           baseGemColour = (vector)value;
+            else if (name == "normalGemColour")           normalGemColour = (vector)value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
             else if (name == "transformLockExpire")   transformLockExpire = (integer)value;
