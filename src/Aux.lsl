@@ -333,8 +333,7 @@ default {
             else if (choice == "Help Notecard")
                 llGiveInventory(id,NOTECARD_HELP);
             else if (choice == "Get Key") {
-                if (llGetInventoryType(OBJECT_KEY) == INVENTORY_OBJECT)
-                    llGiveInventory(id,OBJECT_KEY);
+                llGiveInventory(id,OBJECT_KEY);
             }
             else if (choice == "Visit Dollhouse") {
                 // If is Dolly, whisk Dolly away to Location of Landmark
