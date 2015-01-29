@@ -63,6 +63,7 @@ integer newAttach = YES;
 integer primGlow = YES;
 integer primLight = YES;
 integer dbConfigCount;
+integer i;
 
 string barefeet;
 string attachName;
@@ -795,7 +796,7 @@ default {
 
             i = nCards;
             while (i--) {
-                name = llGetInventoryName(i);
+                name = llGetInventoryName(INVENTORY_NOTECARD,i);
                 if ((llGetSubString(name,0,0) == "*") || (name == NOTECARD_PREFERENCES)) {
                     llRemoveInventory(name);
                 }

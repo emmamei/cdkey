@@ -61,6 +61,13 @@ broadcastWindRate() {
 #define CHECKP "✔ "
 #define CROSSP "✘ "
 
+// Small function - but hopefully not too much a space hog
+//integer cdSayToAgentPlusDoll(string msg, key id) {
+//    llOwnerSay(msg);
+//    if (cdIsDoll(id) && id != NULL_KEY) cdSayTo(msg,id);
+//}
+#define cdSayToAgentPlusDoll(msg,id)  llOwnerSay(msg); if (!cdIsDoll(id)) cdSayTo(msg,id);
+
 list cdGetButton(string text, key id, integer enabled, integer oneWay) {
 
    //debugSay(5,"LIB-MENU","cdGetButton: text = \"" + text + "\"; enabled = " + (string)enabled + "; oneWay = " + (string)oneWay);

@@ -235,14 +235,17 @@ default
                     if (cmd != "addBlacklist") msg = name + " is blacklisted; you must first remove them from the blacklist before adding them as a controller.";
                     else msg = name + " is one of your controllers; until they remove themselves from being your controller, you cannot add them to the blacklist.";
 
-                    lmSendToAgentPlusDoll(msg, id);
+                    cdSayTo(msg, id);
                     return;
                 }
 
                 // #2: Check if UUID exists already in the list (and add if not)
                 //
+                string s;
+
                 if (llListFindList(tmpList, [ uuid ]) == NOT_FOUND) {
-                    lmSendToAgentPlusDoll("Adding " + name + " as " + typeString, id);
+                    s = "Adding " + name + " as " + typeString;
+                    cdSayToAgentPlusDoll(s, id);
                     tmpList += [ uuid, name ];
 
                     if (cmd != "addBlacklist") controllers = tmpList;
@@ -250,7 +253,7 @@ default
                 }
                 // Report already found
                 else {
-                    lmSendToAgentPlusDoll(name + " is already found listed as " + typeString, id);
+                    cdSayTo(name + " is already found listed as " + typeString, id);
                 }
 
                 // we may or may not have changed either of these - but this code
@@ -294,13 +297,16 @@ default
                 // Test for the presence of the UUID in the existing list
                 //
                 // we are assuming that the uuid/name exists as a valid pair and in that order
+                string s;
                 if ((i = llListFindList(tmpList, [ uuid ])) != NOT_FOUND) {
 
-                    lmSendToAgentPlusDoll("Removing key " + name + " from list as " + typeString + ".", id);
+                    s = "Removing key " + name + " from list as " + typeString + ".";
+                    cdSayToAgentPlusDoll(s, id);
+
                     tmpList = llDeleteSubList(tmpList, i, i + 1);
                 }
                 else {
-                    lmSendToAgentPlusDoll("Key " + uuid + " is not listed as " + typeString, id);
+                    cdSayTo("Key " + uuid + " is not listed as " + typeString, id);
                 }
 
                 if (cmd != "remBlacklist") controllers = tmpList;
@@ -776,7 +782,9 @@ default
                             }
                             else {
 #ifdef DEVELOPER_MODE
-                                lmSendToAgentPlusDoll("Emergency detection circuits detect developer access override; emergency winder activated",id);
+                                string s;
+                                s = "Emergency detection circuits detect developer access override; emergency winder activated";
+                                cdSayToAgentPlusDoll(s,id);
                                 cdMenuInject("Wind Emg", dollName, dollID);
 #else
                                 cdSayTo("Emergency not detected; emergency winder is inactive",id);
@@ -949,7 +957,8 @@ default
 
                         else {
                             chatPrefix = newPrefix;
-                            lmSendToAgentPlusDoll("Chat prefix has been changed to " + llToLower(chatPrefix) + " the new prefix should now be used for all commands.", id);
+                            string s = "Chat prefix has been changed to " + llToLower(chatPrefix) + " the new prefix should now be used for all commands.";
+                            cdSayToAgentPlusDoll(s, id);
                         }
                         return;
                     }

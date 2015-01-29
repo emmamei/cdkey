@@ -571,19 +571,10 @@ Parent - Take care choosing your parents; they have great control over Dolly and
             }
         }
 
-        // 12: lmSendToAgentPlusDoll
         // 15: lmSendToController
         //
         else if (code < 200) {
-            if (code == 12) {
-
-                //----------------------------------------
-                // lmSendToAgentPlusDoll
-                msg = llList2String(split, 0);
-                llOwnerSay(msg);
-                llRegionSayTo(id, PUBLIC_CHANNEL, msg);
-            }
-            else if (code == 15) {
+            if (code == 15) {
 
                 //----------------------------------------
                 // lmSendToController

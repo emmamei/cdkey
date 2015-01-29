@@ -268,7 +268,11 @@ changeComplete(integer success) {
 #endif
 
     if (success) {
-        if (change) lmSendToAgentPlusDoll("Change to new outfit " + newOutfitName + " complete.", dresserID);
+        if (change) {
+            string s = "Change to new outfit " + newOutfitName + " complete.";
+
+            cdSayToAgentPlusDoll(s,dresserID);
+        }
 
         // Note: if wearLock is already set, it STAYS set with this setting
         //
@@ -291,7 +295,10 @@ changeComplete(integer success) {
             }
         }
 
-        lmSendToAgentPlusDoll("Change to new outfit " + newOutfitName + " unsuccessful.", dresserID);
+        string s = "Change to new outfit " + newOutfitName + " unsuccessful.";
+
+        cdSayToAgentPlusDoll(s,dresserID);
+
         wearLock = 0;
     }
 

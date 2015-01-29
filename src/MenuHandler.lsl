@@ -706,8 +706,10 @@ default {
                     if ((index = llListFindList(controllers, [ (string)id ])) != NOT_FOUND) {
                         controllers = llDeleteSubList(controllers, index, index + 1);
                         lmSendConfig("controllers", llDumpList2String(controllers, "|"));
+
                         cdSayTo("You are no longer a controller of this Dolly.", id);
                         llOwnerSay("Your controller " + name + " has relinquished control.");
+
                         //debugSay(5,"DEBUG-MENUHANDLER","id " + (string)id + " dropped from " + llDumpList2String(controllers,","));
                         debugSay(5,"DEBUG-MENUHANDLER","controllers = " + llDumpList2String(controllers,",") + " (" + (string)llGetListLength(controllers) + ")");
                     }
@@ -729,22 +731,31 @@ default {
                     // This code depends on knowledge of which menu has which option; the only reason we
                     // care at all is because we want to redisplay the menu in which the option occurs
 
+                    string s;
+
                     if (afterSpace == "Visible") {
                         lmSendConfig("isVisible", (string)(visible = (beforeSpace == CROSS)));
-                        if (visible) lmSendToAgentPlusDoll("You watch as the Key fades away...",id);
-                        else lmSendToAgentPlusDoll("The Key magically reappears",id);
+
+                        if (visible) s = "You watch as the Key fades away...";
+                        else s = "The Key magically reappears";
+
+                        cdSayToAgentPlusDoll(s,id);
+
                         lmMenuReply(MAIN, name, id);
                     }
                     else if (afterSpace == "AFK") {
 
                         if (beforeSpace == CROSS) {
                             lmSetConfig("afk", MENU_AFK);
-                            lmSendToAgentPlusDoll("AFK Mode manually triggered; Key subsystems slowing...",id);
+                            s = "AFK Mode manually triggered; Key subsystems slowing...";
                         }
                         else {
                             lmSetConfig("afk", NOT_AFK);
-                            lmSendToAgentPlusDoll("You hear the Key whir back to full power",id);
+                            s = "You hear the Key whir back to full power";
                         }
+
+                        cdSayToAgentPlusDoll(s,id);
+
                         lmMenuReply(MAIN, name, id);
                     }
                     // Could be Option or Ability:
