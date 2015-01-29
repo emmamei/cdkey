@@ -97,57 +97,48 @@ integer rlvWait;
 // FUNCTIONS
 //=======================================
 doVisibility() {
-    if (cdNotecardExists(APPEARANCE_NC)) {
+    debugSay(4, "DEBUG-START", "Color setting: " + (string)gemColour + "/" + (string)baseGemColour);
 
-        if (!visible || !primGlow || collapsed) {
-            // Turn off glow et all when not visible or collapsed
-            llSetLinkPrimitiveParamsFast(LINK_SET, [ PRIM_POINT_LIGHT, FALSE, gemColour, 0.5, 2.5, 2.0 ]);
-            llSetLinkPrimitiveParamsFast(LINK_SET, [ PRIM_GLOW, ALL_SIDES, 0.0 ]);
-        }
-        else {
-            // Turn on glow and light using llSetLinkPrimitiveParamsFast
+    if (!visible || !primGlow || collapsed) {
+        // Turn off glow et all when not visible or collapsed
+        llSetLinkPrimitiveParamsFast(LINK_SET, [ PRIM_POINT_LIGHT, FALSE, gemColour, 0.5, 2.5, 2.0 ]);
+        llSetLinkPrimitiveParamsFast(LINK_SET, [ PRIM_GLOW, ALL_SIDES, 0.0 ]);
+    }
+    else {
+        // Turn on glow and light using llSetLinkPrimitiveParamsFast
 
-            list params;
-            integer nPrims = llGetNumberOfPrims();
-            integer i;
-            integer j;
-            string name;
+        list params;
+        integer nPrims = llGetNumberOfPrims();
+        integer i;
+        integer j;
+        string name;
+        float glow;
 
-            debugSay(4, "DEBUG-START", "Number of prims = " + (string)nPrims);
+        debugSay(4, "DEBUG-START", "Number of prims = " + (string)nPrims);
 
-            i = nPrims;
-            while (i--) {
-                name = llGetLinkName(i + 1);
-                debugSay(4, "DEBUG-START", "Name of prim #" + (string)(i + 1) + " of " + (string)nPrims + " = " + name);
-                params += [ PRIM_LINK_TARGET, i ];
+        i = nPrims;
+        while (i--) {
+            name = llGetLinkName(i + 1);
+            debugSay(4, "DEBUG-START", "Name of prim #" + (string)(i + 1) + " of " + (string)nPrims + " = " + name);
+            params += [ PRIM_LINK_TARGET, i ];
 
-                if (cdGetElementType(appearanceData, ( [ name, "Light" ] )) != JSON_INVALID) {
+            if (llGetSubString(name, 0, 4) == "Heart") {
+                debugSay(4, "DEBUG-START", "Found parameter for prim" + name + ": Light");
 
-                    // Note that none of the JSON data is used here...
-                    debugSay(4, "DEBUG-START", "Found parameter for prim" + name + ": Light");
-
-                    // This sets a default color: no need to make gemColour with a in-code default
-                    //if (colour == ZERO_VECTOR) {
-                    //    colour = (vector)llList2String(params, 1);
-                    //    gemColour = colour;
-                    //    baseGemColour = colour;
-                    //}
-
-                    params += [ PRIM_POINT_LIGHT, (primLight & !collapsed), gemColour, 0.5, 2.5, 2.0 ];
-                }
-
-                j = 0;
-                if (cdGetElementType(appearanceData, ( [ name, "Glow" ] )) != JSON_INVALID) {
-                    while (cdGetElementType(appearanceData,( [ name, "Glow", j] )) != JSON_INVALID) {
-                        debugSay(4, "DEBUG-START", "Found parameter for prim" + name + ": Glow");
-                        params += (list)PRIM_GLOW + llJson2List(cdGetValue(appearanceData,( [ name, "Glow", j++ ] )));
-                    }
-                }
+                // JSON parameters are .......................... <0.6, 0.0, 0.9>, 0.3, 3.0, 0.2
+                params += [ PRIM_POINT_LIGHT, (primLight & !collapsed), gemColour, 0.5, 2.5, 2.0 ];
+                glow = 0.08;
             }
+            else if (name == "Body") glow = 0.3;
+            else if (name == "Center") glow = 0.0;
+            else if (llGetSubString(name, 0, 5) == "Mount") glow = 0.1;
 
-            debugSay(4, "DEBUG-START", "Set Params list: " + llDumpList2String(params, ","));
-            llSetLinkPrimitiveParamsFast(0, params);
+            debugSay(4, "DEBUG-START", "Found parameter for prim" + name + ": Glow");
+            params += [ PRIM_GLOW, -1, glow ];
         }
+
+        debugSay(4, "DEBUG-START", "Set Params list: " + llDumpList2String(params, ","));
+        llSetLinkPrimitiveParamsFast(0, params);
     }
 }
 
@@ -233,6 +224,10 @@ processConfiguration(string name, string value) {
 
             // convert to seconds and store back
             value = (string)(val * SEC_TO_MIN);
+        }
+        else if (name == "gem colour" || name == "gem color") {
+            baseGemColour = (vector)value;
+            gemColour = baseGemColour;
         }
 
         // FIXME: Note the lack of validation here (!)
@@ -393,11 +388,11 @@ doneConfiguration(integer prefsRead) {
 
     lmInitState(110);
 
-    if (cdNotecardExists(APPEARANCE_NC)) {
-        ncLine = 0;
-        appearanceData = "";
-        ncRequestAppearance = llGetNotecardLine(APPEARANCE_NC, ncLine++);
-    }
+//    if (cdNotecardExists(APPEARANCE_NC)) {
+//        ncLine = 0;
+//        appearanceData = "";
+//        ncRequestAppearance = llGetNotecardLine(APPEARANCE_NC, ncLine++);
+//    }
 
     debugSay(3,"DEBUG-START","doneConfiguration done - exiting");
 }
@@ -691,10 +686,6 @@ default {
         RLVok = UNSET;
 
         setWindRate();
-        gemColour = baseGemColour;
-        lmInternalCommand("setGemColour", (string)baseGemColour, llGetKey());
-        lmSendConfig("baseGemColour",(string)baseGemColour);
-        lmSendConfig("gemColour",(string)gemColour);
     }
 
     //----------------------------------------
@@ -747,26 +738,28 @@ default {
     dataserver(key query_id, string data) {
 
         // Reading notecard DataAppearance (JSON list of appearance settings)
-        if (query_id == ncRequestAppearance) {
-            if (data == EOF) {
-                doVisibility();
-                configured = 1;
-                ncRequestAppearance = NULL_KEY;
-                llSleep(1.0);
-            }
-            else {
-                appearanceData += llStringTrim(data,STRING_TRIM);
-                ncRequestAppearance = llGetNotecardLine(APPEARANCE_NC, ncLine++);
-            }
-        }
+        //if (query_id == ncRequestAppearance) {
+        //    if (data == EOF) {
+        //        doVisibility();
+        //        configured = 1;
+        //        ncRequestAppearance = NULL_KEY;
+        //        llSleep(1.0);
+        //    }
+        //    else {
+        //        appearanceData += llStringTrim(data,STRING_TRIM);
+        //        ncRequestAppearance = llGetNotecardLine(APPEARANCE_NC, ncLine++);
+        //    }
+        //}
         // Read notecard: Preferences
-        else if (query_id == ncPrefsKey) {
+        if (query_id == ncPrefsKey) {
             if (data == EOF) {
                 //lmSendConfig("ncPrefsLoadedUUID", llDumpList2String(llList2List((string)llGetInventoryKey(NOTECARD_PREFERENCES) + ncPrefsLoadedUUID, 0, 9),"|"));
                 lmInternalCommand("getTimeUpdates","",NULL_KEY);
+
                 gemColour = baseGemColour;
                 lmSendConfig("gemColour",(string)gemColour);
                 lmInternalCommand("setGemColour",(string)gemColour,NULL_KEY);
+                doVisibility();
 
                 llOwnerSay("Preferences read in " + formatFloat(llGetTime() - ncStart, 2) + "s");
 

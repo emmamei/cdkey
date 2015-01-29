@@ -193,11 +193,12 @@ default {
             if (cmd == "setGemColour") {
                 vector newColour = (vector)llList2String(split, 0);
 
-                if (newColour == gemColour) return;
+                //if (newColour == gemColour) return;
                 if (newColour == <0.0,0.0,0.0>) {
                     llSay(DEBUG_CHANNEL,"Script " + script + " tried to set gem color to Black!");
                     return;
                 }
+                debugSay(4,"DEBUG-AUX","Setting gem color to " + (string)gemColour);
 
                 integer j; integer shaded; list params; list colourParams;
                 integer n; integer m;
