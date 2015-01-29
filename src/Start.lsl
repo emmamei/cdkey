@@ -101,6 +101,7 @@ doVisibility() {
 
         if (!visible || !primGlow || collapsed) {
             // Turn off glow et all when not visible or collapsed
+            llSetLinkPrimitiveParamsFast(LINK_SET, [ PRIM_POINT_LIGHT, FALSE, gemColour, 0.5, 2.5, 2.0 ]);
             llSetLinkPrimitiveParamsFast(LINK_SET, [ PRIM_GLOW, ALL_SIDES, 0.0 ]);
         }
         else {

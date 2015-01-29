@@ -150,7 +150,7 @@ default {
             else if (name == "wearLock")                     wearLock = (integer)value;
             else if (name == "primLight")                   primLight = (integer)value;
             else if (name == "primGlow")                     primGlow = (integer)value;
-            else if (name == "isVisible")                     visible = (integer)value;
+            //else if (name == "isVisible")                   isVisible = (integer)value;
             else if (name == "gemColour")                   gemColour = (vector)value;
             else if (name == "blacklist") {
                 if (split == [""]) blacklist = [];

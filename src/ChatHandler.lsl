@@ -73,7 +73,7 @@ default
             else if (name == "timeReporting")           timeReporting = (integer)value;
 #endif
             else if (name == "hardcore")                     hardcore = (integer)value;
-            else if (name == "isVisible")                     visible = (integer)value;
+            //else if (name == "isVisible")                     isVisible = (integer)value;
             else if (name == "blacklist") {
                 if (split == [""]) blacklist = [];
                 else blacklist = split;
