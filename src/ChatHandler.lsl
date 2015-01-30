@@ -592,7 +592,7 @@ default
                                    formatFloat(RATE_AFK, 1) + "x\nWind amount: " + (string)windMins + " (mins)\n";
 
                         if (demoMode) s += "Demo mode is enabled\n";
-                        if (lastWinderName) s += "Last winder was: " + lastWinderName + "\n";
+                        //if (lastWinderName) s += "Last winder was: " + lastWinderName + "\n";
 
                         string p = pronounHerDoll;
 
@@ -622,7 +622,7 @@ default
                         else if (RLVok == 1) s += "RLV is active.\nRLV version: " + rlvAPIversion;
                         else s += "RLV is not active.\n";
 
-                        if (lastWinderID) s += "Last winder was " + cdProfileURL(lastWinderID);
+                        if (lastWinderID) s += "\nLast winder was " + cdProfileURL(lastWinderID);
                         if (lastWinderName) s += " (" + lastWinderName + ")";
                         s += "\n";
 
