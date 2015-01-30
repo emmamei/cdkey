@@ -61,9 +61,9 @@ key lastAttachAvatar;
 
 integer newAttach = YES;
 #ifdef PRIMGLOW_OPT
-integer primGlow = YES;
+integer gemGlow = YES;
 #endif
-integer primLight = YES;
+integer gemLight = YES;
 integer dbConfigCount;
 integer i;
 
@@ -108,7 +108,7 @@ doLuminosity() {
     // textured Key items don't change color (texture overrides color?).
 
 #ifdef PRIMGLOW_OPT
-    if (!visible || !primGlow || collapsed) {
+    if (!visible || !gemGlow || collapsed) {
 #else
     if (!visible || collapsed) {
 #endif
@@ -138,10 +138,10 @@ doLuminosity() {
 
             if (llGetSubString(name, 0, 4) == "Heart") {
                 // JSON parameters were .............................. <0.6, 0.0, 0.9>, 0.3, 3.0, 0.2
-                params += [ PRIM_POINT_LIGHT, (primLight & !collapsed),      gemColour, 0.5, 2.5, 2.0 ];
-                if (primLight) glow = 0.08;
+                params += [ PRIM_POINT_LIGHT, (gemLight & !collapsed),      gemColour, 0.5, 2.5, 2.0 ];
+                if (gemLight) glow = 0.08;
             }
-            else if (primLight) {
+            else if (gemLight) {
                 if (name == "Body") glow = 0.3;
                 //else if (name == "Center") glow = 0.0;
                 else if (llGetSubString(name, 0, 5) == "Mount") glow = 0.1;
@@ -516,9 +516,9 @@ default {
 
             else if (name == "gemColour") {      gemColour = (vector)value; doLuminosity(); }
 #ifdef PRIMGLOW_OPT
-            else if (name == "primGlow")  {      primGlow = (integer)value; doLuminosity(); }
+            else if (name == "gemGlow")  {      gemGlow = (integer)value; doLuminosity(); }
 #endif
-            else if (name == "primLight") {     primLight = (integer)value; doLuminosity(); }
+            else if (name == "gemLight") {     gemLight = (integer)value; doLuminosity(); }
             else if (name == "isVisible") {       visible = (integer)value; doLuminosity(); }
 
             else if (name == "collapsed") {

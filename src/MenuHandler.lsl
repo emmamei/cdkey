@@ -54,7 +54,7 @@ float windDefault = WIND_DEFAULT;
 
 string msg;
 integer carryMoved;
-integer primLight = 1;
+integer gemLight = 1;
 integer clearAnim;
 integer dbConfig;
 integer textboxType;
@@ -220,8 +220,8 @@ default {
             else if (c == "p") {
                      if (name == "poserID")                   poserID = (key)value;
                 else if (name == "poseSilence")           poseSilence = (integer)value;
-                else if (name == "primLight") {
-                    primLight = (integer)value;
+                else if (name == "gemLight") {
+                    gemLight = (integer)value;
                     lmInternalCommand("setGemColour", (string)gemColour, NULL_KEY);
                 }
 #ifdef ADULT_MODE
@@ -762,12 +762,12 @@ default {
 
                         // Entering key menu section
                         if (afterSpace == "Gem Light") {
-                             lmSendConfig("primLight", (string)isX);
+                             lmSendConfig("gemLight", (string)isX);
                              lmMenuReply("Key...", name, id);
                         }
 #ifdef PRIMGLOW_OPT
                         else if (afterSpace == "Key Glow") { 
-                            lmSendConfig("primGlow", (string)isX);
+                            lmSendConfig("gemGlow", (string)isX);
                             lmMenuReply("Key...", name, id);
                         }
 #endif

@@ -35,8 +35,10 @@ string memOutput = "Script Memory Status:";
 integer maxMins;
 integer ncLine;
 integer memReporting;
-integer primGlow = 1;
-integer primLight = 1;
+#ifdef PRIMGLOW_OPT
+integer gemGlow = 1;
+#endif
+integer gemLight = 1;
 integer textboxChannel;
 integer textboxHandle;
 integer textboxType;
@@ -151,8 +153,10 @@ default {
 #endif
             else if (name == "windMins")                     windMins = (integer)value;
             else if (name == "wearLock")                     wearLock = (integer)value;
-            else if (name == "primLight")                   primLight = (integer)value;
-            else if (name == "primGlow")                     primGlow = (integer)value;
+            else if (name == "gemLight")                   gemLight = (integer)value;
+#ifdef PRIMGLOW_OPT
+            else if (name == "gemGlow")                     gemGlow = (integer)value;
+#endif
             //else if (name == "isVisible")                   isVisible = (integer)value;
             //else if (name == "gemColour") {
             //    vector oldGemColour = gemColour;
@@ -526,9 +530,9 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 if (cdIsController(id)) plusList += [ "Max Time...", "Wind Time..." ];
                 cdDialogListen();
 #ifdef PRIMGLOW_OPT
-                llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(plusList, 1, 1) + cdGetButton("Key Glow", id, primGlow, 0) + cdGetButton("Gem Light", id, primLight, 0) + "Back..."), dialogChannel);
+                llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(plusList, 1, 1) + cdGetButton("Key Glow", id, gemGlow, 0) + cdGetButton("Gem Light", id, gemLight, 0) + "Back..."), dialogChannel);
 #else
-                llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(plusList, 1, 1) + cdGetButton("Gem Light", id, primLight, 0) + "Back..."), dialogChannel);
+                llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(plusList, 1, 1) + cdGetButton("Gem Light", id, gemLight, 0) + "Back..."), dialogChannel);
 #endif
             }
             else if (llGetSubString(choice,0,6) == "Gender:") {
