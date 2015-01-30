@@ -617,7 +617,8 @@ default {
 
                 llOwnerSay(msg);
 
-                if (newAttach && !quiet && isAttached)
+                // When starting up, let people know...
+                if (newAttach && isAttached)
                     llSay(0, llGetDisplayName(llGetOwner()) + " is now a dolly - anyone may play with their Key.");
             }
             else if (code == MEM_REPORT) {
