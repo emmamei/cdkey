@@ -985,8 +985,12 @@ default {
             lmPoseReply(choice, name, id);
         }
         else if (channel == typeChannel) {
-            llRegionSayTo(id, 0, "Dolly's internal mechanisms engage, and a transformation comes over Dolly, making " + pronounHerDoll + " into a " + choice + " Dolly");
-            lmTypeReply(choice, name, id);
+            if (choice == "Back...")
+                cdMenuInject(backMenu);
+            else {
+                llRegionSayTo(id, 0, "Dolly's internal mechanisms engage, and a transformation comes over Dolly, making " + pronounHerDoll + " into a " + choice + " Dolly");
+                lmTypeReply(choice, name, id);
+            }
         }
         else if ((channel == blacklistChannel) || (channel == controlChannel)) {
             // This is what starts the Menu process: a reply sent out
