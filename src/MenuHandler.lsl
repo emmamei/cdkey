@@ -295,21 +295,25 @@ default {
 
                 // Compute "time remaining" message for mainMenu/windMenu
                 string timeLeft;
+                integer minsLeft;
 
-                integer minsLeft = llRound(timeLeftOnKey / (60.0 * windRate));
+                if (!hardcore) {
 
-                if (minsLeft > 0) {
-                    timeLeft = "Dolly has " + (string)minsLeft + " minutes remaining. ";
+                    minsLeft = llRound(timeLeftOnKey / (60.0 * windRate));
 
-                    timeLeft += "Key is ";
-                    if (windingDown) {
-                        if (windRate == 1) timeLeft += "winding down at a normal rate. ";
-                        else if (windRate > 1) timeLeft += "winding down at an accelerated rate. ";
-                        else if (windRate < 1) timeLeft += "winding down at a slowed rate. ";
+                    if (minsLeft > 0) {
+                        timeLeft = "Dolly has " + (string)minsLeft + " minutes remaining. ";
+
+                        timeLeft += "Key is ";
+                        if (windingDown) {
+                            if (windRate == 1) timeLeft += "winding down at a normal rate. ";
+                            else if (windRate > 1) timeLeft += "winding down at an accelerated rate. ";
+                            else if (windRate < 1) timeLeft += "winding down at a slowed rate. ";
+                        }
+                        else timeLeft += "not winding down. ";
                     }
-                    else timeLeft += "not winding down. ";
+                    else timeLeft = "Dolly has no time left. ";
                 }
-                else timeLeft = "Dolly has no time left. ";
 
                 //----------------------------------------
                 // Start building menu
