@@ -616,7 +616,11 @@ default {
 
         if (controlHandle) {
             channel = controlChannel;
+#ifdef ADULT_MODE
             type = "controller list";
+#else
+            type = "parent list";
+#endif
             current = controllers;
         }
         else {
@@ -907,7 +911,11 @@ default {
                         }
 
                         activeChannel = controlChannel;
+#ifdef ADULT_MODE
                         msg = "controller list";
+#else
+                        msg = "parent list";
+#endif
                         debugSay(5,"DEBUG-MENUHANDLER","controllers = " + llDumpList2String(controllers,",") + " (" + (string)llGetListLength(controllers) + ")");
                         if (controllers != []) {
                             dialogKeys  = cdList2ListStrided(controllers, 0, -1, 2);
@@ -944,9 +952,6 @@ default {
                     }
                     else if (beforeSpace == CIRCLE_MINUS) {
                         if (dialogKeys == []) {
-#ifndef ADULT_MODE
-                            if (msg = "controller list") msg = "parent list";
-#endif
                             msg = "Your " + msg + " is empty.";
                             llRegionSayTo(id, 0, msg);
                             return;
@@ -962,9 +967,6 @@ default {
                     }
                     else if (beforeSpace == "List") {
                         if (dialogNames == []) {
-#ifndef ADULT_MODE
-                            if (msg = "controller list") msg = "parent list";
-#endif
 
                             if (cdIsDoll(id)) msg = "Your " + msg + " is empty.";
                             else msg = "Doll's " + msg + " is empty.";
@@ -1012,7 +1014,7 @@ default {
                 llListenRemove(blacklistHandle);
                 blacklistHandle = 0;
 
-                if (llListFindList(controllers, [uuid,name]) == NOT_FOUND) lmInternalCommand("addBlacklist", (string)uuid + "|" + name, id);
+                if (llListFindList(controllers, [uuid,name]) != NOT_FOUND) lmInternalCommand("addBlacklist", (string)uuid + "|" + name, id);
                 else                                                       lmInternalCommand("remBlacklist", (string)uuid + "|" + name, id);
             }
             else {
