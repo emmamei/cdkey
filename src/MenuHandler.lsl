@@ -765,7 +765,7 @@ default {
                              lmSendConfig("gemLight", (string)isX);
                              lmMenuReply("Key...", name, id);
                         }
-#ifdef PRIMGLOW_OPT
+#ifdef GEMGLOW_OPT
                         else if (afterSpace == "Key Glow") { 
                             lmSendConfig("gemGlow", (string)isX);
                             lmMenuReply("Key...", name, id);

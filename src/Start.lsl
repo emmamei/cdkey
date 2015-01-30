@@ -60,7 +60,7 @@ integer lastAttachPoint;
 key lastAttachAvatar;
 
 integer newAttach = YES;
-#ifdef PRIMGLOW_OPT
+#ifdef GEMGLOW_OPT
 integer gemGlow = YES;
 #endif
 integer gemLight = YES;
@@ -107,7 +107,7 @@ doLuminosity() {
     // Note that it sets the color on every prim to the gemColour - but the
     // textured Key items don't change color (texture overrides color?).
 
-#ifdef PRIMGLOW_OPT
+#ifdef GEMGLOW_OPT
     if (!visible || !gemGlow || collapsed) {
 #else
     if (!visible || collapsed) {
@@ -515,7 +515,7 @@ default {
             else if (name == "userAfkRLVcmd")            userAfkRLVcmd = value;
 
             else if (name == "gemColour") {      gemColour = (vector)value; doLuminosity(); }
-#ifdef PRIMGLOW_OPT
+#ifdef GEMGLOW_OPT
             else if (name == "gemGlow")  {      gemGlow = (integer)value; doLuminosity(); }
 #endif
             else if (name == "gemLight") {     gemLight = (integer)value; doLuminosity(); }

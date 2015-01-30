@@ -11,7 +11,7 @@
 // #define JAMMABLE 1
 
 /* Is primGlow a selectable option? */
-// #define PRIMGLOW_OPT 1
+// #define GEMGLOW_OPT 1
 
 /* Confirm items fully removed */
 // #define CONFIRM_UNWEAR 1
