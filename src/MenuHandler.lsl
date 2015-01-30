@@ -765,10 +765,12 @@ default {
                              lmSendConfig("primLight", (string)isX);
                              lmMenuReply("Key...", name, id);
                         }
+#ifdef PRIMGLOW_OPT
                         else if (afterSpace == "Key Glow") { 
                             lmSendConfig("primGlow", (string)isX);
                             lmMenuReply("Key...", name, id);
                         }
+#endif
                         else {
                             // These variables are used to track which menu to respond with given
                             // a particular menu selection; that way, a setting can be toggled without

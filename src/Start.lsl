@@ -60,7 +60,9 @@ integer lastAttachPoint;
 key lastAttachAvatar;
 
 integer newAttach = YES;
+#ifdef PRIMGLOW_OPT
 integer primGlow = YES;
+#endif
 integer primLight = YES;
 integer dbConfigCount;
 integer i;
@@ -101,7 +103,11 @@ integer rlvWait;
 doLuminosity() {
     debugSay(4, "DEBUG-START", "Color setting: " + (string)gemColour);
 
+#ifdef PRIMGLOW_OPT
     if (!visible || !primGlow || collapsed) {
+#else
+    if (!visible || collapsed) {
+#endif
         // Turn off glow et all when not visible or collapsed
         llSetLinkPrimitiveParamsFast(LINK_SET, [ PRIM_POINT_LIGHT, FALSE, gemColour, 0.5, 2.5, 2.0 ]);
         llSetLinkPrimitiveParamsFast(LINK_SET, [ PRIM_GLOW, ALL_SIDES, 0.0 ]);
@@ -502,7 +508,9 @@ default {
             else if (name == "userAfkRLVcmd")            userAfkRLVcmd = value;
 
             else if (name == "gemColour") {      gemColour = (vector)value; doLuminosity(); }
+#ifdef PRIMGLOW_OPT
             else if (name == "primGlow")  {      primGlow = (integer)value; doLuminosity(); }
+#endif
             else if (name == "primLight") {     primLight = (integer)value; doLuminosity(); }
             else if (name == "isVisible") {       visible = (integer)value; doLuminosity(); }
 
