@@ -293,6 +293,7 @@ default {
                 if (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND) {
                     //msg = "You are not permitted any access to this dolly's key.";
                     //menu = ["Leave Alone"];
+                    llOwnerSay("SECURITY WARNING! Attempted Main Menu access by " + llGetDisplayName(id));
                     return;
                 }
                 else {

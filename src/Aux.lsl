@@ -646,10 +646,14 @@ Parent - Take care choosing your parents; they have great control over Dolly and
     // LISTEN
     //----------------------------------------
     listen(integer channel, string name, key id, string choice) {
-        // Deny access to the key when the command was recieved from blacklisted avatar
-        if (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND) return;
 
         name = llGetDisplayName(id);
+
+        // Deny access to the key when the command was recieved from blacklisted avatar
+        if (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND) {
+            llOwnerSay("SECURITY WARNING! Attempted access from blacklisted user " + name);
+            return;
+        }
 
         //llOwnerSay((string)channel + "=" + (string)textboxChannel + "? " + (string)textboxType + " " + choice);
 

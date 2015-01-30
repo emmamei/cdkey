@@ -375,7 +375,10 @@ default
 
         if (channel == chatChannel) {
             // Deny access to the menus when the command was recieved from blacklisted avatar
-            if (!isDoll && (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND)) return;
+            if (!isDoll && (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND)) {
+                llOwnerSay("SECURITY WARNING! Attempted chat channel access by blacklisted user " + name);
+                return;
+            }
 
             lmInternalCommand("getTimeUpdates","",NULL_KEY);
             debugSay(5,"DEBUG-CHAT",("Got a chat channel message: " + name + "/" + (string)id + "/" + msg));
