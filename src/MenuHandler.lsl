@@ -290,246 +290,238 @@ default {
                 isDoll          = cdIsDoll(id);
                 numControllers  = cdControllerCount();
 
-                if (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND) {
-                    //msg = "You are not permitted any access to this dolly's key.";
-                    //menu = ["Leave Alone"];
-                    llOwnerSay("SECURITY WARNING! Attempted Main Menu access by " + llGetDisplayName(id));
+                //----------------------------------------
+                // Build message for Main Menu display
+
+                // Compute "time remaining" message for mainMenu/windMenu
+                string timeLeft;
+
+                integer minsLeft = llRound(timeLeftOnKey / (60.0 * windRate));
+
+                if (minsLeft > 0) {
+                    timeLeft = "Dolly has " + (string)minsLeft + " minutes remaining. ";
+
+                    timeLeft += "Key is ";
+                    if (windingDown) {
+                        if (windRate == 1) timeLeft += "winding down at a normal rate. ";
+                        else if (windRate > 1) timeLeft += "winding down at an accelerated rate. ";
+                        else if (windRate < 1) timeLeft += "winding down at a slowed rate. ";
+                    }
+                    else timeLeft += "not winding down. ";
+                }
+                else timeLeft = "Dolly has no time left. ";
+
+                //----------------------------------------
+                // Start building menu
+
+                // Handle our "special" states first which significantly alter the menu
+                //
+                // 1. Doll has carrier
+                // 2. Doll is collapsed and is accessing their menu
+                // 3. Doll is not collapsed and either has no carrier, or carrier is accessor
+
+                // When the doll is collapsed they lose their access to most
+                // key functions with a few exceptions; note too, that the
+                // collapsedMenu handles ALL aspects...
+
+                if (collapsed && isDoll) {
+                    lmInternalCommand("collapsedMenu", timeLeft, NULL_KEY);
                     return;
                 }
-                else {
-                    //----------------------------------------
-                    // Build message for Main Menu display
 
-                    // Compute "time remaining" message for mainMenu/windMenu
-                    string timeLeft;
-
-                    integer minsLeft = llRound(timeLeftOnKey / (60.0 * windRate));
-
-                    if (minsLeft > 0) {
-                        timeLeft = "Dolly has " + (string)minsLeft + " minutes remaining. ";
-
-                        timeLeft += "Key is ";
-                        if (windingDown) {
-                            if (windRate == 1) timeLeft += "winding down at a normal rate. ";
-                            else if (windRate > 1) timeLeft += "winding down at an accelerated rate. ";
-                            else if (windRate < 1) timeLeft += "winding down at a slowed rate. ";
-                        }
-                        else timeLeft += "not winding down. ";
-                    }
-                    else timeLeft = "Dolly has no time left. ";
-
-                    //----------------------------------------
-                    // Start building menu
-
-                    // Handle our "special" states first which significantly alter the menu
+                // When the doll is carried the carrier has exclusive control
+                else if (hasCarrier) {
+                    // Doll has carrier - but who clicked her key?
                     //
-                    // 1. Doll has carrier
-                    // 2. Doll is collapsed and is accessing their menu
-                    // 3. Doll is not collapsed and either has no carrier, or carrier is accessor
-
-                    // When the doll is collapsed they lose their access to most
-                    // key functions with a few exceptions; note too, that the
-                    // collapsedMenu handles ALL aspects...
-
-                    if (collapsed && isDoll) {
-                        lmInternalCommand("collapsedMenu", timeLeft, NULL_KEY);
-                        return;
-                    }
-
-                    // When the doll is carried the carrier has exclusive control
-                    else if (hasCarrier) {
-                        // Doll has carrier - but who clicked her key?
-                        //
-                        // ...Carrier?
-                        if (isCarrier) {
-                            msg = "Uncarry frees " + dollName + " when you are done with " + pronounHerDoll + ". ";
-                            menu = ["Uncarry"];
-                            if (collapsed) {
-                                msg += "(Doll is collapsed.) ";
-                            }
-                        }
-                        // ...Controller (NOT Dolly)
-                        else if (cdIsController(id) && !isDoll) {
-                            msg = dollName + " is being carried by " + carrierName + ". ";
-                            menu = ["Uncarry"];
-                        }
-                        // ...Dolly or member of public
-                        else {
-                            lmInternalCommand("carriedMenu", carrierName, NULL_KEY);
+                    // ...Carrier?
+                    if (isCarrier) {
+                        msg = "Uncarry frees " + dollName + " when you are done with " + pronounHerDoll + ". ";
+                        menu = ["Uncarry"];
+                        if (collapsed) {
+                            msg += "(Doll is collapsed.) ";
                         }
                     }
+                    // ...Controller (NOT Dolly)
+                    else if (cdIsController(id) && !isDoll) {
+                        msg = dollName + " is being carried by " + carrierName + ". ";
+                        menu = ["Uncarry"];
+                    }
+                    // ...Dolly or member of public
+                    else {
+                        lmInternalCommand("carriedMenu", carrierName, NULL_KEY);
+                    }
+                }
 
-                    // The Dolly has no carrier... continue...
+                // The Dolly has no carrier... continue...
 
-                    // Two types of folks will never get here: 1) a collapsed Dolly who
-                    // clicked on her Key, and 2) Dolly or a member of the public who clicked on
-                    // a carried Dolly's Key.
+                // Two types of folks will never get here: 1) a collapsed Dolly who
+                // clicked on her Key, and 2) Dolly or a member of the public who clicked on
+                // a carried Dolly's Key.
+                //
+                // All the rest pass through this point.
+
+                //----------------------------------------
+                // FULL (NORMAL) MENU
+                //
+                if (!collapsed && (!hasCarrier || isCarrier)) {
+                    // State: not collapsed; and either: a) toucher is carrier; or b) doll has no carrier...
+                    // Put another way, a carrier gets the same menu Dolly would if she has no carrier.
                     //
-                    // All the rest pass through this point.
+                    // Toucher could be...
+                    //   1. Doll
+                    //   2. Carrier
+                    //   3. Controller
+                    //   4. Someone else
 
-                    //----------------------------------------
-                    // FULL (NORMAL) MENU
-                    //
-                    if (!collapsed && (!hasCarrier || isCarrier)) {
-                        // State: not collapsed; and either: a) toucher is carrier; or b) doll has no carrier...
-                        // Put another way, a carrier gets the same menu Dolly would if she has no carrier.
-                        //
-                        // Toucher could be...
-                        //   1. Doll
-                        //   2. Carrier
-                        //   3. Controller
-                        //   4. Someone else
-
-                        // Options only available to dolly
-                        if (isDoll) {
-                            if (canAFK) menu += "AFK";
-                            menu += "Visible";
-                        }
-                        else {
-                            manpage = "communitydoll.htm";
-
-                            // Toucher is not Doll.... could be anyone
-                            msg =  dollName + " is a doll and likes to be treated like " +
-                                   "a doll. So feel free to use these options. ";
-
-                            menu += [
-#ifdef JAMMABLE
-                                "Hold",
-#endif
-                                "Unwind" ];
-                        }
-
-                        if (RLVok == 1) {
-                            // Can the doll be dressed? Add menu button
-                            //
-                            // Dolly can change her outfits if she is able.
-                            // Others can if Dolly allows, OR if the toucher is a Controller.
-                            // Note that this means Carriers cannot change Dolly unless
-                            // permitted: this is appropriate.
-
-                            if (isDoll) {
-                                if (canDressSelf && keyAnimation == "" && !hardcore) menu += "Outfits...";
-                            }
-                            else {
-                                if (hardcore || allowDress || isController) menu += "Outfits...";
-                            }
-                        }
-
-                        // Only present the Types button if Dolly is not posed
-                        if (keyAnimation == "") menu += "Types...";
-
-                        // Members of the public are allowed if allowed
-                        else if (!isDoll && !isController && (hardcore || allowDress)) menu += "Types...";
-
-                        // Dolly or Controllers always can use Types
-                        else menu += "Types...";
-
-                        if (keyAnimation != "") {
-                            msg += "Doll is currently posed. ";
-
-                            // If accessor is Dolly... allow Dolly to pose and unpose,
-                            // but NOT when posed by someone else.
-
-                            if (isDoll) {
-                                if (poserID == dollID)
-                                    menu += [ "Poses...", "Unpose" ];
-                            }
-
-                            // If accessor is NOT Dolly... allow the public access if
-                            // permitted by Dolly, and allow access to all Controllers
-                            // (NOT Dolly by virtue of ruling out Doll previously).
-                            // Also allow anyone to Unpose Dolly if Dolly self posed.
-
-                            else {
-                                if (isController || allowPose || hardcore)
-                                    menu += [ "Poses...", "Unpose" ];
-                                else if (poserID == dollID)
-                                    menu += [ "Unpose" ];
-                            }
-                        }
-                        else {
-                            // Notice again: Carrier can only pose Dolly if permitted.
-                            if ((!isDoll && allowPose) || isDoll || isController) menu += "Poses...";
-                        }
-
-                        // Fix for issue #157
-                        if (!isDoll) {
-                            if (!hasCarrier) {
-                                // Allowing Dolly to carry herself is nonsense... others can
-                                // if Dolly allows it, but a Controller can no matter what
-                                if (allowCarry || hardcore || isController) {
-                                    msg += "Carry option picks up " + dollName + " and temporarily makes the Dolly exclusively yours. ";
-                                    menu += "Carry";
-                                }
-                            }
-                        }
-
-#ifdef ADULT_MODE
-                        // Is doll strippable?
-                        if (RLVok == 1) {
-                            if (allowStrip || dollType == "Slut" || hardcore) {
-                                if (isController || isCarrier) {
-                                    if (simRating == "MATURE" || simRating == "ADULT") menu += "Strip";
-                                }
-                            }
-                            else if (isDoll) {
-                                if (simRating == "MATURE" || simRating == "ADULT") menu += "Strip";
-                            }
-                        }
-#endif
-                    }
-
-                    // At this point, we have no assumptions about
-                    // whether Dolly is collapsed, carried, or whatnot.
-
+                    // Options only available to dolly
                     if (isDoll) {
-                        if (!collapsed) {
-                            if (keyAnimation == "") menu += [ "Options..." ];
-                            menu += [ "Help..." ];
+                        if (canAFK) menu += "AFK";
+                        menu += "Visible";
+                    }
+                    else {
+                        manpage = "communitydoll.htm";
+
+                        // Toucher is not Doll.... could be anyone
+                        msg =  dollName + " is a doll and likes to be treated like " +
+                                "a doll. So feel free to use these options. ";
+
+                        menu += [
+#ifdef JAMMABLE
+                            "Hold",
+#endif
+                            "Unwind" ];
+                    }
+
+                    if (RLVok == 1) {
+                        // Can the doll be dressed? Add menu button
+                        //
+                        // Dolly can change her outfits if she is able.
+                        // Others can if Dolly allows, OR if the toucher is a Controller.
+                        // Note that this means Carriers cannot change Dolly unless
+                        // permitted: this is appropriate.
+
+                        if (isDoll) {
+                            if (canDressSelf && keyAnimation == "" && !hardcore) menu += "Outfits...";
+                        }
+                        else {
+                            if (hardcore || allowDress || isController) menu += "Outfits...";
+                        }
+                    }
+
+                    // Only present the Types button if Dolly is not posed
+                    if (keyAnimation == "") menu += "Types...";
+
+                    // Members of the public are allowed if allowed
+                    else if (!isDoll && !isController && (hardcore || allowDress)) menu += "Types...";
+
+                    // Dolly or Controllers always can use Types
+                    else menu += "Types...";
+
+                    if (keyAnimation != "") {
+                        msg += "Doll is currently posed. ";
+
+                        // If accessor is Dolly... allow Dolly to pose and unpose,
+                        // but NOT when posed by someone else.
+
+                        if (isDoll) {
+                            if (poserID == dollID)
+                                menu += [ "Poses...", "Unpose" ];
+                        }
+
+                        // If accessor is NOT Dolly... allow the public access if
+                        // permitted by Dolly, and allow access to all Controllers
+                        // (NOT Dolly by virtue of ruling out Doll previously).
+                        // Also allow anyone to Unpose Dolly if Dolly self posed.
+
+                        else {
+                            if (isController || allowPose || hardcore)
+                                menu += [ "Poses...", "Unpose" ];
+                            else if (poserID == dollID)
+                                menu += [ "Unpose" ];
                         }
                     }
                     else {
-                        // this includes any Controller that is NOT Dolly
-                        if (isController) {
-                            menu += "Options...";
+                        // Notice again: Carrier can only pose Dolly if permitted.
+                        if ((!isDoll && allowPose) || isDoll || isController) menu += "Poses...";
+                    }
 
-                            // Do we want Dolly to hae Detach capability... ever?
-                            if (detachable) menu += [ "Detach" ];
+                    // Fix for issue #157
+                    if (!isDoll) {
+                        if (!hasCarrier) {
+                            // Allowing Dolly to carry herself is nonsense... others can
+                            // if Dolly allows it, but a Controller can no matter what
+                            if (allowCarry || hardcore || isController) {
+                                msg += "Carry option picks up " + dollName + " and temporarily makes the Dolly exclusively yours. ";
+                                menu += "Carry";
+                            }
                         }
-                        menu += [ "Wind","Help..." ];
                     }
 
-                    if (lowScriptMode)
-                        msg += "Key is in power-saving mode. ";
-
-#ifdef DEVELOPER_MODE
-                    if (RLVok == UNSET) msg += "Still checking for RLV support some features unavailable. ";
-                    else
-#endif
-                    if (RLVok != 1) {
-                        msg += "No RLV detected; therefore, some features are unavailable. ";
+#ifdef ADULT_MODE
+                    // Is doll strippable?
+                    if (RLVok == 1) {
+                        if (allowStrip || dollType == "Slut" || hardcore) {
+                            if (isController || isCarrier) {
+                                if (simRating == "MATURE" || simRating == "ADULT") menu += "Strip";
+                            }
+                        }
+                        else if (isDoll) {
+                            if (simRating == "MATURE" || simRating == "ADULT") menu += "Strip";
+                        }
                     }
-
-                    msg += "See " + WEB_DOMAIN + manpage + " for more information. "
-#ifdef DEVELOPER_MODE
-                    + "(Key is in Developer Mode.) "
-                    + "\n\nCurrent region FPS is " + formatFloat(llGetRegionFPS(),1) + " FPS and time dilation is " + formatFloat(llGetRegionTimeDilation(),3) + ".";
 #endif
-                    ;
-
-                    menu = llListSort(menu, 1, 1);
-
-                    // This is needed because we want to sort by name;
-                    // this section puts the checkmark marker on both
-                    // keys by replacing them within the list - and thus
-                    // not disturbing the alphabetic order
-
-                    if ((i = llListFindList(menu, ["AFK"]))     != NOT_FOUND) menu = llListReplaceList(menu, cdGetButton("AFK",     id, afk,     0), i, i);
-                    if ((i = llListFindList(menu, ["Visible"])) != NOT_FOUND) menu = llListReplaceList(menu, cdGetButton("Visible", id, visible, 0), i, i);
-
-                    msg = timeLeft + msg;
-                    timeLeft = "";
                 }
+
+                // At this point, we have no assumptions about
+                // whether Dolly is collapsed, carried, or whatnot.
+
+                if (isDoll) {
+                    if (!collapsed) {
+                        if (keyAnimation == "") menu += [ "Options..." ];
+                        menu += [ "Help..." ];
+                    }
+                }
+                else {
+                    // this includes any Controller that is NOT Dolly
+                    if (isController) {
+                        menu += "Options...";
+
+                        // Do we want Dolly to hae Detach capability... ever?
+                        if (detachable) menu += [ "Detach" ];
+                    }
+                    menu += [ "Wind","Help..." ];
+                }
+
+                if (lowScriptMode)
+                    msg += "Key is in power-saving mode. ";
+
+#ifdef DEVELOPER_MODE
+                if (RLVok == UNSET) msg += "Still checking for RLV support some features unavailable. ";
+                else
+#endif
+                if (RLVok != 1) {
+                    msg += "No RLV detected; therefore, some features are unavailable. ";
+                }
+
+                msg += "See " + WEB_DOMAIN + manpage + " for more information. "
+#ifdef DEVELOPER_MODE
+                + "(Key is in Developer Mode.) "
+                + "\n\nCurrent region FPS is " + formatFloat(llGetRegionFPS(),1) + " FPS and time dilation is " + formatFloat(llGetRegionTimeDilation(),3) + ".";
+#endif
+                ;
+
+                menu = llListSort(menu, 1, 1);
+
+                // This is needed because we want to sort by name;
+                // this section puts the checkmark marker on both
+                // keys by replacing them within the list - and thus
+                // not disturbing the alphabetic order
+
+                if ((i = llListFindList(menu, ["AFK"]))     != NOT_FOUND) menu = llListReplaceList(menu, cdGetButton("AFK",     id, afk,     0), i, i);
+                if ((i = llListFindList(menu, ["Visible"])) != NOT_FOUND) menu = llListReplaceList(menu, cdGetButton("Visible", id, visible, 0), i, i);
+
+                msg = timeLeft + msg;
+                timeLeft = "";
 
                 cdListenerActivate(dialogHandle);
                 llSetTimerEvent(MENU_TIMEOUT);
@@ -662,9 +654,6 @@ default {
         //    name = filter by prim name
         //     key = filter by avatar key
         //  choice = filter by specific message
-
-        // Deny access to the menus when the command was recieved from blacklisted avatar
-        if (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND) return;
 
         // Cache access test results
         integer hasCarrier      = cdCarried();

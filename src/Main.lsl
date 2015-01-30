@@ -281,6 +281,12 @@ default {
         key id = llDetectedKey(0);
         string agentName = llGetDisplayName(id);
 
+        // Deny access to the key when the command was recieved from blacklisted avatar
+        if (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND) {
+            llOwnerSay("SECURITY WARNING! Attempted Key access from blacklisted user " + agentName);
+            return;
+        }
+
         if (RLVok == UNSET) {
             if (dollID != id) {
                 cdSayTo(dollName + "'s key clanks and clinks.... it doesn't seem to be ready yet.",id);
@@ -552,6 +558,10 @@ default {
 #ifdef ADULT_MODE
             else if (name == "allowStrip")                 allowStrip = (integer)value;
 #endif
+            else if (name == "blacklist") {
+                if (split == [""]) blacklist = [];
+                else blacklist = split;
+            }
             //else if (name == "autoTP")                         autoTP = (integer)value;
             else if (c == "d") {
                      if (name == "dollDisplayName")       dollDisplayName = value;
