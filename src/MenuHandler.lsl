@@ -982,7 +982,8 @@ default {
             }
         }
         else if (channel == poseChannel) {
-            lmPoseReply(choice, name, id);
+            if (choice == "Back...") cdMenuInject(backMenu);
+            else lmPoseReply(choice, name, id);
         }
         else if (channel == typeChannel) {
             if (choice == "Back...")
