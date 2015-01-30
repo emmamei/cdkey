@@ -101,19 +101,25 @@ integer rlvWait;
 // FUNCTIONS
 //=======================================
 doLuminosity() {
-    debugSay(4, "DEBUG-START", "Color setting: " + (string)gemColour);
+
+    // The two options below do the same thing - but when not visible or collapsed,
+    // it bypasses all the scanning and testing and goes straight to work.
+    // Note that it sets the color on every prim to the gemColour - but the
+    // textured Key items don't change color (texture overrides color?).
 
 #ifdef PRIMGLOW_OPT
     if (!visible || !primGlow || collapsed) {
 #else
     if (!visible || collapsed) {
 #endif
-        // Turn off glow et all when not visible or collapsed
+        // Turn off glow et al when not visible or collapsed
         llSetLinkPrimitiveParamsFast(LINK_SET, [ PRIM_POINT_LIGHT, FALSE, gemColour, 0.5, 2.5, 2.0 ]);
         llSetLinkPrimitiveParamsFast(LINK_SET, [ PRIM_GLOW, ALL_SIDES, 0.0 ]);
     }
     else {
-        // Turn on glow and light using llSetLinkPrimitiveParamsFast
+        // Set gem light and glow parameters using llSetLinkPrimitiveParamsFast
+        //
+        // Note that this sets light and glow - even IF the Key light is off
 
         list params;
         integer nPrims = llGetNumberOfPrims();
@@ -128,19 +134,20 @@ doLuminosity() {
             name = llGetLinkName(i + 1);
             debugSay(4, "DEBUG-START", "Name of prim #" + (string)(i + 1) + " of " + (string)nPrims + " = " + name);
             params += [ PRIM_LINK_TARGET, i ];
+            glow = 0.0;
 
             if (llGetSubString(name, 0, 4) == "Heart") {
-                debugSay(4, "DEBUG-START", "Found parameter for prim" + name + ": Light");
-
-                // JSON parameters are .......................... <0.6, 0.0, 0.9>, 0.3, 3.0, 0.2
-                params += [ PRIM_POINT_LIGHT, (primLight & !collapsed), gemColour, 0.5, 2.5, 2.0 ];
-                glow = 0.08;
+                // JSON parameters were .............................. <0.6, 0.0, 0.9>, 0.3, 3.0, 0.2
+                params += [ PRIM_POINT_LIGHT, (primLight & !collapsed),      gemColour, 0.5, 2.5, 2.0 ];
+                if (primLight) glow = 0.08;
             }
-            else if (name == "Body") glow = 0.3;
-            //else if (name == "Center") glow = 0.0;
-            else if (llGetSubString(name, 0, 5) == "Mount") glow = 0.1;
+            else if (primLight) {
+                if (name == "Body") glow = 0.3;
+                //else if (name == "Center") glow = 0.0;
+                else if (llGetSubString(name, 0, 5) == "Mount") glow = 0.1;
+            }
 
-            params += [ PRIM_GLOW, -1, glow ];
+            params += [ PRIM_GLOW, ALL_SIDES, glow ];
         }
 
         debugSay(4, "DEBUG-START", "Set Params list: " + llDumpList2String(params, ","));
