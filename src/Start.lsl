@@ -126,15 +126,19 @@ doLuminosity() {
         integer i;
         string name;
         float glow;
+        integer primN;
 
         debugSay(4, "DEBUG-START", "Number of prims = " + (string)nPrims);
 
         i = nPrims;
         while (i--) {
-            name = llGetLinkName(i + 1);
-            debugSay(4, "DEBUG-START", "Name of prim #" + (string)(i + 1) + " of " + (string)nPrims + " = " + name);
-            params += [ PRIM_LINK_TARGET, i ];
+            primN = i + 1;
+            name = llGetLinkName(primN);
+            debugSay(4, "DEBUG-START", "Name of prim #" + (string)(primN) + " of " + (string)nPrims + " = " + name);
             glow = 0.0;
+
+            // Start a new Link Target
+            params += [ PRIM_LINK_TARGET, primN ];
 
             if (llGetSubString(name, 0, 4) == "Heart") {
                 // JSON parameters were .............................. <0.6, 0.0, 0.9>, 0.3, 3.0, 0.2
