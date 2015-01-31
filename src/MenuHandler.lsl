@@ -732,11 +732,10 @@ default {
                     string s;
 
                     if (afterSpace == "Visible") {
-                        lmSendConfig("isVisible", (string)(visible = (beforeSpace == CROSS)));
-
                         if (visible) s = "You watch as the Key fades away...";
                         else s = "The Key magically reappears";
 
+                        lmSendConfig("isVisible", (string)(visible = (beforeSpace == CROSS)));
                         cdSayToAgentPlusDoll(s,id);
 
                         lmMenuReply(MAIN, name, id);
@@ -873,11 +872,13 @@ default {
                 }
                 // Item before Space is NOT a Check or Cross -- so must be either
                 // a "circle plus" or "circle minus" or the word "List"
+                else if ((afterSpace == "Blacklist")
 #ifdef ADULT_MODE
-                else if ((afterSpace == "Blacklist") || (afterSpace == "Controller")) {
+                       || (afterSpace == "Controller")
 #else
-                else if ((afterSpace == "Blacklist") || (afterSpace == "Parent")) {
+                       || (afterSpace == "Parent")
 #endif
+                       ) {
                     integer activeChannel; string msg;
                     lmSendConfig("backMenu",(backMenu = "Access..."));
 
@@ -982,14 +983,19 @@ default {
             }
         }
         else if (channel == poseChannel) {
-            if (choice == "Back...") cdMenuInject(backMenu);
-            else lmPoseReply(choice, name, id);
+            if (choice == "Back...") {
+                cdMenuInject(backMenu);
+            }
+            else {
+                lmPoseReply(choice, name, id);
+            }
         }
         else if (channel == typeChannel) {
-            if (choice == "Back...")
+            if (choice == "Back...") {
                 cdMenuInject(backMenu);
+            }
             else {
-                llRegionSayTo(id, 0, "Dolly's internal mechanisms engage, and a transformation comes over Dolly, making " + pronounHerDoll + " into a " + choice + " Dolly");
+                cdSayTo("Dolly's internal mechanisms engage, and a transformation comes over Dolly, making " + pronounHerDoll + " into a " + choice + " Dolly",id);
                 lmTypeReply(choice, name, id);
             }
         }
