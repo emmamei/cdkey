@@ -537,13 +537,18 @@ default {
                     // We are collapsed: activate RLV restrictions
                     lmRunRLV(defaultCollapseRLVcmd);
                     if (userCollapseRLVcmd != "") lmRunRLVas("UserCollapse", userCollapseRLVcmd);
+
+                    // set gem colour to gray
+                    lmInternalCommand("setGemColour", "<0.867, 0.867, 0.867>", NULL_KEY);
                 }
                 else {
+                    lmInternalCommand("resetGemColour", "", NULL_KEY);
                     if (wasCollapsed) {
                         // We were collapsed but aren't now... so clear RLV restrictions
                         lmRunRLV("clear");
                     }
                 }
+                doLuminosity();
             }
             else if (name == "dollDisplayName") {
                 if (script != cdMyScriptName()) {

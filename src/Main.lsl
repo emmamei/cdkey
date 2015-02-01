@@ -138,7 +138,6 @@ uncollapse() {
 
     // Among other things, this will set the Key's turn rate
     setWindRate();
-    lmInternalCommand("resetGemColour", "", NULL_KEY);
 }
 
 collapse(integer newCollapseState) {
@@ -158,8 +157,6 @@ collapse(integer newCollapseState) {
         return;
     }
 
-    // set gem colour to gray
-    lmInternalCommand("setGemColour", "<0.867, 0.867, 0.867>", NULL_KEY);
     debugSay(3,"DEBUG-MAIN","Entering new collapse state (" + (string)newCollapseState + ") with time left of " + (string)timeLeftOnKey);
 
     string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
