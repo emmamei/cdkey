@@ -302,9 +302,8 @@ default {
                     float timeCollapsed = llGetUnixTime() - collapseTime;
                     msg = "You need winding. ";
 #ifdef DEVELOPER_MODE
-                    if (timeCollapsed >= 60) {
-                        msg += "You have been collapsed for " + (string)llFloor(timeCollapsed / SEC_TO_MIN) + " minutes. ";
-                    }
+                    msg += "You have been collapsed for " + (string)llFloor(timeCollapsed / SEC_TO_MIN) + " minutes (" + (string)timeCollapsed + " seconds). ";
+                    msg += "\n\nTime before TP: " + (string)TIME_BEFORE_TP + "\nTime before Emg Wind: " + (string)TIME_BEFORE_EMGWIND + "\nTime elapsed: " + (string)timeCollapsed + "\n";
 #endif
 
                     // Only present the TP home option for the doll if they have been collapsed
