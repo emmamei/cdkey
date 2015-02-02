@@ -744,19 +744,19 @@ default {
                     if (collapsed == NO_TIME) {
                         lmSendToController(dollName + " has activated the emergency winder.");
 
-                        // default is 20% of max, but no more than 60 minutes
+                        // default is 20% of max, but no more than 10 minutes
                         //
                         // Doing it this way makes the wind amount independent of the amount
                         // of time in a single wind. It is also a form of hard-coding.
                         //
                         windAmount = effectiveLimit * 0.2;
-                        if (windAmount > 3600) windAmount = 3600;
+                        if (windAmount > 600) windAmount = 600;
 
                         lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = windAmount));
                         lmSendConfig("winderRechargeTime", (string)(winderRechargeTime = (llGetUnixTime() + EMERGENCY_LIMIT_TIME)));
                         lmUncollapse();
 
-                        llOwnerSay("With an electical sound the motor whirrs into life and gives you " + (string)llRound(windAmount / SECS_PER_MIN) + " minutes of life. The recharger requires " + (string)llRound(EMERGENCY_LIMIT_TIME / 3600) + " hours to recharge.");
+                        llOwnerSay("With an electical sound the motor whirrs into life and gives you " + (string)llRound(windAmount / SECS_PER_MIN) + " minutes of life. The emergency winder requires " + (string)llRound(EMERGENCY_LIMIT_TIME / 3600) + " hours to recharge.");
                     }
 #ifdef JAMMABLE
                     else {
