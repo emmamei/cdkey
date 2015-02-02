@@ -705,6 +705,11 @@ default {
                     if (cdIsDoll(id)) msg += "What type of doll do you want to be?";
                     else {
                         msg += "What type of doll do you want the Doll to be?";
+
+                        if ((i = llListFindList(choices, (list)"Builder")) != NOT_FOUND) {
+                            choices = llDeleteSubList(choices, i, i);
+                        }
+
                         if (!hardcore)
                             llOwnerSay(cdProfileURL(id) + " is looking at your doll types.");
                     }
