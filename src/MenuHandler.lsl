@@ -1021,8 +1021,8 @@ default {
                 llListenRemove(blacklistHandle);
                 blacklistHandle = 0;
 
-                if (llListFindList(controllers, [uuid,name]) != NOT_FOUND) lmInternalCommand("addBlacklist", (string)uuid + "|" + name, id);
-                else                                                       lmInternalCommand("remBlacklist", (string)uuid + "|" + name, id);
+                if (llListFindList(blacklist, [uuid,name]) != NOT_FOUND) lmInternalCommand("remBlacklist", (string)uuid + "|" + name, id);
+                else                                                     lmInternalCommand("addBlacklist", (string)uuid + "|" + name, id);
             }
             else {
 
