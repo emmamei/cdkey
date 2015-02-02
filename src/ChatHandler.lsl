@@ -991,7 +991,8 @@ default
 
                         llSetObjectName(dollDisplayName);
                         allSymbols = doubledSymbols + pairedSymbols;
-                        i = 10;
+
+                        i = (integer)llFrand(6) + 4;
                         while (i--) {
                             n = (integer)(llFrand(llStringLength(allSymbols)));
                             c = llGetSubString(allSymbols,n,n);
