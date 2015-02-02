@@ -482,7 +482,7 @@ default {
             //debugSay(3,"DEBUG-MAIN","Time left on key at unwinding: " + (string)timeLeftOnKey);
             if (timeLeftOnKey > 0) {
 
-                minsLeft = llRound(timeLeftOnKey / (SEC_TO_MIN * windRate));
+                minsLeft = llRound(timeLeftOnKey / (SECS_PER_MIN * windRate));
 
                 if (doWarnings && !warned) {
                     if (minsLeft == 30 || minsLeft == 15 || minsLeft == 10 || minsLeft ==  5 || minsLeft ==  2) {
@@ -601,7 +601,7 @@ default {
                 keyLimit = (float)value;
 
                 // if limit is negative clip it at a default
-                if (keyLimit < 0) keyLimit = 240 * SEC_TO_MIN;
+                if (keyLimit < 0) keyLimit = 240 * SECS_PER_MIN;
 
                 // if limit is less than time left on key, clip time remaining
                 if (timeLeftOnKey > keyLimit) timeLeftOnKey = keyLimit;
@@ -678,7 +678,7 @@ default {
             else if (cmd == "windMsg") {
                 integer windAmount = llList2Integer(split, 0);
                 string name = llList2String(split, 1);
-                string mins = (string)llFloor(windAmount / SEC_TO_MIN);
+                string mins = (string)llFloor(windAmount / SECS_PER_MIN);
                 string percent = formatFloat((float)timeLeftOnKey * 100.0 / (float)effectiveLimit, 1);
 
 #ifdef DEVELOPER_MODE
@@ -756,7 +756,7 @@ default {
                         lmSendConfig("winderRechargeTime", (string)(winderRechargeTime = (llGetUnixTime() + EMERGENCY_LIMIT_TIME)));
                         lmUncollapse();
 
-                        llOwnerSay("With an electical sound the motor whirrs into life and gives you " + (string)llRound(windAmount / SEC_TO_MIN) + " minutes of life. The recharger requires " + (string)llRound(EMERGENCY_LIMIT_TIME / 3600) + " hours to recharge.");
+                        llOwnerSay("With an electical sound the motor whirrs into life and gives you " + (string)llRound(windAmount / SECS_PER_MIN) + " minutes of life. The recharger requires " + (string)llRound(EMERGENCY_LIMIT_TIME / 3600) + " hours to recharge.");
                     }
 #ifdef JAMMABLE
                     else {
@@ -766,7 +766,7 @@ default {
 #endif
                 }
                 else {
-                   float rechargeMins = ((winderRechargeTime - llGetUnixTime()) / SEC_TO_MIN);
+                   float rechargeMins = ((winderRechargeTime - llGetUnixTime()) / SECS_PER_MIN);
                    string s = "Emergency self-winder is not yet recharged. There remains ";
 
                    //llSay(DEBUG_CHANNEL,"Winder recharge: rechargeMins = " + (string)rechargeMins + " minutes");
@@ -866,7 +866,7 @@ default {
                     llSay(DEBUG_CHANNEL, "3> windAmount = " + (string)windAmount);
 #endif
                     if (timeLeftOnKey == effectiveLimit) { // Fully wound
-                        llOwnerSay("You have been fully wound by " + name + " - " + (string)llRound(effectiveLimit / (SEC_TO_MIN * windRate)) + " minutes remaining.");
+                        llOwnerSay("You have been fully wound by " + name + " - " + (string)llRound(effectiveLimit / (SECS_PER_MIN * windRate)) + " minutes remaining.");
 
                         if (!quiet) llSay(0, dollName + " has been fully wound by " + name + ". Thanks for winding Dolly!");
                         else cdSayTo(dollName + " is now fully wound. Thanks for winding Dolly!", id);
@@ -888,7 +888,7 @@ default {
             else if (choice == "Max Time...") {
                 // If the Max Times available are changed, be sure to change the next choice also
                 cdDialogListen();
-                llDialog(id, "You can set the maximum available time here.  Dolly cannot be wound beyond this amount of time.\nDolly currently has " + (string)llFloor(timeLeftOnKey / SEC_TO_MIN) + " mins left of " + (string)llFloor(keyLimit / SEC_TO_MIN) + ". If you lower the maximum, Dolly will lose the extra time entirely.",
+                llDialog(id, "You can set the maximum available time here.  Dolly cannot be wound beyond this amount of time.\nDolly currently has " + (string)llFloor(timeLeftOnKey / SECS_PER_MIN) + " mins left of " + (string)llFloor(keyLimit / SECS_PER_MIN) + ". If you lower the maximum, Dolly will lose the extra time entirely.",
                     dialogSort(["45m", "60m", "75m", "90m", "120m", "150m", "180m", "240m", MAIN]), dialogChannel);
             }
 
@@ -899,10 +899,12 @@ default {
                      (choice ==  "90min") ||
                      (choice == "120min")) {
 
-                if (windNormal > keyLimit) lmSendConfig("windNormal", (string)(windNormal = llFloor(keyLimit / 6)));
-                else lmSendConfig("windNormal", (string)(windNormal = (integer)choice));
+                windNormal = (integer)choice * (integer)SECS_PER_MIN;
 
-                cdSayTo("Winding now set to " + (string)(windNormal / SECS_PER_MIN) + " minutes",id);
+                if (windNormal > keyLimit) windNormal = llFloor(keyLimit / 6);
+                lmSendConfig("windNormal", (string)windNormal);
+
+                cdSayTo("Winding now set to " + (string)(windNormal / (integer)SECS_PER_MIN) + " minutes",id);
                 lmMenuReply("Key...","",id);
             }
 
@@ -915,8 +917,8 @@ default {
                      (choice == "180m") ||
                      (choice == "240m")) {
 
-                keyLimit = (float)choice * SEC_TO_MIN;
-                cdSayTo("Key limit now set to " + (string)llFloor(keyLimit / SEC_TO_MIN) + " minutes",id);
+                keyLimit = (float)choice * SECS_PER_MIN;
+                cdSayTo("Key limit now set to " + (string)llFloor(keyLimit / SECS_PER_MIN) + " minutes",id);
 
                 // if limit is less than time left on key, clip time remaining
                 if (timeLeftOnKey > keyLimit) timeLeftOnKey = keyLimit;
@@ -942,7 +944,7 @@ default {
                 if (keyLimit >= 240) windChoices += "120min";
 
                 cdDialogListen();
-                llDialog(id, "You can set the amount of time in each wind.\nDolly currently winds " + (string)(windNormal / SECS_PER_MIN) + " mins.",
+                llDialog(id, "You can set the amount of time in each wind.\nDolly currently winds " + (string)(windNormal / (integer)SECS_PER_MIN) + " mins.",
                     dialogSort(windChoices + [ MAIN ]), dialogChannel);
             }
 #ifdef JAMMABLE
@@ -978,7 +980,7 @@ default {
                 setWindRate();
                 lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
                 if (timeLeftOnKey)
-                    llOwnerSay("You have " + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * windRate)) + " minutes of life remaining.");
+                    llOwnerSay("You have " + (string)llRound(timeLeftOnKey / (SECS_PER_MIN * windRate)) + " minutes of life remaining.");
 
                 clearAnim = 1;
             }
