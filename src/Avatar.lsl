@@ -561,6 +561,7 @@ ifPermissions() {
     }
     else {
         // Stop moving to Target
+        lockPos = ZERO_VECTOR;
         llTargetRemove(targetHandle);
         llStopMoveToTarget();
     }
