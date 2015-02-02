@@ -747,7 +747,8 @@ default {
                         // of time in a single wind. It is also a form of hard-coding.
                         //
                         windAmount = effectiveLimit * 0.2;
-                        if (windAmount > 600) windAmount = 600;
+                        if (hardcore) { if (windAmount > 120) windAmount = 120; }
+                        else { if (windAmount > 600) windAmount = 600; }
 
                         lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = windAmount));
                         lmSendConfig("winderRechargeTime", (string)(winderRechargeTime = (llGetUnixTime() + EMERGENCY_LIMIT_TIME)));

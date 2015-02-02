@@ -597,7 +597,9 @@ default
 
                         float windEmergency;
                         windEmergency = effectiveLimit * 0.2;
-                        if (windEmergency > 600) windEmergency = 600;
+                        if (hardcore) { if (windEmergency > 120) windEmergency = 120; }
+                        else { if (windEmergency > 600) windEmergency = 600; }
+
                         s += (string)((integer)(windEmergency / SECS_PER_MIN)) + " mins\n";
 
                         if (demoMode) s += "Demo mode is enabled\n";
