@@ -28,8 +28,6 @@ float timerEvent;
 float listenTime;
 float memTime;
 string minsLeft;
-//string windRate;
-integer windMins;
 string curGemColour;
 string memOutput = "Script Memory Status:";
 integer maxMins;
@@ -151,7 +149,6 @@ default {
 #ifdef ADULT_MODE
             else if (name == "allowStrip")             allowStrip = (integer)value;
 #endif
-            else if (name == "windMins")                     windMins = (integer)value;
             else if (name == "wearLock")                     wearLock = (integer)value;
             else if (name == "gemLight")                   gemLight = (integer)value;
 #ifdef GEMGLOW_OPT

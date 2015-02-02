@@ -82,6 +82,8 @@ integer timeReporting       = 1;
 integer visible             = 1;
 integer wearLock;
 integer winderRechargeTime;
+integer windMins            = 30;
+integer windNormal          = 1800;
 integer windingDown         = 1;
 
 #ifdef DEVELOPER_MODE

@@ -79,6 +79,7 @@
 #define LOCKMEISTER_CHANNEL -8888
 // Seconds per minute
 #define SEC_TO_MIN 60.0
+#define SECS_PER_MIN 60.0
 // Community Dolls web URLs
 #define WEB_DEV "https://github.com/emmamei/cdkey/tree/Development"
 #define WEB_DOMAIN "http://communitydolls.com/"

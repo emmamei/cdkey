@@ -18,11 +18,10 @@
 
 //key listID                  = NULL_KEY;
 
-integer windMins = 30;
 key lastWinderID;
 string lastWinderName;
 
-float effectiveLimit          = 10800.0;
+float effectiveLimit;
 
 string msg;
 integer chatEnable           = TRUE;
@@ -178,9 +177,9 @@ default
             //----------------------------------------
             // Shortcut: w
             else if (c == "w") {
-                     if (name == "windMins")                 windMins = (integer)value;
-                else if (name == "wearLock")                 wearLock = (integer)value;
+                     if (name == "wearLock")                 wearLock = (integer)value;
                 else if (name == "windRate")                 windRate = (float)value;
+                else if (name == "windNormal")             windNormal = (integer)value;
                 else if (name == "windingDown")           windingDown = (integer)value;
             }
         }
@@ -592,7 +591,7 @@ default
                     else if (choice == "xstats") {
                         if (isDoll && hardcore) return;
                         string s = "Extended stats:\n\nDoll is a " + dollType + " Doll.\nAFK time factor: " +
-                                   formatFloat(RATE_AFK, 1) + "x\nWind amount: " + (string)windMins + " (mins)\n";
+                                   formatFloat(RATE_AFK, 1) + "x\nWind amount: " + (string)llFloor(windNormal / SECS_PER_MIN) + " (mins)\n";
 
                         if (demoMode) s += "Demo mode is enabled\n";
                         //if (lastWinderName) s += "Last winder was: " + lastWinderName + "\n";
@@ -634,8 +633,8 @@ default
                     }
                     else if (choice == "stat") {
                         if (isDoll && hardcore) return;
-                        float t1 = timeLeftOnKey / (SEC_TO_MIN * windRate);
-                        float t2 = effectiveLimit / (SEC_TO_MIN * windRate);
+                        float t1 = timeLeftOnKey / (SECS_PER_MIN * windRate);
+                        float t2 = effectiveLimit / (SECS_PER_MIN * windRate);
                         float p = t1 * 100.0 / t2;
 
                         string msg = "Time: " + (string)llRound(t1) + "/" +
@@ -660,8 +659,8 @@ default
                     }
                     else if (choice == "stats") {
                         if (isDoll && hardcore) return;
-                        cdSayTo("Time remaining: " + (string)llRound(timeLeftOnKey / (SEC_TO_MIN * windRate)) + " minutes of " +
-                                    (string)llRound(effectiveLimit / (SEC_TO_MIN * windRate)) + " minutes.", id);
+                        cdSayTo("Time remaining: " + (string)llRound(timeLeftOnKey / (SECS_PER_MIN * windRate)) + " minutes of " +
+                                    (string)llRound(effectiveLimit / (SECS_PER_MIN * windRate)) + " minutes.", id);
 
                         string msg;
 
@@ -683,7 +682,7 @@ default
 
                         if (!cdCollapsedAnim() && cdAnimated()) {
                         //    llOwnerSay(dollID, "Current pose: " + currentAnimation);
-                        //    llOwnerSay(dollID, "Pose time remaining: " + (string)(poseTime / SEC_TO_MIN) + " minutes.");
+                        //    llOwnerSay(dollID, "Pose time remaining: " + (string)(poseTime / SECS_PER_MIN) + " minutes.");
                             llOwnerSay("Doll is posed.");
                         }
 
@@ -712,7 +711,7 @@ default
                         string s = "Dolly's Key is now ";
                         if (demoMode) {
                             if (timeLeftOnKey > DEMO_LIMIT) lmSetConfig("timeLeftOnKey", (string)(timeLeftOnKey = DEMO_LIMIT));
-                            s += "in demo mode: " + (string)llRound(timeLeftOnKey / SEC_TO_MIN) + " of " + (string)llFloor(DEMO_LIMIT / SEC_TO_MIN) + " minutes remaining.";
+                            s += "in demo mode: " + (string)llRound(timeLeftOnKey / SECS_PER_MIN) + " of " + (string)llFloor(DEMO_LIMIT / SECS_PER_MIN) + " minutes remaining.";
                         }
                         else {
                             // Q: currentlimit not set until later; how do we tell user what it is?
@@ -720,7 +719,7 @@ default
                             //    only exception would be if keyLimit was invalid however there will be a follow up message
                             //    from Main stating this and giving the new value so not something we need to do here.
 
-                            s += "running normally: " + (string)llRound(timeLeftOnKey / SEC_TO_MIN) + " of " + (string)llFloor(keyLimit / SEC_TO_MIN) + " minutes remaining.";
+                            s += "running normally: " + (string)llRound(timeLeftOnKey / SECS_PER_MIN) + " of " + (string)llFloor(keyLimit / SECS_PER_MIN) + " minutes remaining.";
                         }
 
                         //llSendToAgent(s,id);

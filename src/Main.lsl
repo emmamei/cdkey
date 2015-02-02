@@ -67,7 +67,6 @@ integer poseExpire;
 integer transformLockExpire;
 
 float effectiveLimit  = keyLimit;
-integer windMins = 30;
 float effectiveWindTime = 30.0;
 
 string mistressName;
@@ -583,11 +582,12 @@ default {
             else if (name == "transformLockExpire")   transformLockExpire = (integer)value;
 
             else if (name == "windAmount")                 windAmount = (float)value;
+            else if (name == "windNormal")                 windNormal = (integer)value;
             // This keeps the timers up to date - via a GetTimeUpdates internal command
-            else if (name == "windMins") {
+            //else if (name == "windMins") {
                 //if (script != "Main") llOwnerSay("windMins LinkMessage sent by " + script + " with value " + value);
-                windMins = (integer)value;
-            }
+            //    windMins = (integer)value;
+            //}
 #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")           timeReporting = (integer)value;
 #endif
@@ -681,6 +681,10 @@ default {
                 string mins = (string)llFloor(windAmount / SEC_TO_MIN);
                 string percent = formatFloat((float)timeLeftOnKey * 100.0 / (float)effectiveLimit, 1);
 
+#ifdef DEVELOPER_MODE
+                    llSay(DEBUG_CHANNEL, "4> windAmount = " + (string)windAmount);
+                    llSay(DEBUG_CHANNEL, "4> mins = " + (string)mins);
+#endif
                 // We're assuming that every winder has a non-null name, and every
                 // auto-wind has a null name... is that really true?
                 if (name != "") {
@@ -793,10 +797,15 @@ default {
 #endif
 
                 // Test and reject repeat winding as appropriate - Controllers and Carriers are not limited
-                if (!(cdIsController(id) || cdIsCarrier(id))) {
-                    if (!allowRepeatWind && (id == lastWinderID)) {
-                        cdSayTo("Dolly needs to be wound by someone else before you can wind " + pronounHerDoll + " again.", id);
-                        return;
+                // (odd sequence helps with short-circuiting and speed)
+                if (!allowRepeatWind) {
+                    if (!cdIsController(id)) {
+                        if (!cdIsCarrier(id)) {
+                            if (id == lastWinderID) {
+                                cdSayTo("Dolly needs to be wound by someone else before you can wind " + pronounHerDoll + " again.", id);
+                                return;
+                            }
+                        }
                     }
                 }
 
@@ -805,17 +814,27 @@ default {
                 // effectiveWindTime allows us to preserve the real wind
                 // even when demo mode is active
                 if (demoMode) effectiveWindTime = 60;
-                else effectiveWindTime = (float)windMins * SEC_TO_MIN;
+                else effectiveWindTime = (float)windNormal;
+#ifdef DEVELOPER_MODE
+                    llSay(DEBUG_CHANNEL, "1> effectiveWindTime = " + (string)effectiveWindTime);
+#endif
 
+                // set the actual wind amount - but don't overwind
                 if (timeLeftOnKey + effectiveWindTime > effectiveLimit) windAmount = effectiveLimit - timeLeftOnKey;
                 else windAmount = effectiveWindTime;
 
+#ifdef DEVELOPER_MODE
+                    llSay(DEBUG_CHANNEL, "2> effectiveWindTime = " + (string)effectiveWindTime);
+                    llSay(DEBUG_CHANNEL, "2> windAmount = " + (string)windAmount);
+#endif
                 // The "winding" takes place here. Note that while timeLeftOnKey might
                 // be set - collapse is set a short time later - thus, timeLeftOnKey is greater
                 // than zero, but collapse is still true.
                 lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey += windAmount));
 
                 if (collapsed == NO_TIME) {
+
+                    // Just gave Dolly time: so now, uncollapse Dolly
 
                     // We could call the code directly - but by doing this,
                     // it's an asynchronous event, and not a function that
@@ -842,6 +861,10 @@ default {
                     lmSendConfig("lastWinderID", (string)(lastWinderID = id));
                     lmSendConfig("lastWinderName", name);
 
+#ifdef DEVELOPER_MODE
+                    llSay(DEBUG_CHANNEL, "3> effectiveWindTime = " + (string)effectiveWindTime);
+                    llSay(DEBUG_CHANNEL, "3> windAmount = " + (string)windAmount);
+#endif
                     if (timeLeftOnKey == effectiveLimit) { // Fully wound
                         llOwnerSay("You have been fully wound by " + name + " - " + (string)llRound(effectiveLimit / (SEC_TO_MIN * windRate)) + " minutes remaining.");
 
@@ -876,9 +899,10 @@ default {
                      (choice ==  "90min") ||
                      (choice == "120min")) {
 
-                if (windMins * SEC_TO_MIN > keyLimit) lmSendConfig("windMins", (string)(windMins = 30));
-                else lmSendConfig("windMins", (string)(windMins = (integer)choice));
-                cdSayTo("Winding now set to " + (string)windMins + " minutes",id);
+                if (windNormal > keyLimit) lmSendConfig("windNormal", (string)(windNormal = llFloor(keyLimit / 6)));
+                else lmSendConfig("windNormal", (string)(windNormal = (integer)choice));
+
+                cdSayTo("Winding now set to " + (string)(windNormal / SECS_PER_MIN) + " minutes",id);
                 lmMenuReply("Key...","",id);
             }
 
@@ -918,7 +942,7 @@ default {
                 if (keyLimit >= 240) windChoices += "120min";
 
                 cdDialogListen();
-                llDialog(id, "You can set the amount of time in each wind.\nDolly currently winds " + (string)windMins + " mins.",
+                llDialog(id, "You can set the amount of time in each wind.\nDolly currently winds " + (string)(windNormal / SECS_PER_MIN) + " mins.",
                     dialogSort(windChoices + [ MAIN ]), dialogChannel);
             }
 #ifdef JAMMABLE

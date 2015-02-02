@@ -218,8 +218,8 @@ processConfiguration(string name, string value) {
 
 //  list internals = [ "wind time", "blacklist key", "controller key" ];
 //  list cmdName = [ "setWindTime", "addBlacklist", "addMistress" ];
-    list internals = [ "wind time" ];
-    list cmdName = [ "setWindTime" ];
+//  list internals = [ "wind time" ];
+//  list cmdName = [ "setWindTime" ];
 
     // Three specially handled configuration entries:
     //   * doll gender
@@ -251,21 +251,38 @@ processConfiguration(string name, string value) {
         lmSendConfig(cdListElement(sendName,i), value);
         llSleep(0.1);  // approx 5 frames - be nice to sim!
     }
-    else if ((i = cdListElementP(internals,name)) != NOT_FOUND) {
-        if (name == "wind time") {
+    else if (name == "max time") {
+        keyLimit = (integer)value;
 
-            // validate value
-            if ((float)value > 90) value = "90";
-            else if ((float)value < 15) value = "15";
+        if (keyLimit > 240) keyLimit = 240;
+        else if (keyLimit < 15) keyLimit = 15;
 
-            // If it takes 2 winds or less to wind dolly, then
-            // we fall back to 6 winds: note that this happens AFTER
-            // the numerical validation: so potentioally, after this next
-            // statement, we could have a wind time of less than 15 - which
-            // is to be expected
-            if ((float)value > (keyLimit / 2)) value = (string)llFloor(keyLimit / 6);
-        }
-        lmInternalCommand(cdListElement(cmdName,i), value, NULL_KEY);
+        if (keyLimit < windNormal) windNormal = llFloor(keyLimit / 6);
+
+        //lmSendConfig("windMins",(string)(windMins = windNormal / SECS_PER_MIN));
+        lmSendConfig("windNormal",(string)windNormal);
+        //lmSendConfig("windAmount",(string)windAmount);
+        lmSendConfig("keyLimit",(string)keyLimit);
+    }
+    else if (name == "wind time") {
+        integer windMins = (integer)value;
+
+        // validate value
+        if (windMins > 90) windMins = 90;
+        else if (windMins < 15) windMins = 15;
+        windNormal = windMins * (integer)SECS_PER_MIN;
+
+        // If it takes 2 winds or less to wind dolly, then
+        // we fall back to 6 winds: note that this happens AFTER
+        // the numerical validation: so potentioally, after this next
+        // statement, we could have a wind time of less than 15 - which
+        // is to be expected
+        if (windNormal > (keyLimit / 2)) windNormal = llFloor(keyLimit / 6);
+
+        //lmSendConfig("windMins",(string)(windMins = windNormal / SEC_PER_MIN));
+        lmSendConfig("windNormal",(string)windNormal);
+        //lmSendConfig("windAmount",(string)windAmount);
+        lmSendConfig("keyLimit",(string)keyLimit);
     }
     else if (name == "gem colour" || name == "gem color") {
         if ((vector)value != ZERO_VECTOR) {
