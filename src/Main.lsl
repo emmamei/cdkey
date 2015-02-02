@@ -33,9 +33,6 @@ integer minsLeft;
 
 float lastEmergencyTime;
 
-// EMERGENCY_LIMIT_TIME needs to be an even number of hours (in seconds)
-#define EMERGENCY_LIMIT_TIME 43200 // 12 (RL) Hours = 43200 Seconds
-
 string rlvAPIversion;
 #ifdef DEVELOPER_MODE
 float thisTimerEvent;

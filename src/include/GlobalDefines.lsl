@@ -97,6 +97,7 @@
 #define JAM_TIMEOUT ((integer)llFrand(180) + 120)
 #define TIME_BEFORE_TP 900
 #define TIME_BEFORE_EMGWIND 1800
+#define EMERGENCY_LIMIT_TIME 43200 // 12 (RL) Hours = 43200 Seconds)
 
 // Permissions scripts should request
 //

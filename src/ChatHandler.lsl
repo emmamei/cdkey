@@ -591,7 +591,14 @@ default
                     else if (choice == "xstats") {
                         if (isDoll && hardcore) return;
                         string s = "Extended stats:\n\nDoll is a " + dollType + " Doll.\nAFK time factor: " +
-                                   formatFloat(RATE_AFK, 1) + "x\nWind amount: " + (string)llFloor(windNormal / SECS_PER_MIN) + " (mins)\n";
+                                   formatFloat(RATE_AFK, 1) + "x\nWind amount: " + (string)llFloor(windNormal / SECS_PER_MIN) + " (mins)\nKey Limit: " +
+                                   (string)((integer)(keyLimit / SECS_PER_MIN)) + " mins\nEmergency Winder Recharge Time: " +
+                                   (string)(EMERGENCY_LIMIT_TIME / 60 / (integer)SECS_PER_MIN) + " hours\nEmergency Winder: ";
+
+                        float windEmergency;
+                        windEmergency = effectiveLimit * 0.2;
+                        if (windEmergency > 600) windEmergency = 600;
+                        s += (string)((integer)(windEmergency / SECS_PER_MIN)) + " mins\n";
 
                         if (demoMode) s += "Demo mode is enabled\n";
                         //if (lastWinderName) s += "Last winder was: " + lastWinderName + "\n";
