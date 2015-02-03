@@ -513,7 +513,6 @@ default {
             else if (name == "homingBeacon")             homingBeacon = (integer)value;
             else if (name == "collapseTime")             collapseTime = (float)value;
 #endif
-            else if (name == "dollType")                     dollType = value;
             else if (name == "showPhrases") {
                 showPhrases = (integer)value;
                 currentPhrases = [];
