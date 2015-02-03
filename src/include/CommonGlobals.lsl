@@ -49,7 +49,7 @@ integer allowRepeatWind     = 1;
 #ifdef ADULT_MODE
 integer allowStrip          = 1;
 #endif
-integer autoAFK             = 1;
+integer autoAfk             = 1;
 integer autoTP;
 integer busyIsAway;
 integer canAFK              = 1;

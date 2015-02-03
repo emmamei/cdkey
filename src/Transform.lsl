@@ -417,22 +417,27 @@ default {
         if (canAFK) {
             integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0);
 
-            // When Dolly is "away" - enter AFK
-            // Also set away when busy
+            if (afk) {
+                // Dolly is flagged as afk... check to see if afk was automatically triggered,
+                // and if Dolly is no longer afk
+                if (!dollAway && autoAfk) {
+                    lmSetConfig("afk", (string)NOT_AFK);
+                    lmSetConfig("autoAfk", (string)FALSE);
+                    llOwnerSay("You hear the Key whir back to full power");
 
-            if (autoAFK && (afk != dollAway)) {
-
+                }
+            }
+            else {
+                // Dolly is flagged as NOT afk... see if Dolly has automatically gone afk, and adjust
+                // appropriately - and mark afk as auto-triggered
                 if (dollAway) {
-                    lmSetConfig("afk", AUTO_AFK);
+                    lmSetConfig("afk", (string)TRUE);
+                    lmSetConfig("autoAfk", (string)TRUE);
                     llOwnerSay("Automatically entering AFK mode; Key subsystems slowing...");
                 }
-                else {
-                    lmSetConfig("afk", NOT_AFK);
-                    llOwnerSay("You hear the Key whir back to full power");
-                }
-
-                setWindRate();
             }
+
+            setWindRate();
         }
     }
 
@@ -478,7 +483,7 @@ default {
 
                  if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
             else if (name == "afk")                               afk = (integer)value;
-            else if (name == "autoAFK")                       autoAFK = (integer)value;
+            else if (name == "autoAfk")                       autoAfk = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")           timeReporting = (integer)value;
             else if (name == "debugLevel")                 debugLevel = (integer)value;

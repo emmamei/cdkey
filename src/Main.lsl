@@ -90,27 +90,6 @@ ifPermissions() {
 }
 #endif
 
-setAfk(integer setting) {
-    // afk setting 2 is special: means we automatically set AFK, in
-    // contrast to the user setting AFK otherwise
-
-    if (setting != 2) {
-        // setting is either 0 (FALSE) or 1 (TRUE)
-        integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0);
-
-        if (dollAway != afk) autoAFK = 0;
-        else autoAFK = 1;
-    }
-
-    // The odd code for setting AFK folds values 1 and 2 into
-    // a single value
-    lmSendConfig("afk", (string)(afk = (setting != 0)));
-    lmSendConfig("autoAFK", (string)autoAFK);
-    lmInternalCommand("setHovertext", "", llGetKey());
-    setWindRate();
-
-}
-
 uncollapse() {
     string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
     cdSetHovertext("",INFO); // uses primText
@@ -547,7 +526,7 @@ default {
                 else if (name == "collapsed")                    collapsed = (integer)value;
             }
             else if (name == "allowRepeatWind")       allowRepeatWind = (integer)value;
-            else if (name == "autoAFK")                       autoAFK = (integer)value;
+            else if (name == "autoAfk")                       autoAfk = (integer)value;
 #ifdef ADULT_MODE
             else if (name == "allowStrip")                 allowStrip = (integer)value;
 #endif
@@ -614,8 +593,19 @@ default {
             else if (name == "lastWinderID") {
                 lmSendConfig("lastWinderID", (string)(lastWinderID = (key)value));
             }
+            else if (name == "autoAfk") {
+                lmSendConfig("autoAfk", (string)(autoAfk = (integer)value));
+                if (autoAfk) lmSendConfig("afk", (string)(afk = TRUE));
+
+                lmInternalCommand("setHovertext", "", llGetKey());
+                setWindRate();
+            }
             else if (name == "afk") {
-                setAfk((integer)value);
+                lmSendConfig("afk", (string)(afk = (integer)value));
+                if (!afk) lmSendConfig("autoAfk", (string)(autoAfk = 0));
+
+                lmInternalCommand("setHovertext", "", llGetKey());
+                setWindRate();
             }
             else if (name == "timeLeftOnKey") {
                 timeLeftOnKey = (float)value;
