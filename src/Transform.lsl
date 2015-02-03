@@ -99,6 +99,11 @@ setDollType(string stateName, integer automated) {
     // Convert state name to Title case
     stateName = cdGetFirstChar(llToUpper(stateName)) + cdButFirstChar(llToLower(stateName));
 
+    if (stateName = "") {
+        llSay(DEBUG_CHANNEL,"Attempt made to set dollType to null string! Setting to Regular...");
+        stateName = "Regular";
+    }
+
     // If no change, abort
     if (stateName == dollType) return;
 
@@ -711,6 +716,8 @@ default {
                     else {
                         msg += "What type of doll do you want the Doll to be?";
 
+                        // This removes the Builder type from the list shown to the
+                        // non-Dolly user
                         if ((i = llListFindList(choices, (list)"Builder")) != NOT_FOUND) {
                             choices = llDeleteSubList(choices, i, i);
                         }

@@ -206,11 +206,7 @@ default {
                      if (name == "dialogChannel")           dialogChannel = (integer)value;
                 else if (name == "detachable")                 detachable = (integer)value;
                 else if (name == "demoMode")                     demoMode = (integer)value;
-                else if (name == "dollType") {
-                    // this script is the only one with this sort of "protected" setting... is it needed?
-                    //dollType = llGetSubString(llToUpper(value), 0, 0) + llGetSubString(llToLower(value), 1, -1);
-                    dollType = value;
-                }
+                else if (name == "dollType")                     dollType = value;
 #ifdef DEVELOPER_MODE
                 else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif

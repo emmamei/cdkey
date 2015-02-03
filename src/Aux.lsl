@@ -154,27 +154,40 @@ default {
 #ifdef GEMGLOW_OPT
             else if (name == "gemGlow")                     gemGlow = (integer)value;
 #endif
-            //else if (name == "isVisible")                   isVisible = (integer)value;
-            //else if (name == "gemColour") {
-            //    vector oldGemColour = gemColour;
-            //    gemColour = (vector)value;
-            //
-            //    if (gemColour != oldGemColour || gemColour != normalGemColour)
-            //        lmInternalCommand("setGemColour", gemColour, id);
-            //}
             else if (name == "blacklist") {
                 if (split == [""]) blacklist = [];
                 else blacklist = split;
             }
             else if (name == "dollType") {
-                if (configured && (keyAnimation != "") && (keyAnimation != ANIMATION_COLLAPSED) && (poserID != dollID)) {
-                    if (value == "Display" || hardcore)
-                        llOwnerSay("You feel yourself transform and know you will soon be free of your pose when the timer ends.");
-                    else if (dollType == "Display")
-                        llOwnerSay("As you feel yourself become a display doll you feel a sense of helplessness knowing you will remain posed until released.");
+                dollType = value;
 
-                    dollType = value;
-                    lmInternalCommand("setPose", keyAnimation, NULL_KEY);
+                // if:   * Key is configured
+                //       * Dolly is posed
+                //       * Dolly is not collapsed
+                //       * Poser is not Dolly
+                //
+                // This only occurs when Dolly is posed when transformed by someone else; if that happens,
+                // put out a message, and reissue the pose
+                //
+                // This is necessary because of the Display Doll: if a posed Dolly is transformed, then
+                // the pose timer needs to be reset and eliminated
+                //
+                if (!hardcore) { // if hardcore, there IS no timer
+                    if (keyAnimation != "") {
+                        if (keyAnimation != ANIMATION_COLLAPSED) {
+                            if (poserID != dollID) {
+                                if (configured) {
+
+                                    if (dollType == "Display")
+                                        llOwnerSay("As you feel yourself become a " + dollType + " Doll you feel a sense of helplessness knowing you will remain posed until released.");
+                                    else
+                                        llOwnerSay("You feel yourself transform into a " + dollType + " Doll and know you will soon be free of your pose when the timer ends.");
+
+                                    lmInternalCommand("setPose", keyAnimation, NULL_KEY);
+                                }
+                            }
+                        }
+                    }
                 }
             }
             else if (name == "dialogChannel") {
