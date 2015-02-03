@@ -626,8 +626,8 @@ default {
             i = poseCount;
             while (i--) {
                 // This takes time:
-                poseName = llGetInventoryName(INVENTORY_ANIMATION, i + 1);
-                debugSay(6,"DEBUG-AVATAR","Pose #" + (string)i + " (" + poseName + ") found: " + llDumpList2String(poseList, ","));
+                poseName = llGetInventoryName(INVENTORY_ANIMATION, i);
+                debugSay(6,"DEBUG-AVATAR","Pose #" + (string)(i+1) + " (" + poseName + ") found: " + llDumpList2String(poseList, ","));
 
                 // Collect all viable poses: skip the collapse animation
                 if (poseName != ANIMATION_COLLAPSED)
