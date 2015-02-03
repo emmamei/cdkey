@@ -98,11 +98,14 @@ list currentPhrases;
 setDollType(string stateName, integer automated) {
     // Convert state name to Title case
     stateName = cdGetFirstChar(llToUpper(stateName)) + cdButFirstChar(llToLower(stateName));
+    debugSay(2,"DEBUG-DOLLTYPE","Changing (" + (string)automated + ") to type " + stateName + " from " + dollType);
 
-    if (stateName = "") {
-        llSay(DEBUG_CHANNEL,"Attempt made to set dollType to null string! Setting to Regular...");
+#ifdef DEVELOPER_MODE
+    if (stateName == "") {
+        llSay(DEBUG_CHANNEL,"Attempt made to set dollType to null string by " + script + "! Setting to Regular...");
         stateName = "Regular";
     }
+#endif
 
     // If no change, abort
     if (stateName == dollType) return;
@@ -164,6 +167,7 @@ setDollType(string stateName, integer automated) {
     // if NOT RLVok then we have a DollType with no associated typeFolder...
 
     setWindRate();
+    debugSay(2,"DEBUG-DOLLTYPE","Changed to type " + dollType);
 }
 
 reloadTypeNames() {
@@ -742,9 +746,10 @@ default {
         }
         else if (code == TYPE_SELECTION) {
             // "choice" is a valid Type: change to it as appropriate
-            transform = "";
 
             if (cdIsDoll(id) || cdIsController(id) || !mustAgreeToType || hardcore) {
+                transform = "";
+
                 // Doll (or a Controller) chose a Type - or no confirmation needed: just do it
                 transformedViaMenu = YES;
                 setDollType(choice, NOT_AUTOMATED);
