@@ -38,19 +38,14 @@ float thisTimerEvent;
 float timerInterval;
 #endif
 
-float rlvTimer;
-
 // Note that this is not the "speed" nor is it a slowing factor
 // This is a vector of force applied against Dolly: headwind speed
 // is a good way to think of it
 float afkSlowWalkSpeed = 30;
 float animRefreshRate = 8.0;
 
-float nextRLVcheck;
-float nextAnimRefresh;
-
 vector carrierPos;
-vector lockPos;
+vector newCarrierPos;
 
 string msg;
 string name;
@@ -62,11 +57,8 @@ string barefeet;
 string myPath;
 #endif
 
-string rlvAPIversion;
 string userBaseRLVcmd;
 
-integer isFrozen;
-integer isNoScript;
 integer hasCarrier;
 integer i;
 integer posePage;
@@ -84,16 +76,59 @@ list animList;
 key grantorID;
 integer permMask;
 
-integer carryMoved;
+vector pointTo;
 integer clearAnim = 1;
 integer locked;
 integer targetHandle;
 integer newAttach = 1;
 integer chatChannel = 75;
+integer atTarget;
 
 //========================================
 // FUNCTIONS
 //========================================
+
+followCarrier(key id) {
+
+    if (!atTarget && hasCarrier && keyAnimation== "") {
+        // Dolly is being carried and is movable
+
+        // Get updated position and set target
+        newCarrierPos = llList2Vector(llGetObjectDetails(id, [OBJECT_POS]), 0);
+
+        if (newCarrierPos) {
+            // Carrier is present
+            targetHandle = llTarget(carrierPos, CARRY_RANGE);
+
+            carrierPos = newCarrierPos;
+
+            // Move to and turn toward target
+            pointTo = carrierPos - llGetPos();
+
+            lmRunRLV("setrot:" + (string)(llAtan2(pointTo.x, pointTo.y)) + "=force");
+            llMoveToTarget(carrierPos, 0.7);
+        }
+        else {
+            // Carrier has disappeared: drop
+            hasCarrier = 0;
+            newCarrierPos = ZERO_VECTOR;
+            carrierPos = ZERO_VECTOR;
+            // Full stop: avatar comes to stop
+            llTargetRemove(targetHandle);
+            llStopMoveToTarget();
+
+            lmSendConfig("carrierID", (string)(carrierID = NULL_KEY));
+            lmSendConfig("carrierName", (carrierName = ""));
+        }
+    }
+    else {
+        // Dolly either has no carrier, or is frozen in place
+
+        // Full stop: avatar comes to stop
+        llTargetRemove(targetHandle);
+        llStopMoveToTarget();
+    }
+}
 
 posePageN(string choice, key id) {
     string posePrefix;
@@ -489,18 +524,15 @@ ifPermissions() {
         if (clearAnim) clearAnimations();
         else if (cdAnimated()) oneAnimation(); 
 
-        if (animRefreshRate) nextAnimRefresh = llGetTime() + animRefreshRate;
         llSetTimerEvent(animRefreshRate);
     }
 
     //----------------------------------------
     // PERMISSION_TAKE_CONTROLS
 
-    isFrozen = (collapsed || keyAnimation != "");
-
     if (permMask & PERMISSION_TAKE_CONTROLS) {
 
-        if (isFrozen)
+        if (keyAnimation != "")
             // Dolly is "frozen": either collapsed or posed
 
             // When collapsed or posed the doll should not be able to move at all; so the key will
@@ -533,38 +565,7 @@ ifPermissions() {
     //----------------------------------------
     // Moving to Target
 
-    if (isFrozen) {
-
-        if (lockPos == ZERO_VECTOR) lmSendConfig("lockPos", (string)(lockPos = llGetPos()));
-
-        llTargetRemove(targetHandle);
-        targetHandle = llTarget(lockPos, 1.0);
-        llMoveToTarget(lockPos, 0.7);
-    }
-    else if (hasCarrier) {
-
-        if (lockPos) lmSendConfig("lockPos", (string)(lockPos = ZERO_VECTOR));
-
-        // Stop moving to Target
-        llTargetRemove(targetHandle);
-        llStopMoveToTarget();
-
-        // Re-enable with new target
-        vector carrierPos = llList2Vector(llGetObjectDetails(carrierID, [ OBJECT_POS ]), 0);
-
-        if (carrierPos) {
-            targetHandle = llTarget(carrierPos, CARRY_RANGE);
-            llMoveToTarget(carrierPos, 0.7);
-        }
-        else
-            llOwnerSay("Carrier is out of region?!");
-    }
-    else {
-        // Stop moving to Target
-        lockPos = ZERO_VECTOR;
-        llTargetRemove(targetHandle);
-        llStopMoveToTarget();
-    }
+    followCarrier(carrierID);
 }
 
 //========================================
@@ -581,7 +582,6 @@ default {
         RLVok = UNSET;
         cdInitializeSeq();
 
-        isNoScript = llGetParcelFlags(llGetPos()) & PARCEL_FLAG_ALLOW_SCRIPTS;
         llRequestPermissions(dollID, PERMISSION_MASK);
     }
 
@@ -589,13 +589,13 @@ default {
     // ON REZ
     //----------------------------------------
     on_rez(integer start) {
+        // Set up key when rezzed
 
         RLVok = UNSET;
-        llStopMoveToTarget();
-        llTargetRemove(targetHandle);
+        //llStopMoveToTarget();
+        //llTargetRemove(targetHandle);
 
         debugSay(2,"DEBUG-AVATAR","ifPermissions (on_rez)");
-        isNoScript = llGetParcelFlags(llGetPos()) & PARCEL_FLAG_ALLOW_SCRIPTS;
         ifPermissions();
     }
 
@@ -607,11 +607,10 @@ default {
             llStopMoveToTarget();
             llTargetRemove(targetHandle);
 
-            isNoScript = llGetParcelFlags(llGetPos()) & PARCEL_FLAG_ALLOW_SCRIPTS;
 
 #ifdef DEVELOPER_MODE
             msg = "Region ";
-            if (isNoScript) msg += "does not allow scripts";
+            if (llGetParcelFlags(llGetPos()) & PARCEL_FLAG_ALLOW_SCRIPTS) msg += "does not allow scripts";
             else msg += "allows scripts";
 
             debugSay(2,"DEBUG-AVATAR",msg);
@@ -658,12 +657,11 @@ default {
         llTargetRemove(targetHandle);
 
         if (id) {
-            debugSay(2,"DEBUG-AVATAR","ifPermissions (attach)");
             ifPermissions();
 
 #ifdef DEVELOPER_MODE
             debugSay(2,"DEBUG-AVATAR","Region FPS: " + formatFloat(llGetRegionFPS(),1) + "; Region Time Dilation: " + formatFloat(llGetRegionTimeDilation(),3));
-            debugSay(2,"DEBUG-AVATAR","ifPermissions (changed)");
+            debugSay(2,"DEBUG-AVATAR","ifPermissions (attach)");
 #endif
             ifPermissions();
         }
@@ -684,6 +682,9 @@ default {
                 poseList += poseName;
         }
         poseList = llListSort(poseList, 1, 1);
+
+        // Note: this is initial, before receiving any new config events
+        setWindRate();
     }
 
     //----------------------------------------
@@ -706,10 +707,6 @@ default {
             value = llList2String(split, 1);
             split = llDeleteSubList(split, 0, 0);
 
-// CHANGED_OTHER bit used to indicate changes of RLV status that
-// would not normally be reflected as a doll state.
-//#define CHANGED_OTHER 0x80000000
-
             if (name == "carrierID") {
                 carrierID = (key)value;
                 hasCarrier = cdCarried();
@@ -718,8 +715,9 @@ default {
             else if (name == "collapsed") {
                     collapsed = (integer)value;
 
-                    if (collapsed) lmSendConfig("keyAnimation", (keyAnimation = ANIMATION_COLLAPSED));
-                    else if (cdCollapsedAnim()) lmSendConfig("keyAnimation", (keyAnimation = ""));
+                    if (collapsed) keyAnimation = ANIMATION_COLLAPSED;
+                    else if (cdCollapsedAnim()) keyAnimation = "";
+                    lmSendConfig("keyAnimation", keyAnimation);
 
                     debugSay(2,"DEBUG-AVATAR","ifPermissions (link_message 300/collapsed)");
                     ifPermissions();
@@ -734,17 +732,6 @@ default {
                 string oldanim = keyAnimation;
                 keyAnimation = value;
 
-                // Purpose of this code is unknown: it appears
-                // to de-animate a collapsed dolly when the animation
-                // is set to collapse... say What?
-                //
-                //if (cdCollapsedAnim() && collapsed) {
-                //    lmSendConfig("keyAnimation", "");
-                //    ifPermissions();
-                //}
-
-                //isAnimated = (keyAnimation != "");
-
                 if cdNoAnim() clearAnim = 1;
                 else {
                     if ((oldanim != "") && (keyAnimation != oldanim)) {    // Issue #139 Moving directly from one animation to another make certain keyAnimationID does not holdover to the new animation.
@@ -758,28 +745,15 @@ default {
             }
             else if (name == "poserID")                 poserID = (key)value;
             else {
-                // These are segregated so they won't execute the ifPermissions() at the
-                // end... why is that?
-
                      if (name == "detachable")               detachable = (integer)value;
 #ifdef DEVELOPER_MODE
                 else if (name == "debugLevel")               debugLevel = (integer)value;
 #endif
-                else if (name == "lowScriptMode") {
-                    lowScriptMode = (integer)value;
-
-                    // The Avatar Timer operates under different rules;
-                    // most of the time it's not active at all
-                    //
-                    //if (lowScriptMode) llSetTimerEvent(LOW_RATE);
-                    //else llSetTimerEvent(STD_RATE);
-                }
-
+                else if (name == "lowScriptMode")         lowScriptMode = (integer)value;
                 else if (name == "quiet")                         quiet = (integer)value;
                 else if (name == "chatChannel")             chatChannel = (integer)value;
-                else if (name == "allowPose")                     allowPose = (integer)value;
+                else if (name == "allowPose")                 allowPose = (integer)value;
                 else if (name == "barefeet")                   barefeet = value;
-                //else if (name == "wearLock")                   wearLock = (integer)value;
                 else if (name == "dollType")                   dollType = value;
                 else if (name == "controllers") {
                     if (split == [""]) controllers = [];
@@ -796,7 +770,6 @@ default {
                 return;
             }
 
-            //if (RLVstarted) cdLoadData(RLV_NC, RLV_BASE_RESTRICTIONS);
             debugSay(2,"DEBUG-AVATAR","ifPermissions (link_message 300)");
             ifPermissions();
         }
@@ -817,10 +790,6 @@ default {
                 string choice = llList2String(split, 0);
                 posePageN(choice,id);
             }
-            //else if (cmd == "wearLock") {
-
-            //    lmSendConfig("wearLock", (string)(wearLock = llList2Integer(split, 0)));
-            //}
         }
         else if (code == MENU_SELECTION) {
             string choice = llList2String(split, 0);
@@ -938,9 +907,6 @@ default {
         }
         else if (code < 200) {
             if (code == 110) {
-                //configured = 1;
-                //doCheckRLV();
-
                 debugSay(2,"DEBUG-AVATAR","ifPermissions (link_message 110)");
                 //if ((dollType == "Display" || hardcore) && keyAnimation != "" && keyAnimation != "collapse")
 
@@ -948,16 +914,12 @@ default {
                 oneAnimation();
             }
             else if (code == MEM_REPORT) {
-                float delay = llList2Float(split, 0);
-                memReport(cdMyScriptName(),delay);
+                memReport("Avatar",llList2Float(split,0));
             }
             else if (code == CONFIG_REPORT) {
                 cdConfigureReport();
             }
         }
-
-        //debugSay(2,"DEBUG-AVATAR","ifPermissions (link_message 500)");
-        //ifPermissions();
     }
 
     //----------------------------------------
@@ -976,7 +938,6 @@ default {
         if (clearAnim) clearAnimations();
         else if (cdAnimated()) oneAnimation(); 
 
-        if (animRefreshRate) nextAnimRefresh = llGetTime() + animRefreshRate;
         llSetTimerEvent(animRefreshRate);
 
 #ifdef DEVELOPER_MODE
@@ -995,29 +956,12 @@ default {
     //----------------------------------------
     at_target(integer num, vector target, vector me) {
 
-        if (hasCarrier) {
-            // Clear old targets to ensure there is only one
-            llTargetRemove(targetHandle);
-            llStopMoveToTarget();
+        atTarget = TRUE;
+        followCarrier(carrierID);
 
-            if (keyAnimation == "") {
-                // Get updated position and set target
-                carrierPos = llList2Vector(llGetObjectDetails(carrierID, [OBJECT_POS]), 0);
-                targetHandle = llTarget(carrierPos, CARRY_RANGE);
-            }
-            else {
-                if (lockPos) lockPos = llGetPos();
-                targetHandle = llTarget(lockPos, 0.5);
-            }
-
-            if (carryMoved) {
-                vector pointTo = target - llGetPos();
-                float  turnAngle = llAtan2(pointTo.x, pointTo.y);
-
-                lmRunRLV("setrot:" + (string)(turnAngle) + "=force");
-                carryMoved = 0;
-            }
-        }
+        // Full stop: avatar comes to stop
+        llTargetRemove(targetHandle);
+        llStopMoveToTarget();
     }
 
     //----------------------------------------
@@ -1025,23 +969,8 @@ default {
     //----------------------------------------
     not_at_target() {
 
-        if (cdNoAnim() && cdCarried()) {
-            vector newCarrierPos = llList2Vector(llGetObjectDetails(carrierID,[OBJECT_POS]),0);
-            llStopMoveToTarget();
-
-            if (carrierPos != newCarrierPos) {
-                llTargetRemove(targetHandle);
-                carrierPos = newCarrierPos;
-                targetHandle = llTarget(carrierPos, CARRY_RANGE);
-            }
-            if (carrierPos) {
-                llMoveToTarget(carrierPos, 0.7);
-                carryMoved = 1;
-            }
-        }
-        else if (cdAnimated()) {
-            llMoveToTarget(lockPos, 0.7);
-        }
+        atTarget = FALSE;
+        followCarrier(carrierID);
     }
 
 #ifdef SLOW_WALK
@@ -1088,7 +1017,7 @@ default {
                         // This will run the appropriate llSetForce command repeatedly as long as
                         // the key is held down. This may or may not be desired, but it should not
                         // lead to erroneous operation.
-                        //debugSay(2,"DEBUG-AVATAR","Slowing Dolly");
+
                              if (level & CONTROL_FWD)   llSetForce(<-1, 0, 0> * afkSlowWalkSpeed, TRUE);
                         else if (level & CONTROL_BACK)  llSetForce(< 1, 0, 0> * afkSlowWalkSpeed, TRUE);
                         else if (level & CONTROL_RIGHT) llSetForce(< 0, 1, 0> * afkSlowWalkSpeed, TRUE);
@@ -1107,17 +1036,15 @@ default {
     //----------------------------------------
     dataserver(key request, string data) {
 
-        if (request == rlvTPrequest) {
-            vector global = llGetRegionCorner() + (vector)data;
+        vector global = llGetRegionCorner() + (vector)data;
 
-            llOwnerSay("Dolly is now teleporting.");
+        llOwnerSay("Dolly is now teleporting.");
 
-            // Note this will be rejected if @unsit=n or @tploc=n are active
-            lmRunRLVas("TP", "tpto:" +
-                    (string) llFloor( global.x ) + "/" +
-                    (string) llFloor( global.y ) + "/" +
-                    (string) llFloor( global.z ) + "=force");
-        }
+        // Note this will be rejected if @unsit=n or @tploc=n are active
+        lmRunRLVas("TP", "tpto:" +
+                (string) llFloor( global.x ) + "/" +
+                (string) llFloor( global.y ) + "/" +
+                (string) llFloor( global.z ) + "=force");
     }
 
     //----------------------------------------

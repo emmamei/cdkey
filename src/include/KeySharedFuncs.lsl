@@ -35,7 +35,9 @@ float setWindRate() {
     //
     // Note that baseWindRate never changes in this function at all.
 
-    broadcastWindRate();
+    lmSendConfig("baseWindRate", (string)baseWindRate);
+    lmSendConfig("windRate", (string)windRate);
+    lmSendConfig("windingDown", (string)windingDown);
 
     // llTargetOmega: With normalized vector, spin rate is equal to radians per second
     // 2𝜋 radians per rotation.  This sets a normal rotation rate of 4 rpm about the
@@ -46,12 +48,6 @@ float setWindRate() {
     else             llTargetOmega(<0.0, 0.0, 1.0>,                     0.0, 1);
 
     return windRate;
-}
-
-broadcastWindRate() {
-    lmSendConfig("baseWindRate", (string)baseWindRate);
-    lmSendConfig("windRate", (string)windRate);
-    lmSendConfig("windingDown", (string)windingDown);
 }
 
 #define CHECK "✔"
