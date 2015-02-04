@@ -61,6 +61,8 @@ default
 
         scaleMem();
 
+        setWindRate();
+
         if (code == CONFIG) {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
