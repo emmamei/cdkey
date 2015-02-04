@@ -388,7 +388,7 @@ default {
                         menu += "Hold";
 #endif
 
-                        if (dollType != Builder) menu += "Unwind";
+                        if (dollType != "Builder") menu += "Unwind";
                     }
 
                     if (RLVok == 1) {
