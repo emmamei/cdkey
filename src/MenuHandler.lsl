@@ -384,12 +384,11 @@ default {
                         // Toucher is not Doll.... could be anyone
                         msg =  dollName + " is a doll and likes to be treated like " +
                                 "a doll. So feel free to use these options. ";
-
-                        menu += [
 #ifdef JAMMABLE
-                            "Hold",
+                        menu += "Hold";
 #endif
-                            "Unwind" ];
+
+                        if (dollType != Builder) menu += "Unwind";
                     }
 
                     if (RLVok == 1) {
@@ -489,7 +488,8 @@ default {
                         // Do we want Dolly to hae Detach capability... ever?
                         if (detachable) menu += [ "Detach" ];
                     }
-                    menu += [ "Wind","Help..." ];
+                    if (dollType != "Builder") menu += "Wind";
+                    menu += "Help...";
                 }
 
                 if (lowScriptMode)
