@@ -259,9 +259,7 @@ default
 
                 // we may or may not have changed either of these - but this code
                 // forces a refresh in any case
-                debugSay(5,"DEBUG-ADDMISTRESS","Blacklist = " + llDumpList2String(blacklist,"|") + " (" + (string)llGetListLength(blacklist) + ")");
                 lmSetConfig("blacklist",   llDumpList2String(blacklist,   "|") );
-                debugSay(5,"DEBUG-ADDMISTRESS","Blacklist = " + llDumpList2String(blacklist,"|") + " (" + (string)llGetListLength(blacklist) + ")");
                 lmSetConfig("controllers", llDumpList2String(controllers, "|") );
 
                 debugSay(5,"DEBUG-ADDMISTRESS",   "blacklist >> " + llDumpList2String(blacklist,   ",") + " (" + (string)llGetListLength(blacklist  ) + ")");
@@ -383,7 +381,6 @@ default
 
             lmInternalCommand("getTimeUpdates","",NULL_KEY);
             debugSay(5,"DEBUG-CHAT",("Got a chat channel message: " + name + "/" + (string)id + "/" + msg));
-            //msg = llToLower(msg);
             string prefix = cdGetFirstChar(msg);
 
             // Before we proceed first verify that the command is for us.
@@ -1030,6 +1027,12 @@ default
                     else if (choice == "debug") {
                         lmSendConfig("debugLevel", (string)(debugLevel = (integer)param));
                         llOwnerSay("Debug level set to " + (string)debugLevel);
+
+                        if (debugLevel == 0) {
+                            lmSendConfig("timeReporting", (string)(timeReporting = 0));
+                            llOwnerSay("Time reporting turned off.");
+                        }
+
                         return;
                     }
                     else if (choice == "inject") {
