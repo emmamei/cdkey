@@ -38,18 +38,7 @@ string msg;
 float delayTime = 15.0; // in seconds
 float initTimer;
 
-key MistressID = NULL_KEY;
-
-string appearanceData;
-string chatFilter = "";
-integer chatEnable = TRUE;
-
-#define APPEARANCE_NC "DataAppearance"
 key ncPrefsKey;
-//list ncPrefsLoadedUUID;
-//key ncIntroKey;
-key ncResetAttach;
-key ncRequestAppearance;
 integer prefsRead;
 
 integer ncLine;
@@ -216,11 +205,6 @@ processConfiguration(string name, string value) {
                       "allowDress", "allowCarry", "allowRepeatWind"
                     ];
 
-//  list internals = [ "wind time", "blacklist key", "controller key" ];
-//  list cmdName = [ "setWindTime", "addBlacklist", "addMistress" ];
-//  list internals = [ "wind time" ];
-//  list cmdName = [ "setWindTime" ];
-
     // Three specially handled configuration entries:
     //   * doll gender
     //   * blacklist key
@@ -285,20 +269,18 @@ processConfiguration(string name, string value) {
         lmSendConfig("keyLimit",(string)keyLimit);
     }
     else if (name == "gem colour" || name == "gem color") {
-        if ((vector)value != ZERO_VECTOR) {
-            prefGemColour = value;
-        }
+        if ((vector)value != ZERO_VECTOR) prefGemColour = value;
     }
     else if (name == "chat mode") {
-        chatFilter = "";
-        chatEnable = TRUE;
+        // Set the way chat operates
 
-        if (value == "dolly") chatFilter = (string)dollID;
-        else if (value == "disabled") chatEnable = FALSE;
-        else if (value == "world") chatFilter = "";
+        // Note that a value of "world" doesn't actually require
+        // any action at all
+        value = llToLower(value);
 
-        lmSendConfig("chatEnable",(string)chatEnable);
-        lmSendConfig("chatFilter",chatFilter);
+        if (value == "dolly") lmSetConfig("chatFilter",(string)dollID);
+        else if (value == "disabled") lmInternalCommand("chatDisable","",NULL_KEY);
+        else if (value != "world") llSay(DEBUG_CHANNEL,"Bad chat mode (" + value + ")");
     }
     else if (name == "helpless dolly") {
         // Note inverted sense of this value: this is intentional
@@ -306,59 +288,19 @@ processConfiguration(string name, string value) {
         else lmSendConfig("canSelfTP", "1");
     }
     else if (name == "doll gender") {
-        // This only accepts valid values
-        if (value == "female" || value == "woman" || value == "girl") setGender("female");
-        else if (value == "male" || value == "man" || value == "boy") setGender("male");
-        else setGender("female");
+        // set gender of dolly
+
+        if (value == "female" || value == "woman" || value == "girl") dollGender = "female";
+        else if (value == "male" || value == "man" || value == "boy") dollGender = "male";
+        else dollGender = "female";
+
+        lmSetConfig("dollGender", dollGender);
     }
-    //else if (name == "blacklist key") {
-    //    if (llList2Key([ value ], 0) != NULL_KEY) {
-    //        if (llListFindList(blacklist, [ value ]) == NOT_FOUND)
-    //            lmSendConfig("blacklist", llDumpList2String((blacklist += [ "", value ]), "|"));
-    //    }
-    //}
-    //else if (name == "controller key") {
-    //    if (llList2Key([ value ], 0) != NULL_KEY) {
-    //        if (llListFindList(controllers, [ value ]) == NOT_FOUND)
-    //            lmSendConfig("controllers", llDumpList2String((controllers += [ "", value ]), "|"));
-    //    }
-    //}
-    //--------------------------------------------------------------------------
-    // Disabled for future use, allows for extention scripts to add support for
-    // their own peferences by using names starting with the prefix 'ext'. These
-    // are sent with a different link code to prevent clashes with built in names
-    //--------------------------------------------------------------------------
-    //else if (llGetSubString(name, 0, 2) == "ext") {
-    //    string param = "|" + llDumpList2String(values, "|");
-    //    llMessageLinked(LINK_SET, 127, name + param, NULL_KEY);
-    //}
 #ifdef DEVELOPER_MODE
     else {
-        llOwnerSay("Unknown configuration value in preferences: " + name + " on line " + (string)(ncLine + 1));
+        llSay(DEBUG_CHANNEL,"Unknown configuration value in preferences: " + name + " on line " + (string)(ncLine + 1));
     }
 #endif
-}
-
-// Gender is actually set in Aux: so send them a set request
-setGender(string gender) {
-
-//  if (gender == "male") {
-//      dollGender     = "Male";
-//      pronounHerDoll = "His";
-//      pronounSheDoll = "He";
-//  }
-//  else {
-//      dollGender = "Female";
-//      pronounHerDoll = "Her";
-//      pronounSheDoll = "She";
-//  }
-
-    // We don't actually USE these values - so no processing
-    // of the 300 message is necessary
-
-    lmSetConfig("dollGender",     dollGender);
-    lmSetConfig("pronounHerDoll", pronounHerDoll);
-    lmSetConfig("pronounSheDoll", pronounSheDoll);
 }
 
 // PURPOSE: readPreferences reads the Preferences notecard, if any -
@@ -400,9 +342,7 @@ doneConfiguration(integer prefsRead) {
     // items are are completed.
     debugSay(3,"DEBUG-START","Configuration done - starting init code 102 and 104 and 105");
     lmInitState(102);
-    llSleep(0.1);
     lmInitState(104);
-    llSleep(0.1);
     lmInitState(105);
 
     //initializationCompleted
@@ -423,12 +363,6 @@ doneConfiguration(integer prefsRead) {
     if (isAttached) cdSetKeyName(dollDisplayName + "'s Key");
 
     lmInitState(110);
-
-//    if (cdNotecardExists(APPEARANCE_NC)) {
-//        ncLine = 0;
-//        appearanceData = "";
-//        ncRequestAppearance = llGetNotecardLine(APPEARANCE_NC, ncLine++);
-//    }
 
     debugSay(3,"DEBUG-START","doneConfiguration done - exiting");
 }
@@ -479,7 +413,6 @@ default {
             split = llDeleteSubList(split,0,0);
 
                  if (name == "lowScriptMode")            lowScriptMode = (integer)value;
-            //else if (name == "ncPrefsLoadedUUID")    ncPrefsLoadedUUID = split;
             else if (name == "dialogChannel")            dialogChannel = (integer)value;
             else if (name == "timeLeftOnKey")            timeLeftOnKey = (float)value;
             else if (name == "demoMode")                      demoMode = (integer)value;
@@ -779,21 +712,8 @@ default {
     //----------------------------------------
     dataserver(key query_id, string data) {
 
-        // Reading notecard DataAppearance (JSON list of appearance settings)
-        //if (query_id == ncRequestAppearance) {
-        //    if (data == EOF) {
-        //        doLuminosity();
-        //        configured = 1;
-        //        ncRequestAppearance = NULL_KEY;
-        //        llSleep(1.0);
-        //    }
-        //    else {
-        //        appearanceData += llStringTrim(data,STRING_TRIM);
-        //        ncRequestAppearance = llGetNotecardLine(APPEARANCE_NC, ncLine++);
-        //    }
-        //}
-        // Read notecard: Preferences
         if (query_id == ncPrefsKey) {
+            // Read notecard: Preferences
             if (data == EOF) {
                 //lmSendConfig("ncPrefsLoadedUUID", llDumpList2String(llList2List((string)llGetInventoryKey(NOTECARD_PREFERENCES) + ncPrefsLoadedUUID, 0, 9),"|"));
                 lmInternalCommand("getTimeUpdates","",NULL_KEY);
@@ -822,6 +742,7 @@ default {
                 }
 
                 // get next Notecard Line
+                llSleep(0.1);
                 ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ++ncLine);
             }
         }

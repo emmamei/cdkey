@@ -89,47 +89,53 @@ list dialogButtons;
 // EVERY time it is called... possibly for a security feature
 // using a dialogChannel periodic change setup
 
-doDialogChannelWithReset() {
-    uniqueID = 0;
-    dialogChannel = 0;
-    llListenRemove(dialogHandle);
-    doDialogChannel();
-}
+//doDialogChannelWithReset() {
+//    uniqueID = 0;
+//    dialogChannel = 0;
+//
+//    llListenRemove(dialogHandle);
+//    llListenRemove(poseHandle);
+//    llListenRemove(typeHandle);
+//
+//    doDialogChannel();
+//}
 
 // This function ONLY activates the dialogChannel - no
 // reset is done unless necessary
 
 doDialogChannel() {
-    if (dialogChannel != 0) {
+    // Open dialogChannel and typeChannel, poseChannel, with it
+    if (dialogChannel) {
         cdListenerActivate(dialogHandle);
+        cdListenerActivate(poseHandle);
+        cdListenerActivate(typeHandle);
     }
     else {
         dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGenerateKey(), -7, -1));
         dialogHandle = cdListenAll(dialogChannel);
-        cdListenerDeactivate(dialogHandle);
+
+        poseChannel = dialogChannel - POSE_CHANNEL_OFFSET;
+        poseHandle = cdListenAll(poseChannel);
+
+        typeChannel = dialogChannel - TYPE_CHANNEL_OFFSET;
+        typeHandle = cdListenAll(typeChannel);
+
+        // NOTE: blacklistChannel and controlChannel are not opened here
+        blacklistChannel = dialogChannel - BLACKLIST_CHANNEL_OFFSET;
+        controlChannel = dialogChannel - CONTROL_CHANNEL_OFFSET;
     }
 
-    blacklistChannel = dialogChannel - BLACKLIST_CHANNEL_OFFSET;
-    controlChannel = dialogChannel - CONTROL_CHANNEL_OFFSET;
-
-    poseChannel = dialogChannel - POSE_CHANNEL_OFFSET;
-    typeChannel = dialogChannel - TYPE_CHANNEL_OFFSET;
-
-    if (poseHandle != 0) llListenRemove(poseHandle);
-    if (typeHandle != 0) llListenRemove(typeHandle);
-    poseHandle = cdListenAll(poseChannel);
-    typeHandle = cdListenAll(typeChannel);
-
+    llSleep(0.1);
     lmSendConfig("dialogChannel", (string)(dialogChannel));
 }
 
-integer listCompare(list a, list b) {
-    if (a != b) return FALSE;    // Note: This is comparing list lengths only
-
-    return !llListFindList(a, b);  
-    // As both lists are the same length, llListFindList() can only return 0 or -1 
-    // Which we return as TRUE or FALSE respectively    
-}
+//integer listCompare(list a, list b) {
+//    if (a != b) return FALSE;    // Note: This is comparing list lengths only
+//
+//    return !llListFindList(a, b);  
+//    // As both lists are the same length, llListFindList() can only return 0 or -1 
+//    // Which we return as TRUE or FALSE respectively    
+//}
 
 //========================================
 // STATES
@@ -263,12 +269,16 @@ default {
             if (cmd == "dialogListen") {
 
                 doDialogChannel();
-                cdListenerActivate(dialogHandle);
+                //cdListenerActivate(dialogHandle);
                 llSetTimerEvent(MENU_TIMEOUT);
             }
             else if (cmd == "dialogClose") {
                 cdListenerDeactivate(dialogHandle);
+                cdListenerDeactivate(poseHandle);
+                cdListenerDeactivate(typeHandle);
+
                 llSetTimerEvent(0.0);
+
                 dialogKeys = []; dialogButtons = []; dialogNames = [];
 
                 menuName = "";
@@ -578,12 +588,11 @@ default {
 
         if (blacklistHandle) { llListenRemove(blacklistHandle); blacklistHandle = 0; }
         if (controlHandle)   { llListenRemove(controlHandle);     controlHandle = 0; }
-        if (poseHandle)      { llListenRemove(poseHandle);           poseHandle = 0; }
-        if (typeHandle)      { llListenRemove(typeHandle);           typeHandle = 0; }
 
-        if (dialogHandle) cdListenerDeactivate(dialogHandle);
+        if (poseHandle)      cdListenerDeactivate(poseHandle);
+        if (typeHandle)      cdListenerDeactivate(typeHandle);
+        if (dialogHandle)    cdListenerDeactivate(dialogHandle);
 
-        //cdListenerDeactivate(dialogHandle);
         dialogKeys = [];
         dialogButtons = [];
         dialogNames = [];

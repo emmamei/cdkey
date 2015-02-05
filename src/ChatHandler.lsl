@@ -25,14 +25,13 @@ float effectiveLimit;
 
 string msg;
 integer chatEnable           = TRUE;
-string chatFilter           = "";
+key chatFilter;
 string rlvAPIversion;
 
 integer chatChannel         = 75;
 integer chatHandle          = 0;
 
-default
-{
+default {
     //----------------------------------------
     // STATE ENTRY
     //----------------------------------------
@@ -61,8 +60,6 @@ default
 
         scaleMem();
 
-        setWindRate();
-
         if (code == CONFIG) {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
@@ -74,7 +71,6 @@ default
             else if (name == "timeReporting")           timeReporting = (integer)value;
 #endif
             else if (name == "hardcore")                     hardcore = (integer)value;
-            //else if (name == "isVisible")                     isVisible = (integer)value;
             else if (name == "blacklist") {
                 if (split == [""]) blacklist = [];
                 else blacklist = split;
@@ -112,22 +108,6 @@ default
                 else if (name == "controllers") {
                     if (split == [""]) controllers = [];
                     else controllers = split;
-                }
-                else if (name == "chatEnable") {
-                    chatEnable = (integer)value;
-                    if (chatEnable) cdListenerActivate(chatHandle);
-                    else cdListenerDeactivate(chatHandle);
-                }
-                else if (name == "chatFilter") {
-                    chatFilter = value;
-                    llListenRemove(chatHandle);
-                    chatHandle = llListen(chatChannel, "", chatFilter, "");
-                }
-                else if (name == "chatChannel") {
-                    chatChannel = (integer)value;
-                    dollID = llGetOwner();
-                    llListenRemove(chatHandle);
-                    chatHandle = llListen(chatChannel, "", chatFilter, "");
                 }
             }
 
@@ -185,7 +165,44 @@ default
                 else if (name == "windingDown")           windingDown = (integer)value;
             }
         }
+        else if (code == SET_CONFIG) {
+            string setName = llList2String(split, 0);
+            string value = llList2String(split, 1);
 
+            if (setName == "chatChannel") {
+                // Change listening chat channel
+
+                if (chatChannel == 0) return;
+
+                integer newChatChannel = (integer)value;
+
+                if (newChatChannel != DEBUG_CHANNEL && newChatChannel != PUBLIC_CHANNEL) {
+                    chatChannel = newChatChannel;
+
+                    // Reset chat channel with new channel number
+                    llListenRemove(chatHandle);
+                    chatHandle = llListen(chatChannel, "", chatFilter, "");
+                    lmSendConfig("chatChannel",(string)chatChannel);
+                }
+                else {
+                    llSay(DEBUG_CHANNEL,"Attempted to set channel to invalid value!");
+                }
+            }
+            else if (setName == "chatFilter") {
+                // Change filter on the listening chat channel
+                //
+                // Note: This is a one-time event, and done only by preferences
+
+                if (chatChannel == 0) return;
+
+                chatFilter = (key)value;
+
+                // Reset chat channel with new filter
+                llListenRemove(chatHandle);
+                chatHandle = llListen(chatChannel, "", chatFilter, "");
+                lmSendConfig("chatChannel",(string)chatChannel);
+            }
+        }
         else if (code == INTERNAL_CMD) {
             string cmd = llList2String(split, 0);
 
@@ -315,6 +332,15 @@ default
                 // forces a refresh in any case
                 lmSetConfig("blacklist",   llDumpList2String(blacklist,   "|") );
                 lmSetConfig("controllers", llDumpList2String(controllers, "|") );
+            }
+            else if (cmd == "chatDisable") {
+                // Turn off chat channel entirely
+                //
+                // Note that this is a one-time event, and only happens in preferences.
+                // Note, too, that this eseentially disables most of this script.
+
+                llListenRemove(chatHandle);
+                lmSendConfig("chatChannel",(string)(chatChannel = 0));
             }
         }
         else if (code == RLV_RESET) {
@@ -604,8 +630,6 @@ default
                         if (demoMode) s += "Demo mode is enabled\n";
                         //if (lastWinderName) s += "Last winder was: " + lastWinderName + "\n";
 
-                        string p = pronounHerDoll;
-
                         cdCapability(autoTP,           "Doll can", "be force teleported");
                         cdCapability(canAFK,           "Doll can", "go AFK");
                         cdCapability(canFly,           "Doll can", "fly");
@@ -618,11 +642,11 @@ default
                         cdCapability(hardcore,         "Doll is", "currently in hardcore mode");
 
                         // These settings all are affected by hardcore
-                        cdCapability((detachable && !hardcore),    "Doll can", "detach " + p + " key");
+                        cdCapability((detachable && !hardcore),    "Doll can", "detach " + pronounHerDoll + " key");
                         cdCapability((allowPose || hardcore),      "Doll can", "be posed by the public");
                         cdCapability((allowDress || hardcore),     "Doll can", "be dressed by the public");
                         cdCapability((allowCarry || hardcore),     "Doll can", "be carried by the public");
-                        cdCapability((canDressSelf && !hardcore),  "Doll can", "dress by " + p + "self");
+                        cdCapability((canDressSelf && !hardcore),  "Doll can", "dress by " + pronounHerDoll + "self");
                         cdCapability((poseSilence || hardcore),    "Doll is",  "silenced while posing");
 
                         if (windingDown) s += "\nCurrent wind rate is " + formatFloat(windRate,2) + ".\n";

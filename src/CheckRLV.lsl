@@ -159,9 +159,7 @@ activateRLVBase() {
     string baseRLV = "detach=n,permissive=n";
 #endif
 
-    //if (userBaseRLVcmd != "") lmRunRLVas("UserBase", userBaseRLVcmd);
-
-    baseRLV += ",sendchannel:" + (string)chatChannel + "=rem";
+    if (chatChannel) baseRLV += ",sendchannel:" + (string)chatChannel + "=rem";
     lmRunRLVas("Base", baseRLV);
     baseRLV = "";
 
@@ -377,6 +375,7 @@ default {
                     if (split == [""]) controllers = [];
                     else controllers = split;
                 }
+                else if (name == "chatChannel")  chatChannel = (integer)value;
             }
 
             else if (name == "dialogChannel") {
