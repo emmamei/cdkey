@@ -81,7 +81,6 @@ integer clearAnim = 1;
 integer locked;
 integer targetHandle;
 integer newAttach = 1;
-integer chatChannel = 75;
 integer atTarget;
 
 //========================================
@@ -751,7 +750,6 @@ default {
 #endif
                 else if (name == "lowScriptMode")         lowScriptMode = (integer)value;
                 else if (name == "quiet")                         quiet = (integer)value;
-                else if (name == "chatChannel")             chatChannel = (integer)value;
                 else if (name == "allowPose")                 allowPose = (integer)value;
                 else if (name == "barefeet")                   barefeet = value;
                 else if (name == "dollType")                   dollType = value;
@@ -1036,15 +1034,17 @@ default {
     //----------------------------------------
     dataserver(key request, string data) {
 
-        vector global = llGetRegionCorner() + (vector)data;
+        if (request == rlvTPrequest) {
+            vector global = llGetRegionCorner() + (vector)data;
 
-        llOwnerSay("Dolly is now teleporting.");
+            llOwnerSay("Dolly is now teleporting.");
 
-        // Note this will be rejected if @unsit=n or @tploc=n are active
-        lmRunRLVas("TP", "tpto:" +
-                (string) llFloor( global.x ) + "/" +
-                (string) llFloor( global.y ) + "/" +
-                (string) llFloor( global.z ) + "=force");
+            // Note this will be rejected if @unsit=n or @tploc=n are active
+            lmRunRLVas("TP", "tpto:" +
+                    (string) llFloor( global.x ) + "/" +
+                    (string) llFloor( global.y ) + "/" +
+                    (string) llFloor( global.z ) + "=force");
+        }
     }
 
     //----------------------------------------
