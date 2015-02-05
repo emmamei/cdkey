@@ -1105,6 +1105,11 @@ default {
                     }
                     return;
                 }
+#ifdef DEVELOPER_MODE
+                else {
+                    llSay(DEBUG_CHANNEL,"No pose or command recognized: " + msg);
+                }
+#endif
             }
         }
     }
