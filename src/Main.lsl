@@ -33,7 +33,6 @@ integer minsLeft;
 
 float lastEmergencyTime;
 
-string rlvAPIversion;
 #ifdef DEVELOPER_MODE
 float thisTimerEvent;
 float lastTimerEvent;
@@ -45,14 +44,9 @@ integer timeSpan;
 
 key lastWinderID = NULL_KEY;
 
-integer targetHandle;
 integer lowScriptTimer;
 integer lastLowScriptTime;
-
-integer clearAnim;
-integer RLVck = 1;
 integer warned;
-
 integer wearLockExpire;
 integer carryExpire;
 #ifdef JAMMABLE
@@ -65,8 +59,6 @@ integer transformLockExpire;
 
 float effectiveLimit  = keyLimit;
 float effectiveWindTime = 30.0;
-
-string mistressName;
 
 key simRatingQuery;
 
@@ -91,6 +83,7 @@ ifPermissions() {
 #endif
 
 uncollapse() {
+    // Revive dolly back from being collapsed
     string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
     cdSetHovertext("",INFO); // uses primText
 
@@ -116,7 +109,8 @@ uncollapse() {
 }
 
 collapse(integer newCollapseState) {
-
+    // Dolly is in a new collapse state: collapsed, or jammed
+    //
     // newCollapseState describes state being entered;
     // collapsed describes current state
     //
@@ -195,6 +189,8 @@ collapse(integer newCollapseState) {
 // default state should be changed to normal state
 
 default {
+    // default state
+    //
 
     //----------------------------------------
     // STATE ENTRY
@@ -274,13 +270,12 @@ default {
     // TIMER
     //----------------------------------------
     timer() {
-
-        // Doing the following every tick:
-        //    1. Are we checking for RLV? Reset...
-        //    2. Carrier still present (in region)?
-        //    3. Is Doll away?
-        //    4. Wind down
-        //    5. How far away is carrier? ("follow")
+        // Timer event: normally runs every 30 or 60 seconds
+        //
+        // This is the major timer in the Dolly;
+        // a second timer takes care of other things
+        // and is in Transform; the collapsed animation
+        // relies on a timer in Avatar.
 
         //----------------------------------------
         // TIMER INTERVAL
@@ -290,6 +285,7 @@ default {
 
         // sanity checking - esp. for relogs
         if (timeSpan > 120) {
+            // Check sanity of timeSpan
             timeSpan = 0;
             lastTimerMark = timerMark;
         }
@@ -334,7 +330,7 @@ default {
                 // normal mode immediately - wait 10 minutes
                 // to see if this good news sticks
 
-                integer timeSpan = llGetUnixTime() - lastLowScriptTime;
+                timeSpan = llGetUnixTime() - lastLowScriptTime;
 
                 if (timeSpan > 600) {
                     debugSay(2,"DEBUG-MAIN", "Low Script Mode active but environment good - disabling");
@@ -372,18 +368,6 @@ default {
         }
 
         //----------------------------------------
-        // CARRY TIMER: RUN OR RESET
-
-        // If carried, the carry times out (expires) if the carrier is
-        // not in range for the duration
-        if (carryExpire > 0) {
-            // carryExpire is a fixed Time in the future - so decreasing it makes no sense...
-            // making it a UnixTime makes no real sense, but it doesn't hurt and that is
-            // standard for these variables
-            if (llGetAgentSize(carrierID) == ZERO_VECTOR)       carryExpire = llGetUnixTime() + CARRY_TIMEOUT;
-        }
-
-        //----------------------------------------
         // TIME SAVED (TIMER INTERVAL)
 
         lastTimerMark = timerMark;
@@ -412,15 +396,26 @@ default {
         }
 
         //----------------------------------------
-        // CARRY TIMED OUT?
+        // CARRY EXPIRATION
 
-        // Has the carry timed out? If so, drop the Dolly
         if (carryExpire) {
+            // carry has an expiration in play
             if (carryExpire <= timerMark) {
+                // carry has timed out: drop dolly
                 lmMenuReply("Uncarry", carrierName, carrierID);
                 carryExpire = 0;
             }
             lmSendConfig("carryExpire", (string)carryExpire);
+        }
+        else {
+            if (carrierID) {
+                // Dolly is carried and no carry expire in place
+                if (llGetAgentSize(carrierID) == ZERO_VECTOR) {
+                    // No carrier present: start carry timeout
+                    carryExpire = llGetUnixTime() + CARRY_TIMEOUT;
+                    lmSendConfig("carryExpire", (string)carryExpire);
+                }
+            }
         }
 
         //----------------------------------------
@@ -435,7 +430,7 @@ default {
             }
         }
 
-        lmInternalCommand("getTimeUpdates", "", llGetKey());
+        if (windingDown) lmInternalCommand("getTimeUpdates", "", llGetKey());
 
 #ifdef LOCKON
         ifPermissions();
@@ -448,38 +443,40 @@ default {
         // wind rate to be 0.
         //
         // Others which cause this effect are not being attached to spine
-        // and being doll type Builder or Key
+        // and being doll type Builder
         //
         // Note too: if no time measured, then no need to check everything
 
-        if (windingDown && (timeSpan != 0)) {
-            timeLeftOnKey -= timeSpan * windRate;
+        if (windingDown) {
+            if (timeSpan != 0) {
+                timeLeftOnKey -= timeSpan * windRate;
 
-            //debugSay(3,"DEBUG-MAIN","Time left on key at unwinding: " + (string)timeLeftOnKey);
-            if (timeLeftOnKey > 0) {
+                //debugSay(3,"DEBUG-MAIN","Time left on key at unwinding: " + (string)timeLeftOnKey);
+                if (timeLeftOnKey > 0) {
 
-                minsLeft = llRound(timeLeftOnKey / (SECS_PER_MIN * windRate));
+                    minsLeft = llRound(timeLeftOnKey / (SECS_PER_MIN * windRate));
 
-                if (doWarnings && !warned) {
-                    if (minsLeft == 30 || minsLeft == 15 || minsLeft == 10 || minsLeft ==  5 || minsLeft ==  2) {
+                    if (doWarnings && !warned) {
+                        if (minsLeft == 30 || minsLeft == 15 || minsLeft == 10 || minsLeft ==  5 || minsLeft ==  2) {
 
-                        if (!quiet) llSay(0, dollName + " has " + (string)minsLeft + " minutes left before they run down!");
-                        else llOwnerSay("You have " + (string)minsLeft + " minutes left before winding down!");
-                        warned = 1; // have warned now: dont repeat same warning
+                            if (!quiet) llSay(0, dollName + " has " + (string)minsLeft + " minutes left before they run down!");
+                            else llOwnerSay("You have " + (string)minsLeft + " minutes left before winding down!");
+                            warned = 1; // have warned now: dont repeat same warning
+                        }
                     }
+                    else warned = 0;
+
                 }
-                else warned = 0;
+                else {
+                    // Dolly is DONE! Go down... and yell for help.
+                    if (collapsed == NOT_COLLAPSED) {
 
-            }
-            else {
-                // Dolly is DONE! Go down... and yell for help.
-                if (collapsed == NOT_COLLAPSED) {
+                        // This message is intentionally excluded from the quiet key setting as it is not good for
+                        // dolls to simply go down silently.
 
-                    // This message is intentionally excluded from the quiet key setting as it is not good for
-                    // dolls to simply go down silently.
-
-                    llSay(0, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on Dolly's key.)");
-                    collapse(NO_TIME);
+                        llSay(0, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on Dolly's key.)");
+                        collapse(NO_TIME);
+                    }
                 }
             }
         }
@@ -641,6 +638,8 @@ default {
             integer isController = cdIsController(id);
 
             if (cmd == "getTimeUpdates") {
+                // we could do this: but is critical that everyone knows the correct time
+                //if (!windingDown) return;
 
                 // The time variables are set this way:
                 //
@@ -657,6 +656,8 @@ default {
                 if (cdTimeSet(poseExpire))           lmSendConfig("poseExpire",            (string)poseExpire);
                 if (cdTimeSet(carryExpire))          lmSendConfig("carryExpire",           (string)carryExpire);
                 if (cdTimeSet(collapseTime))         lmSendConfig("collapseTime",          (string)collapseTime);
+
+                lmSendConfig("windingDown",(string)windingDown);
             }
             else if (cmd == "collapse") {
                 if (collapsed) uncollapse();
@@ -696,7 +697,6 @@ default {
         }
         else if (code == RLV_RESET) {
             RLVok = (llList2Integer(split, 0) == 1);
-            rlvAPIversion = llList2String(split, 1);
 
             // refresh collapse state... no escape!
             collapse(collapsed);
@@ -970,11 +970,9 @@ default {
                 if (timeLeftOnKey)
                     llOwnerSay("You have " + (string)llRound(timeLeftOnKey / (SECS_PER_MIN * windRate)) + " minutes of life remaining.");
 
-                clearAnim = 1;
             }
 
             else if (code == 105) {
-                clearAnim = 1;
 
                 if (lowScriptMode) llSetTimerEvent(LOW_RATE);
                 else if (!cdAttached()) llSetTimerEvent(60.0);
