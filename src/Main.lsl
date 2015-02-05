@@ -43,7 +43,6 @@ integer lastTimerMark;
 integer timeSpan;
 
 key lastWinderID;
-string lastWinderName;
 
 integer lowScriptTimer;
 integer lastLowScriptTime;
@@ -142,7 +141,6 @@ collapse(integer newCollapseState) {
 
     // when dolly collapses, anyone can rescue
     lmSendConfig("lastWinderID", (string)(lastWinderID = NULL_KEY));
-    lmSendConfig("lastWinderName", (string)(lastWinderName = ""));
 
     // Entering a collapsed state
     if (newCollapseState == NO_TIME) {
@@ -839,7 +837,6 @@ default {
                 }
                 else {
                     lmSendConfig("lastWinderID", (string)(lastWinderID = id));
-                    lmSendConfig("lastWinderName", name);
 
 #ifdef DEVELOPER_MODE
                     llSay(DEBUG_CHANNEL, "3> effectiveWindTime = " + (string)effectiveWindTime);

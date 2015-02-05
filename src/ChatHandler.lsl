@@ -19,7 +19,6 @@
 //key listID                  = NULL_KEY;
 
 key lastWinderID;
-string lastWinderName;
 
 float effectiveLimit;
 
@@ -130,10 +129,7 @@ default {
 
             //----------------------------------------
             // Shortcut: l
-            else if (c == "l") {
-                     if (name == "lastWinderID")         lastWinderID = (key)value;
-                else if (name == "lastWinderName")     lastWinderName = value;
-            }
+            else if (name == "lastWinderID")         lastWinderID = (key)value;
 
             //----------------------------------------
             // Shortcut: p
@@ -628,7 +624,6 @@ default {
                         s += (string)((integer)(windEmergency / SECS_PER_MIN)) + " mins\n";
 
                         if (demoMode) s += "Demo mode is enabled\n";
-                        //if (lastWinderName) s += "Last winder was: " + lastWinderName + "\n";
 
                         cdCapability(autoTP,           "Doll can", "be force teleported");
                         cdCapability(canAFK,           "Doll can", "go AFK");
@@ -657,7 +652,6 @@ default {
                         else s += "RLV is not active.\n";
 
                         if (lastWinderID) s += "\nLast winder was " + cdProfileURL(lastWinderID);
-                        if (lastWinderName) s += " (" + lastWinderName + ")";
                         s += "\n";
 
                         cdSayTo(s, id);
