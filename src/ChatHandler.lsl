@@ -1050,7 +1050,8 @@ default {
 #ifdef DEVELOPER_MODE
                     else if (choice == "debug") {
                         lmSendConfig("debugLevel", (string)(debugLevel = (integer)param));
-                        llOwnerSay("Debug level set to " + (string)debugLevel);
+                        if (debugLevel > 0) llOwnerSay("Debug level set to " + (string)debugLevel);
+                        else llOwnerSay("Debug messages turned off.");
 
                         if (debugLevel == 0) {
                             lmSendConfig("timeReporting", (string)(timeReporting = 0));
