@@ -397,8 +397,11 @@ default {
 #ifdef JAMMABLE
                         menu += "Hold";
 #endif
-
+#ifdef DEVELOPER_MODE
                         if (dollType != "Builder") menu += "Unwind";
+#else
+                        menu += "Unwind";
+#endif
                     }
 
                     if (RLVok == 1) {
@@ -498,8 +501,12 @@ default {
                         // Do we want Dolly to hae Detach capability... ever?
                         if (detachable) menu += [ "Detach" ];
                     }
+#ifdef DEVELOPER_MODE
                     if (dollType != "Builder") menu += "Wind";
                     menu += "Help...";
+#else
+                    menu += [ "Wind", "Help..." ];
+#endif
                 }
 
                 if (lowScriptMode)

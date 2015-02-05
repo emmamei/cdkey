@@ -168,10 +168,13 @@ setDollType(string stateName, integer automated) {
 
     setWindRate();
     debugSay(2,"DEBUG-DOLLTYPE","Changed to type " + dollType);
-    lmSendToController(dollName + " has just become a Builder Dolly. The Key has stopped unwinding and is in stasis.");
+#ifdef DEVELOPER_MODE
+    if (stateName == "Builder")
+        lmSendToController(dollName + " has just become a Builder Dolly. The Key has stopped unwinding and is in stasis.");
+#endif
 }
 
-reloadTypeNames() {
+reloadTypeNames(key id) {
     string typeName;
 
     integer n = llGetInventoryNumber(INVENTORY_NOTECARD);
@@ -218,7 +221,8 @@ reloadTypeNames() {
         if (llListFindList(types, (list)"Slut") == NOT_FOUND) types += [ "Slut" ];
 #endif
 #ifdef DEVELOPER_MODE
-    types += [ "Builder" ];
+    // we can add outright because this type is not allowed a notecard at all
+    if (cdIsDoll(id)) types += [ "Builder" ];
 #endif
 }
 
@@ -270,7 +274,7 @@ default {
     //----------------------------------------
     changed(integer change) {
         if (change & CHANGED_ALLOWED_DROP)
-            reloadTypeNames();
+            reloadTypeNames(NULL_KEY);
     }
 
     //----------------------------------------
@@ -702,7 +706,7 @@ default {
                 }
                 else {
                     // Transformation lock time has expired: transformations (type changes) now allowed
-                    reloadTypeNames();
+                    reloadTypeNames(id);
                     debugSay(5,"DEBUG-TYPES","Type names reloaded");
 
                     msg = "These change the personality of " + dollName + "; Dolly is currently a " + dollType + " Doll. ";
@@ -719,12 +723,6 @@ default {
                     if (cdIsDoll(id)) msg += "What type of doll do you want to be?";
                     else {
                         msg += "What type of doll do you want the Doll to be?";
-
-                        // This removes the Builder type from the list shown to the
-                        // non-Dolly user
-                        if ((i = llListFindList(choices, (list)"Builder")) != NOT_FOUND) {
-                            choices = llDeleteSubList(choices, i, i);
-                        }
 
                         if (!hardcore)
                             llOwnerSay(cdProfileURL(id) + " is looking at your doll types.");
@@ -778,7 +776,7 @@ default {
                 configured = 1;
             }
             else if (code == 104) {
-                reloadTypeNames();
+                reloadTypeNames(NULL_KEY);
                 llSetTimerEvent(30.0);
 
                 // Might have been set in Prefs, so do this late
