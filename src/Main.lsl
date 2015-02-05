@@ -941,9 +941,6 @@ default {
         // Quick shortcut...
         else if (code < 200) {
             if (code == 102) {
-                // Single wind for new starting dolly
-                lmMenuReply("Wind", "", NULL_KEY);
-
                 configured = 1;
 
                 if (lowScriptMode) llSetTimerEvent(LOW_RATE);
@@ -961,7 +958,7 @@ default {
                 lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
                 if (timeLeftOnKey)
                     llOwnerSay("You have " + (string)llRound(timeLeftOnKey / (SECS_PER_MIN * windRate)) + " minutes of life remaining.");
-
+                lmMenuReply("Wind", "", NULL_KEY);
             }
 
             else if (code == 105) {
