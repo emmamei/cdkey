@@ -48,15 +48,19 @@ string msg;
 setGender(string gender) {
 
     if (gender == "male") {
-        lmSendConfig("dollGender",     (dollGender     = "male"));
-        lmSendConfig("pronounHerDoll", (pronounHerDoll = "his"));
-        lmSendConfig("pronounSheDoll", (pronounSheDoll = "he"));
+        dollGender     = "male";
+        pronounHerDoll = "his";
+        pronounSheDoll = "he";
     }
     else {
-        lmSendConfig("dollGender", (dollGender = "female"));
-        lmSendConfig("pronounHerDoll", (pronounHerDoll = "her"));
-        lmSendConfig("pronounSheDoll", (pronounSheDoll = "she"));
+        dollGender     = "female";
+        pronounHerDoll = "her";
+        pronounSheDoll = "she";
     }
+
+    lmSendConfig("dollGender",     dollGender);
+    lmSendConfig("pronounHerDoll", pronounHerDoll);
+    lmSendConfig("pronounSheDoll", pronounSheDoll);
 }
 
 default {
@@ -201,12 +205,7 @@ default {
 
                 split = llDeleteSubList(split, 0, 0);
 
-                 if (name == "dollGender")
-                     lmSendConfig("dollGender",(dollGender = value));
-            else if (name == "pronounHerDoll")
-                     lmSendConfig("pronounHerDoll",(pronounHerDoll = value));
-            else if (name == "pronounSheDoll")
-                     lmSendConfig("pronounSheDoll",(pronounSheDoll = value));
+                if (name == "dollGender") setGender(value);
         }
         else if (code == INTERNAL_CMD) {
             string cmd = llList2String(split, 0);
