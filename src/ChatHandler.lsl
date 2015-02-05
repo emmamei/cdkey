@@ -715,7 +715,7 @@ default {
                         lmMemReport(1.0,id);
                         return;
                     }
-                    else if (choice == "release") {
+                    else if (choice == "release" || choice == "unpose") {
                         if (isDoll && hardcore) return;
                         string p = pronounHerDoll;
                         string s = pronounSheDoll;
@@ -1093,15 +1093,15 @@ default {
 
                     // if animation starts with "." only Doll has access to it
                     if (firstChar == ".") {
-                        if (isDoll) { cdMenuInject(msg, name, id); }
+                        if (isDoll) { lmPoseReply(msg, name, id); }
                     }
                     // if animation starts with "!" only Doll and Controllers have access to it
                     else if (firstChar == "!") {
-                        if (isDoll || isController) { cdMenuInject(msg, name, id); }
+                        if (isDoll || isController) { lmPoseReply(msg, name, id); }
                     }
                     else {
                         // It's a pose but from a member of the public
-                        if (allowPose) cdMenuInject(msg, name, id);
+                        if (allowPose || hardcore) lmPoseReply(msg, name, id);
                     }
                     return;
                 }
