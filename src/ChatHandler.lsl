@@ -810,17 +810,15 @@ default {
                             }
                             else {
 #ifdef DEVELOPER_MODE
-                                string s;
-                                s = "Emergency detection circuits detect developer access override; emergency winder activated";
-                                cdSayToAgentPlusDoll(s,id);
+                                cdSayTo("Emergency detection circuits detect developer access override; emergency winder activated",id);
                                 cdMenuInject("Wind Emg", dollName, dollID);
 #else
-                                cdSayTo("Emergency not detected; emergency winder is inactive",id);
+                                cdSayTo("Emergency not detected; emergency winder is currently disengaged",id);
 #endif
                             }
                         }
                         else {
-                            cdSayTo("Dolly is not collapsed; emergency winder is inactive",id);
+                            cdSayTo("Dolly is not collapsed; emergency winder is currently disengaged",id);
                         }
                     }
                     else cdMenuInject("Wind", name, id);
