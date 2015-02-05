@@ -42,7 +42,8 @@ integer timerMark;
 integer lastTimerMark;
 integer timeSpan;
 
-key lastWinderID = NULL_KEY;
+key lastWinderID;
+string lastWinderName;
 
 integer lowScriptTimer;
 integer lastLowScriptTime;
@@ -126,11 +127,22 @@ collapse(integer newCollapseState) {
         return;
     }
 
+    // If not already collapsed, mark the start time
+    if (collapsed == NOT_COLLAPSED) {
+        collapseTime = llGetUnixTime();
+        lmSendConfig("collapseTime", (string)collapseTime);
+    }
+
+    if (collapsed != newCollapseState)
+        lmSendConfig("collapsed", (string)(collapsed = newCollapseState));
+
     debugSay(3,"DEBUG-MAIN","Entering new collapse state (" + (string)newCollapseState + ") with time left of " + (string)timeLeftOnKey);
 
     string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
 
+    // when dolly collapses, anyone can rescue
     lmSendConfig("lastWinderID", (string)(lastWinderID = NULL_KEY));
+    lmSendConfig("lastWinderName", (string)(lastWinderName = ""));
 
     // Entering a collapsed state
     if (newCollapseState == NO_TIME) {
@@ -145,32 +157,12 @@ collapse(integer newCollapseState) {
         if (collapsed != JAMMED)
             jamExpire = llGetUnixTime() + JAM_TIMEOUT;
     }
-#endif
 
-    // If not already collapsed, mark the start time
-    if (collapsed == NOT_COLLAPSED) {
-        collapseTime = llGetUnixTime();
-        lmSendConfig("collapseTime", (string)collapseTime);
-    }
-
-#ifdef JAMMABLE
     // If not jammed, reset time to Jam Repair
     if (newCollapseState != JAMMED) {
-        if (jamExpire) {
-            jamExpire = 0;
-            lmSendConfig("jamExpire", (string)jamExpire);
-        }
+        if (jamExpire) lmSendConfig("jamExpire", (string)(jamExpire = 0));
     }
 #endif
-
-    // The three (four) pillars of being collapsed:
-    //     1. collapsed != 0
-    //     2. collapseTime is non-zero
-    //     3. internalCommand "collapse" generated
-    //    (4. timeLeftOnKey == 0 .... normally)
-
-    if (collapsed != newCollapseState)
-        lmSendConfig("collapsed", (string)(collapsed = newCollapseState));
 
     // queued up: broadcast new times
     lmInternalCommand("getTimeUpdates", "", llGetKey());

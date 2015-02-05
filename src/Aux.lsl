@@ -309,6 +309,7 @@ default {
                 // is it possible to be collapsed but collapseTime be equal to 0.0?
                 if (collapsed) {
                     float timeCollapsed = llGetUnixTime() - collapseTime;
+                    llSay(DEBUG_CHANNEL,"Time collapsed is marked as negative!");
                     msg = "You need winding. ";
 #ifdef DEVELOPER_MODE
                     msg += "You have been collapsed for " + (string)llFloor(timeCollapsed / SEC_TO_MIN) + " minutes (" + (string)timeCollapsed + " seconds). ";
