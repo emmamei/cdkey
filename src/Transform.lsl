@@ -168,6 +168,7 @@ setDollType(string stateName, integer automated) {
 
     setWindRate();
     debugSay(2,"DEBUG-DOLLTYPE","Changed to type " + dollType);
+    lmSendToController(dollName + " has just become a Builder Dolly. The Key has stopped unwinding and is in stasis.");
 }
 
 reloadTypeNames() {
