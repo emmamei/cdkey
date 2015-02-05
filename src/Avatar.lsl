@@ -640,13 +640,12 @@ default {
     //----------------------------------------
     attach(key id) {
         if (id == NULL_KEY && (!detachable || hardcore) && !locked) {
-            // Undetachable key with controller is detached while RLV lock
-            // is not available inform any key controllers.
-            // We send no message if the key is RLV locked as RLV will reattach
-            // automatically this prevents neusance messages when defaultwear is
-            // permitted.
-            // Q: Should that be changed? Not sure the message serves much purpose with *verified* RLV and known lock.
-            lmSendToController(dollName + " has bypassed the key attachment lock and removed " + pronounHerDoll + " key. Appropriate authorities have been notified of this breach of security.");
+            // Detaching key somehow...
+
+            // As the id is NULL_KEY, this is a detach: and an illegal
+            // one at that (not detachable, hardcore, and not locked).
+            lmSendToController(dollName + " has bypassed the Key's bio-lock and detached the Key.");
+            llOwnerSay("You have bypassed your Key's bio-lock systems and your controllers have been notified.");
         }
 
         locked = 0;
