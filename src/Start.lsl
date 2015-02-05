@@ -412,20 +412,14 @@ default {
             string value = llList2String(split, 1);
             split = llDeleteSubList(split,0,0);
 
-                 if (name == "lowScriptMode")            lowScriptMode = (integer)value;
-            else if (name == "dialogChannel")            dialogChannel = (integer)value;
-            else if (name == "timeLeftOnKey")            timeLeftOnKey = (float)value;
-            else if (name == "demoMode")                      demoMode = (integer)value;
-            else if (name == "quiet")                            quiet = (integer)value;
+                 if (name == "keyLimit")                      keyLimit = (float)value;
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                  debugLevel = (integer)value;
 #endif
-            else if (name == "controllers")                controllers = split;
             else if (name == "blacklist") {
                 if (split == [""]) blacklist = [];
                 else blacklist = split;
             }
-            else if (name == "keyLimit")                      keyLimit = (float)value;
             else if (name == "keyAnimation") {
                 string oldKeyAnimation = keyAnimation;
                 keyAnimation = value;
