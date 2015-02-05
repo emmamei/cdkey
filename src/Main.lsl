@@ -659,10 +659,6 @@ default {
                 string mins = (string)llFloor(windAmount / SECS_PER_MIN);
                 string percent = formatFloat((float)timeLeftOnKey * 100.0 / (float)effectiveLimit, 1);
 
-#ifdef DEVELOPER_MODE
-                    llSay(DEBUG_CHANNEL, "4> windAmount = " + (string)windAmount);
-                    llSay(DEBUG_CHANNEL, "4> mins = " + (string)mins);
-#endif
                 // We're assuming that every winder has a non-null name, and every
                 // auto-wind has a null name... is that really true?
                 if (name != "") {
@@ -793,18 +789,13 @@ default {
                 // even when demo mode is active
                 if (demoMode) effectiveWindTime = 60;
                 else effectiveWindTime = (float)windNormal;
-#ifdef DEVELOPER_MODE
-                    llSay(DEBUG_CHANNEL, "1> effectiveWindTime = " + (string)effectiveWindTime);
-#endif
 
                 // set the actual wind amount - but don't overwind
                 if (timeLeftOnKey + effectiveWindTime > effectiveLimit) windAmount = effectiveLimit - timeLeftOnKey;
                 else windAmount = effectiveWindTime;
 
-#ifdef DEVELOPER_MODE
-                    llSay(DEBUG_CHANNEL, "2> effectiveWindTime = " + (string)effectiveWindTime);
-                    llSay(DEBUG_CHANNEL, "2> windAmount = " + (string)windAmount);
-#endif
+                debugSay(3,"DEBUG-MAIN", "Set windAmount = " + (string)windAmount);
+
                 // The "winding" takes place here. Note that while timeLeftOnKey might
                 // be set - collapse is set a short time later - thus, timeLeftOnKey is greater
                 // than zero, but collapse is still true.
@@ -838,10 +829,6 @@ default {
                 else {
                     lmSendConfig("lastWinderID", (string)(lastWinderID = id));
 
-#ifdef DEVELOPER_MODE
-                    llSay(DEBUG_CHANNEL, "3> effectiveWindTime = " + (string)effectiveWindTime);
-                    llSay(DEBUG_CHANNEL, "3> windAmount = " + (string)windAmount);
-#endif
                     if (timeLeftOnKey == effectiveLimit) { // Fully wound
                         llOwnerSay("You have been fully wound by " + name + " - " + (string)llRound(effectiveLimit / (SECS_PER_MIN * windRate)) + " minutes remaining.");
 
