@@ -842,18 +842,23 @@ default {
                     return;
                 }
                 else if (choice == "options") {
-                    cdMenuInject("Options...", name, id);
+                    if (collapsed) cdMenuInject(MAIN, name, id);
+                    else cdMenuInject("Options...", name, id);
                     return;
                 }
                 else if (choice == "types") {
-                    cdMenuInject("Types...", name, id);
+                    if (collapsed) cdMenuInject(MAIN, name, id);
+                    else cdMenuInject("Types...", name, id);
                     return;
                 }
                 else if (choice == "poses") {
-                    if (isDoll || isController) cdMenuInject("Poses...", name, id);
+                    if (collapsed) cdMenuInject(MAIN, name, id);
                     else {
-                        if (allowPose || hardcore) cdMenuInject("Poses...", name, id);
-                        else cdSayTo("You are not allowed to pose Dolly", id);
+                        if (isDoll || isController) cdMenuInject("Poses...", name, id);
+                        else {
+                            if (allowPose || hardcore) cdMenuInject("Poses...", name, id);
+                            else cdSayTo("You are not allowed to pose Dolly", id);
+                        }
                     }
                     return;
                 }
@@ -1001,42 +1006,49 @@ default {
                 //
                 if (isDoll) {
                     if (choice == "gname") {
+                        // gname outputs a string with a symbol-based border
+                        //
+                        // Yes, this is a frivolous command... so what? *grins*
                         string doubledSymbols = "♬♬♪♪♩♩♭♭♪♪♦♦◊◊☢☢✎✎♂♂♀♀₪₪♋♋☯☯☆☆★★◇◇◆◆✈✈☉☉☊☊☋☋∆∆☀☀✵✵██▓▓▒▒░░❂❂××××⊹⊹××⊙⊙웃웃⚛⚛☠☠░░♡♡♫♫♬♬♀♀❤❤☮☮ﭚﭚ☆☆※※✴✴❇❇ﭕﭕةةثث¨¨ϟϟღღ⁂⁂٩٩۶۶✣✣✱✱✧✧✦✦❦❦⌘⌘ѽѽ☄☄✰✰++₪₪קק¤¤øøღღ°°♫♫✿✿▫▫▪▪♬♬♩♩♪♪♬♬°°ººةة==--++^^**˜˜¤¤øø☊☊☩☩´´⇝⇝⁘⁘⁙⁙⁚⁚⁛⁛↑↑↓↓☆☆★★··❤❤";
                         string pairedSymbols = "☜☞▶◀▷◁⊰⊱«»☾☽<>()[]{}\\/";
                         string allSymbols;
-                        string s1;
-                        string s2;
+
                         integer n;
-                        string c;
-                        integer i;
+                        string c1;
+                        string c2;
+                        string cLeft;
+                        integer len;
                         integer j;
+                        integer numChar;
+                        integer lenAllSymbols = llStringLength(allSymbols);
                         string oldName = llGetObjectName();
 
                         llSetObjectName(dollDisplayName);
                         allSymbols = doubledSymbols + pairedSymbols;
+                        param = " " + param + " ";
 
-                        i = (integer)llFrand(6) + 4;
-                        while (i--) {
-                            n = (integer)(llFrand(llStringLength(allSymbols)));
-                            c = llGetSubString(allSymbols,n,n);
+                        len = (integer)llFrand(6) + 4;
 
-                            if ((integer)(llFrand(4)) == 0) j = (integer)llFrand(3) + 1;
-                            else j = 1;
-
-                                 if (j == 1) s1 = s1 + c;
-                            else if (j == 2) s1 = s1 + c + c;
-                            else if (j == 3) s1 = s1 + c + c + c;
-                            else if (j == 4) s1 = s1 + c + c + c + c;
-
+                        while (len--) {
+                            n = (integer)(llFrand(lenAllSymbols));
+                            c1 = llGetSubString(allSymbols,n,n);
                             n = n ^ 1;
-                            c = llGetSubString(allSymbols,n,n);
+                            c2 = llGetSubString(allSymbols,n,n);
 
-                                 if (j == 1) s2 =             c + s2;
-                            else if (j == 2) s2 =         c + c + s2;
-                            else if (j == 3) s2 =     c + c + c + s2;
-                            else if (j == 4) s2 = c + c + c + c + s2;
+                            if ((integer)(llFrand(4)) == 0) numChar = (integer)llFrand(3) + 1;
+                            else numChar = 1;
+
+                            j = numChar;
+                            while (j--) cLeft += c1;
+                            param = cLeft + param;
+
+                            if (c2 == c1) param += cLeft;
+                            else {
+                                j = numChar;
+                                while  (j--) param += c2;
+                            }
                         }
-                        llSay(PUBLIC_CHANNEL,s1 + " " + param + " " + s2);
+                        llSay(PUBLIC_CHANNEL,param);
                         llSetObjectName(oldName);
                     }
 #ifdef DEVELOPER_MODE
