@@ -243,17 +243,12 @@ default {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
 
-            debugSay(5,"DEBUG-LIST","=====>> name = " + name);
-            debugSay(5,"DEBUG-LIST","Split = " + llDumpList2String(split,"|") + " (" + (string)llGetListLength(split) + ")");
             split = llDeleteSubList(split, 0, 0);
-            debugSay(5,"DEBUG-LIST","Split = " + llDumpList2String(split,"|") + " (" + (string)llGetListLength(split) + ")");
 
                  if (name == "blacklist") {
 
-                    debugSay(5,"DEBUG-LIST","Blacklist = " + llDumpList2String(blacklist,"|") + " (" + (string)llGetListLength(blacklist) + ")");
                     if (split == [""]) blacklist = [];
                     else blacklist = split;
-                    debugSay(5,"DEBUG-LIST","Blacklist = " + llDumpList2String(blacklist,"|") + " (" + (string)llGetListLength(blacklist) + ")");
                     lmSendConfig("blacklist",llDumpList2String(blacklist,"|"));
             }
             else if (name == "controllers") {
@@ -550,7 +545,6 @@ default {
         else if (code == MENU_SELECTION) {
             string name = llList2String(split, 0);
 
-            //debugSay(5,"DEBUG-MENUHANDLER","Menu choice = " + choice + ", space = " + (string)space);
             if (name == "Options...") {
                 lmInternalCommand("optionsMenu", llGetDisplayName(id), id);
             }
@@ -719,9 +713,6 @@ default {
 
                         cdSayTo("You are no longer a controller of this Dolly.", id);
                         llOwnerSay("Your controller " + name + " has relinquished control.");
-
-                        //debugSay(5,"DEBUG-MENUHANDLER","id " + (string)id + " dropped from " + llDumpList2String(controllers,","));
-                        debugSay(5,"DEBUG-MENUHANDLER","controllers = " + llDumpList2String(controllers,",") + " (" + (string)llGetListLength(controllers) + ")");
                     }
 #ifdef DEVELOPER_MODE
                     else {
@@ -925,12 +916,9 @@ default {
 #else
                         msg = "parent list";
 #endif
-                        debugSay(5,"DEBUG-MENUHANDLER","controllers = " + llDumpList2String(controllers,",") + " (" + (string)llGetListLength(controllers) + ")");
                         if (controllers != []) {
                             dialogKeys  = cdList2ListStrided(controllers, 0, -1, 2);
                             dialogNames = cdList2ListStrided(controllers, 1, -1, 2);
-                            debugSay(5,"DEBUG-MENUHANDLER","dialogKeys = " + llDumpList2String(dialogKeys,","));
-                            debugSay(5,"DEBUG-MENUHANDLER","dialogNames = " + llDumpList2String(dialogNames,","));
                         }
                         else {
                             dialogKeys  = [];

@@ -129,7 +129,12 @@ default {
 #ifdef HOMING_BEACON
             else if (name == "homingBeacon")             homingBeacon = (integer)value;
 #endif
-            else if (name == "collapseTime")             collapseTime = (float)value;
+            else if (name == "collapseTime") {
+            collapseTime = (float)value;
+#ifdef DEVELOPER_MODE
+            llSay(DEBUG_CHANNEL,"collapseTime read as " + (string)collapseTime + " from the wire");
+#endif
+            }
             else if (name == "collapsed")                   collapsed = (integer)value;
             else if (name == "autoTP")                         autoTP = (integer)value;
             else if (name == "autoTP")                         autoTP = (integer)value;
@@ -306,6 +311,8 @@ default {
                 list menu = [ "Ok" ];
 
                 debugSay(2,"DEBUG-AUX","Building collapsedMenu...");
+                llOwnerSay(DEBUG_CHANNEL,"collapseTime is " + (string)collapseTime + " at start of collapsedMenu");
+
                 // is it possible to be collapsed but collapseTime be equal to 0.0?
                 if (collapsed) {
                     float timeCollapsed;
@@ -434,10 +441,6 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                     plusList += [ "⊕ Blacklist", "List Blacklist" ];
 
                     if (llGetListLength(blacklist)) plusList += [ "⊖ Blacklist" ];
-#ifdef DEVELOPER_MODE
-                    debugSay(5,"DEBUG-AUX","Blacklist length: " + (string)llGetListLength(blacklist) + " >> " + llDumpList2String(blacklist,","));
-#endif
-
 #ifdef ADULT_MODE
                     plusList += [ "⊕ Controller" ];
 #else

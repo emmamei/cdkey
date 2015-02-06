@@ -130,8 +130,7 @@ collapse(integer newCollapseState) {
     if (collapsed == NOT_COLLAPSED) {
         collapseTime = llGetUnixTime();
 #ifdef DEVELOPER_MODE
-        llSay(DEBUG_CHANNEL,"collapseTime = " + (string)collapseTime);
-        llSay(DEBUG_CHANNEL,"currentTime = " + (string)llGetUnixTime());
+        llSay(DEBUG_CHANNEL,"collapseTime set to " + (string)collapseTime + " at " + (string)llGetUnixTime());
 #endif
         lmSendConfig("collapseTime", (string)collapseTime);
     }
