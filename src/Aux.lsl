@@ -129,12 +129,7 @@ default {
 #ifdef HOMING_BEACON
             else if (name == "homingBeacon")             homingBeacon = (integer)value;
 #endif
-            else if (name == "collapseTime") {
-            collapseTime = (float)value;
-#ifdef DEVELOPER_MODE
-            llSay(DEBUG_CHANNEL,"collapseTime read as " + (string)collapseTime + " from the wire");
-#endif
-            }
+            else if (name == "collapseTime")             collapseTime = (integer)value;
             else if (name == "collapsed")                   collapsed = (integer)value;
             else if (name == "autoTP")                         autoTP = (integer)value;
             else if (name == "autoTP")                         autoTP = (integer)value;
@@ -317,16 +312,10 @@ default {
 
                 // is it possible to be collapsed but collapseTime be equal to 0.0?
                 if (collapsed) {
-                    float timeCollapsed;
-
                     msg = "You need winding. ";
-                    timeCollapsed = llGetUnixTime() - collapseTime;
+                    integer timeCollapsed = llGetUnixTime() - collapseTime;
 
 #ifdef DEVELOPER_MODE
-                    if (timeCollapsed < 0)
-                        llSay(DEBUG_CHANNEL,"Time collapsed is marked as negative! (" + (string)timeCollapsed + "): " + (string)llGetUnixTime() + " - " + (string)collapseTime);
-                    else
-                        llSay(DEBUG_CHANNEL,"Time collapsed is marked as positive... (" + (string)timeCollapsed + "): " + (string)llGetUnixTime() + " - " + (string)collapseTime);
                     msg += "You have been collapsed for " + (string)llFloor(timeCollapsed / SEC_TO_MIN) + " minutes (" + (string)timeCollapsed + " seconds). ";
                     msg += "\n\nTime before TP: " + (string)TIME_BEFORE_TP + "\nTime before Emg Wind: " + (string)TIME_BEFORE_EMGWIND + "\nTime elapsed: " + (string)timeCollapsed + "\n";
 #endif
