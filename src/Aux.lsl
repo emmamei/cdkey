@@ -310,8 +310,10 @@ default {
                 string timeLeft = llList2String(split, 0);
                 list menu = [ "Ok" ];
 
+#ifdef DEVELOPER_MODE
                 debugSay(2,"DEBUG-AUX","Building collapsedMenu...");
-                llOwnerSay(DEBUG_CHANNEL,"collapseTime is " + (string)collapseTime + " at start of collapsedMenu");
+                llSay(DEBUG_CHANNEL,"collapseTime is " + (string)collapseTime + " at start of collapsedMenu");
+#endif
 
                 // is it possible to be collapsed but collapseTime be equal to 0.0?
                 if (collapsed) {

@@ -103,7 +103,7 @@ default {
                 else if (name == "canStand")                 canStand = (integer)value;
                 else if (name == "canSelfTP")               canSelfTP = (integer)value;
                 else if (name == "configured")             configured = (integer)value;
-                else if (name == "collapseTime")         collapseTime = (float)value;
+                else if (name == "collapseTime")         collapseTime = (integer)value;
                 else if (name == "controllers") {
                     if (split == [""]) controllers = [];
                     else controllers = split;

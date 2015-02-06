@@ -33,7 +33,6 @@ string script;
 string simRating;
 
 float baseWindRate          = RATE_STANDARD;
-float collapseTime;
 float dilationMedian        = 1.0;
 float displayWindRate	    = RATE_STANDARD;
 float keyLimit              = 10800.0;
@@ -60,6 +59,7 @@ integer canSit              = 1;
 integer canStand            = 1;
 integer code;
 integer collapsed;
+integer collapseTime;
 integer configured;
 integer demoMode;
 integer detachable          = 1;

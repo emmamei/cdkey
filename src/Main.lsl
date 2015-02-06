@@ -31,8 +31,6 @@
 string msg;
 integer minsLeft;
 
-float lastEmergencyTime;
-
 #ifdef DEVELOPER_MODE
 float thisTimerEvent;
 float lastTimerEvent;
@@ -47,15 +45,15 @@ key lastWinderID;
 integer lowScriptTimer;
 integer lastLowScriptTime;
 integer warned;
-float wearLockExpire;
-float carryExpire;
+integer wearLockExpire;
+integer carryExpire;
 #ifdef JAMMABLE
-float jamExpire;
+integer jamExpire;
 #endif
-float poseExpire;
+integer poseExpire;
 // Note that unlike the others, we do not maintain
 // transformLockExpire in this script
-float transformLockExpire;
+integer transformLockExpire;
 
 float effectiveLimit  = keyLimit;
 float effectiveWindTime = 30.0;
@@ -87,7 +85,7 @@ uncollapse() {
     string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
     cdSetHovertext("",INFO); // uses primText
 
-    lmSendConfig("collapseTime", (string)(collapseTime = 0.0));
+    lmSendConfig("collapseTime", (string)(collapseTime = 0));
 
     // This configuration triggers RLV release
     lmSendConfig("collapsed", (string)(collapsed = 0));
@@ -616,12 +614,12 @@ default {
                 if (lowScriptMode) lastLowScriptTime = llGetUnixTime();
                 else lastLowScriptTime = 0;
             }
-            else if (name == "poseExpire")         poseExpire = (float)value;
-            else if (name == "carryExpire")       carryExpire = (float)value;
+            else if (name == "poseExpire")         poseExpire = (integer)value;
+            else if (name == "carryExpire")       carryExpire = (integer)value;
 #ifdef JAMMABLE
-            else if (name == "jamExpire")           jamExpire = (float)value;
+            else if (name == "jamExpire")           jamExpire = (integer)value;
 #endif
-            else if (name == "wearLockExpire") wearLockExpire = (float)value;
+            else if (name == "wearLockExpire") wearLockExpire = (integer)value;
         }
         else if (code == INTERNAL_CMD) {
             string cmd = llList2String(split, 0);
@@ -741,12 +739,12 @@ default {
 #endif
                 }
                 else {
-                   float rechargeMins = ((winderRechargeTime - llGetUnixTime()) / SECS_PER_MIN);
+                   integer rechargeMins = ((winderRechargeTime - llGetUnixTime()) / SECS_PER_MIN);
                    string s = "Emergency self-winder is not yet recharged. There remains ";
 
                    //llSay(DEBUG_CHANNEL,"Winder recharge: rechargeMins = " + (string)rechargeMins + " minutes");
-                   if (rechargeMins < 60) s += (string)llFloor(rechargeMins) + " minutes ";
-                   else s += "over " + (string)llFloor(rechargeMins / 60) + " hours ";
+                   if (rechargeMins < 60) s += (string)rechargeMins + " minutes ";
+                   else s += "over " + (string)(rechargeMins / 60) + " hours ";
 
                    llOwnerSay(s + "before it will be ready again.");
                 }
@@ -811,7 +809,7 @@ default {
                     // slows down the user.
 
                     lmSendConfig("collapsed", (string)(collapsed = 0));
-                    lmSendConfig("collapseTime", (string)(collapseTime = 0.0));
+                    lmSendConfig("collapseTime", (string)(collapseTime = 0));
                     lmCollapse(0);
                 }
 

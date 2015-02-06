@@ -46,7 +46,7 @@ integer changeOutfit;
 string msg;
 integer i;
 list types;
-float menuTime;
+//integer menuTime;
 key transformerID;
 integer readLine;
 integer readingNC;
@@ -54,7 +54,7 @@ string typeNotecard;
 
 integer outfitSearchTries;
 integer typeSearchTries;
-float outfitsSearchTimer;
+integer outfitsSearchTimer;
 string outfitsFolder;
 integer outfitSearching;
 
@@ -306,7 +306,7 @@ default {
         if (timeReporting) {
             string s;
 
-            s = "Transform Timer fired, interval " + formatFloat(llGetTime() - lastTimerEvent,3) + "s. (lowScriptMode ";
+            s = "Transform Timer fired, interval " + (integer)(llGetTime() - lastTimerEvent) + "s. (lowScriptMode ";
             if (lowScriptMode) s += "is active).";
             else s += "is not active).";
 
@@ -520,7 +520,7 @@ default {
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
 #ifdef HOMING_BEACON
             else if (name == "homingBeacon")             homingBeacon = (integer)value;
-            else if (name == "collapseTime")             collapseTime = (float)value;
+            else if (name == "collapseTime")             collapseTime = (integer)value;
 #endif
             else if (name == "showPhrases") {
                 showPhrases = (integer)value;
@@ -649,7 +649,7 @@ default {
             string curState = cdGetFirstChar(choice);
 
             // for timing out the Menu
-            menuTime = llGetTime();
+            //menuTime = llGetTime();
 
             // Transforming options
             if ((choice == "Type...")        ||
@@ -842,7 +842,7 @@ default {
                     debugSay(2,"DEBUG-SEARCHING","typeFolder = \"" + typeFolder + "\" and typeFolderExpected = \"" + typeFolderExpected + "\"");
                     // Search for a typeFolder...
                     if (typeFolder == "" && typeFolderExpected != "") {
-                        debugSay(2,"DEBUG-SEARCHING","Outfit folder found in " + formatFloat(llGetTime() - outfitsSearchTimer,1) + "s; searching for typeFolder");
+                        debugSay(2,"DEBUG-SEARCHING","Outfit folder found in " + (string)(llGetTime() - outfitsSearchTimer) + "s; searching for typeFolder");
                         // outfitsFolder search is done: search for typeFolder
                         folderSearch(outfitsFolder,typeSearchChannel);
                     }
@@ -924,8 +924,8 @@ default {
                     // we finished our outfit search: so end the search and
                     // put out results
                     outfitSearching = 0;
-                    llOwnerSay("Outfits search completed in " + formatFloat(llGetTime() - outfitsSearchTimer,1) + "s");
-                    outfitsSearchTimer = 0.0;
+                    llOwnerSay("Outfits search completed in " + (string)(llGetTime() - outfitsSearchTimer) + "s");
+                    outfitsSearchTimer = 0;
                     nudeFolder = "";
                     normalselfFolder = "";
 
