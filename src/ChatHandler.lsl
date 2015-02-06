@@ -84,7 +84,6 @@ default {
 #ifdef ADULT_MODE
                 else if (name == "allowStrip")             allowStrip = (integer)value;
 #endif
-                //else if (name == "autoAFK")                   autoAFK = (integer)value;
                 else if (name == "allowRepeatWind")   allowRepeatWind = (integer)value;
                 else if (name == "allowCarry")             allowCarry = (integer)value;
                 else if (name == "allowDress")             allowDress = (integer)value;
@@ -126,9 +125,6 @@ default {
                 else if (name == "debugLevel")             debugLevel = (integer)value;
 #endif
             }
-
-            //----------------------------------------
-            // Shortcut: l
             else if (name == "lastWinderID")         lastWinderID = (key)value;
 
             //----------------------------------------
@@ -141,15 +137,11 @@ default {
                 else if (name == "pronounSheDoll")     pronounSheDoll = value;
             }
 
-            //----------------------------------------
-            // Shortcut: k
-            else if (c == "k") {
-                     if (name == "keyAnimation")         keyAnimation = value;
-                else if (name == "keyLimit") {
-                    keyLimit = (float)value;
-                    if (!demoMode) effectiveLimit = keyLimit;
-                    else effectiveLimit = DEMO_LIMIT;
-                }
+            else if (name == "keyAnimation")         keyAnimation = value;
+            else if (name == "keyLimit") {
+                keyLimit = (float)value;
+                if (!demoMode) effectiveLimit = keyLimit;
+                else effectiveLimit = DEMO_LIMIT;
             }
 
             //----------------------------------------
