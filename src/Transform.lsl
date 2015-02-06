@@ -54,7 +54,7 @@ string typeNotecard;
 
 integer outfitSearchTries;
 integer typeSearchTries;
-integer outfitsSearchTimer;
+float outfitsSearchTimer;
 string outfitsFolder;
 integer outfitSearching;
 
@@ -306,7 +306,7 @@ default {
         if (timeReporting) {
             string s;
 
-            s = "Transform Timer fired, interval " + (integer)(llGetTime() - lastTimerEvent) + "s. (lowScriptMode ";
+            s = "Transform Timer fired, interval " + (string)(llGetTime() - lastTimerEvent) + "s. (lowScriptMode ";
             if (lowScriptMode) s += "is active).";
             else s += "is not active).";
 

@@ -33,7 +33,6 @@ integer minsLeft;
 
 #ifdef DEVELOPER_MODE
 float thisTimerEvent;
-float lastTimerEvent;
 float timerInterval;
 #endif
 integer timerMark;
@@ -729,7 +728,9 @@ default {
                         lmSendConfig("winderRechargeTime", (string)(winderRechargeTime = (llGetUnixTime() + EMERGENCY_LIMIT_TIME)));
                         lmUncollapse();
 
-                        llOwnerSay("With an electical sound the motor whirrs into life and gives you " + (string)llRound(windAmount / SECS_PER_MIN) + " minutes of life. The emergency winder requires " + (string)llRound(EMERGENCY_LIMIT_TIME / 3600) + " hours to recharge.");
+                        string s = "With an electical sound the motor whirrs into life, ";
+                        if (hardcore) llOwnerSay("and you can feel your joints reanimating as time is added.");
+                        else llOwnerSay("and gives you " + (string)llRound(windAmount / SECS_PER_MIN) + " minutes of life. The emergency winder requires " + (string)llRound(EMERGENCY_LIMIT_TIME / 3600) + " hours to recharge.");
                     }
 #ifdef JAMMABLE
                     else {
@@ -739,16 +740,20 @@ default {
 #endif
                 }
                 else {
-                   integer rechargeMins = ((winderRechargeTime - llGetUnixTime()) / SECS_PER_MIN);
-                   string s = "Emergency self-winder is not yet recharged. There remains ";
+                    integer rechargeMins = ((winderRechargeTime - llGetUnixTime()) / SECS_PER_MIN);
+                    string s = "Emergency self-winder is not yet recharged.";
 
-                   //llSay(DEBUG_CHANNEL,"Winder recharge: rechargeMins = " + (string)rechargeMins + " minutes");
-                   if (rechargeMins < 60) s += (string)rechargeMins + " minutes ";
-                   else s += "over " + (string)(rechargeMins / 60) + " hours ";
+                    if (!hardcore) {
+                        s += "  There remains ";
 
-                   llOwnerSay(s + "before it will be ready again.");
+                        //llSay(DEBUG_CHANNEL,"Winder recharge: rechargeMins = " + (string)rechargeMins + " minutes");
+                        if (rechargeMins < 60) s += (string)rechargeMins + " minutes ";
+                        else s += "over " + (string)(rechargeMins / 60) + " hours ";
+
+                        s += "before it will be ready again.";
+                    }
+                    llOwnerSay(s);
                 }
-
             }
 
             // Winding - pure and simple

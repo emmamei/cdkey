@@ -33,7 +33,6 @@ key mainCreator;
 #endif
 key lastAttachedID;
 #ifdef DEVELOPER_MODE
-float lastTimerEvent;
 float thisTimerEvent;
 float timerInterval;
 #endif

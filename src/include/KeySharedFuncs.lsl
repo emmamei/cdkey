@@ -13,7 +13,9 @@
 
 #define cdWakeScript(a) llSetScriptState(a,1); lmInternalCommand("wakeScript", a, llGetKey())
 
+#ifdef DEVELOPER_MODE
 float lastTimerEvent;
+#endif
 integer timerStarted;
 
 float setWindRate() {

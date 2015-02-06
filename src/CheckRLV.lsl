@@ -21,7 +21,6 @@
 #define lmDoCheckRLV() lmInternalCommand("doCheckRLV","",NULL_KEY)
 
 #ifdef DEVELOPER_MODE
-float lastTimerEvent;
 float thisTimerEvent;
 float timerInterval;
 #endif
