@@ -47,15 +47,15 @@ key lastWinderID;
 integer lowScriptTimer;
 integer lastLowScriptTime;
 integer warned;
-integer wearLockExpire;
-integer carryExpire;
+float wearLockExpire;
+float carryExpire;
 #ifdef JAMMABLE
-integer jamExpire;
+float jamExpire;
 #endif
-integer poseExpire;
+float poseExpire;
 // Note that unlike the others, we do not maintain
 // transformLockExpire in this script
-integer transformLockExpire;
+float transformLockExpire;
 
 float effectiveLimit  = keyLimit;
 float effectiveWindTime = 30.0;
@@ -87,7 +87,7 @@ uncollapse() {
     string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
     cdSetHovertext("",INFO); // uses primText
 
-    lmSendConfig("collapseTime", (string)(collapseTime = 0));
+    lmSendConfig("collapseTime", (string)(collapseTime = 0.0));
 
     // This configuration triggers RLV release
     lmSendConfig("collapsed", (string)(collapsed = 0));
@@ -129,6 +129,10 @@ collapse(integer newCollapseState) {
     // If not already collapsed, mark the start time
     if (collapsed == NOT_COLLAPSED) {
         collapseTime = llGetUnixTime();
+#ifdef DEVELOPER_MODE
+        llSay(DEBUG_CHANNEL,"collapseTime = " + (string)collapseTime);
+        llSay(DEBUG_CHANNEL,"currentTime = " + (string)llGetUnixTime());
+#endif
         lmSendConfig("collapseTime", (string)collapseTime);
     }
 
@@ -521,7 +525,6 @@ default {
                 if (split == [""]) blacklist = [];
                 else blacklist = split;
             }
-            //else if (name == "autoTP")                         autoTP = (integer)value;
             else if (c == "d") {
                      if (name == "dollDisplayName")       dollDisplayName = value;
                 else if (name == "dialogChannel")           dialogChannel = (integer)value;
@@ -614,13 +617,12 @@ default {
                 if (lowScriptMode) lastLowScriptTime = llGetUnixTime();
                 else lastLowScriptTime = 0;
             }
-            else if (name == "collapseTime")     collapseTime = (integer)value;
-            else if (name == "poseExpire")         poseExpire = (integer)value;
-            else if (name == "carryExpire")       carryExpire = (integer)value;
+            else if (name == "poseExpire")         poseExpire = (float)value;
+            else if (name == "carryExpire")       carryExpire = (float)value;
 #ifdef JAMMABLE
-            else if (name == "jamExpire")           jamExpire = (integer)value;
+            else if (name == "jamExpire")           jamExpire = (float)value;
 #endif
-            else if (name == "wearLockExpire") wearLockExpire = (integer)value;
+            else if (name == "wearLockExpire") wearLockExpire = (float)value;
         }
         else if (code == INTERNAL_CMD) {
             string cmd = llList2String(split, 0);
@@ -810,7 +812,7 @@ default {
                     // slows down the user.
 
                     lmSendConfig("collapsed", (string)(collapsed = 0));
-                    lmSendConfig("collapseTime", (string)(collapseTime = 0));
+                    lmSendConfig("collapseTime", (string)(collapseTime = 0.0));
                     lmCollapse(0);
                 }
 

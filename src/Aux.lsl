@@ -308,10 +308,16 @@ default {
                 debugSay(2,"DEBUG-AUX","Building collapsedMenu...");
                 // is it possible to be collapsed but collapseTime be equal to 0.0?
                 if (collapsed) {
-                    float timeCollapsed = llGetUnixTime() - collapseTime;
-                    llSay(DEBUG_CHANNEL,"Time collapsed is marked as negative!");
+                    float timeCollapsed;
+
                     msg = "You need winding. ";
+                    timeCollapsed = llGetUnixTime() - collapseTime;
+
 #ifdef DEVELOPER_MODE
+                    if (timeCollapsed < 0)
+                        llSay(DEBUG_CHANNEL,"Time collapsed is marked as negative! (" + (string)timeCollapsed + "): " + (string)llGetUnixTime() + " - " + (string)collapseTime);
+                    else
+                        llSay(DEBUG_CHANNEL,"Time collapsed is marked as positive... (" + (string)timeCollapsed + "): " + (string)llGetUnixTime() + " - " + (string)collapseTime);
                     msg += "You have been collapsed for " + (string)llFloor(timeCollapsed / SEC_TO_MIN) + " minutes (" + (string)timeCollapsed + " seconds). ";
                     msg += "\n\nTime before TP: " + (string)TIME_BEFORE_TP + "\nTime before Emg Wind: " + (string)TIME_BEFORE_EMGWIND + "\nTime elapsed: " + (string)timeCollapsed + "\n";
 #endif
