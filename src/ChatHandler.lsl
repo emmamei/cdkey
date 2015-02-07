@@ -164,6 +164,9 @@ default {
 
                 integer newChatChannel = (integer)value;
 
+                // Time saver
+                if (newChatChannel == chatChannel) return;
+
                 if (newChatChannel != DEBUG_CHANNEL && newChatChannel != PUBLIC_CHANNEL) {
                     chatChannel = newChatChannel;
 
@@ -171,6 +174,9 @@ default {
                     llListenRemove(chatHandle);
                     chatHandle = llListen(chatChannel, "", chatFilter, "");
                     lmSendConfig("chatChannel",(string)chatChannel);
+#ifdef DEVELOPER_MODE
+                    llSay(DEBUG_CHANNEL,"chat channel set externally to " + (string)chatChannel);
+#endif
                 }
                 else {
                     llSay(DEBUG_CHANNEL,"Attempted to set channel to invalid value!");
@@ -189,6 +195,9 @@ default {
                 llListenRemove(chatHandle);
                 chatHandle = llListen(chatChannel, "", chatFilter, "");
                 lmSendConfig("chatChannel",(string)chatChannel);
+#ifdef DEVELOPER_MODE
+                llSay(DEBUG_CHANNEL,"chat channel renewed using channel " + (string)chatChannel);
+#endif
             }
         }
         else if (code == INTERNAL_CMD) {
@@ -377,16 +386,17 @@ default {
         // - Keeps open the potential ability to extend functionality with other objects
         //   a basic HUD for doll showing basic status info and with quick access menu buttons
         //   for example (Makes a note to github that thought).
-        id = llGetOwnerKey(id);
-        name = llGetDisplayName(id);
-        integer isDoll = cdIsDoll(id);
-        integer isController = cdIsController(id);
 
         //----------------------------------------
         // CHAT COMMAND CHANNEL
         //----------------------------------------
 
         if (channel == chatChannel) {
+            id = llGetOwnerKey(id);
+            name = llGetDisplayName(id);
+            integer isDoll = cdIsDoll(id);
+            integer isController = cdIsController(id);
+
             // Deny access to the menus when the command was recieved from blacklisted avatar
             if (!isDoll && (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND)) {
                 llOwnerSay("SECURITY WARNING! Attempted chat channel access by blacklisted user " + name);
@@ -449,7 +459,6 @@ default {
 
 #define PARAMETERS_EXIST (space != NOT_FOUND)
 
-            //if (isDoll || (!isDoll && allowCarry)) { }
             // Choice is a command, not a pose
             integer space = llSubStringIndex(msg, " ");
             string choice = msg;
@@ -473,106 +482,82 @@ default {
                 if (choice == "help") {
                     // First: anyone can do these commands
                     string help = "Commands:
-    Commands can be prefixed with your prefix, which is currently " + llToLower(chatPrefix) + "
-    help ........... this list of commands";
-                    string menus = "Menu Commands:
+    Commands need to be prefixed with the prefix, which is currently " + llToLower(chatPrefix) + "
 
-    Use these commands to trigger menus:\n";
+    help ........... this list of commands
+    menu ........... show main menu";
 
-                    // if is Doll or Controller, can do these commands
                     if (isDoll || isController) {
-                        help +=
-"
+                        help += "
     build .......... list build configurations
     detach ......... detach key if possible
     stat ........... concise current status
     stats .......... selected statistics and settings
     xstats ......... extended statistics and settings
     release ........ stop the current pose if possible
+    unpose ......... stop the current pose if possible
     demo ........... toggle demo mode
     [posename] ..... activate the named pose if possible
-    listposes ...... list all poses";
-                        menus +=
-"
-    poses .......... show Poses menu";
-
-                        // accessor is either Doll or controller so...
-                        if (isDoll) {
-                            if (canDressSelf && !hardcore)
-                                menus += "
-    outfits ........ show Outfits menu";
-                        }
-                        // is Controller, but NOT Doll
-                        else
-                            menus += "
-    outfits ........ show Outfits menu";
+    listposes ...... list all poses
+    channel ## ..... change channel
+    prefix XX ...... change chat command prefix
+    controller NN .. add controller";
                     }
-                    // Not dolly OR controller...
+                    //----------------------------------------
+                    // Dolly Help
+                    if (isDoll) {
+                        help += "
+    blacklist NN ... add to blacklist
+    unblacklist NN . remove from blacklist";
+
+                        if (!hardcore) help += "
+    wind ........... trigger emergency autowind";
+                    }
+
+                    //----------------------------------------
+                    // Controller Help
+                    else if (isController) {
+                        help += "
+    carry .......... carry dolly
+    uncarry ........ put down dolly
+    wind ........... wind key";
+                    }
+
+                    //----------------------------------------
+                    // Public Help
                     else {
-                        if (allowDress || hardcore) {
-                            menus += "
-    outfits ........ show Outfits menu";
-                        }
+                        help += "
+    wind ........... wind key";
 
                         if (allowPose || hardcore) {
-                            menus +=
-"
-    poses .......... show Poses menu";
                             help += "
     listposes ...... list all poses
+    release ........ stop the current pose if possible
+    unpose ......... stop the current pose if possible
     [posename] ..... activate the named pose if possible";
                         }
 
                         if (allowCarry || hardcore) {
                             help += "
-    carry .......... pick up Dolly
-    uncarry ........ drop Dolly";
+    carry .......... carry dolly
+    uncarry ........ put down dolly";
                         }
                     }
 
-                    // wind command changes sense when others use it
-                    if (isDoll) {
-                        if (!hardcore)
-                            help +=
-"
-    wind ........... trigger emergency autowind";
-                    }
-                    else {
-                        help +=
-"
-    wind ........... wind key";
-                    }
-
-                    menus +=
-"
-    menu ........... show main menu
-    types .......... show Types menu
-    options ........ show Options menu";
-
-                    if (isDoll || cdIsBuiltinController(id)) {
-                        help +=
-"
-    channel ## ..... change channel
-    prefix XX ...... change chat command prefix
-    controller NN .. add controller
-    blacklist NN ... add to blacklist
-    unblacklist NN . remove from blacklist";
-                    }
                     cdSayTo(help + "\n", id);
-                    cdSayTo(menus + "\n", id);
 
 #ifdef DEVELOPER_MODE
-                    if (isDoll) help =
-"
+                    if (isDoll) help = "
     Debugging commands:
 
     debug # ........ set the debugging message verbosity 0-9
     timereporting .. set timereporting \"on\" or \"off\"
     powersave ...... turn on powersave mode
     inject x#x#x ... inject a link message with \"code#data#key\"
+    powersave ...... trigger a powersave event
     collapse ....... perform an immediate collapse (out of time)";
-#endif
                     cdSayTo(help + "\n", id);
+#endif
                     return;
                 }
 
@@ -585,8 +570,11 @@ default {
                 //   * xstats
                 //   * stat
                 //   * stats
-                //   * release
+                //   * release/unpose
                 //   * demo
+                //   * hardcore (ADULT_MODE)
+                //   * collapse (DEVELOPER_MODE)
+                //   * powersave (DEVELOPER_MODE)
                 //
                 if (isDoll || isController) {
                     if (choice == "build") {
@@ -752,13 +740,21 @@ default {
                         // Dolly can set it.
 
                         if (hardcore) {
-                            if (isController && !isDoll)
+                            if (isController && !isDoll) {
                                 lmSendConfig("hardcore",(string)(hardcore = 0));
+                                cdSayTo("Doll's hardcore mode has been disabled. The sound of a lock unlocking is heard.",id);
+                            }
                         }
                         else {
-                            if (isDoll)
+                            if (isDoll) {
                                 lmSendConfig("hardcore",(string)(hardcore = 1));
+                                cdSayTo("Doll's hardcore mode has been enabled. The sound of a lock closing is heard.",id);
+                            }
+                            else {
+                                cdSayTo("You rattle the lock, but it is securely fastened: you cannot disable hardcore mode.",id);
+                            }
                         }
+                        return;
                     }
 
 #endif
@@ -783,8 +779,6 @@ default {
                 //   * wind
                 //   * outfits
                 //   * menu
-                //   * types
-                //   * poses
                 //   * listposes
                 //   * carry
                 //   * uncarry
@@ -816,42 +810,8 @@ default {
                     else cdMenuInject("Wind", name, id);
                     return;
                 }
-                else if (choice == "outfits") {
-                    if (isDoll) {
-                        if (hardcore) return;
-                        if (canDressSelf) cdMenuInject("Outfits...", name, id);
-                        else cdSayTo("You are not allowed to dress yourself",id);
-                    }
-                    else {
-                        if (allowDress || hardcore) cdMenuInject("Outfits...", name, id);
-                        else cdSayTo("You are not allowed to dress Dolly",id);
-                    }
-
-                    return;
-                }
                 else if (choice == "menu") {
                     cdMenuInject(MAIN, name, id);
-                    return;
-                }
-                else if (choice == "options") {
-                    if (collapsed) cdMenuInject(MAIN, name, id);
-                    else cdMenuInject("Options...", name, id);
-                    return;
-                }
-                else if (choice == "types") {
-                    if (collapsed) cdMenuInject(MAIN, name, id);
-                    else cdMenuInject("Types...", name, id);
-                    return;
-                }
-                else if (choice == "poses") {
-                    if (collapsed) cdMenuInject(MAIN, name, id);
-                    else {
-                        if (isDoll || isController) cdMenuInject("Poses...", name, id);
-                        else {
-                            if (allowPose || hardcore) cdMenuInject("Poses...", name, id);
-                            else cdSayTo("You are not allowed to pose Dolly", id);
-                        }
-                    }
                     return;
                 }
                 else if (choice == "listposes") {
@@ -920,30 +880,40 @@ default {
                 //   * blacklist AAA
                 //   * unblacklist AAA
                 //   * prefix ZZZ
-                //   * wakescript NNNN
                 //
-                if (isDoll || cdIsBuiltinController(id)) {
+                if (isDoll) {
+                    if (choice == "blacklist") {
+                        lmInternalCommand("addBlacklist", param, id);
+                        return;
+                    }
+                    else if (choice == "unblacklist") {
+                        lmInternalCommand("remBlacklist", param, id);
+                        return;
+                    }
+                }
+
+                if (isDoll || isController) {
                     if (choice == "channel") {
                         string c = param;
 
                         if ((string) ((integer) c) == c) {
                             integer ch = (integer) c;
 
-                            if (ch > 0) lmSendConfig("chatChannel",(string)ch);
-                            else cdSayTo("Invalid channel (" + (string)ch + ") ignored",id);
+                            if (ch == PUBLIC_CHANNEL || ch == DEBUG_CHANNEL) {
+                                cdSayTo("Invalid channel (" + (string)ch + ") ignored",id);
+                            }
+                            else {
+                                lmSendConfig("chatChannel",(string)(chatChannel = ch));
+                                cdSayTo("Dolly communications link reset with new parameters on channel " + (string)chatChannel,id);
+#ifdef DEVELOPER_MODE
+                                llSay(DEBUG_CHANNEL,"chat channel reset from cmd line using channel " + (string)chatChannel);
+#endif
+                            }
                         }
                         return;
                     }
                     else if (choice == "controller") {
                         lmInternalCommand("addMistress", param, id);
-                        return;
-                    }
-                    else if (choice == "blacklist") {
-                        lmInternalCommand("addBlacklist", param, id);
-                        return;
-                    }
-                    else if (choice == "unblacklist") {
-                        lmInternalCommand("remBlacklist", param, id);
                         return;
                     }
                     else if (choice == "prefix") {
@@ -991,10 +961,11 @@ default {
                 // DOLL COMMANDS (with parameter)
                 //
                 // These commands are for dolly ONLY
-                //   * debug
-                //   * inject
-                //   * timereporting
-                //   * collapse
+                //   * gname
+                //   * debug (DEVELOPER_MODE)
+                //   * inject (DEVELOPER_MODE)
+                //   * timereporting (DEVELOPER_MODE)
+                //   * collapse (DEVELOPER_MODE)
                 //
                 if (isDoll) {
                     if (choice == "gname") {
@@ -1011,37 +982,35 @@ default {
                         string cLeft;
                         integer len;
                         integer j;
-                        integer numChar;
-                        integer lenAllSymbols = llStringLength(allSymbols);
+                        integer lenAllSymbols;
                         string oldName = llGetObjectName();
 
                         llSetObjectName(dollDisplayName);
                         allSymbols = doubledSymbols + pairedSymbols;
+                        lenAllSymbols = llStringLength(allSymbols);
                         param = " " + param + " ";
 
                         len = (integer)llFrand(6) + 4;
 
                         while (len--) {
+                            // Get a random character
                             n = (integer)(llFrand(lenAllSymbols));
                             c1 = llGetSubString(allSymbols,n,n);
+
+                            // Get the chosen character's alternate
                             n = n ^ 1;
                             c2 = llGetSubString(allSymbols,n,n);
 
-                            if ((integer)(llFrand(4)) == 0) numChar = (integer)llFrand(3) + 1;
-                            else numChar = 1;
-
-                            j = numChar;
-                            while (j--) cLeft += c1;
-                            param = cLeft + param;
-
-                            if (c2 == c1) param += cLeft;
-                            else {
-                                j = numChar;
-                                while  (j--) param += c2;
+                            // Use multiple characters 25% of the time
+                            if ((integer)(llFrand(4)) == 0) {
+                                j = (integer)llFrand(3) + 1;
+                                while (j--) param = c1 + param + c2;
                             }
+                            else param = c1 + param + c2;
                         }
                         llSay(PUBLIC_CHANNEL,param);
                         llSetObjectName(oldName);
+                        return;
                     }
 #ifdef DEVELOPER_MODE
                     else if (choice == "debug") {
@@ -1086,9 +1055,14 @@ default {
                     }
 #endif
                 }
+
+                // Poses don't have secondary parameters - so skip
+                return;
             }
 
-            // Is the "msg" an animation? (and skip the "collapse" animation entirely)
+            // The chat message is not a known command, so try to find an animation (pose)
+            // Commands with secondary parameters bypass this sequence
+
             if (msg != "collapse") {
                 if (llGetInventoryType(msg) == INVENTORY_ANIMATION) {
                     string firstChar = cdGetFirstChar(msg);
@@ -1105,7 +1079,6 @@ default {
                         // It's a pose but from a member of the public
                         if (allowPose || hardcore) lmPoseReply(msg, name, id);
                     }
-                    return;
                 }
 #ifdef DEVELOPER_MODE
                 else {
