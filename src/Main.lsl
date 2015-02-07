@@ -665,7 +665,8 @@ default {
                     // Note this makes no difference to waiting events, just other scripts
                     if (collapsed == 0) llSleep(0.5);
 
-                    llOwnerSay("Your key has been turned by " + name + " giving you " +
+                    if (hardcore) llOwnerSay("Your key has been cranked by " + name + ".");
+                    else llOwnerSay("Your key has been turned by " + name + " giving you " +
                         mins + " more minutes of life (" + percent + "% capacity).");
 
 #ifdef DEVELOPER_MODE
@@ -834,7 +835,8 @@ default {
                     lmSendConfig("lastWinderID", (string)(lastWinderID = id));
 
                     if (timeLeftOnKey == effectiveLimit) { // Fully wound
-                        llOwnerSay("You have been fully wound by " + name + " - " + (string)llRound(effectiveLimit / (SECS_PER_MIN * windRate)) + " minutes remaining.");
+                        if (hardcore) llOwnerSay("You have been fully wound by " + name + ".");
+                        else llOwnerSay("You have been fully wound by " + name + " - " + (string)llRound(effectiveLimit / (SECS_PER_MIN * windRate)) + " minutes remaining.");
 
                         if (!quiet) llSay(0, dollName + " has been fully wound by " + name + ". Thanks for winding Dolly!");
                         else cdSayTo(dollName + " is now fully wound. Thanks for winding Dolly!", id);
@@ -854,10 +856,14 @@ default {
             // a button click on "45min" sets the wind time to 45 minutes.
 
             else if (choice == "Max Time...") {
+                list maxList = [ "45m", "60m", "75m", "90m", "120m" ];
+                if (!hardcore) maxList += [ "150m", "180m", "240m" ]
+                maxList += MAIN;
+
                 // If the Max Times available are changed, be sure to change the next choice also
                 cdDialogListen();
-                llDialog(id, "You can set the maximum available time here.  Dolly cannot be wound beyond this amount of time.\nDolly currently has " + (string)llFloor(timeLeftOnKey / SECS_PER_MIN) + " mins left of " + (string)llFloor(keyLimit / SECS_PER_MIN) + ". If you lower the maximum, Dolly will lose the extra time entirely.",
-                    dialogSort(["45m", "60m", "75m", "90m", "120m", "150m", "180m", "240m", MAIN]), dialogChannel);
+                llDialog(id, "You can set the maximum available time here.  Dolly cannot be wound beyond this amount of time.\nDolly currently has " + (string)llFloor(timeLeftOnKey / SECS_PER_MIN) + " mins left of " + (string)llFloor(keyLimit / SECS_PER_MIN) + ". If you lower the maximum, Dolly will lose any extra time entirely.",
+                    dialogSort(maxList), dialogChannel);
             }
 
             else if ((choice ==  "15min") ||
