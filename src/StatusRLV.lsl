@@ -111,14 +111,17 @@ default {
             split = llDeleteSubList(split, 0, 0);
 
             if (cmd == "refreshRLV") {
-                //llOwnerSay("Reactivating RLV restrictions");
+                llOwnerSay("Reactivating RLV restrictions");
+                llOwnerSay("@" + llDumpList2String(rlvRestrict,",=n") + "=n");
 
-                i = llGetListLength(rlvRestrict);
-                while (i--) {
-                    string cmd = llList2String(rlvRestrict, i);
-                    debugSay(4,"DEBUG-STATUSRLV","rlvCommand (refresh): " + cmd);
-                    llOwnerSay("@" + cmd + "=n");
-                }
+                //string cmd;
+                //i = llGetListLength(rlvRestrict);
+                //while (i--) {
+                //    cmd += llList2String(rlvRestrict, i);
+                //
+                //    This assumes that all cmds in the rlvRestrict are y/n options!
+                //    llOwnerSay("@" + cmd + "=n");
+                //}
             }
             else if (cmd == "instantMessage") {
 
@@ -176,7 +179,6 @@ default {
                 }
 
                 llOwnerSay("@" + commandString);
-                debugSay(4,"DEBUG-STATUSRLV","rlvCommand (refresh) activated");
                 rlvCmdIssued = 1;
                 lmInternalCommand("storeRLV",script + "|" + commandString,NULL_KEY);
             }
@@ -193,7 +195,7 @@ default {
         else if (code == RLV_RESET) {
             RLVok = (cdListIntegerElement(split, 0) == 1);
 
-            debugSay(4,"DEBUG-STATUSRLV","rlvCommand (refresh) activated");
+            //debugSay(4,"DEBUG-STATUSRLV","rlvCommand (refresh) activated");
             if (RLVok)
                 lmInternalCommand("refreshRLV","",NULL_KEY);
         }
