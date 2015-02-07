@@ -958,11 +958,11 @@ default {
                 dollID = llGetOwner();
                 dollName = llGetDisplayName(dollID);
 
-                setWindRate();
                 lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
-                if (timeLeftOnKey)
-                    llOwnerSay("You have " + (string)llRound(timeLeftOnKey / (SECS_PER_MIN * windRate)) + " minutes of life remaining.");
-                lmMenuReply("Wind", "", NULL_KEY);
+                setWindRate();
+                //if (timeLeftOnKey)
+                //    llOwnerSay("You have " + (string)llRound(timeLeftOnKey / (SECS_PER_MIN * windRate)) + " minutes of life remaining.");
+                //lmMenuReply("Wind", "", NULL_KEY);
             }
 
             else if (code == 105) {
