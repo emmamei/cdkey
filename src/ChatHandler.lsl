@@ -175,7 +175,7 @@ default {
                     chatHandle = llListen(chatChannel, "", chatFilter, "");
                     lmSendConfig("chatChannel",(string)chatChannel);
 #ifdef DEVELOPER_MODE
-                    llSay(DEBUG_CHANNEL,"chat channel set externally to " + (string)chatChannel);
+                    //llSay(DEBUG_CHANNEL,"chat channel set externally to " + (string)chatChannel);
 #endif
                 }
                 else {
@@ -196,7 +196,7 @@ default {
                 chatHandle = llListen(chatChannel, "", chatFilter, "");
                 lmSendConfig("chatChannel",(string)chatChannel);
 #ifdef DEVELOPER_MODE
-                llSay(DEBUG_CHANNEL,"chat channel renewed using channel " + (string)chatChannel);
+                //llSay(DEBUG_CHANNEL,"chat channel renewed using channel " + (string)chatChannel);
 #endif
             }
         }

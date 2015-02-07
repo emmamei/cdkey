@@ -273,7 +273,15 @@ default {
         timerMark = llGetUnixTime();
         timeSpan = timerMark - lastTimerMark;
 
-        // sanity checking - esp. for relogs
+        // sanity checking of timeSpan
+        //
+        // If we relog, the lastTimerMark will be LONG ago....  leading to a
+        // HUGE timeSpan... so stomp on it and start with a fresh timeSpan
+        //
+        // Same thing happens on startup with lastTimerMark = 0
+        //
+        // Note that if the timeSpan goes beyond 120s for any reason at all,
+        // then no time is accrued - but that should be okay for now.
         if (timeSpan > 120) {
             // Check sanity of timeSpan
             timeSpan = 0;
@@ -439,14 +447,18 @@ default {
 
         if (windingDown) {
             if (timeSpan != 0) {
+                // Key ticks down just a little further...
                 timeLeftOnKey -= timeSpan * windRate;
 
-                //debugSay(3,"DEBUG-MAIN","Time left on key at unwinding: " + (string)timeLeftOnKey);
+                //debugSay(3,"DEBUG-MAIN","Time left on key at unwinding: " + (string)timeLeftOnKey + " - span = " + (string)timeSpan + "s with rate of " + (string)windRate);
+                //llSay(DEBUG_CHANNEL,"Time left on key at unwinding: " + (string)timeLeftOnKey + " - span = " + (string)timeSpan + "s with rate of " + (string)windRate);
+
+                // Now that we've ticked down a few - check for warnings, and check for collapse
                 if (timeLeftOnKey > 0) {
 
-                    minsLeft = llRound(timeLeftOnKey / (SECS_PER_MIN * windRate));
-
                     if (doWarnings && !warned) {
+                        minsLeft = llRound(timeLeftOnKey / (SECS_PER_MIN * windRate));
+
                         if (minsLeft == 30 || minsLeft == 15 || minsLeft == 10 || minsLeft ==  5 || minsLeft ==  2) {
 
                             if (!quiet) llSay(0, dollName + " has " + (string)minsLeft + " minutes left before they run down!");
