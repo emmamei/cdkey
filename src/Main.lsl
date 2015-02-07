@@ -685,7 +685,8 @@ default {
                         mins + " more minutes of life (" + percent + "% capacity).", id);
                 }
                 else {
-                    llOwnerSay("Your key turns automatically, ggiving you an additional " + mins + " minutes of life.");
+                    if (hardcore) llOwnerSay("Your key turns automatically, giving you additional minutes of life.");
+                    else llOwnerSay("Your key turns automatically, giving you an additional " + mins + " minutes of life.");
                 }
             }
         }
