@@ -681,7 +681,7 @@ default {
         poseList = llListSort(poseList, 1, 1);
 
         // Note: this is initial, before receiving any new config events
-        setWindRate();
+        //lmInternalCommand("setWindRate","",NULL_KEY);
     }
 
     //----------------------------------------

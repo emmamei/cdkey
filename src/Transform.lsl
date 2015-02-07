@@ -166,7 +166,7 @@ setDollType(string stateName, integer automated) {
     }
     // if NOT RLVok then we have a DollType with no associated typeFolder...
 
-    setWindRate();
+    lmInternalCommand("setWindRate","",NULL_KEY);
     debugSay(2,"DEBUG-DOLLTYPE","Changed to type " + dollType);
 #ifdef DEVELOPER_MODE
     if (stateName == "Builder")
@@ -451,7 +451,7 @@ default {
                 }
             }
 
-            setWindRate();
+            lmInternalCommand("setWindRate","",NULL_KEY);
         }
     }
 

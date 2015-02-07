@@ -18,40 +18,6 @@ float lastTimerEvent;
 #endif
 integer timerStarted;
 
-float setWindRate() {
-
-    windingDown = cdWindDown();
-    windRate = baseWindRate;
-
-    if (afk) windRate *= 0.5 * baseWindRate;
-
-    // There are several winding rates:
-    //
-    // baseWindRate is the basic rate when the Key is full-on and without
-    //     restrictions or adjustments
-    //
-    // windRate is the actual discernable Key winding rate. THIS is the
-    //     amount of most importance, and the one that accounts for
-    //     the Key's actual winding down - the others are "storage" to
-    //     preserve other rates.
-    //
-    // Note that baseWindRate never changes in this function at all.
-
-    lmSendConfig("baseWindRate", (string)baseWindRate);
-    lmSendConfig("windRate", (string)windRate);
-    lmSendConfig("windingDown", (string)windingDown);
-
-    // llTargetOmega: With normalized vector, spin rate is equal to radians per second
-    // 2𝜋 radians per rotation.  This sets a normal rotation rate of 4 rpm about the
-    // Z axis multiplied by the wind rate this way the key will visually run faster as
-    // the dolly begins using their time faster.
-    //
-    if (windingDown) llTargetOmega(<0.0, 0.0, 1.0>, windRate * TWO_PI / 8.0, 1);
-    else             llTargetOmega(<0.0, 0.0, 1.0>,                     0.0, 1);
-
-    return windRate;
-}
-
 #define CHECK "✔"
 #define CROSS "✘"
 

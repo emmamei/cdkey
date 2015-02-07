@@ -653,8 +653,6 @@ default {
         else cdResetKeyName();
 
         RLVok = UNSET;
-
-        setWindRate();
     }
 
     //----------------------------------------
@@ -662,7 +660,7 @@ default {
     //----------------------------------------
     attach(key id) {
 
-        setWindRate();
+        lmInternalCommand("setWindRate","",NULL_KEY);
         if (id == NULL_KEY) {
 
             if(!llGetAttached()) cdResetKeyName();
