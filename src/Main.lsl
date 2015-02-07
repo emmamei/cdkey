@@ -669,9 +669,6 @@ default {
                     else llOwnerSay("Your key has been turned by " + name + " giving you " +
                         mins + " more minutes of life (" + percent + "% capacity).");
 
-#ifdef DEVELOPER_MODE
-                    llSay(DEBUG_CHANNEL, "Wind: " + mins + " mins (" + percent + "%) by \"" + name + "\"");
-#endif
                     cdSayTo("You turn " + dollDisplayName + "'s Key, and " + pronounSheDoll + " receives " +
                         mins + " more minutes of life (" + percent + "% capacity).", id);
                 }
@@ -857,7 +854,7 @@ default {
 
             else if (choice == "Max Time...") {
                 list maxList = [ "45m", "60m", "75m", "90m", "120m" ];
-                if (!hardcore) maxList += [ "150m", "180m", "240m" ]
+                if (!hardcore) maxList += [ "150m", "180m", "240m" ];
                 maxList += MAIN;
 
                 // If the Max Times available are changed, be sure to change the next choice also
