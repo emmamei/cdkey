@@ -90,7 +90,6 @@ integer rlvWait;
 // FUNCTIONS
 //=======================================
 doLuminosity() {
-
     // The two options below do the same thing - but when not visible or collapsed,
     // it bypasses all the scanning and testing and goes straight to work.
     // Note that it sets the color on every prim to the gemColour - but the
@@ -117,13 +116,10 @@ doLuminosity() {
         float glow;
         integer primN;
 
-        debugSay(4, "DEBUG-START", "Number of prims = " + (string)nPrims);
-
         i = nPrims;
         while (i--) {
             primN = i + 1;
             name = llGetLinkName(primN);
-            debugSay(4, "DEBUG-START", "Name of prim #" + (string)(primN) + " of " + (string)nPrims + " = " + name);
             glow = 0.0;
 
             // Start a new Link Target
@@ -246,7 +242,7 @@ processConfiguration(string name, string value) {
         //lmSendConfig("windMins",(string)(windMins = windNormal / SECS_PER_MIN));
         lmSendConfig("windNormal",(string)windNormal);
         //lmSendConfig("windAmount",(string)windAmount);
-        lmSendConfig("keyLimit",(string)keyLimit);
+        lmSetConfig("keyLimit",(string)keyLimit);
     }
     else if (name == "wind time") {
         integer windMins = (integer)value;
@@ -266,7 +262,7 @@ processConfiguration(string name, string value) {
         //lmSendConfig("windMins",(string)(windMins = windNormal / SEC_PER_MIN));
         lmSendConfig("windNormal",(string)windNormal);
         //lmSendConfig("windAmount",(string)windAmount);
-        lmSendConfig("keyLimit",(string)keyLimit);
+        lmSetConfig("keyLimit",(string)keyLimit);
     }
     else if (name == "gem colour" || name == "gem color") {
         if ((vector)value != ZERO_VECTOR) prefGemColour = value;

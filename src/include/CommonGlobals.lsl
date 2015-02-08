@@ -82,9 +82,9 @@ integer timeReporting       = 1;
 integer visible             = 1;
 integer wearLock;
 integer winderRechargeTime;
+integer windingDown         = 1;
 integer windMins            = 30;
 integer windNormal          = 1800;
-integer windingDown         = 1;
 
 #ifdef DEVELOPER_MODE
 integer debugLevel          = DEBUG_LEVEL;
