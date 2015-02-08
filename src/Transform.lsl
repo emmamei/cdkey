@@ -495,8 +495,8 @@ default {
 
             split = llDeleteSubList(split,0,0);
 
-                 if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
-            else if (name == "afk")                               afk = (integer)value;
+//               if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
+                 if (name == "afk")                               afk = (integer)value;
             else if (name == "autoAfk")                       autoAfk = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")           timeReporting = (integer)value;

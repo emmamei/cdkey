@@ -423,7 +423,7 @@ default {
         if (windingDown) {
             if (timeSpan != 0) {
                 // Key ticks down just a little further...
-                timeLeftOnKey -= timeSpan * windRate;
+                timeLeftOnKey -= (integer)(timeSpan * windRate);
 
                 // Now that we've ticked down a few - check for warnings, and check for collapse
                 if (timeLeftOnKey > 0) {
@@ -504,7 +504,7 @@ default {
                 else if (name == "dialogChannel")           dialogChannel = (integer)value;
                 else if (name == "demoMode") {
                     if (demoMode = (integer)value) effectiveLimit = DEMO_LIMIT;
-                    else effectiveLimit = (integer)keyLimit;
+                    else effectiveLimit = keyLimit;
                 }
                 else if (name == "dollType")                     dollType = value;
 #ifdef DEVELOPER_MODE
@@ -521,7 +521,7 @@ default {
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
             else if (name == "transformLockExpire")   transformLockExpire = (integer)value;
 
-            else if (name == "windAmount")                 windAmount = (float)value;
+            else if (name == "windAmount")                 windAmount = (integer)value;
             else if (name == "windNormal")                 windNormal = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")           timeReporting = (integer)value;
@@ -533,7 +533,7 @@ default {
             split = llDeleteSubList(split, 0, 0);
 
             if (name == "keyLimit") {
-                keyLimit = (float)value;
+                keyLimit = (integer)value;
 
                 // if limit is negative clip it at a default
                 if (keyLimit < 0) keyLimit = 10800;
@@ -542,7 +542,7 @@ default {
                 if (timeLeftOnKey > keyLimit) timeLeftOnKey = keyLimit;
 
                 // set effectiveLimit appropriately
-                if (!demoMode) effectiveLimit = (integer)keyLimit;
+                if (!demoMode) effectiveLimit = keyLimit;
                 else effectiveLimit = DEMO_LIMIT;
 
                 lmSendConfig("keyLimit", (string)keyLimit);
@@ -625,6 +625,7 @@ default {
                 else collapse(llList2Integer(split, 0));
             }
             else if (cmd == "windMsg") {
+                // this overlaps a global windAmount... bad!
                 integer windAmount = llList2Integer(split, 0);
                 string name = llList2String(split, 1);
                 string mins = (string)llFloor(windAmount / SECS_PER_MIN);
@@ -692,7 +693,7 @@ default {
                         // Doing it this way makes the wind amount independent of the amount
                         // of time in a single wind. It is also a form of hard-coding.
                         //
-                        windAmount = effectiveLimit * 0.2;
+                        windAmount = (integer)(effectiveLimit * 0.2);
                         if (hardcore) { if (windAmount > 120) windAmount = 120; }
                         else { if (windAmount > 600) windAmount = 600; }
 
@@ -854,14 +855,14 @@ default {
                      (choice == "180m") ||
                      (choice == "240m")) {
 
-                keyLimit = (float)choice * SECS_PER_MIN;
+                keyLimit = (integer)choice * SECS_PER_MIN;
                 cdSayTo("Key limit now set to " + (string)llFloor(keyLimit / SECS_PER_MIN) + " minutes",id);
 
                 // if limit is less than time left on key, clip time remaining
                 if (timeLeftOnKey > keyLimit) timeLeftOnKey = keyLimit;
 
                 // if not in demo mode set effectiveLimit
-                if (!demoMode) effectiveLimit = (integer)keyLimit;
+                if (!demoMode) effectiveLimit = keyLimit;
                 else effectiveLimit = DEMO_LIMIT;
 
                 lmSendConfig("keyLimit", (string)keyLimit);

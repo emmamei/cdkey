@@ -180,7 +180,7 @@ default {
             split = llDeleteSubList(split, 0, 0);
             string c = cdGetFirstChar(name);
 
-                 if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
+                 if (name == "timeLeftOnKey")           timeLeftOnKey = (integer)value;
             else if (name == "baseWindRate")             baseWindRate = (float)value;
             else if (name == "windRate")                     windRate = (float)value;
             else if (name == "backMenu")                     backMenu = value;

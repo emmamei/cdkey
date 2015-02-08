@@ -239,9 +239,7 @@ processConfiguration(string name, string value) {
 
         if (keyLimit < windNormal) windNormal = llFloor(keyLimit / 6);
 
-        //lmSendConfig("windMins",(string)(windMins = windNormal / SECS_PER_MIN));
         lmSendConfig("windNormal",(string)windNormal);
-        //lmSendConfig("windAmount",(string)windAmount);
         lmSetConfig("keyLimit",(string)keyLimit);
     }
     else if (name == "wind time") {
@@ -252,16 +250,13 @@ processConfiguration(string name, string value) {
         else if (windMins < 15) windMins = 15;
         windNormal = windMins * (integer)SECS_PER_MIN;
 
-        // If it takes 2 winds or less to wind dolly, then
-        // we fall back to 6 winds: note that this happens AFTER
-        // the numerical validation: so potentioally, after this next
-        // statement, we could have a wind time of less than 15 - which
-        // is to be expected
+        // If it takes 2 winds or less to wind dolly, then we fall back to 6
+        // winds: note that this happens AFTER the numerical validation: so
+        // potentioally, after this next statement, we could have a wind time
+        // of less than 15 - which is to be expected
         if (windNormal > (keyLimit / 2)) windNormal = llFloor(keyLimit / 6);
 
-        //lmSendConfig("windMins",(string)(windMins = windNormal / SEC_PER_MIN));
         lmSendConfig("windNormal",(string)windNormal);
-        //lmSendConfig("windAmount",(string)windAmount);
         lmSetConfig("keyLimit",(string)keyLimit);
     }
     else if (name == "gem colour" || name == "gem color") {
@@ -408,7 +403,7 @@ default {
             string value = llList2String(split, 1);
             split = llDeleteSubList(split,0,0);
 
-                 if (name == "keyLimit")                      keyLimit = (float)value;
+                 if (name == "keyLimit")                      keyLimit = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                  debugLevel = (integer)value;
 #endif

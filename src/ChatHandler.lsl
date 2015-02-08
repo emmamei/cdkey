@@ -20,7 +20,7 @@
 
 key lastWinderID;
 
-float effectiveLimit;
+integer effectiveLimit;
 
 string msg;
 integer chatEnable           = TRUE;
@@ -65,7 +65,7 @@ default {
             string c = cdGetFirstChar(name); // for speedup
             split = llDeleteSubList(split,0,0);
 
-                 if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
+                 if (name == "timeLeftOnKey")           timeLeftOnKey = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")           timeReporting = (integer)value;
 #endif
@@ -139,7 +139,7 @@ default {
 
             else if (name == "keyAnimation")         keyAnimation = value;
             else if (name == "keyLimit") {
-                keyLimit = (float)value;
+                keyLimit = (integer)value;
                 if (!demoMode) effectiveLimit = keyLimit;
                 else effectiveLimit = DEMO_LIMIT;
             }
@@ -593,7 +593,7 @@ default {
                         if (isDoll && hardcore) return;
                         string s = "Extended stats:\n\nDoll is a " + dollType + " Doll.\nAFK time factor: " +
                                    formatFloat(RATE_AFK, 1) + "x\nWind amount: " + (string)llFloor(windNormal / SECS_PER_MIN) + " (mins)\nKey Limit: " +
-                                   (string)((integer)(keyLimit / SECS_PER_MIN)) + " mins\nEmergency Winder Recharge Time: " +
+                                   (string)(keyLimit / SECS_PER_MIN) + " mins\nEmergency Winder Recharge Time: " +
                                    (string)(EMERGENCY_LIMIT_TIME / 60 / (integer)SECS_PER_MIN) + " hours\nEmergency Winder: ";
 
                         float windEmergency;
