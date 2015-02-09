@@ -168,7 +168,7 @@ processConfiguration(string name, string value) {
 
     // Configuration entries: these are the actual configuration
     // commands; they must match with a sendName below
-    list configs = [ "quiet key", "outfits path",
+    list configs = [ "quiet key", "outfits path", "hardcore mode",
                      "busy is away", "can afk", "can fly", "poseable", "can sit", "can stand",
                      "can dress", "detachable", "doll type",
 #ifdef ADULT_MODE
@@ -185,7 +185,7 @@ processConfiguration(string name, string value) {
 
     // "Send Names": these are the configuration variable names;
     // they must be matched with a configs entry above
-    list sendName = [ "quiet", "outfitsFolder",
+    list sendName = [ "quiet", "outfitsFolder", "hardcore",
                       "busyIsAway", "canAfk", "canFly", "allowPose", "canSit", "canStand",
                       "canDressSelf", "detachable", "dollType",
 #ifdef ADULT_MODE
@@ -199,11 +199,6 @@ processConfiguration(string name, string value) {
 #endif
                       "allowDress", "allowCarry", "allowRepeatWind"
                     ];
-
-    // Three specially handled configuration entries:
-    //   * doll gender
-    //   * blacklist key
-    //   * controller key
 
     // This processes a single line from the preferences notecard...
     // processing done a single time during the read of the nc belong elsewhere
