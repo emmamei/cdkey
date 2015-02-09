@@ -264,8 +264,7 @@ processConfiguration(string name, string value) {
     else if (name == "chat mode") {
         // Set the way chat operates
 
-        // Note that a value of "world" doesn't actually require
-        // any action at all
+        // Note that a value of "world" doesn't actually require any action at all
         value = llToLower(value);
 
         if (value == "dolly") lmSetConfig("chatFilter",(string)dollID);
@@ -306,7 +305,8 @@ readPreferences() {
         // Start reading from first line (which is 0)
         ncLine = 0;
         ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ncLine);
-    } else {
+    }
+    else {
         // File missing - report for debugging only
         debugSay(1, "DEBUG-START", "No configuration found (" + NOTECARD_PREFERENCES + ")");
 
@@ -340,9 +340,9 @@ doneConfiguration(integer prefsRead) {
 
     if (dollDisplayName == "") {
         string name = dollName;
-        integer space = llSubStringIndex(name, " ");
+        integer i = llSubStringIndex(name, " ");
 
-        if (space != NOT_FOUND) name = llGetSubString(name, 0, space - 1);
+        if (i != NOT_FOUND) name = llGetSubString(name, 0, i - 1);
 
         lmSendConfig("dollDisplayName", (dollDisplayName = "Dolly " + name));
     }
@@ -462,10 +462,6 @@ default {
             else if (name == "collapsed") {
                 integer wasCollapsed = collapsed;
                 collapsed = (integer)value;
-
-                //debugSay(2, "DEBUG-START", "Collapsed = " + (string)collapsed);
-                //debugSay(2, "DEBUG-START", "defaultCollapseRLVcmd = " + defaultCollapseRLVcmd);
-                //debugSay(2, "DEBUG-START", "userCollapseRLVcmd = " + userCollapseRLVcmd);
 
                 if (collapsed) {
                     // We are collapsed: activate RLV restrictions
