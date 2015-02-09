@@ -56,7 +56,6 @@ integer gemLight = YES;
 integer dbConfigCount;
 integer i;
 
-string barefeet;
 string attachName;
 string prefGemColour; // use this to set gem color
 integer isAttached;
@@ -169,7 +168,7 @@ processConfiguration(string name, string value) {
 
     // Configuration entries: these are the actual configuration
     // commands; they must match with a sendName below
-    list configs = [ "barefeet path", "quiet key", "outfits path",
+    list configs = [ "quiet key", "outfits path",
                      "busy is away", "can afk", "can fly", "poseable", "can sit", "can stand",
                      "can dress", "detachable", "doll type",
 #ifdef ADULT_MODE
@@ -186,7 +185,7 @@ processConfiguration(string name, string value) {
 
     // "Send Names": these are the configuration variable names;
     // they must be matched with a configs entry above
-    list sendName = [ "barefeet", "quiet", "outfitsFolder",
+    list sendName = [ "quiet", "outfitsFolder",
                       "busyIsAway", "canAfk", "canFly", "allowPose", "canSit", "canStand",
                       "canDressSelf", "detachable", "dollType",
 #ifdef ADULT_MODE

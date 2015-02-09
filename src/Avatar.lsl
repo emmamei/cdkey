@@ -50,7 +50,7 @@ string msg;
 string name;
 string value;
 
-string barefeet;
+//string barefeet;
 
 #ifdef DEVELOPER_MODE
 string myPath;
@@ -749,7 +749,7 @@ default {
                 else if (name == "lowScriptMode")         lowScriptMode = (integer)value;
                 else if (name == "quiet")                         quiet = (integer)value;
                 else if (name == "allowPose")                 allowPose = (integer)value;
-                else if (name == "barefeet")                   barefeet = value;
+                //else if (name == "barefeet")                   barefeet = value;
                 else if (name == "dollType")                   dollType = value;
                 else if (name == "controllers") {
                     if (split == [""]) controllers = [];
@@ -807,7 +807,7 @@ default {
 
                 // We separate this out for two reasones: a) saves space; b) separates the RLV
                 // processes so we can be sure this runs after the stripping process
-                if (barefeet != "") lmRunRLVas("Dress","attachallover:" + barefeet + "=force,");
+                //if (barefeet != "") lmRunRLVas("Dress","attachallover:" + barefeet + "=force,");
 
                 lmInternalCommand("strip", "", id);
             }
