@@ -111,8 +111,8 @@ default {
             split = llDeleteSubList(split, 0, 0);
 
             if (cmd == "refreshRLV") {
-                llOwnerSay("Reactivating RLV restrictions");
-                llOwnerSay("@" + llDumpList2String(rlvRestrict,",=n") + "=n");
+                //llOwnerSay("Reactivating RLV restrictions");
+                if (rlvRestrict) llOwnerSay("@" + llDumpList2String(rlvRestrict,",=n") + "=n");
 
                 //string cmd;
                 //i = llGetListLength(rlvRestrict);
