@@ -167,16 +167,15 @@ default {
                 // Time saver
                 if (newChatChannel == chatChannel) return;
 
-                if (newChatChannel != DEBUG_CHANNEL && newChatChannel != PUBLIC_CHANNEL) {
+                if (newChatChannel != DEBUG_CHANNEL) {
+                    // Note that setting the chat channel to 0 (PUBLIC) is valid:
+                    // it isn't used as a channel, but as a flag for a disabled channel
                     chatChannel = newChatChannel;
 
                     // Reset chat channel with new channel number
                     llListenRemove(chatHandle);
                     chatHandle = llListen(chatChannel, "", chatFilter, "");
                     lmSendConfig("chatChannel",(string)chatChannel);
-#ifdef DEVELOPER_MODE
-                    //llSay(DEBUG_CHANNEL,"chat channel set externally to " + (string)chatChannel);
-#endif
                 }
                 else {
                     llSay(DEBUG_CHANNEL,"Attempted to set channel to invalid value!");
@@ -195,9 +194,6 @@ default {
                 llListenRemove(chatHandle);
                 chatHandle = llListen(chatChannel, "", chatFilter, "");
                 lmSendConfig("chatChannel",(string)chatChannel);
-#ifdef DEVELOPER_MODE
-                //llSay(DEBUG_CHANNEL,"chat channel renewed using channel " + (string)chatChannel);
-#endif
             }
         }
         else if (code == INTERNAL_CMD) {
@@ -216,8 +212,8 @@ default {
                 list tmpList;
 
                 // we don't want controllers to be added to the blacklist;
-                // likewise, we don't want to allow those on the blacklist
-                // to be controllers. barlist represents the "contra" list
+                // likewise, we don't want to allow those on the blacklist to
+                // be controllers. barlist represents the "contra" list
                 // opposing the added-to list.
                 //
                 list barList;
@@ -300,16 +296,7 @@ default {
                     tmpList = blacklist;
                 }
 
-                //if (split = []) {
-                //    lmSendToAgentPlusDoll("The " + typeString + " list is empty!", id);
-                //    lmSetConfig("blacklist",   llDumpList2String(blacklist,   "|") );
-                //    lmSetConfig("controllers", llDumpList2String(controllers, "|") );
-                //    return;
-                //}
-
-                // Test for the presence of the UUID in the existing list
-                //
-                // we are assuming that the uuid/name exists as a valid pair and in that order
+                // Test for presence of uuid in list: if it's not there, we can't remove it
                 string s;
                 if ((i = llListFindList(tmpList, [ uuid ])) != NOT_FOUND) {
 
@@ -759,14 +746,18 @@ default {
 
 #endif
 #ifdef DEVELOPER_MODE
-                    else if (choice == "collapse" && isDoll) {
-                        lmSetConfig("timeLeftOnKey","10");
-                        llOwnerSay("Immediate collapse triggered: ten seconds to collapse");
+                    else if (choice == "collapse") {
+                        if (isDoll) {
+                            lmSetConfig("timeLeftOnKey","10");
+                            llOwnerSay("Immediate collapse triggered: ten seconds to collapse");
+                        }
                         return;
                     }
-                    else if (choice == "powersave" && isDoll) {
-                        lmSetConfig("lowScriptMode","1");
-                        llOwnerSay("Power-save mode initiated");
+                    else if (choice == "powersave") {
+                        if (isDoll) {
+                            lmSetConfig("lowScriptMode","1");
+                            llOwnerSay("Power-save mode initiated");
+                        }
                         return;
                     }
 #endif
@@ -796,7 +787,7 @@ default {
                             }
                             else {
 #ifdef DEVELOPER_MODE
-                                cdSayTo("Emergency detection circuits detect developer access override; emergency winder activated",id);
+                                cdSayTo("Emergency detection circuits detect developer access override; safety protocols removed and emergency winder activated",id);
                                 cdMenuInject("Wind Emg", dollName, dollID);
 #else
                                 cdSayTo("Emergency not detected; emergency winder is currently disengaged",id);
@@ -862,7 +853,7 @@ default {
                     return;
                 }
                 else if (choice == "uncarry") {
-                    if (isController || cdIsCarrier(id)) cdMenuInject("Uncarry", name, id);
+                    if (!isDoll && (isController || cdIsCarrier(id))) cdMenuInject("Uncarry", name, id);
                     return;
                 }
             }
@@ -1001,8 +992,8 @@ default {
                             n = n ^ 1;
                             c2 = llGetSubString(allSymbols,n,n);
 
-                            // Use multiple characters 25% of the time
-                            if ((integer)(llFrand(4)) == 0) {
+                            // Use multiple characters %50 of the time
+                            if ((integer)(llFrand(2)) == 0) {
                                 j = (integer)llFrand(3) + 1;
                                 while (j--) param = c1 + param + c2;
                             }
@@ -1063,7 +1054,7 @@ default {
             // The chat message is not a known command, so try to find an animation (pose)
             // Commands with secondary parameters bypass this sequence
 
-            if (msg != "collapse") {
+            if (msg != ANIMATION_COLLAPSED) {
                 if (llGetInventoryType(msg) == INVENTORY_ANIMATION) {
                     string firstChar = cdGetFirstChar(msg);
 

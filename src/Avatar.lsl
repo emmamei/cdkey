@@ -904,7 +904,6 @@ default {
         else if (code < 200) {
             if (code == 110) {
                 debugSay(2,"DEBUG-AVATAR","ifPermissions (link_message 110)");
-                //if ((dollType == "Display" || hardcore) && keyAnimation != "" && keyAnimation != "collapse")
 
                 ifPermissions();
                 oneAnimation();

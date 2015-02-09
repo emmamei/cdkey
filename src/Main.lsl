@@ -139,9 +139,6 @@ collapse(integer newCollapseState) {
     // If not already collapsed, mark the start time
     if (collapsed == NOT_COLLAPSED) {
         collapseTime = llGetUnixTime();
-#ifdef DEVELOPER_MODE
-        llSay(DEBUG_CHANNEL,"collapseTime set to " + (string)collapseTime + " at " + (string)llGetUnixTime());
-#endif
         lmSendConfig("collapseTime", (string)collapseTime);
     }
 
@@ -719,7 +716,6 @@ default {
                     if (!hardcore) {
                         s += "  There remains ";
 
-                        //llSay(DEBUG_CHANNEL,"Winder recharge: rechargeMins = " + (string)rechargeMins + " minutes");
                         if (rechargeMins < 60) s += (string)rechargeMins + " minutes ";
                         else s += "over " + (string)(rechargeMins / 60) + " hours ";
 
