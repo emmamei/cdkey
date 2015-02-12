@@ -1,0 +1,17 @@
+DEVELOPING THE COMMUNITY DOLLS KEY
+==================================
+
+Developing for the Community Dolls Key is not hard, but several
+things must be understood. The use of link messages, the layout
+of the Key source on github, and more.
+
+Source Layout
+-------------
+
+The relevant directories are these:
+
+* doc: Documentation
+* nc: Notecards
+* src: LSL Source files and includes
+* types: Key Type files
+

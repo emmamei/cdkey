@@ -554,6 +554,9 @@ default {
             else if (name == "transformLockExpire") {
                 lmSendConfig("transformLockExpire",(string)(transformLockExpire = (integer)value));
             }
+            else if (name == "outfitsFolder") {
+                lmSendConfig("outfitsFolder",outfitsFolder = value);
+            }
         }
         else if (code == INTERNAL_CMD) {
             string cmd = llList2String(split, 0);

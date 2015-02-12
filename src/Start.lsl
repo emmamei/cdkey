@@ -152,133 +152,167 @@ processConfiguration(string name, string value) {
     //----------------------------------------
     // Assign values to program variables
 
-         if (value == "yes"  || value == "YES" ||
-             value == "on"   || value == "ON"   ||
-             value == "true" || value == "TRUE")
-
-             value = "1";
-
-    else if (value == "no"    || value == "NO"     ||
-             value == "off"   || value == "OFF"    ||
-             value == "false" || value == "FALSE")
-
-             value = "0";
-
     integer i;
 
     // Configuration entries: these are the actual configuration
     // commands; they must match with a sendName below
-    list configs = [ "quiet key", "outfits path", "hardcore mode",
-                     "busy is away", "can afk", "can fly", "poseable", "can sit", "can stand",
-                     "can dress", "detachable", "doll type",
-#ifdef ADULT_MODE
-                     "strippable",
-#endif
-                     "pose silence",
-                     "auto tp", "outfitable", "max time", "chat channel", "dolly name", "demo mode",
-                     "afk rlv", "collapse rlv", "pose rlv" , "show phrases",
+    list configs = [ "outfits path", "doll type", "max time", "chat channel", "dolly name", "wind time",
 #ifdef DEVELOPER_MODE
                      "debug level",
 #endif
-                     "dressable", "carryable", "repeatable wind"
+                     "afk rlv", "collapse rlv", "pose rlv", "gem color", "gem colour", "doll gender", "helpless dolly", "chat mode"
                    ];
 
-    // "Send Names": these are the configuration variable names;
-    // they must be matched with a configs entry above
-    list sendName = [ "quiet", "outfitsFolder", "hardcore",
-                      "busyIsAway", "canAfk", "canFly", "allowPose", "canSit", "canStand",
-                      "canDressSelf", "detachable", "dollType",
+    list settings = [ "quiet key", "hardcore", "busy is away", "can afk", "can fly",
+                      "poseable", "can sit", "can stand", "can dress self", "detachable",
 #ifdef ADULT_MODE
-                      "allowStrip",
+                      "strippable",
 #endif
-                      "poseSilence",
-                      "autoTP", "allowDress", "keyLimit", "chatChannel", "dollDisplayName", "demoMode",
-                      "userAfkRLVcmd", "userCollapseRLVcmd", "userPoseRLVcmd" , "showPhrases",
-#ifdef DEVELOPER_MODE
-                     "debugLevel",
-#endif
-                      "allowDress", "allowCarry", "allowRepeatWind"
+                      "pose silence", "auto tp", "dressable", "outfitable", "can dress", "demo mode",
+                      "show phrases", "carryable", "repeatable wind"
                     ];
+
+    list settingName = [ "quiet", "hardcore", "busyIsAway", "canAfk", "canFly",
+                         "allowPose", "canSit", "canStand", "canDressSelf", "detachable",
+#ifdef ADULT_MODE
+                         "allowStrip",
+#endif
+                         "poseSilence", "autoTP", "allowDress", "allowDress", "allowDress", "demoMode",
+                         "showPhrases", "allowCarry", "allowRepeatWind"
+                       ];
 
     // This processes a single line from the preferences notecard...
     // processing done a single time during the read of the nc belong elsewhere
 
     name = llToLower(name);
 
-    if ((i = cdListElementP(configs,name)) != NOT_FOUND) {
-        if (name == "max time") {
-            float val = (float)value;
+    // Check for settings - boolean true or false
+    if ((i = cdListElementP(settings,name)) != NOT_FOUND) {
+            value = llToLower(value);
 
-            // validate value for max time (in minutes)
-            if (val > 240) val = 240;
-            else if (val < 10) val = 30;
+            if (value == "yes"  ||
+                value == "on"   ||
+                value == "y"    ||
+                value == "t"    ||
+                value == "true" ||
+                value == "1") {
 
-            // convert to seconds and store back
-            value = (string)(val * SEC_TO_MIN);
+            value = "1";
+
+        }
+        else if (value == "no"    ||
+                 value == "off"   ||
+                 value == "n"     ||
+                 value == "f"     ||
+                 value == "false" ||
+                 value == "0") {
+                 
+            value = "0";
+        }
+        else {
+            llSay(DEBUG_CHANNEL,"Invalid preferences setting! (" + name + " = " + value + ")");
+            return;
         }
 
-        // FIXME: Note the lack of validation here (!)
-        debugSay(2, "DEBUG-START", "Sending message " + cdListElement(sendName,i) + " with value " + (string)value);
-
-        // Do both ways for now, just until all are converted or handled
-        lmSetConfig(cdListElement(sendName,i), value);
-        lmSendConfig(cdListElement(sendName,i), value);
+        lmSetConfig(cdListElement(settingName,i), value);
+        lmSendConfig(cdListElement(settingName,i), value);
         llSleep(0.1);  // approx 5 frames - be nice to sim!
     }
-    else if (name == "max time") {
-        keyLimit = (integer)value;
+    // Check for non-boolean settings
+    else if ((i = cdListElementP(configs,name)) != NOT_FOUND) {
+        if (name == "outfits path") {
+            // should be present
+            lmSetConfig("outfitsFolder", value);
+        }
+        else if (name == "doll type") {
+            // should be part of a valid set
+            lmSetConfig("dollType", value);
+        }
+        else if (name == "chat channel") {
+            // cant be 0 or MAXINT (DEBUG_CHANNEL)
+            lmSetConfig("chatChannel", value);
+        }
+        else if (name == "dolly name") {
+            // should be printable
+            lmSendConfig("dollDisplayName", value);
+        }
+        else if (name == "debug level") {
+            // has to be between 0 and 9
+            debugLevel = (integer)value;
 
-        if (keyLimit > 240) keyLimit = 240;
-        else if (keyLimit < 15) keyLimit = 15;
+            if (debugLevel > 9) debugLevel = 9;
+            else if (debugLevel < 0) debugLevel = 0;
 
-        if (keyLimit < windNormal) windNormal = llFloor(keyLimit / 6);
+            lmSendConfig("debugLevel", value);
+        }
+        else if (name == "afk rlv") {
+            // has to be valid rlv
+            lmSendConfig("userAfkRLVcmd", value);
+        }
+        else if (name == "collapse rlv") {
+            // has to be valid rlv
+            lmSendConfig("userCollapseRLVcmd", value);
+        }
+        else if (name == "pose rlv") {
+            // has to be valid rlv
+            lmSendConfig("userPoseRLVcmd", value);
+        }
+        else if (name == "max time") {
+            keyLimit = (integer)value;
 
-        lmSendConfig("windNormal",(string)windNormal);
-        lmSetConfig("keyLimit",(string)keyLimit);
-    }
-    else if (name == "wind time") {
-        integer windMins = (integer)value;
+            if (keyLimit > 240) keyLimit = 240;
+            else if (keyLimit < 15) keyLimit = 15;
 
-        // validate value
-        if (windMins > 90) windMins = 90;
-        else if (windMins < 15) windMins = 15;
-        windNormal = windMins * (integer)SECS_PER_MIN;
+            if (keyLimit < windNormal) windNormal = llFloor(keyLimit / 6);
 
-        // If it takes 2 winds or less to wind dolly, then we fall back to 6
-        // winds: note that this happens AFTER the numerical validation: so
-        // potentioally, after this next statement, we could have a wind time
-        // of less than 15 - which is to be expected
-        if (windNormal > (keyLimit / 2)) windNormal = llFloor(keyLimit / 6);
+            lmSendConfig("windNormal",(string)windNormal);
+            lmSetConfig("keyLimit",(string)keyLimit);
+        }
+        else if (name == "wind time") {
+            integer windMins = (integer)value;
 
-        lmSendConfig("windNormal",(string)windNormal);
-        lmSetConfig("keyLimit",(string)keyLimit);
-    }
-    else if (name == "gem colour" || name == "gem color") {
-        if ((vector)value != ZERO_VECTOR) prefGemColour = value;
-    }
-    else if (name == "chat mode") {
-        // Set the way chat operates
+            // validate value
+            if (windMins > 90) windMins = 90;
+            else if (windMins < 15) windMins = 15;
+            windNormal = windMins * (integer)SECS_PER_MIN;
 
-        // Note that a value of "world" doesn't actually require any action at all
-        value = llToLower(value);
+            // If it takes 2 winds or less to wind dolly, then we fall back to 6
+            // winds: note that this happens AFTER the numerical validation: so
+            // potentioally, after this next statement, we could have a wind time
+            // of less than 15 - which is to be expected
+            if (windNormal > (keyLimit / 2)) windNormal = llFloor(keyLimit / 6);
 
-        if (value == "dolly") lmSetConfig("chatFilter",(string)dollID);
-        else if (value == "disabled") lmInternalCommand("chatDisable","",NULL_KEY);
-        else if (value != "world") llSay(DEBUG_CHANNEL,"Bad chat mode (" + value + ")");
-    }
-    else if (name == "helpless dolly") {
-        // Note inverted sense of this value: this is intentional
-        if (value == "1") lmSendConfig("canSelfTP", "0");
-        else lmSendConfig("canSelfTP", "1");
-    }
-    else if (name == "doll gender") {
-        // set gender of dolly
+            lmSendConfig("windNormal",(string)windNormal);
+            lmSetConfig("keyLimit",(string)keyLimit);
+        }
+        else if (name == "gem colour" || name == "gem color") {
+            if ((vector)value != ZERO_VECTOR) prefGemColour = value;
+        }
+        else if (name == "chat mode") {
+            // Set the way chat operates
 
-        if (value == "female" || value == "woman" || value == "girl") dollGender = "female";
-        else if (value == "male" || value == "man" || value == "boy") dollGender = "male";
-        else dollGender = "female";
+            // Note that a value of "world" doesn't actually require any action at all
+            value = llToLower(value);
 
-        lmSetConfig("dollGender", dollGender);
+            if (value == "dolly") lmSetConfig("chatFilter",(string)dollID);
+            else if (value == "disabled") lmInternalCommand("chatDisable","",NULL_KEY);
+            else if (value != "world") llSay(DEBUG_CHANNEL,"Bad chat mode (" + value + ")");
+        }
+        else if (name == "helpless dolly") {
+            // Note inverted sense of this value: this is intentional
+            if (value == "1") lmSendConfig("canSelfTP", "0");
+            else lmSendConfig("canSelfTP", "1");
+        }
+        else if (name == "doll gender") {
+            // set gender of dolly
+
+            if (value == "female" || value == "woman" || value == "girl") dollGender = "female";
+            else if (value == "male" || value == "man" || value == "boy") dollGender = "male";
+            else dollGender = "female";
+
+            lmSetConfig("dollGender", dollGender);
+        }
+        llSleep(0.1);  // approx 5 frames - be nice to sim!
     }
 #ifdef DEVELOPER_MODE
     else {
@@ -665,10 +699,6 @@ default {
 
         // when attaching key, user is NOT AFK...
         lmSetConfig("afk", NOT_AFK);
-
-        // when attaching we're not in lowScriptMode
-        //lowScriptMode = 0;
-        //lmSendConfig("lowScriptMode", "0");
 
         // reset collapse environment
 #ifdef JAMMABLE
