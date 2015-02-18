@@ -6,7 +6,7 @@
 //
 // DATE: 27 October 2014
 
-#include "include/Json.lsl"
+//#include "include/Json.lsl"
 #include "include/GlobalDefines.lsl"
 
 #define RUNNING 1
@@ -214,8 +214,9 @@ processConfiguration(string name, string value) {
             return;
         }
 
-        lmSetConfig(cdListElement(settingName,i), value);
-        lmSendConfig(cdListElement(settingName,i), value);
+        string name = cdListElement(settingName,i);
+        //lmSetConfig(name, value);
+        lmSendConfig(name, value);
         llSleep(0.1);  // approx 5 frames - be nice to sim!
     }
     // Check for non-boolean settings
