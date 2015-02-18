@@ -219,7 +219,7 @@ activateRLV() {
             lmRunRLVas("Base", "detach=n,permissive=n");  //locks key
 #endif
         cdListenerDeactivate(rlvHandle);
-        //lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
+        lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
 
         // This generates a 350 link message
         lmRLVreport(RLVok, rlvAPIversion, 0);
