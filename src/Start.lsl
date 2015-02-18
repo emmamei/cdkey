@@ -257,33 +257,27 @@ processConfiguration(string name, string value) {
             // has to be valid rlv
             lmSendConfig("userPoseRLVcmd", value);
         }
+
+        // Note that the entries "max time" and "wind time" are
+        // somewhat unique in that they affect each other: so,
+        // we don't use the one to validate the other until preferences
+        // are completely read, nor do we set these values system-wide
         else if (name == "max time") {
-            keyLimit = (integer)value;
+            if ((integer)value != 0) {
+                keyLimit = (integer)value * SECS_PER_MIN;
 
-            if (keyLimit > 240) keyLimit = 240;
-            else if (keyLimit < 15) keyLimit = 15;
-
-            if (keyLimit < windNormal) windNormal = llFloor(keyLimit / 6);
-
-            lmSendConfig("windNormal",(string)windNormal);
-            lmSetConfig("keyLimit",(string)keyLimit);
+                if (keyLimit > 14400) keyLimit = 14400;
+                else if (keyLimit < 900) keyLimit = 900;
+            }
         }
         else if (name == "wind time") {
-            integer windMins = (integer)value;
+            if ((integer)value != 0) {
+                windNormal = (integer)value * SECS_PER_MIN;
 
-            // validate value
-            if (windMins > 90) windMins = 90;
-            else if (windMins < 15) windMins = 15;
-            windNormal = windMins * (integer)SECS_PER_MIN;
-
-            // If it takes 2 winds or less to wind dolly, then we fall back to 6
-            // winds: note that this happens AFTER the numerical validation: so
-            // potentioally, after this next statement, we could have a wind time
-            // of less than 15 - which is to be expected
-            if (windNormal > (keyLimit / 2)) windNormal = llFloor(keyLimit / 6);
-
-            lmSendConfig("windNormal",(string)windNormal);
-            lmSetConfig("keyLimit",(string)keyLimit);
+                // validate value
+                if (windNormal > 5400) windNormal = 5400;
+                else if (windNormal < 900) windNormal = 900;
+            }
         }
         else if (name == "gem colour" || name == "gem color") {
             if ((vector)value != ZERO_VECTOR) prefGemColour = value;
@@ -353,6 +347,15 @@ doneConfiguration(integer prefsRead) {
     // but how do we use this knowledge?
 
     if (!prefsRead) llOwnerSay("No preferences were read");
+
+    // Make sure the wind is a reasonable value. If not:
+    // windNormal is set to force six winds - but rounded to a
+    // value divided by 5. (The latter step is merely for user
+    // comfort, rather than a strange and odd number coming out.)
+    if (windNormal > keyLimit) windNormal = (keyLimit / 6) % 5;
+
+    lmSendConfig("windNormal",(string)windNormal);
+    lmSetConfig("keyLimit",(string)keyLimit);
 
     resetState = RESET_NONE;
 
