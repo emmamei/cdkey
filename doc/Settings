@@ -1,0 +1,52 @@
+SET CONFIG Settings
+===================
+18 February 2015
+
+There are many settings in the Key, and some time ago
+a separate "channel" was set up to actually set these
+configurations rather than to broadcast them over the
+usual CONFIG channel. This allows a single procedure
+to set the values as needed and then broadcast the result
+to all the rest.
+
+This prevents competing settings from coming about, as
+there is then only one place where these settings will
+be set.
+
+This document is subject to considerable change, but
+this is the current layout:
+
+Aux.lsl
+-------
+* dollGender
+
+ChatHandler.lsl
+---------------
+* chatChannel
+* chatFilter
+
+Main.lsl
+--------
+* keyLimit
+* lastWinderID
+* autoAfk
+* afk
+* timeLeftOnKey
+* wearLock
+* lowScriptMode
+* poseExpire
+* carryExpire
+* jamExpire
+* wearLockExpire
+
+MenuHandler.lsl
+---------------
+* blacklist
+* controllers
+
+Transform.lsl
+-------------
+* dollType
+* transformLockExpire
+* outfitsFolder
+

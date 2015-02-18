@@ -1,0 +1,59 @@
+INTERNAL COMMANDS
+=================
+18 December 2014
+
+There are "internal commands" triggered by a LinkMessage code 305, and as
+long as there is support for the variables and code, then they could be
+anywhere, in any listening script.
+
+This is their names and locations as of 18 December 2014. Depending on
+size and memory constraints, this list is subject to change.
+
+Aux.lsl
+-------
+* strip
+
+Avatar.lsl
+----------
+* detach
+* TP
+
+ChatHandler.lsl
+---------------
+* addMistress
+* addBlacklist
+* remMistress
+* remBlacklist
+
+CheckRLV.lsl
+------------
+* doCheckRLV
+* updateExceptions
+
+Dress.lsl
+---------
+* randomDress
+
+Main.lsl
+--------
+* getTimeUpdates
+* collapse
+* wearLock
+
+MenuHandler.lsl
+---------------
+* dialogListen
+* dialogClose
+* mainMenu
+
+StatusRLV.lsl
+-------------
+
+Transform.lsl
+-------------
+* setGemColour
+* setHovertext
+* carriedMenu
+* collapseMenu
+* optionsMenu
+
