@@ -250,7 +250,8 @@ default {
             }
         }
 
-        lmMenuReply(MAIN, agentName, id);
+        debugSay(2,"DEBUG-MAIN","Key accessed by " + agentName + " (" + (string)id + ")");
+        lmMenuReply(MAIN,agentName,id);
     }
 
     //----------------------------------------
