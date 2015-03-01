@@ -744,6 +744,10 @@ default {
                 // of type - and chose "Transform" from the menu
                 transformedViaMenu = YES;
                 setDollType(transform, NOT_AUTOMATED);
+#ifdef DEVELOPER_MODE
+                //llSay(DEBUG_CHANNEL,"randomDress called: Transform button");
+#endif
+                //lmInternalCommand("randomDress","",NULL_KEY);
             }
         }
         else if (code == TYPE_SELECTION) {
@@ -755,6 +759,10 @@ default {
                 // Doll (or a Controller) chose a Type - or no confirmation needed: just do it
                 transformedViaMenu = YES;
                 setDollType(choice, NOT_AUTOMATED);
+#ifdef DEVELOPER_MODE
+                //llSay(DEBUG_CHANNEL,"randomDress called: (Type) button");
+#endif
+                //lmInternalCommand("randomDress","",NULL_KEY);
             }
             else {
                 // This section is executed when:
@@ -849,7 +857,10 @@ default {
                         // outfitsFolder search is done: search for typeFolder
                         folderSearch(outfitsFolder,typeSearchChannel);
                     }
-                    //else lmInternalCommand("randomDress","",NULL_KEY);
+                    //else {
+                          // typeFolder is set, or no typeFolder is expected
+                    //    lmInternalCommand("randomDress","",NULL_KEY);
+                    //}
                 }
             }
 
@@ -957,6 +968,9 @@ default {
                 }
                 else {
                     debugSay(2,"DEBUG-SEARCHING","Random dress being chosen");
+#ifdef DEVELOPER_MODE
+                    llSay(DEBUG_CHANNEL,"randomDress called after Search");
+#endif
                     lmInternalCommand("randomDress","",NULL_KEY);
                 }
             }

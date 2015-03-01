@@ -158,30 +158,7 @@ retryDirSearch() {
 
     // Retry at Outfits top level
     lmSendConfig("clothingFolder", (clothingFolder = ""));
-
-    setActiveFolder();
-
-    debugSay(6, "DEBUG-DRESS", "Trying the " + activeFolder + " folder.");
-
     dressViaRandom(); // recursion
-}
-
-// Set the folder to use for clothing attach and detach
-// Should be current clothing folder
-
-setActiveFolder() {
-
-    // activeFolder is the folder (full path) we are looking at with our Menu
-    // outfitsFolder is where all outfits are stored, including
-    //     ~normalself, ~nude, and all the type folders
-    // clothingFolder is the current folder for clothing, relative
-    //     to the outfitsFolder
-
-    // set activeFolder
-    if (clothingFolder == "") activeFolder = outfitsFolder;
-    else activeFolder = outfitsFolder + "/" + clothingFolder;
-
-    lmSendConfig("activeFolder", activeFolder);
 }
 
 rlvRequest(string rlv, integer channel) {
@@ -218,15 +195,27 @@ rlvRequest(string rlv, integer channel) {
 
 listInventoryOn(integer channel) {
 
-    setActiveFolder();
-
     if (outfitsFolder == "") {
         llOwnerSay("No suitable outfits folder found, so unfortunately you will not be able to be dressed");
+        return;
     }
-    else {
-        setActiveFolder();
-        rlvRequest("getinv:" + activeFolder + "=", channel);
-    }
+
+    // activeFolder is the folder (full path) we are looking at with our Menu
+    // outfitsFolder is where all outfits are stored, including
+    //     ~normalself, ~nude, and all the type folders
+    // clothingFolder is the current folder for clothing, relative
+    //     to the outfitsFolder
+
+    activeFolder = outfitsFolder;
+    if (clothingFolder != "") activeFolder += "/" + clothingFolder;
+
+#ifdef DEVELOPER_MODE
+    llSay(DEBUG_CHANNEL,"listing inventory on " + (string)channel + " with active folder " + activeFolder);
+#endif
+    debugSay(4, "DEBUG-DRESS", "Setting activeFolder (in listInventory) to " + activeFolder);
+    lmSendConfig("activeFolder", activeFolder);
+
+    rlvRequest("getinv:" + activeFolder + "=", channel);
 }
 
 integer isDresser(key id) {
@@ -464,6 +453,9 @@ default {
             if (cmd == "randomDress") {
                 // this makes it easier, and we don't have to be "afraid" to call the
                 // randomDress function.
+#ifdef DEVELOPER_MODE
+                llSay(DEBUG_CHANNEL,"randomDress executing");
+#endif
                 if (!RLVok) {
 #ifdef DEVELOPER_MODE
                     llSay(DEBUG_CHANNEL,"randomDress rejected: no RLV set");
@@ -604,10 +596,12 @@ default {
 #endif
                     
                 // attach the new folder and lock it down - and prevent nude
+                debugSay(2, "DEBUG-DRESS", "Attaching outfit from " + newOutfit);
                 cdAttachAndLock(newOutfit);
                 llSleep(5.0);
 
                 // repeat for good measure
+                debugSay(2, "DEBUG-DRESS", "Attaching outfit again from " + newOutfit);
                 cdAttachAndLock(newOutfit);
 
                 // At this point, all of ~normalself, ~nude, and newOutfit have been added and locked
@@ -828,7 +822,7 @@ default {
 #ifdef ROLLOVER
                     outfitPage--;
                     if (outfitPage < 1)
-                        outfitPage = (llFloor((llGetListLength(outfitsList)) / (float)OUTFIT_PAGE_SIZE));
+                        outfitPage = llFloor((llGetListLength(outfitsList) + (OUTFIT_PAGE_SIZE / 2)) / (float)OUTFIT_PAGE_SIZE);
 #else
                     if (outfitPage != 1)
                         outfitPage--;
@@ -880,7 +874,7 @@ default {
                     return;
                 }
 
-                //llSay(DEBUG_CHANNEL,"Calling wear outfit with " + choice);
+                debugSay(3, "DEBUG-DRESS", "Calling wearOutfit with " + choice + " in the active folder " + activeFolder);
                 lmInternalCommand("wearOutfit", choice, NULL_KEY);
             }
         }
@@ -902,6 +896,9 @@ default {
             llListenRemove(randomDressHandle);
             outfitsList = llParseString2List(choice, [","], []);
             debugSay(6, "DEBUG-CLOTHING", "Choosing random outfit (from: " + choice + ")");
+#ifdef DEVELOPER_MODE
+            llSay(DEBUG_CHANNEL,"Choosing random outfit from " + choice);
+#endif
 
             integer n;
 
@@ -923,6 +920,8 @@ default {
             }
             else {
                 // Outfits (theoretically) found: change to one
+                //
+                // This is where the actual chosing of a random outfit takes place
 
                 string itemName;
                 string prefix;
@@ -994,6 +993,7 @@ default {
 
                     // Here.....
                     outfitsHandle = cdListenAll(outfitsChannel);
+                    debugSay(3, "DEBUG-DRESS", "Calling wearOutfit with random outfit " + randomOutfitName + " in the active folder " + activeFolder);
                     lmInternalCommand("wearOutfit", randomOutfitName, NULL_KEY);
 
                     llOwnerSay("You are being dressed in this outfit: " + randomOutfitName);
