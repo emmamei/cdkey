@@ -43,7 +43,7 @@ string msg;
 string prefix;
 
 integer tempDressingLock = FALSE;  // allow only one dressing going on at a time
-integer canDressTimeout;
+
 #ifdef NOT_USED
 integer dressingSteps;             // are all attempts to dress complete?
 #endif
@@ -162,7 +162,6 @@ retryDirSearch() {
 }
 
 rlvRequest(string rlv, integer channel) {
-    canDressTimeout = 1;
 
     if (channel < 2670) {
         llSay(DEBUG_CHANNEL,"rlvRequest called with old channel numbers");
@@ -210,16 +209,16 @@ listInventoryOn(integer channel) {
     if (clothingFolder != "") activeFolder += "/" + clothingFolder;
 
 #ifdef DEVELOPER_MODE
-    llSay(DEBUG_CHANNEL,"listing inventory on " + (string)channel + " with active folder " + activeFolder);
-#endif
+    //llSay(DEBUG_CHANNEL,"listing inventory on " + (string)channel + " with active folder " + activeFolder);
     debugSay(4, "DEBUG-DRESS", "Setting activeFolder (in listInventory) to " + activeFolder);
+#endif
     lmSendConfig("activeFolder", activeFolder);
 
     rlvRequest("getinv:" + activeFolder + "=", channel);
 }
 
 integer isDresser(key id) {
-    if (dresserID == NULL_KEY) {
+    if (dresserID == NULL_KEY || llGetAgentSize(dresserID) == ZERO_VECTOR) {
         // No dresser currently: set it to id
 
         // check if id is something other than an avatar: and fake up TRUE val if so
@@ -270,15 +269,6 @@ changeComplete(integer success) {
         if (dressingFailures > MAX_DRESS_FAILURES)
             llOwnerSay("Too many dressing failures.");
 
-        if (canDressTimeout) {
-            if (newOutfitName) {
-                llSay(DEBUG_CHANNEL,"Dressing sequence (with outfit " + newOutfitName + ") timed out.");
-            }
-            else {
-                llSay(DEBUG_CHANNEL,"Dressing sequence (with no outfit?!) timed out.");
-            }
-        }
-
         string s = "Change to new outfit " + newOutfitName + " unsuccessful.";
 
         cdSayToAgentPlusDoll(s,dresserID);
@@ -288,7 +278,6 @@ changeComplete(integer success) {
 
     lmSetConfig("wearLock", (string)wearLock);
 
-    canDressTimeout = 0;
     change = 0;
 
     tempDressingLock = FALSE;
@@ -355,19 +344,18 @@ default {
     // TIMER
     //----------------------------------------
     timer() {
-        if (canDressTimeout) {
+        // This is triggered when a dressing times out
+        llSay(DEBUG_CHANNEL,"Dress timer tripped: failed to change to " + newOutfitName);
 
-            llListenRemove(randomDressHandle);
-            llListenRemove(menuDressHandle);
+        llListenRemove(randomDressHandle);
+        llListenRemove(menuDressHandle);
 #ifdef CONFIRM_WEAR
-            llListenRemove(confirmWearHandle);
+        llListenRemove(confirmWearHandle);
 #endif
 #ifdef CONFIRM_UNWEAR
-            llListenRemove(confirmUnwearHandle);
+        llListenRemove(confirmUnwearHandle);
 #endif
-            changeComplete(FALSE);
-            canDressTimeout = 0;
-        }
+        changeComplete(FALSE);
     }
 #endif
 
@@ -654,7 +642,6 @@ default {
                 llListenRemove(randomDressHandle);
                 llListenRemove(menuDressHandle);
 
-                canDressTimeout = 0;
                 changeComplete(TRUE);
             }
             else if (cmd == "stripAll") {
@@ -1100,7 +1087,7 @@ default {
             cdListenAll(outfitsChannel);
             lmSendConfig("backMenu",(backMenu = MAIN));
             llDialog(dresserID, outfitsMessage, dialogSort(newOutfitsList), outfitsChannel);
-            canDressTimeout = 1;
+
             llSetTimerEvent(60.0);
             newOutfitsList = [];
         }
