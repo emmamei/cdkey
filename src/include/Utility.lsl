@@ -4,7 +4,7 @@
 
 // This allows "oneshot" RLV commands without spamming
 // non-RLV users.
-#define cdRlvSay(a) if (RLVok) llOwnerSay(a)
+#define cdRlvSay(a) if (RLVok == TRUE) llOwnerSay(a)
 #define cdUserProfile(id) "secondlife:///app/agent/"+(string)id+"/about"
 
 /*

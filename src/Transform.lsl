@@ -158,7 +158,7 @@ setDollType(string stateName, integer automated) {
     typeSearchTries = 0;
 
     // if RLV is non-functional, dont search for a Type Folder
-    if (RLVok) {
+    if (RLVok == TRUE) {
         debugSay(2,"DEBUG-DOLLTYPE","Searching for " + typeFolderExpected);
         outfitsSearchTimer = llGetTime();
         typeSearchHandle = cdListenMine(typeSearchChannel);
@@ -337,7 +337,7 @@ default {
             }
         }
 #endif
-        if (RLVok) {
+        if (RLVok == TRUE) {
             // if we get here then the search RLV timed out
             if (outfitSearching) {
                 // Note carefully - if the search tries is maxed,
@@ -580,12 +580,12 @@ default {
                     }
                     else {
                         pluslist += [ "Type...", "Access..." ];
-                        if (RLVok) pluslist += [ "Restrictions..." ];
+                        if (RLVok == TRUE) pluslist += [ "Restrictions..." ];
                     }
                 }
                 else if (cdIsCarrier(id)) {
                     pluslist += [ "Type..." ];
-                    if (RLVok) pluslist += [ "Restrictions..." ];
+                    if (RLVok == TRUE) pluslist += [ "Restrictions..." ];
                 }
                 // Test for User Controller first: that way, a User Controller that
                 // is also in a Builtin Controller is treated as a normal User
@@ -595,13 +595,13 @@ default {
                     msg = "See " + WEB_DOMAIN + "controller.htm. Choose what you want to happen.";
 
                     pluslist += [ "Type...", "Access..." ];
-                    if (RLVok) pluslist += [ "Restrictions..." ];
+                    if (RLVok == TRUE) pluslist += [ "Restrictions..." ];
                     pluslist += [ "Drop Control" ];
 
                 }
                 else if (cdIsBuiltinController(id)) {
                     pluslist += [ "Type...", "Access..." ];
-                    if (RLVok) pluslist += [ "Restrictions..." ];
+                    if (RLVok == TRUE) pluslist += [ "Restrictions..." ];
                 }
                 // This section should never be triggered: it means that
                 // someone who shouldn't see the Options menu did.
@@ -623,7 +623,7 @@ default {
             typeSearchTries = 0;
             changeOutfit = 1;
 
-            if (RLVok) {
+            if (RLVok == TRUE) {
                 if (rlvChannel) {
                     typeSearchHandle = cdListenMine(typeSearchChannel);
                     outfitSearchHandle = cdListenMine(outfitSearchChannel);

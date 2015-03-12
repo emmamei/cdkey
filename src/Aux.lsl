@@ -297,8 +297,8 @@ default {
                 list menu = [ "Ok" ];
 
 #ifdef DEVELOPER_MODE
-                debugSay(2,"DEBUG-AUX","Building collapsedMenu...");
-                llSay(DEBUG_CHANNEL,"collapseTime is " + (string)collapseTime + " at start of collapsedMenu");
+//              debugSay(2,"DEBUG-AUX","Building collapsedMenu...");
+//              llSay(DEBUG_CHANNEL,"collapseTime is " + (string)collapseTime + " at start of collapsedMenu");
 #endif
 
                 // is it possible to be collapsed but collapseTime be equal to 0.0?
@@ -444,7 +444,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
                 list plusList;
 
-                if (RLVok) {
+                if (RLVok == TRUE) {
 
                     // One-way options
                     if (!hardcore) {
@@ -483,7 +483,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
 
                 if (!hardcore) {
                     plusList += cdGetButton("Carryable", id, allowCarry, 0);
-                    if (RLVok) {
+                    if (RLVok == TRUE) {
                         plusList += cdGetButton("Outfitable", id, allowDress, 0);
 #ifdef ADULT_MODE
                         plusList += cdGetButton("Strippable", id, allowStrip, 0);

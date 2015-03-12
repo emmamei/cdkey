@@ -444,7 +444,7 @@ default {
 #ifdef DEVELOPER_MODE
                 llSay(DEBUG_CHANNEL,"randomDress executing");
 #endif
-                if (!RLVok) {
+                if (RLVok != TRUE) {
 #ifdef DEVELOPER_MODE
                     llSay(DEBUG_CHANNEL,"randomDress rejected: no RLV set");
 #endif
@@ -745,7 +745,7 @@ default {
                 debugSay(3, "DEBUG-DRESS", "Region rating " + simRating + " outfit " + newOutfitName + " outfitRating: " + (string)outfitRating +
                             " regionRating: " + (string)regionRating);
 
-                if (RLVok) {
+                if (RLVok == TRUE) {
                     if (outfitRating > regionRating) {
                         pushRandom = 1;
                         clothingFolder = newOutfitPath;

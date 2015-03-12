@@ -150,7 +150,7 @@ checkRLV() {
 }
 
 activateRLVBase() {
-    if (!RLVok) return;
+    if (RLVok != 1) return;
 
 #ifdef DEVELOPER_MODE
     string baseRLV = "permissive=n";
@@ -192,7 +192,7 @@ activateRLVBase() {
 // This is designed to be called repetitively...
 
 activateRLV() {
-    if (!RLVok) {
+    if (RLVok != 1) {
         RLVstarted = 0;
         return;
     }
@@ -215,7 +215,7 @@ activateRLV() {
         // via the menu. To make the key truly "undetachable", we get
         // rid of the menu item to unlock it
 
-        if (RLVok)
+        if (RLVok == TRUE)
             lmRunRLVas("Base", "detach=n,permissive=n");  //locks key
 #endif
         cdListenerDeactivate(rlvHandle);
@@ -310,7 +310,7 @@ default {
                 nextRLVcheck = llGetTime() + RLV_TIMEOUT;
 #else
                 nextRLVcheck = 0.0;
-                RLVok = 1;
+                RLVok = TRUE;
 
                 //lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
 
@@ -325,7 +325,7 @@ default {
                 myPath = msg;
 
                 nextRLVcheck = 0.0;
-                RLVok = 1;
+                RLVok = TRUE;
 
                 llOwnerSay("RLV check completed in " + formatFloat((llGetTime() - rlvTimer),1) + "s");
                 rlvTimer = 0;
@@ -397,7 +397,7 @@ default {
             else if (cmd == "updateExceptions") {
 
                 // Exempt builtin or user specified controllers from TP restictions
-                if (!RLVok) return;
+                if (RLVok != FALSE) return;
 
                 list exceptions = BUILTIN_CONTROLLERS + cdList2ListStrided(controllers, 0, -1, 2);
                 integer i;

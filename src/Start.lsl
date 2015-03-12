@@ -237,6 +237,7 @@ processConfiguration(string name, string value) {
             // should be printable
             lmSendConfig("dollDisplayName", value);
         }
+#ifdef DEVELOPER_MODE
         else if (name == "debug level") {
             // has to be between 0 and 9
             debugLevel = (integer)value;
@@ -246,6 +247,7 @@ processConfiguration(string name, string value) {
 
             lmSendConfig("debugLevel", value);
         }
+#endif
         else if (name == "afk rlv") {
             // has to be valid rlv
             lmSendConfig("userAfkRLVcmd", value);
@@ -540,14 +542,14 @@ default {
                 if (cdAttached()) {
                     string msg = dollName + " has logged in with";
 
-                    if (!RLVok) msg += "out";
+                    if (RLVok != TRUE) msg += "out";
                     msg += " RLV at " + wwGetSLUrl();
 
                     lmSendToController(msg);
                 }
             }
 
-            if (RLVok) {
+            if (RLVok == TRUE) {
                 // If RLV is ok, then trigger all of the necessary RLV restrictions
                 // (collapse is managed by Main)
                 if (!collapsed) {
