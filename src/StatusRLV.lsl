@@ -134,7 +134,7 @@ default {
                 string commandString = cdListElement(split, 1);
                 list tmpList;
 
-                if (RLVok != FALSE) return;
+                if (RLVok != TRUE) return;
 
                 // if rlvCmdIssued is 0, that means that
                 // no command has gone out since we ran last....

@@ -592,6 +592,7 @@ default {
         RLVok = UNSET;
         //llStopMoveToTarget();
         //llTargetRemove(targetHandle);
+        llSetStatus(STATUS_PHYSICS,TRUE);
 
         debugSay(2,"DEBUG-AVATAR","ifPermissions (on_rez)");
         ifPermissions();
@@ -649,7 +650,6 @@ default {
 
         locked = 0;
 
-        llSetStatus(STATUS_PHYSICS,TRUE);
         llStopMoveToTarget();
         llTargetRemove(targetHandle);
 
