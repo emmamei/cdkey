@@ -487,6 +487,7 @@ default {
                         if (keyAnimation == "") menu += [ "Options..." ];
                         menu += [ "Help..." ];
                     }
+                    if (allowSelfWind) menu += [ "Wind" ];
                 }
                 else {
                     // this includes any Controller that is NOT Dolly

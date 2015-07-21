@@ -650,12 +650,18 @@ default {
                     // Note this makes no difference to waiting events, just other scripts
                     if (collapsed == 0) llSleep(0.5);
 
-                    if (hardcore) llOwnerSay("Your key has been cranked by " + name + ".");
-                    else llOwnerSay("Your key has been turned by " + name + " giving you " +
-                        mins + " more minutes of life (" + percent + "% capacity).");
+                    if (dollID == id) {
+                        llOwnerSay("You managed to turn your key giving you " +
+                            mins + " more minutes of life (" + percent + "% capacity).");
+                    }
+                    else {
+                        if (hardcore) llOwnerSay("Your key has been cranked by " + name + ".");
+                        else llOwnerSay("Your key has been turned by " + name + " giving you " +
+                            mins + " more minutes of life (" + percent + "% capacity).");
 
-                    cdSayTo("You turn " + dollDisplayName + "'s Key, and " + pronounSheDoll + " receives " +
-                        mins + " more minutes of life (" + percent + "% capacity).", id);
+                        cdSayTo("You turn " + dollDisplayName + "'s Key, and " + pronounSheDoll + " receives " +
+                            mins + " more minutes of life (" + percent + "% capacity).", id);
+                    }
                 }
                 else {
                     if (hardcore) llOwnerSay("Your key turns automatically, giving you additional minutes of life.");
@@ -756,6 +762,15 @@ default {
                     return;
                 }
 #endif
+                // Test and reject repeat windings from Dolly - no matter who Dolly is or what the settings are
+                if (allowSelfWind) {
+                    if (id == dollID) {
+                        if (id == lastWinderID) {
+                            llOwnerSay("You hae wound yourself once already; you must be wound by someone else before being able to wind again.");
+                            return;
+                        }
+                    }
+                }
 
                 // Test and reject repeat winding as appropriate - Controllers and Carriers are not limited
                 // (odd sequence helps with short-circuiting and speed)

@@ -135,6 +135,7 @@ default {
             else if (name == "canSit")                         canSit = (integer)value;
             else if (name == "canStand")                     canStand = (integer)value;
             else if (name == "allowRepeatWind")       allowRepeatWind = (integer)value;
+            else if (name == "allowSelfWind")           allowSelfWind = (integer)value;
             else if (name == "dollDisplayName")       dollDisplayName = value;
             else if (name == "doWarnings")                 doWarnings = (integer)value;
             else if (name == "hardcore")                     hardcore = (integer)value;
