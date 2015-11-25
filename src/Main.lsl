@@ -13,6 +13,11 @@
 #define cdKeyStopped() (!windingDown)
 #define cdTimeSet(a) (a!=0)
 #define cdResetKey() llResetOtherScript("Start")
+#ifdef DEVELOPER_MODE
+#define cdWindDown()			(!collapsed && cdAttached() && (dollType != "Builder"))
+#else
+#define cdWindDown()			(!collapsed && cdAttached())
+#endif
 #define UNSET -1
 #define lmCollapse(a) lmInternalCommand("collapse",(string)(a),NULL_KEY)
 #define lmUncollapse() lmInternalCommand("collapse","0",NULL_KEY)
@@ -82,6 +87,47 @@ ifPermissions() {
 
 #define Z_AXIS <0.0, 0.0, 1.0>
 #define cdSetSpin(c) llTargetOmega(<0.0, 0.0, 1.0>, (c), 1)
+
+float setWindRate() {
+    //float newWindRate = baseWindRate;
+    //integer newWindingDown = windingDown;
+    //vector agentPos = llList2Vector(llGetObjectDetails(dollID, [ OBJECT_POS ]), 0);
+    //integer agentInfo = llGetAgentInfo(dollID);
+
+    debugSay(3,"DEBUG-WINDRATE","Entering setWindRate()");
+
+    // this funny repetitive if speeds things up
+    // Can't move cdAttached() to the end because the others depend on it
+
+// (!collapsed && cdAttached() && (dollType != "Builder"))
+
+         if (!cdAttached())           windingDown = 0;
+    else if (collapsed)               windingDown = 0;
+#ifdef DEVELOPER_MODE
+    else if (dollType == "Builder")   windingDown = 0;
+    else if (dollType == "Key")       windingDown = 0;
+#endif
+
+         if (windingDown == 0) windRate = 0.0;
+    else if (afk) windRate = baseWindRate * 0.5;
+    else          windRate = baseWindRate;
+
+    lmSendConfig("windingDown", (string)(windingDown));
+    lmSendConfig("baseWindRate", (string)baseWindRate);
+    lmSendConfig("windRate", (string)(windRate));
+
+    // llTargetOmega: With normalized vector spinrate is equal to radians per second
+    // 2𝜋 radians per rotation.  This sets a normal rotation rate of 4 rpm about the
+    // Z axis multiplied by the wind rate this way the key will visually run faster as
+    // the dolly begins using their time faster.
+    llSetStatus(STATUS_PHYSICS,TRUE);
+    llTargetOmega(llVecNorm(<0.0, 0.0, 1.0>), windRate * (TWO_PI / 15.0), 1);
+    debugSay(5,"DEBUG-WINDRATE","llTargetOmega(" + (string)llVecNorm(<0.0, 0.0, 1.0>) + ", " + formatFloat(windRate * (TWO_PI / 15.0),2) + ", 1);");
+
+    return windRate;
+}
+
+#ifdef NO_DEF
 float setWindRate() {
     windingDown = cdWindDown();
     windRate = baseWindRate;
@@ -115,23 +161,24 @@ float setWindRate() {
 
     return windRate;
 }
+#endif
 
 uncollapse() {
     // Revive dolly back from being collapsed
     string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
     cdSetHovertext("",INFO); // uses primText
 
+    setWindRate();
+
     lmSendConfig("collapseTime", (string)(collapseTime = 0));
     lmSendConfig("collapsed", (string)(collapsed = 0));
-    lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
+    //lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
     lmInternalCommand("getTimeUpdates", "", llGetKey());
     lmInternalCommand("setHovertext", "", llGetKey());
 
 #ifdef JAMMABLE
     lmSendConfig("jamExpire", (string)(jamExpire = 0));
 #endif
-
-    setWindRate();
 }
 
 collapse(integer newCollapseState) {
@@ -350,11 +397,6 @@ default {
                 llSetTimerEvent(STD_RATE);
             }
         }
-
-        //----------------------------------------
-        // TIME SAVED (TIMER INTERVAL)
-
-        lastTimerMark = timerMark;
 
         //----------------------------------------
         // CHECK COLLAPSE STATE
@@ -762,6 +804,7 @@ default {
                     return;
                 }
 #endif
+#ifdef SINGLE_SELF_WIND
                 // Test and reject repeat windings from Dolly - no matter who Dolly is or what the settings are
                 if (allowSelfWind) {
                     if (id == dollID) {
@@ -771,7 +814,7 @@ default {
                         }
                     }
                 }
-
+#endif
                 // Test and reject repeat winding as appropriate - Controllers and Carriers are not limited
                 // (odd sequence helps with short-circuiting and speed)
                 if (!allowRepeatWind) {
