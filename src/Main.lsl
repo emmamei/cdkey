@@ -36,9 +36,9 @@
 string msg;
 integer minsLeft;
 
-float timerMark;
-float timerLast;
-float timeSpan;
+integer timerMark;
+integer timerLast;
+integer timerSpan;
 integer lowScriptModeSpan;
 
 key lastWinderID;
@@ -320,20 +320,18 @@ default {
         //----------------------------------------
         // TIMER INTERVAL
         timerMark = llGetUnixTime();
-        timeSpan = timerMark - timerLast;
+        timerSpan = timerMark - timerLast;
+        //debugSay(2,"DEBUG-TIMER", "Winding down: timers = " + formatFloat(timerMark,1) + "/" + formatFloat(timerLast,1) + "/" + formatFloat(timerSpan,1) + "/"
+        timerLast = timerMark;
 
-        // sanity checking of timeSpan
+        // sanity checking of timerSpan
         //
         // If we relog, the timerLast will be LONG ago....  leading to a
-        // HUGE timeSpan... so stomp on it and start with a fresh timeSpan
+        // HUGE timerSpan... so stomp on it and start with a fresh timerSpan
         //
         // Same thing happens on startup with timerLast = 0
 
-        if (timeSpan > 120) {
-            // Check sanity of timeSpan
-            timeSpan = 0;
-            timerLast = timerMark;
-        }
+        if (timerSpan > 120) timerSpan = 60;
 
         //----------------------------------------
         // LOW SCRIPT MODE
@@ -459,9 +457,10 @@ default {
         // being doll type Builder
 
         if (windingDown) {
-            if (timeSpan != 0) {
+            debugSay(2,"DEBUG-TIMER", "Winding down: timerSpan = " + (string)timerSpan + "s.");
+            if (timerSpan != 0) {
                 // Key ticks down just a little further...
-                timeLeftOnKey -= (integer)(timeSpan * windRate);
+                timeLeftOnKey -= (integer)(timerSpan * windRate);
 
                 // Now that we've ticked down a few - check for warnings, and check for collapse
                 if (timeLeftOnKey > 0) {
