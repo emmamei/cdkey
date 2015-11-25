@@ -487,11 +487,20 @@ default {
             else if (name == "userPoseRLVcmd")          userPoseRLVcmd = value;
             else if (name == "userAfkRLVcmd")            userAfkRLVcmd = value;
 
-            else if (name == "gemColour") {      gemColour = (vector)value; doLuminosity(); }
+            else if (name == "gemColour") {
+                    gemColour = (vector)value;
+                    lmInternalCommand("setGemColour", (string)gemColour, NULL_KEY);
+            }
 #ifdef GEMGLOW_OPT
-            else if (name == "gemGlow")  {      gemGlow = (integer)value; doLuminosity(); }
+            else if (name == "gemGlow") {
+                    gemGlow = (integer)value;
+                    lmInternalCommand("setGemColour", (string)gemColour, NULL_KEY);
+            }
 #endif
-            else if (name == "gemLight") {     gemLight = (integer)value; doLuminosity(); }
+            else if (name == "gemLight") {
+                    gemLight = (integer)value;
+                    lmInternalCommand("setGemColour", (string)gemColour, NULL_KEY);
+            }
             else if (name == "isVisible") {       visible = (integer)value; doLuminosity(); }
 
             else if (name == "collapsed") {
