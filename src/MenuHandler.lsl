@@ -298,21 +298,25 @@ default {
                 string timeLeft;
                 integer minsLeft;
 
+                timeLeft += "Key is ";
+                if (windingDown) {
+                    if (hardcore) timeLeft += "winding down. ";
+                    else {
+                        // is it possible to be winding down at a rate of zero?
+                             if (windRate == 1) timeLeft += "winding down at a normal rate. ";
+                        else if (windRate  > 1) timeLeft += "winding down at an accelerated rate. ";
+                        else if (windRate  < 1) timeLeft += "winding down at a slowed rate. ";
+                    }
+                }
+                else timeLeft += "not winding down. ";
+
                 if (!hardcore) {
 
-                    minsLeft = llRound(timeLeftOnKey / (60.0 * windRate));
+                    // This statement doesnt jive with Holding the Key... but this block
+                    // needs a rework anyway
+                    if (windRate > 0.0) minsLeft = llRound(timeLeftOnKey / (60.0 * windRate));
 
-                    if (minsLeft > 0) {
-                        timeLeft = "Dolly has " + (string)minsLeft + " minutes remaining. ";
-
-                        timeLeft += "Key is ";
-                        if (windingDown) {
-                            if (windRate == 1) timeLeft += "winding down at a normal rate. ";
-                            else if (windRate > 1) timeLeft += "winding down at an accelerated rate. ";
-                            else if (windRate < 1) timeLeft += "winding down at a slowed rate. ";
-                        }
-                        else timeLeft += "not winding down. ";
-                    }
+                    if (minsLeft > 0) timeLeft = "Dolly has " + (string)minsLeft + " minutes remaining. ";
                     else timeLeft = "Dolly has no time left. ";
                 }
 
