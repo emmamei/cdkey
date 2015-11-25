@@ -20,11 +20,6 @@
 #define cdResetKey() llResetOtherScript("Start")
 #define lmDoCheckRLV() lmInternalCommand("doCheckRLV","",NULL_KEY)
 
-#ifdef DEVELOPER_MODE
-float thisTimerEvent;
-float timerInterval;
-#endif
-
 float rlvTimer;
 
 float nextRLVcheck;

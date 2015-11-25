@@ -32,10 +32,6 @@ key rlvTPrequest;
 key mainCreator;
 #endif
 key lastAttachedID;
-#ifdef DEVELOPER_MODE
-float thisTimerEvent;
-float timerInterval;
-#endif
 
 // Note that this is not the "speed" nor is it a slowing factor
 // This is a vector of force applied against Dolly: headwind speed

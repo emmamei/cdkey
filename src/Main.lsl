@@ -36,13 +36,9 @@
 string msg;
 integer minsLeft;
 
-#ifdef DEVELOPER_MODE
-integer thisTimerEvent;
-integer timerInterval;
-#endif
-integer timerMark;
-integer lastTimerMark;
-integer timeSpan;
+float timerMark;
+float timerLast;
+float timeSpan;
 integer lowScriptModeSpan;
 
 key lastWinderID;
@@ -324,29 +320,20 @@ default {
         //----------------------------------------
         // TIMER INTERVAL
         timerMark = llGetUnixTime();
-        timeSpan = timerMark - lastTimerMark;
+        timeSpan = timerMark - timerLast;
 
         // sanity checking of timeSpan
         //
-        // If we relog, the lastTimerMark will be LONG ago....  leading to a
+        // If we relog, the timerLast will be LONG ago....  leading to a
         // HUGE timeSpan... so stomp on it and start with a fresh timeSpan
         //
-        // Same thing happens on startup with lastTimerMark = 0
+        // Same thing happens on startup with timerLast = 0
 
         if (timeSpan > 120) {
             // Check sanity of timeSpan
             timeSpan = 0;
-            lastTimerMark = timerMark;
+            timerLast = timerMark;
         }
-
-#ifdef DEVELOPER_MODE
-        if (timeReporting) {
-            thisTimerEvent = llGetUnixTime();
-            if (thisTimerEvent - lastTimerEvent < 120)
-                llOwnerSay("Main Timer fired, interval " + formatFloat(thisTimerEvent - lastTimerEvent,3) + "s.");
-            lastTimerEvent = thisTimerEvent;
-        }
-#endif
 
         //----------------------------------------
         // LOW SCRIPT MODE

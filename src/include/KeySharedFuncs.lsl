@@ -15,6 +15,8 @@
 
 #ifdef DEVELOPER_MODE
 float lastTimerEvent;
+float thisTimerEvent;
+float timerInterval;
 #endif
 integer timerStarted;
 

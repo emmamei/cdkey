@@ -302,19 +302,6 @@ default {
         // typeFolder = Folder related to current Doll Type (e.g., "*Japanese")
         // typeFolderExpected = Computed but untested typeFolder
 
-#ifdef DEVELOPER_MODE
-        if (timeReporting) {
-            string s;
-
-            s = "Transform Timer fired, interval " + (string)(llGetTime() - lastTimerEvent) + "s. (lowScriptMode ";
-            if (lowScriptMode) s += "is active).";
-            else s += "is not active).";
-
-            llOwnerSay(s);
-
-            lastTimerEvent = llGetTime();
-        }
-#endif
         // transform lock: check time
         if (transformLockExpire) {
             if (transformLockExpire  <= llGetUnixTime()) {
