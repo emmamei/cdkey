@@ -631,6 +631,7 @@ default {
 
         dollID = llGetOwner();
         dollName = llGetDisplayName(dollID);
+        llSetStatus(STATUS_PHYSICS,TRUE);
 
         rlvWait = 1;
         cdInitializeSeq();
@@ -681,6 +682,7 @@ default {
     //----------------------------------------
     attach(key id) {
 
+        llSetStatus(STATUS_PHYSICS,TRUE);
         lmInternalCommand("setWindRate","",NULL_KEY);
         if (id == NULL_KEY) {
 
