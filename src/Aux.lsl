@@ -216,7 +216,7 @@ default {
                     return;
                 }
                 debugSay(4,"DEBUG-AUX","Setting gem color to " + (string)gemColour);
-                lmSendConfig("gemColour", (string)(gemColour = newColour));
+                //lmSendConfig("gemColour", (string)(gemColour = newColour));
 
                 if (visible) {
                     // only done if Gem is visible
