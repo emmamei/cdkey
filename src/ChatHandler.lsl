@@ -34,7 +34,7 @@ string chatPrefix           = "";
 string RLVver               = "";
 string pronounHerDoll       = "Her";
 string pronounSheDoll       = "She";
-string dollName             = "";
+//string dollName             = "";
 string blockedControlName   = "";
 string blockedControlUUID   = "";
 
@@ -48,9 +48,9 @@ integer chatChannel         = 75;
 integer chatHandle          = 0;
 #ifdef DEVELOPER_MODE
 integer timeReporting       = 0;
-integer debugLevel          = DEBUG_LEVEL;
+//integer debugLevel          = DEBUG_LEVEL;
 #endif
-integer RLVok               = UNSET;
+//integer RLVok               = UNSET;
 integer blockedControlTime  = 0;
 integer blacklistMode       = 0;
 

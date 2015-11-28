@@ -52,23 +52,23 @@ float lastEmergencyTime;
 string rlvAPIversion;
 
 // Current Controller - or Mistress
-key carrierID = NULL_KEY;
+//key carrierID = NULL_KEY;
 key winderID = NULL_KEY;
-key dollID = NULL_KEY;
+//key dollID = NULL_KEY;
 #ifdef KEY_HANDLER
 key keyHandler = NULL_KEY;
 #endif
 
-integer dialogChannel;
+//integer dialogChannel;
 integer targetHandle;
-integer lowScriptMode;
+//integer lowScriptMode;
 integer busyIsAway;
 integer ticks;
 
-integer afk;
+//integer afk;
 integer autoAFK = 1;
 //integer autoTP;
-integer canAFK = 1;
+//integer canAFK = 1;
 //integer canCarry = 1;
 //integer canDress = 1;
 //integer canFly = 1;
@@ -78,19 +78,19 @@ integer canAFK = 1;
 //integer canDressSelf;
 //integer canUnwear;
 integer clearAnim;
-integer collapsed;
-integer configured;
-integer demoMode;
+//integer collapsed;
+//integer configured;
+//integer demoMode;
 //integer detachable = 1;
 //integer doWarnings;
 //integer tpLureOnly;
 //integer pleasureDoll;
 //integer isTransformingKey;
 //integer visible = 1;
-integer quiet;
-integer RLVok = -1;
+//integer quiet;
+//integer RLVok = -1;
 integer RLVck = 1;
-integer signOn;
+//integer signOn;
 //integer takeoverAllowed;
 //integer timerStarted;
 integer warned;
@@ -98,18 +98,18 @@ integer wearLock;
 
 #ifdef DEVELOPER_MODE
 integer timeReporting = 1;
-integer debugLevel = DEBUG_LEVEL;
+//integer debugLevel = DEBUG_LEVEL;
 #endif
 
 // If the key is a Transforming Key - one that can transform from one
 // type of Doll to another - this tracks the current type of doll.
-string dollType = "Regular";
+//string dollType = "Regular";
 
 float winderRechargeTime;
 float wearLockExpire;
 float carryExpire;
 //float lastRandomTime;
-float lastTimerEvent;
+//float lastTimerEvent;
 //float menuSleep;
 //float lastTickTime;
 float jamExpire;
@@ -117,18 +117,18 @@ float jamExpire;
 float nextExpiryTime;
 #endif
 float poseExpire;
-float windamount      = WIND_DEFAULT;
-float keyLimit        = 10800.0;
-float timeLeftOnKey   = windamount;
-float baseWindRate    = windRate;
-float displayWindRate = windRate;
+//float windamount      = WIND_DEFAULT;
+//float keyLimit        = 10800.0;
+//float timeLeftOnKey   = windamount;
+//float baseWindRate    = windRate;
+//float displayWindRate = windRate;
 //integer HTTPinterval  = 60;
 //integer HTTPthrottle  = 10;
 float collapseTime;
 list windTimes        = [ 30 ];
 
-string keyAnimation;
-string dollName;
+//string keyAnimation;
+//string dollName;
 string mistressName;
 string pronounHerDoll = "Her";
 string pronounSheDoll = "She";

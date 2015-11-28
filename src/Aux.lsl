@@ -18,32 +18,32 @@
 #define HIPPO_UPDATE -2948813
 
 key lmRequest;
-key carrierID = NULL_KEY;
-key dollID = NULL_KEY;
-key poserID = NULL_KEY;
+//key carrierID = NULL_KEY;
+//key dollID = NULL_KEY;
+//key poserID = NULL_KEY;
 list memWait;
-list controllers;
+//list controllers;
 float rezTime;
 float timerEvent;
 float listenTime;
 float memTime;
 string memData;
 string minsLeft;
-string windRate;
-string windTime;
+//string windRate;
+integer windTime;
 string dollyName;
-string carrierName;
+//string carrierName;
 string pronounHerDoll = "Her";
 string pronounSheDoll = "She";
 string dollGender = "Female";
 string curGemColour;
 integer maxMins;
-integer configured;
+//integer configured;
 integer ncLine;
-integer visible;
+//integer visible;
 integer memCollecting;
 integer memRequested;
-integer quiet;
+//integer quiet;
 integer wearLock;
 integer rezzed;
 integer primGlow = 1;
@@ -349,14 +349,14 @@ default {
             if (cmd == "setAFK") {
                 afk = llList2Integer(split, 0);
                 integer auto = llList2Integer(split, 1);
-                windRate = llList2String(split, 2);
+                windRate = llList2Float(split, 2);
                 minsLeft = llList2String(split, 3);
                 msg;
 
                 if (afk) {
                     if (auto) msg = "Automatically entering AFK mode.";
                     else msg = "You are now away from keyboard (AFK).";
-                    msg += " Key unwinding has slowed to " + (string)windRate + "x and movements and abilities are restricted.";
+                    msg += " Key unwinding has slowed to " + formatFloat(windRate,1) + "x and movements and abilities are restricted.";
                 }
                 else msg = "You are now no longer away from keyboard (AFK). Movements are unrestricted and winding down proceeds at normal rate. ";
                 llOwnerSay(msg + " You have " + (string)minsLeft + " minutes of life remaining.");

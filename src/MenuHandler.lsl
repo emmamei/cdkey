@@ -35,26 +35,26 @@
 //========================================
 // Current Controller - or Mistress
 //key MistressID = NULL_KEY;
-key poserID = NULL_KEY;
-key dollID = NULL_KEY;
+//key poserID = NULL_KEY;
+//key dollID = NULL_KEY;
 key menuID = NULL_KEY;
 
 // does this need to be a global?
-key uniqueID = NULL_KEY;
+//key uniqueID = NULL_KEY;
 
 //list windTimes = [ 30 ];
 
-float timeLeftOnKey;
+//float timeLeftOnKey;
 float windDefault = WIND_DEFAULT;
 float collapseTime;
 
-integer afk;
+//integer afk;
 integer autoAFK = 1;
 //integer autoTP;
 //integer canAFK = 1;
-integer canCarry = 1;
-integer canDress = 1;
-integer canDressSelf = 1;
+//integer canCarry = 1;
+//integer canDress = 1;
+//integer canDressSelf = 1;
 //integer canFly = 1;
 //integer canSit = 1;
 //integer canStand = 1;
@@ -64,48 +64,48 @@ integer canRepeat = 1;
 integer carryMoved;
 integer primLight = 1;
 integer clearAnim;
-integer collapsed;
-integer configured;
-integer demoMode;
+//integer collapsed;
+//integer configured;
+//integer demoMode;
 //integer detachable = 1;
 //integer doWarnings;
 //integer tpLureOnly;
 //integer pleasureDoll;
 //integer isTransformingKey;
-integer visible = 1;
+//integer visible = 1;
 //integer quiet;
-integer RLVok = UNSET;
+//integer RLVok = UNSET;
 //integer signOn;
 //integer takeoverAllowed;
 //integer warned;
 //integer offlineMode;
 integer dbConfig;
 integer textboxType;
-integer debugLevel = DEBUG_LEVEL;
+//integer debugLevel = DEBUG_LEVEL;
 //integer startup = 1;
 
 integer blacklistChannel;
 integer controlChannel;
-integer dialogChannel;
+//integer dialogChannel;
 integer blacklistHandle;
 integer controlHandle;
-integer dialogHandle;
+//integer dialogHandle;
 string isDollName;
-string dollType = "Regular";
+//string dollType = "Regular";
 string pronounHerDoll = "Her";
 string pronounSheDoll = "She";
 
 vector gemColour;
 
-string carrierName;
+//string carrierName;
 string mistressName;
-string keyAnimation;
+//string keyAnimation;
 //string dollyName;
 string menuName;
 
 integer winderRechargeTime;
 
-list blacklist;
+//list blacklist;
 list dialogKeys;
 list dialogNames;
 list dialogButtons;

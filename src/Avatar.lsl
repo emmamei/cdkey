@@ -25,17 +25,17 @@
 #define cdListenerActivate(a) llListenControl(a, 1)
 #define cdResetKey() llResetOtherScript("Start")
 
-key carrierID = NULL_KEY;
+//key carrierID = NULL_KEY;
 
 key rlvTPrequest;
 #ifdef LOCKON
 key mainCreator;
 #endif
 //key requestLoadData;
-key keyAnimationID;
+//key keyAnimationID;
 key lastAttachedID;
 #ifdef DEVELOPER_MODE
-float lastTimerEvent;
+//float lastTimerEvent;
 float thisTimerEvent;
 float timerInterval;
 integer timeReporting = 1;
@@ -49,6 +49,7 @@ float rlvTimer;
 //float baseWindRate;
 float afkSlowWalkSpeed = 5;
 float animRefreshRate = 8.0;
+float minRate;
 
 float nextRLVcheck;
 float nextAnimRefresh;
@@ -67,8 +68,8 @@ string name;
 string value;
 
 string barefeet;
-string carrierName;
-string keyAnimation;
+//string carrierName;
+//string keyAnimation;
 
 #ifdef DEVELOPER_MODE
 string myPath;
@@ -80,7 +81,7 @@ string rlvAPIversion;
 //string redirchan;
 string userBaseRLVcmd;
 
-integer afk;
+//integer afk;
 //integer isAnimated;
 integer isFrozen;
 integer isNoScript;
@@ -97,16 +98,16 @@ integer permMask;
 integer carryMoved;
 //integer rlvChannel;
 integer clearAnim = 1;
-integer collapsed;
+//integer collapsed;
 //integer configured;
-integer dialogChannel;
+//integer dialogChannel;
 //integer haveControls;
 //integer rlvHandle;
 integer locked;
-integer lowScriptMode;
+//integer lowScriptMode;
 //integer poseSilence;
 //integer refreshControls;
-integer RLVok = UNSET;
+//integer RLVok = UNSET;
 //integer startup = 1;
 integer targetHandle;
 //integer ticks;

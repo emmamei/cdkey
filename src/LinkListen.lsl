@@ -11,13 +11,13 @@
 #include "include/GlobalDefines.lsl"
 
 key keyID               =   NULL_KEY;
-key carrierID           =   NULL_KEY;
+//key carrierID           =   NULL_KEY;
 
-string carrierName;
+//string carrierName;
 
 integer msgcount;
 
-list controllers;
+//list controllers;
 
 // Selector format
 // 1st Param, lowest link code value to match inclusive.

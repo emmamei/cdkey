@@ -38,7 +38,7 @@
 //========================================
 // VARIABLES
 //========================================
-string dollName;
+//string dollName;
 string stateName;
 list types;
 float menuTime;
@@ -63,14 +63,14 @@ integer transformedViaMenu;
 string transform;
 string typeFolder;
 
-integer dialogChannel;
+//integer dialogChannel;
 integer rlvChannel;
 integer rlvChannel2;
 integer rlvChannel3;
 
 integer minMinutes;
-integer configured;
-integer RLVok;
+//integer configured;
+//integer RLVok;
 
 //integer startup = 1;
 
@@ -84,14 +84,14 @@ integer showPhrases;
 integer wearAtLogin;
 #endif
 //integer isTransformingKey;
-key dollID;
+//key dollID;
 string typeFolderExpected;
 
 key kQuery;
 
 list currentPhrases;
 
-integer quiet;
+//integer quiet;
 
 //========================================
 // FUNCTIONS
