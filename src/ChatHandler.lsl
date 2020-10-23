@@ -621,7 +621,7 @@ default {
                         else s += "Key is not winding down.\n";
 
                         if (RLVok == UNSET) s += "RLV status is unknown.\n";
-                        else if (RLVok == 1) s += "RLV is active.\nRLV version: " + rlvAPIversion;
+                        else if (RLVok == TRUE) s += "RLV is active.\nRLV version: " + rlvAPIversion;
                         else s += "RLV is not active.\n";
 
                         if (lastWinderID) s += "\nLast winder was " + cdProfileURL(lastWinderID);

@@ -662,7 +662,7 @@ default {
             // refresh collapse state... no escape!
             collapse(collapsed);
 
-            if (RLVok) {
+            if (RLVok == TRUE) {
                 if (!allowDress && !hardcore) llOwnerSay("The public cannot dress you.");
             }
             else {

@@ -90,7 +90,7 @@ doCheckRLV() {
 // Currently runs on init 110 - button press - and timer
 
 checkRLV() {
-    if (RLVok == 1) {
+    if (RLVok == TRUE) {
         RLVck = 0;
         llSetTimerEvent(0.0);
         lmInternalCommand("refreshRLV","",NULL_KEY);
@@ -197,7 +197,7 @@ activateRLVBase() {
 // This is designed to be called repetitively...
 
 activateRLV() {
-    if (!RLVok) {
+    if (RLVok == FALSE) {
         RLVstarted = 0;
         return;
     }
@@ -220,7 +220,7 @@ activateRLV() {
         // via the menu. To make the key truly "undetachable", we get
         // rid of the menu item to unlock it
 
-        if (RLVok)
+        if (RLVok == TRUE)
             lmRunRLVas("Base", "detach=n,permissive=n");  //locks key
 #endif
         cdListenerDeactivate(rlvHandle);
@@ -233,7 +233,7 @@ activateRLV() {
     activateRLVBase();
 
     // If we get here - RLVok is already set
-    //RLVstarted = (RLVstarted | RLVok);
+    //RLVstarted = (RLVstarted | (RLVok == TRUE));
     RLVstarted = 1;
 }
 
@@ -402,7 +402,7 @@ default {
             else if (cmd == "updateExceptions") {
 
                 // Exempt builtin or user specified controllers from TP restictions
-                if (!RLVok) return;
+                if (RLVok == FALSE) return;
 
                 list exceptions = BUILTIN_CONTROLLERS + cdList2ListStrided(controllers, 0, -1, 2);
                 integer i;

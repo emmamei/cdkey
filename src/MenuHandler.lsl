@@ -403,7 +403,7 @@ default {
 #endif
                     }
 
-                    if (RLVok == 1) {
+                    if (RLVok == TRUE) {
                         // Can the doll be dressed? Add menu button
                         //
                         // Dolly can change her outfits if she is able.
@@ -470,7 +470,7 @@ default {
 
 #ifdef ADULT_MODE
                     // Is doll strippable?
-                    if (RLVok == 1) {
+                    if (RLVok == TRUE) {
                         if (allowStrip || dollType == "Slut" || hardcore) {
                             if (isController || isCarrier) {
                                 if (simRating == "MATURE" || simRating == "ADULT") menu += "Strip";
@@ -516,7 +516,7 @@ default {
                 if (RLVok == UNSET) msg += "Still checking for RLV support some features unavailable. ";
                 else
 #endif
-                if (RLVok != 1) {
+                if (RLVok != TRUE) {
                     msg += "No RLV detected; therefore, some features are unavailable. ";
                 }
 
@@ -557,7 +557,7 @@ default {
         else if (code == RLV_RESET) {
             RLVok = llList2Integer(split, 0);
 
-            if (RLVok)
+            if (RLVok == TRUE)
                 lmInternalCommand("updateExceptions", "", NULL_KEY);
         }
         else if (code < 200) {

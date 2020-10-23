@@ -108,12 +108,14 @@ doLuminosity() {
         //
         // Note that this sets light and glow - even IF the Key light is off
 
+        // FIXME: Prim Search
         list params;
         integer nPrims = llGetNumberOfPrims();
         integer i;
         string name;
         float glow;
         integer primN;
+        string primPrefix;
 
         i = nPrims;
         while (i--) {
@@ -124,7 +126,8 @@ doLuminosity() {
             // Start a new Link Target
             params += [ PRIM_LINK_TARGET, primN ];
 
-            if (llGetSubString(name, 0, 4) == "Heart") {
+            primPrefix = llGetSubString(llGetLinkName(i), 0, 2);
+            if (primPrefix == "Hea" || primPrefix == "Gem") {
                 // JSON parameters were .............................. <0.6, 0.0, 0.9>, 0.3, 3.0, 0.2
                 params += [ PRIM_POINT_LIGHT, (gemLight & !collapsed),      gemColour, 0.5, 2.5, 2.0 ];
                 if (gemLight) glow = 0.08;
@@ -542,14 +545,14 @@ default {
                 if (cdAttached()) {
                     string msg = dollName + " has logged in with";
 
-                    if (!RLVok) msg += "out";
+                    if (RLVok != TRUE) msg += "out";
                     msg += " RLV at " + wwGetSLUrl();
 
                     lmSendToController(msg);
                 }
             }
 
-            if (RLVok) {
+            if (RLVok == TRUE) {
                 // If RLV is ok, then trigger all of the necessary RLV restrictions
                 // (collapse is managed by Main)
                 if (!collapsed) {

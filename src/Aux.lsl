@@ -219,19 +219,23 @@ default {
                 //lmSendConfig("gemColour", (string)(gemColour = newColour));
  
                 if (visible) {
+                    // FIXME: Prim Search
+
                     // only done if Gem is visible
                     integer j; integer shaded; list params; list colourParams;
                     integer n; integer m;
                     integer index;
                     integer index2;
                     vector shade;
+                    string primPrefix;
 
                     n = llGetNumberOfPrims();
                     i = n;
                     while (i--) {
                         index = n - i - 1;
 
-                        if (llGetSubString(llGetLinkName(index), 0, 4) == "Heart") {
+                        primPrefix = llGetSubString(llGetLinkName(index), 0, 2);
+                        if (primPrefix == "Hea" || primPrefix == "Gem") {
                             params += [ PRIM_LINK_TARGET, index ];
 
                             if (!shaded) {
@@ -449,7 +453,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
                 list plusList;
 
-                if (RLVok) {
+                if (RLVok == TRUE) {
 
                     // One-way options
                     if (!hardcore) {
@@ -488,7 +492,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
 
                 if (!hardcore) {
                     plusList += cdGetButton("Carryable", id, allowCarry, 0);
-                    if (RLVok) {
+                    if (RLVok == TRUE) {
                         plusList += cdGetButton("Outfitable", id, allowDress, 0);
 #ifdef ADULT_MODE
                         plusList += cdGetButton("Strippable", id, allowStrip, 0);

@@ -151,7 +151,7 @@ default {
 
             debugSay(7,"DEBUG-STATUSRLV","Got Link Message 315 from script " + script + ": " + commandString);
 
-            if (RLVok == 1) {
+            if (RLVok == TRUE) {
                 // Note that this does NOT handle "clear=..."
                 if (commandString == "clear") {
 #ifdef LOCKON
@@ -196,7 +196,7 @@ default {
             RLVok = (cdListIntegerElement(split, 0) == 1);
 
             //debugSay(4,"DEBUG-STATUSRLV","rlvCommand (refresh) activated");
-            if (RLVok)
+            if (RLVok == TRUE)
                 lmInternalCommand("refreshRLV","",NULL_KEY);
         }
         else if (code < 200) {
