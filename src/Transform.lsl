@@ -253,11 +253,12 @@ folderSearch(string folder, integer channel) {
     if (RLVok) {
         if (folder == "") lmRunRLV("getinv=" + (string)channel);
         else lmRunRLV("getinv:" + folder + "=" + (string)channel);
+
+        // The next stage is the listener, while we create a time
+        // out to timeout the RLV call...
+        llSetTimerEvent(RLV_TIMEOUT);
     }
 
-    // The next stage is the listener, while we create a time
-    // out to timeout the RLV call...
-    llSetTimerEvent(RLV_TIMEOUT);
 }
 
 //========================================
