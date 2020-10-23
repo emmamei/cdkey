@@ -189,22 +189,29 @@ default {
             else if (name == "gemColour")                   gemColour = (vector)value;
             else if (name == "lowScriptMode")           lowScriptMode = (integer)value;
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
+            else if (name == "allowCarry")                 allowCarry = (integer)value;
+            else if (name == "allowDress")                 allowDress = (integer)value;
+            else if (name == "allowPose")                   allowPose = (integer)value;
 
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "afk")                               afk = (integer)value;
+            else if (name == "showPhrases")               showPhrases = (integer)value;
+            else if (name == "gemLight") {
+                gemLight = (integer)value;
+                lmInternalCommand("setGemColour", (string)gemColour, NULL_KEY);
+            }
+#ifdef ADULT_MODE
+            else if (name == "allowStrip")             allowStrip = (integer)value;
+#endif
 
             // shortcut: c
             else if (c == "c") {
                      if (name == "carrierID")                   carrierID = (key)value;
                 else if (name == "canAFK")                         canAFK = (integer)value;
-                else if (name == "allowCarry")                     allowCarry = (integer)value;
-                else if (name == "allowDress")                     allowDress = (integer)value;
-                else if (name == "allowPose")                       allowPose = (integer)value;
                 else if (name == "canDressSelf")             canDressSelf = (integer)value;
                 else if (name == "canSelfTP")                   canSelfTP = (integer)value;
                 else if (name == "collapsed")                   collapsed = (integer)value;
                 else if (name == "configured")                 configured = (integer)value;
-                else if (name == "showPhrases")               showPhrases = (integer)value;
             }
 
             // shortcut: d
@@ -222,13 +229,6 @@ default {
             else if (c == "p") {
                      if (name == "poserID")                   poserID = (key)value;
                 else if (name == "poseSilence")           poseSilence = (integer)value;
-                else if (name == "gemLight") {
-                    gemLight = (integer)value;
-                    lmInternalCommand("setGemColour", (string)gemColour, NULL_KEY);
-                }
-#ifdef ADULT_MODE
-                else if (name == "allowStrip")             allowStrip = (integer)value;
-#endif
                 else if (name == "pronounHerDoll")     pronounHerDoll = value;
                 else if (name == "pronounSheDoll")     pronounSheDoll = value;
             }
@@ -487,6 +487,7 @@ default {
                         if (keyAnimation == "") menu += [ "Options..." ];
                         menu += [ "Help..." ];
                     }
+                    if (allowSelfWind) menu += [ "Wind" ];
                 }
                 else {
                     // this includes any Controller that is NOT Dolly
