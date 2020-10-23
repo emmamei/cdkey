@@ -158,11 +158,15 @@ activateRLVBase() {
     string baseRLV = "detach=n,permissive=n";
 #endif
 
+    // remove chat channel from access... right?
     if (chatChannel) baseRLV += ",sendchannel:" + (string)chatChannel + "=rem";
-    if (RLVok)
-        lmRunRLVas("Base", baseRLV);
+    lmRunRLVas("Base", baseRLV);
+
+    // Reset baseRLV for second round
     baseRLV = "";
 
+    // Add users choice of extended base RLV restrictions
+    //
     //if (userBaseRLVcmd != "")
     //    lmRunRLVas("UserBase", userBaseRLVcmd);
 
