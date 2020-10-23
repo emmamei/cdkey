@@ -159,7 +159,8 @@ activateRLVBase() {
 #endif
 
     if (chatChannel) baseRLV += ",sendchannel:" + (string)chatChannel + "=rem";
-    lmRunRLVas("Base", baseRLV);
+    if (RLVok)
+        lmRunRLVas("Base", baseRLV);
     baseRLV = "";
 
     //if (userBaseRLVcmd != "")
