@@ -184,11 +184,11 @@ default {
             }
 #ifdef DEVELOPER_MODE
 
-            // There is a case to be made that this is a run-time program error,
-            // and needs to be sent to the user as an error to be reported.
+            // This is not a run-time error - after all, the RLV was not executed -
+            // the only problem is one of speed and optimization.
 
             else {
-                llSay(DEBUG_CHANNEL,"Received RLV with no RLV active: " + commandString);
+                debugSay(4,"DEBUG-STATUSRLV","Received RLV with no RLV active: " + commandString);
             }
 #endif
         }

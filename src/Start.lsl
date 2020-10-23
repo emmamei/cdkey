@@ -458,14 +458,18 @@ default {
 
                     if (cdPoseAnim()) {
                         // keyAnimation is a pose of some sort
-                        if (defaultPoseRLVcmd)
-                            lmRunRLV(defaultPoseRLVcmd);
-                        if (userPoseRLVcmd)
-                            lmRunRLVas("UserPose", userPoseRLVcmd);
+                        if (RLVok == TRUE) {
+			    if (defaultPoseRLVcmd) {
+			        lmRunRLV(defaultPoseRLVcmd);
+                            }
+			    if (userPoseRLVcmd) {
+			        lmRunRLVas("UserPose", userPoseRLVcmd);
+                            }
+                        }
                     }
                     else if (oldKeyAnimation != keyAnimation) {
                         // animation just became null
-                        lmRunRLV("clear");
+                        if (RLVok == TRUE) lmRunRLV("clear");
                     }
                 }
             }
@@ -476,13 +480,15 @@ default {
                 if (!collapsed) {
                     // a collapse overrides AFK - ignore AFK if we are collapsed
                     if (afk) {
-                        lmRunRLV(defaultAfkRLVcmd);
-                        if (userAfkRLVcmd)
-                            lmRunRLVas("UserAfk", userAfkRLVcmd);
+                        if (RLVok == TRUE) {
+                            lmRunRLV(defaultAfkRLVcmd);
+                            if (userAfkRLVcmd)
+                                lmRunRLVas("UserAfk", userAfkRLVcmd);
+                        }
                     }
                     else if (oldAfk != afk) {
                         // afk value JUST became zero
-                        lmRunRLV("clear");
+                        if (RLVok == TRUE) lmRunRLV("clear");
                     }
                 }
             }
@@ -501,21 +507,25 @@ default {
                 integer wasCollapsed = collapsed;
                 collapsed = (integer)value;
 
-                if (collapsed) {
-                    // We are collapsed: activate RLV restrictions
-                    lmRunRLV(defaultCollapseRLVcmd);
-                    if (userCollapseRLVcmd != "") lmRunRLVas("UserCollapse", userCollapseRLVcmd);
-
-                    // set gem colour to gray
-                    lmInternalCommand("setGemColour", "<0.867, 0.867, 0.867>", NULL_KEY);
-                }
-                else {
-                    lmInternalCommand("resetGemColour", "", NULL_KEY);
-                    if (wasCollapsed) {
-                        // We were collapsed but aren't now... so clear RLV restrictions
-                        lmRunRLV("clear");
+                if (RLVok == TRUE) {
+                    if (collapsed) {
+                        // We are collapsed: activate RLV restrictions
+                        lmRunRLV(defaultCollapseRLVcmd);
+                        if (userCollapseRLVcmd != "") lmRunRLVas("UserCollapse", userCollapseRLVcmd);
+                    }
+                    else {
+                        if (wasCollapsed) {
+                            // We were collapsed but aren't now... so clear RLV restrictions
+                            if (RLVok == TRUE) lmRunRLV("clear");
+                        }
                     }
                 }
+
+                if (collapsed)
+                    // set gem colour to gray
+                    lmInternalCommand("setGemColour", "<0.867, 0.867, 0.867>", NULL_KEY);
+                else
+                    lmInternalCommand("resetGemColour", "", NULL_KEY);
                 doLuminosity();
             }
             else if (name == "dollDisplayName") {
@@ -557,7 +567,7 @@ default {
                 // (collapse is managed by Main)
                 if (!collapsed) {
                     // Not collapsed: clear any user collapse RLV restrictions
-                    lmRunRLV("clear");
+                    if (RLVok == TRUE) lmRunRLV("clear");
 
                     // Is Dolly AFK? Trigger RLV restrictions as appropriate
                     if (afk) {
