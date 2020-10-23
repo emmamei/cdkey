@@ -32,6 +32,10 @@ key rlvTPrequest;
 key mainCreator;
 #endif
 key lastAttachedID;
+// #ifdef DEVELOPER_MODE
+// float thisTimerEvent;
+// float timerInterval;
+// #endif
 
 // Note that this is not the "speed" nor is it a slowing factor
 // This is a vector of force applied against Dolly: headwind speed
@@ -588,7 +592,6 @@ default {
         RLVok = UNSET;
         //llStopMoveToTarget();
         //llTargetRemove(targetHandle);
-        llSetStatus(STATUS_PHYSICS,TRUE);
 
         debugSay(2,"DEBUG-AVATAR","ifPermissions (on_rez)");
         ifPermissions();
@@ -646,6 +649,7 @@ default {
 
         locked = 0;
 
+        //llSetStatus(STATUS_PHYSICS,TRUE);
         llStopMoveToTarget();
         llTargetRemove(targetHandle);
 
@@ -770,7 +774,7 @@ default {
             split = llDeleteSubList(split, 0, 0);
 
             if (cmd == "detach") {
-                if (RLVok == TRUE) llOwnerSay("@clear,detachme=force");
+                if (RLVok) llOwnerSay("@clear,detachme=force");
                 else llDetachFromAvatar();
             }
             else if (cmd == "teleport") {

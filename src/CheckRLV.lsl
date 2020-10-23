@@ -20,6 +20,11 @@
 #define cdResetKey() llResetOtherScript("Start")
 #define lmDoCheckRLV() lmInternalCommand("doCheckRLV","",NULL_KEY)
 
+// #ifdef DEVELOPER_MODE
+// float thisTimerEvent;
+// float timerInterval;
+// #endif
+
 float rlvTimer;
 
 float nextRLVcheck;
@@ -85,7 +90,7 @@ doCheckRLV() {
 // Currently runs on init 110 - button press - and timer
 
 checkRLV() {
-    if (RLVok == TRUE) {
+    if (RLVok == 1) {
         RLVck = 0;
         llSetTimerEvent(0.0);
         lmInternalCommand("refreshRLV","",NULL_KEY);
@@ -137,7 +142,7 @@ checkRLV() {
     else {
         // RLVck reached max
         debugSay(2,"DEBUG-RLV","RLV check failed...");
-        RLVok = FALSE;
+        RLVok = 0;
 
         llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
         nextRLVcheck = 0.0;
@@ -145,7 +150,7 @@ checkRLV() {
 }
 
 activateRLVBase() {
-    if (RLVok != TRUE) return;
+    if (RLVok != 1) return;
 
 #ifdef DEVELOPER_MODE
     string baseRLV = "permissive=n";
@@ -187,7 +192,7 @@ activateRLVBase() {
 // This is designed to be called repetitively...
 
 activateRLV() {
-    if (RLVok != TRUE) {
+    if (!RLVok) {
         RLVstarted = 0;
         return;
     }
@@ -210,7 +215,8 @@ activateRLV() {
         // via the menu. To make the key truly "undetachable", we get
         // rid of the menu item to unlock it
 
-        lmRunRLVas("Base", "detach=n,permissive=n");  //locks key
+        if (RLVok)
+            lmRunRLVas("Base", "detach=n,permissive=n");  //locks key
 #endif
         cdListenerDeactivate(rlvHandle);
         lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
@@ -304,7 +310,7 @@ default {
                 nextRLVcheck = llGetTime() + RLV_TIMEOUT;
 #else
                 nextRLVcheck = 0.0;
-                RLVok = TRUE;
+                RLVok = 1;
 
                 //lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
 
@@ -319,7 +325,7 @@ default {
                 myPath = msg;
 
                 nextRLVcheck = 0.0;
-                RLVok = TRUE;
+                RLVok = 1;
 
                 llOwnerSay("RLV check completed in " + formatFloat((llGetTime() - rlvTimer),1) + "s");
                 rlvTimer = 0;
@@ -391,7 +397,7 @@ default {
             else if (cmd == "updateExceptions") {
 
                 // Exempt builtin or user specified controllers from TP restictions
-                if (RLVok != TRUE) return;
+                if (!RLVok) return;
 
                 list exceptions = BUILTIN_CONTROLLERS + cdList2ListStrided(controllers, 0, -1, 2);
                 integer i;

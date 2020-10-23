@@ -1,5 +1,6 @@
 #ifndef JSON_LSL
 #define JSON_LSL
+float Json_version=1.0;
 key requestLoadData;
 
 // Data Type Values

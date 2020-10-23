@@ -1,5 +1,6 @@
 #ifndef RLV_API_LSL
 #define RLV_API_LSL
+float RestrainedLoveAPI_version=1.0;
 #define VERSIONNEW_PREFIX "RestrainedLove"
 // The latest RLV api version in versionnum format
 #define RLV_NUM_CURRENT 2080100

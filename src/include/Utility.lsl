@@ -1,6 +1,7 @@
 #ifndef UTILITY_LSL
 #define UTILITY_LSL
 #include "config.h"
+float Utility_version=1.0;
 
 // This allows "oneshot" RLV commands without spamming
 // non-RLV users.

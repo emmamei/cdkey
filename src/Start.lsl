@@ -487,20 +487,11 @@ default {
             else if (name == "userPoseRLVcmd")          userPoseRLVcmd = value;
             else if (name == "userAfkRLVcmd")            userAfkRLVcmd = value;
 
-            else if (name == "gemColour") {
-                    gemColour = (vector)value;
-                    lmInternalCommand("setGemColour", (string)gemColour, NULL_KEY);
-            }
+            else if (name == "gemColour") {      gemColour = (vector)value; doLuminosity(); }
 #ifdef GEMGLOW_OPT
-            else if (name == "gemGlow") {
-                    gemGlow = (integer)value;
-                    lmInternalCommand("setGemColour", (string)gemColour, NULL_KEY);
-            }
+            else if (name == "gemGlow")  {      gemGlow = (integer)value; doLuminosity(); }
 #endif
-            else if (name == "gemLight") {
-                    gemLight = (integer)value;
-                    lmInternalCommand("setGemColour", (string)gemColour, NULL_KEY);
-            }
+            else if (name == "gemLight") {     gemLight = (integer)value; doLuminosity(); }
             else if (name == "isVisible") {       visible = (integer)value; doLuminosity(); }
 
             else if (name == "collapsed") {
@@ -551,14 +542,14 @@ default {
                 if (cdAttached()) {
                     string msg = dollName + " has logged in with";
 
-                    if (RLVok != TRUE) msg += "out";
+                    if (!RLVok) msg += "out";
                     msg += " RLV at " + wwGetSLUrl();
 
                     lmSendToController(msg);
                 }
             }
 
-            if (RLVok == TRUE) {
+            if (RLVok) {
                 // If RLV is ok, then trigger all of the necessary RLV restrictions
                 // (collapse is managed by Main)
                 if (!collapsed) {
@@ -640,7 +631,6 @@ default {
 
         dollID = llGetOwner();
         dollName = llGetDisplayName(dollID);
-        llSetStatus(STATUS_PHYSICS,TRUE);
 
         rlvWait = 1;
         cdInitializeSeq();
@@ -691,7 +681,6 @@ default {
     //----------------------------------------
     attach(key id) {
 
-        llSetStatus(STATUS_PHYSICS,TRUE);
         lmInternalCommand("setWindRate","",NULL_KEY);
         if (id == NULL_KEY) {
 

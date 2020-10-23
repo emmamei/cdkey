@@ -158,7 +158,7 @@ setDollType(string stateName, integer automated) {
     typeSearchTries = 0;
 
     // if RLV is non-functional, dont search for a Type Folder
-    if (RLVok == TRUE) {
+    if (RLVok) {
         debugSay(2,"DEBUG-DOLLTYPE","Searching for " + typeFolderExpected);
         outfitsSearchTimer = llGetTime();
         typeSearchHandle = cdListenMine(typeSearchChannel);
@@ -302,6 +302,19 @@ default {
         // typeFolder = Folder related to current Doll Type (e.g., "*Japanese")
         // typeFolderExpected = Computed but untested typeFolder
 
+#ifdef DEVELOPER_MODE
+        if (timeReporting) {
+            string s;
+
+            s = "Transform Timer fired, interval " + (string)(llGetTime() - lastTimerEvent) + "s. (lowScriptMode ";
+            if (lowScriptMode) s += "is active).";
+            else s += "is not active).";
+
+            llOwnerSay(s);
+
+            lastTimerEvent = llGetTime();
+        }
+#endif
         // transform lock: check time
         if (transformLockExpire) {
             if (transformLockExpire  <= llGetUnixTime()) {
@@ -324,7 +337,7 @@ default {
             }
         }
 #endif
-        if (RLVok == TRUE) {
+        if (RLVok) {
             // if we get here then the search RLV timed out
             if (outfitSearching) {
                 // Note carefully - if the search tries is maxed,
@@ -482,6 +495,7 @@ default {
 
             split = llDeleteSubList(split,0,0);
 
+//               if (name == "timeLeftOnKey")           timeLeftOnKey = (float)value;
                  if (name == "afk")                               afk = (integer)value;
             else if (name == "autoAfk")                       autoAfk = (integer)value;
 #ifdef DEVELOPER_MODE
@@ -566,12 +580,12 @@ default {
                     }
                     else {
                         pluslist += [ "Type...", "Access..." ];
-                        if (RLVok == TRUE) pluslist += [ "Restrictions..." ];
+                        if (RLVok) pluslist += [ "Restrictions..." ];
                     }
                 }
                 else if (cdIsCarrier(id)) {
                     pluslist += [ "Type..." ];
-                    if (RLVok == TRUE) pluslist += [ "Restrictions..." ];
+                    if (RLVok) pluslist += [ "Restrictions..." ];
                 }
                 // Test for User Controller first: that way, a User Controller that
                 // is also in a Builtin Controller is treated as a normal User
@@ -581,13 +595,13 @@ default {
                     msg = "See " + WEB_DOMAIN + "controller.htm. Choose what you want to happen.";
 
                     pluslist += [ "Type...", "Access..." ];
-                    if (RLVok == TRUE) pluslist += [ "Restrictions..." ];
+                    if (RLVok) pluslist += [ "Restrictions..." ];
                     pluslist += [ "Drop Control" ];
 
                 }
                 else if (cdIsBuiltinController(id)) {
                     pluslist += [ "Type...", "Access..." ];
-                    if (RLVok == TRUE) pluslist += [ "Restrictions..." ];
+                    if (RLVok) pluslist += [ "Restrictions..." ];
                 }
                 // This section should never be triggered: it means that
                 // someone who shouldn't see the Options menu did.
@@ -609,7 +623,7 @@ default {
             typeSearchTries = 0;
             changeOutfit = 1;
 
-            if (RLVok == TRUE) {
+            if (RLVok) {
                 if (rlvChannel) {
                     typeSearchHandle = cdListenMine(typeSearchChannel);
                     outfitSearchHandle = cdListenMine(outfitSearchChannel);

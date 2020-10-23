@@ -1,6 +1,7 @@
 #ifndef COMMON_GLOBALS
 #define COMMON_GLOBALS
 #include "GlobalDefines.lsl"
+float CommonGlobals_version=1.0;
 //----------------------------
 // COMMON GLOBALS
 //----------------------------

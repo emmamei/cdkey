@@ -1,5 +1,6 @@
 #ifndef KEY_SHARED_FUNC_LSL
 #define KEY_SHARED_FUNC_LSL
+float KeySharedFuncs_version=1.0;
 
 #include "GlobalDefines.lsl"
 #include "LinkMessage.lsl"

@@ -134,8 +134,6 @@ default {
                 string commandString = cdListElement(split, 1);
                 list tmpList;
 
-                if (RLVok != TRUE) return;
-
                 // if rlvCmdIssued is 0, that means that
                 // no command has gone out since we ran last....
                 // so ignore it.
@@ -153,7 +151,7 @@ default {
 
             debugSay(7,"DEBUG-STATUSRLV","Got Link Message 315 from script " + script + ": " + commandString);
 
-            if (RLVok == TRUE) {
+            if (RLVok == 1) {
                 // Note that this does NOT handle "clear=..."
                 if (commandString == "clear") {
 #ifdef LOCKON
@@ -198,7 +196,7 @@ default {
             RLVok = (cdListIntegerElement(split, 0) == 1);
 
             //debugSay(4,"DEBUG-STATUSRLV","rlvCommand (refresh) activated");
-            if (RLVok == TRUE)
+            if (RLVok)
                 lmInternalCommand("refreshRLV","",NULL_KEY);
         }
         else if (code < 200) {

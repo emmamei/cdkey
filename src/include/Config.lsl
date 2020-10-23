@@ -1,5 +1,6 @@
 #ifndef CONFIG_LSL
 #define CONFIG_LSL
+float Config_version=1.0;
 #ifdef ADULT_MODE
 #define ADULT ["Adult"]
 #else

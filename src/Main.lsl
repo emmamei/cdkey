@@ -13,11 +13,6 @@
 #define cdKeyStopped() (!windingDown)
 #define cdTimeSet(a) (a!=0)
 #define cdResetKey() llResetOtherScript("Start")
-#ifdef DEVELOPER_MODE
-#define cdWindDown()			(!collapsed && cdAttached() && (dollType != "Builder"))
-#else
-#define cdWindDown()			(!collapsed && cdAttached())
-#endif
 #define UNSET -1
 #define lmCollapse(a) lmInternalCommand("collapse",(string)(a),NULL_KEY)
 #define lmUncollapse() lmInternalCommand("collapse","0",NULL_KEY)
@@ -36,9 +31,13 @@
 string msg;
 integer minsLeft;
 
+// #ifdef DEVELOPER_MODE
+// integer thisTimerEvent;
+// integer timerInterval;
+// #endif
 integer timerMark;
-integer timerLast;
-integer timerSpan;
+integer lastTimerMark;
+integer timeSpan;
 integer lowScriptModeSpan;
 
 key lastWinderID;
@@ -81,53 +80,11 @@ ifPermissions() {
 }
 #endif
 
-#define Z_AXIS <0.0, 0.0, 1.0>
-#define cdSetSpin(c) llTargetOmega(<0.0, 0.0, 1.0>, (c), 1)
-
-float setWindRate() {
-    //float newWindRate = baseWindRate;
-    //integer newWindingDown = windingDown;
-    //vector agentPos = llList2Vector(llGetObjectDetails(dollID, [ OBJECT_POS ]), 0);
-    //integer agentInfo = llGetAgentInfo(dollID);
-
-    debugSay(3,"DEBUG-WINDRATE","Entering setWindRate()");
-
-    // this funny repetitive if speeds things up
-    // Can't move cdAttached() to the end because the others depend on it
-
-// (!collapsed && cdAttached() && (dollType != "Builder"))
-
-         if (!cdAttached())           windingDown = 0;
-    else if (collapsed)               windingDown = 0;
-#ifdef DEVELOPER_MODE
-    else if (dollType == "Builder")   windingDown = 0;
-    else if (dollType == "Key")       windingDown = 0;
-#endif
-
-         if (windingDown == 0) windRate = 0.0;
-    else if (afk) windRate = baseWindRate * 0.5;
-    else          windRate = baseWindRate;
-
-    lmSendConfig("windingDown", (string)(windingDown));
-    lmSendConfig("baseWindRate", (string)baseWindRate);
-    lmSendConfig("windRate", (string)(windRate));
-
-    // llTargetOmega: With normalized vector spinrate is equal to radians per second
-    // 2𝜋 radians per rotation.  This sets a normal rotation rate of 4 rpm about the
-    // Z axis multiplied by the wind rate this way the key will visually run faster as
-    // the dolly begins using their time faster.
-    llSetStatus(STATUS_PHYSICS,TRUE);
-    llTargetOmega(llVecNorm(<0.0, 0.0, 1.0>), windRate * (TWO_PI / 15.0), 1);
-    debugSay(5,"DEBUG-WINDRATE","llTargetOmega(" + (string)llVecNorm(<0.0, 0.0, 1.0>) + ", " + formatFloat(windRate * (TWO_PI / 15.0),2) + ", 1);");
-
-    return windRate;
-}
-
-#ifdef NO_DEF
 float setWindRate() {
     windingDown = cdWindDown();
     windRate = baseWindRate;
-    if (afk) windRate *= 0.5;
+
+    if (afk) windRate *= 0.5 * baseWindRate;
 
     // There are several winding rates:
     //
@@ -142,39 +99,33 @@ float setWindRate() {
     lmSendConfig("windRate", (string)windRate);
     lmSendConfig("windingDown", (string)windingDown);
 
-    //llSay(DEBUG_CHANNEL,"winding down is " + (string)windingDown +
-    //    " and wind rate is " + formatFloat(windRate,2));
-    //llSay(DEBUG_CHANNEL,"wind rate is seen to be " + formatFloat((getWindRate()),2));
-
     // llTargetOmega: With normalized vector, spin rate is equal to radians per second
     // 2𝜋 radians per rotation.  This sets a normal rotation rate of 4 rpm about the
     // Z axis multiplied by the wind rate this way the key will visually run faster as
     // the dolly begins using their time faster.
-
-    // The normal rotation is 4 rpm or .7853981 radians per second
-    if (windingDown) cdSetSpin(windRate * TWO_PI / 8.0);
-    else             cdSetSpin(0.0);
+    //
+    if (windingDown) llTargetOmega(<0.0, 0.0, 1.0>, windRate * TWO_PI / 8.0, 1);
+    else             llTargetOmega(<0.0, 0.0, 1.0>,                     0.0, 1);
 
     return windRate;
 }
-#endif
 
 uncollapse() {
     // Revive dolly back from being collapsed
     string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
     cdSetHovertext("",INFO); // uses primText
 
-    setWindRate();
-
     lmSendConfig("collapseTime", (string)(collapseTime = 0));
     lmSendConfig("collapsed", (string)(collapsed = 0));
-    //lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
+    lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
     lmInternalCommand("getTimeUpdates", "", llGetKey());
     lmInternalCommand("setHovertext", "", llGetKey());
 
 #ifdef JAMMABLE
     lmSendConfig("jamExpire", (string)(jamExpire = 0));
 #endif
+
+    setWindRate();
 }
 
 collapse(integer newCollapseState) {
@@ -246,15 +197,10 @@ default {
     // ON REZ
     //----------------------------------------
     on_rez(integer start) {
-        // a hack to start the Key turning
-        //llTargetOmega(<0.0, 0.0, 1.0>, 0.7853981, 1);
-
         RLVok = UNSET;
         timerStarted = 1;
         configured = 1;
-
         lmInternalCommand("setHovertext", "", llGetKey());
-
         llSetTimerEvent(30.0);
     }
 
@@ -320,18 +266,29 @@ default {
         //----------------------------------------
         // TIMER INTERVAL
         timerMark = llGetUnixTime();
-        timerSpan = timerMark - timerLast;
-        //debugSay(2,"DEBUG-TIMER", "Winding down: timers = " + formatFloat(timerMark,1) + "/" + formatFloat(timerLast,1) + "/" + formatFloat(timerSpan,1) + "/"
-        timerLast = timerMark;
+        timeSpan = timerMark - lastTimerMark;
 
-        // sanity checking of timerSpan
+        // sanity checking of timeSpan
         //
-        // If we relog, the timerLast will be LONG ago....  leading to a
-        // HUGE timerSpan... so stomp on it and start with a fresh timerSpan
+        // If we relog, the lastTimerMark will be LONG ago....  leading to a
+        // HUGE timeSpan... so stomp on it and start with a fresh timeSpan
         //
-        // Same thing happens on startup with timerLast = 0
+        // Same thing happens on startup with lastTimerMark = 0
 
-        if (timerSpan > 120) timerSpan = 60;
+        if (timeSpan > 120) {
+            // Check sanity of timeSpan
+            timeSpan = 0;
+            lastTimerMark = timerMark;
+        }
+
+#ifdef DEVELOPER_MODE
+        if (timeReporting) {
+            thisTimerEvent = llGetUnixTime();
+            if (thisTimerEvent - lastTimerEvent < 120)
+                llOwnerSay("Main Timer fired, interval " + formatFloat(thisTimerEvent - lastTimerEvent,3) + "s.");
+            lastTimerEvent = thisTimerEvent;
+        }
+#endif
 
         //----------------------------------------
         // LOW SCRIPT MODE
@@ -382,6 +339,11 @@ default {
                 llSetTimerEvent(STD_RATE);
             }
         }
+
+        //----------------------------------------
+        // TIME SAVED (TIMER INTERVAL)
+
+        lastTimerMark = timerMark;
 
         //----------------------------------------
         // CHECK COLLAPSE STATE
@@ -457,10 +419,9 @@ default {
         // being doll type Builder
 
         if (windingDown) {
-            debugSay(2,"DEBUG-TIMER", "Winding down: timerSpan = " + (string)timerSpan + "s.");
-            if (timerSpan != 0) {
+            if (timeSpan != 0) {
                 // Key ticks down just a little further...
-                timeLeftOnKey -= (integer)(timerSpan * windRate);
+                timeLeftOnKey -= (integer)(timeSpan * windRate);
 
                 // Now that we've ticked down a few - check for warnings, and check for collapse
                 if (timeLeftOnKey > 0) {
@@ -605,10 +566,8 @@ default {
             }
             else if (name == "timeLeftOnKey") {
                 timeLeftOnKey = (integer)value;
-
                 if (timeLeftOnKey > effectiveLimit) timeLeftOnKey = effectiveLimit;
 
-                debugSay(3,"DEBUG-MAIN", "timeLeftOnKey set to " + (string)timeLeftOnKey);
                 lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
             }
             else if (name == "wearLock") {
@@ -703,7 +662,7 @@ default {
             // refresh collapse state... no escape!
             collapse(collapsed);
 
-            if (RLVok == TRUE) {
+            if (RLVok) {
                 if (!allowDress && !hardcore) llOwnerSay("The public cannot dress you.");
             }
             else {
@@ -782,14 +741,6 @@ default {
                 //   3. Send out new timeLeftOnKey
                 //   4. React to wind (including uncollapse)
 
-#ifdef JAMMABLE
-                // Test and reject winding of jammed dollies
-                if (collapsed == JAMMED) {
-                    cdDialogListen();
-                    llDialog(id, "The Dolly cannot be wound while " + pronounHerDoll + " key is being held.", ["Help...", "OK"], dialogChannel);
-                    return;
-                }
-#endif
 #ifdef SINGLE_SELF_WIND
                 // Test and reject repeat windings from Dolly - no matter who Dolly is or what the settings are
                 if (allowSelfWind) {
@@ -801,6 +752,15 @@ default {
                     }
                 }
 #endif
+#ifdef JAMMABLE
+                // Test and reject winding of jammed dollies
+                if (collapsed == JAMMED) {
+                    cdDialogListen();
+                    llDialog(id, "The Dolly cannot be wound while " + pronounHerDoll + " key is being held.", ["Help...", "OK"], dialogChannel);
+                    return;
+                }
+#endif
+
                 // Test and reject repeat winding as appropriate - Controllers and Carriers are not limited
                 // (odd sequence helps with short-circuiting and speed)
                 if (!allowRepeatWind) {

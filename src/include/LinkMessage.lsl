@@ -1,5 +1,6 @@
 #ifndef LINK_MSG_LIB
 #define LINK_MSG_LIB
+float LinkMessage_version=1.0;
 
 // Used as the ID field in link messages to indicate the remote database
 // as the triggering source.
