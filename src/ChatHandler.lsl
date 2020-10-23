@@ -159,9 +159,6 @@ default {
 
             if (setName == "chatChannel") {
                 // Change listening chat channel
-#ifdef DEVELOPER_MODE
-                llSay(DEBUG_CHANNEL,"Changing chat channel from " + (string)(chatChannel) + " to...");
-#endif
 
                 // if the current chatChannel is zero it cannot be changed
                 if (chatChannel == 0) return;
@@ -177,7 +174,7 @@ default {
                     chatChannel = newChatChannel;
 
 #ifdef DEVELOPER_MODE
-                    llSay(DEBUG_CHANNEL,"Changed chat channel to " + (string)(chatChannel));
+                    debugSay(5,"DEBUG-CHATHANDLER","Changed chat channel to " + (string)(chatChannel));
 #endif
 
                     // Reset chat channel with new channel number
