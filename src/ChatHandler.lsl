@@ -159,7 +159,11 @@ default {
 
             if (setName == "chatChannel") {
                 // Change listening chat channel
+#ifdef DEVELOPER_MODE
+                llSay(DEBUG_CHANNEL,"Changing chat channel from " + (string)(chatChannel) + " to...");
+#endif
 
+                // if the current chatChannel is zero it cannot be changed
                 if (chatChannel == 0) return;
 
                 integer newChatChannel = (integer)value;
@@ -171,6 +175,10 @@ default {
                     // Note that setting the chat channel to 0 (PUBLIC) is valid:
                     // it isn't used as a channel, but as a flag for a disabled channel
                     chatChannel = newChatChannel;
+
+#ifdef DEVELOPER_MODE
+                    llSay(DEBUG_CHANNEL,"Changed chat channel to " + (string)(chatChannel));
+#endif
 
                     // Reset chat channel with new channel number
                     llListenRemove(chatHandle);
@@ -186,6 +194,7 @@ default {
                 //
                 // Note: This is a one-time event, and done only by preferences
 
+                // if the chatChannel is zero then the chatFilter cannot be changed
                 if (chatChannel == 0) return;
 
                 chatFilter = (key)value;
@@ -324,7 +333,7 @@ default {
                 // Note, too, that this eseentially disables most of this script.
 
                 llListenRemove(chatHandle);
-                lmSendConfig("chatChannel",(string)(chatChannel = 0));
+                lmSetConfig("chatChannel",(string)(0));
             }
         }
         else if (code == RLV_RESET) {
@@ -894,10 +903,10 @@ default {
                                 cdSayTo("Invalid channel (" + (string)ch + ") ignored",id);
                             }
                             else {
-                                lmSendConfig("chatChannel",(string)(chatChannel = ch));
-                                cdSayTo("Dolly communications link reset with new parameters on channel " + (string)chatChannel,id);
+                                lmSetConfig("chatChannel",(string)(ch));
+                                cdSayTo("Dolly communications link reset with new parameters on channel " + (string)ch,id);
 #ifdef DEVELOPER_MODE
-                                llSay(DEBUG_CHANNEL,"chat channel reset from cmd line using channel " + (string)chatChannel);
+                                llSay(DEBUG_CHANNEL,"chat channel changed from cmd line to using channel " + (string)ch);
 #endif
                             }
                         }
