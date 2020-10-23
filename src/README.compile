@@ -1,0 +1,30 @@
+*** COMPILING
+
+23 October 2020
+
+To compile the code properly here, there are a few things to
+be aware of.
+
+First, this code CAN ONLY BE COMPILED USING FIRESTORM.
+
+This is a bummer, but the Firestorm preprocessor provides power
+and capabilities not found anywhere else.
+
+Secondly, the Firestorm editor must be set to use the preprocessor,
+and to look for include file specifications in this directory.
+
+*** WHEN COMPILING...
+
+Firstly, every time you change anything in the include directory,
+you MUST RECOMPILE THE ENTIRE KEY. This is because a change in
+any of those files may affect more than one file in the key itself.
+
+You should also change the version number contained in the file.
+
+Secondly, any time you change a file in THIS directory, you can
+recompile it all by itself.
+
+Lastly, just in case - it pays to periodically compile the entire
+key from the git repo. This will help keep the git repo in a state
+where it can generate a working key.
+
