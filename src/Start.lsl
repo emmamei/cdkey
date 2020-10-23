@@ -57,7 +57,7 @@ integer dbConfigCount;
 integer i;
 
 string attachName;
-string prefGemColour; // use this to set gem color
+string prefGemColour="<0.9, 0.1, 0.8>"; // pink
 integer isAttached;
 
 // These RLV commands are set by the user
