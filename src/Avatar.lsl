@@ -940,7 +940,8 @@ default {
 
         if (lastTimerEvent) {
             timerInterval = thisTimerEvent - lastTimerEvent;
-            if (timeReporting) llOwnerSay("Avatar Timer fired, interval " + formatFloat(timerInterval,2) + "s.");
+            if (timeReporting)
+                debugSay(5,"DEBUG-AVATAR","Avatar Timer fired, interval " + formatFloat(timerInterval,2) + "s.");
         }
         lastTimerEvent = thisTimerEvent;
 #endif

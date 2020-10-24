@@ -461,7 +461,8 @@ default {
         if (cdAttached()) timerInterval = thisTimerEvent - lastTimerEvent;
         lastTimerEvent = thisTimerEvent;
 
-        if (timeReporting) llOwnerSay("CheckRLV Timer fired, interval " + formatFloat(timerInterval,3) + "s.");
+        if (timeReporting)
+            debugSay(5,"DEBUG-CHECKRLV","CheckRLV Timer fired, interval " + formatFloat(timerInterval,3) + "s.");
 #endif
 
         // IF RLV is ok we don't have to check it do we?

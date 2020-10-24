@@ -285,7 +285,7 @@ default {
         if (timeReporting) {
             thisTimerEvent = llGetUnixTime();
             if (thisTimerEvent - lastTimerEvent < 120)
-                llOwnerSay("Main Timer fired, interval " + formatFloat(thisTimerEvent - lastTimerEvent,3) + "s.");
+                debugSay(5,"DEBUG-MAIN","Main Timer fired, interval " + formatFloat(thisTimerEvent - lastTimerEvent,3) + "s.");
             lastTimerEvent = thisTimerEvent;
         }
 #endif

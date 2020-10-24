@@ -312,7 +312,7 @@ default {
             if (lowScriptMode) s += "is active).";
             else s += "is not active).";
 
-            llOwnerSay(s);
+            debugSay(5,"DEBUG-TRANSFORM",s);
 
             lastTimerEvent = llGetTime();
         }
