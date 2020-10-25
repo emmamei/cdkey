@@ -10,8 +10,13 @@
 /* Are we able to hold Dolly's Key? */
 // #define JAMMABLE 1
 
+/* Is a gem present? */
+#define GEM_PRESENT 1
+
+#ifdef GEM_PRESENT
 /* Is primGlow a selectable option? */
 // #define GEMGLOW_OPT 1
+#endif
 
 /* Confirm items fully removed */
 // #define CONFIRM_UNWEAR 1

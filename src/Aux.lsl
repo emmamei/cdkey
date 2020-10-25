@@ -33,10 +33,14 @@ string memOutput = "Script Memory Status:";
 integer maxMins;
 integer ncLine;
 integer memReporting;
+
+#ifdef GEM_PRESENT
 #ifdef GEMGLOW_OPT
 integer gemGlow = 1;
 #endif
 integer gemLight = 1;
+#endif
+
 integer textboxChannel;
 integer textboxHandle;
 integer textboxType;
@@ -147,9 +151,11 @@ default {
             else if (name == "allowStrip")             allowStrip = (integer)value;
 #endif
             else if (name == "wearLock")                     wearLock = (integer)value;
+#ifdef GEM_PRESENT
             else if (name == "gemLight")                   gemLight = (integer)value;
 #ifdef GEMGLOW_OPT
             else if (name == "gemGlow")                     gemGlow = (integer)value;
+#endif
 #endif
             else if (name == "blacklist") {
                 if (split == [""]) blacklist = [];
@@ -204,7 +210,53 @@ default {
             string cmd = llList2String(split, 0);
             split = llDeleteSubList(split, 0, 0);
 
-            if (cmd == "setGemColour") {
+            if (cmd == "collapsedMenu") {
+                // this is only called for Dolly - so...
+                string timeLeft = llList2String(split, 0);
+                list menu = [ "Ok" ];
+
+#ifdef DEVELOPER_MODE
+//              debugSay(2,"DEBUG-AUX","Building collapsedMenu...");
+//              llSay(DEBUG_CHANNEL,"collapseTime is " + (string)collapseTime + " at start of collapsedMenu");
+#endif
+
+                // is it possible to be collapsed but collapseTime be equal to 0.0?
+                if (collapsed) {
+                    msg = "You need winding. ";
+                    integer timeCollapsed = llGetUnixTime() - collapseTime;
+
+#ifdef DEVELOPER_MODE
+                    msg += "You have been collapsed for " + (string)llFloor(timeCollapsed / SEC_TO_MIN) + " minutes (" + (string)timeCollapsed + " seconds). ";
+                    msg += "\n\nTime before TP: " + (string)TIME_BEFORE_TP + "\nTime before Emg Wind: " + (string)TIME_BEFORE_EMGWIND + "\nTime elapsed: " + (string)timeCollapsed + "\n";
+#endif
+
+                    // Only present the TP home option for the doll if they have been collapsed
+                    // for at least 900 seconds (15 minutes) - Suggested by Christina
+
+                    if (timeCollapsed > TIME_BEFORE_TP) {
+#ifdef HOMING_BEACON
+                        if (!homingBeacon)
+#endif
+                            if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK)
+                                menu += ["TP Home"];
+
+                        // If the doll is still down after 1800 seconds (30 minutes) and their
+                        // emergency winder is recharged; add a button for it
+
+                        if (!hardcore) {
+                            if (timeCollapsed > TIME_BEFORE_EMGWIND) {
+                                if (winderRechargeTime <= llGetUnixTime())
+                                    menu += ["Wind Emg"];
+                            }
+                        }
+                    }
+
+                    cdDialogListen();
+                    llDialog(dollID, msg, menu, dialogChannel);
+                }
+            }
+#ifdef GEM_PRESENT
+            else if (cmd == "setGemColour") {
                 // This command does NOT set normalGemColour - which is as it
                 // should be. This allows us to set the gemColour without
                 // losing the colour we "normally" use.
@@ -279,6 +331,7 @@ default {
             else if (cmd == "resetGemColour") {
                 lmInternalCommand("setGemColour", (string)normalGemColour, id);
             }
+#endif
 #ifdef ADULT_MODE
             else if (cmd == "strip") {
                 // llToLower() may be superfluous here
@@ -300,51 +353,6 @@ default {
                 lmInternalCommand("stripAll", "", id);
             }
 #endif
-            else if (cmd == "collapsedMenu") {
-                // this is only called for Dolly - so...
-                string timeLeft = llList2String(split, 0);
-                list menu = [ "Ok" ];
-
-#ifdef DEVELOPER_MODE
-//              debugSay(2,"DEBUG-AUX","Building collapsedMenu...");
-//              llSay(DEBUG_CHANNEL,"collapseTime is " + (string)collapseTime + " at start of collapsedMenu");
-#endif
-
-                // is it possible to be collapsed but collapseTime be equal to 0.0?
-                if (collapsed) {
-                    msg = "You need winding. ";
-                    integer timeCollapsed = llGetUnixTime() - collapseTime;
-
-#ifdef DEVELOPER_MODE
-                    msg += "You have been collapsed for " + (string)llFloor(timeCollapsed / SEC_TO_MIN) + " minutes (" + (string)timeCollapsed + " seconds). ";
-                    msg += "\n\nTime before TP: " + (string)TIME_BEFORE_TP + "\nTime before Emg Wind: " + (string)TIME_BEFORE_EMGWIND + "\nTime elapsed: " + (string)timeCollapsed + "\n";
-#endif
-
-                    // Only present the TP home option for the doll if they have been collapsed
-                    // for at least 900 seconds (15 minutes) - Suggested by Christina
-
-                    if (timeCollapsed > TIME_BEFORE_TP) {
-#ifdef HOMING_BEACON
-                        if (!homingBeacon)
-#endif
-                            if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK)
-                                menu += ["TP Home"];
-
-                        // If the doll is still down after 1800 seconds (30 minutes) and their
-                        // emergency winder is recharged; add a button for it
-
-                        if (!hardcore) {
-                            if (timeCollapsed > TIME_BEFORE_EMGWIND) {
-                                if (winderRechargeTime <= llGetUnixTime())
-                                    menu += ["Wind Emg"];
-                            }
-                        }
-                    }
-
-                    cdDialogListen();
-                    llDialog(dollID, msg, menu, dialogChannel);
-                }
-            }
         }
         else if (code == RLV_RESET) {
             RLVok = llList2Integer(split, 0);
@@ -533,15 +541,17 @@ Parent - Take care choosing your parents; they have great control over Dolly and
             }
             else if (choice == "Key...") {
 
-                list plusList = ["Dolly Name...","Gem Colour...","Gender:" + dollGender];
+                list plusList = ["Dolly Name...","Gender:" + dollGender];
 
                 lmSendConfig("backMenu",(backMenu = "Options..."));
                 if (cdIsController(id)) plusList += [ "Max Time...", "Wind Time..." ];
                 cdDialogListen();
+#ifdef GEM_PRESENT
 #ifdef GEMGLOW_OPT
-                llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(plusList, 1, 1) + cdGetButton("Key Glow", id, gemGlow, 0) + cdGetButton("Gem Light", id, gemLight, 0) + "Back..."), dialogChannel);
+                llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(plusList, 1, 1) + "Gem Colour..." + cdGetButton("Key Glow", id, gemGlow, 0) + cdGetButton("Gem Light", id, gemLight, 0) + "Back..."), dialogChannel);
 #else
-                llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(plusList, 1, 1) + cdGetButton("Gem Light", id, gemLight, 0) + "Back..."), dialogChannel);
+                llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(plusList, 1, 1) + "Gem Colour..." + cdGetButton("Gem Light", id, gemLight, 0) + "Back..."), dialogChannel);
+#endif
 #endif
             }
             else if (llGetSubString(choice,0,6) == "Gender:") {
@@ -571,12 +581,19 @@ Parent - Take care choosing your parents; they have great control over Dolly and
             }
 
             // Textbox generating menus
-            else if (choice == "Custom..." || choice == "Dolly Name..." ) {
+            else if (choice == "Dolly Name..."
+#ifdef GEM_PRESENT
+                || choice == "Custom..." )
+#endif
+                {
+#ifdef GEM_PRESENT
                 if (choice == "Custom...") {
                     textboxType = GEM_COLOR_TEXTBOX;
                     llTextBox(id, "Here you can input a custom colour value\n\nCurrent colour: " + (string)gemColour + "\n\nEnter vector eg <0.900, 0.500, 0.000>\nOr Hex eg #A4B355\nOr RGB eg 240, 120, 10", textboxChannel);
                 }
-                else if (choice == "Dolly Name...") {
+                else
+#endif
+                if (choice == "Dolly Name...") {
                     textboxType = DOLL_NAME_TEXTBOX;
                     llTextBox(id, "Here you can change your dolly name from " + dollDisplayName + " to a name of your choice.", textboxChannel);
                 }

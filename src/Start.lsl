@@ -49,10 +49,12 @@ integer lastAttachPoint;
 key lastAttachAvatar;
 
 integer newAttach = YES;
+#ifdef GEM_PRESENT
 #ifdef GEMGLOW_OPT
 integer gemGlow = YES;
 #endif
 integer gemLight = YES;
+#endif
 integer dbConfigCount;
 integer i;
 
@@ -88,6 +90,7 @@ integer rlvWait;
 //=======================================
 // FUNCTIONS
 //=======================================
+#ifdef GEM_PRESENT
 doLuminosity() {
     // The two options below do the same thing - but when not visible or collapsed,
     // it bypasses all the scanning and testing and goes straight to work.
@@ -145,6 +148,7 @@ doLuminosity() {
         llSetLinkPrimitiveParamsFast(0, params);
     }
 }
+#endif
 
 //---------------------------------------
 // Configuration Functions
@@ -496,11 +500,13 @@ default {
             else if (name == "userPoseRLVcmd")          userPoseRLVcmd = value;
             else if (name == "userAfkRLVcmd")            userAfkRLVcmd = value;
 
+#ifdef GEM_PRESENT
             else if (name == "gemColour") {      gemColour = (vector)value; doLuminosity(); }
 #ifdef GEMGLOW_OPT
             else if (name == "gemGlow")  {      gemGlow = (integer)value; doLuminosity(); }
 #endif
             else if (name == "gemLight") {     gemLight = (integer)value; doLuminosity(); }
+#endif
             else if (name == "isVisible") {       visible = (integer)value; doLuminosity(); }
 
             else if (name == "collapsed") {

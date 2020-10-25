@@ -54,7 +54,9 @@ float windDefault = WIND_DEFAULT;
 
 string msg;
 integer carryMoved;
+#ifdef GEM_PRESENT
 integer gemLight = 1;
+#endif
 integer clearAnim;
 integer dbConfig;
 integer textboxType;
@@ -186,16 +188,18 @@ default {
             else if (name == "backMenu")                     backMenu = value;
             else if (name == "hardcore")                     hardcore = (integer)value;
             else if (name == "windingDown")               windingDown = (integer)value;
-            else if (name == "gemColour")                   gemColour = (vector)value;
             else if (name == "lowScriptMode")           lowScriptMode = (integer)value;
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
 
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "showPhrases")               showPhrases = (integer)value;
+#ifdef GEM_PRESENT
+            else if (name == "gemColour")                   gemColour = (vector)value;
             else if (name == "gemLight") {
                 gemLight = (integer)value;
                 lmInternalCommand("setGemColour", (string)gemColour, NULL_KEY);
             }
+#endif
 
             // shortcut: a
             else if (c == "a") {
@@ -569,7 +573,11 @@ default {
             }
             else if (code == 110) {
                 //startup = 0;
+#ifdef GEM_PRESENT
                 lmInternalCommand("setGemColour", (string)gemColour, NULL_KEY);
+#else
+                ;
+#endif
             }
             else if (code == MEM_REPORT) {
                 float delay = llList2Float(split, 0);
@@ -772,6 +780,7 @@ default {
                         integer isX = (beforeSpace == CROSS);
 
                         // Entering key menu section
+#ifdef GEM_PRESENT
                         if (afterSpace == "Gem Light") {
                              lmSendConfig("gemLight", (string)isX);
                              lmMenuReply("Key...", name, id);
@@ -783,6 +792,7 @@ default {
                         }
 #endif
                         else {
+#endif
                             // These variables are used to track which menu to respond with given
                             // a particular menu selection; that way, a setting can be toggled without
                             // having a menu go away
@@ -875,7 +885,9 @@ default {
                             if (isPublic) {
                                 cdMenuInject("Public...");
                             }
+#ifdef GEM_PRESENT
                         }
+#endif
                     }
                 }
                 // Item before Space is NOT a Check or Cross -- so must be either
