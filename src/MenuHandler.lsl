@@ -397,9 +397,6 @@ default {
                         // Toucher is not Doll.... could be anyone
                         msg =  dollName + " is a doll and likes to be treated like " +
                                 "a doll. So feel free to use these options. ";
-#ifdef JAMMABLE
-                        menu += "Hold";
-#endif
 #ifdef DEVELOPER_MODE
                         if (dollType != "Builder") menu += "Unwind";
 #else

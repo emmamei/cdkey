@@ -47,9 +47,6 @@ integer lastLowScriptTime;
 integer warned;
 integer wearLockExpire;
 integer carryExpire;
-#ifdef JAMMABLE
-integer jamExpire;
-#endif
 integer poseExpire;
 // Note that unlike the others, we do not maintain
 // transformLockExpire in this script
@@ -129,10 +126,6 @@ uncollapse() {
     lmInternalCommand("getTimeUpdates", "", llGetKey());
     lmInternalCommand("setHovertext", "", llGetKey());
 
-#ifdef JAMMABLE
-    lmSendConfig("jamExpire", (string)(jamExpire = 0));
-#endif
-
     setWindRate();
 }
 
@@ -165,18 +158,6 @@ collapse(integer newCollapseState) {
         lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0));
         cdSetHovertext("Disabled Dolly!",CRITICAL); // uses primText
     }
-#ifdef JAMMABLE
-    else if (newCollapseState == JAMMED) {
-        // Default time span (random) = 120.0 (two minutes) to 300.0 (five minutes)
-        if (collapsed != JAMMED)
-            jamExpire = llGetUnixTime() + JAM_TIMEOUT;
-    }
-
-    // If not jammed, reset time to Jam Repair
-    if (newCollapseState != JAMMED) {
-        if (jamExpire) lmSendConfig("jamExpire", (string)(jamExpire = 0));
-    }
-#endif
 
     lmInternalCommand("getTimeUpdates", "", llGetKey());
     // Among other things, this will set the Key's turn rate
@@ -359,10 +340,6 @@ default {
         // False collapse? Collapsed = 1 while timeLeftOnKey is positive is an invalid condition
         if (collapsed == NO_TIME)
             if (timeLeftOnKey > 0) lmUncollapse();
-#ifdef JAMMABLE
-        else if (collapsed == JAMMED)
-            if (jamExpire <= timerMark) lmUncollapse();
-#endif
 
         //----------------------------------------
         // POSE TIMED OUT?
@@ -594,9 +571,6 @@ default {
             }
             else if (name == "poseExpire")         poseExpire = (integer)value;
             else if (name == "carryExpire")       carryExpire = (integer)value;
-#ifdef JAMMABLE
-            else if (name == "jamExpire")           jamExpire = (integer)value;
-#endif
             else if (name == "wearLockExpire") wearLockExpire = (integer)value;
         }
         else if (code == INTERNAL_CMD) {
@@ -611,9 +585,6 @@ default {
                 //   * {wear|jam|pose|carry}Expire (time) - time of expiration
                 //   * collapseTime (time) - time of collapse
 
-#ifdef JAMMABLE
-                if (cdTimeSet(jamExpire))            lmSendConfig("jamExpire",             (string)jamExpire);
-#endif
                 if (cdTimeSet(timeLeftOnKey))        lmSendConfig("timeLeftOnKey",         (string)timeLeftOnKey);
                 if (cdTimeSet(wearLockExpire))       lmSendConfig("wearLockExpire",        (string)wearLockExpire);
                 if (cdTimeSet(transformLockExpire))  lmSendConfig("transformLockExpire",   (string)transformLockExpire);
@@ -717,12 +688,6 @@ default {
                         if (hardcore) llOwnerSay("and you can feel your joints reanimating as time is added.");
                         else llOwnerSay("and gives you " + (string)llRound(windAmount / SECS_PER_MIN) + " minutes of life. The emergency winder requires " + (string)llRound(EMERGENCY_LIMIT_TIME / 3600) + " hours to recharge.");
                     }
-#ifdef JAMMABLE
-                    else {
-                        if (collapsed == JAMMED) { llOwnerSay("The emergency winder motor whirrs, splutters and then falls silent, unable to budge your jammed mechanism."); }
-                        else { llOwnerSay("The failsafe trigger fires with a soft click preventing the motor engaging while your mechanism is running."); }
-                    }
-#endif
                 }
                 else {
                     integer rechargeMins = ((winderRechargeTime - llGetUnixTime()) / SECS_PER_MIN);
@@ -760,15 +725,6 @@ default {
                     }
                 }
 #endif
-#ifdef JAMMABLE
-                // Test and reject winding of jammed dollies
-                if (collapsed == JAMMED) {
-                    cdDialogListen();
-                    llDialog(id, "The Dolly cannot be wound while " + pronounHerDoll + " key is being held.", ["Help...", "OK"], dialogChannel);
-                    return;
-                }
-#endif
-
                 // Test and reject repeat winding as appropriate - Controllers and Carriers are not limited
                 // (odd sequence helps with short-circuiting and speed)
                 if (!allowRepeatWind) {
@@ -907,12 +863,6 @@ default {
                 llDialog(id, "You can set the amount of time in each wind.\nDolly currently winds " + (string)(windNormal / (integer)SECS_PER_MIN) + " mins.",
                     dialogSort(windChoices + [ MAIN ]), dialogChannel);
             }
-#ifdef JAMMABLE
-            else if (choice == "Hold") {
-                collapse(JAMMED);
-                cdSayTo("Dolly freezes, " + pronounHerDoll + " key kept from turning",id);
-            }
-#endif
             else if (choice == "Unwind") {
                 collapse(NO_TIME);
                 cdSayTo("Dolly collapses, " + pronounHerDoll + " key unwound",id);

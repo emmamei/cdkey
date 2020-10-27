@@ -7,9 +7,6 @@
 /* Fake out not having RLV */
 // #define FAKE_NORLV 1
 
-/* Are we able to hold Dolly's Key? */
-// #define JAMMABLE 1
-
 /* Is a gem present? */
 #define GEM_PRESENT 1
 

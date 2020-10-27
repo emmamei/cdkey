@@ -726,9 +726,6 @@ default {
         lmSetConfig("afk", NOT_AFK);
 
         // reset collapse environment
-#ifdef JAMMABLE
-        if (collapsed == JAMMED) collapsed = NOT_COLLAPSED;
-#endif
         lmInternalCommand("collapse", (string)collapsed, llGetKey());
 
         lastAttachPoint = cdAttached();
