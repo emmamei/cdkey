@@ -8,7 +8,7 @@
 // #define FAKE_NORLV 1
 
 /* Is a gem present? */
-#define GEM_PRESENT 1
+// #define GEM_PRESENT 1
 
 #ifdef GEM_PRESENT
 /* Is primGlow a selectable option? */

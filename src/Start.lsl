@@ -59,7 +59,9 @@ integer dbConfigCount;
 integer i;
 
 string attachName;
+#ifdef GEM_PRESENT
 string prefGemColour="<0.9, 0.1, 0.8>"; // pink
+#endif
 integer isAttached;
 
 // These RLV commands are set by the user
@@ -289,9 +291,11 @@ processConfiguration(string name, string value) {
                 else if (windNormal < 900) windNormal = 900;
             }
         }
+#ifdef GEM_PRESENT
         else if (name == "gem colour" || name == "gem color") {
             if ((vector)value != ZERO_VECTOR) prefGemColour = value;
         }
+#endif
         else if (name == "chat mode") {
             // Set the way chat operates
 
@@ -507,7 +511,11 @@ default {
 #endif
             else if (name == "gemLight") {     gemLight = (integer)value; doLuminosity(); }
 #endif
-            else if (name == "isVisible") {       visible = (integer)value; doLuminosity(); }
+            else if (name == "isVisible") {       visible = (integer)value;
+#ifdef GEM_PRESENT
+            doLuminosity();
+#endif
+            }
 
             else if (name == "collapsed") {
                 integer wasCollapsed = collapsed;
@@ -527,12 +535,14 @@ default {
                     }
                 }
 
+#ifdef GEM_PRESENT
                 if (collapsed)
                     // set gem colour to gray
                     lmInternalCommand("setGemColour", "<0.867, 0.867, 0.867>", NULL_KEY);
                 else
                     lmInternalCommand("resetGemColour", "", NULL_KEY);
                 doLuminosity();
+#endif
             }
             else if (name == "dollDisplayName") {
                 if (script != cdMyScriptName()) {
@@ -742,7 +752,9 @@ default {
             if (data == EOF) {
                 //lmSendConfig("ncPrefsLoadedUUID", llDumpList2String(llList2List((string)llGetInventoryKey(NOTECARD_PREFERENCES) + ncPrefsLoadedUUID, 0, 9),"|"));
                 lmInternalCommand("getTimeUpdates","",NULL_KEY);
+#ifdef GEM_PRESENT
                 lmInternalCommand("setNormalGemColour",(string)prefGemColour,NULL_KEY);
+#endif
 
                 llOwnerSay("Preferences read in " + formatFloat(llGetTime() - ncStart, 2) + "s");
 

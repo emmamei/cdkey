@@ -552,6 +552,8 @@ Parent - Take care choosing your parents; they have great control over Dolly and
 #else
                 llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(plusList, 1, 1) + "Gem Colour..." + cdGetButton("Gem Light", id, gemLight, 0) + "Back..."), dialogChannel);
 #endif
+#else
+                llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(plusList, 1, 1) + "Back..."), dialogChannel);
 #endif
             }
             else if (llGetSubString(choice,0,6) == "Gender:") {
@@ -583,8 +585,9 @@ Parent - Take care choosing your parents; they have great control over Dolly and
             // Textbox generating menus
             else if (choice == "Dolly Name..."
 #ifdef GEM_PRESENT
-                || choice == "Custom..." )
+                || choice == "Custom..."
 #endif
+                )
                 {
 #ifdef GEM_PRESENT
                 if (choice == "Custom...") {
