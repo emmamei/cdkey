@@ -615,7 +615,7 @@ default {
         }
 
         else if (code == RLV_RESET) {
-            RLVok = ((integer)choice == 1);
+            RLVok = (integer)choice;
             if (dollType == "") setDollType("Regular", AUTOMATED);
 
             outfitsFolder = "";

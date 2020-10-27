@@ -193,7 +193,7 @@ default {
 #endif
         }
         else if (code == RLV_RESET) {
-            RLVok = (cdListIntegerElement(split, 0) == 1);
+            RLVok = llList2Integer(split, 0);
 
             //debugSay(4,"DEBUG-STATUSRLV","rlvCommand (refresh) activated");
             if (RLVok == TRUE)

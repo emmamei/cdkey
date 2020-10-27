@@ -561,7 +561,7 @@ default {
             }
         }
         else if (code == RLV_RESET) {
-            RLVok = (llList2Integer(split, 0) == 1);
+            RLVok = llList2Integer(split, 0);
             rlvWait = 0;
 
             if (newAttach) {

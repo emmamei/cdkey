@@ -42,7 +42,7 @@ string userBaseRLVcmd;
 integer i;
 integer rlvChannel;
 integer rlvHandle;
-integer RLVck = 0;
+integer RLVck = MAX_RLVCHECK_TRIES;
 integer RLVstarted;
 integer chatChannel = 75;
 
@@ -71,7 +71,7 @@ doCheckRLV() {
     }
 
     rlvTimer = llGetTime();
-    RLVck = 0;
+    RLVck = MAX_RLVCHECK_TRIES;
     RLVok = UNSET;
     rlvAPIversion = "";
     RLVstarted = 0;
@@ -97,14 +97,14 @@ checkRLV() {
         return;
     }
 
-    debugSay(2,"DEBUG-RLV","checking for RLV - try " + (string)RLVck + " of " + (string)MAX_RLVCHECK_TRIES);
+    debugSay(2,"DEBUG-RLV","checking for RLV - try " + (string)(MAX_RLVCHECK_TRIES - RLVck) + " of " + (string)MAX_RLVCHECK_TRIES);
     //rlvTimer = llGetTime();
 
     // rlvAPIversion is set by the listener when a message is received
     // myPath is set by the listener if a message is received that is not
     // a RestrainedLove or RestrainedLife message
 
-    if (RLVck < MAX_RLVCHECK_TRIES) {
+    if (RLVck > 0) {
         // Check RLV again: give it several tries
 
         // Setting the FAKE_NORLV flag causes the listener to not be open for the check
@@ -112,10 +112,7 @@ checkRLV() {
         // from the check; all other code works normally.
 
         // Increase number of check - RLVck is check number
-        if (RLVck <= 0) {
-            RLVck = 1;
-        }
-        else RLVck++;
+        RLVck -= 1;
 
 #ifdef FAKE_NORLV
         // Make viewer act is if there is no RLV support
@@ -129,12 +126,8 @@ checkRLV() {
             if (RLVck > 2) llOwnerSay("@version=" + (string)rlvChannel);
             else llOwnerSay("@versionnew=" + (string)rlvChannel);
         }
-#ifdef DEVELOPER_MODE
-        else {
-            // We got a positive RLV response - so try the path
-            llOwnerSay("@getpathnew=" + (string)rlvChannel);
-        }
-#endif
+        debugSay(2,"DEBUG-RLV","checking for RLV - setting " + (string)(RLV_TIMEOUT) + "-second timer...");
+
         // Set next RLV check in 20s
         llSetTimerEvent(RLV_TIMEOUT);
         nextRLVcheck = llGetTime() + RLV_TIMEOUT;
@@ -205,7 +198,7 @@ activateRLV() {
     string baseRLV;
 
     if (!RLVstarted) {
-        llOwnerSay("@clear");
+        lmRunRLV("clear");
 
 #ifndef LOCKON
         // if Doll is one of the developers... dont lock:
@@ -249,7 +242,7 @@ default {
         dollName = llGetDisplayName(dollID = llGetOwner());
 
         rlvTimer = llGetTime();
-        RLVck = 0;
+        RLVck = MAX_RLVCHECK_TRIES;
         RLVok = UNSET;
         rlvAPIversion = "";
         RLVstarted = 0;
@@ -268,7 +261,7 @@ default {
     on_rez(integer start) {
 
         rlvTimer = llGetTime();
-        RLVck = 0;
+        RLVck = MAX_RLVCHECK_TRIES;
         RLVok = UNSET;
         rlvAPIversion = "";
         RLVstarted = 0;
@@ -298,48 +291,21 @@ default {
         // Initial RLV Check results are being processed here
         //
         if (chan == rlvChannel) {
-            //debugSay(2, "DEBUG-RLV", "RLV Message received: " + msg);
+            debugSay(2, "DEBUG-RLV", "RLV Message received: " + msg);
 
             if ((llGetSubString(msg, 0, 13) == "RestrainedLove") ||
                 (llGetSubString(msg, 0, 13) == "RestrainedLife")) {
 
-                debugSay(2, "DEBUG-RLV", "RLV Version: " + msg);
-
                 rlvAPIversion = msg;
-
-#ifdef DEVELOPER_MODE
-                // We got a positive RLV response - so try the path
-                llOwnerSay("@getpathnew=" + (string)rlvChannel);
-
-                llSetTimerEvent(RLV_TIMEOUT);
-                nextRLVcheck = llGetTime() + RLV_TIMEOUT;
-#else
-                nextRLVcheck = 0.0;
-                RLVok = 1;
-
-                //lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
-
-                cdListenerDeactivate(rlvHandle);
-                activateRLV();
-                lmRLVreport(RLVok, rlvAPIversion, 0);
-#endif
-            }
-#ifdef DEVELOPER_MODE
-            else {
-                debugSay(2, "DEBUG-RLV", "RLV Key Path: " + msg);
-                myPath = msg;
+                debugSay(2, "DEBUG-RLV", "RLV Version: " + rlvAPIversion);
 
                 nextRLVcheck = 0.0;
-                RLVok = 1;
-
-                llOwnerSay("RLV check completed in " + formatFloat((llGetTime() - rlvTimer),1) + "s");
-                rlvTimer = 0;
+                RLVok = TRUE;
 
                 cdListenerDeactivate(rlvHandle);
                 activateRLV();
                 lmRLVreport(RLVok, rlvAPIversion, 0);
             }
-#endif
         }
     }
 

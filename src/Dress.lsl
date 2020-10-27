@@ -679,7 +679,7 @@ default {
             }
         }
         else if (code == RLV_RESET) {
-            RLVok = (cdListIntegerElement(split, 0) == 1);
+            RLVok = llList2Integer(split, 0);
         }
         // Choice #500: (From Main Menu) Dress Dolly
         else if (code == MENU_SELECTION)  {
