@@ -300,6 +300,14 @@ default {
                 numControllers  = cdControllerCount();
 
                 //----------------------------------------
+                // Prepare listeners: this allows for lag time by doing this up front
+
+                cdListenerActivate(dialogHandle); // is this redundant?
+                llSetTimerEvent(MENU_TIMEOUT);
+
+                cdDialogListen();
+
+                //----------------------------------------
                 // Build message for Main Menu display
 
                 // Compute "time remaining" message for mainMenu/windMenu
@@ -429,32 +437,40 @@ default {
                     // Dolly or Controllers always can use Types
                     else menu += "Types...";
 
-                    if (keyAnimation != "") {
-                        msg += "Doll is currently posed. ";
+                    integer poseCount;
+                    poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
+                    if (poseCount > 1) {
+			if (keyAnimation != "") {
+			    msg += "Doll is currently posed. ";
 
-                        // If accessor is Dolly... allow Dolly to pose and unpose,
-                        // but NOT when posed by someone else.
+			    // If accessor is Dolly... allow Dolly to pose and unpose,
+			    // but NOT when posed by someone else.
 
-                        if (isDoll) {
-                            if (poserID == dollID)
-                                menu += [ "Poses...", "Unpose" ];
-                        }
+			    if (isDoll) {
+				if (poserID == dollID)
+				    menu += [ "Poses...", "Unpose" ];
+			    }
 
-                        // If accessor is NOT Dolly... allow the public access if
-                        // permitted by Dolly, and allow access to all Controllers
-                        // (NOT Dolly by virtue of ruling out Doll previously).
-                        // Also allow anyone to Unpose Dolly if Dolly self posed.
+			    // If accessor is NOT Dolly... allow the public access if
+			    // permitted by Dolly, and allow access to all Controllers
+			    // (NOT Dolly by virtue of ruling out Doll previously).
+			    // Also allow anyone to Unpose Dolly if Dolly self posed.
 
-                        else {
-                            if (isController || allowPose || hardcore)
-                                menu += [ "Poses...", "Unpose" ];
-                            else if (poserID == dollID)
-                                menu += [ "Unpose" ];
-                        }
-                    }
+			    else {
+				if (isController || allowPose || hardcore)
+				    menu += [ "Poses...", "Unpose" ];
+				else if (poserID == dollID)
+				    menu += [ "Unpose" ];
+			    }
+			}
+			else {
+			    // Notice again: Carrier can only pose Dolly if permitted.
+			    if ((!isDoll && allowPose) || isDoll || isController) menu += "Poses...";
+			}
+		    }
                     else {
-                        // Notice again: Carrier can only pose Dolly if permitted.
-                        if ((!isDoll && allowPose) || isDoll || isController) menu += "Poses...";
+			 if (poseCount == 1) llSay(DEBUG_CHANNEL, "No poses found!");
+		    else if (poseCount == 0) llSay(DEBUG_CHANNEL, "No poses found! Key won't work without collapse animation!");
                     }
 
                     // Fix for issue #157
@@ -541,10 +557,6 @@ default {
                 msg = timeLeft + msg;
                 timeLeft = "";
 
-                cdListenerActivate(dialogHandle);
-                llSetTimerEvent(MENU_TIMEOUT);
-
-                cdDialogListen();
                 llDialog(id, msg, dialogSort(menu), dialogChannel);
             }
         }

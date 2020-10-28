@@ -138,21 +138,10 @@ posePageN(string choice, key id) {
 
     poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
 
-    if (poseList == []) {
-        buildList = TRUE;
-        if (poseCount > 1) cdSayTo("Reading " + (string)poseCount + " poses from Dolly's internal secondary memory...",id);
-        else if (poseCount == 1) {
-            llSay(DEBUG_CHANNEL, "No poses found!");
-            return;
-        }
-        else if (poseCount == 0) {
-            llSay(DEBUG_CHANNEL, "No poses found! Key won't work without collapse animation!");
-            return;
-        }
-    }
-
     debugSay(6,"DEBUG-AVATAR","Loop index initialized at " + (string)i + " poses");
     debugSay(6,"DEBUG-AVATAR","Current pose list = " + llDumpList2String(poseList, ","));
+
+    if (poseList == []) buildList = TRUE;
 
     i = poseCount; // loopIndex
     while (i--) {
@@ -187,8 +176,8 @@ posePageN(string choice, key id) {
     }
 
     debugSay(6,"DEBUG-AVATAR","Pose list contains: " + llDumpList2String(tmpList, ","));
-    if (buildList)
-        cdSayTo("Read complete: found " + (string)llGetListLength(tmpList) + " viable poses.",id);
+    //if (buildList)
+    //    cdSayTo("Read complete: found " + (string)llGetListLength(tmpList) + " viable poses.",id);
 
     if (choice == "Poses Next") {
         posePage++;
