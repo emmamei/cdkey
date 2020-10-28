@@ -487,6 +487,8 @@ default {
     stat ........... concise current status
     stats .......... selected statistics and settings
     xstats ......... extended statistics and settings
+    hide ........... make key invisible
+    unhide ......... make key visible
     release ........ stop the current pose if possible
     unpose ......... stop the current pose if possible
     demo ........... toggle demo mode
@@ -767,6 +769,18 @@ default {
                         return;
                     }
 #endif
+                    else if (choice == "hide") {
+                        visible = FALSE;
+			llSetLinkAlpha(LINK_SET, (float)visible, ALL_SIDES);
+                        lmSendConfig("isVisible", (string)visible);
+                        return;
+                    }
+                    else if (choice == "unhide") {
+                        visible = TRUE;
+			llSetLinkAlpha(LINK_SET, (float)visible, ALL_SIDES);
+                        lmSendConfig("isVisible", (string)visible);
+                        return;
+                    }
                 }
 
                 //----------------------------------------
