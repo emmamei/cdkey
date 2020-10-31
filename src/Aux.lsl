@@ -522,6 +522,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
 #ifdef HOMING_BEACON
                 plusList += cdGetButton("Homing Beacon", id, homingBeacon, 0);
 #endif
+                if (!hardcore) plusList += cdGetButton("RLV", id, RLVok, 0);
 
                 // One-way options
                 if (cdIsController(id)) {
