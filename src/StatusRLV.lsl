@@ -112,7 +112,7 @@ default {
 
             if (cmd == "refreshRLV") {
                 //llOwnerSay("Reactivating RLV restrictions");
-                if (rlvRestrict) llOwnerSay("@" + llDumpList2String(rlvRestrict,",=n") + "=n");
+                if (rlvRestrict) lmRunRLV(llDumpList2String(rlvRestrict,",=n") + "=n");
 
                 //string cmd;
                 //i = llGetListLength(rlvRestrict);
@@ -167,7 +167,7 @@ default {
                     //return;
                 }
 
-                // This can happen...
+                // This could thereotically happen...
                 if (commandString == "" || commandString == "0") {
                     llSay(DEBUG_CHANNEL,"requested RLV command from " + script + " is empty!");
                     return;
