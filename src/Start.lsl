@@ -170,6 +170,10 @@ processConfiguration(string name, string value) {
                      "debug level",
 #endif
                      "afk rlv", "collapse rlv", "pose rlv", "gem color", "gem colour", "doll gender", "helpless dolly", "chat mode"
+#ifdef GEM_PRESENT
+                     "gem color", "gem colour",
+#endif
+                     "doll gender", "helpless dolly", "chat mode"
                    ];
 
     list settings = [ "quiet key", "hardcore", "busy is away", "can afk", "can fly",
@@ -186,7 +190,7 @@ processConfiguration(string name, string value) {
 #ifdef ADULT_MODE
                          "allowStrip",
 #endif
-                         "poseSilence", "autoTP", "allowDress", "allowDress", "allowDress", "demoMode",
+                         "poseSilence", "autoTP", "allowDress", "demoMode",
                          "showPhrases", "allowCarry", "allowRepeatWind"
                        ];
 
@@ -254,7 +258,7 @@ processConfiguration(string name, string value) {
             if (debugLevel > 9) debugLevel = 9;
             else if (debugLevel < 0) debugLevel = 0;
 
-            lmSendConfig("debugLevel", value);
+            lmSendConfig("debugLevel", (string)debugLevel);
         }
 #endif
         else if (name == "afk rlv") {
@@ -702,7 +706,7 @@ default {
         if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
         else cdResetKeyName();
 
-        RLVok = UNSET;
+        //RLVok = UNSET;
     }
 
     //----------------------------------------
