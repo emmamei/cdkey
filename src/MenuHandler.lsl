@@ -25,6 +25,7 @@
 #define cdMenuInject(a) lmMenuReply((a),name,id);
 #define cdResetKey() llResetOtherScript("Start")
 #define lmCollapse(a) lmInternalCommand("collapse",(string)(a),NULL_KEY)
+#define lmDoCheckRLV() lmInternalCommand("doCheckRLV","",NULL_KEY)
 
 // Wait for the user for 5 minutes - but for a program, only
 // wait 60s. The request for a dialog menu should happen before then -
@@ -861,6 +862,18 @@ default {
                                 else if (afterSpace == "Homing Beacon") lmSendConfig("homingBeacon",  (string)isX);
 #endif
                                 else if (afterSpace == "Warnings")      lmSendConfig("doWarnings",    (string)isX);
+                                else if (afterSpace == "RLV") {
+                                    if (isX) {
+                                        RLVok = TRUE; // in this script, mark it ok while we check elsewhere
+                                        debugSay(4,"DEBUG-MENU","Requesting a check of RLV");
+                                        lmDoCheckRLV();
+                                    }
+                                    else {
+                                        // since disabling RLV, just do it and report
+                                        RLVok = FALSE;
+                                        lmRLVreport(RLVok,"",0);
+                                    }
+                                }
 
                                 // if is not Doll, they can set and unset these options...
                                 // if is Doll, these abilities can only be removed (X)
