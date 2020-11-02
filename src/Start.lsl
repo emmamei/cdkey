@@ -169,13 +169,15 @@ processConfiguration(string name, string value) {
 #ifdef DEVELOPER_MODE
                      "debug level",
 #endif
-                     "afk rlv", "collapse rlv", "pose rlv", "gem color", "gem colour", "doll gender", "helpless dolly", "chat mode"
+                     "afk rlv", "collapse rlv", "pose rlv",
 #ifdef GEM_PRESENT
                      "gem color", "gem colour",
 #endif
                      "doll gender", "helpless dolly", "chat mode"
                    ];
 
+    // The settings list and the settingName list much match up
+    // with entries
     list settings = [ "quiet key", "hardcore", "busy is away", "can afk", "can fly",
                       "poseable", "can sit", "can stand", "can dress self", "detachable",
 #ifdef ADULT_MODE
@@ -190,7 +192,7 @@ processConfiguration(string name, string value) {
 #ifdef ADULT_MODE
                          "allowStrip",
 #endif
-                         "poseSilence", "autoTP", "allowDress", "demoMode",
+                         "poseSilence", "autoTP", "allowDress", "allowDress", "allowDress", "demoMode",
                          "showPhrases", "allowCarry", "allowRepeatWind"
                        ];
 
