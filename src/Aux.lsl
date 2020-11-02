@@ -121,7 +121,10 @@ default {
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
             else if (name == "backMenu")                     backMenu = value;
             else if (name == "quiet")                           quiet = (integer)value;
+#ifdef GEM_PRESENT
+            // only used for Gem purposes
             else if (name == "isVisible")                     visible = (integer)value;
+#endif
 #ifdef HOMING_BEACON
             else if (name == "homingBeacon")             homingBeacon = (integer)value;
 #endif

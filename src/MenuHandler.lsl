@@ -243,9 +243,10 @@ default {
             }
             else if (name == "quiet")                           quiet = (integer)value;
             else if (name == "hovertextOn")               hovertextOn = (integer)value;
+            else if (name == "visibility")                 visibility = (float)value;
             else if (name == "isVisible") {
                 visible = (integer)value;
-                llSetLinkAlpha(LINK_SET, (float)visible, ALL_SIDES);
+                llSetLinkAlpha(LINK_SET, (float)visibility, ALL_SIDES);
             }
         }
         else if (code == SET_CONFIG) {

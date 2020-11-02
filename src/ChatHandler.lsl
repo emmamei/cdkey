@@ -489,6 +489,8 @@ default {
     xstats ......... extended statistics and settings
     hide ........... make key invisible
     unhide ......... make key visible
+    show ........... make key visible
+    ghost .......... make key visible and ghostly
     release ........ stop the current pose if possible
     unpose ......... stop the current pose if possible
     demo ........... toggle demo mode
@@ -769,15 +771,36 @@ default {
                         return;
                     }
 #endif
+                    // Could potentially combine the next three into one
+                    // block but the code to account for the differences
+                    // may not be worth it.
+                    //
                     else if (choice == "hide") {
                         visible = FALSE;
-			llSetLinkAlpha(LINK_SET, (float)visible, ALL_SIDES);
+                        visibility = 0.0;
+
+                        llSetLinkAlpha(LINK_SET, (float)visibility, ALL_SIDES);
+                        lmSendConfig("visibility", (string)visibility);
                         lmSendConfig("isVisible", (string)visible);
                         return;
                     }
-                    else if (choice == "unhide") {
+                    else if (choice == "unhide" || choice == "show") {
                         visible = TRUE;
-			llSetLinkAlpha(LINK_SET, (float)visible, ALL_SIDES);
+
+                        llSetLinkAlpha(LINK_SET, (float)visibility, ALL_SIDES);
+                        lmSendConfig("visibility", (string)visibility);
+                        lmSendConfig("isVisible", (string)visible);
+                        return;
+                    }
+                    else if (choice == "ghost") {
+                        visible = TRUE;
+
+                        // This toggles ghostliness
+                        if (visibility != 1.0) visibility = 1.0;
+                        else visibility = GHOST_VISIBILITY;
+
+                        llSetLinkAlpha(LINK_SET, (float)visibility, ALL_SIDES);
+                        lmSendConfig("visibility", (string)visibility);
                         lmSendConfig("isVisible", (string)visible);
                         return;
                     }

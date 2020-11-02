@@ -184,7 +184,7 @@ processConfiguration(string name, string value) {
                       "strippable",
 #endif
                       "pose silence", "auto tp", "dressable", "outfitable", "can dress", "demo mode",
-                      "show phrases", "carryable", "repeatable wind"
+                      "show phrases", "carryable", "repeatable wind", "ghost"
                     ];
 
     list settingName = [ "quiet", "hardcore", "busyIsAway", "canAfk", "canFly",
@@ -193,7 +193,7 @@ processConfiguration(string name, string value) {
                          "allowStrip",
 #endif
                          "poseSilence", "autoTP", "allowDress", "allowDress", "allowDress", "demoMode",
-                         "showPhrases", "allowCarry", "allowRepeatWind"
+                         "showPhrases", "allowCarry", "allowRepeatWind", "ghost"
                        ];
 
     // This processes a single line from the preferences notecard...
@@ -230,9 +230,12 @@ processConfiguration(string name, string value) {
         }
 
         string name = cdListElement(settingName,i);
-        //lmSetConfig(name, value);
-        lmSendConfig(name, value);
-        llSleep(0.1);  // approx 5 frames - be nice to sim!
+
+        // Special handling for ghost setting: value is a boolean,
+        // but result is to change the visibility value...
+        //
+        if (name == "ghost") { lmSendConfig("visibility",(string)GHOST_VISIBILITY); }
+        else { lmSendConfig(name, value); }
     }
     // Check for non-boolean settings
     else if ((i = cdListElementP(configs,name)) != NOT_FOUND) {
@@ -326,13 +329,13 @@ processConfiguration(string name, string value) {
 
             lmSetConfig("dollGender", dollGender);
         }
-        llSleep(0.1);  // approx 5 frames - be nice to sim!
     }
 #ifdef DEVELOPER_MODE
     else {
         llSay(DEBUG_CHANNEL,"Unknown configuration value in preferences: " + name + " on line " + (string)(ncLine + 1));
     }
 #endif
+    llSleep(0.1);  // approx 5 frames - be nice to sim!
 }
 
 // PURPOSE: readPreferences reads the Preferences notecard, if any -
@@ -516,13 +519,8 @@ default {
             else if (name == "gemGlow")  {      gemGlow = (integer)value; doLuminosity(); }
 #endif
             else if (name == "gemLight") {     gemLight = (integer)value; doLuminosity(); }
+            else if (name == "isVisible") {       visible = (integer)value; doLuminosity(); }
 #endif
-            else if (name == "isVisible") {       visible = (integer)value;
-#ifdef GEM_PRESENT
-            doLuminosity();
-#endif
-            }
-
             else if (name == "collapsed") {
                 integer wasCollapsed = collapsed;
                 collapsed = (integer)value;

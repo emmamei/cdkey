@@ -138,6 +138,9 @@ float GlobalDefines_version=1.0;
 // Used by this file below for OPTION_DATE
 //#define PACKAGE_VERSION "26 February 2014"
 
+// Defines level of "ghostliness" visibiliity
+#define GHOST_VISIBILITY 0.4
+
 // used by ServiceRequestor.lsl for updates
 //#define PACKAGE_VERNUM "11.11"
 
