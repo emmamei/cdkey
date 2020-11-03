@@ -78,10 +78,23 @@ ifPermissions() {
 #endif
 
 float setWindRate() {
-    windingDown = cdWindDown();
-    windRate = baseWindRate;
+    integer x;
+    float y;
 
-    if (afk) windRate *= 0.5 * baseWindRate;
+    // This sets the wind rate etc and reports if values have changed...
+    x = cdWindDown();
+    if (x != windingDown) {
+        windingDown = x;
+        lmSendConfig("windingDown", (string)windingDown);   // boolean
+    }
+
+    y = baseWindRate;
+    if (afk) y *= 0.5;
+
+    if (y != windRate) {
+        windRate = y;
+        lmSendConfig("windRate", (string)windRate);         // current rate
+    }
 
     // There are several winding rates:
     //
@@ -93,8 +106,6 @@ float setWindRate() {
     //     the Key's actual winding down.
 
     lmSendConfig("baseWindRate", (string)baseWindRate); // base rate: 1.0
-    lmSendConfig("windRate", (string)windRate);         // current rate
-    lmSendConfig("windingDown", (string)windingDown);   // boolean
 
     // llTargetOmega: With normalized vector, spin rate is equal to radians per second
     // 2𝜋 radians per rotation.  This sets a normal rotation rate of 4 rpm about the
@@ -180,6 +191,10 @@ default {
         if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
 
         cdInitializeSeq();
+
+        lmSendConfig("windingDown", (string)(windingDown = cdWindDown()));   // boolean
+        lmSendConfig("baseWindRate", (string)baseWindRate); // base rate: 1.0
+        lmSendConfig("windRate", (string)(windRate = baseWindRate));         // current rate
     }
 
     //----------------------------------------
@@ -191,6 +206,10 @@ default {
         configured = 1;
         lmInternalCommand("setHovertext", "", llGetKey());
         llSetTimerEvent(30.0);
+
+        lmSendConfig("windingDown", (string)(windingDown = cdWindDown()));   // boolean
+        lmSendConfig("baseWindRate", (string)baseWindRate); // base rate: 1.0
+        lmSendConfig("windRate", (string)(windRate = baseWindRate));         // current rate
     }
 
     //----------------------------------------
