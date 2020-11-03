@@ -184,7 +184,7 @@ default {
             string c = cdGetFirstChar(name);
 
                  if (name == "timeLeftOnKey")           timeLeftOnKey = (integer)value;
-            else if (name == "baseWindRate")             baseWindRate = (float)value;
+            //else if (name == "baseWindRate")             baseWindRate = (float)value;
             else if (name == "windRate")                     windRate = (float)value;
             else if (name == "backMenu")                     backMenu = value;
             else if (name == "hardcore")                     hardcore = (integer)value;

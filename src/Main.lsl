@@ -88,7 +88,7 @@ float setWindRate() {
         lmSendConfig("windingDown", (string)windingDown);   // boolean
     }
 
-    y = baseWindRate;
+    y = RATE_STANDARD;
     if (afk) y *= 0.5;
 
     if (y != windRate) {
@@ -105,7 +105,7 @@ float setWindRate() {
     //     amount of most importance, and the one that accounts for
     //     the Key's actual winding down.
 
-    lmSendConfig("baseWindRate", (string)baseWindRate); // base rate: 1.0
+    //lmSendConfig("baseWindRate", (string)baseWindRate); // base rate: 1.0
 
     // llTargetOmega: With normalized vector, spin rate is equal to radians per second
     // 2𝜋 radians per rotation.  This sets a normal rotation rate of 4 rpm about the
@@ -193,8 +193,8 @@ default {
         cdInitializeSeq();
 
         lmSendConfig("windingDown", (string)(windingDown = cdWindDown()));   // boolean
-        lmSendConfig("baseWindRate", (string)baseWindRate); // base rate: 1.0
-        lmSendConfig("windRate", (string)(windRate = baseWindRate));         // current rate
+        //lmSendConfig("baseWindRate", (string)baseWindRate); // base rate: 1.0
+        lmSendConfig("windRate", (string)(windRate = RATE_STANDARD));         // current rate
     }
 
     //----------------------------------------
@@ -208,8 +208,8 @@ default {
         llSetTimerEvent(30.0);
 
         lmSendConfig("windingDown", (string)(windingDown = cdWindDown()));   // boolean
-        lmSendConfig("baseWindRate", (string)baseWindRate); // base rate: 1.0
-        lmSendConfig("windRate", (string)(windRate = baseWindRate));         // current rate
+        //lmSendConfig("baseWindRate", (string)baseWindRate); // base rate: 1.0
+        lmSendConfig("windRate", (string)(windRate = RATE_STANDARD));         // current rate
     }
 
     //----------------------------------------
@@ -519,7 +519,7 @@ default {
             else if (name == "hardcore")                     hardcore = (integer)value;
             else if (name == "hovertextOn")               hovertextOn = (integer)value;
             else if (name == "busyIsAway")                 busyIsAway = (integer)value;
-            else if (name == "baseWindRate")             baseWindRate = (float)value;
+            //else if (name == "baseWindRate")             baseWindRate = (float)value;
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
