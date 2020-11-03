@@ -271,12 +271,14 @@ default {
         }
 
 #ifdef DEVELOPER_MODE
-        if (timeReporting) {
-            thisTimerEvent = llGetUnixTime();
-            if (thisTimerEvent - lastTimerEvent < 120)
-                debugSay(5,"DEBUG-MAIN","Main Timer fired, interval " + formatFloat(thisTimerEvent - lastTimerEvent,3) + "s.");
-            lastTimerEvent = thisTimerEvent;
+        thisTimerEvent = llGetTime();
+
+        if (lastTimerEvent) {
+            timerInterval = thisTimerEvent - lastTimerEvent;
+            if (timeReporting)
+                debugSay(5,"DEBUG-MAIN","Main Timer fired, interval " + formatFloat(timerInterval,2) + "s.");
         }
+        lastTimerEvent = thisTimerEvent;
 #endif
 
         //----------------------------------------
