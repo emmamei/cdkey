@@ -679,8 +679,8 @@ default {
         doRestart();
         llSleep(0.5);
 
-        // Set the debug level for all scripts early
 #ifdef DEVELOPER_MODE
+        // Set the debug level for all scripts early
         lmSendConfig("debugLevel",(string)debugLevel);
 #endif
         readPreferences();
@@ -707,6 +707,10 @@ default {
         else cdResetKeyName();
 
         //RLVok = UNSET;
+#ifdef DEVELOPER_MODE
+        // Set the debug level for all scripts early
+        lmSendConfig("debugLevel",(string)debugLevel);
+#endif
     }
 
     //----------------------------------------
