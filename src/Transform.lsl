@@ -99,7 +99,6 @@ list currentPhrases;
 setDollType(string stateName, integer automated) {
     // Convert state name to Title case
     stateName = cdGetFirstChar(llToUpper(stateName)) + cdButFirstChar(llToLower(stateName));
-    debugSay(2,"DEBUG-DOLLTYPE","Changing (" + (string)automated + ") to type " + stateName + " from " + dollType);
 
 #ifdef DEVELOPER_MODE
     if (stateName == "") {
@@ -109,7 +108,12 @@ setDollType(string stateName, integer automated) {
 #endif
 
     // If no change, abort
-    if (stateName == dollType) return;
+    if (stateName == dollType) {
+        debugSay(2,"DEBUG-DOLLTYPE","No doll type change necessary...");
+        return;
+    }
+
+    debugSay(2,"DEBUG-DOLLTYPE","Changing (" + (string)automated + ") to type " + stateName + " from " + dollType);
 
     // By not aborting, selecting the same state can cause a "refresh" ...
     // though our menus do not currently allow this
