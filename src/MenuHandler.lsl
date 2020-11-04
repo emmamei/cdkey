@@ -204,10 +204,10 @@ default {
 
             // shortcut: a
             else if (c == "a") {
+                     if (name == "afk")                               afk = (integer)value;
 #ifdef ADULT_MODE
-                     if (name == "allowStrip")             allowStrip = (integer)value;
+                else if (name == "allowStrip")                 allowStrip = (integer)value;
 #endif
-                else if (name == "afk")                               afk = (integer)value;
                 else if (name == "allowCarry")                 allowCarry = (integer)value;
                 else if (name == "allowDress")                 allowDress = (integer)value;
                 else if (name == "allowPose")                   allowPose = (integer)value;
