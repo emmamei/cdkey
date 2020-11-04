@@ -464,6 +464,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
                 list plusList;
 
+                // The following options require RLV to work
                 if (RLVok == TRUE) {
 
                     // One-way options
@@ -572,6 +573,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 llOwnerSay("Gender is now set to " + dollGender);
                 lmMenuReply("Key...", llGetDisplayName(id), id);
             }
+#ifdef GEM_PRESENT
             else if (choice == "Gem Colour...") {
                 msg = "Here you can choose your own gem colour.";
 
@@ -585,6 +587,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 lmInternalCommand("setNormalGemColour", choice, id);
                 lmMenuReply("Gem Colour...", llGetDisplayName(id), id);
             }
+#endif
 
             // Textbox generating menus
             else if (choice == "Dolly Name..."
