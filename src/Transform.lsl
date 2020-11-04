@@ -124,30 +124,16 @@ setDollType(string stateName, integer automated) {
 
     // Look for Notecard for the Doll Type and start reading it if showPhrases is enabled
     //
-    // Builder types don't allow for Notecard Hypno
     if (showPhrases) {
-        if (stateName != "Builder") {
-            if (llGetInventoryType(typeNotecard) == INVENTORY_NOTECARD) {
+        if (llGetInventoryType(typeNotecard) == INVENTORY_NOTECARD) {
 
-                kQuery = llGetNotecardLine(typeNotecard,readLine++);
+            kQuery = llGetNotecardLine(typeNotecard,readLine++);
 
-                debugSay(2,"DEBUG-DOLLTYPE","Found notecard: " + typeNotecard);
-            }
-#ifdef DEVELOPER_MODE
-            else {
-                debugSay(2,"DEBUG-DOLLTYPE","Found no notecard titled " + typeNotecard);
-            }
-#endif
+            debugSay(2,"DEBUG-DOLLTYPE","Found notecard: " + typeNotecard);
         }
     }
 
-    // Dont lock transformation if is automated (or is a Builder Dolly)
-    if (!automated
-#ifdef DEVELOPER_MODE
-        && stateName != "Builder"
-#endif
-        ) transformLockExpire = llGetUnixTime() + TRANSFORM_LOCK_TIME;
-
+    if (!automated) transformLockExpire = llGetUnixTime() + TRANSFORM_LOCK_TIME;
     else transformLockExpire = 0;
     lmSendConfig("transformLockExpire",(string)transformLockExpire);
 
@@ -173,10 +159,6 @@ setDollType(string stateName, integer automated) {
 
     lmInternalCommand("setWindRate","",NULL_KEY);
     debugSay(2,"DEBUG-DOLLTYPE","Changed to type " + dollType);
-#ifdef DEVELOPER_MODE
-    if (stateName == "Builder")
-        lmSendToController(dollName + " has just become a Builder Dolly. The Key has stopped unwinding and is in stasis.");
-#endif
 }
 
 reloadTypeNames(key id) {
@@ -198,18 +180,11 @@ reloadTypeNames(key id) {
             // The Slut model is allowed (in a normal fashion)
             // if this is an ADULT key
             //
-            // Note that the Builder type is disallowed here:
-            // if it is a valid type, it is added later; Builder
-            // types shouldn't have a notecard
-            //
-            if (   (typeName != "Builder")
 #ifndef ADULT_MODE
-                && (typeName != "Slut")
+            if (typeName != "Slut") types += typeName;
+#else
+            types += typeName;
 #endif
-                ) {
-
-                types += typeName;
-            }
         }
     }
 
@@ -218,16 +193,11 @@ reloadTypeNames(key id) {
     // Note the following rules of the built-in types:
     //   - Display: Notecard is ok but not needed
     //   - Slut: rejects type even if Notecard is present if not ADULT, else Notecard ok but not needed
-    //   - Builder: rejects Notecards entirely
     //
     if (llListFindList(types, (list)"Display") == NOT_FOUND) types += [ "Display" ];
 #ifdef ADULT_MODE
     if (simRating == "MATURE" || simRating == "ADULT")
         if (llListFindList(types, (list)"Slut") == NOT_FOUND) types += [ "Slut" ];
-#endif
-#ifdef DEVELOPER_MODE
-    // we can add outright because this type is not allowed a notecard at all
-    if (cdIsDoll(id)) types += [ "Builder" ];
 #endif
 }
 

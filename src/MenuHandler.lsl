@@ -407,11 +407,7 @@ default {
                         // Toucher is not Doll.... could be anyone
                         msg =  dollName + " is a doll and likes to be treated like " +
                                 "a doll. So feel free to use these options. ";
-#ifdef DEVELOPER_MODE
-                        if (dollType != "Builder") menu += "Unwind";
-#else
                         menu += "Unwind";
-#endif
                     }
 
                     if (RLVok == TRUE) {
@@ -520,12 +516,7 @@ default {
                         // Do we want Dolly to hae Detach capability... ever?
                         if (detachable) menu += [ "Detach" ];
                     }
-#ifdef DEVELOPER_MODE
-                    if (dollType != "Builder") menu += "Wind";
-                    menu += "Help...";
-#else
                     menu += [ "Wind", "Help..." ];
-#endif
                 }
 
                 if (lowScriptMode)

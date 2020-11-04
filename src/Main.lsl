@@ -22,7 +22,6 @@
 //    - slut: can be stripped (like Pleasure Dolls)
 //    - Display: poses dont time out
 //    - Key: doesnt wind down - Doll can be worn by other Dolly as Key
-//    - Builder: doesnt wind down
 
 //========================================
 // VARIABLES
@@ -420,9 +419,6 @@ default {
         // A specific test for collapsed status is no longer required here as
         // being collapsed is one of several conditions which forces the wind
         // rate to be 0.
-        //
-        // Others which cause this effect are not being attached to spine and
-        // being doll type Builder
 
         if (windingDown) {
             if (timeSpan != 0) {
