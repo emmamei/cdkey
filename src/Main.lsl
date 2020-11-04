@@ -29,6 +29,7 @@
 
 string msg;
 integer minsLeft;
+float windRateFactor = 1.0;
 
 // #ifdef DEVELOPER_MODE
 // integer thisTimerEvent;
@@ -77,43 +78,33 @@ ifPermissions() {
 #endif
 
 float setWindRate() {
-    integer x;
-    float y;
+    integer newWindDown;
+    float newWindRate;
 
     // This sets the wind rate etc and reports if values have changed...
-    x = cdWindDown();
-    if (x != windingDown) {
-        windingDown = x;
+    newWindDown = cdWindDown();
+    if (newWindDown != windingDown) {
+        windingDown = newWindDown;
         lmSendConfig("windingDown", (string)windingDown);   // boolean
     }
 
-    y = RATE_STANDARD;
-    if (afk) y *= 0.5;
+    if (afk) { newWindRate = 0.5; }
+    else { newWindRate = windRateFactor; }
 
-    if (y != windRate) {
-        windRate = y;
+    if (newWindRate != windRate) {
+        windRate = newWindRate;
         lmSendConfig("windRate", (string)windRate);         // current rate
     }
 
-    // There are several winding rates:
+    // llTargetOmega: With a normalized vector (first parameter), the spin rate
+    // is in radians per second - 2𝜋 radians equals 1 full rotation.
     //
-    // baseWindRate is the basic rate when the Key is full-on and without
-    //     restrictions or adjustments
+    // The specified rate is 2𝜋 radians divided by 8 - so as coded one entire key
+    // rotation takes 8 seconds. Rotation is about the Z axis, scaled according
+    // to the wind rate.
     //
-    // windRate is the actual discernable Key winding rate. THIS is the
-    //     amount of most importance, and the one that accounts for
-    //     the Key's actual winding down.
-
-    //lmSendConfig("baseWindRate", (string)baseWindRate); // base rate: 1.0
-
-    // llTargetOmega: With normalized vector, spin rate is equal to radians per second
-    // 2𝜋 radians per rotation.  This sets a normal rotation rate of 4 rpm about the
-    // Z axis multiplied by the wind rate this way the key will visually run faster as
-    // the dolly begins using their time faster.
-
-    //debugSay(1,"DEBUG-WINDRATE","windRate * TWO_PI / 8.0 = " + (string)(windRate * TWO_PI / 8.0));
-    //debugSay(1,"DEBUG-WINDRATE","windRate = " + (string)(windRate));
-    //debugSay(1,"DEBUG-WINDRATE","windingDown = " + (string)(windingDown));
+    // The windRate variable allows the changing of the key's rotation speed based
+    // on external factors.
 
     if (windingDown == 1) {
         llTargetOmega(<0.0, 0.0, 1.0>, windRate * TWO_PI / 8.0, 1.0);
