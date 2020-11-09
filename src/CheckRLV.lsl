@@ -369,6 +369,8 @@ default {
                 list exceptions = BUILTIN_CONTROLLERS + cdList2ListStrided(controllers, 0, -1, 2);
                 integer i;
 
+                if (exceptions == []) return;
+
                 if cdCarried() {
                     if (llListFindList(exceptions, (list)carrierID) != NOT_FOUND) exceptions += carrierID;
                 }
@@ -389,13 +391,22 @@ default {
                 //  RecvChat: being able to recieve a chat message from someone
                 // RecvEmote: being able to recieve an emote from someone
 
-                // Directly dump the list using the static parts of the RLV command as a seperator; no looping needed
-                lmRunRLVas("Base", "clear=tplure:,tplure:"          + llDumpList2String(exceptions, "=add,tplure:")    + "=add");
-                lmRunRLVas("Base", "clear=accepttp:,accepttp:"      + llDumpList2String(exceptions, "=add,accepttp:")  + "=add");
-                lmRunRLVas("Base", "clear=sendim:,sendim:"          + llDumpList2String(exceptions, "=add,sendim:")    + "=add");
-                lmRunRLVas("Base", "clear=recvim:,recvim:"          + llDumpList2String(exceptions, "=add,recvim:")    + "=add");
-                lmRunRLVas("Base", "clear=recvchat:,recvchat:"      + llDumpList2String(exceptions, "=add,recvchat:")  + "=add");
-                lmRunRLVas("Base", "clear=recvemote:,recvemote:"    + llDumpList2String(exceptions, "=add,recvemote:") + "=add");
+                llOwnerSay("Reactivating RLV exceptions");
+                lmRunRLVas("Base", "clear=tplure:,clear=accepttp:,clear=sendim:,clear=recvim:,clear=recvchat:,clear=recvemote:");
+
+                string exceptionKey;
+                i = llGetListLength(exceptions);
+                while (i--) {
+                    exceptionKey = llList2String(exceptions, i);
+
+                    // This assumes that all cmds in the rlvRestrict are y/n options!
+                    lmRunRLVas("Base", "tplure:"    + (string)(exceptionKey) + "=add," +
+                                       "accepttp:"  + (string)(exceptionKey) + "=add," +
+                                       "sendim:"    + (string)(exceptionKey) + "=add," +
+                                       "recvim:"    + (string)(exceptionKey) + "=add," +
+                                       "recvchat:"  + (string)(exceptionKey) + "=add," +
+                                       "recvemote:" + (string)(exceptionKey) + "=add");
+                }
             }
         }
         else if (code < 200) {

@@ -32,9 +32,9 @@
 //  1: RLV restriction
 //  2: String CSV containing scripts using restriction
 //
-list rlvStatus;
+//list rlvStatus; ... not used
 list rlvRestrict;
-list rlvRestrictions;
+//list rlvRestrictions; ... not used
 
 string scriptName;
 integer statusChannel = 55117;
@@ -111,17 +111,18 @@ default {
             split = llDeleteSubList(split, 0, 0);
 
             if (cmd == "refreshRLV") {
-                //llOwnerSay("Reactivating RLV restrictions");
-                if (rlvRestrict) lmRunRLV(llDumpList2String(rlvRestrict,",=n") + "=n");
+                llOwnerSay("Reactivating RLV restrictions");
 
-                //string cmd;
-                //i = llGetListLength(rlvRestrict);
-                //while (i--) {
-                //    cmd += llList2String(rlvRestrict, i);
-                //
-                //    This assumes that all cmds in the rlvRestrict are y/n options!
-                //    llOwnerSay("@" + cmd + "=n");
-                //}
+                if (rlvRestrict == []) return;
+
+                string cmd;
+                i = llGetListLength(rlvRestrict);
+                while (i--) {
+                    cmd = llList2String(rlvRestrict, i);
+
+                    // This assumes that all cmds in the rlvRestrict are y/n options!
+                    llOwnerSay("@" + cmd + "=n");
+                }
             }
             else if (cmd == "instantMessage") {
 
