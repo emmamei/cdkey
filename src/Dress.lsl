@@ -44,10 +44,6 @@ string prefix;
 
 integer tempDressingLock = FALSE;  // allow only one dressing going on at a time
 
-#ifdef NOT_USED
-integer dressingSteps;             // are all attempts to dress complete?
-#endif
-
 //key setupID = NULL_KEY;
 
 string newOutfitName;
@@ -339,26 +335,6 @@ default {
     }
 
 
-#ifdef NOT_USED
-    //----------------------------------------
-    // TIMER
-    //----------------------------------------
-    timer() {
-        // This is triggered when a dressing times out
-        llSay(DEBUG_CHANNEL,"Dress timer tripped: failed to change to " + newOutfitName);
-
-        llListenRemove(randomDressHandle);
-        llListenRemove(menuDressHandle);
-#ifdef CONFIRM_WEAR
-        llListenRemove(confirmWearHandle);
-#endif
-#ifdef CONFIRM_UNWEAR
-        llListenRemove(confirmUnwearHandle);
-#endif
-        changeComplete(FALSE);
-    }
-#endif
-
     //----------------------------------------
     // LINK_MESSAGE
     //----------------------------------------
@@ -375,6 +351,9 @@ default {
         scaleMem();
 
         if (code == CONFIG) {
+
+            // Configuration settings
+
             string name = cdListElement(split, 0);
             string value = cdListElement(split, 1);
             string c = cdGetFirstChar(name);
@@ -433,6 +412,15 @@ default {
             else if (name == "hardcore")                        hardcore = (integer)value;
         }
         else if (code == INTERNAL_CMD) {
+
+            // Internal command - one of:
+            //
+            // * randomDress
+            // * wearOutfit
+            // * stripAll
+            // * setHovertext
+            // * carriedMenu
+
             string cmd = cdListElement(split, 0);
             split = llDeleteSubList(split, 0, 0);
 
@@ -465,10 +453,14 @@ default {
                 }
             }
             else if (cmd == "wearOutfit") {
+
                 // Overriting a script global here... not kosher, but works.
                 // Note that the value may or may NOT come from this script:
                 // ergo, the reason this overwrite is here.
+
                 newOutfitName = cdListElement(split, 0);
+
+                // Abort if no outfit...
 
                 if (newOutfitName == "") {
                     llSay(DEBUG_CHANNEL, "No outfit chosen to wear!");
@@ -489,14 +481,6 @@ default {
 #endif
                     tempDressingLock = TRUE;
 
-#ifdef NOT_USED
-                    // dressingSteps is used to track whether all listener code paths
-                    // for dressing have been done: that is, normalself attached,
-                    // new outfit attached, and old outfit removed. (It does NOT include
-                    // nude folder.)
-                    dressingSteps = 0;
-#endif
-
                     dressingFailures = 0;
                     change = 1;
 
@@ -504,10 +488,10 @@ default {
                     // previous values of newOutfit* into oldOutfit* - can we do
                     // this without using a link message?
                     //
-                    // *OutfitName       choice           - name of outfit
+                    // *OutfitName       newOutfitName    - name of outfit
                     // *OutfitFolder     outfitsFolder    - name of main outfits folder
                     // *OutfitPath       clothingFolder   - name of folder with outfit, relative to outfitsFolder
-                    // *Outfit           -new-            - full path of outfit (outfitsFolder + "/" + clothingFolder + "/" + choice)
+                    // *Outfit           -new-            - full path of outfit (outfitsFolder + "/" + clothingFolder + "/" + newOutfitName)
 
                     lmSendConfig("oldOutfitName",   (  oldOutfitName = newOutfitName));
                     lmSendConfig("oldOutfitFolder", (oldOutfitFolder = newOutfitFolder));
@@ -516,7 +500,6 @@ default {
 
                     // Build the newOutfit* variables - but do they get used?
 
-                    //  newOutfitName = choice;
                     newOutfitFolder = outfitsFolder;
                       newOutfitPath = clothingFolder;
 
@@ -533,10 +516,11 @@ default {
 
                 //newOutfitWordEnd = llStringLength(newOutfit)  - 1;
 
-                //llOwnerSay("newOutfit is: " + newOutfit);
-                //llOwnerSay("newOutfitName is: " + newOutfitName);
-                //llOwnerSay("choice is: " + choice);
-                //llOwnerSay("clothingFolder is: " + clothingFolder);
+                debugSay(5,"DEBUG-DRESS","newOutfit is: " + newOutfit);
+                debugSay(5,"DEBUG-DRESS","newOutfitName is: " + newOutfitName);
+                debugSay(5,"DEBUG-DRESS","newOutfitFolder is: " + newOutfitFolder);
+                debugSay(5,"DEBUG-DRESS","newOutfitPath is: " + newOutfitPath);
+                debugSay(5,"DEBUG-DRESS","clothingFolder is: " + clothingFolder);
 
                 //----------------------------------------
                 // DRESSING
@@ -548,10 +532,13 @@ default {
                 // the entire outfitsFolder just in case (everything we want should be locked on). Next, go through all
                 // clothing parts and detach them if possible. Finally, Attach everything in the outfitsFolder just in case.
                 //
-                // Attach and Lock:
+                // Attach and Lock (Base):
                 //
                 // 1) Attach everything in the normalselfFolder (using @attachallover:=force followed by @detachallthis:=n )
                 // 2) Attach everything in the nudeFolder (using @attachallover:=force followed by @detachallthis:=n )
+                //
+                // Attach and Lock (New Outfit):
+                //
                 // 3) Attach everything in the newOutfitFolder (using @attachallover:=force followed by @detachallthis:=n )
                 // 4) Attach everything in the newOutfitFolder a second time (using @attachallover:=force followed by @detachallthis:=n )
                 //
@@ -565,16 +552,30 @@ default {
                 //
                 // 8) Attach everything in the newOutfitFolder a third time (using @attachallover:=force followed by @detachallthis:=n )
 
+                // COMMENTS:
+                //
+                // Duplication between Step #3 and Step #4 is probably not needed, and skipping Step #5 saves having to save
+                // the oldOutfitFolder.  Skipping oldOutfitFolder also makes things work for when the oldOutfitFolder is unknown.
+                // Step #7 seems to be overkill, as does Step #8.
+
                 llOwnerSay("New outfit chosen: " + newOutfitName);
+
+                //----------------------------------------
+                // STEP #1
 
                 // Restore our usual look from the ~normalself folder...
 #define cdAttachAndLock(a) lmRunRLV("attachallover:"+(a)+"=force,detachallthis:"+(a)+"=n")
 
                 // This attaches ~normalself and locks it
+                debugSay(2,"DEBUG-DRESS","attach and lock for normal self folder: " + normalselfFolder);
                 cdAttachAndLock(normalselfFolder);
+
+                //----------------------------------------
+                // STEP #2
 
                 if (nudeFolder != "") {
                     // this attaches the ~nude folder
+                    debugSay(2,"DEBUG-DRESS","attach and lock for nude folder: " + nudeFolder);
                     cdAttachAndLock(nudeFolder);
                 }
 #ifdef DEVELOPER_MODE
@@ -582,46 +583,73 @@ default {
                     llSay(DEBUG_CHANNEL,"nudeFolder is empty! (no nude folder attached)");
                 }
 #endif
-                    
+
+                //----------------------------------------
+                // STEP #3
+
                 // attach the new folder and lock it down - and prevent nude
                 debugSay(2, "DEBUG-DRESS", "Attaching outfit from " + newOutfit);
                 cdAttachAndLock(newOutfit);
                 llSleep(5.0);
 
-                // repeat for good measure
-                debugSay(2, "DEBUG-DRESS", "Attaching outfit again from " + newOutfit);
-                cdAttachAndLock(newOutfit);
-
-                // At this point, all of ~normalself, ~nude, and newOutfit have been added and locked
-                // We should be fully clothed and set with every thing we need - BUT we have to
-                // remove the old...
+                //----------------------------------------
+                // *** NEW STEP #4
 
                 // Remove rest of old outfit (using saved path)
                 if (oldOutfitPath != "") {
+                    debugSay(2, "DEBUG-DRESS", "Removing old outfit from " + oldOutfitPath);
                     lmRunRLV("detachall:" + oldOutfitPath + "=force");
                     oldOutfitPath = "";
                 }
 #ifdef DEVELOPER_MODE
-                //else llSay(DEBUG_CHANNEL,"no old outfit path!");
+                else llSay(DEBUG_CHANNEL,"no old outfit path!");
 #endif
+                //----------------------------------------
+                // *** NEW STEP #5
+
+                // Attach new outfit again
+                debugSay(2, "DEBUG-DRESS", "Attaching outfit again from " + newOutfit);
+                cdAttachAndLock(newOutfit);
+
+                //----------------------------------------
+                // *** NEW STEP #6
+
+                // Unlock folders previously locked
+                lmRunRLV("detachallthis:" + normalselfFolder + "=y," +
+                         "detachallthis:" +       nudeFolder + "=y," +
+                         "detachallthis:" +        newOutfit + "=y");
+                debugSay(2, "DEBUG-DRESS", "Unlocking three folders of new outfit...");
+
+                //----------------------------------------
+                // STEP #6
+
                 // Now remove everything in the outfits folder (typeically "> Outfits")
                 // which is not locked down - and then attach everything in the new outfit
                 // again
-                lmRunRLV("detachall:" + outfitsFolder + "=force");
+                //debugSay(2, "DEBUG-DRESS", "Removing everything in Outfits folder: " + outfitsFolder);
+                //lmRunRLV("detachall:" + outfitsFolder + "=force");
+
+                //----------------------------------------
+                // STEP #7
 
                 // And now send an attempt to clean up any remaining stray pieces: remove rest of
                 // clothing not otherwise locked
-                list parts = [ "gloves","jacket","pants","shirt",
-                               "shoes","skirt","socks","underpants",
-                               "undershirt","alpha","pelvis","left foot",
-                               "right foot","r lower leg","l lower leg",
-                               "r forearm","l forearm","r upper arm",
-                               "l upper arm","r upper leg","l upper leg" ];
+                //list parts = [ "gloves","jacket","pants","shirt",
+                //               "shoes","skirt","socks","underpants",
+                //               "undershirt","alpha","pelvis","left foot",
+                //               "right foot","r lower leg","l lower leg",
+                //               "r forearm","l forearm","r upper arm",
+                //               "l upper arm","r upper leg","l upper leg" ];
+                //
+                //debugSay(2, "DEBUG-DRESS", "Removing all parts....");
+                //lmRunRLV("detachallthis:" + llDumpList2String(parts, "=force,detachallthis:") + "=force");
 
-                lmRunRLV("detachallthis:" + llDumpList2String(parts, "=force,detachallthis:") + "=force");
+                //----------------------------------------
+                // STEP #8
 
                 // Attach everything one last time - in case we knocked something off we need
-                lmRunRLV("attachall:" + newOutfit + "=force");
+                //debugSay(2, "DEBUG-DRESS", "Reattach new outfit: " + newOutfit);
+                //lmRunRLV("attachall:" + newOutfit + "=force");
 
 #ifdef CONFIRM_WEAR
                 // check to see that everything in the ~normalself folder is
@@ -679,10 +707,15 @@ default {
             }
         }
         else if (code == RLV_RESET) {
+
+            // RLV check is resetting values
+
             RLVok = llList2Integer(split, 0);
         }
-        // Choice #500: (From Main Menu) Dress Dolly
         else if (code == MENU_SELECTION)  {
+
+            // Selection from menu
+
             string choice = cdListElement(split, 0);
             string name = cdListElement(split, 1);
 
@@ -729,7 +762,7 @@ default {
             //     initState = 105;
             // }
 
-                 if (code == MEM_REPORT) {
+            if (code == MEM_REPORT) {
                 memReport(cdMyScriptName(),cdListFloatElement(split, 0));
             }
             else if (code == CONFIG_REPORT) {
@@ -784,11 +817,12 @@ default {
             debugSay(6, "DEBUG-DRESS", "Secondary outfits menu: choice = " + choice + "; select = " + (string)select);
 
             if (llGetSubString(choice, 0, 6) == "Outfits") {
+
                 // Choice was one of:
                 //
-                // Outfits Next
-                // Outfits Prev
-                // Outfits Parent
+                // - Outfits Next
+                // - Outfits Prev
+                // - Outfits Parent
 
                 if (!isDresser(id)) {
                     outfitsList = [];
