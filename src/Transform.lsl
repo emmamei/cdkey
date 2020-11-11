@@ -456,8 +456,8 @@ default {
             string s = "Transform Link Msg:" + script + ":" + (string)code + ":choice/name";
             string t = choice + "/" + name;
 
-            if (id != NULL_KEY || debugLevel > 6) debugSay(5,"DEBUG-LINK",s + "/id = " + t + "/" + (string)id);
-            else debugSay(5,"DEBUG-LINK",s + " = " + t);
+            if (id != NULL_KEY || debugLevel > 6) debugSay(5,"DEBUG-TRANSFORM",s + "/id = " + t + "/" + (string)id);
+            else debugSay(5,"DEBUG-TRANSFORM",s + " = " + t);
         }
 #endif
         scaleMem();
