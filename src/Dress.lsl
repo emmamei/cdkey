@@ -528,35 +528,47 @@ default {
 
                 // Steps to dressing avi:
                 //
-                // Overview: Attach everything we need, and lock them afterwards. Next, detach the old outfit - then detach
-                // the entire outfitsFolder just in case (everything we want should be locked on). Next, go through all
-                // clothing parts and detach them if possible. Finally, Attach everything in the outfitsFolder just in case.
+                // Overview: Attach everything we need, and lock them afterwards.
+                // Next, detach the old outfit - then detach the entire outfitsFolder
+                // just in case (everything we want should be locked on). Next,
+                // go through all clothing parts and detach them if possible.
+                // Finally, Attach everything in the outfitsFolder just in case.
                 //
                 // Attach and Lock (Base):
                 //
-                // 1) Attach everything in the normalselfFolder (using @attachallover:=force followed by @detachallthis:=n )
-                // 2) Attach everything in the nudeFolder (using @attachallover:=force followed by @detachallthis:=n )
+                // 1) Attach everything in the normalselfFolder
+                //       (using @attachallover:=force followed by @detachallthis:=n )
+                // 2) Attach everything in the nudeFolder
+                //       (using @attachallover:=force followed by @detachallthis:=n )
                 //
                 // Attach and Lock (New Outfit):
                 //
-                // 3) Attach everything in the newOutfitFolder (using @attachallover:=force followed by @detachallthis:=n )
-                // 4) Attach everything in the newOutfitFolder a second time (using @attachallover:=force followed by @detachallthis:=n )
+                // 3) Attach everything in the newOutfitFolder
+                //       (using @attachallover:=force followed by @detachallthis:=n )
+                // 4) Attach everything in the newOutfitFolder a second time
+                //       (using @attachallover:=force followed by @detachallthis:=n )
                 //
                 // Force Detach:
                 //
-                // 5) Detach oldOutfitFolder (using @detachall:=force )
-                // 6) Detach entire outfitsFolder (using @detachall:=force )
-                // 7) Go through clothing parts and detach (using @detachallthis:=force on each part)
+                // 5) Detach oldOutfitFolder
+                //       (using @detachall:=force )
+                // 6) Detach entire outfitsFolder
+                //       (using @detachall:=force )
+                // 7) Go through clothing parts and detach
+                //       (using @detachallthis:=force on each part)
                 //
                 // Attach outfit again:
                 //
-                // 8) Attach everything in the newOutfitFolder a third time (using @attachallover:=force followed by @detachallthis:=n )
+                // 8) Attach everything in the newOutfitFolder a third time
+                //       (using @attachallover:=force followed by @detachallthis:=n )
 
                 // COMMENTS:
                 //
-                // Duplication between Step #3 and Step #4 is probably not needed, and skipping Step #5 saves having to save
-                // the oldOutfitFolder.  Skipping oldOutfitFolder also makes things work for when the oldOutfitFolder is unknown.
-                // Step #7 seems to be overkill, as does Step #8.
+                // Duplication between Step #3 and Step #4 is probably not
+                // needed, and skipping Step #5 saves having to save the
+                // oldOutfitFolder.  Skipping oldOutfitFolder also makes things
+                // work for when the oldOutfitFolder is unknown.  Step #7 seems
+                // to be overkill, as does Step #8.
 
                 llOwnerSay("New outfit chosen: " + newOutfitName);
 
@@ -578,11 +590,6 @@ default {
                     debugSay(2,"DEBUG-DRESS","attach and lock for nude folder: " + nudeFolder);
                     cdAttachAndLock(nudeFolder);
                 }
-#ifdef DEVELOPER_MODE
-                else {
-                    llSay(DEBUG_CHANNEL,"nudeFolder is empty! (no nude folder attached)");
-                }
-#endif
 
                 //----------------------------------------
                 // STEP #3
@@ -595,15 +602,19 @@ default {
                 //----------------------------------------
                 // *** NEW STEP #4
 
-                // Remove rest of old outfit (using saved path)
-                if (oldOutfitPath != "") {
-                    debugSay(2, "DEBUG-DRESS", "Removing old outfit from " + oldOutfitPath);
-                    lmRunRLV("detachall:" + oldOutfitPath + "=force");
-                    oldOutfitPath = "";
+                // Remove rest of old outfit (using saved folder)
+                if (oldOutfitFolder != "") {
+                    debugSay(2, "DEBUG-DRESS", "Removing old outfit from " + oldOutfitFolder);
+                    lmRunRLV("detachall:" + oldOutfitFolder + "=force");
+                    oldOutfitFolder = "";
                 }
-#ifdef DEVELOPER_MODE
-                else llSay(DEBUG_CHANNEL,"no old outfit path!");
-#endif
+                else {
+                    // If no oldOutfitFolder, then just detach everything
+                    // outside of the newFolder and ~normalself and ~nude
+                    debugSay(2, "DEBUG-DRESS", "Removing all other outfits from " + outfitsFolder);
+                    lmRunRLV("detachall:" + outfitsFolder + "=force");
+                }
+
                 //----------------------------------------
                 // *** NEW STEP #5
 
