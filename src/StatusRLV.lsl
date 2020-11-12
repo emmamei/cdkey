@@ -150,7 +150,7 @@ default {
         else if (code == RLV_CMD) {
             string commandString = cdListElement(split, 1);
 
-            debugSay(7,"DEBUG-STATUSRLV","Got Link Message 315 from script " + script + ": " + commandString);
+            debugSay(7,"DEBUG-STATUSRLV","Got RLV_CMD (315) from script " + script + ": " + commandString);
 
             if (RLVok == TRUE) {
                 // Note that this does NOT handle "clear=..."
