@@ -238,9 +238,10 @@ integer isDresser(key id) {
 
 changeComplete(integer success) {
     // And remove the temp locks we used
+
 #ifdef DEVELOPER_MODE
     llOwnerSay("Your key is now unlocked again as you are a developer.");
-    if (RLVok == TRUE) lmRunRLV("clear");
+    if (RLVok == TRUE) lmRunRLV("clear=attach,clear=detach");
 #else
     // if we used "detach" as the pattern then the Key would be unlocked
     lmRunRLV("clear=attach,clear=detachall");

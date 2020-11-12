@@ -473,9 +473,9 @@ default {
 
                     // Dolly is operating normally (not collapsed)
 
-                    if (cdPoseAnim()) {
-                        // keyAnimation is a pose of some sort
-                        if (RLVok == TRUE) {
+                    if (RLVok == TRUE) {
+                        if (cdPoseAnim()) {
+                            // keyAnimation is a pose of some sort
 			    if (defaultPoseRLVcmd) {
 			        lmRunRLV(defaultPoseRLVcmd);
                             }
@@ -483,10 +483,10 @@ default {
 			        lmRunRLVas("UserPose", userPoseRLVcmd);
                             }
                         }
-                    }
-                    else if (oldKeyAnimation != keyAnimation) {
-                        // animation just became null
-                        if (RLVok == TRUE) lmRunRLV("clear");
+                        else if (oldKeyAnimation != keyAnimation) {
+                            // animation just became null
+                            lmRunRLV("clear"); // FIXME: This is too generic
+                        }
                     }
                 }
             }
@@ -496,16 +496,15 @@ default {
 
                 if (!collapsed) {
                     // a collapse overrides AFK - ignore AFK if we are collapsed
-                    if (afk) {
-                        if (RLVok == TRUE) {
+                    if (RLVok == TRUE) {
+                        if (afk) {
                             lmRunRLV(defaultAfkRLVcmd);
-                            if (userAfkRLVcmd)
-                                lmRunRLVas("UserAfk", userAfkRLVcmd);
+                            if (userAfkRLVcmd) lmRunRLVas("UserAfk", userAfkRLVcmd);
                         }
-                    }
-                    else if (oldAfk != afk) {
-                        // afk value JUST became zero
-                        if (RLVok == TRUE) lmRunRLV("clear");
+                        else if (oldAfk != afk) {
+                            // afk value JUST became zero
+                            if (RLVok == TRUE) lmRunRLV("clear"); // FIXME: This is too generic
+                        }
                     }
                 }
             }
@@ -534,7 +533,7 @@ default {
                     else {
                         if (wasCollapsed) {
                             // We were collapsed but aren't now... so clear RLV restrictions
-                            if (RLVok == TRUE) lmRunRLV("clear");
+                            lmRunRLV("clear"); // FIXME: this is too generic
                         }
                     }
                 }
@@ -587,7 +586,7 @@ default {
                 // (collapse is managed by Main)
                 if (!collapsed) {
                     // Not collapsed: clear any user collapse RLV restrictions
-                    if (RLVok == TRUE) lmRunRLV("clear");
+                    lmRunRLV("clear");
 
                     // Is Dolly AFK? Trigger RLV restrictions as appropriate
                     if (afk) {
