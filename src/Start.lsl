@@ -805,7 +805,7 @@ default {
             i = nCards;
             while (i--) {
                 name = llGetInventoryName(INVENTORY_NOTECARD,i);
-                if ((llGetSubString(name,0,0) == "*") || (name == NOTECARD_PREFERENCES)) {
+                if (name == NOTECARD_PREFERENCES) {
                     llRemoveInventory(name);
                 }
             }
