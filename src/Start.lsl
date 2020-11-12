@@ -511,6 +511,7 @@ default {
             else if (name == "userCollapseRLVcmd")  userCollapseRLVcmd = value;
             else if (name == "userPoseRLVcmd")          userPoseRLVcmd = value;
             else if (name == "userAfkRLVcmd")            userAfkRLVcmd = value;
+            else if (name == "defaultBaseRLVcmd")    defaultBaseRLVcmd = value;
 
 #ifdef GEM_PRESENT
             else if (name == "gemColour") {      gemColour = (vector)value; doLuminosity(); }
@@ -586,7 +587,7 @@ default {
                 // (collapse is managed by Main)
                 if (!collapsed) {
                     // Not collapsed: clear any user collapse RLV restrictions
-                    lmRunRLV("clear");
+                    lmRunRLV("clear"); // FIXME: This messes things up
 
                     // Is Dolly AFK? Trigger RLV restrictions as appropriate
                     if (afk) {

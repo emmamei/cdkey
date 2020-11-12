@@ -37,6 +37,7 @@ list rlvRestrict;
 //list rlvRestrictions; ... not used
 
 string scriptName;
+string defaultBaseRLVcmd;
 integer statusChannel = 55117;
 integer statusHandle;
 integer rlvCmdIssued;
@@ -100,9 +101,9 @@ default {
             string value = cdListElement(split, 1);
 
 #ifdef DEVELOPER_MODE
-                 if (name == "debugLevel") debugLevel = (integer)cdListElement(split, 1);
-            //else if (name == "debugLevel") debugLevel = (integer)cdListElement(split, 1);
+                 if (name == "debugLevel") debugLevel = (integer)value;
 #endif
+            else if (name == "defaultBaseRLVcmd") defaultBaseRLVcmd = value;
             return;
         }
 
@@ -158,11 +159,10 @@ default {
 #ifdef LOCKON
                     // this is a blanket clear, but it doesn't mean to us what
                     // it means normally: we have a base RLV set
-                    commandString += ",permissive=n,detach=n";
-                    //if (userBaseRLVcmd) commandString += "," + userBaseRLVcmd;
+                    commandString += ",permissive=n,detach=n," + defaultBaseRLVcmd;
 #else
                     //llSay(DEBUG_CHANNEL,"blanket clear issued from " + script);
-                    commandString += ",permissive=y,detach=y";
+                    commandString += ",permissive=y,detach=y," + defaultBaseRLVcmd;
 #endif
                     //lmInternalCommand("clearRLV",script,NULL_KEY);
                     //return;
@@ -180,6 +180,7 @@ default {
                 }
 
                 llOwnerSay("@" + commandString);
+                lmInternalCommand("updateExceptions",script,NULL_KEY);
                 rlvCmdIssued = 1;
                 lmInternalCommand("storeRLV",script + "|" + commandString,NULL_KEY);
             }

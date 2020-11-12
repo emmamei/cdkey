@@ -152,6 +152,7 @@ activateRLVBase() {
     if (!canSit)    baseRLV += "sit=n";             else baseRLV += "sit=y";
 
     lmRunRLVas("Base", baseRLV);
+    lmSendConfig("defaultBaseRLVcmd",(string)baseRLV); // save the defaults
 
 #ifdef LOCKON
     if (!canDressSelf || hardcore || collapsed || wearLock || afk) {
@@ -362,14 +363,16 @@ default {
                 doCheckRLV();
             }
             else if (cmd == "updateExceptions") {
+                // VERY IMPORTANT: DO NOT CALL lmRunRLV OR lmRunRLVas!! THIS WILL SET UP
+                // A SCRIPT LOOP THAT WILL BE VERY HARD TO ESCAPE.
 
                 // Exempt builtin or user specified controllers from TP restictions
                 if (RLVok == FALSE) return;
 
                 list exceptions = BUILTIN_CONTROLLERS + cdList2ListStrided(controllers, 0, -1, 2);
-                integer i;
-
                 if (exceptions == []) return;
+
+                integer i;
 
                 if cdCarried() {
                     if (llListFindList(exceptions, (list)carrierID) != NOT_FOUND) exceptions += carrierID;
@@ -392,7 +395,7 @@ default {
                 // RecvEmote: being able to recieve an emote from someone
 
                 llOwnerSay("Reactivating RLV exceptions");
-                lmRunRLVas("Base", "clear=tplure:,clear=accepttp:,clear=sendim:,clear=recvim:,clear=recvchat:,clear=recvemote:");
+                llOwnerSay("@clear=tplure:,clear=accepttp:,clear=sendim:,clear=recvim:,clear=recvchat:,clear=recvemote:");
 
                 string exceptionKey;
                 i = llGetListLength(exceptions);
@@ -400,12 +403,12 @@ default {
                     exceptionKey = llList2String(exceptions, i);
 
                     // This assumes that all cmds in the rlvRestrict are y/n options!
-                    lmRunRLVas("Base", "tplure:"    + (string)(exceptionKey) + "=add," +
-                                       "accepttp:"  + (string)(exceptionKey) + "=add," +
-                                       "sendim:"    + (string)(exceptionKey) + "=add," +
-                                       "recvim:"    + (string)(exceptionKey) + "=add," +
-                                       "recvchat:"  + (string)(exceptionKey) + "=add," +
-                                       "recvemote:" + (string)(exceptionKey) + "=add");
+                    llOwnerSay("@tplure:"    + (string)(exceptionKey) + "=add," +
+                                "accepttp:"  + (string)(exceptionKey) + "=add," +
+                                "sendim:"    + (string)(exceptionKey) + "=add," +
+                                "recvim:"    + (string)(exceptionKey) + "=add," +
+                                "recvchat:"  + (string)(exceptionKey) + "=add," +
+                                "recvemote:" + (string)(exceptionKey) + "=add");
                 }
             }
         }
