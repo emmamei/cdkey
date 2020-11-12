@@ -722,19 +722,21 @@ default {
 
                 changeComplete(TRUE);
             }
+#ifdef ADULT_MODE
             else if (cmd == "stripAll") {
-                if (nudeFolder)
-                    lmRunRLV("detachthis:" + nudeFolder + "=n");
-                if (normalselfFolder)
-                    lmRunRLV("detachthis:" + normalselfFolder + "=n");
+                if (nudeFolder)       lmRunRLV("detachthis:" + nudeFolder       + "=n");
+                if (normalselfFolder) lmRunRLV("detachthis:" + normalselfFolder + "=n");
 
                 lmRunRLV("detachall:" + outfitsFolder + "=force");
+                oldOutfitName = "";
+                oldOutfit     = "";
+                newOutfitName = "";
+                newOutfit     = "";
 
-                if (nudeFolder)
-                    lmRunRLV("detachthis:" + nudeFolder + "=y,attachall:" + nudeFolder + "=force");
-                if (normalselfFolder)
-                    lmRunRLV("detachthis:" + normalselfFolder + "=y,attachall:" + normalselfFolder + "=force");
+                if (nudeFolder)       lmRunRLV("detachthis:" + nudeFolder       + "=y,attachall:" + nudeFolder       + "=force");
+                if (normalselfFolder) lmRunRLV("detachthis:" + normalselfFolder + "=y,attachall:" + normalselfFolder + "=force");
             }
+#endif
             else if (cmd == "setHovertext") {
                 string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
 
