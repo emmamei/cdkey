@@ -728,10 +728,8 @@ default {
                 if (normalselfFolder) lmRunRLV("detachthis:" + normalselfFolder + "=n");
 
                 lmRunRLV("detachall:" + outfitsFolder + "=force");
-                oldOutfitName = "";
-                oldOutfit     = "";
-                newOutfitName = "";
-                newOutfit     = "";
+                oldOutfit = "";
+                newOutfit = "";
 
                 if (nudeFolder)       lmRunRLV("detachthis:" + nudeFolder       + "=y,attachall:" + nudeFolder       + "=force");
                 if (normalselfFolder) lmRunRLV("detachthis:" + normalselfFolder + "=y,attachall:" + normalselfFolder + "=force");
