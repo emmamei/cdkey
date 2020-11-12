@@ -79,6 +79,7 @@ string isDollName;
 
 string mistressName;
 string menuName;
+string outfitsFolder;
 
 list dialogKeys;
 list dialogNames;
@@ -186,6 +187,7 @@ default {
                  if (name == "timeLeftOnKey")           timeLeftOnKey = (integer)value;
             //else if (name == "baseWindRate")             baseWindRate = (float)value;
             else if (name == "windRate")                     windRate = (float)value;
+            else if (name == "outfitsFolder")           outfitsFolder = value;
             else if (name == "backMenu")                     backMenu = value;
             else if (name == "hardcore")                     hardcore = (integer)value;
             else if (name == "windingDown")               windingDown = (integer)value;
@@ -418,12 +420,17 @@ default {
                         // Note that this means Carriers cannot change Dolly unless
                         // permitted: this is appropriate.
 
-                        if (isDoll) {
-                            if (canDressSelf && keyAnimation == "" && !hardcore) menu += "Outfits...";
+                        if (outfitsFolder == "") {
+			    llSay(DEBUG_CHANNEL, "Outfits folder is blank!");
                         }
                         else {
-                            if (hardcore || allowDress || isController) menu += "Outfits...";
-                        }
+                            if (isDoll) {
+                                if (canDressSelf && keyAnimation == "" && !hardcore) menu += "Outfits...";
+                            }
+                            else {
+                                if (hardcore || allowDress || isController) menu += "Outfits...";
+                            }
+		        }
                     }
 
                     // Only present the Types button if Dolly is not posed
