@@ -815,8 +815,8 @@ default {
                     if (outfitsFolder != "") {
                         // This brute force setting is fine: we are searching for the Outfits
                         // folder, and this is the initial setting
-                        if (~llListFindList(folderList, (list)"~nude"))        lmSendConfig("nudeFolder",(nudeFolder = "~nude"));
-                        if (~llListFindList(folderList, (list)"~normalself"))  lmSendConfig("normalselfFolder",(normalselfFolder = "~normalself"));
+                        if (~llListFindList(folderList, (list)"~nude"))        lmSendConfig("nudeFolder",      (nudeFolder       = outfitsFolder + "/~nude"));
+                        if (~llListFindList(folderList, (list)"~normalself"))  lmSendConfig("normalselfFolder",(normalselfFolder = outfitsFolder + "/~normalself"));
                     }
 
                     debugSay(2,"DEBUG-SEARCHING","outfitsFolder = " + outfitsFolder);

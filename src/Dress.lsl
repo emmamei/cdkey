@@ -50,9 +50,9 @@ string newOutfitName;
 string newOutfitFolder;
 string newOutfitPath;
 
-string oldOutfitName;
-string oldOutfitFolder;
-string oldOutfitPath;
+//string oldOutfitName;
+//string oldOutfitFolder;
+//string oldOutfitPath;
 
 // New simple listener setup we only
 // listen to rlvChannel directly the
@@ -77,8 +77,8 @@ string clothingFolder; // This contains clothing to be worn
 string outfitsFolder;  // This contains folders of clothing to be worn
 string activeFolder; // This is the lookup folder to search
 string typeFolder; // This is the folder we want for our doll type
-string normalselfFolder = "~normalself"; // This is the ~normalself we are using
-string nudeFolder = "~nude"; // This is the ~nude we are using
+string normalselfFolder; // This is the ~normalself we are using
+string nudeFolder; // This is the ~nude we are using
 
 integer randomDressHandle;
 integer randomDressChannel;
@@ -359,11 +359,13 @@ default {
             string c = cdGetFirstChar(name);
 
             if (llListFindList([ "a", "R", "h", "p", "c", "d", "n", "t", "w", "o", "u" ], (list)c) == NOT_FOUND) return;
+            debugSay(6, "DEBUG-DRESS", "Link message: CONFIG name = " + name);
 
             if (name == "dialogChannel") {
                 dialogChannel = (integer)value;
                 rlvBaseChannel = dialogChannel ^ 0x80000000; // Xor with the sign bit forcing the positive channel needed by RLV spec.
                 outfitsChannel = dialogChannel + 15; // arbitrary offset
+                debugSay(6, "DEBUG-DRESS", "outfits Channel set to " + (string)outfitsChannel);
 
                 randomDressChannel = rlvBaseChannel + 2665;
                   menuDressChannel = rlvBaseChannel + 2666;
@@ -399,11 +401,17 @@ default {
             }
 
             else if (c == "o") {
-                     if (name == "outfitsFolder")              outfitsFolder = value;
-                else if (name == "oldOutfitFolder")          oldOutfitFolder = value;
-                else if (name == "oldOutfitPath")              oldOutfitPath = value;
-                else if (name == "oldOutfitName")              oldOutfitName = value;
-                else if (name == "oldOutfit")                      oldOutfit = value;
+                     if (name == "outfitsFolder") {
+                         outfitsFolder = value;
+                         normalselfFolder = outfitsFolder + "/~normalself";
+                         nudeFolder       = outfitsFolder + "/~nude";
+                         lmSendConfig("normalselfFolder", normalselfFolder);
+                         lmSendConfig("nudeFolder", nudeFolder);
+                }
+//              else if (name == "oldOutfitFolder")          oldOutfitFolder = value;
+//              else if (name == "oldOutfitPath")              oldOutfitPath = value;
+//              else if (name == "oldOutfitName")              oldOutfitName = value;
+//              else if (name == "oldOutfit")                      oldOutfit = value;
             }
 
             else if (name == "typeFolder")                    typeFolder = value;
@@ -472,7 +480,8 @@ default {
                     // If we are in developer mode we are in danger of the key being ripped
                     // off here.  We therefore will use a temporary @detach=n restriction.
                     llOwnerSay("Developer key locked in place to prevent accidental detachment during dressing.");
-                    lmRunRLV("attachthis=y,detachthis=n,detach=n,touchall=n,showinv=n");
+                    //lmRunRLV("attachthis=y,detachthis=n,detach=n,touchall=n,showinv=n");
+                    lmRunRLV("detach=n");
 
 #else
                     // This locks down a (Normal) Dolly's touch and inventory - but
@@ -493,10 +502,10 @@ default {
                     // *OutfitPath       clothingFolder   - name of folder with outfit, relative to outfitsFolder
                     // *Outfit           -new-            - full path of outfit (outfitsFolder + "/" + clothingFolder + "/" + newOutfitName)
 
-                    lmSendConfig("oldOutfitName",   (  oldOutfitName = newOutfitName));
-                    lmSendConfig("oldOutfitFolder", (oldOutfitFolder = newOutfitFolder));
-                    lmSendConfig("oldOutfitPath",   (  oldOutfitPath = newOutfitPath));
-                    lmSendConfig("oldOutfit",       (      oldOutfit = newOutfit));
+                    //lmSendConfig("oldOutfitName",   (  oldOutfitName = newOutfitName));
+                    //lmSendConfig("oldOutfitFolder", (oldOutfitFolder = newOutfitFolder));
+                    //lmSendConfig("oldOutfitPath",   (  oldOutfitPath = newOutfitPath));
+                    //lmSendConfig("oldOutfit",       (      oldOutfit = newOutfit));
 
                     // Build the newOutfit* variables - but do they get used?
 
@@ -576,60 +585,89 @@ default {
                 // STEP #1
 
                 // Restore our usual look from the ~normalself folder...
-#define cdAttachAndLock(a) lmRunRLV("attachallover:"+(a)+"=force,detachallthis:"+(a)+"=n")
+
+// FIXME: These are messy - need to clean up normalselfFolder and nudeFolder
+//        so to match other folder specs
+#define cdLock(a)   lmRunRLV("detachallthis:"+(a)+"=n")
+#define cdUnlock(a) lmRunRLV("detachallthis:"+(a)+"=y")
+#define cdAttach(a) lmRunRLV("attachallover:"+(a)+"=force") 
+#define cdForceDetach(a) lmRunRLV("detachall:"+(a)+"=force");
 
                 // This attaches ~normalself and locks it
+                debugSay(2,"DEBUG-DRESS","*** STEP 1 ***");
                 debugSay(2,"DEBUG-DRESS","attach and lock for normal self folder: " + normalselfFolder);
-                cdAttachAndLock(normalselfFolder);
+                cdAttach(normalselfFolder);
 
                 //----------------------------------------
                 // STEP #2
 
+                debugSay(2,"DEBUG-DRESS","*** STEP 2 ***");
                 if (nudeFolder != "") {
                     // this attaches the ~nude folder
                     debugSay(2,"DEBUG-DRESS","attach and lock for nude folder: " + nudeFolder);
-                    cdAttachAndLock(nudeFolder);
+                    cdAttach(nudeFolder);
                 }
 
                 //----------------------------------------
                 // STEP #3
 
                 // attach the new folder and lock it down - and prevent nude
+                debugSay(2,"DEBUG-DRESS","*** STEP 3 ***");
                 debugSay(2, "DEBUG-DRESS", "Attaching outfit from " + newOutfit);
-                cdAttachAndLock(newOutfit);
-                llSleep(5.0);
+                cdAttach(newOutfit);
+
+                // At this point, all standard equipment should be attached,
+                // and all of the new outfit should be attached. Nothing is locked.
 
                 //----------------------------------------
                 // *** NEW STEP #4
 
                 // Remove rest of old outfit (using saved folder)
-                if (oldOutfitFolder != "") {
-                    debugSay(2, "DEBUG-DRESS", "Removing old outfit from " + oldOutfitFolder);
-                    lmRunRLV("detachall:" + oldOutfitFolder + "=force");
-                    oldOutfitFolder = "";
+                debugSay(2,"DEBUG-DRESS","*** STEP 4 ***");
+
+                cdUnlock(normalselfFolder);
+                cdUnlock(nudeFolder);
+                cdUnlock(newOutfit);
+                llSleep(1.0);
+
+                cdLock(normalselfFolder);
+                cdLock(nudeFolder);
+                cdLock(newOutfit);
+                llSleep(5.0);
+
+                if (oldOutfit != "") {
+                    debugSay(2, "DEBUG-DRESS", "Removing old outfit from " + oldOutfit);
+                    cdForceDetach(oldOutfit);
                 }
                 else {
                     // If no oldOutfitFolder, then just detach everything
                     // outside of the newFolder and ~normalself and ~nude
                     debugSay(2, "DEBUG-DRESS", "Removing all other outfits from " + outfitsFolder);
-                    lmRunRLV("detachall:" + outfitsFolder + "=force");
+                    cdForceDetach(outfitsFolder);
                 }
+                llSleep(1.0);
 
                 //----------------------------------------
                 // *** NEW STEP #5
 
+                debugSay(2,"DEBUG-DRESS","*** STEP 5 ***");
+
                 // Attach new outfit again
                 debugSay(2, "DEBUG-DRESS", "Attaching outfit again from " + newOutfit);
-                cdAttachAndLock(newOutfit);
+                cdAttach(newOutfit);
+                llSleep(1.0);
 
                 //----------------------------------------
                 // *** NEW STEP #6
 
+                debugSay(2,"DEBUG-DRESS","*** STEP 6 ***");
                 // Unlock folders previously locked
-                lmRunRLV("detachallthis:" + normalselfFolder + "=y," +
-                         "detachallthis:" +       nudeFolder + "=y," +
-                         "detachallthis:" +        newOutfit + "=y");
                 debugSay(2, "DEBUG-DRESS", "Unlocking three folders of new outfit...");
+                cdUnlock(normalselfFolder);
+                cdUnlock(nudeFolder);
+                cdUnlock(newOutfit);
+                llSleep(1.0);
+                debugSay(2,"DEBUG-DRESS","*** END DRESSING SEQUENCE ***");
 
                 //----------------------------------------
                 // STEP #6
@@ -677,6 +715,7 @@ default {
                 else dressingSteps += 2;
 #endif
                 //llSetTimerEvent(15.0);
+                oldOutfit = newOutfit;
 
                 llListenRemove(randomDressHandle);
                 llListenRemove(menuDressHandle);
@@ -731,10 +770,12 @@ default {
             string name = cdListElement(split, 1);
 
             if (choice == "Outfits..." && !tempDressingLock) {
+                // This is required: there are side effects
                 if (id) {
                     if (!isDresser(id)) return;
                 }
 
+                debugSay(2, "DEBUG-DRESS", "Outfit menu; outfit Folder = " + outfitsFolder);
                 if (wearLock) {
                     cdDialogListen();
                     llDialog(dresserID, "Clothing was just changed; cannot change right now.", ["OK"], dialogChannel);
@@ -742,6 +783,7 @@ default {
                 }
 
                 if (outfitsFolder != "") {
+                    debugSay(2, "DEBUG-DRESS", "Outfit menu; outfit Folder is not empty");
                     if (useTypeFolder) clothingFolder = typeFolder;
                     else clothingFolder = "";
 
@@ -749,9 +791,8 @@ default {
                     dressViaMenu();
                 }
                 else {
-                    cdDialogListen();
-                    llDialog(dresserID, "No outfits in this directory.", [ "OK", "Options...", MAIN ], dialogChannel);
-                    //llDialog(dresserID, "You look in " + pronounHerDoll + " closet, and see no outfits for Dolly to wear.", ["OK"], dialogChannel);
+                    if (RLVok == TRUE) llSay(DEBUG_CHANNEL,"outfitsFolder is unset.");
+                    else llSay(DEBUG_CHANNEL,"You cannot be dressed without RLV active.");
                     return;
                 }
             }
@@ -808,6 +849,8 @@ default {
 
         // Request max memory to avoid constant having to bump things up and down
         llSetMemoryLimit(65536);
+
+        debugSay(6, "DEBUG-DRESS", "Listener called[" + (string)channel + "]: " + name + "|" + choice);
 
         if (channel == outfitsChannel) {
             // The first menu is generated by listener2666 (randome outfits
@@ -1071,6 +1114,7 @@ default {
             list tmpList;
             integer totalOutfits;
 
+            debugSay(6, "DEBUG-DRESS", "Filtering outfit data");
             // Filter list of outfits (directories) to choose
             n = llGetListLength(outfitsList);
             while (n--) {
@@ -1098,6 +1142,7 @@ default {
             outfitsList = tmpList;
             tmpList = [];
 
+            debugSay(6, "DEBUG-DRESS", "Any outfits remaining?");
             // we've gone through and cleaned up the list - but is anything left?
             if (outfitsList == []) {
                 outfitsList = []; // free memory
