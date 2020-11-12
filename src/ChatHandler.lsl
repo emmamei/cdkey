@@ -479,6 +479,7 @@ default {
 
     help ........... this list of commands
     menu ........... show main menu";
+                    string help2;
 
                     if (isDoll || isController) {
                         help += "
@@ -499,25 +500,28 @@ default {
     channel ## ..... change channel
     prefix XX ...... change chat command prefix
     controller NN .. add controller";
-                    }
-                    //----------------------------------------
-                    // Dolly Help
-                    if (isDoll) {
-                        help += "
+
+                        //----------------------------------------
+                        // Dolly Help
+                        if (isDoll) {
+                            help2 += "Commands (page2):
+
     blacklist NN ... add to blacklist
     unblacklist NN . remove from blacklist";
 
-                        if (!hardcore) help += "
+                            if (!hardcore) help += "
     wind ........... trigger emergency autowind";
-                    }
+                        }
 
-                    //----------------------------------------
-                    // Controller Help
-                    else if (isController) {
-                        help += "
+                        //----------------------------------------
+                        // Controller Help
+                        else {
+                            help2 += "Commands (page2):
+
     carry .......... carry dolly
     uncarry ........ put down dolly
     wind ........... wind key";
+                        }
                     }
 
                     //----------------------------------------
@@ -542,6 +546,7 @@ default {
                     }
 
                     cdSayTo(help + "\n", id);
+                    if (help2 != "") cdSayTo(help2 + "\n", id);
 
 #ifdef DEVELOPER_MODE
                     if (isDoll) help = "
