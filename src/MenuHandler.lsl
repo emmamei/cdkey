@@ -569,9 +569,6 @@ default {
         }
         else if (code == RLV_RESET) {
             RLVok = llList2Integer(split, 0);
-
-            if (RLVok == TRUE)
-                lmInternalCommand("updateExceptions", "", NULL_KEY);
         }
         else if (code < 200) {
             if (code == 102) {
@@ -735,6 +732,7 @@ default {
 
                         cdSayTo("You are no longer a controller of this Dolly.", id);
                         llOwnerSay("Your controller " + name + " has relinquished control.");
+                        lmInternalCommand("reloadExceptions", script, NULL_KEY);
                     }
 #ifdef DEVELOPER_MODE
                     else {
