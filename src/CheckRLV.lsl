@@ -48,6 +48,8 @@ integer RLVck = MAX_RLVCHECK_TRIES;
 integer RLVstarted;
 integer chatChannel = 75;
 
+list rlvExceptions;
+
 #define MAX_INT DEBUG_CHANNEL
 
 //========================================
@@ -271,7 +273,8 @@ default {
     //----------------------------------------
     listen(integer chan, string name, key id, string msg) {
 
-        debugSay(2, "DEBUG-AVATAR", "Listener tripped....");
+        debugSay(2, "DEBUG-AVATAR", "Listener tripped on channel " + (string)chan);
+        debugSay(2, "DEBUG-AVATAR", "Listener data = " + (string)msg);
 
         // Initial RLV Check results are being processed here
         //
@@ -352,6 +355,13 @@ default {
             }
             else if (name == "wearLock")      {     wearLock = (integer)value; activateRLVBase(); }
         }
+        else if (code == RLV_RESET) {
+            RLVok = llList2Integer(split, 0);
+
+            debugSay(4,"DEBUG-MENU","RLV Reset: Updating exceptions");
+            if (RLVok == TRUE)
+                lmInternalCommand("reloadExceptions", script, NULL_KEY);
+        }
         else if (code == INTERNAL_CMD) {
             string cmd = llList2String(split, 0);
             split = llDeleteSubList(split, 0, 0);
@@ -362,7 +372,17 @@ default {
             if (cmd == "doCheckRLV") {
                 doCheckRLV();
             }
-            else if (cmd == "updateExceptions") {
+            else if (cmd == "addExceptions") {
+                string exceptionKey = llList2String(split, 0);
+
+                llOwnerSay("@tplure:"    + (string)(exceptionKey) + "=add," +
+                            "accepttp:"  + (string)(exceptionKey) + "=add," +
+                            "sendim:"    + (string)(exceptionKey) + "=add," +
+                            "recvim:"    + (string)(exceptionKey) + "=add," +
+                            "recvchat:"  + (string)(exceptionKey) + "=add," +
+                            "recvemote:" + (string)(exceptionKey) + "=add");
+            }
+            else if (cmd == "reloadExceptions") {
                 // VERY IMPORTANT: DO NOT CALL lmRunRLV OR lmRunRLVas!! THIS WILL SET UP
                 // A SCRIPT LOOP THAT WILL BE VERY HARD TO ESCAPE.
 
@@ -385,6 +405,17 @@ default {
                 if ((i = llListFindList(exceptions, (list)dollID)) != NOT_FOUND)
                     llDeleteSubList(exceptions, i, i);
 
+                //debugSay(5,"DEBUG-CHECKRLV","Checking to see if exceptions have changed");
+                // Goal is to check and see if the exceptions have changed...
+                // If we make it through here, they have changed.
+                //if (rlvExceptions == exceptions) { // compares item count only
+                //    if (rlvExceptions == []) return; // compares list to null
+                //    if (!llListFindList(rlvExceptions, exceptions)) return;
+                //}
+                //debugSay(5,"DEBUG-CHECKRLV","Exceptions have changed");
+
+                rlvExceptions = exceptions; // save current exceptions
+
                 // Restrictions (and exceptions)
                 //
                 //    TPLure: being transported to a TP sent by a friend
@@ -394,15 +425,19 @@ default {
                 //  RecvChat: being able to recieve a chat message from someone
                 // RecvEmote: being able to recieve an emote from someone
 
-                llOwnerSay("Reactivating RLV exceptions");
-                llOwnerSay("@clear=tplure:,clear=accepttp:,clear=sendim:,clear=recvim:,clear=recvchat:,clear=recvemote:");
+                debugSay(5,"DEBUG-CHECKRLV","Reloading RLV exceptions");
+                // SELECTIVE clear: exceptions only
+                llOwnerSay("@clear=tplure:,clear=accepttp:");
+                llOwnerSay("@clear=sendim:,clear=recvim:");
+                llOwnerSay("@clear=recvchat:,clear=recvemote:");
 
                 string exceptionKey;
                 i = llGetListLength(exceptions);
                 while (i--) {
                     exceptionKey = llList2String(exceptions, i);
 
-                    // This assumes that all cmds in the rlvRestrict are y/n options!
+                    // This assumes that exceptions are a block...
+                    // for now they are
                     llOwnerSay("@tplure:"    + (string)(exceptionKey) + "=add," +
                                 "accepttp:"  + (string)(exceptionKey) + "=add," +
                                 "sendim:"    + (string)(exceptionKey) + "=add," +
