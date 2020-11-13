@@ -1,0 +1,36 @@
+integer rlvrc = -1812221819;
+integer handle;
+integer ArbitraryPositiveInteger = 12345;
+key victim;
+string ArbitraryCommandName;
+default{
+    state_entry()
+    {
+    }
+    touch_start(integer total_number)
+    {
+        victim = llDetectedKey(0);
+        llListenRemove(handle);
+        handle = llListen(ArbitraryPositiveInteger,"","","");
+        ArbitraryCommandName ="testing";
+        llRegionSayTo(victim, rlvrc,ArbitraryCommandName+","+(string)victim+",@versionnum="+(string)ArbitraryPositiveInteger);
+        llSetTimerEvent(5.0);
+    }
+    listen(integer channel, string name, key id, string message)
+    {
+        if(llGetOwnerKey(id)!=victim){
+            return;
+        }
+        if("testing"==ArbitraryCommandName ){
+            llSetTimerEvent(0.0);
+            llListenRemove(handle);
+            llOwnerSay(llGetDisplayName(victim)+" is using RLV version "+message);
+        }
+    }
+    timer()
+    {
+        llSetTimerEvent(0.0);
+        llListenRemove(handle);
+        llOwnerSay(llGetDisplayName(victim)+" doesn't seem to be using an active RLV relay");
+    }
+}
