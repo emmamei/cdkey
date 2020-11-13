@@ -13,7 +13,7 @@ key poserID                 = NULL_KEY;
 key uniqueID                = NULL_KEY;
 
 list blacklist              = [];
-list BuiltinControllers     = BUILTIN_CONTROLLERS;
+//list BuiltinControllers     = BUILTIN_CONTROLLERS;
 list controllers            = [];
 list split                  = [];
 

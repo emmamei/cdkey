@@ -543,7 +543,6 @@ default {
                 debugSay(2,"DEBUG-OPTIONS","Building Options menu...");
                 debugSay(2,"DEBUG-OPTIONS","isDoll = " + (string)cdIsDoll(id));
                 debugSay(2,"DEBUG-OPTIONS","isCarrier = " + (string)cdIsCarrier(id));
-                debugSay(2,"DEBUG-OPTIONS","isBuiltinController = " + (string)cdIsBuiltinController(id));
                 debugSay(2,"DEBUG-OPTIONS","isUserController = " + (string)cdIsUserController(id));
 
                 if (cdIsDoll(id)) {
@@ -562,9 +561,6 @@ default {
                     pluslist += [ "Type..." ];
                     if (RLVok == TRUE) pluslist += [ "Restrictions..." ];
                 }
-                // Test for User Controller first: that way, a User Controller that
-                // is also in a Builtin Controller is treated as a normal User
-                // Controller
                 else if (cdIsUserController(id)) {
 
                     msg = "See " + WEB_DOMAIN + "controller.htm. Choose what you want to happen.";
@@ -573,10 +569,6 @@ default {
                     if (RLVok == TRUE) pluslist += [ "Restrictions..." ];
                     pluslist += [ "Drop Control" ];
 
-                }
-                else if (cdIsBuiltinController(id)) {
-                    pluslist += [ "Type...", "Access..." ];
-                    if (RLVok == TRUE) pluslist += [ "Restrictions..." ];
                 }
                 // This section should never be triggered: it means that
                 // someone who shouldn't see the Options menu did.

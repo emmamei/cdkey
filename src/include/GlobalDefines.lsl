@@ -120,16 +120,16 @@ float GlobalDefines_version=1.0;
 #define AGENT_SILKY_MESMERISER_RAW    2fff40f0-ea4a-4b52-abb8-d4bf6b1c98c9
 #define AGENT_SILKY_MESMERISER        "2fff40f0-ea4a-4b52-abb8-d4bf6b1c98c9"
 
-#define BUILTIN_CONTROLLERS [AGENT_SILKY_MESMERISER,AGENT_MAYSTONE_RESIDENT,AGENT_CHRISTINA_HALPIN,AGENT_ANDROMEDA_LAMPLIGHT]
+//#define BUILTIN_CONTROLLERS [AGENT_SILKY_MESMERISER,AGENT_MAYSTONE_RESIDENT,AGENT_CHRISTINA_HALPIN,AGENT_ANDROMEDA_LAMPLIGHT]
 // list BuiltinControllers = BUILTIN_CONTROLLERS;
 #define USER_CONTROLLERS controllers
 #include "CommonGlobals.lsl"
 
 // Once CommonGlobals is included redefine BUILTIN_CONTROLLERS to use the BuiltinControllers variable
 // otherwise we end up with many copies of the actual list data itself using more memory.
-#undef BUILTIN_CONTROLLERS
-#define BUILTIN_CONTROLLERS BuiltinControllers
-#define ALL_CONTROLLERS USER_CONTROLLERS + BUILTIN_CONTROLLERS
+//#undef BUILTIN_CONTROLLERS
+//#define BUILTIN_CONTROLLERS BuiltinControllers
+//#define ALL_CONTROLLERS USER_CONTROLLERS + BUILTIN_CONTROLLERS
 
 #define LOW_FPS 30.0
 #define LOW_DILATION 0.6
@@ -254,7 +254,7 @@ float GlobalDefines_version=1.0;
 // Tests of id
 #define cdIsDoll(id)                    (id == dollID)
 #define cdIsCarrier(id)                 (id == carrierID)
-#define cdDollyIsBuiltinController(id)  (id == dollID && (llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1))
+//#define cdDollyIsBuiltinController(id)  (id == dollID && (llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1))
 #define cdIsUserController(id)          (llListFindList(USER_CONTROLLERS, [ (string)id ]) != -1)
 #define cdIsController(id)              cdGetControllerStatus(id)
 
@@ -264,41 +264,16 @@ float GlobalDefines_version=1.0;
 #include "Config.lsl"
 #include "LinkMessage.lsl"
 
-integer cdIsBuiltinController(key id) {
-
-    // Did we find the id in the list of User Controllers?
-    if (cdIsUserController(id))
-
-        // A User Controller will never act like a Builtin Controller...
-        // even if they ARE a Buitin Controller
-        return FALSE;
-
-    else {
-
-        // Dolly will never "be" a Built-in Controller
-        if (id != dollID)
-            return (llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1);
-        else
-            return FALSE;
-    }
-}
-
 integer cdGetControllerStatus(key id) {
 
-    // If the Dolly is a Builtin Controller, it makes
-    // no difference: they are still normal to the Key here.
-    // If the id belongs to a Builtin Controller who is
-    // NOT the Dolly, then is ok
-    //
     // Rules:
     //   Dolly is a Controller only if there aren't any User Controllers
-    //   A User is a Controller if they are in the user controller list or
-    //      in the Builtin Controller list
+    //   A User is a Controller if they are in the controller list
     //
     if (cdIsDoll(id))
         return (USER_CONTROLLERS == []);
     else {
-        return (llListFindList(USER_CONTROLLERS + BUILTIN_CONTROLLERS, [ (string)id ]) != -1);
+        return (llListFindList(USER_CONTROLLERS, [ (string)id ]) != -1);
     }
 }
 

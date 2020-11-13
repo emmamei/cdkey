@@ -693,7 +693,7 @@ default {
 
         list split = llParseStringKeepNulls(choice, [ " " ], []);
 
-        name = llGetDisplayName(id); // FIXME: name can get set to ""
+        name = llGetDisplayName(id); // FIXME: id must be present in sim for this to work
 
         integer space = llSubStringIndex(choice, " ");
 
@@ -1005,12 +1005,19 @@ default {
                             else msg = "Doll's " + msg + " is empty.";
                         }
                         else {
+                            debugSay(4,"DEBUG-MENU","Controller list: " + llDumpList2String(controllers,"|"));
+                            debugSay(4,"DEBUG-MENU","DialogKeys: " + llDumpList2String(dialogKeys,"|"));
+                            debugSay(4,"DEBUG-MENU","DialogNames: " + llDumpList2String(dialogNames,"|"));
                             if (cdIsDoll(id)) msg = "Current " + msg + ":";
                             else msg = "Doll's current " + msg + ":";
 
-                            i = n;
-                            while (i--)
-                                msg += "\n" + (string)(n - i) + ". " + llList2String(dialogNames, n - i - 1);
+                            i = n; 
+                            string idX;
+                            while (i--) {
+                                idX = llList2String(dialogKeys, n - i - 2);
+                                msg += "\n" + (string)(n - i) + "." +
+                                       "secondlife:///app/agent/" + idX + "/about";
+                            }
                         }
                         llRegionSayTo(id, 0, msg);
                         cdMenuInject("Access...");

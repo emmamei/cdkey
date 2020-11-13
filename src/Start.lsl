@@ -173,7 +173,7 @@ processConfiguration(string name, string value) {
 #ifdef GEM_PRESENT
                      "gem color", "gem colour",
 #endif
-                     "doll gender", "helpless dolly", "chat mode"
+                     "doll gender", "helpless dolly", "chat mode", "controller"
                    ];
 
     // The settings list and the settingName list much match up
@@ -305,6 +305,18 @@ processConfiguration(string name, string value) {
             if ((vector)value != ZERO_VECTOR) prefGemColour = value;
         }
 #endif
+        else if (name == "controller") {
+            string uuid = (string)value;
+            controllers = (controllers = []) + controllers + [ (string)value, "x" ];
+            lmSetConfig("controllers", llDumpList2String(controllers, "|"));
+            // Controllers get added to the exceptions
+            llOwnerSay("@tplure:"    + uuid + "=add," +
+                        "accepttp:"  + uuid + "=add," +
+                        "sendim:"    + uuid + "=add," +
+                        "recvim:"    + uuid + "=add," +
+                        "recvchat:"  + uuid + "=add," +
+                        "recvemote:" + uuid + "=add");
+        }
         else if (name == "chat mode") {
             // Set the way chat operates
 

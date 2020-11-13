@@ -389,7 +389,7 @@ default {
                 // Exempt builtin or user specified controllers from TP restictions
                 if (RLVok == FALSE) return;
 
-                list exceptions = BUILTIN_CONTROLLERS + cdList2ListStrided(controllers, 0, -1, 2);
+                list exceptions = cdList2ListStrided(controllers, 0, -1, 2);
                 if (exceptions == []) return;
 
                 integer i;
