@@ -219,15 +219,17 @@ float GlobalDefines_version=1.0;
 #define cdMyScriptName()		llGetScriptName()
 #define cdMyScriptLine()		(string)__LINE__
 
+#define FALSE 0
+#define TRUE 1
+#define UNSET -1
+
 #define ATTACH_BACK 9
 #define ATTACH_HUD_CENTER_1 35
 #define ATTACH_HUD_CENTER_2 31
 #define DEBUG_CHANNEL 0x7FFFFFFF
-#define FALSE 0
 #define INVENTORY_SCRIPT 10
 #define INVENTORY_ANIMATION 20
 #define PUBLIC_CHANNEL 0
-#define TRUE 1
 #define TWO_PI 6.283185307179586476925286766559
 #define NOT_FOUND -1
 
