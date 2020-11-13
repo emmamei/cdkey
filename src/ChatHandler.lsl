@@ -245,7 +245,8 @@ default {
                 //----------------------------------------
                 // VALIDATION
                 //
-                // #1: Cannot add UUID if prohibited by (found in) barList
+                // #1a: Cannot add UUID as controller if found in blacklist
+                // #1b: Cannot blacklist UUID if found in controllers list
                 //
                 if (llListFindList(barList, [ uuid ]) != NOT_FOUND) {
 
@@ -265,8 +266,19 @@ default {
                     cdSayToAgentPlusDoll(s, id);
                     tmpList += [ uuid, name ];
 
-                    if (cmd != "addBlacklist") controllers = tmpList;
-                    else blacklist = tmpList;
+                    if (cmd == "addBlacklist") {
+                        blacklist = tmpList;
+                    }
+                    else {
+                        controllers = tmpList;
+                        // Controllers get added to the exceptions
+                        llOwnerSay("@tplure:"    + uuid + "=add," +
+                                    "accepttp:"  + uuid + "=add," +
+                                    "sendim:"    + uuid + "=add," +
+                                    "recvim:"    + uuid + "=add," +
+                                    "recvchat:"  + uuid + "=add," +
+                                    "recvemote:" + uuid + "=add");
+                    }
                 }
                 // Report already found
                 else {
@@ -315,8 +327,15 @@ default {
                     cdSayTo("Key " + uuid + " is not listed as " + typeString, id);
                 }
 
-                if (cmd != "remBlacklist") controllers = tmpList;
-                else blacklist = tmpList;
+                if (cmd == "remBlacklist") {
+                    blacklist = tmpList;
+                }
+                else {
+                    controllers = tmpList;
+                    // because we cant remove by UUID, a complete redo of
+                    // exceptions is necessary
+                    lmInternalCommand("reloadExceptions",script,NULL_KEY);
+                }
 
                 // we may or may not have changed either of these - but this code
                 // forces a refresh in any case
