@@ -227,7 +227,7 @@ default {
             else if (cmd == "runRLVcmd") {
                 if (commandString == "clear") {
                     llSay(DEBUG_CHANNEL,"Clear command run from " + script + " using lmRunRLVcmd");
-		    lmRunRLVcmd("clear",commandString);
+		    lmRunRLVcmd("clearRLVcmd",commandString);
 		    return;
 		}
 
