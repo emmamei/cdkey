@@ -1127,9 +1127,9 @@ default {
 
                 if (itemName != newOutfitName) {
                     if (!isHiddenItem(prefix) && !isGroupItem(prefix)) {
-                        debugSay(4, "DEBUG-DRESS", "dollType = " + dollType + "; prefix = " + prefix);
+                        //debugSay(4, "DEBUG-DRESS", "dollType = " + dollType + "; prefix = " + prefix);
                         if (!isTransformingItem(prefix) || dollType == "Regular") {
-                            debugSay(4, "DEBUG-DRESS", "Passed the test: " + itemName);
+                            //debugSay(4, "DEBUG-DRESS", "Passed the test: " + itemName);
                             if (isRated(prefix)) {
                                 if (cdOutfitRating(itemName) <= cdRating2Integer(simRating)) {
                                     tmpList += itemName;
