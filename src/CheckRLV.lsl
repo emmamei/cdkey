@@ -180,7 +180,8 @@ activateRLV() {
     string baseRLV;
 
     if (!RLVstarted) {
-        lmRunRLV("clear");
+        //lmRunRLV("clear");
+        lmRunRLVcmd("clearRLVcmd","");
 
 #ifndef LOCKON
         // if Doll is one of the developers... dont lock:
