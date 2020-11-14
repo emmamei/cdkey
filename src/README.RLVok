@@ -16,8 +16,7 @@ in LinkMessage.lsl from CheckRLV.lsl
 
     #define lmRLVreport(active,apistring,apiversion) cdLinkMessage(LINK_THIS,0,350,(string)active+"|"+apistring+"|"+(string)apiversion,llGetKey())
 
-The RLV_RESET message is received by nearly all scripts in
-the Key:
+The RLV_RESET message is received by all scripts in the Key:
 
     Aux.lsl:          else if (code == RLV_RESET) {
     Avatar.lsl:       else if (code == RLV_RESET) {
@@ -38,10 +37,9 @@ CheckRLV.lsl:        lmSendConfig("RLVok",(string)RLVok); // is this needed or r
 
 **** RLVok and UNSET value
 
-RLVok should be set to UNSET value before being used in code.
-All tests and sets need to be checked to make sure that they
-are being set properly with RLVok being a tristate value
-instead of a boolean.
+RLVok should be set to UNSET value before being used in code.  All tests
+and sets need to be checked to make sure that they are being set properly
+with RLVok being a tristate value instead of a boolean.
 
 **** RLV_RESET processing
 
@@ -74,3 +72,17 @@ the user wants to set things one way or the other.
 The Aux script creates the Option... menu dialog, and the MenuHandler
 script responds to a button press.
 
+RLV_CMD
+=======
+The RLV_CMD code (351) is caught only by StatusRLV, and is used to manage
+RLV commands. The new processing adds specific commands that are only sent
+with code 351.
+
+The code is sent by lmRunRLV, lmRestrictRLV, and lmRunRLVas. These functions
+are defined in include/LinkMessage.lsl and are used by the following scripts:
+
+Avatar.lsl
+CheckRLV.lsl
+Dress.lsl
+Start.lsl
+Transform.lsl
