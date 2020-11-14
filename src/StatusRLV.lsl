@@ -136,83 +136,36 @@ default {
                 // an overriding need to not have a 2s delay in it
                 llInstantMessage(id,llList2String(split,0));
             }
-#ifdef NOT_USED
-            else if (cmd == "runRLVcmd") {
-                // The goal of the runRLVcmd command is to perform
-                // non-restrictive RLV commands requested
+        }
+        else if (code == RLV_CMD) {
+            string commandString = cdListElement(split, 2);
+            string cmd = llList2String(split, 1);
+            //split = llDeleteSubList(split, 0, 0);
 
-                string commandString = cdListElement(split, 1);
+            debugSay(4,"DEBUG-STATUSRLV","Got RLV_CMD (315) from script " + script + ": " + cmd + "|" + commandString);
 
-                if (RLVok != TRUE) {
-                    if (RLVok == UNSET) llSay(DEBUG_CHANNEL,"RLV command issued with RLV active! (" + commandString + ")");
-                    return;
-                }
-
-                debugSay(4,"DEBUG-STATUSRLV","Got RLV_CMD (315) from script " + script + ": " + commandString);
-
-                if (RLVok == TRUE) {
-                    if (commandString == "clear") {
-                        // this is a blanket clear, but it doesn't mean to us what
-                        // it means normally: we have a base RLV set
-
-                        //llSay(DEBUG_CHANNEL,"blanket clear issued from " + script);
-                        commandString +=
-#ifdef LOCKON
-                            ",permissive=n,detach=n";
-#else
-                            ",permissive=y,detach=y";
-#endif
-                        if (rlvRestrict == []) {
-                            if (defaultBaseRLVcmd != "") commandString += defaultBaseRLVcmd;
-                        }
-                        else commandString += llDumpList2String(rlvRestrict, ",");
-
-                        llOwnerSay("@" + commandString);
-                        lmInternalCommand("reloadExceptions",script,NULL_KEY);
-                        //lmInternalCommand("clearRLV",script,NULL_KEY);
-                        return;
-                    }
-                    else {
-
-                        // This could thereotically happen...
-                        if (commandString == "" || commandString == "0") {
-                            llSay(DEBUG_CHANNEL,"requested RLV command from " + script + " is empty!");
-                            return;
-                        }
-
-                        if (llStringLength(commandString) > CHATMSG_MAXLEN) {
-                            llSay(DEBUG_CHANNEL,"requested RLV command from " + script + " is too long!");
-                            //llSay(DEBUG_CHANNEL,"requested RLV command from " + script + " is too long!");
-                            return;
-                        }
-
-                        llOwnerSay("@" + commandString);
-                    }
-                }
-#ifdef DEVELOPER_MODE
-
-                // This is not a run-time error - after all, the RLV was not executed -
-                // the only problem is one of speed and optimization.
-
-                else {
-                    debugSay(4,"DEBUG-STATUSRLV","Received RLV with no RLV active: " + commandString);
-                }
-#endif
+            if (RLVok != TRUE) {
+                if (RLVok == UNSET) llSay(DEBUG_CHANNEL,"RLV command issued with RLV active! (" + commandString + ")");
+                return;
             }
-#endif
-            else if (cmd == "restrictRLVcmd") {
+
+            // This could thereotically happen...
+            if (commandString == "" || commandString == "0") {
+                llSay(DEBUG_CHANNEL,"requested RLV command from " + script + " is empty!");
+                return;
+            }
+
+            if (llStringLength(commandString) > CHATMSG_MAXLEN) {
+                llSay(DEBUG_CHANNEL,"requested RLV command from " + script + " is too long!");
+                return;
+            }
+
+            if (cmd == "restrictRLVcmd") {
                 // The goal of the restrictRLVcmd command is to implement the
                 // requested restriction (cmd) and then store it in a variable
                 // to be restored later
                 //
                 // Once this command is widely used, storeRLV will be unneeded.
-
-                string commandString = cdListElement(split,1);
-
-                if (RLVok != TRUE) {
-                    if (RLVok == UNSET) llSay(DEBUG_CHANNEL,"RLV command issued with RLV active! (" + commandString + ")");
-                    return;
-                }
 
                 script = cdListElement(split,0);
                 list tmpList;
@@ -221,8 +174,7 @@ default {
 
                 rlvRestrict = (rlvRestrict=[]) + rlvRestrict + commandString;
             }
-#ifdef NOT_USED
-            else if (cmd == "storeRLV") {
+            else if (cmd == "refreshRLV") {
                 // The goal of the storeRLV command is to take current RLV
                 // restrictions and save them into a variable, and thus
                 // preserve the restrictions for later logon
@@ -272,63 +224,30 @@ default {
                 llOwnerSay("@getstatus:edit="      + (string)statusChannel);
                 llOwnerSay("@getstatus:fartouch="  + (string)statusChannel);
             }
-#endif
-        }
-
-        else if (code == RLV_CMD) {
-            string commandString = cdListElement(split, 1);
-
-            debugSay(4,"DEBUG-STATUSRLV","Got RLV_CMD (315) from script " + script + ": " + commandString);
-
-            if (RLVok != TRUE) {
-                if (RLVok == UNSET) llSay(DEBUG_CHANNEL,"RLV command issued with RLV active! (" + commandString + ")");
-                return;
-            }
-
-            if (RLVok == TRUE) {
+            else if (cmd == "runRLVcmd") {
                 if (commandString == "clear") {
-                    // this is a blanket clear, but it doesn't mean to us what
-                    // it means normally: we have a base RLV set
+                    llSay(DEBUG_CHANNEL,"Clear command run from " + script + " using lmRunRLVcmd");
+		    lmRunRLVcmd("clear",commandString);
+		    return;
+		}
 
-                    //llSay(DEBUG_CHANNEL,"blanket clear issued from " + script);
+                llOwnerSay("@" + commandString);
+                //lmInternalCommand("storeRLV",script + "|" + commandString,NULL_KEY);
+            }
+            else if (cmd == "clearRLVcmd") {
+                // this is a blanket clear, but it doesn't mean to us what
+                // it means normally: we have a base RLV set
+
+                //llSay(DEBUG_CHANNEL,"blanket clear issued from " + script);
 #ifdef LOCKON
-                    commandString += ",permissive=n,detach=n," + defaultBaseRLVcmd;
+                commandString += ",permissive=n,detach=n," + defaultBaseRLVcmd;
 #else
-                    commandString += ",permissive=y,detach=y," + defaultBaseRLVcmd;
+                commandString += ",permissive=y,detach=y," + defaultBaseRLVcmd;
 #endif
-                    llOwnerSay("@" + commandString);
-                    lmInternalCommand("reloadExceptions",script,NULL_KEY);
-                    //lmInternalCommand("clearRLV",script,NULL_KEY);
-                    return;
-                }
-                else {
-
-                    // This could thereotically happen...
-                    if (commandString == "" || commandString == "0") {
-                        llSay(DEBUG_CHANNEL,"requested RLV command from " + script + " is empty!");
-                        return;
-                    }
-
-                    if (llStringLength(commandString) > CHATMSG_MAXLEN) {
-                        llSay(DEBUG_CHANNEL,"requested RLV command from " + script + " is too long!");
-                        //llSay(DEBUG_CHANNEL,"requested RLV command from " + script + " is too long!");
-                        return;
-                    }
-
-                    llOwnerSay("@" + commandString);
-                    rlvCmdIssued = 1;
-                    //lmInternalCommand("storeRLV",script + "|" + commandString,NULL_KEY);
-                }
+                llOwnerSay("@" + commandString);
+                lmInternalCommand("reloadExceptions",script,NULL_KEY);
+                //lmInternalCommand("clearRLV",script,NULL_KEY);
             }
-#ifdef DEVELOPER_MODE
-
-            // This is not a run-time error - after all, the RLV was not executed -
-            // the only problem is one of speed and optimization.
-
-            else {
-                debugSay(4,"DEBUG-STATUSRLV","Received RLV with no RLV active: " + commandString);
-            }
-#endif
         }
         else if (code == RLV_RESET) {
             RLVok = llList2Integer(split, 0);
