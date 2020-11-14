@@ -380,7 +380,10 @@ default {
             else if (name == "afk")                                  afk = (integer)value;
             else if (name == "RLVok")                              RLVok = (integer)value;
             else if (name == "hovertextOn")                  hovertextOn = (integer)value;
-            else if (name == "dollType")                        dollType = value;
+            else if (name == "dollType") {
+                if (value == "") dollType = "Regular";
+                else dollType = value;
+            }
             else if (name == "pronounHerDoll")            pronounHerDoll = value;
             else if (name == "pronounSheDoll")            pronounSheDoll = value;
             else if (c == "c") {
@@ -935,7 +938,7 @@ default {
                 //if (!isDresser(id)) return;
 
                 outfitsList = [];
-                if (isParentFolder(cdGetFirstChar(choice))) {
+                if ((cdGetFirstChar(choice) == ">") || (cdGetFirstChar(choice) == "*")) {
 
                     // if a Folder was chosen, we have to descend into it by
                     // adding the choice to the currently active folder
@@ -1025,7 +1028,7 @@ default {
                     // This (sort of) odd sequence imposes short-cut operations
 
                     if (!isHiddenItem(prefix)) {            // ~foo
-                        if (!isTransformingItem(prefix)) { // *foo
+                        if (!isTransformingItem(prefix) || dollType == "Regular") { // *foo
                             if (!isGroupItem(prefix)) {    // #foo
                                 if (isRated(prefix)) {     // {x}foo -- this test avoids function call
                                     if (!(cdOutfitRating(itemName) > simrating)) {
@@ -1123,18 +1126,19 @@ default {
                 prefix = cdGetFirstChar(itemName);
 
                 if (itemName != newOutfitName) {
-                    if (!isHiddenItem(prefix) &&
-                        !isGroupItem(prefix) &&
-                        !isTransformingItem(prefix)) {
-
-                        if (isRated(prefix)) {
-                            if (cdOutfitRating(itemName) <= cdRating2Integer(simRating)) {
+                    if (!isHiddenItem(prefix) && !isGroupItem(prefix)) {
+                        debugSay(4, "DEBUG-DRESS", "dollType = " + dollType + "; prefix = " + prefix);
+                        if (!isTransformingItem(prefix) || dollType == "Regular") {
+                            debugSay(4, "DEBUG-DRESS", "Passed the test: " + itemName);
+                            if (isRated(prefix)) {
+                                if (cdOutfitRating(itemName) <= cdRating2Integer(simRating)) {
+                                    tmpList += itemName;
+                                }
+                            }
+                            else {
+                                if (!((cdGetFirstChar(choice) == ">") || (cdGetFirstChar(choice) == "*"))) totalOutfits++;
                                 tmpList += itemName;
                             }
-                        }
-                        else {
-                            if (!isParentFolder(prefix)) totalOutfits++;
-                            tmpList += itemName;
                         }
                     }
                 }

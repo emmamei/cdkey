@@ -100,18 +100,16 @@ setDollType(string stateName, integer automated) {
     // Convert state name to Title case
     stateName = cdGetFirstChar(llToUpper(stateName)) + cdButFirstChar(llToLower(stateName));
 
-#ifdef DEVELOPER_MODE
     if (stateName == "") {
         llSay(DEBUG_CHANNEL,"Attempt made to set dollType to null string by " + script + "! Setting to Regular...");
         stateName = "Regular";
     }
-#endif
 
     // If no change, abort
-    if (stateName == dollType) {
-        debugSay(2,"DEBUG-DOLLTYPE","No doll type change necessary...");
-        return;
-    }
+    //if (stateName == dollType) {
+    //    debugSay(2,"DEBUG-DOLLTYPE","No doll type change necessary...");
+    //    return;
+    //}
 
     debugSay(2,"DEBUG-DOLLTYPE","Changing (" + (string)automated + ") to type " + stateName + " from " + dollType);
 
@@ -582,7 +580,10 @@ default {
 
         else if (code == RLV_RESET) {
             RLVok = (integer)choice;
-            if (dollType == "") setDollType("Regular", AUTOMATED);
+            if (dollType == "") {
+                setDollType("Regular", AUTOMATED);
+                llSay(DEBUG_CHANNEL,"dollType had to be fixed from blank");
+            }
 
             outfitsFolder = "";
             typeFolder = "";
