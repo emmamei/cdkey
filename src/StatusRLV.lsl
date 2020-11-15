@@ -119,15 +119,14 @@ default {
             if (cmd == "refreshRLV") {
                 debugSay(4,"DEBUG-STATUSRLV","Restoring recorded restrictions...");
 
+                //return; // FIXME: temporarily restore no restrictions at all
                 if (rlvRestrict == []) return; // no restrictions
 
                 string cmd;
-                i = llGetListLength(rlvRestrict);
+                i = ~llGetListLength(rlvRestrict);
                 while (i--) {
                     cmd = llList2String(rlvRestrict, i);
-
-                    // This assumes that all cmds in the rlvRestrict are y/n options!
-                    llOwnerSay("@" + cmd + "=n");
+                    llOwnerSay("@" + cmd);
                 }
             }
             else if (cmd == "instantMessage") {
@@ -142,21 +141,10 @@ default {
             string cmd = llList2String(split, 1);
             //split = llDeleteSubList(split, 0, 0);
 
-            debugSay(4,"DEBUG-STATUSRLV","Got RLV_CMD (315) from script " + script + ": " + cmd + "|" + commandString);
+            debugSay(4,"DEBUG-STATUSRLV","Got RLV_CMD (315) from script " + script + ": " + cmd + " - " + commandString);
 
             if (RLVok != TRUE) {
                 if (RLVok == UNSET) llSay(DEBUG_CHANNEL,"RLV command issued with RLV active! (" + commandString + ")");
-                return;
-            }
-
-            // This could thereotically happen...
-            if (commandString == "" || commandString == "0") {
-                llSay(DEBUG_CHANNEL,"requested RLV command from " + script + " is empty!");
-                return;
-            }
-
-            if (llStringLength(commandString) > CHATMSG_MAXLEN) {
-                llSay(DEBUG_CHANNEL,"requested RLV command from " + script + " is too long!");
                 return;
             }
 
@@ -170,7 +158,62 @@ default {
                 script = cdListElement(split,0);
                 list tmpList;
 
-                llOwnerSay("@" + commandString);
+                // This could thereotically happen...
+                if (commandString == "" || commandString == "0") {
+                    llSay(DEBUG_CHANNEL,"requested RLV command from " + script + " is empty!");
+                    return;
+                }
+
+                if (llStringLength(commandString) > CHATMSG_MAXLEN) {
+                    llSay(DEBUG_CHANNEL,"requested RLV command from " + script + " is too long!");
+                    return;
+                }
+
+//integer rlvAlwaysrun;
+//integer rlvEdit;
+//integer rlvFartouch;
+//integer rlvSendchat;
+//integer rlvShowhovertextall;
+//integer rlvShowinv;
+//integer rlvShowloc;
+//integer rlvShowminimap;
+//integer rlvShownames;
+//integer rlvShowworldmap;
+//integer rlvSit;
+//integer rlvSittp;
+//integer rlvTplm;
+//integer rlvTploc;
+//integer rlvTplure;
+
+                // Split command string into multiple commands
+                list commandList;
+                commandList = llParseString2List(commandString,[","],[""]);
+
+                // iterate over list
+                integer index = ~llGetListLength(commandList);
+                string ending;
+                string command;
+
+                while(index++) {
+                    // Either find "=n" or "=y" and handle it
+                    command = llList2String(commandList,index);
+                    ending = llGetSubString(command,-2,-1);
+                    debugSay(4,"DEBUG-STATUSRLV","RestrictRLVcmd: command = " + command);
+                    debugSay(4,"DEBUG-STATUSRLV","RestrictRLVcmd: ending = " + ending);
+
+                    if (ending == "=n") {
+                        ; // result = TRUE (restricted)
+                    }
+                    else if (ending == "=y") {
+                        ; // result = FALSE (unrestricted)
+                    }
+                    else {
+		        ; // not a y/n restrict
+                    }
+
+                    llOwnerSay("@" + command);
+                }
+
 
                 rlvRestrict = (rlvRestrict=[]) + rlvRestrict + commandString;
             }
@@ -230,6 +273,17 @@ default {
 		    lmRunRLVcmd("clearRLVcmd",commandString);
 		    return;
 		}
+
+                // This could thereotically happen...
+                if (commandString == "" || commandString == "0") {
+                    llSay(DEBUG_CHANNEL,"requested RLV command from " + script + " is empty!");
+                    return;
+                }
+
+                if (llStringLength(commandString) > CHATMSG_MAXLEN) {
+                    llSay(DEBUG_CHANNEL,"requested RLV command from " + script + " is too long!");
+                    return;
+                }
 
                 llOwnerSay("@" + commandString);
                 //lmInternalCommand("storeRLV",script + "|" + commandString,NULL_KEY);

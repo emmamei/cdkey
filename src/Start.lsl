@@ -489,10 +489,11 @@ default {
                         if (cdPoseAnim()) {
                             // keyAnimation is a pose of some sort
 			    if (defaultPoseRLVcmd) {
-			        lmRunRLV(defaultPoseRLVcmd);
+			        lmRestrictRLV(defaultPoseRLVcmd);
                             }
 			    if (userPoseRLVcmd) {
-			        lmRunRLVas("UserPose", userPoseRLVcmd);
+			        //lmRunRLVas("UserPose", userPoseRLVcmd);
+			        lmRestrictRLV(userPoseRLVcmd);
                             }
                         }
                         else if (oldKeyAnimation != keyAnimation) {
@@ -511,8 +512,8 @@ default {
                     // a collapse overrides AFK - ignore AFK if we are collapsed
                     if (RLVok == TRUE) {
                         if (afk) {
-                            lmRunRLV(defaultAfkRLVcmd);
-                            if (userAfkRLVcmd) lmRunRLVas("UserAfk", userAfkRLVcmd);
+                            lmRestrictRLV(defaultAfkRLVcmd);
+                            if (userAfkRLVcmd) lmRestrictRLV(userAfkRLVcmd);
                         }
                         else if (oldAfk != afk) {
                             // afk value JUST became zero
@@ -542,8 +543,8 @@ default {
                 if (RLVok == TRUE) {
                     if (collapsed) {
                         // We are collapsed: activate RLV restrictions
-                        lmRunRLV(defaultCollapseRLVcmd);
-                        if (userCollapseRLVcmd != "") lmRunRLVas("UserCollapse", userCollapseRLVcmd);
+                        lmRestrictRLV(defaultCollapseRLVcmd);
+                        if (userCollapseRLVcmd != "") lmRestrictRLV(userCollapseRLVcmd);
                     }
                     else {
                         if (wasCollapsed) {
@@ -607,14 +608,14 @@ default {
 
                     // Is Dolly AFK? Trigger RLV restrictions as appropriate
                     if (afk) {
-                        lmRunRLV(defaultAfkRLVcmd);
-                        if (userAfkRLVcmd != "") lmRunRLVas("UserAfk", userAfkRLVcmd);
+                        lmRestrictRLV(defaultAfkRLVcmd);
+                        if (userAfkRLVcmd != "") lmRestrictRLV(userAfkRLVcmd);
                     }
 
                     // Are we posed? Trigger RLV restrictions for being posed
                     if (cdPoseAnim()) {
-                        lmRunRLV(defaultPoseRLVcmd);
-                        if (userPoseRLVcmd != "") lmRunRLVas("UserPose", userPoseRLVcmd);
+                        lmRestrictRLV(defaultPoseRLVcmd);
+                        if (userPoseRLVcmd != "") lmRestrictRLV(userPoseRLVcmd);
                     }
                 }
             }

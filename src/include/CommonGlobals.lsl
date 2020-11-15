@@ -89,6 +89,24 @@ integer windingDown         = 1;
 integer windMins            = 30;
 integer windNormal          = 1800;
 
+// List of managed and stored restrictions
+
+integer rlvAlwaysrun;
+integer rlvEdit;
+integer rlvFartouch;
+integer rlvSendchat;
+integer rlvShowhovertextall;
+integer rlvShowinv;
+integer rlvShowloc;
+integer rlvShowminimap;
+integer rlvShownames;
+integer rlvShowworldmap;
+integer rlvSit;
+integer rlvSittp;
+integer rlvTplm;
+integer rlvTploc;
+integer rlvTplure;
+
 #ifdef DEVELOPER_MODE
 integer debugLevel          = DEBUG_LEVEL;
 #endif
