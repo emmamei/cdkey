@@ -482,6 +482,7 @@ default {
                 else if (name == "collapsed")                    collapsed = (integer)value;
             }
             else if (name == "allowRepeatWind")       allowRepeatWind = (integer)value;
+            else if (name == "allowDress")                 allowDress = (integer)value;
             else if (name == "autoAfk")                       autoAfk = (integer)value;
 #ifdef ADULT_MODE
             else if (name == "allowStrip")                 allowStrip = (integer)value;

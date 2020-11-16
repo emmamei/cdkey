@@ -434,13 +434,14 @@ default {
                     }
 
                     // Only present the Types button if Dolly is not posed
-                    if (keyAnimation == "") menu += "Types...";
+                    if (keyAnimation == "" && allowDress) {
 
-                    // Members of the public are allowed if allowed
-                    else if (!isDoll && !isController && (hardcore || allowDress)) menu += "Types...";
+                        // Members of the public are allowed if allowed
+                        if (!isDoll && !isController) menu += "Types...";
 
-                    // Dolly or Controllers always can use Types
-                    else menu += "Types...";
+                        // Dolly or Controllers always can use Types
+                        else menu += "Types...";
+                    }
 
                     integer poseCount;
                     poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
