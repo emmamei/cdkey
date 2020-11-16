@@ -441,6 +441,9 @@ default {
             if (cmd == "randomDress") {
                 // this makes it easier, and we don't have to be "afraid" to call the
                 // randomDress function.
+                llSay(DEBUG_CHANNEL,"randomDress aborting");
+                return;
+
 #ifdef DEVELOPER_MODE
                 llSay(DEBUG_CHANNEL,"randomDress executing");
 #endif
