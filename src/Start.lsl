@@ -499,7 +499,7 @@ default {
                         else if (oldKeyAnimation != keyAnimation) {
                             // animation just became null
                             //lmRunRLV("clear"); // FIXME: This is too generic
-		            lmRunRLVcmd("clearRLVcmd","");
+		            lmRunRLVcmd("clearRLVcmd",defaultBaseRLVcmd);
                         }
                     }
                 }

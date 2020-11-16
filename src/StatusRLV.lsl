@@ -116,6 +116,7 @@ default {
             string cmd = llList2String(split, 0);
             split = llDeleteSubList(split, 0, 0);
 
+#ifdef NOT_USED
             if (cmd == "refreshRLV") {
                 debugSay(4,"DEBUG-STATUSRLV","Restoring recorded restrictions...");
 
@@ -124,12 +125,13 @@ default {
 
                 string cmd;
                 i = ~llGetListLength(rlvRestrict);
-                while (i--) {
+                while (i++) {
                     cmd = llList2String(rlvRestrict, i);
                     llOwnerSay("@" + cmd);
                 }
             }
-            else if (cmd == "instantMessage") {
+#endif
+            if (cmd == "instantMessage") {
 
                 // This is segregated for speed: this script (StatusRLV) doesn't have
                 // an overriding need to not have a 2s delay in it
@@ -201,6 +203,7 @@ default {
                     debugSay(4,"DEBUG-STATUSRLV","RestrictRLVcmd: command = " + command);
                     debugSay(4,"DEBUG-STATUSRLV","RestrictRLVcmd: ending = " + ending);
 
+#ifdef NOT_USED
                     if (ending == "=n") {
                         ; // result = TRUE (restricted)
                     }
@@ -210,14 +213,29 @@ default {
                     else {
 		        ; // not a y/n restrict
                     }
-
+#endif
                     llOwnerSay("@" + command);
                 }
 
 
                 rlvRestrict = (rlvRestrict=[]) + rlvRestrict + commandString;
             }
-            else if (cmd == "refreshRLV") {
+            else if (cmd == "restoreRLV") {
+                // The goal of the restoreRLV command is to take saved RLV
+                // restrictions and restore them after logon or RLV activation
+                debugSay(4,"DEBUG-STATUSRLV","Restoring recorded restrictions...");
+
+                //return; // FIXME: temporarily restore no restrictions at all
+                if (rlvRestrict == []) return; // no restrictions
+
+                string cmd;
+                i = ~llGetListLength(rlvRestrict);
+                while (i++) {
+                    cmd = llList2String(rlvRestrict, i);
+                    llOwnerSay("@" + cmd);
+                }
+            }
+            else if (cmd == "storeRLV") {
                 // The goal of the storeRLV command is to take current RLV
                 // restrictions and save them into a variable, and thus
                 // preserve the restrictions for later logon
@@ -298,8 +316,9 @@ default {
 #else
                 commandString += ",permissive=y,detach=y," + defaultBaseRLVcmd;
 #endif
-                llOwnerSay("@" + commandString);
-                lmInternalCommand("reloadExceptions",script,NULL_KEY);
+                llOwnerSay("@clear"); // clear
+                llOwnerSay("@" + commandString); // restore restrictions if need be
+                lmInternalCommand("reloadExceptions",script,NULL_KEY); // then restore exceptions
                 //lmInternalCommand("clearRLV",script,NULL_KEY);
             }
         }
@@ -308,7 +327,7 @@ default {
 
             //debugSay(4,"DEBUG-STATUSRLV","rlvCommand (refresh) activated");
             if (RLVok == TRUE)
-                lmInternalCommand("refreshRLV","",NULL_KEY);
+                lmRunRLVcmd("restoreRLV","");
         }
         else if (code < 200) {
             if (code == MEM_REPORT) {
