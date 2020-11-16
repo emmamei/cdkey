@@ -130,9 +130,9 @@ activateRLVBase() {
     if (RLVok != 1) return;
 
 #ifdef DEVELOPER_MODE
-    string baseRLV = "permissive=n";
+    string baseRLV;
 #else
-    string baseRLV = "detach=n,permissive=n";
+    string baseRLV = "detach=n";
 #endif
 
     // remove chat channel from access... right?
@@ -197,7 +197,7 @@ activateRLV() {
         // rid of the menu item to unlock it
 
         if (RLVok == TRUE)
-            lmRunRLVas("Base", "detach=n,permissive=n");  //locks key
+            lmRunRLVas("Base", "detach=n");  //locks key
 #endif
         //cdListenerDeactivate(rlvHandle);
         lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?

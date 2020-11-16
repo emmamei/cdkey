@@ -311,12 +311,12 @@ default {
                 // it means normally: we have a base RLV set
 
                 //llSay(DEBUG_CHANNEL,"blanket clear issued from " + script);
-#ifdef LOCKON
-                commandString += ",permissive=n,detach=n," + defaultBaseRLVcmd;
-#else
-                commandString += ",permissive=y,detach=y," + defaultBaseRLVcmd;
-#endif
                 llOwnerSay("@clear"); // clear
+#ifdef LOCKON
+                llOwnerSay("@detach=n"); // detach
+#else
+                llOwnerSay("@detach=y"); // detach
+#endif
                 llOwnerSay("@" + commandString); // restore restrictions if need be
                 lmInternalCommand("reloadExceptions",script,NULL_KEY); // then restore exceptions
                 //lmInternalCommand("clearRLV",script,NULL_KEY);
