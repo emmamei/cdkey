@@ -74,15 +74,23 @@ script responds to a button press.
 
 RLV_CMD
 =======
-The RLV_CMD code (351) is caught only by StatusRLV, and is used to manage
+The RLV_CMD code (315) is caught only by StatusRLV, and is used to manage
 RLV commands. The new processing adds specific commands that are only sent
 with code 351.
 
 The code is sent by lmRunRLV, lmRestrictRLV, and lmRunRLVas. These functions
 are defined in include/LinkMessage.lsl and are used by the following scripts:
 
-Avatar.lsl
-CheckRLV.lsl
-Dress.lsl
-Start.lsl
-Transform.lsl
+    * Avatar.lsl
+    * CheckRLV.lsl
+    * Dress.lsl
+    * Start.lsl
+    * Transform.lsl
+
+The funtions are the following:
+
+    * clearRLVcmd
+    * restoreRLV
+    * restrictRLVcmd
+    * runRLVcmd
+    * storeRLV
