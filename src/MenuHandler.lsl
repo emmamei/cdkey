@@ -104,33 +104,32 @@ list dialogButtons;
 //    doDialogChannel();
 //}
 
+chooseDialogChannel() {
+    dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGenerateKey(), -7, -1));
+    poseChannel = dialogChannel - POSE_CHANNEL_OFFSET;
+    typeChannel = dialogChannel - TYPE_CHANNEL_OFFSET;
+
+    // NOTE: blacklistChannel and controlChannel are not opened here
+    blacklistChannel = dialogChannel - BLACKLIST_CHANNEL_OFFSET;
+    controlChannel = dialogChannel - CONTROL_CHANNEL_OFFSET;
+    lmSendConfig("dialogChannel", (string)(dialogChannel));
+}
+
 // This function ONLY activates the dialogChannel - no
 // reset is done unless necessary
 
 doDialogChannel() {
     // Open dialogChannel and typeChannel, poseChannel, with it
-    if (dialogChannel) {
+    if (dialogHandle) {
         cdListenerActivate(dialogHandle);
         cdListenerActivate(poseHandle);
         cdListenerActivate(typeHandle);
     }
     else {
-        dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGenerateKey(), -7, -1));
         dialogHandle = cdListenAll(dialogChannel);
-
-        poseChannel = dialogChannel - POSE_CHANNEL_OFFSET;
-        poseHandle = cdListenAll(poseChannel);
-
-        typeChannel = dialogChannel - TYPE_CHANNEL_OFFSET;
-        typeHandle = cdListenAll(typeChannel);
-
-        // NOTE: blacklistChannel and controlChannel are not opened here
-        blacklistChannel = dialogChannel - BLACKLIST_CHANNEL_OFFSET;
-        controlChannel = dialogChannel - CONTROL_CHANNEL_OFFSET;
+          poseHandle = cdListenAll(poseChannel);
+          typeHandle = cdListenAll(typeChannel);
     }
-
-    llSleep(0.1);
-    lmSendConfig("dialogChannel", (string)(dialogChannel));
 }
 
 //integer listCompare(list a, list b) {
@@ -154,6 +153,8 @@ default {
         dollName = llGetDisplayName(dollID);
 
         cdInitializeSeq();
+        RLVok = UNSET;
+        chooseDialogChannel();
     }
 
     //----------------------------------------
@@ -161,6 +162,7 @@ default {
     //----------------------------------------
     on_rez(integer start) {
         RLVok = UNSET;
+        chooseDialogChannel();
     }
 
     //----------------------------------------

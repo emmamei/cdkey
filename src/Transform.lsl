@@ -220,15 +220,24 @@ folderSearch(string folder, integer channel) {
     integer handle;
 
     debugSay(2,"DEBUG-FOLDERSEARCH","folderSearch: Searching within \"" + folder + "\"");
+    if (channel == 0) {
+        if (folder != "") {
+            llSay(DEBUG_CHANNEL,"Searching folder " + folder + " invalid with no channel!");
+        }
+        else {
+            llSay(DEBUG_CHANNEL,"Searching folder (unspecified) invalid with no channel!");
+        }
+    }
+    else {
+        // The folder search starts as a RLV @getinv call...
+        //
+        if (folder == "") lmRunRLV("getinv=" + (string)channel);
+        else lmRunRLV("getinv:" + folder + "=" + (string)channel);
 
-    // The folder search starts as a RLV @getinv call...
-    //
-    if (folder == "") lmRunRLV("getinv=" + (string)channel);
-    else lmRunRLV("getinv:" + folder + "=" + (string)channel);
-
-    // The next stage is the listener, while we create a time
-    // out to timeout the RLV call...
-    llSetTimerEvent(RLV_TIMEOUT);
+        // The next stage is the listener, while we create a time
+        // out to timeout the RLV call...
+        llSetTimerEvent(RLV_TIMEOUT);
+    }
 }
 
 //========================================
@@ -507,12 +516,15 @@ default {
                 }
             }
             else if (name == "dialogChannel") {
-
                 dialogChannel = (integer)value;
+
+                llSay(DEBUG_CHANNEL,"Dialog channel set to" + (string)dialogChannel);
+
                 rlvChannel = ~dialogChannel + 1;
+                typeChannel = dialogChannel - 778;
+
                 typeSearchChannel = rlvChannel + 1;
                 outfitSearchChannel = rlvChannel + 2;
-                typeChannel = dialogChannel - 778;
             }
         }
 
