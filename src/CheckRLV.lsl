@@ -127,16 +127,19 @@ checkRLV() {
 }
 
 activateRLVBase() {
-    if (RLVok != 1) return;
+    if (RLVok != TRUE) return;
 
 #ifdef DEVELOPER_MODE
     string baseRLV;
+    // remove chat channel from access... right?
+    if (chatChannel) baseRLV += "sendchannel:" + (string)chatChannel + "=rem";
 #else
     string baseRLV = "detach=n";
-#endif
-
     // remove chat channel from access... right?
     if (chatChannel) baseRLV += ",sendchannel:" + (string)chatChannel + "=rem";
+#endif
+
+    // Run the base as stored
     lmRunRLVas("Base", baseRLV);
 
     // Reset baseRLV for second round
