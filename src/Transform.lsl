@@ -947,13 +947,13 @@ default {
                     lmSendConfig("nudeFolder",nudeFolder);
                     lmSendConfig("normalselfFolder",normalselfFolder);
                 }
-                else {
-                    debugSay(2,"DEBUG-SEARCHING","Random dress being chosen");
+                //else {
+                //    debugSay(2,"DEBUG-SEARCHING","Random dress being chosen");
 #ifdef DEVELOPER_MODE
-                    llSay(DEBUG_CHANNEL,"randomDress called after Search");
+                //    llSay(DEBUG_CHANNEL,"randomDress called after Search");
 #endif
-                    lmInternalCommand("randomDress","",NULL_KEY);
-                }
+                //    lmInternalCommand("randomDress","",NULL_KEY);
+                //}
             }
         }
     }
