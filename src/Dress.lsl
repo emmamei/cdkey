@@ -81,8 +81,10 @@ string typeFolder; // This is the folder we want for our doll type
 string normalselfFolder; // This is the ~normalself we are using
 string nudeFolder; // This is the ~nude we are using
 
+#ifdef NOT_USED
 integer randomDressHandle;
 integer randomDressChannel;
+#endif
 integer menuDressHandle;
 integer menuDressChannel;
 #ifdef CONFIRM_WEAR
@@ -167,8 +169,10 @@ rlvRequest(string rlv, integer channel) {
         }
 
         llSay(DEBUG_CHANNEL,"rlvRequest called with old channel numbers");
-             if (channel == 2665)   randomDressHandle = cdListenMine(  randomDressChannel);
-        else if (channel == 2666)     menuDressHandle =  cdListenAll(    menuDressChannel);
+             if (channel == 2666)     menuDressHandle =  cdListenAll(    menuDressChannel);
+#ifdef NOT_USED
+        else if (channel == 2665)   randomDressHandle = cdListenMine(  randomDressChannel);
+#endif
 #ifdef CONFIRM_WEAR
         else if (channel == 2668)   confirmWearHandle = cdListenMine(  confirmWearChannel);
 #endif
@@ -179,8 +183,10 @@ rlvRequest(string rlv, integer channel) {
         lmRunRLV(rlv + (string)(rlvBaseChannel + channel));
     }
     else {
-             if (channel ==   randomDressChannel)   randomDressHandle = cdListenMine(  randomDressChannel);
-        else if (channel ==     menuDressChannel)     menuDressHandle =  cdListenAll(    menuDressChannel);
+             if (channel ==     menuDressChannel)     menuDressHandle =  cdListenAll(    menuDressChannel);
+#ifdef NOT_USED
+        else if (channel ==   randomDressChannel)   randomDressHandle = cdListenMine(  randomDressChannel);
+#endif
 #ifdef CONFIRM_WEAR
         else if (channel ==   confirmWearChannel)   confirmWearHandle = cdListenMine(  confirmWearChannel);
 #endif
@@ -374,7 +380,9 @@ default {
                 outfitsChannel = dialogChannel + 15; // arbitrary offset
                 debugSay(6, "DEBUG-DRESS", "outfits Channel set to " + (string)outfitsChannel);
 
+#ifdef NOT_USED
                 randomDressChannel = rlvBaseChannel + 2665;
+#endif
                   menuDressChannel = rlvBaseChannel + 2666;
 #ifdef CONFIRM_WEAR
                 confirmWearChannel = rlvBaseChannel + 2668;
@@ -442,6 +450,7 @@ default {
             string cmd = cdListElement(split, 0);
             split = llDeleteSubList(split, 0, 0);
 
+#ifdef NOT_USED
             // Choose an (appropriate) random outfit and put it on
             //
             if (cmd == "randomDress") {
@@ -473,7 +482,8 @@ default {
                     dressVia(randomDressChannel);
                 }
             }
-            else if (cmd == "wearOutfit") {
+#endif
+            if (cmd == "wearOutfit") {
 
                 // Overriting a script global here... not kosher, but works.
                 // Note that the value may or may NOT come from this script:
@@ -730,7 +740,9 @@ default {
                 //llSetTimerEvent(15.0);
                 oldOutfit = newOutfit;
 
+#ifdef NOT_USED
                 llListenRemove(randomDressHandle);
+#endif
                 llListenRemove(menuDressHandle);
 
                 changeComplete(TRUE);
@@ -843,6 +855,7 @@ default {
                 debugSay(3, "DEBUG-DRESS", "Region rating " + simRating + " outfit " + newOutfitName + " outfitRating: " + (string)outfitRating +
                             " regionRating: " + (string)regionRating);
 
+#ifdef NOT_USED
                 if (RLVok == TRUE) {
                     if (outfitRating > regionRating) {
                         pushRandom = 1;
@@ -850,6 +863,7 @@ default {
                         dressVia(randomDressChannel);
                     }
                 }
+#endif
             }
         }
     }
@@ -974,6 +988,7 @@ default {
         // 2668:
         // 2669:
 
+#ifdef NOT_USED
         //----------------------------------------
         // Channel: 2665
         //
@@ -1094,6 +1109,7 @@ default {
                 pushRandom = 0;
             }
         }
+#endif
 
         //----------------------------------------
         // Channel: 2666
