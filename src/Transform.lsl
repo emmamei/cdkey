@@ -519,7 +519,7 @@ default {
             else if (name == "dialogChannel") {
                 dialogChannel = (integer)value;
 
-                llSay(DEBUG_CHANNEL,"Dialog channel set to" + (string)dialogChannel);
+                //llSay(DEBUG_CHANNEL,"Dialog channel set to" + (string)dialogChannel);
 
                 rlvChannel = ~dialogChannel + 1;
                 typeChannel = dialogChannel - 778;
