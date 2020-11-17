@@ -39,6 +39,7 @@ integer timerMark;
 integer lastTimerMark;
 integer timeSpan;
 integer lowScriptModeSpan;
+integer isAttached;
 
 key lastWinderID;
 
@@ -178,7 +179,8 @@ default {
         RLVok = UNSET;
         dollID = llGetOwner();
         dollName = llGetDisplayName(dollID);
-        if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
+        isAttached = cdAttached();
+        if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
 
         cdInitializeSeq();
 
@@ -196,6 +198,9 @@ default {
         configured = 1;
         lmInternalCommand("setHovertext", "", llGetKey());
         llSetTimerEvent(30.0);
+
+        isAttached = cdAttached();
+        if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
 
         lmSendConfig("windingDown", (string)(windingDown = cdWindDown()));   // boolean
         //lmSendConfig("baseWindRate", (string)baseWindRate); // base rate: 1.0
@@ -887,7 +892,7 @@ default {
                 configured = 1;
 
                 if (lowScriptMode) llSetTimerEvent(LOW_RATE);
-                else if (!cdAttached()) llSetTimerEvent(60.0);
+                else if (!isAttached) llSetTimerEvent(60.0);
                 else llSetTimerEvent(STD_RATE);
 
                 timerStarted = 1;
@@ -904,7 +909,7 @@ default {
             else if (code == 105) {
 
                 if (lowScriptMode) llSetTimerEvent(LOW_RATE);
-                else if (!cdAttached()) llSetTimerEvent(60.0);
+                else if (!isAttached) llSetTimerEvent(60.0);
                 else llSetTimerEvent(STD_RATE);
                 timerStarted = 1;
             }

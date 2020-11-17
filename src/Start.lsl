@@ -403,7 +403,7 @@ doneConfiguration(integer prefsRead) {
     lmInitState(105);
 
     //initializationCompleted
-    isAttached = cdAttached();
+    //isAttached = cdAttached();
 
     if (dollDisplayName == "") {
         string name = dollName;
@@ -576,7 +576,7 @@ default {
 
                         lmSendConfig("dollDisplayName", (dollDisplayName = "Dolly " + name));
                     }
-                    if (cdAttached()) cdSetKeyName(dollDisplayName + "'s Key");
+                    if (isAttached) cdSetKeyName(dollDisplayName + "'s Key");
                 }
             }
         }
@@ -588,7 +588,7 @@ default {
 
                 newAttach = 0;
 
-                if (cdAttached()) {
+                if (isAttached) {
                     string msg = dollName + " has logged in with";
 
                     if (RLVok != TRUE) msg += "out";
@@ -686,7 +686,8 @@ default {
         cdInitializeSeq();
         resetState = RESET_STARTUP;
 
-        if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
+        isAttached = cdAttached();
+        if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
         else {
             llOwnerSay("Key not attached");
             cdResetKeyName();
@@ -709,7 +710,7 @@ default {
     // TOUCH START
     //----------------------------------------
     touch_start(integer num) {
-        if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
+        if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
     }
 
     //----------------------------------------
@@ -720,7 +721,8 @@ default {
         dollID = llGetOwner();
         dollName = llGetDisplayName(dollID);
 
-        if (cdAttached()) llRequestPermissions(dollID, PERMISSION_MASK);
+        isAttached = cdAttached();
+        if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
         else cdResetKeyName();
 
         //RLVok = UNSET;
@@ -749,7 +751,7 @@ default {
         } else {
 
             isAttached = 1;
-            llMessageLinked(LINK_SET, 106, "Start|attached|" + (string)cdAttached(), id);
+            llMessageLinked(LINK_SET, 106, "Start|attached|" + (string)isAttached, id);
 
             if (llGetPermissionsKey() == dollID && (llGetPermissions() & PERMISSION_TAKE_CONTROLS) != 0) llTakeControls(CONTROL_MOVE, 1, 1);
             else llRequestPermissions(dollID, PERMISSION_MASK);

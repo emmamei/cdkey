@@ -215,7 +215,7 @@ float GlobalDefines_version=1.0;
 #define cdPoseAnim()                    (keyAnimation != "" && keyAnimation != ANIMATION_COLLAPSED)
 #define cdPosed()			(!collapsed && keyAnimation != "")
 #define cdSelfPosed()			(poserID == dollID)
-#define cdRunTimer()			(configured && cdAttached() && RLVchecked)
+//#define cdRunTimer()			(configured && cdAttached() && RLVchecked)
 #define cdMyScriptName()		llGetScriptName()
 #define cdMyScriptLine()		(string)__LINE__
 
@@ -243,7 +243,7 @@ float GlobalDefines_version=1.0;
 #define getScriptTime() formatFloat(getObjectScriptTime(llGetKey()), 3) + "ms"
 #define getWindRate() llList2Float(llGetPrimitiveParams([ PRIM_OMEGA ]), 1) / (TWO_PI / 15.0)
 #define timerNextFrame() llSetTimerEvent(0.01 * mainTimerEnable)
-#define cdWindDown() (!collapsed && cdAttached())
+#define cdWindDown() (!collapsed && isAttached)
 
 #define uncarry() lmInternalCommand("uncarry", "", NULL_KEY)
 //#define uncollapse(old) lmInternalCommand("uncollapse", "0", NULL_KEY)
