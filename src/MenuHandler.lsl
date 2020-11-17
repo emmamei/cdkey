@@ -496,13 +496,13 @@ default {
 #ifdef ADULT_MODE
                     // Is doll strippable?
                     if (RLVok == TRUE) {
-                        if (allowStrip || dollType == "Slut" || hardcore) {
-                            if (isController || isCarrier) {
-                                if (simRating == "MATURE" || simRating == "ADULT") menu += "Strip";
+                        if (simRating == "MATURE" || simRating == "ADULT") {
+                            if (dollType == "Slut" || hardcore) {
+                                menu += "Strip";
                             }
-                        }
-                        else if (isDoll) {
-                            if (simRating == "MATURE" || simRating == "ADULT") menu += "Strip";
+                            else if (allowStrip && allowDress) {
+                                if (isController || isCarrier || isDoll) menu += "Strip";
+                            }
                         }
                     }
 #endif
@@ -608,6 +608,12 @@ default {
     //----------------------------------------
     timer() {
         llSetTimerEvent(0.0);
+
+        if (blacklistHandle) debugSay(4,"DEBUG-MENU","Timer expired: blacklistHandle set");
+        if (controlHandle)   debugSay(4,"DEBUG-MENU","Timer expired: controlHandle set");
+        if (poseHandle)      debugSay(4,"DEBUG-MENU","Timer expired: poseHandle set");
+        if (typeHandle)      debugSay(4,"DEBUG-MENU","Timer expired: typeHandle set");
+        if (dialogHandle)    debugSay(4,"DEBUG-MENU","Timer expired: dialogHandle set");
 
         if (blacklistHandle) { llListenRemove(blacklistHandle); blacklistHandle = 0; }
         if (controlHandle)   { llListenRemove(controlHandle);     controlHandle = 0; }
