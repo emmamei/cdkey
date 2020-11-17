@@ -20,8 +20,9 @@
 #define isKnownTypeFolder(a) (llListFindList(typeFolders, [ a ]) != NOT_FOUND)
 
 #define nothingWorn(c,d) ((c) != "0") && ((c) != "1") && ((d) != "0") && ((d) != "1")
-#define dressViaMenu() listInventoryOn(menuDressChannel)
-#define dressViaRandom() listInventoryOn(randomDressChannel)
+#define dressVia(a) listInventoryOn(a)
+// #define dressViaMenu() listInventoryOn(menuDressChannel)
+// #define dressViaRandom() listInventoryOn(randomDressChannel)
 #ifdef CONFIRM_WEAR
 #define checkWornItems(c) rlvRequest("getinvworn:" + (c) + "=", confirmWearChannel)
 #endif
@@ -154,12 +155,17 @@ retryDirSearch() {
 
     // Retry at Outfits top level
     lmSendConfig("clothingFolder", (clothingFolder = ""));
-    dressViaRandom(); // recursion
+    dressVia(randomDressChannel); // recursion
 }
 
 rlvRequest(string rlv, integer channel) {
 
     if (channel < 2670) {
+        if (channel == 0) {
+            llSay(DEBUG_CHANNEL,"rlvRequest called with channel zero");
+            return;
+        }
+
         llSay(DEBUG_CHANNEL,"rlvRequest called with old channel numbers");
              if (channel == 2665)   randomDressHandle = cdListenMine(  randomDressChannel);
         else if (channel == 2666)     menuDressHandle =  cdListenAll(    menuDressChannel);
@@ -464,7 +470,7 @@ default {
                     else clothingFolder = "";
 
                     lmSendConfig("clothingFolder", clothingFolder);
-                    dressViaRandom();
+                    dressVia(randomDressChannel);
                 }
             }
             else if (cmd == "wearOutfit") {
@@ -795,7 +801,7 @@ default {
                     else clothingFolder = "";
 
                     lmSendConfig("clothingFolder", clothingFolder);
-                    dressViaMenu();
+                    dressVia(menuDressChannel);
                 }
                 else {
                     if (RLVok == TRUE) llSay(DEBUG_CHANNEL,"outfitsFolder is unset.");
@@ -841,7 +847,7 @@ default {
                     if (outfitRating > regionRating) {
                         pushRandom = 1;
                         clothingFolder = newOutfitPath;
-                        dressViaRandom();
+                        dressVia(randomDressChannel);
                     }
                 }
             }
@@ -950,7 +956,7 @@ default {
                     else clothingFolder += ("/" + choice);
 
                     lmSendConfig("clothingFolder", clothingFolder);
-                    dressViaMenu(); // recursion: put up a new Primary menu
+                    dressVia(menuDressChannel); // recursion: put up a new Primary menu
 
                     llSetTimerEvent(60.0);
                     return;
@@ -1082,7 +1088,7 @@ default {
                 }
                 else {
                     clothingFolder += "/" + randomOutfitName;
-                    dressViaRandom(); // recursion
+                    dressVia(randomDressChannel); // recursion
                 }
 
                 pushRandom = 0;

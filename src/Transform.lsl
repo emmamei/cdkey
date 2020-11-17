@@ -220,6 +220,7 @@ folderSearch(string folder, integer channel) {
     integer handle;
 
     debugSay(2,"DEBUG-FOLDERSEARCH","folderSearch: Searching within \"" + folder + "\"");
+
     if (channel == 0) {
         if (folder != "") {
             llSay(DEBUG_CHANNEL,"Searching folder " + folder + " invalid with no channel!");

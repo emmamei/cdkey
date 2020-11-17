@@ -130,6 +130,7 @@ doDialogChannel() {
           poseHandle = cdListenAll(poseChannel);
           typeHandle = cdListenAll(typeChannel);
     }
+    lmSendConfig("dialogChannel", (string)(dialogChannel));
 }
 
 //integer listCompare(list a, list b) {
