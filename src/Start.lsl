@@ -690,7 +690,7 @@ default {
         if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
         else {
             llOwnerSay("Key not attached");
-            cdResetKeyName();
+            //cdResetKeyName();
         }
 
         // WHen this script (Start.lsl) resets... EVERYONE resets...
@@ -723,7 +723,7 @@ default {
 
         isAttached = cdAttached();
         if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
-        else cdResetKeyName();
+        //else cdResetKeyName();
 
         //RLVok = UNSET;
 #ifdef DEVELOPER_MODE
@@ -740,7 +740,7 @@ default {
         lmInternalCommand("setWindRate","",NULL_KEY);
         if (id == NULL_KEY) {
 
-            if(!llGetAttached()) cdResetKeyName();
+            //if(!llGetAttached()) cdResetKeyName();
 
             // At this point, we know that we have a REAL detach:
             // key id is NULL_KEY and llGetAttached() == 0
