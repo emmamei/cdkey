@@ -763,7 +763,7 @@ default {
             split = llDeleteSubList(split, 0, 0);
 
             if (cmd == "detach") {
-                if (RLVok == TRUE) llOwnerSay("@clear,detachme=force");
+                if (RLVok == TRUE) { lmRunRLVcmd("clearRLVcmd","detachme=force"); }
                 else llDetachFromAvatar();
             }
             else if (cmd == "teleport") {

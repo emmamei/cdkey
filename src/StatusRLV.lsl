@@ -317,6 +317,7 @@ default {
 #else
                 llOwnerSay("@detach=y"); // detach
 #endif
+                rlvRestrict = [];
                 if (commandString != "")
                     llOwnerSay("@" + commandString); // restore restrictions if need be
                 lmInternalCommand("reloadExceptions",script,NULL_KEY); // then restore exceptions
