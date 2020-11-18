@@ -105,27 +105,47 @@ list dialogButtons;
 //}
 
 chooseDialogChannel() {
+    debugSay(4,"DEBUG-MENU","chooseDialogChannel() called");
+
+    if (dialogHandle) {
+
+        llListenRemove(dialogHandle);
+        llListenRemove(poseHandle);
+        llListenRemove(typeHandle);
+
+        dialogHandle = 0;
+          poseHandle = 0;
+          typeHandle = 0;
+    }
+
     dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGenerateKey(), -7, -1));
     poseChannel = dialogChannel - POSE_CHANNEL_OFFSET;
     typeChannel = dialogChannel - TYPE_CHANNEL_OFFSET;
 
     // NOTE: blacklistChannel and controlChannel are not opened here
     blacklistChannel = dialogChannel - BLACKLIST_CHANNEL_OFFSET;
-    controlChannel = dialogChannel - CONTROL_CHANNEL_OFFSET;
+      controlChannel = dialogChannel - CONTROL_CHANNEL_OFFSET;
+
     lmSendConfig("dialogChannel", (string)(dialogChannel));
+    doDialogChannel();
 }
 
 // This function ONLY activates the dialogChannel - no
 // reset is done unless necessary
 
 doDialogChannel() {
+    debugSay(4,"DEBUG-MENU","doDialogChannel() called");
+
     // Open dialogChannel and typeChannel, poseChannel, with it
     if (dialogHandle) {
+
+        // Uses llListenControl(a, 1)
         cdListenerActivate(dialogHandle);
         cdListenerActivate(poseHandle);
         cdListenerActivate(typeHandle);
     }
     else {
+        // Uses llListen(a, NO_FILTER, NO_FILTER, NO_FILTER)
         dialogHandle = cdListenAll(dialogChannel);
           poseHandle = cdListenAll(poseChannel);
           typeHandle = cdListenAll(typeChannel);
@@ -162,6 +182,15 @@ default {
     // ON REZ
     //----------------------------------------
     on_rez(integer start) {
+        RLVok = UNSET;
+        cdInitializeSeq();
+        chooseDialogChannel();
+    }
+
+    //----------------------------------------
+    // ATTACH
+    //----------------------------------------
+    attach(key id) {
         RLVok = UNSET;
         chooseDialogChannel();
     }
@@ -230,7 +259,8 @@ default {
 
             // shortcut: d
             else if (c == "d") {
-                     if (name == "dialogChannel")           dialogChannel = (integer)value;
+                     if (name == "dialogChannel") {         dialogChannel = (integer)value;
+                         debugSay(4,"DEBUG-MENU","dialogChannel recieved and set to " + (string)dialogChannel); } // FIXME: remove when not needed
                 else if (name == "detachable")                 detachable = (integer)value;
                 else if (name == "demoMode")                     demoMode = (integer)value;
                 else if (name == "dollType")                     dollType = value;
@@ -310,6 +340,7 @@ default {
                 // Prepare listeners: this allows for lag time by doing this up front
 
                 cdListenerActivate(dialogHandle); // is this redundant?
+                lmSendConfig("dialogChannel", (string)(dialogChannel));
                 llSetTimerEvent(MENU_TIMEOUT);
 
                 cdDialogListen();
@@ -561,6 +592,7 @@ default {
                 msg = timeLeft + msg;
                 timeLeft = "";
 
+                debugSay(4,"DEBUG-MENU","Menu being displayed and results on channel " + (string)dialogChannel);
                 llDialog(id, msg, dialogSort(menu), dialogChannel);
             }
         }
@@ -709,6 +741,8 @@ default {
 
         menuID = id;
         menuName = name;
+
+        debugSay(4,"DEBUG-MENU","Listener activated on channel " + (string)channel);
 
         // Answer to one of these channels:
         //    * dialogChannel
