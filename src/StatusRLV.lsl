@@ -306,6 +306,12 @@ default {
                 llOwnerSay("@" + commandString);
                 //lmInternalCommand("storeRLV",script + "|" + commandString,NULL_KEY);
             }
+            else if (cmd == "escapeRLVcmd") {
+                // complete zap of all RLV - such as from SafeWord
+                llOwnerSay("@clear");
+                RLVok = FALSE;
+                rlvRestrict = [];
+            }
             else if (cmd == "clearRLVcmd") {
                 // this is a blanket clear, but it doesn't mean to us what
                 // it means normally: we have a base RLV set
