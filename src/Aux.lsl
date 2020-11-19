@@ -10,10 +10,15 @@
 #include "include/GlobalDefines.lsl"
 // #include "include/Json.lsl"
 
+#define RUNNING 1
+#define NOT_RUNNING 0
+#define cdStopScript(a) llSetScriptState(a, NOT_RUNNING)
+#define cdRunScript(a) llSetScriptState(a, RUNNING)
+#define cdResetKey() llResetOtherScript("Start")
+
 #define WARN_MEM 6144
 #define NO_FILTER ""
 #define cdListenUser(a,b) llListen(a, NO_FILTER,         b, NO_FILTER)
-#define cdResetKey() llResetOtherScript("Start")
 #define UNSET -1
 
 #define GEM_COLOR_TEXTBOX 1
@@ -405,6 +410,8 @@ default {
                 cdSayTo("Here is your link to the Community Dolls website: " + WEB_DOMAIN, id);
             else if (choice == "Join Group")
                 cdSayTo("Here is your link to the Community Dolls group profile: " + WEB_GROUP, id);
+            else if (choice == "Update")
+                cdRunScript("UpdaterClient");
 
             else if (choice == "Access...") {
                 msg =

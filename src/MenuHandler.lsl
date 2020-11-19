@@ -546,8 +546,8 @@ default {
                 if (isDoll) {
                     if (!collapsed) {
                         if (keyAnimation == "") menu += [ "Options..." ];
-                        menu += [ "Help..." ];
                     }
+                    menu += [ "Help...", "Update" ];
                     if (allowSelfWind) menu += [ "Wind" ];
                 }
                 else {
