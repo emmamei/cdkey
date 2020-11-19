@@ -1,3 +1,22 @@
+//========================================
+// UpdaterClient.lsl
+//========================================
+//
+// vim:sw=4 et nowrap filetype=lsl
+//
+// DATE: Thu 19 Nov 2020 02:09:04 AM CST
+
+#include "include/GlobalDefines.lsl"
+
+// This file was originally created by Fred Beckhusen (Ferd Frederix)
+// It has been drastically cannibalized, and completely rewritten.
+//
+// Operation: Click on the server container that includes the server script
+// along with scripts to be used for updates. After clicking on that
+// container, trigger this update script contained in the object, which
+// sends a command to a listener in the server in order to send all
+// internal scripts over.
+
 // :CATEGORY:Updater
 // :NAME:Script Updater
 // :AUTHOR:Fred Beckhusen (Ferd Frederix)
@@ -12,41 +31,36 @@
 // Remote prim updater for scripts.  This registers the prim to accept scripts from a server in the same region.
 // :CODE:
 
-// when anything changes in the prims inventory, this sends the name and UUID to a central server.
-// It enabled remote script loading from that central prim, estate-wide
-// As a result, if you add any new scripts, they auto-get inserted into the database
-// tunable
+//========================================
+// VARIABLES
+//========================================
 
-#define DEBUG(a) llOwnerSay(llGetScriptName() + ":" + (a));
-
-integer debug = FALSE;     // chat a message
 integer UNIQ = 1246;       // the private channel unique to the owner of this prim
 
 // Not tuneable
-integer CHECKIN = 86400;       // 86400 seconds = 1 day
+integer UPDATE_TIMEOUT = 60;   // 60 seconds for reception to succeed
 integer comChannel;            // placeholder for llRegionSay
 integer pin;             // a random pin for security
 
-update() {
-    integer j = llGetInventoryNumber(INVENTORY_SCRIPT);
-    integer i;
-    string name;
+//========================================
+// FUNCTIONS
+//========================================
 
-    // Report current script name inventory on comChannel
-
-    for (i = 0; i < j; i++) {
-
-        name = llGetInventoryName(INVENTORY_SCRIPT,i);
-        DEBUG("Sending " + name);
-        llRegionSay(comChannel, name + "^" + (string) pin);        
-    }
-
-    llOwnerSay("Script Updater ready");
-    llSetTimerEvent(CHECKIN); // Hourly check ins
+startUpdate() {
+    llRegionSay(comChannel, (string)llGetKey() + "^" + (string)pin);
+    llOwnerSay("Update client prepared to receive...");
+    llSetTimerEvent(UPDATE_TIMEOUT); // Hourly check ins
 }
 
-   
+//========================================
+// STATES
+//========================================
+
 default {
+
+    //----------------------------------------
+    // STATE ENTRY
+    //----------------------------------------
 
     state_entry() {
 
@@ -57,22 +71,17 @@ default {
         // This is the key to the whole operation
         llSetRemoteScriptAccessPin(pin);
 
-        update();
+        startUpdate();
     }
+
+    //----------------------------------------
+    // ON REZ
+    //----------------------------------------
 
     // in case we rez, our UUID changed, so we check in
     on_rez(integer p) {
         llResetScript();
     }
-
-    // a new script may have been added
-    changed(integer what) {
-
-        if (what & CHANGED_INVENTORY)    update(); // after receiving an updated script, I bet this is triggered
-        if (what & CHANGED_REGION_START) llResetScript();
-    }
-
-    timer() {
-        update();
-    }
 }
+
+//========== UPDATERCLIENT ==========
