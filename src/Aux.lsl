@@ -354,8 +354,7 @@ default {
                     //lmSendConfig("wearLock", (string)(wearLock = 1));
                     lmSetConfig("wearLock", "1");
 
-                    if (!quiet) llSay(0, "The dolly " + dollName + " has stripped and may not redress for " + (string)llRound(WEAR_LOCK_TIMEOUT / 60.0) + " minutes.");
-                    else llOwnerSay("You have been stripped and may not redress for " + (string)llRound(WEAR_LOCK_TIMEOUT / 60.0) + " minutes.");
+                    llOwnerSay("You have been stripped and may not redress for " + (string)llRound(WEAR_LOCK_TIMEOUT / 60.0) + " minutes.");
                 }
                 else llOwnerSay("You have stripped off your clothes.");
                 lmInternalCommand("stripAll", "", id);

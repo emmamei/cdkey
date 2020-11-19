@@ -138,8 +138,7 @@ setDollType(string stateName, integer automated) {
     // We dont respond to this: we don't have to
     lmSendConfig("dollType", (dollType = stateName));
 
-    if (!quiet) cdChat(dollName + " has become a " + dollType + " Doll.");
-    else llOwnerSay("You have become a " + dollType + " Doll.");
+    llOwnerSay("You have become a " + dollType + " Doll.");
 
     typeFolder = "";
 
@@ -488,7 +487,6 @@ default {
             else if (name == "lowScriptMode")           lowScriptMode = (integer)value;
             else if (name == "collapsed")                   collapsed = (integer)value;
             else if (name == "simRating")                   simRating = value;
-            else if (name == "quiet")                           quiet = (integer)value;
             else if (name == "hardcore")                     hardcore = (integer)value;
             else if (name == "backMenu")                     backMenu = value;
             else if (name == "hovertextOn")               hovertextOn = (integer)value;

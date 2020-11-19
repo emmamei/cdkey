@@ -75,7 +75,7 @@ default {
                 else blacklist = split;
             }
             else if (name == "busyIsAway")                 busyIsAway = (integer)value;
-            else if (name == "quiet")                           quiet = (integer)value;
+            //else if (name == "quiet")                         quiet = (integer)value;
 
             //----------------------------------------
             // Shortcut: a
