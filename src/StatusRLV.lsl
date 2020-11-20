@@ -316,7 +316,7 @@ default {
                 // this is a blanket clear, but it doesn't mean to us what
                 // it means normally: we have a base RLV set
 
-                //llSay(DEBUG_CHANNEL,"blanket clear issued from " + script);
+                llSay(DEBUG_CHANNEL,"blanket clear issued from " + script);
                 llOwnerSay("@clear"); // clear
 #ifdef LOCKON
                 llOwnerSay("@detach=n"); // detach
@@ -324,9 +324,37 @@ default {
                 llOwnerSay("@detach=y"); // detach
 #endif
                 rlvRestrict = [];
+
+                // Default restrictions used by the key:
+                //     * alwaysrun
+                //     * edit
+                //     * fartouch
+                //     * sendchat
+                //     * showhovertextall
+                //     * showinv
+                //     * showloc
+                //     * showminimap
+                //     * shownames
+                //     * showworldmap
+                //     * sit
+                //     * sittp
+                //     * tplm
+                //     * tploc
+                //     * tplure
+
+                // The following sequence should get all restrictions,
+                // one by one - and maybe a few more, but that is ok
+                llOwnerSay("@clear=tp");
+                llOwnerSay("@clear=sit");
+                llOwnerSay("@clear=show");
+                llOwnerSay("@clear=alwaysrun");
+                llOwnerSay("@clear=edit");
+                llOwnerSay("@clear=fartouch");
+
                 if (commandString != "")
                     llOwnerSay("@" + commandString); // restore restrictions if need be
-                lmInternalCommand("reloadExceptions",script,NULL_KEY); // then restore exceptions
+
+                //lmInternalCommand("reloadExceptions",script,NULL_KEY); // then restore exceptions
                 //lmInternalCommand("clearRLV",script,NULL_KEY);
             }
         }
