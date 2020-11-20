@@ -800,8 +800,8 @@ default {
                             if (hardcore) llOwnerSay("You have been fully wound by " + name + ".");
                             else llOwnerSay("You have been fully wound by " + name + " - " + (string)llRound(effectiveLimit / (SECS_PER_MIN * windRate)) + " minutes remaining.");
 
-                            if (!quiet) llSay(0, dollName + " has been fully wound by " + name + ". Thanks for winding Dolly!");
-                            else cdSayTo(dollName + " is now fully wound. Thanks for winding Dolly!", id);
+                            llSay(0, dollName + " has been fully wound by " + name + ". Thanks for winding Dolly!");
+                            //cdSayTo(dollName + " is now fully wound. Thanks for winding Dolly!", id);
                         }
                         else {
                             llOwnerSay("You have fully wound yourself. Good going!");

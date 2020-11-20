@@ -813,8 +813,9 @@ default {
             }
             else if (choice == "Uncarry") {
                 if (cdIsCarrier(id)) {
-                    if (quiet) cdSayTo("You were carrying " + dollName + " and have now placed them down.", carrierID);
-                    else llSay(0, "Dolly " + dollName + " has been placed down by " + carrierName);
+                    //if (quiet) cdSayTo("You were carrying " + dollName + " and have now placed them down.", carrierID);
+                    //else
+                    llSay(0, "Dolly " + dollName + " has been placed down by " + carrierName);
                 }
                 else {
                     string name = llKey2Name(id);
