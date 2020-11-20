@@ -47,9 +47,9 @@ integer pin;             // a random pin for security
 //========================================
 
 startUpdate() {
-    llRegionSay(comChannel, (string)llGetKey() + "^" + (string)pin);
-    llOwnerSay("Update client prepared to receive...");
-    llSetTimerEvent(UPDATE_TIMEOUT); // Hourly check ins
+    llRegionSay(comChannel, (string)llGetOwner() + "^" + (string)pin);
+    llOwnerSay("Update client prepared to receive updated files...");
+    llSetTimerEvent(UPDATE_TIMEOUT);
 }
 
 //========================================

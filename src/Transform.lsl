@@ -101,7 +101,7 @@ setDollType(string stateName, integer automated) {
     stateName = cdGetFirstChar(llToUpper(stateName)) + cdButFirstChar(llToLower(stateName));
 
     if (stateName == "") {
-        llSay(DEBUG_CHANNEL,"Attempt made to set dollType to null string by " + script + "! Setting to Regular...");
+        //llSay(DEBUG_CHANNEL,"Attempt made to set dollType to null string by " + script + "! Setting to Regular...");
         stateName = "Regular";
     }
 

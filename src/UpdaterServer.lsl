@@ -47,8 +47,10 @@ integer comChannel ;       // we listen on this channel. It is unioque to this o
 integer comHandle;
 
 integer pin;
-key targetUUID;
+key targetID;
 key owner;
+key touchingID;
+integer publicMode = 0;
 
 #define lmSetHovertext(a)  llSetText((a), <1,1,1>, 1)
 #define lmClearHovertext() llSetText("", ZERO_VECTOR, 0)
@@ -73,18 +75,19 @@ sendUpdate() {
 
         // bypass this script, and the Start script...
         if (name != myName && name != "Start") {
-            llRemoteLoadScriptPin(targetUUID, name, pin, FALSE, 100);
+
+            llRemoteLoadScriptPin(targetID, name, pin, FALSE, 100);
             lmSetHovertext("Updating " + name + "...");
-            llOwnerSay("Sending script " + name);
+            llRegionSayTo(targetID, PUBLIC_CHANNEL, "Sending script " + name);
         }
     }
 
     // Updating Start, and starting after should reset key cleanly
     lmSetHovertext("Updating Start and Resetting Key...");
-    llRemoteLoadScriptPin(targetUUID, "Start", pin, TRUE, 100);
+    llRemoteLoadScriptPin(targetID, "Start", pin, TRUE, 100);
 
     lmSetHovertext("Update complete!");
-    llOwnerSay("Update complete!");
+    llRegionSayTo(targetID, PUBLIC_CHANNEL, "Update complete!");
     llSleep(15.0);
     lmSetHovertext("Click for update");
 }
@@ -100,7 +103,6 @@ default {
     //----------------------------------------
 
     state_entry() {
-        comChannel = (((integer)("0x" + llGetSubString((string)llGetOwner(), -8, -1)) & 0x3FFFFFFF) ^ 0xBFFFFFFF ) + UNIQ;    // UNIQ is the private channel for this owner
         owner = llGetOwner();
         lmSetHovertext("Click for update");
     }
@@ -110,7 +112,6 @@ default {
     //----------------------------------------
 
     on_rez(integer start) {
-        comChannel = (((integer)("0x" + llGetSubString((string)llGetOwner(), -8, -1)) & 0x3FFFFFFF) ^ 0xBFFFFFFF ) + UNIQ;    // UNIQ is the private channel for this owner
         owner = llGetOwner();
         lmSetHovertext("Click for update");
     }
@@ -126,13 +127,23 @@ default {
         list params = llParseString2List(msg, ["^"], []);
 
         lmSetHovertext("Updating...");
-        targetUUID = llList2Key(params, 0);
+        targetID = llList2Key(params, 0);
         pin = llList2Integer(params, 1);
-
-        sendUpdate();
 
         llListenRemove(comHandle);
         llSetTimerEvent(0.0);
+
+        llOwnerSay("touchingID = " + (string)touchingID);
+        llOwnerSay(  "targetID = " + (string)  targetID);
+
+        llOwnerSay("pin = " + (string)pin);
+
+        if (targetID == touchingID) {
+            sendUpdate();
+        }
+        else {
+            lmSetHovertext("Update rejected.");
+        }
     }
 
     //----------------------------------------
@@ -154,15 +165,28 @@ default {
 
     touch_start(integer what) {
 
-        // This prevents anyone but the owner from using this updater
-        if (llDetectedKey(0) != owner) return;
+        touchingID = llDetectedKey(0);
 
-        lmSetHovertext("Updating...");
+        // This prevents anyone but the owner from using this updater
+        if (touchingID != owner) {
+            if (publicMode == 0) {
+                llRegionSayTo(touchingID, PUBLIC_CHANNEL, "Not owner... Update request rejected.");
+                llOwnerSay("Not owner: update request rejected.");
+                return;
+            }
+            else {
+                llRegionSayTo(touchingID, PUBLIC_CHANNEL, "Not owner... Public update request accepted.");
+                llOwnerSay("Not owner: update request accepted.");
+            }
+        }
+
+        lmSetHovertext("Awaiting update client...");
 
         // Create a private listener, and open it
+        comChannel = (((integer)("0x" + llGetSubString((string)touchingID, -8, -1)) & 0x3FFFFFFF) ^ 0xBFFFFFFF ) + UNIQ;    // UNIQ is the private channel for this owner
         comHandle = llListen(comChannel,"","","");
 
-        llOwnerSay("Put non-running scripts into inventory and touch this to send them to remote prims.");
+        //llRegionSayTo(touchingID, PUBLIC_CHANNEL, "Put non-running scripts into inventory and touch this to send them to remote prims.");
         llSetTimerEvent(UPDATE_TIMEOUT);
     }
 }

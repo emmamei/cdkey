@@ -430,15 +430,17 @@ doRestart() {
     string script;
 
     cdStopScript("UpdaterClient");
+
     // Set all other scripts to run state and reset them
     n = llGetInventoryNumber(INVENTORY_SCRIPT);
     while(n--) {
+
         script = llGetInventoryName(INVENTORY_SCRIPT, n);
         if (script != "Start" && script != "UpdaterClient") {
 
             llOwnerSay("====> Resetting script: '" + script + "'");
-            //llResetOtherScript(script);
-            cdRunScript(script);
+            //cdRunScript(script);
+            llResetOtherScript(script);
         }
     }
 
