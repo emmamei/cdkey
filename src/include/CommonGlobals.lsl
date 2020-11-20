@@ -74,7 +74,7 @@ integer offlineMode         = TRUE;
 integer optHeader;
 integer pleasureDoll;
 integer poseSilence         = 1;
-integer quiet               = 1;
+//integer quiet               = 1;
 integer remoteSeq;
 integer RLVok               = -1;
 integer showPhrases;

@@ -118,7 +118,7 @@ default {
             else if (name == "keyLimit")                      maxMins = llRound((float)value / 60.0);
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
             else if (name == "backMenu")                     backMenu = value;
-            else if (name == "quiet")                           quiet = (integer)value;
+            //else if (name == "quiet")                           quiet = (integer)value;
 #ifdef HOMING_BEACON
             else if (name == "homingBeacon")             homingBeacon = (integer)value;
 #endif
@@ -433,7 +433,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
                 list plusList = [];
 
-                plusList += cdGetButton("Quiet Key", id, quiet, 0);
+                //plusList += cdGetButton("Quiet Key", id, quiet, 0);
                 plusList += cdGetButton("Type Text", id, hovertextOn, 0);
                 plusList += cdGetButton("Warnings", id, doWarnings, 0);
                 plusList += cdGetButton("Phrases", id, showPhrases, 0);

@@ -427,10 +427,11 @@ default {
                     if (doWarnings && !warned) {
                         minsLeft = llRound(timeLeftOnKey / (SECS_PER_MIN * windRate));
 
-                        if (minsLeft == 30 || minsLeft == 15 || minsLeft == 10 || minsLeft ==  5 || minsLeft ==  2) {
+                        if (minsLeft == 15 || minsLeft == 10 || minsLeft ==  5) {
 
-                            if (!quiet) llSay(0, dollName + " has " + (string)minsLeft + " minutes left before they run down!");
-                            else llOwnerSay("You have " + (string)minsLeft + " minutes left before winding down!");
+                            llSay(0, dollName + " has " + (string)minsLeft + " minutes left before they run down!");
+                            //if (!quiet) llSay(0, dollName + " has " + (string)minsLeft + " minutes left before they run down!");
+                            //else llOwnerSay("You have " + (string)minsLeft + " minutes left before winding down!");
                             warned = 1; // have warned now: dont repeat same warning
                         }
                     }
@@ -508,7 +509,7 @@ default {
                 else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
             }
-            else if (name == "quiet")                           quiet = (integer)value;
+            //else if (name == "quiet")                           quiet = (integer)value;
             else if (name == "hardcore")                     hardcore = (integer)value;
             else if (name == "hovertextOn")               hovertextOn = (integer)value;
             else if (name == "busyIsAway")                 busyIsAway = (integer)value;

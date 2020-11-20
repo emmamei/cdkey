@@ -266,7 +266,7 @@ default {
                 else if (name == "pronounHerDoll")     pronounHerDoll = value;
                 else if (name == "pronounSheDoll")     pronounSheDoll = value;
             }
-            else if (name == "quiet")                           quiet = (integer)value;
+            //else if (name == "quiet")                           quiet = (integer)value;
             else if (name == "hovertextOn")               hovertextOn = (integer)value;
             else if (name == "visibility")                 visibility = (float)value;
             else if (name == "isVisible") {
@@ -871,7 +871,7 @@ default {
                             //----------------------------------------
                             // Operations
                                  if (afterSpace == "Type Text")     lmSendConfig("hovertextOn",   (string)isX);
-                            else if (afterSpace == "Quiet Key")     lmSendConfig("quiet",         (string)(quiet = isX));
+                            //else if (afterSpace == "Quiet Key")     lmSendConfig("quiet",         (string)(quiet = isX));
                             else if (afterSpace == "Phrases")       lmSendConfig("showPhrases",   (string)(showPhrases = isX));
 #ifdef HOMING_BEACON
                             else if (afterSpace == "Homing Beacon") lmSendConfig("homingBeacon",  (string)isX);

@@ -107,7 +107,7 @@ processConfiguration(string name, string value) {
 
     // The settings list and the settingName list much match up
     // with entries
-    list settings = [ "quiet key", "hardcore", "busy is away", "can afk", "can fly",
+    list settings = [ "hardcore", "busy is away", "can afk", "can fly",
                       "poseable", "can sit", "can stand", "can dress self", "detachable",
 #ifdef ADULT_MODE
                       "strippable",
@@ -116,7 +116,7 @@ processConfiguration(string name, string value) {
                       "show phrases", "carryable", "repeatable wind", "ghost"
                     ];
 
-    list settingName = [ "quiet", "hardcore", "busyIsAway", "canAfk", "canFly",
+    list settingName = [ ""hardcore", "busyIsAway", "canAfk", "canFly",
                          "allowPose", "canSit", "canStand", "canDressSelf", "detachable",
 #ifdef ADULT_MODE
                          "allowStrip",
