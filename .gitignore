@@ -1,3 +1,4 @@
 src/**/readme*
 src/**/*.txt
 src/**/*.diff
+[a-z]
