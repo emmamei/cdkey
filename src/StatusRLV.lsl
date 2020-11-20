@@ -116,21 +116,6 @@ default {
             string cmd = llList2String(split, 0);
             split = llDeleteSubList(split, 0, 0);
 
-#ifdef NOT_USED
-            if (cmd == "refreshRLV") {
-                debugSay(4,"DEBUG-STATUSRLV","Restoring recorded restrictions...");
-
-                //return; // FIXME: temporarily restore no restrictions at all
-                if (rlvRestrict == []) return; // no restrictions
-
-                string cmd;
-                i = ~llGetListLength(rlvRestrict);
-                while (i++) {
-                    cmd = llList2String(rlvRestrict, i);
-                    llOwnerSay("@" + cmd);
-                }
-            }
-#endif
             if (cmd == "instantMessage") {
 
                 // This is segregated for speed: this script (StatusRLV) doesn't have
@@ -203,17 +188,6 @@ default {
                     debugSay(4,"DEBUG-STATUSRLV","RestrictRLVcmd: command = " + command);
                     debugSay(4,"DEBUG-STATUSRLV","RestrictRLVcmd: ending = " + ending);
 
-#ifdef NOT_USED
-                    if (ending == "=n") {
-                        ; // result = TRUE (restricted)
-                    }
-                    else if (ending == "=y") {
-                        ; // result = FALSE (unrestricted)
-                    }
-                    else {
-		        ; // not a y/n restrict
-                    }
-#endif
                     llOwnerSay("@" + command);
                 }
 

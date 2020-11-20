@@ -81,10 +81,6 @@ string typeFolder; // This is the folder we want for our doll type
 string normalselfFolder; // This is the ~normalself we are using
 string nudeFolder; // This is the ~nude we are using
 
-#ifdef NOT_USED
-integer randomDressHandle;
-integer randomDressChannel;
-#endif
 integer menuDressHandle;
 integer menuDressChannel;
 #ifdef CONFIRM_WEAR
@@ -170,9 +166,6 @@ rlvRequest(string rlv, integer channel) {
 
         llSay(DEBUG_CHANNEL,"rlvRequest called with old channel numbers");
              if (channel == 2666)     menuDressHandle =  cdListenAll(    menuDressChannel);
-#ifdef NOT_USED
-        else if (channel == 2665)   randomDressHandle = cdListenMine(  randomDressChannel);
-#endif
 #ifdef CONFIRM_WEAR
         else if (channel == 2668)   confirmWearHandle = cdListenMine(  confirmWearChannel);
 #endif
@@ -184,9 +177,6 @@ rlvRequest(string rlv, integer channel) {
     }
     else {
              if (channel ==     menuDressChannel)     menuDressHandle =  cdListenAll(    menuDressChannel);
-#ifdef NOT_USED
-        else if (channel ==   randomDressChannel)   randomDressHandle = cdListenMine(  randomDressChannel);
-#endif
 #ifdef CONFIRM_WEAR
         else if (channel ==   confirmWearChannel)   confirmWearHandle = cdListenMine(  confirmWearChannel);
 #endif
@@ -380,9 +370,6 @@ default {
                 outfitsChannel = dialogChannel + 15; // arbitrary offset
                 debugSay(6, "DEBUG-DRESS", "outfits Channel set to " + (string)outfitsChannel);
 
-#ifdef NOT_USED
-                randomDressChannel = rlvBaseChannel + 2665;
-#endif
                   menuDressChannel = rlvBaseChannel + 2666;
 #ifdef CONFIRM_WEAR
                 confirmWearChannel = rlvBaseChannel + 2668;
@@ -450,39 +437,6 @@ default {
             string cmd = cdListElement(split, 0);
             split = llDeleteSubList(split, 0, 0);
 
-#ifdef NOT_USED
-            // Choose an (appropriate) random outfit and put it on
-            //
-            if (cmd == "randomDress") {
-                // this makes it easier, and we don't have to be "afraid" to call the
-                // randomDress function.
-                llSay(DEBUG_CHANNEL,"randomDress aborting");
-                return;
-
-#ifdef DEVELOPER_MODE
-                llSay(DEBUG_CHANNEL,"randomDress executing");
-#endif
-                if (RLVok == FALSE) {
-#ifdef DEVELOPER_MODE
-                    llSay(DEBUG_CHANNEL,"randomDress rejected: no RLV set");
-#endif
-                    return;
-                }
-
-                debugSay(6, "DEBUG-DRESS", "Random dress outfit chosen automatically");
-
-                if (tempDressingLock) {
-                    llRegionSayTo(dresserID, 0, "Dolly cannot be dressed right now; " + pronounSheDoll + " is already dressing");
-                }
-                else {
-                    if (useTypeFolder) clothingFolder = typeFolder;
-                    else clothingFolder = "";
-
-                    lmSendConfig("clothingFolder", clothingFolder);
-                    dressVia(randomDressChannel);
-                }
-            }
-#endif
             if (cmd == "wearOutfit") {
 
                 // Overriting a script global here... not kosher, but works.
@@ -740,9 +694,6 @@ default {
                 //llSetTimerEvent(15.0);
                 oldOutfit = newOutfit;
 
-#ifdef NOT_USED
-                llListenRemove(randomDressHandle);
-#endif
                 llListenRemove(menuDressHandle);
 
                 changeComplete(TRUE);
@@ -854,16 +805,6 @@ default {
 
                 debugSay(3, "DEBUG-DRESS", "Region rating " + simRating + " outfit " + newOutfitName + " outfitRating: " + (string)outfitRating +
                             " regionRating: " + (string)regionRating);
-
-#ifdef NOT_USED
-                if (RLVok == TRUE) {
-                    if (outfitRating > regionRating) {
-                        pushRandom = 1;
-                        clothingFolder = newOutfitPath;
-                        dressVia(randomDressChannel);
-                    }
-                }
-#endif
             }
         }
     }
@@ -987,129 +928,6 @@ default {
         // 2666: choose outfit Manually (by user)
         // 2668:
         // 2669:
-
-#ifdef NOT_USED
-        //----------------------------------------
-        // Channel: 2665
-        //
-        // Switched doll types: grab a new (appropriate) outfit at random and change to it
-        //
-        else if (channel == randomDressChannel) {
-
-            llListenRemove(randomDressHandle);
-            outfitsList = llParseString2List(choice, [","], []);
-            debugSay(6, "DEBUG-CLOTHING", "Choosing random outfit (from: " + choice + ")");
-#ifdef DEVELOPER_MODE
-            llSay(DEBUG_CHANNEL,"Choosing random outfit from " + choice);
-#endif
-
-            integer n;
-
-            // May never occur: other directories, hidden directories and files,
-            // and hidden UNIX files all take up space here.
-
-            if (outfitsList == []) {   // folder is bereft of files, switching to regular folder
-
-                // No files found; leave the prefix alone and don't change
-                llOwnerSay("There are no outfits in your " + activeFolder + " folder.");
-
-                // Didnt find any outfits in the standard folder, try the
-                // "extended" folder containing (we hope) outfits....
-
-                if (outfitsFolder != "" && clothingFolder != "") {
-                    retryDirSearch();
-                    return;
-                }
-            }
-            else {
-                // Outfits (theoretically) found: change to one
-                //
-                // This is where the actual chosing of a random outfit takes place
-
-                string itemName;
-                string prefix;
-                integer simrating = cdRating2Integer(simRating);
-                list tmpList;
-
-                // Filter directory contents
-                //
-                // Rule out the following:
-                //     ~item - Hidden item (including ~nude and ~normalself)
-                //     *item - Clothing for transformed doll of a particular type
-                //     #item - Group items
-                //     {x}item - Rated item: filter by rating
-                //
-                n = llGetListLength(outfitsList);
-                while (n--) {
-                    itemName = cdListElement(outfitsList, n);
-                    prefix = llGetSubString(itemName,0,0);
-
-                    // skip hidden files/directories and skip
-                    // Doll Type (Transformation) folders...
-                    //
-                    // Note this skips *Regular too
-                    //
-                    // This (sort of) odd sequence imposes short-cut operations
-
-                    if (!isHiddenItem(prefix)) {            // ~foo
-                        if (!isTransformingItem(prefix) || dollType == "Regular") { // *foo
-                            if (!isGroupItem(prefix)) {    // #foo
-                                if (isRated(prefix)) {     // {x}foo -- this test avoids function call
-                                    if (!(cdOutfitRating(itemName) > simrating)) {
-                                        tmpList += itemName;
-                                    }
-                                }
-                                else {
-                                    tmpList += itemName;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                outfitsList = tmpList;
-                tmpList = []; // free memory
-
-                // check the filtered list...
-                if (outfitsList == []) {
-                    // Nothing received (total == 0); try another
-                    // folder, if any; note that the total includes
-                    // "marked" folders (with ">") as well as "normal"
-                    // folders (containing clothing)
-
-                    outfitsList = []; // make sure to remove ref and clear memory
-                    if (pushRandom && clothingFolder != "") {
-                        retryDirSearch();
-                    }
-                    else pushRandom = 0;
-                    return;
-                }
-
-                // Pick outfit (or directory) at random
-                string randomOutfitName;
-
-                randomOutfitName = cdListElement(outfitsList, (integer)llFrand(llGetListLength(outfitsList)));
-
-                // Folders are NOT filtered out; this is so we can descend into sub-directories
-                // and select items within them. Directories are marked with an initial ">" character
-                if (llGetSubString(randomOutfitName, 0, 0) != ">") {
-
-                    // Here.....
-                    outfitsHandle = cdListenAll(outfitsChannel);
-                    debugSay(3, "DEBUG-DRESS", "Calling wearOutfit with random outfit " + randomOutfitName + " in the active folder " + activeFolder);
-                    lmInternalCommand("wearOutfit", randomOutfitName, NULL_KEY);
-
-                    llOwnerSay("You are being dressed in this outfit: " + randomOutfitName);
-                }
-                else {
-                    clothingFolder += "/" + randomOutfitName;
-                    dressVia(randomDressChannel); // recursion
-                }
-
-                pushRandom = 0;
-            }
-        }
-#endif
 
         //----------------------------------------
         // Channel: 2666
