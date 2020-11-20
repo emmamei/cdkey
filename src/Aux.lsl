@@ -409,8 +409,10 @@ default {
                 cdSayTo("Here is your link to the Community Dolls website: " + WEB_DOMAIN, id);
             else if (choice == "Join Group")
                 cdSayTo("Here is your link to the Community Dolls group profile: " + WEB_GROUP, id);
-            else if (choice == "Update")
+            else if (choice == "Update") {
+                llResetOtherScript("UpdaterClient");
                 cdRunScript("UpdaterClient");
+            }
 
             else if (choice == "Access...") {
                 msg =

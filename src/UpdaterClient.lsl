@@ -41,6 +41,7 @@ integer UNIQ = 1246;       // the private channel unique to the owner of this pr
 integer UPDATE_TIMEOUT = 60;   // 60 seconds for reception to succeed
 integer comChannel;            // placeholder for llRegionSay
 integer pin;             // a random pin for security
+key owner;
 
 //========================================
 // FUNCTIONS
@@ -65,8 +66,10 @@ default {
     state_entry() {
 
         pin = llCeil(llFrand(123456) + 654321);
+        owner = llGetOwner();
 
-        comChannel = (((integer)("0x" + llGetSubString((string)llGetOwner(), -8, -1)) & 0x3FFFFFFF) ^ 0xBFFFFFFF ) + UNIQ;    // 1234 is the private channel for this owner
+        comChannel = (((integer)("0x" + llGetSubString((string)owner, -8, -1)) & 0x3FFFFFFF) ^ 0xBFFFFFFF ) + UNIQ;    // 1234 is the private channel for this owner
+        llOwnerSay("client = " + (string)owner);
 
         // This is the key to the whole operation
         llSetRemoteScriptAccessPin(pin);
