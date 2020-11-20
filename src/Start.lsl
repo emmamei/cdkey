@@ -49,19 +49,10 @@ integer lastAttachPoint;
 key lastAttachAvatar;
 
 integer newAttach = YES;
-#ifdef GEM_PRESENT
-#ifdef GEMGLOW_OPT
-integer gemGlow = YES;
-#endif
-integer gemLight = YES;
-#endif
 integer dbConfigCount;
 integer i;
 
 string attachName;
-#ifdef GEM_PRESENT
-string prefGemColour="<0.9, 0.1, 0.8>"; // pink
-#endif
 integer isAttached;
 
 // These RLV commands are set by the user
@@ -92,65 +83,6 @@ integer rlvWait;
 //=======================================
 // FUNCTIONS
 //=======================================
-#ifdef GEM_PRESENT
-doLuminosity() {
-    // The two options below do the same thing - but when not visible or collapsed,
-    // it bypasses all the scanning and testing and goes straight to work.
-    // Note that it sets the color on every prim to the gemColour - but the
-    // textured Key items don't change color (texture overrides color?).
-
-#ifdef GEMGLOW_OPT
-    if (!visible || !gemGlow || collapsed) {
-#else
-    if (!visible || collapsed) {
-#endif
-        // Turn off glow et al when not visible or collapsed
-        llSetLinkPrimitiveParamsFast(LINK_SET, [ PRIM_POINT_LIGHT, FALSE, gemColour, 0.5, 2.5, 2.0 ]);
-        llSetLinkPrimitiveParamsFast(LINK_SET, [ PRIM_GLOW, ALL_SIDES, 0.0 ]);
-    }
-    else {
-        // Set gem light and glow parameters using llSetLinkPrimitiveParamsFast
-        //
-        // Note that this sets light and glow - even IF the Key light is off
-
-        // FIXME: Prim Search
-        list params;
-        integer nPrims = llGetNumberOfPrims();
-        integer i;
-        string name;
-        float glow;
-        integer primN;
-        string primPrefix;
-
-        i = nPrims;
-        while (i--) {
-            primN = i + 1;
-            name = llGetLinkName(primN);
-            glow = 0.0;
-
-            // Start a new Link Target
-            params += [ PRIM_LINK_TARGET, primN ];
-
-            primPrefix = llGetSubString(llGetLinkName(i), 0, 2);
-            if (primPrefix == "Hea" || primPrefix == "Gem") {
-                // JSON parameters were .............................. <0.6, 0.0, 0.9>, 0.3, 3.0, 0.2
-                params += [ PRIM_POINT_LIGHT, (gemLight & !collapsed),      gemColour, 0.5, 2.5, 2.0 ];
-                if (gemLight) glow = 0.08;
-            }
-            else if (gemLight) {
-                if (name == "Body") glow = 0.3;
-                //else if (name == "Center") glow = 0.0;
-                else if (llGetSubString(name, 0, 5) == "Mount") glow = 0.1;
-            }
-
-            params += [ PRIM_GLOW, ALL_SIDES, glow ];
-        }
-
-        debugSay(4, "DEBUG-START", "Set Params list: " + llDumpList2String(params, ","));
-        llSetLinkPrimitiveParamsFast(0, params);
-    }
-}
-#endif
 
 //---------------------------------------
 // Configuration Functions
@@ -170,9 +102,6 @@ processConfiguration(string name, string value) {
                      "debug level",
 #endif
                      "afk rlv", "collapse rlv", "pose rlv",
-#ifdef GEM_PRESENT
-                     "gem color", "gem colour",
-#endif
                      "doll gender", "helpless dolly", "chat mode", "controller"
                    ];
 
@@ -300,11 +229,6 @@ processConfiguration(string name, string value) {
                 else if (windNormal < 900) windNormal = 900;
             }
         }
-#ifdef GEM_PRESENT
-        else if (name == "gem colour" || name == "gem color") {
-            if ((vector)value != ZERO_VECTOR) prefGemColour = value;
-        }
-#endif
         else if (name == "controller") {
             string uuid = (string)value;
             controllers = (controllers = []) + controllers + [ (string)value, "x" ];
@@ -531,14 +455,6 @@ default {
             else if (name == "userAfkRLVcmd")            userAfkRLVcmd = value;
             else if (name == "defaultBaseRLVcmd")    defaultBaseRLVcmd = value;
 
-#ifdef GEM_PRESENT
-            else if (name == "gemColour") {      gemColour = (vector)value; doLuminosity(); }
-#ifdef GEMGLOW_OPT
-            else if (name == "gemGlow")  {      gemGlow = (integer)value; doLuminosity(); }
-#endif
-            else if (name == "gemLight") {     gemLight = (integer)value; doLuminosity(); }
-            else if (name == "isVisible") {       visible = (integer)value; doLuminosity(); }
-#endif
             else if (name == "collapsed") {
                 integer wasCollapsed = collapsed;
                 collapsed = (integer)value;
@@ -557,15 +473,6 @@ default {
                         }
                     }
                 }
-
-#ifdef GEM_PRESENT
-                if (collapsed)
-                    // set gem colour to gray
-                    lmInternalCommand("setGemColour", "<0.867, 0.867, 0.867>", NULL_KEY);
-                else
-                    lmInternalCommand("resetGemColour", "", NULL_KEY);
-                doLuminosity();
-#endif
             }
             else if (name == "dollDisplayName") {
                 if (script != cdMyScriptName()) {
@@ -782,9 +689,6 @@ default {
             if (data == EOF) {
                 //lmSendConfig("ncPrefsLoadedUUID", llDumpList2String(llList2List((string)llGetInventoryKey(NOTECARD_PREFERENCES) + ncPrefsLoadedUUID, 0, 9),"|"));
                 lmInternalCommand("getTimeUpdates","",NULL_KEY);
-#ifdef GEM_PRESENT
-                lmInternalCommand("setNormalGemColour",(string)prefGemColour,NULL_KEY);
-#endif
 
                 llOwnerSay("Preferences read in " + formatFloat(llGetTime() - ncStart, 2) + "s");
 

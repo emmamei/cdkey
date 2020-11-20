@@ -55,9 +55,6 @@ float windDefault = WIND_DEFAULT;
 
 string msg;
 integer carryMoved;
-#ifdef GEM_PRESENT
-integer gemLight = 1;
-#endif
 integer clearAnim;
 integer dbConfig;
 integer textboxType;
@@ -228,13 +225,6 @@ default {
 
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "showPhrases")               showPhrases = (integer)value;
-#ifdef GEM_PRESENT
-            else if (name == "gemColour")                   gemColour = (vector)value;
-            else if (name == "gemLight") {
-                gemLight = (integer)value;
-                lmInternalCommand("setGemColour", (string)gemColour, NULL_KEY);
-            }
-#endif
 
             // shortcut: a
             else if (c == "a") {
@@ -615,11 +605,7 @@ default {
             }
             else if (code == 110) {
                 //startup = 0;
-#ifdef GEM_PRESENT
-                lmInternalCommand("setGemColour", (string)gemColour, NULL_KEY);
-#else
                 ;
-#endif
             }
             else if (code == MEM_REPORT) {
                 float delay = llList2Float(split, 0);
@@ -831,126 +817,111 @@ default {
                         integer isX = (beforeSpace == CROSS);
 
                         // Entering key menu section
-#ifdef GEM_PRESENT
-                        if (afterSpace == "Gem Light") {
-                             lmSendConfig("gemLight", (string)isX);
-                             lmMenuReply("Key...", name, id);
+
+                        // These variables are used to track which menu to respond with given
+                        // a particular menu selection; that way, a setting can be toggled without
+                        // having a menu go away
+                        integer isRestriction = 1;
+                        integer isPublic = 1;
+                        integer isOperation = 1;
+
+                        //----------------------------------------
+                        // Abilities
+                        if (afterSpace == "Silent Pose") {
+                            // if X is true - this value can be changed -OR-
+                            // if is NOT Dolly - this value can be changed -OR-
+                            // if is a Controller - this value can be changed
+                            //
+                            // otherwise - if this is a Dolly with Controller - cannot make this setting false.
+                            if (isX || !isDoll || isController) lmSendConfig("poseSilence", (string)isX);
+                            else if (!isX && isDoll) llOwnerSay("The Silent Pose cannot be disabled by you.");
                         }
-#ifdef GEMGLOW_OPT
-                        else if (afterSpace == "Key Glow") { 
-                            lmSendConfig("gemGlow", (string)isX);
-                            lmMenuReply("Key...", name, id);
+                        else if (!isX || !isDoll || isController) {
+                            // if X is false - these values can be changed -OR-
+                            // if is not Doll - these values can be changed -OR-
+                            // if isController - these values can be changed
+                            //
+                            // However! if X is true and isDoll and is NOT Controller - then skip to next...
+                                 if (afterSpace == "Self TP")    lmSendConfig("canSelfTP",    (string)(canSelfTP = isX));
+                            else if (afterSpace == "Self Dress") lmSendConfig("canDressSelf", (string)(canDressSelf = isX));
+                            else if (afterSpace == "Detachable") lmSendConfig("detachable",   (string)(detachable = isX));
+                            else if (afterSpace == "Flying")     lmSendConfig("canFly",       (string)isX);
+                            else if (afterSpace == "Sitting")    lmSendConfig("canSit",       (string)isX);
+                            else if (afterSpace == "Standing")   lmSendConfig("canStand",     (string)isX);
+                            else if (afterSpace == "Force TP")   lmSendConfig("autoTP",       (string)isX);
+                            else isRestriction = 0;
                         }
-#endif
+                        else if (isX && isDoll) {
+                            // Dolly (accessor) is trying to enable: reject
+                                 if (afterSpace == "Self TP")    llOwnerSay("The Self TP option cannot be re-enabled by you.");
+                            else if (afterSpace == "Self Dress") llOwnerSay("The Self Dress option cannot be re-enabled by you.");
+                            else if (afterSpace == "Detachable") llOwnerSay("The Detachable option cannot be re-enabled by you.");
+                            else if (afterSpace == "Flying")     llOwnerSay("The Flying option cannot be re-enabled by you.");
+                            else if (afterSpace == "Sitting")    llOwnerSay("The Sitting option cannot be re-enabled by you.");
+                            else if (afterSpace == "Standing")   llOwnerSay("The Standing option cannot be re-enabled by you.");
+                            else if (afterSpace == "Force TP")   llOwnerSay("The Force TP option cannot be re-enabled by you.");
+                            else isRestriction = 0;
+                        }
+
+                        if (isRestriction) {
+                            cdMenuInject("Restrictions...");
+                            return;
+                        }
                         else {
-#endif
-                            // These variables are used to track which menu to respond with given
-                            // a particular menu selection; that way, a setting can be toggled without
-                            // having a menu go away
-                            integer isRestriction = 1;
-                            integer isPublic = 1;
-                            integer isOperation = 1;
-
                             //----------------------------------------
-                            // Abilities
-                            if (afterSpace == "Silent Pose") {
-                                // if X is true - this value can be changed -OR-
-                                // if is NOT Dolly - this value can be changed -OR-
-                                // if is a Controller - this value can be changed
-                                //
-                                // otherwise - if this is a Dolly with Controller - cannot make this setting false.
-                                if (isX || !isDoll || isController) lmSendConfig("poseSilence", (string)isX);
-                                else if (!isX && isDoll) llOwnerSay("The Silent Pose cannot be disabled by you.");
-                            }
-                            else if (!isX || !isDoll || isController) {
-                                // if X is false - these values can be changed -OR-
-                                // if is not Doll - these values can be changed -OR-
-                                // if isController - these values can be changed
-                                //
-                                // However! if X is true and isDoll and is NOT Controller - then skip to next...
-                                     if (afterSpace == "Self TP")    lmSendConfig("canSelfTP",    (string)(canSelfTP = isX));
-                                else if (afterSpace == "Self Dress") lmSendConfig("canDressSelf", (string)(canDressSelf = isX));
-                                else if (afterSpace == "Detachable") lmSendConfig("detachable",   (string)(detachable = isX));
-                                else if (afterSpace == "Flying")     lmSendConfig("canFly",       (string)isX);
-                                else if (afterSpace == "Sitting")    lmSendConfig("canSit",       (string)isX);
-                                else if (afterSpace == "Standing")   lmSendConfig("canStand",     (string)isX);
-                                else if (afterSpace == "Force TP")   lmSendConfig("autoTP",       (string)isX);
-                                else isRestriction = 0;
-                            }
-                            else if (isX && isDoll) {
-                                // Dolly (accessor) is trying to enable: reject
-                                     if (afterSpace == "Self TP")    llOwnerSay("The Self TP option cannot be re-enabled by you.");
-                                else if (afterSpace == "Self Dress") llOwnerSay("The Self Dress option cannot be re-enabled by you.");
-                                else if (afterSpace == "Detachable") llOwnerSay("The Detachable option cannot be re-enabled by you.");
-                                else if (afterSpace == "Flying")     llOwnerSay("The Flying option cannot be re-enabled by you.");
-                                else if (afterSpace == "Sitting")    llOwnerSay("The Sitting option cannot be re-enabled by you.");
-                                else if (afterSpace == "Standing")   llOwnerSay("The Standing option cannot be re-enabled by you.");
-                                else if (afterSpace == "Force TP")   llOwnerSay("The Force TP option cannot be re-enabled by you.");
-                                else isRestriction = 0;
-                            }
-
-                            if (isRestriction) {
-                                cdMenuInject("Restrictions...");
-                                return;
-                            }
-                            else {
-                                //----------------------------------------
-                                // Operations
-                                     if (afterSpace == "Type Text")     lmSendConfig("hovertextOn",   (string)isX);
-                                else if (afterSpace == "Quiet Key")     lmSendConfig("quiet",         (string)(quiet = isX));
-                                else if (afterSpace == "Phrases")       lmSendConfig("showPhrases",   (string)(showPhrases = isX));
+                            // Operations
+                                 if (afterSpace == "Type Text")     lmSendConfig("hovertextOn",   (string)isX);
+                            else if (afterSpace == "Quiet Key")     lmSendConfig("quiet",         (string)(quiet = isX));
+                            else if (afterSpace == "Phrases")       lmSendConfig("showPhrases",   (string)(showPhrases = isX));
 #ifdef HOMING_BEACON
-                                else if (afterSpace == "Homing Beacon") lmSendConfig("homingBeacon",  (string)isX);
+                            else if (afterSpace == "Homing Beacon") lmSendConfig("homingBeacon",  (string)isX);
 #endif
-                                else if (afterSpace == "Warnings")      lmSendConfig("doWarnings",    (string)isX);
-                                else if (afterSpace == "RLV") {
-                                    if (isX) {
-                                        RLVok = TRUE; // in this script, mark it ok while we check elsewhere
-                                        debugSay(4,"DEBUG-MENU","Requesting a check of RLV");
-                                        lmDoCheckRLV();
-                                    }
-                                    else {
-                                        // since disabling RLV, just do it and report
-                                        RLVok = FALSE;
-                                        lmRLVreport(RLVok,"",0);
-                                    }
+                            else if (afterSpace == "Warnings")      lmSendConfig("doWarnings",    (string)isX);
+                            else if (afterSpace == "RLV") {
+                                if (isX) {
+                                    RLVok = TRUE; // in this script, mark it ok while we check elsewhere
+                                    debugSay(4,"DEBUG-MENU","Requesting a check of RLV");
+                                    lmDoCheckRLV();
                                 }
-
-                                // if is not Doll, they can set and unset these options...
-                                // if is Doll, these abilities can only be removed (X)
-                                else if (afterSpace == "Rpt Wind") {
-                                    if (!isX || !isDoll || isController) lmSendConfig("allowRepeatWind", (string)isX);
-                                    else if (isDoll) llOwnerSay("The Repeat Wind option cannot be re-enabled by you.");
+                                else {
+                                    // since disabling RLV, just do it and report
+                                    RLVok = FALSE;
+                                    lmRLVreport(RLVok,"",0);
                                 }
-                                else if (afterSpace == "Allow AFK") {
-                                    if (!isX || !isDoll || isController) lmSendConfig("canAFK", (string)(canAFK = isX));
-                                    else if (isDoll) llOwnerSay("The Allow AFK option cannot be re-enabled by you.");
-                                }
-                                else isOperation = 0;
-
                             }
 
-                            if (isOperation) {
-                                cdMenuInject("Operation...");
-                                return;
+                            // if is not Doll, they can set and unset these options...
+                            // if is Doll, these abilities can only be removed (X)
+                            else if (afterSpace == "Rpt Wind") {
+                                if (!isX || !isDoll || isController) lmSendConfig("allowRepeatWind", (string)isX);
+                                else if (isDoll) llOwnerSay("The Repeat Wind option cannot be re-enabled by you.");
                             }
-                            else {
-                                // Public access and abilities
-                                     if (afterSpace == "Carryable")  lmSendConfig("allowCarry",    (string)(allowCarry = isX));
-                                else if (afterSpace == "Outfitable") lmSendConfig("allowDress",    (string)(allowDress = isX));
-                                else if (afterSpace == "Poseable")   lmSendConfig("allowPose",     (string)(allowPose = isX));
-#ifdef ADULT_MODE
-                                else if (afterSpace == "Strippable") lmSendConfig("allowStrip", (string)(allowStrip = isX));
-#endif
-                                else isPublic = 0;
+                            else if (afterSpace == "Allow AFK") {
+                                if (!isX || !isDoll || isController) lmSendConfig("canAFK", (string)(canAFK = isX));
+                                else if (isDoll) llOwnerSay("The Allow AFK option cannot be re-enabled by you.");
                             }
+                            else isOperation = 0;
 
-                            if (isPublic) {
-                                cdMenuInject("Public...");
-                            }
-#ifdef GEM_PRESENT
                         }
+
+                        if (isOperation) {
+                            cdMenuInject("Operation...");
+                            return;
+                        }
+                        else {
+                            // Public access and abilities
+                                 if (afterSpace == "Carryable")  lmSendConfig("allowCarry",    (string)(allowCarry = isX));
+                            else if (afterSpace == "Outfitable") lmSendConfig("allowDress",    (string)(allowDress = isX));
+                            else if (afterSpace == "Poseable")   lmSendConfig("allowPose",     (string)(allowPose = isX));
+#ifdef ADULT_MODE
+                            else if (afterSpace == "Strippable") lmSendConfig("allowStrip", (string)(allowStrip = isX));
 #endif
+                            else isPublic = 0;
+                        }
+
+                        if (isPublic) {
+                            cdMenuInject("Public...");
+                        }
                     }
                 }
                 // Item before Space is NOT a Check or Cross -- so must be either

@@ -39,13 +39,6 @@ integer maxMins;
 integer ncLine;
 integer memReporting;
 
-#ifdef GEM_PRESENT
-#ifdef GEMGLOW_OPT
-integer gemGlow = 1;
-#endif
-integer gemLight = 1;
-#endif
-
 integer textboxChannel;
 integer textboxHandle;
 integer textboxType;
@@ -126,10 +119,6 @@ default {
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
             else if (name == "backMenu")                     backMenu = value;
             else if (name == "quiet")                           quiet = (integer)value;
-#ifdef GEM_PRESENT
-            // only used for Gem purposes
-            else if (name == "isVisible")                     visible = (integer)value;
-#endif
 #ifdef HOMING_BEACON
             else if (name == "homingBeacon")             homingBeacon = (integer)value;
 #endif
@@ -159,12 +148,6 @@ default {
             else if (name == "allowStrip")             allowStrip = (integer)value;
 #endif
             else if (name == "wearLock")                     wearLock = (integer)value;
-#ifdef GEM_PRESENT
-            else if (name == "gemLight")                   gemLight = (integer)value;
-#ifdef GEMGLOW_OPT
-            else if (name == "gemGlow")                     gemGlow = (integer)value;
-#endif
-#endif
             else if (name == "blacklist") {
                 if (split == [""]) blacklist = [];
                 else blacklist = split;
@@ -263,83 +246,6 @@ default {
                     llDialog(dollID, msg, menu, dialogChannel);
                 }
             }
-#ifdef GEM_PRESENT
-            else if (cmd == "setGemColour") {
-                // This command does NOT set normalGemColour - which is as it
-                // should be. This allows us to set the gemColour without
-                // losing the colour we "normally" use.
-                vector newColour = (vector)llList2String(split, 0);
-
-                //if (newColour == gemColour) return;
-                if (newColour == <0.0,0.0,0.0>) {
-                    llSay(DEBUG_CHANNEL,"Script " + script + " tried to set gem color to Black!");
-                    return;
-                }
-                debugSay(4,"DEBUG-AUX","Setting gem color to " + (string)gemColour);
-                //lmSendConfig("gemColour", (string)(gemColour = newColour));
- 
-                if (visible) {
-                    // FIXME: Prim Search
-
-                    // only done if Gem is visible
-                    integer j; integer shaded; list params; list colourParams;
-                    integer n; integer m;
-                    integer index;
-                    integer index2;
-                    vector shade;
-                    string primPrefix;
-
-                    n = llGetNumberOfPrims();
-                    i = n;
-                    while (i--) {
-                        index = n - i - 1;
-
-                        primPrefix = llGetSubString(llGetLinkName(index), 0, 2);
-                        if (primPrefix == "Hea" || primPrefix == "Gem") {
-                            params += [ PRIM_LINK_TARGET, index ];
-
-                            if (!shaded) {
-                                m = llGetLinkNumberOfSides(index);
-                                j = m;
-                                while (j--) {
-                                    // Add noise to color
-                                    shade = <llFrand(0.2) - 0.1 + newColour.x,
-                                             llFrand(0.2) - 0.1 + newColour.y,
-                                             llFrand(0.2) - 0.1 + newColour.z>  * (0.9 + llFrand(0.2));
-                                    //                                            (1.0 + (llFrand(0.2) - 0.1))
-
-                                    // make sure we're in bounds
-                                    if (shade.x < 0.0) shade.x = 0.0;
-                                    if (shade.y < 0.0) shade.y = 0.0;
-                                    if (shade.z < 0.0) shade.z = 0.0;
-
-                                    if (shade.x > 1.0) shade.x = 1.0;
-                                    if (shade.y > 1.0) shade.y = 1.0;
-                                    if (shade.z > 1.0) shade.z = 1.0;
- 
-                                    colourParams += [ PRIM_COLOR, m - j - 1, shade, 1.0 ];
-                                }
-                                shaded = TRUE;
-                            }
-                            params += colourParams;
-                        }
-                    }
-
-                    // params was just built up: so now use it to set colors
-                    llSetLinkPrimitiveParamsFast(0, params);
-                }
-            }
-            else if (cmd == "setNormalGemColour") {
-                string choice = llList2String(split,0);
-                lmInternalCommand("setGemColour", choice, id);
-
-                normalGemColour = (vector)choice;
-                //lmSendConfig("normalGemColour",choice);
-            }
-            else if (cmd == "resetGemColour") {
-                lmInternalCommand("setGemColour", (string)normalGemColour, id);
-            }
-#endif
 #ifdef ADULT_MODE
             else if (cmd == "strip") {
                 // llToLower() may be superfluous here
@@ -559,15 +465,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 lmSendConfig("backMenu",(backMenu = "Options..."));
                 if (cdIsController(id)) plusList += [ "Max Time...", "Wind Time..." ];
                 cdDialogListen();
-#ifdef GEM_PRESENT
-#ifdef GEMGLOW_OPT
-                llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(plusList, 1, 1) + "Gem Colour..." + cdGetButton("Key Glow", id, gemGlow, 0) + cdGetButton("Gem Light", id, gemLight, 0) + "Back..."), dialogChannel);
-#else
-                llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(plusList, 1, 1) + "Gem Colour..." + cdGetButton("Gem Light", id, gemLight, 0) + "Back..."), dialogChannel);
-#endif
-#else
                 llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(plusList, 1, 1) + "Back..."), dialogChannel);
-#endif
             }
             else if (llGetSubString(choice,0,6) == "Gender:") {
                 string s = llGetSubString(choice,7,-1);
@@ -581,36 +479,9 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 llOwnerSay("Gender is now set to " + dollGender);
                 lmMenuReply("Key...", llGetDisplayName(id), id);
             }
-#ifdef GEM_PRESENT
-            else if (choice == "Gem Colour...") {
-                msg = "Here you can choose your own gem colour.";
-
-                cdDialogListen();
-                llDialog(id, msg, dialogSort(COLOR_NAMES + "Key..."), dialogChannel);
-            }
-            else if (llListFindList(COLOR_NAMES, [ choice ]) != NOT_FOUND) {
-                integer index = llListFindList(COLOR_NAMES, [ choice ]);
-                string choice = (string)llList2Vector(COLOR_VALUE, index);
-
-                lmInternalCommand("setNormalGemColour", choice, id);
-                lmMenuReply("Gem Colour...", llGetDisplayName(id), id);
-            }
-#endif
 
             // Textbox generating menus
-            else if (choice == "Dolly Name..."
-#ifdef GEM_PRESENT
-                || choice == "Custom..."
-#endif
-                )
-                {
-#ifdef GEM_PRESENT
-                if (choice == "Custom...") {
-                    textboxType = GEM_COLOR_TEXTBOX;
-                    llTextBox(id, "Here you can input a custom colour value\n\nCurrent colour: " + (string)gemColour + "\n\nEnter vector eg <0.900, 0.500, 0.000>\nOr Hex eg #A4B355\nOr RGB eg 240, 120, 10", textboxChannel);
-                }
-                else
-#endif
+            else if (choice == "Dolly Name...") {
                 if (choice == "Dolly Name...") {
                     textboxType = DOLL_NAME_TEXTBOX;
                     llTextBox(id, "Here you can change your dolly name from " + dollDisplayName + " to a name of your choice.", textboxChannel);

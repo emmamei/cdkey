@@ -114,11 +114,6 @@ integer debugLevel          = DEBUG_LEVEL;
 integer dialogChannel;
 integer dialogHandle;
 
-#ifdef GEM_PRESENT
-vector normalGemColour = RED;  // when we play with the Gem Colour, this marks the original
-vector gemColour;
-#endif
-
 #endif // COMMON_GLOBALS
 
 
