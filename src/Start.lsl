@@ -590,7 +590,7 @@ default {
         initTimer = llGetTime();
 
         dollID = llGetOwner();
-        dollName = llGetDisplayName(dollID);
+        dollName = llMyDisplayName(dollID);
 
         rlvWait = 1;
         cdInitializeSeq();
@@ -629,7 +629,7 @@ default {
     on_rez(integer start) {
         llResetTime();
         dollID = llGetOwner();
-        dollName = llGetDisplayName(dollID);
+        dollName = llMyDisplayName(dollID);
 
         isAttached = cdAttached();
         if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);

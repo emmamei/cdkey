@@ -168,7 +168,7 @@ default {
     //----------------------------------------
     state_entry() {
         dollID = llGetOwner();
-        dollName = llGetDisplayName(dollID);
+        dollName = llMyDisplayName(dollID);
 
         cdInitializeSeq();
         RLVok = UNSET;

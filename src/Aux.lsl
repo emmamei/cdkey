@@ -72,7 +72,7 @@ default {
     state_entry() {
         //lmSendXonfig("debugLevel", (string)debugLevel);
         dollID = llGetOwner();
-        dollName = llGetDisplayName(dollID);
+        dollName = lmMyDisplayName(dollID);
 
         cdInitializeSeq();
     }
