@@ -892,9 +892,9 @@ default {
             if (code == 102) {
                 configured = 1;
 
-                if (lowScriptMode) llSetTimerEvent(LOW_RATE);
-                else if (!isAttached) llSetTimerEvent(60.0);
-                else llSetTimerEvent(STD_RATE);
+                     if (lowScriptMode) llSetTimerEvent(LOW_RATE);
+                else if (!isAttached)   llSetTimerEvent(60.0);
+                else                    llSetTimerEvent(STD_RATE);
 
                 timerStarted = 1;
             }
@@ -909,9 +909,10 @@ default {
 
             else if (code == 105) {
 
-                if (lowScriptMode) llSetTimerEvent(LOW_RATE);
-                else if (!isAttached) llSetTimerEvent(60.0);
-                else llSetTimerEvent(STD_RATE);
+                     if (lowScriptMode) llSetTimerEvent(LOW_RATE);
+                else if (!isAttached)   llSetTimerEvent(60.0);
+                else                    llSetTimerEvent(STD_RATE);
+
                 timerStarted = 1;
             }
 
