@@ -805,11 +805,12 @@ default {
                 lmSendConfig("carrierID", (string)(carrierID = id));
                 lmSendConfig("carrierName", (carrierName = name));
 
-                if (!quiet) llSay(0, "Dolly " + dollName + " has been picked up by " + carrierName);
-                else {
-                    llOwnerSay("You have been picked up by " + carrierName);
-                    llRegionSayTo(carrierID, 0, "You have picked up the doll " + dollName);
-                }
+                llSay(0, "Dolly " + dollName + " has been picked up by " + carrierName);
+                //if (!quiet) llSay(0, "Dolly " + dollName + " has been picked up by " + carrierName);
+                //else {
+                    //llOwnerSay("You have been picked up by " + carrierName);
+                    //llRegionSayTo(carrierID, 0, "You have picked up the doll " + dollName);
+                //}
             }
             else if (choice == "Uncarry") {
                 if (cdIsCarrier(id)) {
@@ -821,12 +822,14 @@ default {
                     string name = llKey2Name(id);
 
                     if (name) {
-                        if (quiet) cdSayTo("You have wrestled Dolly away from " + carrierName + ".", id);
-                        else llSay(0, "Dolly " + dollName + " has been wrestled away from " + carrierName + " by " + llKey2Name(id));
+                        llSay(0, "Dolly " + dollName + " has been wrestled away from " + carrierName + " by " + llKey2Name(id));
+                        //if (quiet) cdSayTo("You have wrestled Dolly away from " + carrierName + ".", id);
+                        //else llSay(0, "Dolly " + dollName + " has been wrestled away from " + carrierName + " by " + llKey2Name(id));
                     }
                     else {
-                        if (quiet) cdSayTo("You have wrestled Dolly away from " + carrierName + ".", id);
-                        else llSay(0, "Dolly " + dollName + " has been wrestled away from " + carrierName);
+                        llSay(0, "Dolly " + dollName + " has been wrestled away from " + carrierName);
+                        //if (quiet) cdSayTo("You have wrestled Dolly away from " + carrierName + ".", id);
+                        //else llSay(0, "Dolly " + dollName + " has been wrestled away from " + carrierName);
                     }
                 }
 

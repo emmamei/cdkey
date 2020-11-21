@@ -178,7 +178,7 @@ default {
     state_entry() {
         RLVok = UNSET;
         dollID = llGetOwner();
-        dollName = llMyDisplayName(dollID);
+        dollName = lmMyDisplayName(dollID);
         isAttached = cdAttached();
         if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
 
@@ -901,7 +901,7 @@ default {
 
             else if (code == 104) {
                 dollID = llGetOwner();
-                dollName = llMyDisplayName(dollID);
+                dollName = lmMyDisplayName(dollID);
 
                 lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
                 setWindRate();

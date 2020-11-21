@@ -246,7 +246,7 @@ folderSearch(string folder, integer channel) {
 default {
     state_entry() {
         dollID =   llGetOwner();
-        dollName = llMyDisplayName(dollID);
+        dollName = lmMyDisplayName(dollID);
 
         cdInitializeSeq();
         RLVok = UNSET;

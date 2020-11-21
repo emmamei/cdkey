@@ -116,7 +116,7 @@ processConfiguration(string name, string value) {
                       "show phrases", "carryable", "repeatable wind", "ghost"
                     ];
 
-    list settingName = [ ""hardcore", "busyIsAway", "canAfk", "canFly",
+    list settingName = [ "hardcore", "busyIsAway", "canAfk", "canFly",
                          "allowPose", "canSit", "canStand", "canDressSelf", "detachable",
 #ifdef ADULT_MODE
                          "allowStrip",
@@ -590,7 +590,7 @@ default {
         initTimer = llGetTime();
 
         dollID = llGetOwner();
-        dollName = llMyDisplayName(dollID);
+        dollName = lmMyDisplayName(dollID);
 
         rlvWait = 1;
         cdInitializeSeq();
@@ -629,7 +629,7 @@ default {
     on_rez(integer start) {
         llResetTime();
         dollID = llGetOwner();
-        dollName = llMyDisplayName(dollID);
+        dollName = lmMyDisplayName(dollID);
 
         isAttached = cdAttached();
         if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
