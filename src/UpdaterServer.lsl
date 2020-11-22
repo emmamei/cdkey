@@ -130,13 +130,13 @@ default {
         targetID = llList2Key(params, 0);
         pin = llList2Integer(params, 1);
 
-        llListenRemove(comHandle);
+        //llListenRemove(comHandle);
         llSetTimerEvent(0.0);
 
-        llOwnerSay("touchingID = " + (string)touchingID);
-        llOwnerSay(  "targetID = " + (string)  targetID);
+        //llOwnerSay("touchingID = " + (string)touchingID);
+        //llOwnerSay(  "targetID = " + (string)  targetID);
 
-        llOwnerSay("pin = " + (string)pin);
+        //llOwnerSay("pin = " + (string)pin);
 
         if (targetID == touchingID) {
             sendUpdate();
