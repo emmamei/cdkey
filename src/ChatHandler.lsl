@@ -4,12 +4,17 @@
 //
 // vim:sw=4 et nowrap filetype=lsl
 //
-// DATE: 27 October 2014
+// DATE: 24 November 2020
 
 #include "include/GlobalDefines.lsl"
 #define cdMenuInject(a,b,c) lmMenuReply(a,b,c)
 
+#define RUNNING 1
+#define NOT_RUNNING 0
 #define UNSET -1
+#define cdStopScript(a) llSetScriptState(a, NOT_RUNNING)
+#define cdRunScript(a) llSetScriptState(a, RUNNING)
+#define cdResetKey() llResetOtherScript("Start")
 
 #define cdCapability(c,p,u) { s += p; if (!(c)) { s += " not"; }; s += " " + u + ".\n"; }
 #define cdListenerActivate(a) llListenControl(a, 1)
@@ -589,6 +594,7 @@ default {
                 //   * build
                 //   * detach
                 //   * xstats
+                //   * update
                 //   * stat
                 //   * stats
                 //   * release/unpose
@@ -600,6 +606,15 @@ default {
                 if (isDoll || isController) {
                     if (choice == "build") {
                         lmConfigReport();
+                        return;
+                    }
+                    else if (choice == "update") {
+
+                        llSay(PUBLIC_CHANNEL,"Update starting...");
+                        lmSendConfig("update","1");
+
+                        //cdRunScript("UpdaterClient");
+                        //llResetOtherScript("UpdaterClient");
                         return;
                     }
                     else if (choice == "detach") {

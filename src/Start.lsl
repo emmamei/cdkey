@@ -4,7 +4,7 @@
 //
 // vim:sw=4 et nowrap filetype=lsl
 //
-// DATE: 27 October 2014
+// DATE: 24 November 2020
 
 //#include "include/Json.lsl"
 #include "include/GlobalDefines.lsl"
@@ -353,17 +353,17 @@ doRestart() {
     integer n;
     string script;
 
-    cdStopScript("UpdaterClient");
+    //cdStopScript("UpdaterClient");
 
     // Set all other scripts to run state and reset them
     n = llGetInventoryNumber(INVENTORY_SCRIPT);
     while(n--) {
 
         script = llGetInventoryName(INVENTORY_SCRIPT, n);
-        if (script != "Start" && script != "UpdaterClient") {
+        if (script != "Start") {
 
             llOwnerSay("====> Resetting script: '" + script + "'");
-            //cdRunScript(script);
+            cdRunScript(script);
             llResetOtherScript(script);
         }
     }
@@ -586,6 +586,9 @@ default {
     // STATE ENTRY
     //----------------------------------------
     state_entry() {
+        if (llGetStartParameter() == 100) {
+            llOwnerSay("Key has been updated.");
+        }
 
         initTimer = llGetTime();
 

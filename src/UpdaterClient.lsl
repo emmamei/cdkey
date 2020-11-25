@@ -4,7 +4,7 @@
 //
 // vim:sw=4 et nowrap filetype=lsl
 //
-// DATE: Thu 19 Nov 2020 02:09:04 AM CST
+// DATE: 24 November 2020
 
 #include "include/GlobalDefines.lsl"
 
@@ -31,6 +31,10 @@
 // Remote prim updater for scripts.  This registers the prim to accept scripts from a server in the same region.
 // :CODE:
 
+#define RUNNING 1
+#define NOT_RUNNING 0
+#define lmLocalSay(a) llSay(PUBLIC_CHANNEL,(a))
+
 //========================================
 // VARIABLES
 //========================================
@@ -40,7 +44,10 @@ integer UNIQ = 1246;       // the private channel unique to the owner of this pr
 // Not tuneable
 integer UPDATE_TIMEOUT = 60;   // 60 seconds for reception to succeed
 integer comChannel;            // placeholder for llRegionSay
+integer controlChannel;
+integer controlHandle;
 integer pin;             // a random pin for security
+integer update;
 key owner;
 
 //========================================
@@ -48,9 +55,23 @@ key owner;
 //========================================
 
 startUpdate() {
-    llRegionSay(comChannel, (string)llGetOwner() + "^" + (string)pin);
+    // All we do is create a key for the gate, then give a copy to the
+    // updater via the comChannel
+    pin = llCeil(llFrand(123456) + 654321);
+
+    comChannel = (((integer)("0x" + llGetSubString((string)owner, -8, -1)) & 0x3FFFFFFF) ^ 0xBFFFFFFF ) + UNIQ;    // 1234 is the private channel for this owner
+    llOwnerSay("client = " + (string)owner);
+    llOwnerSay("client pin = " + (string)pin);
+
+    // This is the key to the whole operation
+    llSetRemoteScriptAccessPin(pin);
+
+    // Trigger the update
+    llRegionSay(comChannel, (string)llGetLinkKey(LINK_THIS) + "^" + (string)pin);
+
     llOwnerSay("Update client prepared to receive updated files...");
     llSetTimerEvent(UPDATE_TIMEOUT);
+    update = 0;
 }
 
 //========================================
@@ -64,17 +85,13 @@ default {
     //----------------------------------------
 
     state_entry() {
-
-        pin = llCeil(llFrand(123456) + 654321);
         owner = llGetOwner();
+        update = 0;
 
-        comChannel = (((integer)("0x" + llGetSubString((string)owner, -8, -1)) & 0x3FFFFFFF) ^ 0xBFFFFFFF ) + UNIQ;    // 1234 is the private channel for this owner
-        llOwnerSay("client = " + (string)owner);
+        controlChannel = -1575318;
+        controlHandle = llListen(controlChannel,"","","");
 
-        // This is the key to the whole operation
-        llSetRemoteScriptAccessPin(pin);
-
-        startUpdate();
+        llOwnerSay("Updater ready.");
     }
 
     //----------------------------------------
@@ -84,6 +101,66 @@ default {
     // in case we rez, our UUID changed, so we check in
     on_rez(integer p) {
         llResetScript();
+    }
+
+
+    //----------------------------------------
+    // LINK MESSAGE
+    //----------------------------------------
+    link_message(integer source, integer i, string data, key id) {
+
+        // Parse link message header information
+        split             =     cdSplitArgs(data);
+        script            =     cdListElement(split, 0);
+        remoteSeq         =     (i & 0xFFFF0000) >> 16;
+        optHeader         =     (i & 0x00000C00) >> 10;
+        code              =      i & 0x000003FF;
+        split             =     llDeleteSubList(split, 0, 0 + optHeader);
+
+        scaleMem();
+
+        string name = llList2String(split, 0);
+
+        debugSay(2,"DEBUG-UPDATER","Received link message code " + (string)code + " command: " + name);
+        if (update == 1) return;
+
+        if (code == CONFIG) {
+
+            //string value = llList2String(split, 1);
+            //string c = cdGetFirstChar(name); // for speedup
+            //split = llDeleteSubList(split,0,0);
+
+            if (name == "update") {
+                update = 1;
+                startUpdate();
+            }
+        }
+    }
+
+    //----------------------------------------
+    // TIMER
+    //----------------------------------------
+
+    // in case we rez, our UUID changed, so we check in
+    timer() {
+        integer index = llGetInventoryNumber(INVENTORY_SCRIPT);
+        integer found = 0;
+
+        // scan all scripts in our inventory, could be more than one needs updating.
+        while (index--) {
+            if (llGetInventoryName(INVENTORY_SCRIPT, index) == "New") {
+                llRemoveInventory("New"); // This script only serves as a flag
+                found = 1;
+            }
+        }
+
+        if (found == 0) {
+            llSay(PUBLIC_CHANNEL,"Update failed.");
+        }
+
+        llSetTimerEvent(0.0);
+        //llSetScriptState(llGetScriptName(),NOT_RUNNING);
+        //llSleep(1.0);
     }
 }
 

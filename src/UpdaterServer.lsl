@@ -4,7 +4,7 @@
 //
 // vim:sw=4 et nowrap filetype=lsl
 //
-// DATE: Thu 19 Nov 2020 02:09:04 AM CST
+// DATE: 24 November 2020
 
 #include "include/GlobalDefines.lsl"
 
@@ -54,6 +54,8 @@ integer publicMode = 0;
 
 #define lmSetHovertext(a)  llSetText((a), <1,1,1>, 1)
 #define lmClearHovertext() llSetText("", ZERO_VECTOR, 0)
+#define RUNNING 1
+#define NOT_RUNNING 0
 
 //========================================
 // FUNCTIONS
@@ -68,6 +70,10 @@ sendUpdate() {
     index = numScripts;
     myName = llGetScriptName();
 
+    llOwnerSay("touchingID = " + (string)touchingID);
+    llOwnerSay(  "targetID = " + (string)  targetID);
+    llOwnerSay("pin = " + (string)pin);
+
     // scan all scripts in our inventory, could be more than one needs updating.
     while (index--) {
 
@@ -76,18 +82,19 @@ sendUpdate() {
         // bypass this script, and the Start script...
         if (name != myName && name != "Start") {
 
-            llRemoteLoadScriptPin(targetID, name, pin, FALSE, 100);
             lmSetHovertext("Updating " + name + "...");
             llRegionSayTo(targetID, PUBLIC_CHANNEL, "Sending script " + name);
+            llRemoteLoadScriptPin(targetID, name, pin, NOT_RUNNING, 100);
         }
     }
 
     // Updating Start, and starting after should reset key cleanly
     lmSetHovertext("Updating Start and Resetting Key...");
-    llRemoteLoadScriptPin(targetID, "Start", pin, TRUE, 100);
+    llRemoteLoadScriptPin(targetID, "Start", pin, RUNNING, 100);
 
     lmSetHovertext("Update complete!");
     llRegionSayTo(targetID, PUBLIC_CHANNEL, "Update complete!");
+
     llSleep(15.0);
     lmSetHovertext("Click for update");
 }
@@ -126,24 +133,24 @@ default {
     listen(integer channel, string name, key id, string msg) {
         list params = llParseString2List(msg, ["^"], []);
 
+        if (owner != touchingID) {
+            lmSetHovertext("Update rejected.");
+            return;
+        }
+
         lmSetHovertext("Updating...");
+        llSay(PUBLIC_CHANNEL,"Beginning update with nearby key...");
         targetID = llList2Key(params, 0);
         pin = llList2Integer(params, 1);
 
-        //llListenRemove(comHandle);
+        llListenRemove(comHandle);
         llSetTimerEvent(0.0);
 
-        //llOwnerSay("touchingID = " + (string)touchingID);
-        //llOwnerSay(  "targetID = " + (string)  targetID);
+        // targetID is the object UUID
+        // owner is the owner of this updater
+        // touchingID is the person touching this updater
 
-        //llOwnerSay("pin = " + (string)pin);
-
-        if (targetID == touchingID) {
-            sendUpdate();
-        }
-        else {
-            lmSetHovertext("Update rejected.");
-        }
+        sendUpdate();
     }
 
     //----------------------------------------
@@ -169,15 +176,8 @@ default {
 
         // This prevents anyone but the owner from using this updater
         if (touchingID != owner) {
-            if (publicMode == 0) {
-                llRegionSayTo(touchingID, PUBLIC_CHANNEL, "Not owner... Update request rejected.");
-                llOwnerSay("Not owner: update request rejected.");
-                return;
-            }
-            else {
-                llRegionSayTo(touchingID, PUBLIC_CHANNEL, "Not owner... Public update request accepted.");
-                llOwnerSay("Not owner: update request accepted.");
-            }
+            llSay(PUBLIC_CHANNEL,"You are not allowed access to this updater.");
+            return;
         }
 
         lmSetHovertext("Awaiting update client...");

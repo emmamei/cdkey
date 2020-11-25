@@ -4,7 +4,7 @@
 //
 // vim:sw=4 et nowrap filetype=lsl
 //
-// DATE: 27 October 2014
+// DATE: 24 November 2020
 
 #define DEBUG_HANDLER 1
 #include "include/GlobalDefines.lsl"
@@ -316,8 +316,11 @@ default {
             else if (choice == "Join Group")
                 cdSayTo("Here is your link to the Community Dolls group profile: " + WEB_GROUP, id);
             else if (choice == "Update") {
-                llResetOtherScript("UpdaterClient");
-                cdRunScript("UpdaterClient");
+                llSay(PUBLIC_CHANNEL,"Update starting....");
+                lmSendConfig("update","1");
+
+                //cdRunScript("UpdaterClient");
+                //llResetOtherScript("UpdaterClient");
             }
 
             else if (choice == "Access...") {
