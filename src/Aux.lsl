@@ -38,6 +38,8 @@ string memOutput = "Script Memory Status:";
 integer maxMins;
 integer ncLine;
 integer memReporting;
+integer isDoll;
+integer resetBody;
 
 integer textboxChannel;
 integer textboxHandle;
@@ -73,7 +75,7 @@ default {
         //lmSendXonfig("debugLevel", (string)debugLevel);
         dollID = llGetOwner();
         dollName = lmMyDisplayName(dollID);
-
+        isDoll = cdIsDoll(dollID);
         cdInitializeSeq();
     }
 
@@ -451,6 +453,10 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                         plusList = llListInsertList(plusList, cdGetButton("Allow AFK", id, canAFK, 1), 0);
 
                     plusList = llListInsertList(plusList, cdGetButton("Rpt Wind", id, allowRepeatWind, 1), 6);
+                }
+
+                if (isDoll) {
+                    plusList += cdGetButton("Body Reset", id, resetBody, 0);
                 }
 
                 lmSendConfig("backMenu",(backMenu = "Options..."));

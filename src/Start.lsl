@@ -116,7 +116,7 @@ processConfiguration(string name, string value) {
                       "show phrases", "carryable", "repeatable wind", "ghost"
                     ];
 
-    list settingName = [ "hardcore", "busyIsAway", "canAfk", "canFly",
+    list settingName = [ "hardcore", "busyIsAway", "canAFK", "canFly",
                          "allowPose", "canSit", "canStand", "canDressSelf", "detachable",
 #ifdef ADULT_MODE
                          "allowStrip",

@@ -4,7 +4,7 @@
 //
 // vim:sw=4 et nowrap filetype=lsl
 //
-// DATE: 27 October 2014
+// DATE: 24 November 2020
 
 // HISTORY:
 //   Oct. 1   Adds everything in ~normalself folder, if oldOutfit begins with a +.
@@ -73,6 +73,7 @@ string unwearFolder;
 
 list outfitsList;
 integer useTypeFolder;
+integer resetBody = 0;
 
 string clothingFolder; // This contains clothing to be worn
 string outfitsFolder;  // This contains folders of clothing to be worn
@@ -381,6 +382,7 @@ default {
             else if (name == "afk")                                  afk = (integer)value;
             else if (name == "RLVok")                              RLVok = (integer)value;
             else if (name == "hovertextOn")                  hovertextOn = (integer)value;
+            else if (name == "resetBody")                      resetBody = (integer)value;
             else if (name == "dollType") {
                 if (value == "") dollType = "Regular";
                 else dollType = value;
@@ -558,10 +560,12 @@ default {
 
                 llOwnerSay("New outfit chosen: " + newOutfitName);
 
-                //----------------------------------------
-                // STEP #1
+                if (resetBody) {
 
-                // Restore our usual look from the ~normalself folder...
+                    //----------------------------------------
+                    // STEP #1
+
+                    // Restore our usual look from the ~normalself folder...
 
 // FIXME: These are messy - need to clean up normalselfFolder and nudeFolder
 //        so to match other folder specs
@@ -570,19 +574,20 @@ default {
 #define cdAttach(a) lmRunRLV("attachallover:"+(a)+"=force") 
 #define cdForceDetach(a) lmRunRLV("detachall:"+(a)+"=force");
 
-                // This attaches ~normalself and locks it
-                debugSay(2,"DEBUG-DRESS","*** STEP 1 ***");
-                debugSay(2,"DEBUG-DRESS","attach and lock for normal self folder: " + normalselfFolder);
-                cdAttach(normalselfFolder);
+                    // This attaches ~normalself and locks it
+                    debugSay(2,"DEBUG-DRESS","*** STEP 1 ***");
+                    debugSay(2,"DEBUG-DRESS","attach and lock for normal self folder: " + normalselfFolder);
+                    cdAttach(normalselfFolder);
 
-                //----------------------------------------
-                // STEP #2
+                    //----------------------------------------
+                    // STEP #2
 
-                debugSay(2,"DEBUG-DRESS","*** STEP 2 ***");
-                if (nudeFolder != "") {
-                    // this attaches the ~nude folder
-                    debugSay(2,"DEBUG-DRESS","attach and lock for nude folder: " + nudeFolder);
-                    cdAttach(nudeFolder);
+                    debugSay(2,"DEBUG-DRESS","*** STEP 2 ***");
+                    if (nudeFolder != "") {
+                        // this attaches the ~nude folder
+                        debugSay(2,"DEBUG-DRESS","attach and lock for nude folder: " + nudeFolder);
+                        cdAttach(nudeFolder);
+                    }
                 }
 
                 //----------------------------------------
@@ -602,6 +607,8 @@ default {
                 // Remove rest of old outfit (using saved folder)
                 debugSay(2,"DEBUG-DRESS","*** STEP 4 ***");
 
+                // Even if resetBody is not true - we still don't want anything
+                // in these directories to be popped off
                 cdUnlock(normalselfFolder);
                 cdUnlock(nudeFolder);
                 cdUnlock(newOutfit);
