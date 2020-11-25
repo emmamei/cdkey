@@ -4,7 +4,7 @@
 //
 // vim:sw=4 et nowrap:
 //
-// DATE: 18 December 2014
+// DATE: 24 November 2020
 
 #include "include/GlobalDefines.lsl"
 //

@@ -4,7 +4,7 @@
 //
 // vim:sw=4 et nowrap filetype=lsl
 //
-// DATE: 27 October 2014
+// DATE: 24 November 2020
 
 // 29 March: Formatting and general cleanup
 // Aug 14, totally changing
