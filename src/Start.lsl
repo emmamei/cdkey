@@ -426,6 +426,7 @@ default {
                         else if (oldKeyAnimation != keyAnimation) {
                             // animation just became null
                             //lmRunRLV("clear"); // FIXME: This is too generic
+                            debugSay(2, "DEBUG-START", "Clearing on keyAnimation");
 		            lmRunRLVcmd("clearRLVcmd",defaultBaseRLVcmd);
                         }
                     }
@@ -445,6 +446,7 @@ default {
                         else if (oldAfk != afk) {
                             // afk value JUST became zero
                             if (RLVok == TRUE) // lmRunRLV("clear"); // FIXME: This is too generic
+                                debugSay(2, "DEBUG-START", "Clearing on afk");
 		                lmRunRLVcmd("clearRLVcmd","");
                         }
                     }
@@ -469,6 +471,7 @@ default {
                         if (wasCollapsed) {
                             // We were collapsed but aren't now... so clear RLV restrictions
                             //lmRunRLV("clear"); // FIXME: this is too generic
+                            debugSay(2, "DEBUG-START", "Clearing on collapsed");
 		            lmRunRLVcmd("clearRLVcmd","");
                         }
                     }
@@ -514,6 +517,7 @@ default {
                 if (!collapsed) {
                     // Not collapsed: clear any user collapse RLV restrictions
                     //lmRunRLV("clear"); // FIXME: This messes things up
+                    debugSay(2, "DEBUG-START", "Clearing on RLV_RESET");
 		    lmRunRLVcmd("clearRLVcmd","");
 
                     // Is Dolly AFK? Trigger RLV restrictions as appropriate
