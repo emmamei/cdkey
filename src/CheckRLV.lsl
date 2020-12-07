@@ -249,18 +249,17 @@ default {
 
         // IF RLVok is TRUE, then check to see that RLV is
         // actually available on the viewer
-        if (RLVok) {
-            RLVok = UNSET;
-            rlvAPIversion = "";
-            RLVstarted = 0;
-            RLVck = MAX_RLVCHECK_TRIES;
+
+        RLVok = UNSET;
+        rlvAPIversion = "";
+        RLVstarted = 0;
+        RLVck = MAX_RLVCHECK_TRIES;
 
 #ifdef DEVELOPER_MODE
-            myPath = "";
+        myPath = "";
 #endif
-            // Note this happens only at the very beginning
-            doCheckRLV();
-        }
+        // Note this happens only at the very beginning
+        doCheckRLV();
     }
 
     //----------------------------------------
