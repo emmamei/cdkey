@@ -609,13 +609,14 @@ default {
 
                 // Even if resetBody is not true - we still don't want anything
                 // in these directories to be popped off
-                cdUnlock(normalselfFolder);
-                cdUnlock(nudeFolder);
+
+                if (normalselfFolder != "") { cdUnlock(normalselfFolder); }
+                if (nudeFolder != "") { cdUnlock(nudeFolder); }
                 cdUnlock(newOutfit);
                 llSleep(1.0);
 
-                cdLock(normalselfFolder);
-                cdLock(nudeFolder);
+                if (normalselfFolder != "") { cdLock(normalselfFolder); }
+                if (nudeFolder != "") { cdLock(nudeFolder); }
                 cdLock(newOutfit);
                 llSleep(5.0);
 
@@ -645,12 +646,17 @@ default {
                 // *** NEW STEP #6
 
                 debugSay(2,"DEBUG-DRESS","*** STEP 6 ***");
+
                 // Unlock folders previously locked
+
                 debugSay(2, "DEBUG-DRESS", "Unlocking three folders of new outfit...");
-                cdUnlock(normalselfFolder);
-                cdUnlock(nudeFolder);
+
+                if (normalselfFolder != "") { cdUnlock(normalselfFolder); }
+                if (nudeFolder != "") { cdUnlock(nudeFolder); }
                 cdUnlock(newOutfit);
+
                 llSleep(1.0);
+
                 debugSay(2,"DEBUG-DRESS","*** END DRESSING SEQUENCE ***");
 
                 //----------------------------------------
