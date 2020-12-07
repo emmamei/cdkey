@@ -87,7 +87,7 @@ are defined in include/LinkMessage.lsl and are used by the following scripts:
     * Start.lsl
     * Transform.lsl
 
-The funtions are the following:
+The functions are the following:
 
     * clearRLVcmd
     * restoreRLV
