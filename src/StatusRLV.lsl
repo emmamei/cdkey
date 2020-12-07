@@ -324,6 +324,8 @@ default {
                 llOwnerSay("@clear=alwaysrun");
                 llOwnerSay("@clear=edit");
                 llOwnerSay("@clear=fartouch");
+                llOwnerSay("@clear=send");
+                llOwnerSay("@clear=recv");
 
                 if (commandString != "")
                     llOwnerSay("@" + commandString); // restore restrictions if need be
