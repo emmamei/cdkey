@@ -15,6 +15,7 @@
 #define cdLockMeisterCmd(a) llWhisper(LOCKMEISTER_CHANNEL,(string)dollID+a)
 #define MAX_RLVCHECK_TRIES 5
 #define RLV_TIMEOUT 20.0
+#define POSE_CHANNEL_OFFSET 777
 #define UNSET -1
 #define ALL_CONTROLS (CONTROL_FWD|CONTROL_BACK|CONTROL_LEFT|CONTROL_RIGHT|CONTROL_ROT_LEFT|CONTROL_ROT_RIGHT|CONTROL_UP|CONTROL_DOWN|CONTROL_LBUTTON|CONTROL_ML_LBUTTON)
 
@@ -748,7 +749,7 @@ default {
                 else if (name == "pronounSheDoll")       pronounSheDoll = value;
                 else if (name == "dialogChannel") {
                     dialogChannel = (integer)value;
-                    poseChannel = dialogChannel - 777;
+                    poseChannel = dialogChannel - POSE_CHANNEL_OFFSET;
                 }
                 else if (name == "keyAnimationID")       keyAnimationID = (key)value;
 

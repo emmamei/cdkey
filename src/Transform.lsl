@@ -12,6 +12,7 @@
 
 #include "include/GlobalDefines.lsl"
 
+#define TYPE_CHANNEL_OFFSET 778
 #define TYPE_FLAG "*"
 #define NO_FILTER ""
 #define UNSET -1
@@ -520,7 +521,7 @@ default {
                 //llSay(DEBUG_CHANNEL,"Dialog channel set to" + (string)dialogChannel);
 
                 rlvChannel = ~dialogChannel + 1;
-                typeChannel = dialogChannel - 778;
+                typeChannel = dialogChannel - TYPE_CHANNEL_OFFSET;
 
                 typeSearchChannel = rlvChannel + 1;
                 outfitSearchChannel = rlvChannel + 2;
