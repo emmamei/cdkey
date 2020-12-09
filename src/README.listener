@@ -8,15 +8,15 @@ Many channels are based off of the setting of the dialogChannel; is this good?
 All of the channels are set to the same dialogChannel system-wide. Note that this
 is only the channel number, not the actual opening of the listener.
 
-Aux.lsl:              textboxChannel = dialogChannel - 1111;
-Avatar.lsl:              poseChannel = dialogChannel - POSE_CHANNEL_OFFSET;
-Dress.lsl:            rlvBaseChannel = dialogChannel ^ 0x80000000; // Xor with the sign bit forcing the positive channel needed by RLV spec.
-Dress.lsl:            outfitsChannel = dialogChannel + 15; // arbitrary offset
-MenuHandler.lsl:         poseChannel = dialogChannel - POSE_CHANNEL_OFFSET;
-MenuHandler.lsl:         typeChannel = dialogChannel - TYPE_CHANNEL_OFFSET;
-MenuHandler.lsl:    blacklistChannel = dialogChannel - BLACKLIST_CHANNEL_OFFSET;
-MenuHandler.lsl:      controlChannel = dialogChannel - CONTROL_CHANNEL_OFFSET;
-Transform.lsl:           typeChannel = dialogChannel - TYPE_CHANNEL_OFFSET;
+            Aux.lsl:      textboxChannel = dialogChannel - 1111;
+         Avatar.lsl:         poseChannel = dialogChannel - POSE_CHANNEL_OFFSET;
+          Dress.lsl:      rlvBaseChannel = dialogChannel ^ 0x80000000; // Xor with the sign bit forcing the positive channel needed by RLV spec.
+          Dress.lsl:      outfitsChannel = dialogChannel + 15; // arbitrary offset
+    MenuHandler.lsl:         poseChannel = dialogChannel - POSE_CHANNEL_OFFSET;
+    MenuHandler.lsl:         typeChannel = dialogChannel - TYPE_CHANNEL_OFFSET;
+    MenuHandler.lsl:    blacklistChannel = dialogChannel - BLACKLIST_CHANNEL_OFFSET;
+    MenuHandler.lsl:      controlChannel = dialogChannel - CONTROL_CHANNEL_OFFSET;
+      Transform.lsl:         typeChannel = dialogChannel - TYPE_CHANNEL_OFFSET;
 
 Channels and the scripts that use them:
 
@@ -67,17 +67,17 @@ dialogChannel is read by:
 
 dialogChannel is set in MenuHandler:
 
-MenuHandler.lsl:    dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGenerateKey(), -7, -1));
-MenuHandler.lsl:                     if (name == "dialogChannel") {         dialogChannel = (integer)value;
+    MenuHandler.lsl:    dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGenerateKey(), -7, -1));
+    MenuHandler.lsl:                     if (name == "dialogChannel") {         dialogChannel = (integer)value;
 
 rlvChannel
 ----------
 rlvChannel is based on dialogChannel, and is used (separately) in two different
 places, and with different meanings and settings:
 
-CheckRLV.lsl:   rlvChannel = MAX_INT - (integer)llFrand(5000);
-CheckRLV.lsl:   rlvChannel = ~dialogChannel + 1;
-Transform.lsl:  rlvChannel = ~dialogChannel + 1;
+    CheckRLV.lsl:   rlvChannel = MAX_INT - (integer)llFrand(5000);
+    CheckRLV.lsl:   rlvChannel = ~dialogChannel + 1;
+    Transform.lsl:  rlvChannel = ~dialogChannel + 1;
 
 The setting of rlvChannel in CheckRLV needs to be unraveled, and used consistently.
 
@@ -97,35 +97,31 @@ Listeners are opened in the following:
 
           Aux.lsl: listen(integer channel, string name, key id, string choice) {
   ChatHandler.lsl: listen(integer channel, string name, key id, string msg) {
-     CheckRLV.lsl: listen(integer chan, string name, key id, string msg) {
+     CheckRLV.lsl: listen(integer chan,    string name, key id, string msg) {
         Dress.lsl: listen(integer channel, string name, key id, string choice) {
   MenuHandler.lsl: listen(integer channel, string name, key id, string choice) {
     StatusRLV.lsl: listen(integer channel, string name, key id, string data) {
     Transform.lsl: listen(integer channel, string name, key id, string choice) {
 UpdaterServer.lsl: listen(integer channel, string name, key id, string msg) {
 
-Aux: textboxChannel
-ChatHandler: chatChannel
-CheckRLV: rlvChannel
-Dress: outfitsChannel
-     menuDressChannel
-    confirmWearChannel
-   confirmUnwearChannel
-MenuHandler:
-    dialogChannel
-    blacklistChannel
-    controlChannel
-    poseChannel
-    typeChannel
-StatusRLV:
-    statusChannel
-Transform:
-    outfitSearchChannel
-    typeSearchChannel
+(It may be worth changing these function calls to be the same, although the
+utility of this is debatable.)
 
-Dress.lsl:integer rlvBaseChannel;
-Dress.lsl:        lmRunRLV(rlv + (string)(rlvBaseChannel + channel));
-Dress.lsl:                rlvBaseChannel = dialogChannel ^ 0x80000000; // Xor with the sign bit forcing the positive channel needed by RLV spec.
-Dress.lsl:                  menuDressChannel = rlvBaseChannel + 2666;
-Dress.lsl:                confirmWearChannel = rlvBaseChannel + 2668;
-Dress.lsl:              confirmUnwearChannel = rlvBaseChannel + 2669;
+Channels listened for and managed by script:
+
+        Aux: textboxChannel
+ChatHandler: chatChannel
+   CheckRLV: rlvChannel
+      Dress: outfitsChannel
+             menuDressChannel
+             confirmWearChannel
+             confirmUnwearChannel
+MenuHandler: dialogChannel
+             blacklistChannel
+             controlChannel
+             poseChannel
+             typeChannel
+  StatusRLV: statusChannel
+  Transform: outfitSearchChannel
+             typeSearchChannel
+
