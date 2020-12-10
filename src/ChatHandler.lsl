@@ -215,7 +215,13 @@ default {
 
                 string uuid = llList2String(split, 1);
                 string name = llList2String(split, 2);
+                string nameURI = "secondlife:///app/agent/" + uuid + "/displayname";
+
                 debugSay(5,"DEBUG-ADDMISTRESS","Blacklist = " + llDumpList2String(blacklist,"|") + " (" + (string)llGetListLength(blacklist) + ")");
+                if (name == "") {
+                    llSay(DEBUG_CHANNEL,"No name alloted with this user.");
+                    name == (string)(uuid);
+                }
 
                 integer type;
                 string typeString;
@@ -255,8 +261,8 @@ default {
                 //
                 if (llListFindList(barList, [ uuid ]) != NOT_FOUND) {
 
-                    if (cmd != "addBlacklist") msg = name + " is blacklisted; you must first remove them from the blacklist before adding them as a controller.";
-                    else msg = name + " is one of your controllers; until they remove themselves from being your controller, you cannot add them to the blacklist.";
+                    if (cmd != "addBlacklist") msg = nameURI + " is blacklisted; you must first remove them from the blacklist before adding them as a controller.";
+                    else msg = nameURI + " is one of your controllers; until they remove themselves from being your controller, you cannot add them to the blacklist.";
 
                     cdSayTo(msg, id);
                     return;
@@ -267,7 +273,7 @@ default {
                 string s;
 
                 if (llListFindList(tmpList, [ uuid ]) == NOT_FOUND) {
-                    s = "Adding " + name + " as " + typeString;
+                    s = "Adding " + nameURI + " as " + typeString;
                     cdSayToAgentPlusDoll(s, id);
                     tmpList += [ uuid, name ];
 
@@ -287,7 +293,7 @@ default {
                 }
                 // Report already found
                 else {
-                    cdSayTo(name + " is already found listed as " + typeString, id);
+                    cdSayTo(nameURI + " is already found listed as " + typeString, id);
                 }
 
                 // we may or may not have changed either of these - but this code
@@ -304,10 +310,16 @@ default {
                 string uuid = llList2String(split, 1);
                 string name = llList2String(split, 2);
 
+                if (name == "") {
+                    llSay(DEBUG_CHANNEL,"No name alloted with this user.");
+                    name == (string)(uuid);
+                }
+
                 integer type;
                 string typeString;
                 string barString;
                 list tmpList;
+                string nameURI = "secondlife:///app/agent/" + uuid + "/displayname";
 
                 // Initial settings
                 if (cmd != "remBlacklist") {
@@ -323,7 +335,7 @@ default {
                 string s;
                 if ((i = llListFindList(tmpList, [ uuid ])) != NOT_FOUND) {
 
-                    s = "Removing key " + name + " from list as " + typeString + ".";
+                    s = "Removing key " + nameURI + " from list as " + typeString + ".";
                     cdSayToAgentPlusDoll(s, id);
 
                     tmpList = llDeleteSubList(tmpList, i, i + 1);
@@ -410,7 +422,7 @@ default {
 
         if (channel == chatChannel) {
             id = llGetOwnerKey(id);
-            name = llGetDisplayName(id);
+            name = llGetDisplayName(id); // get name of person sending chat command
             integer isDoll = cdIsDoll(id);
             integer isController = cdIsController(id);
 

@@ -511,14 +511,11 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 //----------------------------------------
                 // lmSendToController
                 msg = llList2String(split, 0);
-                string targetName;
                 key targetKey;
                 integer n = llGetListLength(cdList2ListStrided(controllers, 0, -1, 2));
 
                 while (n--) {
-                    i = n << 1; // Double the index
-                    targetName = llList2String(controllers, i + 1);
-                    targetKey = llList2Key(controllers, i);
+                    targetKey = llList2Key(controllers, (n << 1));
 
                     lmInternalCommand("instantMessage", msg, targetKey);
                 }
