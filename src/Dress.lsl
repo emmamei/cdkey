@@ -58,7 +58,10 @@ string newOutfitPath;
 // New simple listener setup we only
 // listen to rlvChannel directly the
 // other we use MenuHandlers link 500's
+#define RLV_BASE_CHANNEL 1
+#ifdef RLV_BASE_CHANNEL
 integer rlvBaseChannel;
+#endif
 integer outfitsChannel;
 integer outfitsHandle;
 integer change;
@@ -157,9 +160,16 @@ retryDirSearch() {
     dressVia(randomDressChannel); // recursion
 }
 
+#ifdef RLV_BASE_CHANNEL
+// FUNCTION: rlvRequest - used in only one location
+//
+// FIXME: can the rlvRequest function be removed or reworked?
 rlvRequest(string rlv, integer channel) {
 
     if (channel < 2670) {
+
+        // FIXME: this should not happen
+
         if (channel == 0) {
             llSay(DEBUG_CHANNEL,"rlvRequest called with channel zero");
             return;
@@ -177,6 +187,9 @@ rlvRequest(string rlv, integer channel) {
         lmRunRLV(rlv + (string)(rlvBaseChannel + channel));
     }
     else {
+
+        // FIXME: this block should be executed all the time
+
              if (channel ==     menuDressChannel)     menuDressHandle =  cdListenAll(    menuDressChannel);
 #ifdef CONFIRM_WEAR
         else if (channel ==   confirmWearChannel)   confirmWearHandle = cdListenMine(  confirmWearChannel);
@@ -190,6 +203,7 @@ rlvRequest(string rlv, integer channel) {
 
     llSetTimerEvent(30.0);
 }
+#endif
 
 listInventoryOn(integer channel) {
 
@@ -213,7 +227,15 @@ listInventoryOn(integer channel) {
 #endif
     lmSendConfig("activeFolder", activeFolder);
 
-    rlvRequest("getinv:" + activeFolder + "=", channel);
+    if (channel == menuDressChannel) {
+        menuDressHandle =  cdListenAll(menuDressChannel);
+        lmRunRLV("getinv:" + activeFolder + "=" + (string)(channel));
+
+        llSetTimerEvent(30.0);
+    }
+    else {
+        llSay(DEBUG_CHANNEL,"Erroneous inventory channel requested! (" + (string)(channel) + ")");
+    }
 }
 
 integer isDresser(key id) {
@@ -330,14 +352,12 @@ default {
         cdInitializeSeq();
     }
 
-
     //----------------------------------------
     // ON_REZ
     //----------------------------------------
     on_rez(integer start) {
         ; //startup = 2;
     }
-
 
     //----------------------------------------
     // LINK_MESSAGE
@@ -367,11 +387,13 @@ default {
 
             if (name == "dialogChannel") {
                 dialogChannel = (integer)value;
+#ifdef RLV_BASE_CHANNEL
                 rlvBaseChannel = dialogChannel ^ 0x80000000; // Xor with the sign bit forcing the positive channel needed by RLV spec.
+#endif
+                menuDressChannel = (dialogChannel ^ 0x80000000) + 2666; // Xor with the sign bit forcing the positive channel needed by RLV spec.
                 outfitsChannel = dialogChannel + 15; // arbitrary offset
                 debugSay(6, "DEBUG-DRESS", "outfits Channel set to " + (string)outfitsChannel);
 
-                  menuDressChannel = rlvBaseChannel + 2666;
 #ifdef CONFIRM_WEAR
                 confirmWearChannel = rlvBaseChannel + 2668;
 #endif
@@ -935,15 +957,11 @@ default {
             }
         }
 
-        // channels:
-        //
-        // 2665: choose outfit at Random
-        // 2666: choose outfit Manually (by user)
-        // 2668:
-        // 2669:
+        //----------------------------------------
+        // CHANNELS
 
         //----------------------------------------
-        // Channel: 2666
+        // Channel: menuDressChannel
         //
         // Choosing a new outfit normally and manually: create a paged dialog with an
         // alphabetical list of available outfits, and let the user choose one
