@@ -189,6 +189,19 @@ default {
         //llRegionSayTo(touchingID, PUBLIC_CHANNEL, "Put non-running scripts into inventory and touch this to send them to remote prims.");
         llSetTimerEvent(UPDATE_TIMEOUT);
     }
+
+    //----------------------------------------
+    // CHANGED
+    //----------------------------------------
+    changed(integer change) {
+        if (change & CHANGED_OWNER) {
+
+            llOwnerSay("This is an Updater for the Community Dolls Key: click on this object, then select Update from the Key Menu.\n");
+
+            llSleep(1.0);
+            llResetScript(); // start over
+        }
+    }
 }
 
 //========== UPDATERSERVER ==========
