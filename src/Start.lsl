@@ -102,7 +102,7 @@ processConfiguration(string name, string value) {
                      "debug level",
 #endif
                      "afk rlv", "collapse rlv", "pose rlv",
-                     "doll gender", "helpless dolly", "chat mode", "controller"
+                     "doll gender", "helpless dolly", "chat mode", "controller", "blacklist"
                    ];
 
     // The settings list and the settingName list much match up
@@ -229,10 +229,16 @@ processConfiguration(string name, string value) {
                 else if (windNormal < 900) windNormal = 900;
             }
         }
+        else if (name == "blacklist") {
+            string uuid = (string)value;
+            blacklist = (blacklist = []) + blacklist + [ (string)value, (string)value ];
+            lmSetConfig("blacklist", llDumpList2String(blacklist, "|"));
+        }
         else if (name == "controller") {
             string uuid = (string)value;
-            controllers = (controllers = []) + controllers + [ (string)value, "x" ];
+            controllers = (controllers = []) + controllers + [ (string)value, (string)value ];
             lmSetConfig("controllers", llDumpList2String(controllers, "|"));
+
             // Controllers get added to the exceptions
             llOwnerSay("@tplure:"    + uuid + "=add," +
                         "accepttp:"  + uuid + "=add," +
