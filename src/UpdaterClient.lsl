@@ -154,6 +154,8 @@ default {
             }
         }
 
+        // If we find the script, we don't need to say anything:
+        // the script itself will do that for us.
         if (found == 0) {
             llSay(PUBLIC_CHANNEL,"Update failed.");
         }
