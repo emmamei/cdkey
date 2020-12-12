@@ -23,12 +23,6 @@
 #define dressVia(a) listInventoryOn(a)
 // #define dressViaMenu() listInventoryOn(menuDressChannel)
 // #define dressViaRandom() listInventoryOn(randomDressChannel)
-#ifdef CONFIRM_WEAR
-#define checkWornItems(c) rlvRequest("getinvworn:" + (c) + "=", confirmWearChannel)
-#endif
-#ifdef CONFIRM_UNWEAR
-#define checkRemovedItems(c) rlvRequest("getinvworn:" + (c) + "=", confirmUnwearChannel)
-#endif
 
 //========================================
 // VARIABLES
@@ -87,14 +81,6 @@ string nudeFolder; // This is the ~nude we are using
 
 integer menuDressHandle;
 integer menuDressChannel;
-#ifdef CONFIRM_WEAR
-integer confirmWearHandle;
-integer confirmWearChannel;
-#endif
-#ifdef CONFIRM_UNWEAR
-integer confirmUnwearHandle;
-integer confirmUnwearChannel;
-#endif
 
 //integer fallbackFolder;
 
@@ -176,13 +162,7 @@ rlvRequest(string rlv, integer channel) {
         }
 
         llSay(DEBUG_CHANNEL,"rlvRequest called with old channel numbers");
-             if (channel == 2666)     menuDressHandle =  cdListenAll(    menuDressChannel);
-#ifdef CONFIRM_WEAR
-        else if (channel == 2668)   confirmWearHandle = cdListenMine(  confirmWearChannel);
-#endif
-#ifdef CONFIRM_UNWEAR
-        else if (channel == 2669) confirmUnwearHandle = cdListenMine(confirmUnwearChannel);
-#endif
+        if (channel == 2666) menuDressHandle = cdListenAll(menuDressChannel);
 
         lmRunRLV(rlv + (string)(rlvBaseChannel + channel));
     }
@@ -190,14 +170,7 @@ rlvRequest(string rlv, integer channel) {
 
         // FIXME: this block should be executed all the time
 
-             if (channel ==     menuDressChannel)     menuDressHandle =  cdListenAll(    menuDressChannel);
-#ifdef CONFIRM_WEAR
-        else if (channel ==   confirmWearChannel)   confirmWearHandle = cdListenMine(  confirmWearChannel);
-#endif
-#ifdef CONFIRM_UNWEAR
-        else if (channel == confirmUnwearChannel) confirmUnwearHandle = cdListenMine(confirmUnwearChannel);
-#endif
-
+        if (channel == menuDressChannel) menuDressHandle = cdListenAll(menuDressChannel);
         lmRunRLV(rlv + (string)channel);
     }
 
@@ -394,12 +367,6 @@ default {
                 outfitsChannel = dialogChannel + 15; // arbitrary offset
                 debugSay(6, "DEBUG-DRESS", "outfits Channel set to " + (string)outfitsChannel);
 
-#ifdef CONFIRM_WEAR
-                confirmWearChannel = rlvBaseChannel + 2668;
-#endif
-#ifdef CONFIRM_UNWEAR
-              confirmUnwearChannel = rlvBaseChannel + 2669;
-#endif
             }
             else if (name == "afk")                                  afk = (integer)value;
             else if (name == "RLVok")                              RLVok = (integer)value;
@@ -712,20 +679,6 @@ default {
                 //debugSay(2, "DEBUG-DRESS", "Reattach new outfit: " + newOutfit);
                 //lmRunRLV("attachall:" + newOutfit + "=force");
 
-#ifdef CONFIRM_WEAR
-                // check to see that everything in the ~normalself folder is
-                // actually worn
-                wearFolder = normalselfFolder;
-                checkWornItems(wearFolder);
-
-#endif
-#ifdef CONFIRM_UNWEAR
-                // check to see that everything in the old Outfit folder is
-                // actually removed
-                unwearFolder = oldOutfitPath;
-                if (unwearFolder != "") checkRemovedItems(unwearFolder);
-                else dressingSteps += 2;
-#endif
                 //llSetTimerEvent(15.0);
                 oldOutfit = newOutfit;
 
@@ -1060,99 +1013,6 @@ default {
             llSetTimerEvent(60.0);
             newOutfitsList = [];
         }
-
-#ifdef CONFIRM_WEAR
-        //----------------------------------------
-        // Channel: 2668
-        //
-        // Check to see if all items are fully worn; if not, try again
-        //
-        else if (channel == confirmWearChannel) {
-
-            llListenRemove(confirmWearHandle);
-
-            debugSay(6, "DEBUG-DRESS", "Checking for fully worn: " + wearFolder);
-
-            string c1 = llGetSubString(choice,1,1);
-            string c2 = llGetSubString(choice,2,2);
-
-            if (((c1 != "0" && c1 != "3") ||
-                 (c2 != "0" && c2 != "3")) &&
-                ++dressingFailures <= MAX_DRESS_FAILURES) {
-
-                // Try to attach again
-                string rlvCmd = "detachallthis:" + outfitsFolder + "=n,attachallover:" + wearFolder + "=force";
-                if (!canDressSelf || hardcore || afk || collapsed || wearLock) rlvCmd = "attachallthis:=y," + rlvCmd + ",attachallthis:=n";
-                lmRunRLV(rlvCmd);
-
-                checkWornItems(wearFolder);
-                canDressTimeout++;
-            }
-            else if (dressingFailures > MAX_DRESS_FAILURES) {
-                llSay(DEBUG_CHANNEL,"Some things in " + wearFolder + " failed to attach");
-                changeComplete(FALSE);
-            }
-            else {
-                // Everything was attached successfully...
-                dressingSteps++;
-
-                // If we just attached all our normalself, then attach all of our
-                // new outfit
-                if (wearFolder == normalselfFolder && newOutfitPath != "") wearFolder = newOutfit;
-                else wearFolder = "";
-
-                // Do the new outfit folder (with full path)
-                if (wearFolder != "") checkWornItems(wearFolder);
-                else if (dressingSteps >= 3) changeComplete(TRUE);
-            }
-            debugSay(6, "DEBUG", "canDressTimeout = " + (string)canDressTimeout + ", dressingSteps = " + (string)dressingSteps);
-        }
-
-#endif
-#ifdef CONFIRM_UNWEAR
-        //----------------------------------------
-        // Channel: 2669
-        //
-        // Check to see if all items are fully removed; if not, try again
-        //
-        else if (channel == confirmUnwearChannel) {
-            string c1 = llGetSubString(choice,1,1);
-            string c2 = llGetSubString(choice,2,2);
-
-            llListenRemove(confirmUnwearHandle);
-
-            debugSay(6, "DEBUG-DRESS", "Checking for fully removed: " + unwearFolder);
-
-
-            // @getinv worn returns a coded message: test to see that
-            // nothing in the folder or any subfolders is being worn:
-            // that is, ALL have been removed...
-
-            if (((c1 != "0" && c1 != "1") ||
-                 (c2 != "0" && c2 != "1")) &&
-                ++dressingFailures <= MAX_DRESS_FAILURES) {
-
-                string rlvCmd = "attachallthis:" + outfitsFolder + "=n,detachall:" + unwearFolder + "=force";
-                // Try again: attach stuff in the outfitsFolder, and remove things in unwearFolder
-                if (!canDressSelf || hardcore || afk || collapsed || wearLock) rlvCmd = "detachallthis:=y," + rlvCmd + "detachallthis:=n";
-                lmRunRLV(rlvCmd);
-
-                checkRemovedItems(unwearFolder);
-                canDressTimeout++;
-            }
-            else if (dressingFailures > MAX_DRESS_FAILURES) {
-                llSay(DEBUG_CHANNEL,"Some things in " + unwearFolder + " failed to remove");
-                changeComplete(FALSE);
-            }
-            else {
-                // all items successfully removed
-                dressingSteps++;
-                if (dressingSteps >= 3) changeComplete(TRUE);
-            }
-
-            debugSay(6, "DEBUG-DRESS", "canDressTimeout = " + (string)canDressTimeout + ", dressingSteps = " + (string)dressingSteps);
-        }
-#endif
 
         scaleMem();
     }
