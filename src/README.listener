@@ -1,6 +1,19 @@
 LISTENERS
 =========
 
+Listeners by value:
+
+dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGenerateKey(), -7, -1));
+
+outfitsChannel    = dialogChannel + 15
+blacklistChannel  = dialogChannel - 666
+poseChannel       = dialogChannel - 777
+typeChannel       = dialogChannel - 778
+controlChannel    = dialogChannel - 888
+textboxChannel    = dialogChannel - 1111
+
+rlvChannel is unique; see below.
+
 dialogChannel
 -------------
 
@@ -10,7 +23,6 @@ is only the channel number, not the actual opening of the listener.
 
             Aux.lsl:      textboxChannel = dialogChannel - 1111;
          Avatar.lsl:         poseChannel = dialogChannel - POSE_CHANNEL_OFFSET;
-          Dress.lsl:      rlvBaseChannel = dialogChannel ^ 0x80000000; // Xor with the sign bit forcing the positive channel needed by RLV spec.
           Dress.lsl:      outfitsChannel = dialogChannel + 15; // arbitrary offset
     MenuHandler.lsl:         poseChannel = dialogChannel - POSE_CHANNEL_OFFSET;
     MenuHandler.lsl:         typeChannel = dialogChannel - TYPE_CHANNEL_OFFSET;
@@ -22,7 +34,6 @@ Channels and the scripts that use them:
 
      textboxChannel: Aux.lsl
         poseChannel: Avatar.lsl MenuHandler.lsl
-     rlvBaseChannel: Dress.lsl
      outfitsChannel: Dress.lsl
         typeChannel: MenuHandler.lsl Transform.lsl
    blacklistChannel: MenuHandler.lsl
@@ -38,7 +49,6 @@ dialogChannel drives the setting of the following channels
     * outfitsChannel
     * outfitSearchChannel
     * poseChannel (2x)
-    * rlvBaseChannel
     * textboxChannel
     * typeChannel (2x)
     * typeSearchChannel
@@ -47,14 +57,6 @@ rlvChannel - based on dialogChannel - is also used as an offset:
 
    Transform.lsl:      typeSearchChannel = rlvChannel + 1;
    Transform.lsl:    outfitSearchChannel = rlvChannel + 2;
-
-rlvBaseChannel - also based on dialogChannel - is used here:
-
-   Dress.lsl:       rlvBaseChannel = dialogChannel ^ 0x80000000; // Xor with the sign bit forcing the positive channel needed by RLV spec.
-
-   Dress.lsl:     menuDressChannel = rlvBaseChannel + 2666;
-   Dress.lsl:   confirmWearChannel = rlvBaseChannel + 2668;
-   Dress.lsl: confirmUnwearChannel = rlvBaseChannel + 2669;
 
 dialogChannel is read by:
 
@@ -80,9 +82,6 @@ places, and with different meanings and settings:
     Transform.lsl:  rlvChannel = ~dialogChannel + 1;
 
 The setting of rlvChannel in CheckRLV needs to be unraveled, and used consistently.
-
-The channel rlvBaseChannel in Dress.lsl seems to be of a similar purpose;
-this should be examined and fixed if necessary.
 
 Other Channels
 --------------
