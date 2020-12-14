@@ -63,7 +63,6 @@ integer isCarrier;
 integer isController;
 integer isDoll;
 integer numControllers;
-integer resetBody;
 
 integer blacklistChannel;
 integer blacklistHandle;
@@ -868,7 +867,6 @@ default {
                                  if (afterSpace == "Type Text")     lmSendConfig("hovertextOn",   (string)isX);
                             //else if (afterSpace == "Quiet Key")     lmSendConfig("quiet",       (string)(quiet = isX));
                             else if (afterSpace == "Phrases")       lmSendConfig("showPhrases",   (string)(showPhrases = isX));
-                            else if (afterSpace == "Body Reset")    lmSendConfig("resetBody",     (string)(resetBody = isX));
 #ifdef HOMING_BEACON
                             else if (afterSpace == "Homing Beacon") lmSendConfig("homingBeacon",  (string)isX);
 #endif

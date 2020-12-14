@@ -70,7 +70,6 @@ string unwearFolder;
 
 list outfitsList;
 integer useTypeFolder;
-integer resetBody = 0;
 
 string clothingFolder; // This contains clothing to be worn
 string outfitsFolder;  // This contains folders of clothing to be worn
@@ -371,7 +370,6 @@ default {
             else if (name == "afk")                                  afk = (integer)value;
             else if (name == "RLVok")                              RLVok = (integer)value;
             else if (name == "hovertextOn")                  hovertextOn = (integer)value;
-            else if (name == "resetBody")                      resetBody = (integer)value;
             else if (name == "dollType") {
                 if (value == "") dollType = "Regular";
                 else dollType = value;
@@ -549,12 +547,10 @@ default {
 
                 llOwnerSay("New outfit chosen: " + newOutfitName);
 
-                if (resetBody) {
+                //----------------------------------------
+                // STEP #1
 
-                    //----------------------------------------
-                    // STEP #1
-
-                    // Restore our usual look from the ~normalself folder...
+                // Restore our usual look from the ~normalself folder...
 
 // FIXME: These are messy - need to clean up normalselfFolder and nudeFolder
 //        so to match other folder specs
@@ -563,26 +559,33 @@ default {
 #define cdAttach(a) lmRunRLV("attachallover:"+(a)+"=force") 
 #define cdForceDetach(a) lmRunRLV("detachall:"+(a)+"=force");
 
-                    // This attaches ~normalself and locks it
-                    debugSay(2,"DEBUG-DRESS","*** STEP 1 ***");
-                    debugSay(2,"DEBUG-DRESS","attach and lock for normal self folder: " + normalselfFolder);
-                    cdAttach(normalselfFolder);
+                // This attaches ~normalself and locks it
+                debugSay(2,"DEBUG-DRESS","*** STEP 1 ***");
+                debugSay(2,"DEBUG-DRESS","attach and lock for normal self folder: " + normalselfFolder);
+                cdAttach(normalselfFolder);
 
-                    //----------------------------------------
-                    // STEP #2
+#ifdef NOT_USED
+                //----------------------------------------
+                // STEP #2
 
-                    debugSay(2,"DEBUG-DRESS","*** STEP 2 ***");
-                    if (nudeFolder != "") {
-                        // this attaches the ~nude folder
-                        debugSay(2,"DEBUG-DRESS","attach and lock for nude folder: " + nudeFolder);
-                        cdAttach(nudeFolder);
-                    }
+                // Attach ~nude folder
+
+                // Now irrelevant: nude folder only used for total body reset
+
+                // STEP #2
+                //debugSay(2,"DEBUG-DRESS","*** STEP 2 ***");
+                if (nudeFolder != "") {
+                    // this attaches the ~nude folder
+                    debugSay(2,"DEBUG-DRESS","attach and lock for nude folder: " + nudeFolder);
+                    cdAttach(nudeFolder);
                 }
+#endif
 
                 //----------------------------------------
                 // STEP #3
 
                 // attach the new folder and lock it down - and prevent nude
+
                 debugSay(2,"DEBUG-DRESS","*** STEP 3 ***");
                 debugSay(2, "DEBUG-DRESS", "Attaching outfit from " + newOutfit);
                 cdAttach(newOutfit);
@@ -594,21 +597,26 @@ default {
                 // *** NEW STEP #4
 
                 // Remove rest of old outfit (using saved folder)
+
                 debugSay(2,"DEBUG-DRESS","*** STEP 4 ***");
 
-                // Even if resetBody is not true - we still don't want anything
-                // in these directories to be popped off
+                // We don't want anything in these directories to be popped off
 
+                // Step 4a: Unlock previous locks
                 if (normalselfFolder != "") { cdUnlock(normalselfFolder); }
-                if (nudeFolder != "") { cdUnlock(nudeFolder); }
+                if (      nudeFolder != "") { cdUnlock(      nudeFolder); }
+
                 cdUnlock(newOutfit);
                 llSleep(1.0);
 
+                // Step 4b: Lock items so they don't get thrown off
                 if (normalselfFolder != "") { cdLock(normalselfFolder); }
-                if (nudeFolder != "") { cdLock(nudeFolder); }
+                if (      nudeFolder != "") { cdLock(      nudeFolder); }
+
                 cdLock(newOutfit);
                 llSleep(5.0);
 
+                // Step 4c: Remove oldOutfit or alternately entire Outfits dir
                 if (oldOutfit != "") {
                     debugSay(2, "DEBUG-DRESS", "Removing old outfit from " + oldOutfit);
                     cdForceDetach(oldOutfit);
@@ -641,7 +649,8 @@ default {
                 debugSay(2, "DEBUG-DRESS", "Unlocking three folders of new outfit...");
 
                 if (normalselfFolder != "") { cdUnlock(normalselfFolder); }
-                if (nudeFolder != "") { cdUnlock(nudeFolder); }
+                if (      nudeFolder != "") { cdUnlock(      nudeFolder); }
+
                 cdUnlock(newOutfit);
 
                 llSleep(1.0);
@@ -685,6 +694,26 @@ default {
                 llListenRemove(menuDressHandle);
 
                 changeComplete(TRUE);
+            }
+            else if (cmd == "resetBody") {
+                // Force attach nude elements
+                if (nudeFolder)       lmRunRLV("detachthis:" + nudeFolder       + "=y,attachall:" + nudeFolder       + "=force");
+                if (normalselfFolder) lmRunRLV("detachthis:" + normalselfFolder + "=y,attachall:" + normalselfFolder + "=force");
+
+                // Lock default body
+                if (nudeFolder)       lmRunRLV("detachthis:" + nudeFolder       + "=n");
+                if (normalselfFolder) lmRunRLV("detachthis:" + normalselfFolder + "=n");
+
+                // Remove all else
+                lmRunRLV("detachall:" + outfitsFolder + "=force");
+
+                // Clear old outfit settings
+                oldOutfit = "";
+                newOutfit = "";
+
+                // Clear locks and force attach
+                if (nudeFolder)       lmRunRLV("detachthis:" + nudeFolder       + "=y,attachall:" + nudeFolder       + "=force");
+                if (normalselfFolder) lmRunRLV("detachthis:" + normalselfFolder + "=y,attachall:" + normalselfFolder + "=force");
             }
 #ifdef ADULT_MODE
             else if (cmd == "stripAll") {
