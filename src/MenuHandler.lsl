@@ -330,8 +330,7 @@ default {
                 // Prepare listeners: this allows for lag time by doing this up front
 
                 cdListenerActivate(dialogHandle); // is this redundant?
-                lmSendConfig("dialogChannel", (string)(dialogChannel));
-                llSetTimerEvent(MENU_TIMEOUT);
+                //lmSendConfig("dialogChannel", (string)(dialogChannel));
 
                 cdDialogListen();
 
@@ -565,7 +564,7 @@ default {
                 msg += "See " + WEB_DOMAIN + manpage + " for more information. "
 #ifdef DEVELOPER_MODE
                 + "(Key is in Developer Mode.) "
-                + "\n\nCurrent region FPS is " + formatFloat(llGetRegionFPS(),1) + " FPS and time dilation is " + formatFloat(llGetRegionTimeDilation(),3) + ".";
+                + "\n\nCurrent region FPS is " + formatFloat(llGetRegionFPS(),1) + " FPS and time dilation is " + formatFloat(llGetRegionTimeDilation(),3) + "."
 #endif
                 ;
 
@@ -584,6 +583,7 @@ default {
 
                 debugSay(4,"DEBUG-MENU","Menu being displayed and results on channel " + (string)dialogChannel);
                 llDialog(id, msg, dialogSort(menu), dialogChannel);
+                llSetTimerEvent(MENU_TIMEOUT);
             }
         }
         else if (code == MENU_SELECTION) {
@@ -733,6 +733,7 @@ default {
         if (channel == dialogChannel) {
             // This is what starts the Menu process: a reply sent out
             // via Link Message to be responded to by the appropriate script
+            llSetTimerEvent(0.0);
             lmMenuReply(choice, name, id);
 
             if (space == NOT_FOUND) {
