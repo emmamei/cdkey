@@ -588,6 +588,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
             //   1: Gem Color
             //   2: Dolly Name
 
+#ifdef NOTUSED
             // Type 1 = Custom Gem Color
             if (textboxType == GEM_COLOR_TEXTBOX) {
                 string first = llGetSubString(choice, 0, 0);
@@ -620,9 +621,9 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 }
 #endif
             }
+#endif
 
-            // Type 2 = New Dolly Name
-            else if (textboxType == DOLL_NAME_TEXTBOX) {
+            if (textboxType == DOLL_NAME_TEXTBOX) { // FIXME: This is not strictly needed - remove soonest
                 lmSendConfig("dollDisplayName", choice);
                 lmMenuReply("Key...", name, id);
             }
