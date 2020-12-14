@@ -125,42 +125,47 @@ uncollapse() {
     lmSendConfig("collapseTime", (string)(collapseTime = 0));
     lmSendConfig("collapsed", (string)(collapsed = 0));
     lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
-    lmSendConfig("windingDown", (string)(windingDown = 1));
     lmInternalCommand("getTimeUpdates", "", llGetKey());
     lmInternalCommand("setHovertext", "", llGetKey());
 
+    //lmSendConfig("windingDown", (string)(windingDown = 1)); // FIXME: Redundant? set in setWindRate()
     setWindRate();
 }
 
 collapse(integer newCollapseState) {
     // Dolly is in a new collapse state: collapsed, or not
 
-    if (newCollapseState == NOT_COLLAPSED) { // FIXME: This makes "uncollapse()" and "collapse(0)" equivalent...
+    // The following code makes "uncollapse()" and "collapse(0)" equivalent...
+    // Both uncollapse() and collapse(0) are used; the latter is most useful
+    // when the state is unknown (though could be zero); the former is useful
+    // when collapse(NO_TIME) or collapse(0) is given directly.
+
+    if (newCollapseState == NOT_COLLAPSED) {
         uncollapse();
         return;
     }
 
     // If we are already collapsed, then there is nothing to do here
-    if (collapsed != NOT_COLLAPSED) {
-        return;
+    if (collapsed == NOT_COLLAPSED) {
+
+        collapseTime = llGetUnixTime();
+        lmSendConfig("collapseTime", (string)collapseTime);
+        lmSendConfig("collapsed", (string)(collapsed = newCollapseState));
+
+        // when dolly collapses, anyone can rescue
+        lmSendConfig("lastWinderID", (string)(lastWinderID = NULL_KEY));
+        lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0));
+
+        lmInternalCommand("getTimeUpdates", "", llGetKey());
+
+        // Among other things, this will set the Key's turn rate
+        //lmSendConfig("windingDown", (string)(windingDown = 0)); // FIXME: Redundant? set in setWindRate()
+        setWindRate();
+
+        //string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
+        //cdSetHovertext("Disabled Dolly!",CRITICAL); // uses primText
+        lmInternalCommand("setHovertext", "", llGetKey());
     }
-
-    collapseTime = llGetUnixTime();
-    lmSendConfig("collapseTime", (string)collapseTime);
-    lmSendConfig("collapsed", (string)(collapsed = newCollapseState));
-
-    // when dolly collapses, anyone can rescue
-    lmSendConfig("lastWinderID", (string)(lastWinderID = NULL_KEY));
-    lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0));
-    lmSendConfig("windingDown", (string)(windingDown = 0));
-
-    lmInternalCommand("getTimeUpdates", "", llGetKey());
-    // Among other things, this will set the Key's turn rate
-    setWindRate();
-
-    //string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
-    //cdSetHovertext("Disabled Dolly!",CRITICAL); // uses primText
-    lmInternalCommand("setHovertext", "", llGetKey());
 }
 
 //========================================
@@ -441,7 +446,7 @@ default {
                         // This message is intentionally excluded from the quiet key setting as it is not good for dolls to simply go down silently.
 
                         llSay(0, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on Dolly's key.)");
-                        collapse(NO_TIME);
+                        collapse(NO_TIME); // currently equivalent to uncollapse()
                     }
                 }
             }
@@ -575,10 +580,12 @@ default {
 
                 lmSendConfig("wearLockExpire",(string)(wearLockExpire));
             }
-            else if (name == "lowScriptMode") {  // FIXME: is this needed?
-                lowScriptMode = (integer)value;
+            // We do not trigger this: this code only gets triggered from outside
+            // using SET_CONFIG (code 301).
+            else if (name == "lowScriptMode") {
 
-                //lmSendConfig("lowScriptMode",(string)(lowScriptMode = (integer)value));
+                // Send our setting out to everyone else
+                lmSendConfig("lowScriptMode",(string)(lowScriptMode = (integer)value));
 
                 if (lowScriptMode) lastLowScriptTime = llGetUnixTime();
                 else lastLowScriptTime = 0;
@@ -613,7 +620,7 @@ default {
                 setWindRate();
             }
             else if (cmd == "collapse") {
-                if (collapsed) uncollapse();
+                if (collapsed) uncollapse(); // equivalent to collapse(NO_TIME)
                 else collapse(llList2Integer(split, 0));
             }
             else if (cmd == "windMsg") {
@@ -883,7 +890,7 @@ default {
                     dialogSort(windChoices + [ MAIN ]), dialogChannel);
             }
             else if (choice == "Unwind") {
-                collapse(NO_TIME);
+                collapse(NO_TIME); // currently equivalent to uncollapse()
                 cdSayTo("Dolly collapses, " + pronounHerDoll + " key unwound",id);
             }
         }

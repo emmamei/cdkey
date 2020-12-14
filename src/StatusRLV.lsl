@@ -199,7 +199,6 @@ default {
                 // restrictions and restore them after logon or RLV activation
                 debugSay(4,"DEBUG-STATUSRLV","Restoring recorded restrictions...");
 
-                //return; // FIXME: temporarily restore no restrictions at all
                 if (rlvRestrict == []) return; // no restrictions
 
                 string cmd;

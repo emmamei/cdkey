@@ -249,8 +249,10 @@ default {
 
             // shortcut: d
             else if (c == "d") {
-                     if (name == "dialogChannel") {         dialogChannel = (integer)value;
-                         debugSay(4,"DEBUG-MENU","dialogChannel recieved and set to " + (string)dialogChannel); } // FIXME: remove when not needed
+                if (name == "dialogChannel") {
+                    dialogChannel = (integer)value;
+                    debugSay(4,"DEBUG-MENU","dialogChannel recieved and set to " + (string)dialogChannel);
+                }
                 else if (name == "detachable")                 detachable = (integer)value;
                 else if (name == "demoMode")                     demoMode = (integer)value;
                 else if (name == "dollType")                     dollType = value;
@@ -715,7 +717,7 @@ default {
 
         list split = llParseStringKeepNulls(choice, [ " " ], []);
 
-        name = llGetDisplayName(id); // FIXME: id must be present in sim for this to work
+        name = llGetDisplayName(id); // "id" can be assumed present due to them using the menu dialogs...
 
         integer space = llSubStringIndex(choice, " ");
 

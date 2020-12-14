@@ -117,7 +117,6 @@ checkRLV() {
 
     debugSay(2,"DEBUG-RLV","checking for RLV - setting " + (string)((integer)RLV_TIMEOUT) + "-second timer...");
 
-    // FIXME: Last few tries switch from @version to @versionnew
     if (RLVck > 2) llOwnerSay("@versionnew=" + (string)rlvChannel);
     else llOwnerSay("@version=" + (string)rlvChannel);
 
