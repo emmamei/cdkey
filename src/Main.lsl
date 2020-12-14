@@ -119,12 +119,13 @@ float setWindRate() {
 
 uncollapse() {
     // Revive dolly back from being collapsed
-    string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
-    cdSetHovertext("",INFO); // uses primText
+    //string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
+    //cdSetHovertext("",INFO); // uses primText
 
     lmSendConfig("collapseTime", (string)(collapseTime = 0));
     lmSendConfig("collapsed", (string)(collapsed = 0));
     lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
+    lmSendConfig("windingDown", (string)(windingDown = 1));
     lmInternalCommand("getTimeUpdates", "", llGetKey());
     lmInternalCommand("setHovertext", "", llGetKey());
 
@@ -132,38 +133,33 @@ uncollapse() {
 }
 
 collapse(integer newCollapseState) {
-    // Dolly is in a new collapse state: collapsed, or jammed
+    // Dolly is in a new collapse state: collapsed, or not
 
-    if (newCollapseState == 0) {
+    if (newCollapseState == NOT_COLLAPSED) { // FIXME: This makes "uncollapse()" and "collapse(0)" equivalent...
         uncollapse();
         return;
     }
 
-    // If not already collapsed, mark the start time
-    if (collapsed == NOT_COLLAPSED) {
-        collapseTime = llGetUnixTime();
-        lmSendConfig("collapseTime", (string)collapseTime);
+    // If we are already collapsed, then there is nothing to do here
+    if (collapsed != NOT_COLLAPSED) {
+        return;
     }
 
-    if (collapsed != newCollapseState)
-        lmSendConfig("collapsed", (string)(collapsed = newCollapseState));
-
-    debugSay(3,"DEBUG-MAIN","Entering new collapse state (" + (string)newCollapseState + ") with time left of " + (string)timeLeftOnKey);
-
-    string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
+    collapseTime = llGetUnixTime();
+    lmSendConfig("collapseTime", (string)collapseTime);
+    lmSendConfig("collapsed", (string)(collapsed = newCollapseState));
 
     // when dolly collapses, anyone can rescue
     lmSendConfig("lastWinderID", (string)(lastWinderID = NULL_KEY));
-
-    // Entering a collapsed state
-    if (newCollapseState == NO_TIME) {
-        lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0));
-        cdSetHovertext("Disabled Dolly!",CRITICAL); // uses primText
-    }
+    lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0));
+    lmSendConfig("windingDown", (string)(windingDown = 0));
 
     lmInternalCommand("getTimeUpdates", "", llGetKey());
     // Among other things, this will set the Key's turn rate
     setWindRate();
+
+    //string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
+    //cdSetHovertext("Disabled Dolly!",CRITICAL); // uses primText
     lmInternalCommand("setHovertext", "", llGetKey());
 }
 
@@ -611,7 +607,7 @@ default {
                 if (cdTimeSet(carryExpire))          lmSendConfig("carryExpire",           (string)carryExpire);
                 if (cdTimeSet(collapseTime))         lmSendConfig("collapseTime",          (string)collapseTime);
 
-                lmSendConfig("windingDown",(string)windingDown);
+                //lmSendConfig("windingDown",(string)windingDown);
             }
             else if (cmd == "setWindRate") {
                 setWindRate();
