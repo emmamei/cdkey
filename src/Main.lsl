@@ -307,7 +307,7 @@ default {
                 // lowScriptMode continues...
                 debugSay(2,"DEBUG-MAIN", "Low Script Mode active and bumped");
                 lastLowScriptTime = llGetUnixTime();
-                lmSendConfig("lowScriptMode",(string)(lowScriptMode = 1));
+                //lmSendConfig("lowScriptMode",(string)(lowScriptMode = 1));
                 //lowScriptTimer = 1;
             }
             else {
@@ -340,7 +340,7 @@ default {
                 llSetTimerEvent(LOW_RATE);
             }
             else {
-                lmSendConfig("lowScriptMode",(string)(lowScriptMode = 0));
+                //lmSendConfig("lowScriptMode",(string)(lowScriptMode = 0));
                 llSetTimerEvent(STD_RATE);
             }
         }
@@ -579,11 +579,15 @@ default {
 
                 lmSendConfig("wearLockExpire",(string)(wearLockExpire));
             }
-            else if (name == "lowScriptMode") {
-                lmSendConfig("lowScriptMode",(string)(lowScriptMode = (integer)value));
+            else if (name == "lowScriptMode") {  // FIXME: is this needed?
+                lowScriptMode = (integer)value;
+
+                //lmSendConfig("lowScriptMode",(string)(lowScriptMode = (integer)value));
+
                 if (lowScriptMode) lastLowScriptTime = llGetUnixTime();
                 else lastLowScriptTime = 0;
             }
+
             else if (name == "poseExpire")         poseExpire = (integer)value;
             else if (name == "carryExpire")       carryExpire = (integer)value;
             else if (name == "wearLockExpire") wearLockExpire = (integer)value;
