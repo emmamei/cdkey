@@ -123,7 +123,7 @@ chooseDialogChannel() {
     blacklistChannel = dialogChannel - BLACKLIST_CHANNEL_OFFSET;
       controlChannel = dialogChannel - CONTROL_CHANNEL_OFFSET;
 
-    lmSendConfig("dialogChannel", (string)(dialogChannel));
+    //lmSendConfig("dialogChannel", (string)(dialogChannel));
     doDialogChannel();
 }
 
@@ -251,7 +251,7 @@ default {
             else if (c == "d") {
                 if (name == "dialogChannel") {
                     dialogChannel = (integer)value;
-                    debugSay(4,"DEBUG-MENU","dialogChannel recieved and set to " + (string)dialogChannel);
+                    //debugSay(4,"DEBUG-MENU","dialogChannel recieved and set to " + (string)dialogChannel);
                 }
                 else if (name == "detachable")                 detachable = (integer)value;
                 else if (name == "demoMode")                     demoMode = (integer)value;
@@ -583,7 +583,7 @@ default {
                 msg = timeLeft + msg;
                 timeLeft = "";
 
-                debugSay(4,"DEBUG-MENU","Menu being displayed and results on channel " + (string)dialogChannel);
+                //debugSay(4,"DEBUG-MENU","Menu being displayed and results on channel " + (string)dialogChannel);
                 llDialog(id, msg, dialogSort(menu), dialogChannel);
                 llSetTimerEvent(MENU_TIMEOUT);
             }

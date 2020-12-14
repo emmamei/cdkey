@@ -456,11 +456,13 @@ default {
 
         string choice = cdListElement(split, 0);
         string name = cdListElement(split, 1);
-#ifdef DEVELOPER_MODE
 
+#ifdef NOT_USED
+
+#define MSG_LEVEL 8
         // This is a way to watch the messages coming over the wire...
         // no need for a separate script to do it
-        if ((debugLevel > 4 && code != 11 && code != 12 && code != 15) || debugLevel > 5) {
+        if ((debugLevel > MSG_LEVEL && code != 11 && code != 12 && code != 15) || debugLevel > (MSG_LEVEL + 1)) {
             string s = "Transform Link Msg:" + script + ":" + (string)code + ":choice/name";
             string t = choice + "/" + name;
 
