@@ -288,14 +288,17 @@ default {
 
                 rlvAPIversion = msg;
                 debugSay(2, "DEBUG-RLV", "RLV Version: " + rlvAPIversion);
-
-                //nextRLVcheck = 0.0;
-                llSetTimerEvent(0.0);
-                RLVok = TRUE;
-
-                //cdListenerDeactivate(rlvHandle);
-                activateRLV();
             }
+            else {
+                debugSay(2, "DEBUG-RLV", "Unknown RLV response message: " + msg);
+            }
+
+            //nextRLVcheck = 0.0;
+            llSetTimerEvent(0.0);
+            RLVok = TRUE;
+
+            //cdListenerDeactivate(rlvHandle);
+            activateRLV();
         }
     }
 
