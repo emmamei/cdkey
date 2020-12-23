@@ -10,7 +10,6 @@
 
 #define cdNullList(a) (llGetListLength(a)==0)
 #define cdListMin(a) llListStatistics(LIST_STAT_MIN,a)
-#define cdKeyStopped() (!windingDown)
 #define cdTimeSet(a) (a!=0)
 #define cdResetKey() llResetOtherScript("Start")
 #define UNSET -1
@@ -187,7 +186,7 @@ default {
 
         cdInitializeSeq();
 
-        lmSendConfig("windingDown", (string)(windingDown = cdWindDown()));   // boolean
+        lmSendConfig("windingDown", (string)(windingDown = (windRate > 0)));   // boolean
         //lmSendConfig("baseWindRate", (string)baseWindRate); // base rate: 1.0
         lmSendConfig("windRate", (string)(windRate = RATE_STANDARD));         // current rate
     }
@@ -205,7 +204,7 @@ default {
         isAttached = cdAttached();
         if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
 
-        lmSendConfig("windingDown", (string)(windingDown = cdWindDown()));   // boolean
+        lmSendConfig("windingDown", (string)(windingDown = (windRate > 0)));   // boolean
         //lmSendConfig("baseWindRate", (string)baseWindRate); // base rate: 1.0
         lmSendConfig("windRate", (string)(windRate = RATE_STANDARD));         // current rate
     }
@@ -407,7 +406,7 @@ default {
             }
         }
 
-        if (windingDown) lmInternalCommand("getTimeUpdates", "", llGetKey());
+        if (windRate > 0) lmInternalCommand("getTimeUpdates", "", llGetKey());
 
 #ifdef LOCKON
         ifPermissions();
@@ -419,7 +418,7 @@ default {
         // being collapsed is one of several conditions which forces the wind
         // rate to be 0.
 
-        if (windingDown) {
+        if (windRate > 0) {
             if (timeSpan != 0) {
                 // Key ticks down just a little further...
                 timeLeftOnKey -= (integer)(timeSpan * windRate);
