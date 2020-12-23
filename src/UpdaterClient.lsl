@@ -43,12 +43,16 @@
 integer UNIQ = 1246;       // the private channel unique to the owner of this prim
 
 // Not tuneable
-integer UPDATE_TIMEOUT = 90;   // 60 seconds for reception to succeed
-integer comChannel;            // placeholder for llRegionSay
-integer controlChannel;
-integer controlHandle;
+#define UPDATE_TIMEOUT 30
+#define BEGIN_TIMEOUT 10
+integer comChannel;
+integer comHandle;
 integer pin;             // a random pin for security
 integer update;
+integer waiting;
+integer waitingRetries = 5;
+integer scriptCount;
+integer scriptIndex;
 key owner;
 
 //========================================
@@ -61,17 +65,21 @@ startUpdate() {
     pin = llCeil(llFrand(123456) + 654321);
 
     comChannel = (((integer)("0x" + llGetSubString((string)owner, -8, -1)) & 0x3FFFFFFF) ^ 0xBFFFFFFF ) + UNIQ;    // 1234 is the private channel for this owner
-    llOwnerSay("client = " + (string)owner);
-    llOwnerSay("client pin = " + (string)pin);
+#ifdef LISTENER
+    comHandle = llListen(comChannel,"","","");
+#endif
+    //llOwnerSay("client = " + (string)owner);
+    //llOwnerSay("client pin = " + (string)pin);
 
     // This is the key to the whole operation
     llSetRemoteScriptAccessPin(pin);
 
     // Trigger the update
+    waiting = TRUE;
+    llSetTimerEvent(BEGIN_TIMEOUT);
     llRegionSay(comChannel, (string)llGetLinkKey(LINK_THIS) + "^" + (string)pin);
 
-    llOwnerSay("Update client prepared to receive updated files...");
-    llSetTimerEvent(UPDATE_TIMEOUT);
+    llOwnerSay("Key ready for update...");
     update = 0;
 }
 
@@ -105,11 +113,8 @@ default {
     state_entry() {
         owner = llGetOwner();
         update = 0;
-
-        controlChannel = -1575318;
-        controlHandle = llListen(controlChannel,"","","");
-
-        llOwnerSay("Updater ready.");
+        scriptCount = llGetInventoryNumber(INVENTORY_SCRIPT);
+        scriptIndex = scriptCount; // Update should add one new file (New.lsl)
     }
 
     //----------------------------------------
@@ -121,6 +126,15 @@ default {
         llResetScript();
     }
 
+#ifdef LISTENER
+    //----------------------------------------
+    // LISTEN
+    //----------------------------------------
+
+    listen(integer channel, string name, key id, string msg) {
+        // get update complete message
+    }
+#endif
 
     //----------------------------------------
     // LINK MESSAGE
@@ -144,8 +158,7 @@ default {
 
         if (code == CONFIG) {
 
-            //string value = llList2String(split, 1);
-            //string c = cdGetFirstChar(name); // for speedup
+            string value = llList2String(split, 1);
             //split = llDeleteSubList(split,0,0);
 
             if (name == "update") {
@@ -153,6 +166,26 @@ default {
 		doHalt();
                 startUpdate();
             }
+#ifdef DEVELOPER_MODE
+            else if (name == "debugLevel") debugLevel = (integer)value;
+#endif
+        }
+    }
+
+    //----------------------------------------
+    // CHANGED
+    //----------------------------------------
+    changed(integer change) {
+        if (change & CHANGED_INVENTORY) {
+            llSetTimerEvent(UPDATE_TIMEOUT);
+            if (waiting) {
+                llSay(PUBLIC_CHANNEL, "Key update in progress...");
+                waiting = 0;
+            }
+            //debugSay(4,"DEBUG-UPDATER","Inventory changed: script #" + (string)(scriptCount - scriptIndex + 1) + " of " + (string)scriptCount);
+            llOwnerSay("Received script #" + (string)(scriptCount - scriptIndex + 1) + " of " + (string)scriptCount);
+            scriptIndex--;
+            if (scriptIndex == 0) llSay(PUBLIC_CHANNEL, "Key update complete.");
         }
     }
 
@@ -162,26 +195,44 @@ default {
 
     // in case we rez, our UUID changed, so we check in
     timer() {
-        integer index = llGetInventoryNumber(INVENTORY_SCRIPT);
-        integer found = 0;
 
-        // scan all scripts in our inventory, could be more than one needs updating.
-        while (index--) {
-            if (llGetInventoryName(INVENTORY_SCRIPT, index) == "New") {
-                llRemoveInventory("New"); // This script only serves as a flag
-                found = 1;
+        if (waiting) {
+	    if (waitingRetries > 0) {
+		debugSay(2,"DEBUG-UPDATER","Update retry: remaining retries: " + (string)waitingRetries);
+		waitingRetries--;
+		llSetTimerEvent(BEGIN_TIMEOUT);
+		llRegionSay(comChannel, (string)llGetLinkKey(LINK_THIS) + "^" + (string)pin);
+	    }
+	    else {
+		llSay(DEBUG_CHANNEL,"Updater failed to respond. Restarting key.");
+		llSetScriptState("Start", RUNNING);
+		cdResetKey(); // Key state is may or may not be ok, and scripts are at full-stop...
             }
         }
+	else {
 
-        llSetTimerEvent(0.0);
+            debugSay(4,"DEBUG-UPDATER","Inventory script index on timeout: " + (string)scriptIndex);
 
-        // If we find the script, we don't need to say anything:
-        // the updater server and key reset will handle the last bit.
-        if (found == 0) {
-            llOwnerSay("Update failed.");
-            llSetScriptState("Start", RUNNING);
-            cdResetKey(); // Key state is indeterminate, and scripts are at full-stop...
-        }
+	    integer index = llGetInventoryNumber(INVENTORY_SCRIPT);
+	    integer found = 0;
+
+	    llSetTimerEvent(0.0);
+
+	    // scan all scripts in our inventory, could be more than one needs updating.
+	    while (index--) {
+		if (llGetInventoryName(INVENTORY_SCRIPT, index) == "New") {
+		    found = 1;
+		}
+	    }
+
+	    // If we find the script, we don't need to say anything:
+	    // the updater server and key reset will handle the last bit.
+	    if (found == 0) {
+		llSay(DEBUG_CHANNEL,"Update failed. Restarting key.");
+		llSetScriptState("Start", RUNNING);
+		cdResetKey(); // Key state is indeterminate, and scripts are at full-stop...
+	    }
+	}
     }
 }
 
