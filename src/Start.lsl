@@ -597,6 +597,7 @@ default {
     // STATE ENTRY
     //----------------------------------------
     state_entry() {
+        // start parameter can ONLY be set via llRemoteLoadScriptPin()
         if (llGetStartParameter() == 100) {
             llOwnerSay("Key has been updated.");
         }
