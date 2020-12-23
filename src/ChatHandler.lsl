@@ -155,7 +155,6 @@ default {
                      if (name == "wearLock")                 wearLock = (integer)value;
                 else if (name == "windRate")                 windRate = (float)value;
                 else if (name == "windNormal")             windNormal = (integer)value;
-                else if (name == "windingDown")           windingDown = (integer)value;
             }
         }
         else if (code == SET_CONFIG) {
@@ -672,7 +671,7 @@ default {
                         cdCapability((canDressSelf && !hardcore),  "Doll can", "dress by " + pronounHerDoll + "self");
                         cdCapability((poseSilence || hardcore),    "Doll is",  "silenced while posing");
 
-                        if (windingDown) s += "\nCurrent wind rate is " + formatFloat(windRate,2) + ".\n";
+                        if (windRate > 0) s += "\nCurrent wind rate is " + formatFloat(windRate,2) + ".\n";
                         else s += "Key is not winding down.\n";
 
                         if (RLVok == UNSET) s += "RLV status is unknown.\n";
@@ -720,7 +719,7 @@ default {
 
                         string msg;
 
-                        if (!windingDown) msg = "Key is stopped.";
+                        if (windRate == 0) msg = "Key is stopped.";
                         else {
                             msg = "Key is unwinding at a ";
 
