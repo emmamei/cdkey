@@ -17,6 +17,7 @@
 #define cdListenerDeactivate(a) llListenControl(a, 0)
 #define cdListenerActivate(a) llListenControl(a, 1)
 #define cdResetKey() llResetOtherScript("Start")
+#define lmRunRLVBoolean(a,b) if ((b) == 1) { lmRunRLV((a)+"=y"); } else { lmRunRLV((a)+"=n"); }
 
 // Note we bypass this, and call the routine directly
 #define lmDoCheckRLV() lmInternalCommand("doCheckRLV","",NULL_KEY)
@@ -129,12 +130,12 @@ activateRLVBase() {
 
 #ifdef DEVELOPER_MODE
     string baseRLV;
-    // remove chat channel from access... right?
-    if (chatChannel) baseRLV += "sendchannel:" + (string)chatChannel + "=rem";
+    // this removes this channel from any @sendchannel restrictions
+    //if (chatChannel) baseRLV += "sendchannel:" + (string)chatChannel + "=rem";
 #else
     string baseRLV = "detach=n";
-    // remove chat channel from access... right?
-    if (chatChannel) baseRLV += ",sendchannel:" + (string)chatChannel + "=rem";
+    // this removes this channel from any @sendchannel restrictions
+    //if (chatChannel) baseRLV += ",sendchannel:" + (string)chatChannel + "=rem";
 #endif
 
     // Run the base as stored
@@ -156,7 +157,10 @@ activateRLVBase() {
 
     lmRunRLVas("Base", baseRLV);
     lmSendConfig("defaultBaseRLVcmd",(string)baseRLV); // save the defaults
+    outfitRLVLock();
+}
 
+outfitRLVLock() {
 #ifdef LOCKON
     if (!canDressSelf || hardcore || collapsed || wearLock || afk) {
         // Lock outfit down tight
@@ -328,23 +332,24 @@ default {
 
             if (llListFindList([ "a", "c", "d", "w" ],(list)c) == NOT_FOUND) return;
 
-                 if (name == "autoTP")        {       autoTP = (integer)value; activateRLVBase(); }
-            else if (name == "afk")           {          afk = (integer)value; activateRLVBase(); }
+                 if (name == "autoTP")        {       autoTP = (integer)value; lmRunRLVBoolean("accepttp", !autoTP); }
+            else if (name == "afk")           {          afk = (integer)value; outfitRLVLock(); }
+            else if (name == "hardcore")      {     hardcore = (integer)value; outfitRLVLock(); }
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")    {   debugLevel = (integer)value; }
 #endif
             else if (c == "c") {
-                     if (name == "canSelfTP")     {    canSelfTP = (integer)value; activateRLVBase(); }
-                else if (name == "canDressSelf")  { canDressSelf = (integer)value; activateRLVBase(); }
-                else if (name == "canFly")        {       canFly = (integer)value; activateRLVBase(); }
-                else if (name == "canStand")      {     canStand = (integer)value; activateRLVBase(); }
-                else if (name == "canSit")        {       canSit = (integer)value; activateRLVBase(); }
-                else if (name == "collapsed")     {    collapsed = (integer)value; activateRLVBase(); }
+                     if (name == "canSelfTP")     {    canSelfTP = (integer)value; lmRunRLVBoolean("tplm", canSelfTP); lmRunRLVBoolean("tploc", canSelfTP); }
+                else if (name == "canDressSelf")  { canDressSelf = (integer)value; outfitRLVLock(); }
+                else if (name == "canFly")        {       canFly = (integer)value; lmRunRLVBoolean("fly", canFly); }
+                else if (name == "canStand")      {     canStand = (integer)value; lmRunRLVBoolean("unsit", canStand); }
+                else if (name == "canSit")        {       canSit = (integer)value; lmRunRLVBoolean("sit", canSit); }
+                else if (name == "collapsed")     {    collapsed = (integer)value; outfitRLVLock(); }
                 else if (name == "controllers") {
                     if (split == [""]) controllers = [];
                     else controllers = split;
                 }
-                else if (name == "chatChannel")  chatChannel = (integer)value;
+                else if (name == "chatChannel") { chatChannel = (integer)value; }
             }
 
             else if (name == "dialogChannel") {
@@ -357,7 +362,7 @@ default {
                 rlvHandle = cdListenMine(rlvChannel);
                 cdListenerActivate(rlvHandle);
             }
-            else if (name == "wearLock")      {     wearLock = (integer)value; activateRLVBase(); }
+            else if (name == "wearLock") { wearLock = (integer)value; outfitRLVLock(); }
         }
         else if (code == RLV_RESET) {
             RLVok = llList2Integer(split, 0);
