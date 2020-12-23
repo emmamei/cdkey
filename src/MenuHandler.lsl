@@ -219,7 +219,7 @@ default {
             else if (name == "outfitsFolder")           outfitsFolder = value;
             else if (name == "backMenu")                     backMenu = value;
             else if (name == "hardcore")                     hardcore = (integer)value;
-            else if (name == "windingDown")               windingDown = (integer)value;
+//          else if (name == "windingDown")               windingDown = (integer)value;
             else if (name == "lowScriptMode")           lowScriptMode = (integer)value;
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
 
@@ -341,24 +341,26 @@ default {
 
                 // Compute "time remaining" message for mainMenu/windMenu
                 string timeLeft;
-                integer minsLeft;
 
                 if (!hardcore) {
+		    integer minsLeft;
 
-                    minsLeft = llRound(timeLeftOnKey / (60.0 * windRate));
+                    // timeLeftOnKey is in seconds, and timeLeftOnKey / 60.0 converts
+                    // the number to minutes. The value windRate is a scaling factor:
+                    // a key running fast (windRate = 2.0) has fewer minutes left;
+                    // timeLeftOnKey is "real" seconds left.
 
-                    if (minsLeft > 0) {
+                    if (windRate > 0) {
+                        minsLeft = llRound(timeLeftOnKey / (60.0 * windRate));
                         timeLeft = "Dolly has " + (string)minsLeft + " minutes remaining. ";
 
                         timeLeft += "Key is ";
-                        if (windingDown) {
-                            if (windRate == 1) timeLeft += "winding down at a normal rate. ";
-                            else if (windRate > 1) timeLeft += "winding down at an accelerated rate. ";
-                            else if (windRate < 1) timeLeft += "winding down at a slowed rate. ";
-                        }
-                        else timeLeft += "not winding down. ";
+
+			     if (windRate == 1) timeLeft += "winding down at a normal rate. ";
+			else if (windRate > 1)  timeLeft += "winding down at an accelerated rate. ";
+			else if (windRate < 1)  timeLeft += "winding down at a slowed rate. ";
                     }
-                    else timeLeft = "Dolly has no time left. ";
+		    else timeLeft += "not winding down. ";
                 }
 
                 //----------------------------------------

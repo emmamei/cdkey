@@ -687,15 +687,10 @@ default {
                     }
                     else if (choice == "stat") {
                         if (isDoll && hardcore) return;
-                        float t1 = timeLeftOnKey / (SECS_PER_MIN * windRate);
-                        float t2 = effectiveLimit / (SECS_PER_MIN * windRate);
-                        float p = t1 * 100.0 / t2;
+                        string msg = "Key is ";
 
-                        string msg = "Time: " + (string)llRound(t1) + "/" +
-                                    (string)llRound(t2) + " min (" + formatFloat(p, 2) + "% capacity)";
-
-                        if (windingDown) {
-                            msg += " unwinding at a ";
+                        if (windRate > 0) {
+                            msg += "unwinding at a ";
 
                             if (windRate == 1.0) msg += "normal rate.";
                             else {
@@ -705,7 +700,14 @@ default {
                                 msg += " of " + formatFloat(windRate, 1) + "x.";
                             }
 
-                        } else msg += " and key is currently stopped.";
+			    float t1 = timeLeftOnKey / (SECS_PER_MIN * windRate);
+			    float t2 = effectiveLimit / (SECS_PER_MIN * windRate);
+			    float p = t1 * 100.0 / t2;
+
+			    msg += " Time remaining: " + (string)llRound(t1) + "/" +
+					(string)llRound(t2) + " min (" + formatFloat(p, 2) + "% capacity).";
+
+                        } else msg += " currently stopped.";
                         if (demoMode) msg += " (Demo mode active.)";
 
                         cdSayTo(msg, id);
