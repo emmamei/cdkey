@@ -43,7 +43,7 @@ integer UNIQ = 1246;       // the private channel unique to the owner of this pr
 integer UPDATE_TIMEOUT = 60;  // timeout in 60 seconds
 
 // globals
-integer comChannel ;       // we listen on this channel. It is unioque to this owner and a subchannel
+integer comChannel ;       // we listen on this channel. It is unique to this owner and a subchannel
 integer comHandle;
 
 integer pin;
@@ -121,6 +121,8 @@ default {
     on_rez(integer start) {
         owner = llGetOwner();
         lmSetHovertext("Click for update");
+
+        llSay(PUBLIC_CHANNEL,"This is an Updater for the Community Dolls Key: click on this object, then select Update from the Key Menu.\n");
     }
 
     //----------------------------------------
@@ -133,10 +135,8 @@ default {
     listen(integer channel, string name, key id, string msg) {
         list params = llParseString2List(msg, ["^"], []);
 
-        if (owner != touchingID) {
-            lmSetHovertext("Update rejected.");
-            return;
-        }
+        // guaranteed to be on comChannel...
+        if (owner != touchingID) return;
 
         lmSetHovertext("Updating...");
         llSay(PUBLIC_CHANNEL,"Beginning update with nearby key...");
@@ -159,9 +159,9 @@ default {
 
     timer() {
         llSay(PUBLIC_CHANNEL,"Update has expired...");
-        lmClearHovertext();
         llListenRemove(comHandle);
         llSetTimerEvent(0.0);
+        lmSetHovertext("Click for update");
     }
 
     // This is for when the user clicks the updater: this should start the process
@@ -195,10 +195,6 @@ default {
     //----------------------------------------
     changed(integer change) {
         if (change & CHANGED_OWNER) {
-
-            llOwnerSay("This is an Updater for the Community Dolls Key: click on this object, then select Update from the Key Menu.\n");
-
-            llSleep(1.0);
             llResetScript(); // start over
         }
     }
