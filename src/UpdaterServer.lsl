@@ -70,9 +70,9 @@ sendUpdate() {
     index = numScripts;
     myName = llGetScriptName();
 
-    llOwnerSay("touchingID = " + (string)touchingID);
-    llOwnerSay(  "targetID = " + (string)  targetID);
-    llOwnerSay("pin = " + (string)pin);
+    //llOwnerSay("touchingID = " + (string)touchingID);
+    //llOwnerSay(  "targetID = " + (string)  targetID);
+    //llOwnerSay("pin = " + (string)pin);
 
     // scan all scripts in our inventory, could be more than one needs updating.
     while (index--) {
