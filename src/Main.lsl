@@ -315,6 +315,7 @@ default {
             else {
                 lowScriptModeSpan = llGetUnixTime() - lastLowScriptTime;
 
+                // if environment has past test long enough - then go out of powersave mode
                 if (lowScriptModeSpan > 600) {
                     debugSay(2,"DEBUG-MAIN", "Low Script Mode active but environment good - disabling");
                     lastLowScriptTime = 0;
