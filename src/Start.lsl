@@ -101,14 +101,20 @@ processConfiguration(string name, string value) {
 #ifdef DEVELOPER_MODE
                      "debug level",
 #endif
-                     "afk rlv", "collapse rlv", "pose rlv",
+#ifdef NOT_USED
+                     "afk rlv",
+#endif
+		     "collapse rlv", "pose rlv",
                      "doll gender", "helpless dolly", "chat mode", "controller", "blacklist"
                    ];
 
     // The settings list and the settingName list much match up
     // with entries
-    list settings = [ "hardcore", "busy is away", "can afk", "can fly",
-                      "poseable", "can sit", "can stand", "can dress self", "detachable",
+    list settings = [ "hardcore", "busy is away",
+#ifdef NOT_USED
+                      "can afk",
+#endif
+                      "can fly", "poseable", "can sit", "can stand", "can dress self", "detachable",
 #ifdef ADULT_MODE
                       "strippable",
 #endif
@@ -116,8 +122,11 @@ processConfiguration(string name, string value) {
                       "show phrases", "carryable", "repeatable wind", "ghost"
                     ];
 
-    list settingName = [ "hardcore", "busyIsAway", "canAFK", "canFly",
-                         "allowPose", "canSit", "canStand", "canDressSelf", "detachable",
+    list settingName = [ "hardcore", "busyIsAway",
+#ifdef NOT_USED
+                         "canAFK",
+#endif
+                         "canFly", "allowPose", "canSit", "canStand", "canDressSelf", "detachable",
 #ifdef ADULT_MODE
                          "allowStrip",
 #endif
@@ -195,10 +204,12 @@ processConfiguration(string name, string value) {
             lmSendConfig("debugLevel", (string)debugLevel);
         }
 #endif
+#ifdef NOT_USED
         else if (name == "afk rlv") {
             // has to be valid rlv
             lmSendConfig("userAfkRLVcmd", value);
         }
+#endif
         else if (name == "collapse rlv") {
             // has to be valid rlv
             lmSendConfig("userCollapseRLVcmd", value);
