@@ -707,7 +707,7 @@ default {
 			    msg += " Time remaining: " + (string)llRound(t1) + "/" +
 					(string)llRound(t2) + " min (" + formatFloat(p, 2) + "% capacity).";
 
-                        } else msg += " currently stopped.";
+                        } else msg += "currently stopped.";
                         if (demoMode) msg += " (Demo mode active.)";
 
                         cdSayTo(msg, id);
