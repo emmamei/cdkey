@@ -359,7 +359,10 @@ doRestart() {
     integer n;
     string script;
 
-    //cdStopScript("UpdaterClient");
+    // The UpdaterClient script could be running now, but
+    // since we are restarting, don't let the timer continue,
+    // since we'll be resetting it anyway.
+    cdStopScript("UpdaterClient");
 
     // Set all other scripts to run state and reset them
     n = llGetInventoryNumber(INVENTORY_SCRIPT);
@@ -368,7 +371,7 @@ doRestart() {
         script = llGetInventoryName(INVENTORY_SCRIPT, n);
         if (script != "Start") {
 
-            llOwnerSay("====> Resetting script: '" + script + "'");
+            //llOwnerSay("====> Resetting script: '" + script + "'");
             cdRunScript(script);
             llResetOtherScript(script);
         }

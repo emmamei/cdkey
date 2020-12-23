@@ -34,6 +34,7 @@
 #define RUNNING 1
 #define NOT_RUNNING 0
 #define lmLocalSay(a) llSay(PUBLIC_CHANNEL,(a))
+#define cdResetKey() llResetOtherScript("Start")
 
 //========================================
 // VARIABLES
@@ -42,7 +43,7 @@
 integer UNIQ = 1246;       // the private channel unique to the owner of this prim
 
 // Not tuneable
-integer UPDATE_TIMEOUT = 60;   // 60 seconds for reception to succeed
+integer UPDATE_TIMEOUT = 90;   // 60 seconds for reception to succeed
 integer comChannel;            // placeholder for llRegionSay
 integer controlChannel;
 integer controlHandle;
@@ -172,15 +173,15 @@ default {
             }
         }
 
-        // If we find the script, we don't need to say anything:
-        // the script itself will do that for us.
-        if (found == 0) {
-            llSay(PUBLIC_CHANNEL,"Update failed.");
-        }
-
         llSetTimerEvent(0.0);
-        //llSetScriptState(llGetScriptName(),NOT_RUNNING);
-        //llSleep(1.0);
+
+        // If we find the script, we don't need to say anything:
+        // the updater server and key reset will handle the last bit.
+        if (found == 0) {
+            llOwnerSay("Update failed.");
+            llSetScriptState("Start", RUNNING);
+            cdResetKey(); // Key state is indeterminate, and scripts are at full-stop...
+        }
     }
 }
 

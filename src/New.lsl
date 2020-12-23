@@ -9,8 +9,12 @@
 // Minimalist script to verify that upgrade worked
 
 default {
-    on_rez(integer start_param) {
-        llSay(PUBLIC_CHANNEL, "Update is successful.");
+    state_entry() {
+        if (llGetStartParameter() == 100) {
+            llOwnerSay("Key has been updated.");
+        }
+
+        llOwnerSay("Update was successful.");
         llSleep(1.0);
         llRemoveInventory(llGetScriptName());
     }
