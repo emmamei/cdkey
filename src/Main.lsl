@@ -79,39 +79,42 @@ ifPermissions() {
 #endif
 
 float setWindRate() {
-    integer newWindDown;
     float newWindRate;
 
-    // This sets the wind rate etc and reports if values have changed...
-    newWindDown = cdWindDown();
-    if (newWindDown != windingDown) {
-        windingDown = newWindDown;
-        lmSendConfig("windingDown", (string)windingDown);   // boolean
-    }
+    debugSay(4,"DEBUG-MAIN","setWindRate() running");
 
-    if (afk) { newWindRate = 0.5; }
-    else { newWindRate = windRateFactor; }
+    // if AFK then unwinding slows...
+         if (afk)       newWindRate = 0.5; // 50% speed
+    else if (collapsed) newWindRate = 0.0; // 0% speed
+    else                newWindRate = 1.0; // 100% speed
 
     if (newWindRate != windRate) {
-        windRate = newWindRate;
-        lmSendConfig("windRate", (string)windRate);         // current rate
-    }
+        lmSendConfig("windRate", (string)(windRate = newWindRate));         // current rate
+        lmSendConfig("windingDown", (string)(windingDown = (windRate > 0.0)));   // boolean
 
-    // llTargetOmega: With a normalized vector (first parameter), the spin rate
-    // is in radians per second - 2𝜋 radians equals 1 full rotation.
-    //
-    // The specified rate is 2𝜋 radians divided by 8 - so as coded one entire key
-    // rotation takes 8 seconds. Rotation is about the Z axis, scaled according
-    // to the wind rate.
-    //
-    // The windRate variable allows the changing of the key's rotation speed based
-    // on external factors.
+	debugSay(2,"DEBUG-MAIN","windRate now set to " + (string)windRate);
+	debugSay(6,"DEBUG-MAIN","collapsed is currently " + (string)collapsed);
+	debugSay(6,"DEBUG-MAIN","windingDown is currently " + (string)windingDown);
 
-    if (windingDown == 1) {
-        llTargetOmega(<0.0, 0.0, 1.0>, windRate * TWO_PI / 8.0, 1.0);
-    }
-    else {
-        llTargetOmega(ZERO_VECTOR, 0.0, 0.0);
+	// llTargetOmega: With a normalized vector (first parameter), the spin rate
+	// is in radians per second - 2𝜋 radians equals 1 full rotation.
+	//
+	// The specified rate is 2𝜋 radians divided by 8 - so as coded one entire key
+	// rotation takes 8 seconds. Rotation is about the Z axis, scaled according
+	// to the wind rate.
+	//
+	// The windRate variable allows the changing of the key's rotation speed based
+	// on external factors.
+
+        // Only need to do this when windingDown changes
+	if (windRate == 0.0) {
+	    debugSay(4,"DEBUG-MAIN","setting spin to zero...");
+	    llTargetOmega(ZERO_VECTOR, 0.0, 0.0);
+	}
+	else {
+	    debugSay(4,"DEBUG-MAIN","setting spin to " + (string)windRate + "...");
+	    llTargetOmega(<0.0, 0.0, 1.0>, windRate * TWO_PI / 8.0, 1.0);
+	}
     }
 
     return windRate;
@@ -121,14 +124,14 @@ uncollapse() {
     // Revive dolly back from being collapsed
     //string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
     //cdSetHovertext("",INFO); // uses primText
+    key id = llGetKey();
 
     lmSendConfig("collapseTime", (string)(collapseTime = 0));
     lmSendConfig("collapsed", (string)(collapsed = 0));
     lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
-    lmInternalCommand("getTimeUpdates", "", llGetKey());
-    lmInternalCommand("setHovertext", "", llGetKey());
+    lmInternalCommand("getTimeUpdates", "", id);
+    lmInternalCommand("setHovertext", "", id);
 
-    //lmSendConfig("windingDown", (string)(windingDown = 1)); // FIXME: Redundant? set in setWindRate()
     setWindRate();
 }
 
@@ -159,7 +162,6 @@ collapse(integer newCollapseState) {
         lmInternalCommand("getTimeUpdates", "", llGetKey());
 
         // Among other things, this will set the Key's turn rate
-        //lmSendConfig("windingDown", (string)(windingDown = 0)); // FIXME: Redundant? set in setWindRate()
         setWindRate();
 
         //string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
