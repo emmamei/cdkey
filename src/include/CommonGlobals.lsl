@@ -85,7 +85,7 @@ integer visible             = 1;
 integer wearLock;
 integer windAmount          = 1800;
 integer winderRechargeTime;
-integer windingDown         = 1;
+//integer windingDown         = 1;
 integer windMins            = 30;
 integer windNormal          = 1800;
 
