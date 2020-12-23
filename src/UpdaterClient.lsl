@@ -74,6 +74,23 @@ startUpdate() {
     update = 0;
 }
 
+doHalt() {
+    integer n;
+    string script;
+
+    // Set all other scripts to stop
+    n = llGetInventoryNumber(INVENTORY_SCRIPT);
+    while(n--) {
+
+        script = llGetInventoryName(INVENTORY_SCRIPT, n);
+        if (script != "UpdaterClient") {
+
+            llSetScriptState(script, NOT_RUNNING);
+        }
+    }
+    llSleep(1.0); // Make sure all scripts have time to stop
+}
+
 //========================================
 // STATES
 //========================================
@@ -132,6 +149,7 @@ default {
 
             if (name == "update") {
                 update = 1;
+		doHalt();
                 startUpdate();
             }
         }
