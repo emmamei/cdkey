@@ -89,11 +89,11 @@ float setWindRate() {
 
     if (newWindRate != windRate) {
         lmSendConfig("windRate", (string)(windRate = newWindRate));         // current rate
-        lmSendConfig("windingDown", (string)(windingDown = (windRate > 0.0)));   // boolean
+        //lmSendConfig("windingDown", (string)(windingDown = (windRate > 0.0)));   // boolean
 
 	debugSay(2,"DEBUG-MAIN","windRate now set to " + (string)windRate);
 	debugSay(6,"DEBUG-MAIN","collapsed is currently " + (string)collapsed);
-	debugSay(6,"DEBUG-MAIN","windingDown is currently " + (string)windingDown);
+	//debugSay(6,"DEBUG-MAIN","windingDown is currently " + (string)windingDown);
 
 	// llTargetOmega: With a normalized vector (first parameter), the spin rate
 	// is in radians per second - 2𝜋 radians equals 1 full rotation.
@@ -186,9 +186,9 @@ default {
 
         cdInitializeSeq();
 
-        lmSendConfig("windingDown", (string)(windingDown = (windRate > 0)));   // boolean
+        //lmSendConfig("windingDown", (string)(windingDown = (windRate > 0)));   // boolean
         //lmSendConfig("baseWindRate", (string)baseWindRate); // base rate: 1.0
-        lmSendConfig("windRate", (string)(windRate = RATE_STANDARD));         // current rate
+        lmSendConfig("windRate", (string)(windRate = 1.0)); // base rate: 100%
     }
 
     //----------------------------------------
@@ -204,7 +204,7 @@ default {
         isAttached = cdAttached();
         if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
 
-        lmSendConfig("windingDown", (string)(windingDown = (windRate > 0)));   // boolean
+        //lmSendConfig("windingDown", (string)(windingDown = (windRate > 0)));   // boolean
         //lmSendConfig("baseWindRate", (string)baseWindRate); // base rate: 1.0
         lmSendConfig("windRate", (string)(windRate = RATE_STANDARD));         // current rate
     }
