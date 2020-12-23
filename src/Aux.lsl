@@ -449,9 +449,10 @@ Parent - Take care choosing your parents; they have great control over Dolly and
 
                 // One-way options
                 if (cdIsController(id)) {
+#ifdef NOT_USED
                     if (!afk)
                         plusList = llListInsertList(plusList, cdGetButton("Allow AFK", id, canAFK, 1), 0);
-
+#endif
                     plusList = llListInsertList(plusList, cdGetButton("Rpt Wind", id, allowRepeatWind, 1), 6);
                 }
 

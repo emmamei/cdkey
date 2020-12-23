@@ -427,7 +427,9 @@ default {
 
                     // Options only available to dolly
                     if (isDoll) {
+#ifdef NOT_USED
                         if (canAFK) menu += "AFK";
+#endif
                         menu += "Visible";
                     }
                     else {
@@ -579,7 +581,9 @@ default {
                 // keys by replacing them within the list - and thus
                 // not disturbing the alphabetic order
 
+#ifdef NOT_USED
                 if ((i = llListFindList(menu, ["AFK"]))     != NOT_FOUND) menu = llListReplaceList(menu, cdGetButton("AFK",     id, afk,     0), i, i);
+#endif
                 if ((i = llListFindList(menu, ["Visible"])) != NOT_FOUND) menu = llListReplaceList(menu, cdGetButton("Visible", id, visible, 0), i, i);
 
                 msg = timeLeft + msg;
@@ -792,6 +796,7 @@ default {
 
                         lmMenuReply(MAIN, name, id);
                     }
+#ifdef NOT_USED
                     else if (afterSpace == "AFK") {
 
                         if (beforeSpace == CROSS) {
@@ -807,6 +812,7 @@ default {
 
                         lmMenuReply(MAIN, name, id);
                     }
+#endif
                     // Could be Option or Ability:
                     //     ALL have Checks or Crosses (X) - and all have spaces
 
@@ -895,10 +901,12 @@ default {
                                 if (!isX || !isDoll || isController) lmSendConfig("allowRepeatWind", (string)isX);
                                 else if (isDoll) llOwnerSay("The Repeat Wind option cannot be re-enabled by you.");
                             }
+#ifdef NOT_USED
                             else if (afterSpace == "Allow AFK") {
                                 if (!isX || !isDoll || isController) lmSendConfig("canAFK", (string)(canAFK = isX));
                                 else if (isDoll) llOwnerSay("The Allow AFK option cannot be re-enabled by you.");
                             }
+#endif
                             else isOperation = 0;
 
                         }
