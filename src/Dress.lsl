@@ -552,8 +552,6 @@ default {
 
                 // Restore our usual look from the ~normalself folder...
 
-// FIXME: These are messy - need to clean up normalselfFolder and nudeFolder
-//        so to match other folder specs
 #define cdLock(a)   lmRunRLV("detachallthis:"+(a)+"=n")
 #define cdUnlock(a) lmRunRLV("detachallthis:"+(a)+"=y")
 #define cdAttach(a) lmRunRLV("attachallover:"+(a)+"=force") 
@@ -563,23 +561,6 @@ default {
                 debugSay(2,"DEBUG-DRESS","*** STEP 1 ***");
                 debugSay(2,"DEBUG-DRESS","attach and lock for normal self folder: " + normalselfFolder);
                 cdAttach(normalselfFolder);
-
-#ifdef NOT_USED
-                //----------------------------------------
-                // STEP #2
-
-                // Attach ~nude folder
-
-                // Now irrelevant: nude folder only used for total body reset
-
-                // STEP #2
-                //debugSay(2,"DEBUG-DRESS","*** STEP 2 ***");
-                if (nudeFolder != "") {
-                    // this attaches the ~nude folder
-                    debugSay(2,"DEBUG-DRESS","attach and lock for nude folder: " + nudeFolder);
-                    cdAttach(nudeFolder);
-                }
-#endif
 
                 //----------------------------------------
                 // STEP #3

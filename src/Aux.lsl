@@ -584,46 +584,12 @@ Parent - Take care choosing your parents; they have great control over Dolly and
             listenTime = 0.0;
             string origChoice = choice;
 
-            // Text box input - 4 types
-            //   1: Gem Color
-            //   2: Dolly Name
+            // Text box input - 1 types
+            //   1: Dolly Name
 
-#ifdef NOTUSED
-            // Type 1 = Custom Gem Color
-            if (textboxType == GEM_COLOR_TEXTBOX) {
-                string first = llGetSubString(choice, 0, 0);
-
-                // Note that all of these go through a vector cast at least once:
-                // so a bad entry will shake out as a ZERO_VECTOR or some unknown
-                // vector - which changes the gem color oddly.
-
-                if (first == "<") {                                             // User entry is vector
-                    choice = (string)((vector)choice);
-                }
-                else {
-                    vector tmp;
-                    if (first == "#") tmp =
-                        (vector)("<0x" + llGetSubString(choice, 1, 2) +
-                                 ",0x" + llGetSubString(choice, 3, 4) +
-                                 ",0x" + llGetSubString(choice, 5, 6) + ">");   // User entry is in hex
-                    else tmp = (vector)("<" + choice + ">");                    // User entry is RGB
-                    tmp /= 256.0;
-                    choice = (string)tmp;
-                }
-
-                if (choice) {
-                    lmInternalCommand("setNormalGemColour", choice, id);
-                    lmMenuReply("Gem Colour...", name, id);
-                }
-#ifdef DEVELOPER_MODE
-                else {
-                    llSay(DEBUG_CHANNEL,"Bad color input! (" + origChoice + ")");
-                }
-#endif
-            }
-#endif
-
-            if (textboxType == DOLL_NAME_TEXTBOX) { // FIXME: This is not strictly needed - remove soonest
+            // This test is not really needed - but in the interest of
+            // expansion, this allows more text box types to be created later
+            if (textboxType == DOLL_NAME_TEXTBOX) {
                 lmSendConfig("dollDisplayName", choice);
                 lmMenuReply("Key...", name, id);
             }

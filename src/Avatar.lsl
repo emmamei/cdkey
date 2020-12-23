@@ -493,7 +493,7 @@ ifPermissions() {
     }
 
     if ((permMask & PERMISSION_MASK) != PERMISSION_MASK) {
-        // FIXME: llRequestPermissions runs this function: means a double run if PERMISSION_MASK is off-kilter
+        // llRequestPermissions runs this function: means a double run if PERMISSION_MASK is off-kilter
         llRequestPermissions(dollID, PERMISSION_MASK);
         return;
         }
