@@ -1140,9 +1140,7 @@ default {
                     }
 #endif
                 }
-
-                // Poses don't have secondary parameters - so skip
-                return;
+                // Poses have "secondary" parameters when the name contains spaces
             }
 
             // The chat message is not a known command, so try to find an animation (pose)
