@@ -605,6 +605,21 @@ default {
             integer isController = cdIsController(id);
 
             if (cmd == "getTimeUpdates") {
+
+                // Check for agent away or agent busy (afk)
+                integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0);
+
+                if (dollAway != autoAfk) {
+                    autoAfk = dollAway;
+                    lmSetConfig("autoAfk", (string)autoAfk);
+
+                    if (autoAfk) llOwnerSay("Dolly has gone afk; Key subsystems slowing...");
+                    else         llOwnerSay("You hear the Key whir back to full power");
+
+                    lmInternalCommand("setWindRate","",NULL_KEY);
+                    lmInternalCommand("setHovertext", "", llGetKey());
+                }
+
                 // The time variables are set this way:
                 //
                 //   * timeLeftOnKey (seconds) - positive seconds remaining (adjusted elsewhere)

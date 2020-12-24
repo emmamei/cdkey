@@ -408,20 +408,6 @@ default {
         //else if (hovertextOn) { cdSetHovertext(dollType + " Doll",       ( WHITE  )); }
         //else                  { cdSetHovertext("",                       ( WHITE  )); }
 
-        //----------------------------------------
-        // AUTO AFK TRIGGERS
-
-        integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0);
-
-        if (dollAway != autoAfk) {
-            autoAfk = dollAway;
-            lmSetConfig("autoAfk", (string)autoAfk);
-
-            if (autoAfk) llOwnerSay("Automatically entering AFK mode; Key subsystems slowing...");
-            else         llOwnerSay("You hear the Key whir back to full power");
-
-            lmInternalCommand("setWindRate","",NULL_KEY);
-        }
     }
 
     //----------------------------------------
@@ -466,14 +452,14 @@ default {
 
             split = llDeleteSubList(split,0,0);
 
-                 if (name == "autoAfk")                       autoAfk = (integer)value;
+                 if (name == "collapsed")                   collapsed = (integer)value;
+            else if (name == "autoAfk")                       autoAfk = (integer)value;
 //          else if (name == "afk")                               afk = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")           timeReporting = (integer)value;
             else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
             else if (name == "lowScriptMode")           lowScriptMode = (integer)value;
-            else if (name == "collapsed")                   collapsed = (integer)value;
             else if (name == "simRating")                   simRating = value;
             else if (name == "hardcore")                     hardcore = (integer)value;
             else if (name == "backMenu")                     backMenu = value;
