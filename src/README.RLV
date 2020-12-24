@@ -1,4 +1,4 @@
-SETTING & USAGE OF RLVOK
+ETTING & USAGE OF RLVOK
 ========================
 
 This documents a moment in time of a system in development.
@@ -9,10 +9,14 @@ RLVok is a variable used to store the state of RLV as discovered by
 the key's initialization. The value is then propogated to the rest of
 the key by using the RLV_RESET command.
 
+RLVok is a trinary variable, with values UNSET, TRUE, or FALSE. The
+default setting is UNSET, thus allowing code to determine if the
+RLV check has completed.
+
 **** RLV_RESET
 
-The RLV_RESET code is 350, and is sent by lmRLVreport() defined
-in LinkMessage.lsl from CheckRLV.lsl
+The RLV_RESET code is 350, and is sent by lmRLVreport(). This is
+defined in LinkMessage.lsl, and run from CheckRLV.lsl and MenuHandler.lsl.
 
     #define lmRLVreport(active,apistring,apiversion) cdLinkMessage(LINK_THIS,0,350,(string)active+"|"+apistring+"|"+(string)apiversion,llGetKey())
 
@@ -71,6 +75,29 @@ the user wants to set things one way or the other.
 
 The Aux script creates the Option... menu dialog, and the MenuHandler
 script responds to a button press.
+
+SEQUENCE:
+
+The doCheckRLV() function is run at one of these times:
+* state_entry
+* on_rez
+* attach
+* on demand via remote command
+
+The doCheckRLV() function calls checkRLV() function, which does the
+actual checking.
+
+The listener is listening on the rlvChannel for a response from the RLV
+subsystem in the viewer. If one is received, then RLVok is set and the
+activateRLV() function is run.
+
+Once activateRLV() starts, it calls on activateRLVBase(). If activateRLV()
+has already been called, it won't reset RLV (this may need to change).
+As part of that process, the lmRLVreport() function is used to send out
+the RLVok value.
+
+If the timer expires, RLV checking retries. If it tries several times, but
+fails, then use lmRLVreport() to report RLVok of FALSE.
 
 RLV_CMD
 =======
