@@ -130,7 +130,7 @@ processConfiguration(string name, string value) {
 #ifdef ADULT_MODE
                          "allowStrip",
 #endif
-                         "poseSilence", "autoTP", "allowDress", "allowDress", "allowDress", "demoMode",
+                         "poseSilence", "autoTP", "allowDress", "allowDress", "canDressSelf", "demoMode",
                          "showPhrases", "allowCarry", "allowRepeatWind", "ghost"
                        ];
 
