@@ -583,7 +583,8 @@ default {
                     if (help2 != "") cdSayTo(help2 + "\n", id);
 
 #ifdef DEVELOPER_MODE
-                    if (isDoll) help = "
+                    if (isDoll) {
+                        help = "
     Debugging commands:
 
     debug # ........ set the debugging message verbosity 0-9
@@ -592,7 +593,8 @@ default {
     inject x#x#x ... inject a link message with \"code#data#key\"
     powersave ...... trigger a powersave event
     collapse ....... perform an immediate collapse (out of time)";
-                    cdSayTo(help + "\n", id);
+                        cdSayTo(help + "\n", id);
+                    }
 #endif
                     return;
                 }
