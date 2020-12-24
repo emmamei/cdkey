@@ -343,7 +343,7 @@ default {
                 string timeLeft;
 
                 if (!hardcore) {
-		    integer minsLeft;
+                    integer minsLeft;
 
                     // timeLeftOnKey is in seconds, and timeLeftOnKey / 60.0 converts
                     // the number to minutes. The value windRate is a scaling factor:
@@ -356,11 +356,11 @@ default {
 
                         timeLeft += "Key is ";
 
-			     if (windRate == 1) timeLeft += "winding down at a normal rate. ";
-			else if (windRate > 1)  timeLeft += "winding down at an accelerated rate. ";
-			else if (windRate < 1)  timeLeft += "winding down at a slowed rate. ";
+                             if (windRate == 1) timeLeft += "winding down at a normal rate. ";
+                        else if (windRate > 1)  timeLeft += "winding down at an accelerated rate. ";
+                        else if (windRate < 1)  timeLeft += "winding down at a slowed rate. ";
                     }
-		    else timeLeft += "not winding down. ";
+                    else timeLeft += "not winding down. ";
                 }
 
                 //----------------------------------------
@@ -450,7 +450,7 @@ default {
                         // permitted: this is appropriate.
 
                         if (outfitsFolder == "") {
-			    llSay(DEBUG_CHANNEL, "Outfits folder is blank!");
+                            llSay(DEBUG_CHANNEL, "Outfits folder is blank!");
                         }
                         else {
                             if (isDoll) {
@@ -459,7 +459,7 @@ default {
                             else {
                                 if (hardcore || allowDress || isController) menu += "Outfits...";
                             }
-		        }
+                        }
                     }
 
                     // Only present the Types button if Dolly is not posed
@@ -475,37 +475,37 @@ default {
                     integer poseCount;
                     poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
                     if (poseCount > 1) {
-			if (keyAnimation != "") {
-			    msg += "Doll is currently posed. ";
+                        if (keyAnimation != "") {
+                            msg += "Doll is currently posed. ";
 
-			    // If accessor is Dolly... allow Dolly to pose and unpose,
-			    // but NOT when posed by someone else.
+                            // If accessor is Dolly... allow Dolly to pose and unpose,
+                            // but NOT when posed by someone else.
 
-			    if (isDoll) {
-				if (poserID == dollID)
-				    menu += [ "Poses...", "Unpose" ];
-			    }
+                            if (isDoll) {
+                                if (poserID == dollID)
+                                    menu += [ "Poses...", "Unpose" ];
+                            }
 
-			    // If accessor is NOT Dolly... allow the public access if
-			    // permitted by Dolly, and allow access to all Controllers
-			    // (NOT Dolly by virtue of ruling out Doll previously).
-			    // Also allow anyone to Unpose Dolly if Dolly self posed.
+                            // If accessor is NOT Dolly... allow the public access if
+                            // permitted by Dolly, and allow access to all Controllers
+                            // (NOT Dolly by virtue of ruling out Doll previously).
+                            // Also allow anyone to Unpose Dolly if Dolly self posed.
 
-			    else {
-				if (isController || allowPose || hardcore)
-				    menu += [ "Poses...", "Unpose" ];
-				else if (poserID == dollID)
-				    menu += [ "Unpose" ];
-			    }
-			}
-			else {
-			    // Notice again: Carrier can only pose Dolly if permitted.
-			    if ((!isDoll && allowPose) || isDoll || isController) menu += "Poses...";
-			}
-		    }
+                            else {
+                                if (isController || allowPose || hardcore)
+                                    menu += [ "Poses...", "Unpose" ];
+                                else if (poserID == dollID)
+                                    menu += [ "Unpose" ];
+                            }
+                        }
+                        else {
+                            // Notice again: Carrier can only pose Dolly if permitted.
+                            if ((!isDoll && allowPose) || isDoll || isController) menu += "Poses...";
+                        }
+                    }
                     else {
-			 if (poseCount == 1) llSay(DEBUG_CHANNEL, "No poses found!");
-		    else if (poseCount == 0) llSay(DEBUG_CHANNEL, "No poses found! Key won't work without collapse animation!");
+                         if (poseCount == 1) llSay(DEBUG_CHANNEL, "No poses found!");
+                    else if (poseCount == 0) llSay(DEBUG_CHANNEL, "No poses found! Key won't work without collapse animation!");
                     }
 
                     // Fix for issue #157

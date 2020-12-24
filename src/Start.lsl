@@ -104,7 +104,7 @@ processConfiguration(string name, string value) {
 #ifdef NOT_USED
                      "afk rlv",
 #endif
-		     "collapse rlv", "pose rlv",
+                     "collapse rlv", "pose rlv",
                      "doll gender", "helpless dolly", "chat mode", "controller", "blacklist"
                    ];
 
@@ -435,18 +435,18 @@ default {
                     if (RLVok == TRUE) {
                         if (cdPoseAnim()) {
                             // keyAnimation is a pose of some sort
-			    if (defaultPoseRLVcmd) {
-			        lmRestrictRLV(defaultPoseRLVcmd);
+                            if (defaultPoseRLVcmd) {
+                                lmRestrictRLV(defaultPoseRLVcmd);
                             }
-			    if (userPoseRLVcmd) {
-			        //lmRunRLVas("UserPose", userPoseRLVcmd);
-			        lmRestrictRLV(userPoseRLVcmd);
+                            if (userPoseRLVcmd) {
+                                //lmRunRLVas("UserPose", userPoseRLVcmd);
+                                lmRestrictRLV(userPoseRLVcmd);
                             }
                         }
                         else if (oldKeyAnimation != keyAnimation) {
                             // animation just became null
                             debugSay(2, "DEBUG-START", "Clearing on keyAnimation");
-		            lmRunRLVcmd("clearRLVcmd",defaultBaseRLVcmd);
+                            lmRunRLVcmd("clearRLVcmd",defaultBaseRLVcmd);
                         }
                     }
                 }
@@ -466,7 +466,7 @@ default {
                             // afk value JUST became zero
                             if (RLVok == TRUE) {
                                 debugSay(2, "DEBUG-START", "Clearing on afk");
-		                lmRunRLVcmd("clearRLVcmd","");
+                                lmRunRLVcmd("clearRLVcmd","");
                             }
                         }
                     }
@@ -491,7 +491,7 @@ default {
                         if (wasCollapsed) {
                             // We were collapsed but aren't now... so clear RLV restrictions
                             debugSay(2, "DEBUG-START", "Clearing on collapsed");
-		            lmRunRLVcmd("clearRLVcmd","");
+                            lmRunRLVcmd("clearRLVcmd","");
                         }
                     }
                 }
@@ -536,7 +536,7 @@ default {
                 if (!collapsed) {
                     // Not collapsed: clear any user collapse RLV restrictions
                     debugSay(2, "DEBUG-START", "Clearing on RLV_RESET");
-		    lmRunRLVcmd("clearRLVcmd","");
+                    lmRunRLVcmd("clearRLVcmd","");
 
                     // Is Dolly AFK? Trigger RLV restrictions as appropriate
                     if (afk) {

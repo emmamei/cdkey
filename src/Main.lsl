@@ -91,29 +91,29 @@ float setWindRate() {
         lmSendConfig("windRate", (string)(windRate = newWindRate));         // current rate
         //lmSendConfig("windingDown", (string)(windingDown = (windRate > 0.0)));   // boolean
 
-	debugSay(2,"DEBUG-MAIN","windRate now set to " + (string)windRate);
-	debugSay(6,"DEBUG-MAIN","collapsed is currently " + (string)collapsed);
-	//debugSay(6,"DEBUG-MAIN","windingDown is currently " + (string)windingDown);
+        debugSay(2,"DEBUG-MAIN","windRate now set to " + (string)windRate);
+        debugSay(6,"DEBUG-MAIN","collapsed is currently " + (string)collapsed);
+        //debugSay(6,"DEBUG-MAIN","windingDown is currently " + (string)windingDown);
 
-	// llTargetOmega: With a normalized vector (first parameter), the spin rate
-	// is in radians per second - 2𝜋 radians equals 1 full rotation.
-	//
-	// The specified rate is 2𝜋 radians divided by 8 - so as coded one entire key
-	// rotation takes 8 seconds. Rotation is about the Z axis, scaled according
-	// to the wind rate.
-	//
-	// The windRate variable allows the changing of the key's rotation speed based
-	// on external factors.
+        // llTargetOmega: With a normalized vector (first parameter), the spin rate
+        // is in radians per second - 2𝜋 radians equals 1 full rotation.
+        //
+        // The specified rate is 2𝜋 radians divided by 8 - so as coded one entire key
+        // rotation takes 8 seconds. Rotation is about the Z axis, scaled according
+        // to the wind rate.
+        //
+        // The windRate variable allows the changing of the key's rotation speed based
+        // on external factors.
 
         // Only need to do this when windingDown changes
-	if (windRate == 0.0) {
-	    debugSay(4,"DEBUG-MAIN","setting spin to zero...");
-	    llTargetOmega(ZERO_VECTOR, 0.0, 0.0);
-	}
-	else {
-	    debugSay(4,"DEBUG-MAIN","setting spin to " + (string)windRate + "...");
-	    llTargetOmega(<0.0, 0.0, 1.0>, windRate * TWO_PI / 8.0, 1.0);
-	}
+        if (windRate == 0.0) {
+            debugSay(4,"DEBUG-MAIN","setting spin to zero...");
+            llTargetOmega(ZERO_VECTOR, 0.0, 0.0);
+        }
+        else {
+            debugSay(4,"DEBUG-MAIN","setting spin to " + (string)windRate + "...");
+            llTargetOmega(<0.0, 0.0, 1.0>, windRate * TWO_PI / 8.0, 1.0);
+        }
     }
 
     return windRate;
