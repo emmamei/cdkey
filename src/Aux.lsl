@@ -380,7 +380,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 llDialog(id, msg, dialogSort(plusList + "Back..."), dialogChannel);
             }
             else if (choice == "Restrictions...") {
-                msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
+                msg = "See the help file for explanations of the options.";
                 list plusList;
 
                 // The following options require RLV to work
@@ -435,7 +435,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 llDialog(id, msg, dialogSort(plusList + "Back..."), dialogChannel);
             }
             else if (choice == "Operation...") {
-                msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. (" + OPTION_DATE + " version)";
+                msg = "See the helpfile for explanations.";
                 list plusList = [];
 
                 //plusList += cdGetButton("Quiet Key", id, quiet, 0);

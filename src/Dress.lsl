@@ -1012,7 +1012,7 @@ default {
 #ifdef DEVELOPER_MODE
             //else llSay(DEBUG_CHANNEL,"No outfits in this directory?");
 #endif
-            if (dresserID == dollID) outfitsMessage += "See " + WEB_DOMAIN + outfitsURL + " for more detailed information on outfits. ";
+            if (dresserID == dollID) outfitsMessage += "See the help file for more detailed information on outfits.";
             outfitsMessage += "\n\n" + folderStatus();
 
             // Provide a dialog to user to choose new outfit

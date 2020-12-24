@@ -558,7 +558,7 @@ default {
                 debugSay(2,"DEBUG-OPTIONS","isUserController = " + (string)cdIsUserController(id));
 
                 if (cdIsDoll(id)) {
-                    msg = "See " + WEB_DOMAIN + "keychoices.htm for explanation. ";
+                    msg = "See the help file for information on these options.";
                     pluslist += [ "Operation...", "Public...", "Key..." ];
 
                     if (cdCarried() || cdControllerCount() > 0) {
@@ -575,7 +575,7 @@ default {
                 }
                 else if (cdIsUserController(id)) {
 
-                    msg = "See " + WEB_DOMAIN + "controller.htm. Choose what you want to happen.";
+                    msg = "See the help file for more information on these options. Choose what you want to happen.";
 
                     pluslist += [ "Type...", "Access..." ];
                     if (RLVok == TRUE) pluslist += [ "Restrictions..." ];
