@@ -507,14 +507,12 @@ default {
                 }
             }
         }
-#ifdef DEVELOPER_MODE
         else if (code == MENU_SELECTION) {
             string selection = llList2String(split, 0);
             string name = llList2String(split, 1);
 
             if (selection == "Reset Key") cdResetKey();
         }
-#endif
         else if (code < 200) {
             if (code == 101) {
                 doneConfiguration(prefsRead);
@@ -563,6 +561,9 @@ default {
     // STATE ENTRY
     //----------------------------------------
     state_entry() {
+        // This helps during debugging to set off the reset sequence in logs
+        llOwnerSay("******** KEY RESET ********");
+
         // start parameter can ONLY be set via llRemoteLoadScriptPin()
         if (llGetStartParameter() == 100) {
             llOwnerSay("Key has been updated.");
