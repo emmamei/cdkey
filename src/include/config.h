@@ -4,15 +4,6 @@
 // COMPILE CONFIGURATION
 //========================================
 
-/* Fake out not having RLV */
-// #define FAKE_NORLV 1
-
-/* Confirm items fully removed */
-// #define CONFIRM_UNWEAR 1
-
-/* Confirm items fully worn */
-// #define CONFIRM_WEAR 1
-
 /* adds a homing beacon: an automatic TP home for collapsed dollies */
 // #define HOMING_BEACON 1
 

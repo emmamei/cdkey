@@ -17,6 +17,7 @@
 #define cdListenerDeactivate(a) llListenControl(a, 0)
 #define cdListenerActivate(a) llListenControl(a, 1)
 #define cdResetKey() llResetOtherScript("Start")
+#define cdHaltTimer() llSetTimerEvent(0.0);
 #define lmRunRLVBoolean(a,b) if ((b) == 1) { lmRunRLV((a)+"=y"); } else { lmRunRLV((a)+"=n"); }
 
 // Note we bypass this, and call the routine directly
@@ -68,6 +69,10 @@ list rlvExceptions;
 // This is the main place where the RLV listener is opened.
 
 doCheckRLV() {
+    // Checking for RLV
+    llOwnerSay("Checking for RLV support");
+
+    // Set up RLV listener
     if (rlvChannel == 0) {
         // Calculate positive (RLV compatible) rlvChannel
         rlvChannel = MAX_INT - (integer)llFrand(5000);
@@ -75,54 +80,44 @@ doCheckRLV() {
 
         //cdListenerDeactivate(rlvHandle);
 
-#ifdef FAKE_NORLV
-        // Make viewer act is if there is no RLV support
-        cdListenerDeactivate(rlvHandle);
-#else
         cdListenerActivate(rlvHandle);
-#endif
-
     }
 
-    //rlvTimer = llGetTime();
+    // Configure variables
     RLVck = MAX_RLVCHECK_TRIES;
     RLVok = UNSET;
     rlvAPIversion = "";
-    RLVstarted = 0;
+    RLVstarted = FALSE;
 
 #ifdef DEVELOPER_MODE
     myPath = "";
 #endif
 
     debugSay(2,"DEBUG-RLV","starting a check for RLV");
-    checkRLV();
+    checkRLVcore();
 }
 
 // This the actual check - and is run multiple times
 // to check for RLV
-//
-// Currently runs on init 110 - button press - and timer
 //
 // We should only be calling checkRLV to begin a test, or in the
 // case that the timer expired. Thus, RLVok should be UNSET.
 // If RLVok was TRUE, then no more check tries are needed.
 // If RLVok is FALSE, then there should be no more tries to make.
 
-checkRLV() {
+checkRLVcore() {
+    // Check RLV: this could be called multiple times (retries)
     debugSay(2,"DEBUG-RLV","checking for RLV - try " + (string)(MAX_RLVCHECK_TRIES - RLVck) + " of " + (string)MAX_RLVCHECK_TRIES);
 
-    // Check RLV again: give it several tries
-
-    // Decrease number of check - RLVck is check counter
+    // Decrease number of retries - RLVck is check counter
     RLVck -= 1;
 
-    debugSay(2,"DEBUG-RLV","checking for RLV - setting " + (string)((integer)RLV_TIMEOUT) + "-second timer...");
-
-    if (RLVck > 2) llOwnerSay("@versionnew=" + (string)rlvChannel);
-    else llOwnerSay("@version=" + (string)rlvChannel);
-
+    // Timeout: if no listener reply received, time out
     llSetTimerEvent(RLV_TIMEOUT);
-    //nextRLVcheck = llGetTime() + RLV_TIMEOUT;
+
+    // Switch to older command if newer one fails
+    if (RLVck > 2) llOwnerSay("@versionnew=" + (string)rlvChannel);
+    else           llOwnerSay("@version="    + (string)rlvChannel);
 }
 
 activateRLVBase() {
@@ -130,24 +125,9 @@ activateRLVBase() {
 
 #ifdef DEVELOPER_MODE
     string baseRLV;
-    // this removes this channel from any @sendchannel restrictions
-    //if (chatChannel) baseRLV += "sendchannel:" + (string)chatChannel + "=rem";
 #else
-    string baseRLV = "detach=n";
-    // this removes this channel from any @sendchannel restrictions
-    //if (chatChannel) baseRLV += ",sendchannel:" + (string)chatChannel + "=rem";
+    string baseRLV = "detach=n,";
 #endif
-
-    // Run the base as stored
-    lmRunRLVas("Base", baseRLV);
-
-    // Reset baseRLV for second round
-    baseRLV = "";
-
-    // Add users choice of extended base RLV restrictions
-    //
-    //if (userBaseRLVcmd != "")
-    //    lmRunRLVas("UserBase", userBaseRLVcmd);
 
     if (autoTP)     baseRLV += "accepttp=n,";       else baseRLV += "accepttp=y,";
     if (!canSelfTP) baseRLV += "tplm=n,tploc=n,";   else baseRLV += "tplm=y,tploc=y,";
@@ -158,6 +138,15 @@ activateRLVBase() {
     lmRunRLVas("Base", baseRLV);
     lmSendConfig("defaultBaseRLVcmd",(string)baseRLV); // save the defaults
     outfitRLVLock();
+
+    // Add users choice of extended base RLV restrictions
+    //
+    // Normally, this wouldn't be run - but if prefs have
+    // already been run, and this is called, set the user
+    // base too...
+    //
+    //if (userBaseRLVcmd != "")
+    //    lmRunRLVas("UserBase", userBaseRLVcmd);
 }
 
 outfitRLVLock() {
@@ -182,17 +171,10 @@ outfitRLVLock() {
 activateRLV() {
 
     // At this point RLVok is TRUE
-    string baseRLV;
 
-    if (!RLVstarted) {
-        //lmRunRLV("clear");
+    if (!RLVstarted) { // This is the only reason RLVstarted exists
         lmRunRLVcmd("clearRLVcmd","");
 
-#ifndef LOCKON
-        // if Doll is one of the developers... dont lock:
-        // prevents inadvertent lock-in during development
-        baseRLV += "attachallthis_except:" + myPath + "=add,detachallthis_except:" + myPath + "=add,";
-#endif
         llOwnerSay("Enabling RLV mode");
 
 #ifdef LOCKON
@@ -203,19 +185,20 @@ activateRLV() {
 
         if (RLVok == TRUE)
             lmRunRLVas("Base", "detach=n");  //locks key
+#else
+        // if Doll is one of the developers... dont lock:
+        // prevents inadvertent lock-in during development
 #endif
-        //cdListenerDeactivate(rlvHandle);
         lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
 
-        // This generates a 350 link message
+        // This generates a 350 link message (RLV_RESET)
         lmRLVreport(RLVok, rlvAPIversion, 0);
     }
 
     activateRLVBase();
 
     // If we get here - RLVok is already set
-    //RLVstarted = (RLVstarted | (RLVok == TRUE));
-    RLVstarted = 1;
+    RLVstarted = TRUE;
 }
 
 //========================================
@@ -233,7 +216,7 @@ default {
         RLVck = MAX_RLVCHECK_TRIES;
         RLVok = UNSET;
         rlvAPIversion = "";
-        RLVstarted = 0;
+        RLVstarted = FALSE;
 
 #ifdef DEVELOPER_MODE
         myPath = "";
@@ -255,7 +238,7 @@ default {
 
         RLVok = UNSET;
         rlvAPIversion = "";
-        RLVstarted = 0;
+        RLVstarted = FALSE;
         RLVck = MAX_RLVCHECK_TRIES;
 
 #ifdef DEVELOPER_MODE
@@ -297,7 +280,7 @@ default {
             }
 
             //nextRLVcheck = 0.0;
-            llSetTimerEvent(0.0);
+            cdHaltTimer();
             RLVok = TRUE;
 
             //cdListenerDeactivate(rlvHandle);
@@ -494,11 +477,11 @@ default {
         debugSay(2,"DEBUG-RLV","RLV check failed...");
 
         if (RLVck > 0) {
-            checkRLV(); // try again
+            checkRLVcore(); // try again
         }
         else {
             llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
-            llSetTimerEvent(0.0);
+            cdHaltTimer();
             RLVok = FALSE;
             lmRLVreport(RLVok, "", 0); // report FALSE
         }
