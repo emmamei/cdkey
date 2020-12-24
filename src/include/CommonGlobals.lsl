@@ -75,7 +75,8 @@ integer pleasureDoll;
 integer poseSilence         = 1;
 //integer quiet               = 1;
 integer remoteSeq;
-integer RLVok               = -1;
+integer RLVok               = -1; // UNSET
+integer RLVsupport          = -1; // UNSET
 integer showPhrases;
 integer takeoverAllowed;
 integer timeLeftOnKey       = 1800;

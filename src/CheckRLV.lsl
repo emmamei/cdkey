@@ -23,15 +23,6 @@
 // Note we bypass this, and call the routine directly
 #define lmDoCheckRLV() lmInternalCommand("doCheckRLV","",NULL_KEY)
 
-// #ifdef DEVELOPER_MODE
-// float thisTimerEvent;
-// float timerInterval;
-// #endif
-
-//float rlvTimer;
-
-//float nextRLVcheck;
-
 string name;
 string value;
 
@@ -86,6 +77,7 @@ doCheckRLV() {
     // Configure variables
     RLVck = MAX_RLVCHECK_TRIES;
     RLVok = UNSET;
+    RLVsupport = UNSET;
     rlvAPIversion = "";
     RLVstarted = FALSE;
 
@@ -190,6 +182,7 @@ activateRLV() {
         // prevents inadvertent lock-in during development
 #endif
         lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
+        lmSendConfig("RLVsupport",(string)RLVsupport);
 
         // This generates a 350 link message (RLV_RESET)
         lmRLVreport(RLVok, rlvAPIversion, 0);
@@ -212,16 +205,9 @@ default {
     state_entry() {
         dollName = llGetDisplayName(dollID = llGetOwner());
 
-        //rlvTimer = llGetTime();
-        RLVck = MAX_RLVCHECK_TRIES;
-        RLVok = UNSET;
-        rlvAPIversion = "";
-        RLVstarted = FALSE;
-
 #ifdef DEVELOPER_MODE
         myPath = "";
 #endif
-
         cdInitializeSeq();
         doCheckRLV();
     }
@@ -231,15 +217,8 @@ default {
     //----------------------------------------
     on_rez(integer start) {
 
-        //rlvTimer = llGetTime();
-
         // IF RLVok is TRUE, then check to see that RLV is
         // actually available on the viewer
-
-        RLVok = UNSET;
-        rlvAPIversion = "";
-        RLVstarted = FALSE;
-        RLVck = MAX_RLVCHECK_TRIES;
 
 #ifdef DEVELOPER_MODE
         myPath = "";
@@ -279,11 +258,10 @@ default {
                 debugSay(2, "DEBUG-RLV", "Unknown RLV response message: " + msg);
             }
 
-            //nextRLVcheck = 0.0;
             cdHaltTimer();
             RLVok = TRUE;
+            RLVsupport = TRUE;
 
-            //cdListenerDeactivate(rlvHandle);
             activateRLV();
         }
 #ifdef DEVELOPER_MODE
@@ -483,7 +461,10 @@ default {
             llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
             cdHaltTimer();
             RLVok = FALSE;
+            RLVsupport = FALSE;
+
             lmRLVreport(RLVok, "", 0); // report FALSE
+            lmSendConfig("RLVsupport",(string)RLVsupport);
         }
     }
 }
