@@ -85,22 +85,22 @@ default {
             //----------------------------------------
             // Shortcut: a
             else if (c == "a") {
-                     if (name == "afk")                           afk = (integer)value;
+                     if (name == "autoTP")                     autoTP = (integer)value;
 #ifdef ADULT_MODE
                 else if (name == "allowStrip")             allowStrip = (integer)value;
 #endif
+//              else if (name == "afk")                           afk = (integer)value;
                 else if (name == "allowRepeatWind")   allowRepeatWind = (integer)value;
                 else if (name == "allowCarry")             allowCarry = (integer)value;
                 else if (name == "allowDress")             allowDress = (integer)value;
                 else if (name == "allowPose")               allowPose = (integer)value;
-                else if (name == "autoTP")                     autoTP = (integer)value;
             }
 
             //----------------------------------------
             // Shortcut: c
             else if (c == "c") {
-                     if (name == "canAFK")                     canAFK = (integer)value;
-                else if (name == "collapsed")               collapsed = (integer)value;
+                     if (name == "collapsed")               collapsed = (integer)value;
+//              else if (name == "canAFK")                     canAFK = (integer)value;
                 else if (name == "canDressSelf")         canDressSelf = (integer)value;
                 else if (name == "canFly")                     canFly = (integer)value;
                 else if (name == "canSit")                     canSit = (integer)value;
@@ -638,8 +638,8 @@ default {
                     }
                     else if (choice == "xstats") {
                         if (isDoll && hardcore) return;
-                        string s = "Extended stats:\n\nDoll is a " + dollType + " Doll.\nAFK time factor: " +
-                                   formatFloat(RATE_AFK, 1) + "x\nWind amount: " + (string)llFloor(windNormal / SECS_PER_MIN) + " (mins)\nKey Limit: " +
+                        string s = "Extended stats:\n\nDoll is a " + dollType + " Doll.\nWind amount: " +
+                                   (string)llFloor(windNormal / SECS_PER_MIN) + " (mins)\nKey Limit: " +
                                    (string)(keyLimit / SECS_PER_MIN) + " mins\nEmergency Winder Recharge Time: " +
                                    (string)(EMERGENCY_LIMIT_TIME / 60 / (integer)SECS_PER_MIN) + " hours\nEmergency Winder: ";
 
@@ -653,7 +653,7 @@ default {
                         if (demoMode) s += "Demo mode is enabled\n";
 
                         cdCapability(autoTP,           "Doll can", "be force teleported");
-                        cdCapability(canAFK,           "Doll can", "go AFK");
+                        //cdCapability(canAFK,           "Doll can", "go AFK");
                         cdCapability(canFly,           "Doll can", "fly");
                         cdCapability(canSit,           "Doll can", "sit");
                         cdCapability(canStand,         "Doll can", "stand");
