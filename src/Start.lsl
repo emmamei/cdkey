@@ -451,6 +451,7 @@ default {
                     }
                 }
             }
+#ifdef NOT_USED
             else if (name == "afk") {
                 integer oldAfk = afk;
                 afk = (integer)value;
@@ -472,6 +473,7 @@ default {
                     }
                 }
             }
+#endif
             else if (name == "userCollapseRLVcmd")  userCollapseRLVcmd = value;
             else if (name == "userPoseRLVcmd")          userPoseRLVcmd = value;
             else if (name == "userAfkRLVcmd")            userAfkRLVcmd = value;
@@ -537,13 +539,13 @@ default {
                     // Not collapsed: clear any user collapse RLV restrictions
                     debugSay(2, "DEBUG-START", "Clearing on RLV_RESET");
                     lmRunRLVcmd("clearRLVcmd","");
-
+#ifdef NOT_USED
                     // Is Dolly AFK? Trigger RLV restrictions as appropriate
                     if (afk) {
                         lmRestrictRLV(defaultAfkRLVcmd);
                         if (userAfkRLVcmd != "") lmRestrictRLV(userAfkRLVcmd);
                     }
-
+#endif
                     // Are we posed? Trigger RLV restrictions for being posed
                     if (cdPoseAnim()) {
                         lmRestrictRLV(defaultPoseRLVcmd);
@@ -696,7 +698,7 @@ default {
         }
 
         // when attaching key, user is NOT AFK...
-        lmSetConfig("afk", NOT_AFK);
+        lmSetConfig("autoAfk", "0");
 
         // reset collapse environment
         lmInternalCommand("collapse", (string)collapsed, llGetKey());

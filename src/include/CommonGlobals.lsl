@@ -38,7 +38,7 @@ float dilationMedian        = 1.0;
 float windRate              = RATE_STANDARD;
 float visibility            = 1.0;
 
-integer afk;
+//integer afk;
 integer allowCarry          = 1;
 integer allowDress          = 1;
 integer allowPose           = 1;
@@ -47,7 +47,7 @@ integer allowSelfWind       = 1;
 #ifdef ADULT_MODE
 integer allowStrip          = 1;
 #endif
-integer autoAfk             = 1;
+integer autoAfk             = 0; // autoAfk is the current automated afk setting, not a flag
 integer autoTP;
 integer busyIsAway;
 integer canAFK              = 1;

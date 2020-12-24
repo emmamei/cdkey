@@ -367,7 +367,8 @@ default {
                 debugSay(6, "DEBUG-DRESS", "outfits Channel set to " + (string)outfitsChannel);
 
             }
-            else if (name == "afk")                                  afk = (integer)value;
+//          else if (name == "afk")                                  afk = (integer)value;
+            else if (name == "autoAfk")                          autoAfk = (integer)value;
             else if (name == "RLVok")                              RLVok = (integer)value;
             else if (name == "hovertextOn")                  hovertextOn = (integer)value;
             else if (name == "dollType") {
@@ -713,7 +714,7 @@ default {
                 string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
 
                      if (collapsed)   { cdSetHovertext("Disabled Dolly!",        ( RED    )); }
-                else if (afk)         { cdSetHovertext(dollType + " Doll (AFK)", ( YELLOW )); }
+                else if (autoAfk)     { cdSetHovertext(dollType + " Doll (AFK)", ( YELLOW )); }
                 else if (hovertextOn) { cdSetHovertext(dollType + " Doll",       ( WHITE  )); }
                 else                  { cdSetHovertext("",                       ( WHITE  )); }
             }

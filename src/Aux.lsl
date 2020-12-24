@@ -129,8 +129,8 @@ default {
             else if (name == "autoTP")                         autoTP = (integer)value;
             else if (name == "autoTP")                         autoTP = (integer)value;
             else if (name == "showPhrases")               showPhrases = (integer)value;
-            else if (name == "canAFK")                         canAFK = (integer)value;
-            else if (name == "afk")                               afk = (integer)value;
+//          else if (name == "canAFK")                         canAFK = (integer)value;
+//          else if (name == "afk")                               afk = (integer)value;
             else if (name == "allowCarry")                 allowCarry = (integer)value;
             else if (name == "allowDress")                 allowDress = (integer)value;
             else if (name == "allowPose")                   allowPose = (integer)value;

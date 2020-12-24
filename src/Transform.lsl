@@ -411,29 +411,14 @@ default {
         //----------------------------------------
         // AUTO AFK TRIGGERS
 
-        // if we can AFK, check for auto AFK triggers
-        if (canAFK) {
-            integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0);
+        integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0);
 
-            if (afk) {
-                // Dolly is flagged as afk... check to see if afk was automatically triggered,
-                // and if Dolly is no longer afk
-                if (!dollAway && autoAfk) {
-                    lmSetConfig("afk", (string)NOT_AFK);
-                    lmSetConfig("autoAfk", (string)FALSE);
-                    llOwnerSay("You hear the Key whir back to full power");
+        if (dollAway != autoAfk) {
+            autoAfk = dollAway;
+            lmSetConfig("autoAfk", (string)autoAfk);
 
-                }
-            }
-            else {
-                // Dolly is flagged as NOT afk... see if Dolly has automatically gone afk, and adjust
-                // appropriately - and mark afk as auto-triggered
-                if (dollAway) {
-                    lmSetConfig("afk", (string)TRUE);
-                    lmSetConfig("autoAfk", (string)TRUE);
-                    llOwnerSay("Automatically entering AFK mode; Key subsystems slowing...");
-                }
-            }
+            if (autoAfk) llOwnerSay("Automatically entering AFK mode; Key subsystems slowing...");
+            else         llOwnerSay("You hear the Key whir back to full power");
 
             lmInternalCommand("setWindRate","",NULL_KEY);
         }
@@ -481,8 +466,8 @@ default {
 
             split = llDeleteSubList(split,0,0);
 
-                 if (name == "afk")                               afk = (integer)value;
-            else if (name == "autoAfk")                       autoAfk = (integer)value;
+                 if (name == "autoAfk")                       autoAfk = (integer)value;
+//          else if (name == "afk")                               afk = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")           timeReporting = (integer)value;
             else if (name == "debugLevel")                 debugLevel = (integer)value;
