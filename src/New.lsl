@@ -47,7 +47,7 @@ default {
 
         llOwnerSay("Update was successful.");
 
-        doRestart();
+        //doRestart();
 
         llSleep(1.0);
         llRemoveInventory(llGetScriptName());
