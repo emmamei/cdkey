@@ -89,7 +89,6 @@ default {
 #ifdef ADULT_MODE
                 else if (name == "allowStrip")             allowStrip = (integer)value;
 #endif
-//              else if (name == "afk")                           afk = (integer)value;
                 else if (name == "allowRepeatWind")   allowRepeatWind = (integer)value;
                 else if (name == "allowCarry")             allowCarry = (integer)value;
                 else if (name == "allowDress")             allowDress = (integer)value;

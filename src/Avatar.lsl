@@ -703,7 +703,6 @@ default {
                 carrierID = (key)value;
                 hasCarrier = cdCarried();
             }
-//          else if (name == "afk")                         afk = (integer)value;
             else if (name == "collapsed") {
                     collapsed = (integer)value;
 

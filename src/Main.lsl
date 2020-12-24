@@ -555,20 +555,9 @@ default {
             }
             else if (name == "autoAfk") {
                 lmSendConfig("autoAfk", (string)(autoAfk = (integer)value));
-                //if (autoAfk) lmSendConfig("afk", (string)(afk = TRUE));
-
                 lmInternalCommand("setHovertext", "", llGetKey());
                 setWindRate();
             }
-#ifdef NOT_USED
-            else if (name == "afk") {
-                lmSendConfig("afk", (string)(afk = (integer)value));
-                if (!afk) lmSendConfig("autoAfk", (string)(autoAfk = 0));
-
-                lmInternalCommand("setHovertext", "", llGetKey());
-                setWindRate();
-            }
-#endif
             else if (name == "timeLeftOnKey") {
                 timeLeftOnKey = (integer)value;
                 if (timeLeftOnKey > effectiveLimit) timeLeftOnKey = effectiveLimit;

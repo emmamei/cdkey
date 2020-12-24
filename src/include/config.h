@@ -22,9 +22,6 @@
 /* Defines the Default wind amount */
 #define WIND_DEFAULT 1800.0
 
-/* adds slowed walking during AFK */
-#define SLOW_WALK 1
-
 /* enable the inclusion of adult features such as stripping and slut doll in
    the key */
 #define ADULT_MODE 1

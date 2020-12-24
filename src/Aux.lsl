@@ -130,7 +130,6 @@ default {
             else if (name == "autoTP")                         autoTP = (integer)value;
             else if (name == "showPhrases")               showPhrases = (integer)value;
 //          else if (name == "canAFK")                         canAFK = (integer)value;
-//          else if (name == "afk")                               afk = (integer)value;
             else if (name == "allowCarry")                 allowCarry = (integer)value;
             else if (name == "allowDress")                 allowDress = (integer)value;
             else if (name == "allowPose")                   allowPose = (integer)value;
@@ -449,10 +448,6 @@ Parent - Take care choosing your parents; they have great control over Dolly and
 
                 // One-way options
                 if (cdIsController(id)) {
-#ifdef NOT_USED
-                    if (!afk)
-                        plusList = llListInsertList(plusList, cdGetButton("Allow AFK", id, canAFK, 1), 0);
-#endif
                     plusList = llListInsertList(plusList, cdGetButton("Rpt Wind", id, allowRepeatWind, 1), 6);
                 }
 

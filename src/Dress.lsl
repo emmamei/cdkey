@@ -367,7 +367,6 @@ default {
                 debugSay(6, "DEBUG-DRESS", "outfits Channel set to " + (string)outfitsChannel);
 
             }
-//          else if (name == "afk")                                  afk = (integer)value;
             else if (name == "autoAfk")                          autoAfk = (integer)value;
             else if (name == "RLVok")                              RLVok = (integer)value;
             else if (name == "hovertextOn")                  hovertextOn = (integer)value;

@@ -56,13 +56,13 @@ string attachName;
 integer isAttached;
 
 // These RLV commands are set by the user
-string userAfkRLVcmd;
+//string userAfkRLVcmd;
 //string userBaseRLVcmd;
 string userCollapseRLVcmd;
 string userPoseRLVcmd;
 
 // These are hardcoded and should never change during normal operation
-string defaultAfkRLVcmd = "fly=n,sendchat=n,tplm=n,tplure=n,tploc=n,sittp=n,fartouch=n,alwaysrun=n";
+//string defaultAfkRLVcmd = "fly=n,sendchat=n,tplm=n,tplure=n,tploc=n,sittp=n,fartouch=n,alwaysrun=n";
 string defaultBaseRLVcmd = "";
 string defaultCollapseRLVcmd = "fly=n,sendchat=n,tplm=n,tplure=n,tploc=n,showinv=n,edit=n,sit=n,sittp=n,fartouch=n,showworldmap=n,showminimap=n,showloc=n,shownames=n,showhovertextall=n";
 
@@ -101,9 +101,6 @@ processConfiguration(string name, string value) {
 #ifdef DEVELOPER_MODE
                      "debug level",
 #endif
-#ifdef NOT_USED
-                     "afk rlv",
-#endif
                      "collapse rlv", "pose rlv",
                      "doll gender", "helpless dolly", "chat mode", "controller", "blacklist"
                    ];
@@ -111,9 +108,6 @@ processConfiguration(string name, string value) {
     // The settings list and the settingName list much match up
     // with entries
     list settings = [ "hardcore", "busy is away",
-#ifdef NOT_USED
-                      "can afk",
-#endif
                       "can fly", "poseable", "can sit", "can stand", "can dress self", "detachable",
 #ifdef ADULT_MODE
                       "strippable",
@@ -123,9 +117,6 @@ processConfiguration(string name, string value) {
                     ];
 
     list settingName = [ "hardcore", "busyIsAway",
-#ifdef NOT_USED
-                         "canAFK",
-#endif
                          "canFly", "allowPose", "canSit", "canStand", "canDressSelf", "detachable",
 #ifdef ADULT_MODE
                          "allowStrip",
@@ -202,12 +193,6 @@ processConfiguration(string name, string value) {
             else if (debugLevel < 0) debugLevel = 0;
 
             lmSendConfig("debugLevel", (string)debugLevel);
-        }
-#endif
-#ifdef NOT_USED
-        else if (name == "afk rlv") {
-            // has to be valid rlv
-            lmSendConfig("userAfkRLVcmd", value);
         }
 #endif
         else if (name == "collapse rlv") {
@@ -451,32 +436,9 @@ default {
                     }
                 }
             }
-#ifdef NOT_USED
-            else if (name == "afk") {
-                integer oldAfk = afk;
-                afk = (integer)value;
-
-                if (!collapsed) {
-                    // a collapse overrides AFK - ignore AFK if we are collapsed
-                    if (RLVok == TRUE) {
-                        if (afk) {
-                            lmRestrictRLV(defaultAfkRLVcmd);
-                            if (userAfkRLVcmd) lmRestrictRLV(userAfkRLVcmd);
-                        }
-                        else if (oldAfk != afk) {
-                            // afk value JUST became zero
-                            if (RLVok == TRUE) {
-                                debugSay(2, "DEBUG-START", "Clearing on afk");
-                                lmRunRLVcmd("clearRLVcmd","");
-                            }
-                        }
-                    }
-                }
-            }
-#endif
             else if (name == "userCollapseRLVcmd")  userCollapseRLVcmd = value;
             else if (name == "userPoseRLVcmd")          userPoseRLVcmd = value;
-            else if (name == "userAfkRLVcmd")            userAfkRLVcmd = value;
+//          else if (name == "userAfkRLVcmd")            userAfkRLVcmd = value;
             else if (name == "defaultBaseRLVcmd")    defaultBaseRLVcmd = value;
 
             else if (name == "collapsed") {
@@ -539,13 +501,7 @@ default {
                     // Not collapsed: clear any user collapse RLV restrictions
                     debugSay(2, "DEBUG-START", "Clearing on RLV_RESET");
                     lmRunRLVcmd("clearRLVcmd","");
-#ifdef NOT_USED
-                    // Is Dolly AFK? Trigger RLV restrictions as appropriate
-                    if (afk) {
-                        lmRestrictRLV(defaultAfkRLVcmd);
-                        if (userAfkRLVcmd != "") lmRestrictRLV(userAfkRLVcmd);
-                    }
-#endif
+
                     // Are we posed? Trigger RLV restrictions for being posed
                     if (cdPoseAnim()) {
                         lmRestrictRLV(defaultPoseRLVcmd);

@@ -333,7 +333,6 @@ default {
             if (llListFindList([ "a", "c", "d", "w" ],(list)c) == NOT_FOUND) return;
 
                  if (name == "autoTP")        {       autoTP = (integer)value; lmRunRLVBoolean("accepttp", !autoTP); }
-//          else if (name == "afk")           {          afk = (integer)value; outfitRLVLock(); }
             else if (name == "hardcore")      {     hardcore = (integer)value; outfitRLVLock(); }
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")    {   debugLevel = (integer)value; }

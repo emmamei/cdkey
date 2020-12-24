@@ -394,20 +394,6 @@ default {
 
         if (lowScriptMode) llSetTimerEvent(LOW_RATE);
         else llSetTimerEvent(STD_RATE);
-
-        //----------------------------------------
-        // UPDATE HOVERTEXT
-        //
-        // every 30s or every 60s is too slow
-
-        // Update sign if appropriate
-        //string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
-        //
-        //     if (collapsed)   { cdSetHovertext("Disabled Dolly!",        ( RED    )); }
-        //else if (afk)         { cdSetHovertext(dollType + " Doll (AFK)", ( YELLOW )); }
-        //else if (hovertextOn) { cdSetHovertext(dollType + " Doll",       ( WHITE  )); }
-        //else                  { cdSetHovertext("",                       ( WHITE  )); }
-
     }
 
     //----------------------------------------
@@ -454,7 +440,6 @@ default {
 
                  if (name == "collapsed")                   collapsed = (integer)value;
             else if (name == "autoAfk")                       autoAfk = (integer)value;
-//          else if (name == "afk")                               afk = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")           timeReporting = (integer)value;
             else if (name == "debugLevel")                 debugLevel = (integer)value;
