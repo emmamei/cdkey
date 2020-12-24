@@ -35,7 +35,6 @@ string simRating;
 
 float baseWindRate          = RATE_STANDARD;
 float dilationMedian        = 1.0;
-//float displayWindRate	    = RATE_STANDARD;
 float windRate              = RATE_STANDARD;
 float visibility            = 1.0;
 

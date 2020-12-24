@@ -204,20 +204,20 @@ float GlobalDefines_version=1.0;
 #define NO_TIME 1
 #define JAMMED 2
 
-#define cdControllerCount()		llFloor(llGetListLength(USER_CONTROLLERS) / 2)
-#define cdAttached()			llGetAttached()
-#define cdDollAway()			((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0)
-#define cdCarried()			(carrierID != NULL_KEY)
-#define cdCollapsedAnim()		(keyAnimation == ANIMATION_COLLAPSED)
-#define cdNoAnim()			(keyAnimation == "")
-#define cdMobile()			(keyAnimation == "")
-#define cdAnimated()			(keyAnimation != "")
-#define cdPoseAnim()                    (keyAnimation != "" && keyAnimation != ANIMATION_COLLAPSED)
-#define cdPosed()			(!collapsed && keyAnimation != "")
-#define cdSelfPosed()			(poserID == dollID)
-//#define cdRunTimer()			(configured && cdAttached() && RLVchecked)
-#define cdMyScriptName()		llGetScriptName()
-#define cdMyScriptLine()		(string)__LINE__
+#define cdControllerCount()      llFloor(llGetListLength(USER_CONTROLLERS) / 2)
+#define cdAttached()             llGetAttached()
+#define cdDollAway()             ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0)
+#define cdCarried()              (carrierID != NULL_KEY)
+#define cdCollapsedAnim()        (keyAnimation == ANIMATION_COLLAPSED)
+#define cdNoAnim()               (keyAnimation == "")
+#define cdMobile()               (keyAnimation == "")
+#define cdAnimated()             (keyAnimation != "")
+#define cdPoseAnim()             (keyAnimation != "" && keyAnimation != ANIMATION_COLLAPSED)
+#define cdPosed()                (!collapsed && keyAnimation != "")
+#define cdSelfPosed()            (poserID == dollID)
+//#define cdRunTimer()           (configured && cdAttached() && RLVchecked)
+#define cdMyScriptName()         llGetScriptName()
+#define cdMyScriptLine()         (string)__LINE__
 
 #define FALSE 0
 #define TRUE 1
