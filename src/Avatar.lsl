@@ -608,9 +608,13 @@ default {
             ifPermissions();
         }
         else if (change & CHANGED_INVENTORY) {
+            // Doing this whenever inventory changes is ok: the update process stops this script;
+            // otherwise, the only cost is time.
             poseList = [];
             poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
+
             i = poseCount;
+
             while (i--) {
                 // This takes time:
                 poseName = llGetInventoryName(INVENTORY_ANIMATION, i);
@@ -620,6 +624,7 @@ default {
                 if (poseName != ANIMATION_COLLAPSED)
                     poseList += poseName;
             }
+
             poseList = llListSort(poseList, 1, 1);
         }
     }
