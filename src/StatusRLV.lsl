@@ -131,7 +131,7 @@ default {
             debugSay(4,"DEBUG-STATUSRLV","Got RLV_CMD (315) from script " + script + ": " + cmd + " - " + commandString);
 
             if (RLVok != TRUE) {
-                if (RLVok == UNSET) llSay(DEBUG_CHANNEL,"RLV command issued with RLV active! (" + commandString + ")");
+                if (RLVok == UNSET) llSay(DEBUG_CHANNEL,"RLV command issued with RLV inactive! (" + commandString + ")");
                 return;
             }
 

@@ -303,6 +303,12 @@ default {
             //cdListenerDeactivate(rlvHandle);
             activateRLV();
         }
+#ifdef DEVELOPER_MODE
+        else {
+            llSay(DEBUG_CHANNEL,"Received RLV response data on wrong channel! (" + (string)chan +
+                ") - msg = " + msg);
+        }
+#endif
     }
 
     //----------------------------------------
