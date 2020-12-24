@@ -882,15 +882,16 @@ default {
             }
 
             else {
-                debugSay(2,"DEBUG-AVATAR","pose " + choice + " selected...");
+                llSay(PUBLIC_CHANNEL,"Pose " + choice + " selected.");
 
                 // The Real Meat: We have an animation (pose) name
                 lmSendConfig("keyAnimation", (string)(keyAnimation = choice));
                 lmSendConfig("poserID", (string)(poserID = id));
-                if (dollType != "Display" && !hardcore)
-                    lmSetConfig("poseExpire", (string)(llGetUnixTime() + POSE_TIMEOUT));
-                else
+
+                if (dollType == "Display" || hardcore)
                     lmSetConfig("poseExpire", "0");
+                else
+                    lmSetConfig("poseExpire", (string)(llGetUnixTime() + POSE_TIMEOUT));
 
                 oneAnimation();
                 if (poseSilence || hardcore) lmRunRLV("sendchat=n");
