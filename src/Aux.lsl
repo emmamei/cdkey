@@ -270,6 +270,7 @@ default {
         }
         else if (code == RLV_RESET) {
             RLVok = llList2Integer(split, 0);
+            debugSay(4,"DEBUG-AUX","RLVok set to " + (string)RLVok);
         }
         else if (code == MENU_SELECTION) {
             string choice = llList2String(split, 0);
@@ -379,11 +380,12 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 llDialog(id, msg, dialogSort(plusList + "Back..."), dialogChannel);
             }
             else if (choice == "Restrictions...") {
-                msg = "See the help file for explanations of the options.";
+                msg = "";
                 list plusList;
 
                 // The following options require RLV to work
                 if (RLVok == TRUE) {
+                    msg = "See the help file for explanations of these options. ";
 
                     // One-way options
                     if (!hardcore) {
