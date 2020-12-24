@@ -272,7 +272,8 @@ default {
             else if (name == "visibility")                 visibility = (float)value;
             else if (name == "isVisible") {
                 visible = (integer)value;
-                llSetLinkAlpha(LINK_SET, (float)visibility, ALL_SIDES);
+                if (visible) llSetLinkAlpha(LINK_SET, (float)visibility, ALL_SIDES);
+                else         llSetLinkAlpha(LINK_SET,               0.0, ALL_SIDES);
             }
         }
         else if (code == SET_CONFIG) {
