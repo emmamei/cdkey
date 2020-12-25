@@ -864,6 +864,8 @@ default {
 #endif
                             else if (afterSpace == "Warnings")      lmSendConfig("doWarnings",    (string)isX);
                             else if (afterSpace == "RLV") {
+                                // we don't deal with RLVsupport here, as if RLVsupport is FALSE,
+                                // this choice is never made.
                                 if (isX) {
                                     RLVok = TRUE; // in this script, mark it ok while we check elsewhere
                                     debugSay(4,"DEBUG-MENU","Requesting a check of RLV");
