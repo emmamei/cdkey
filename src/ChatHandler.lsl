@@ -1149,27 +1149,29 @@ default {
             // Commands with secondary parameters bypass this sequence
 
             if (msg != ANIMATION_COLLAPSED) {
-                if (llGetInventoryType(msg) == INVENTORY_ANIMATION) {
-                    string firstChar = cdGetFirstChar(msg);
+                if (!(llGetAgentInfo(llGetOwner()) & AGENT_SITTING)) { // Agent not sitting
+                    if (llGetInventoryType(msg) == INVENTORY_ANIMATION) {
+                        string firstChar = cdGetFirstChar(msg);
 
-                    // if animation starts with "." only Doll has access to it
-                    if (firstChar == ".") {
-                        if (isDoll) { lmPoseReply(msg, name, id); }
+                        // if animation starts with "." only Doll has access to it
+                        if (firstChar == ".") {
+                            if (isDoll) { lmPoseReply(msg, name, id); }
+                        }
+                        // if animation starts with "!" only Doll and Controllers have access to it
+                        else if (firstChar == "!") {
+                            if (isDoll || isController) { lmPoseReply(msg, name, id); }
+                        }
+                        else {
+                            // It's a pose but from a member of the public
+                            if (allowPose || hardcore) lmPoseReply(msg, name, id);
+                        }
                     }
-                    // if animation starts with "!" only Doll and Controllers have access to it
-                    else if (firstChar == "!") {
-                        if (isDoll || isController) { lmPoseReply(msg, name, id); }
-                    }
-                    else {
-                        // It's a pose but from a member of the public
-                        if (allowPose || hardcore) lmPoseReply(msg, name, id);
-                    }
-                }
 #ifdef DEVELOPER_MODE
-                else {
-                    llSay(DEBUG_CHANNEL,"No pose or command recognized: " + msg);
-                }
+                    else {
+                        llSay(DEBUG_CHANNEL,"No pose or command recognized: " + msg);
+                    }
 #endif
+                }
             }
         }
     }

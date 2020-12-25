@@ -469,40 +469,44 @@ default {
                         else menu += "Types...";
                     }
 
-                    integer poseCount;
-                    poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
-                    if (poseCount > 1) {
-                        if (keyAnimation != "") {
-                            msg += "Doll is currently posed. ";
+                    // if dolly is sitting, dont allow poses
+                    if (!(llGetAgentInfo(llGetOwner()) & AGENT_SITTING)) { // Agent not sitting
+                        integer poseCount;
+                        poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
 
-                            // If accessor is Dolly... allow Dolly to pose and unpose,
-                            // but NOT when posed by someone else.
+                        if (poseCount > 1) {
+                            if (keyAnimation != "") {
+                                msg += "Doll is currently posed. ";
 
-                            if (isDoll) {
-                                if (poserID == dollID)
-                                    menu += [ "Poses...", "Unpose" ];
+                                // If accessor is Dolly... allow Dolly to pose and unpose,
+                                // but NOT when posed by someone else.
+
+                                if (isDoll) {
+                                    if (poserID == dollID)
+                                        menu += [ "Poses...", "Unpose" ];
+                                }
+
+                                // If accessor is NOT Dolly... allow the public access if
+                                // permitted by Dolly, and allow access to all Controllers
+                                // (NOT Dolly by virtue of ruling out Doll previously).
+                                // Also allow anyone to Unpose Dolly if Dolly self posed.
+
+                                else {
+                                    if (isController || allowPose || hardcore)
+                                        menu += [ "Poses...", "Unpose" ];
+                                    else if (poserID == dollID)
+                                        menu += [ "Unpose" ];
+                                }
                             }
-
-                            // If accessor is NOT Dolly... allow the public access if
-                            // permitted by Dolly, and allow access to all Controllers
-                            // (NOT Dolly by virtue of ruling out Doll previously).
-                            // Also allow anyone to Unpose Dolly if Dolly self posed.
-
                             else {
-                                if (isController || allowPose || hardcore)
-                                    menu += [ "Poses...", "Unpose" ];
-                                else if (poserID == dollID)
-                                    menu += [ "Unpose" ];
+                                // Notice again: Carrier can only pose Dolly if permitted.
+                                if ((!isDoll && allowPose) || isDoll || isController) menu += "Poses...";
                             }
                         }
                         else {
-                            // Notice again: Carrier can only pose Dolly if permitted.
-                            if ((!isDoll && allowPose) || isDoll || isController) menu += "Poses...";
+                             if (poseCount == 1) llSay(DEBUG_CHANNEL, "No poses found!");
+                        else if (poseCount == 0) llSay(DEBUG_CHANNEL, "No poses found! Key won't work without collapse animation!");
                         }
-                    }
-                    else {
-                         if (poseCount == 1) llSay(DEBUG_CHANNEL, "No poses found!");
-                    else if (poseCount == 0) llSay(DEBUG_CHANNEL, "No poses found! Key won't work without collapse animation!");
                     }
 
                     // Fix for issue #157
