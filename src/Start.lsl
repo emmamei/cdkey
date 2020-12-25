@@ -363,7 +363,7 @@ doRestart() {
         // if script is New, then the script should finish
         // running and self-erase; so ignore
         script = llGetInventoryName(INVENTORY_SCRIPT, n);
-        if (script != "Start" && script != "New") {
+        if (script != "Start") {
 
             cdRunScript(script);
             llResetOtherScript(script);
