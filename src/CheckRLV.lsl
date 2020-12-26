@@ -69,8 +69,6 @@ doCheckRLV() {
         rlvChannel = MAX_INT - (integer)llFrand(5000);
         rlvHandle = cdListenMine(rlvChannel);
 
-        //cdListenerDeactivate(rlvHandle);
-
         cdListenerActivate(rlvHandle);
     }
 
@@ -338,7 +336,6 @@ default {
             split = llDeleteSubList(split, 0, 0);
 
             debugSay(3,"DEBUG-CHECKRLV","Internal command triggered: " + cmd);
-            //llOwnerSay("CheckRLV Link Message[" + (string)debugLevel + "]: cmd = " + cmd);
 
             if (cmd == "doCheckRLV") {
                 doCheckRLV();
