@@ -779,8 +779,6 @@ default {
                 if (timeLeftOnKey + effectiveWindTime > effectiveLimit) windAmount = effectiveLimit - timeLeftOnKey;
                 else windAmount = effectiveWindTime;
 
-                debugSay(3,"DEBUG-MAIN", "Set windAmount = " + (string)windAmount);
-
                 // The "winding" takes place here. Note that while timeLeftOnKey might
                 // be set - collapse is set a short time later - thus, timeLeftOnKey is greater
                 // than zero, but collapse is still true.
