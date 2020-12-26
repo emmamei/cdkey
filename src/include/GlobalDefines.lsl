@@ -25,6 +25,7 @@ float GlobalDefines_version=1.0;
 #define SET_CONFIG        301
 #define SANITY_CONFIG     302
 #define INTERNAL_CMD      305
+#define TIMING_CMD        310
 #define RLV_CMD           315
 #define RLV_RESET         350
 #define MENU_SELECTION    500

@@ -52,6 +52,8 @@ cdLinkMessage(integer target, integer opt, integer code, string data, key id) {
 #define lmSanityConfig(name,value)                      cdLinkMessage(LINK_THIS,0,302,name+"|"+value,llGetKey())
 #define lmInternalCommand(command,parameter,id)         cdLinkMessage(LINK_THIS,0,305,command+"|"+parameter,id)
 #define lmStrip(part)                                   cdLinkMessage(LINK_THIS,0,305,"strip|"+part,id)
+#define lmTimePulse()                                   cdLinkMessage(LINK_THIS,0,310,"getTimeUpdates",llGetKey())
+#define lmTimeConfig(name,value)                        cdLinkMessage(LINK_THIS,0,310,name+"|"+value,llGetKey())
 
 #define lmRunRLV(command)                               cdLinkMessage(LINK_THIS,0,315,__SHORTFILE__+"|runRLVcmd|"+command,llGetKey())
 #define lmRunRLVcmd(cmd,command)                        cdLinkMessage(LINK_THIS,0,315,__SHORTFILE__+"|"+cmd+"|"+command,llGetKey())
