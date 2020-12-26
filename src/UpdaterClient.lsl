@@ -156,6 +156,11 @@ default {
         string mode;
 
              if (code == 15)  mode = "SEND_TO_CONTROLLER";
+        else if (code == 101) mode = "INIT_STAGE1";
+        else if (code == 102) mode = "INIT_STAGE2";
+        else if (code == 104) mode = "INIT_STAGE3";
+        else if (code == 105) mode = "INIT_STAGE4";
+        else if (code == 110) mode = "INIT_STAGE5";
         else if (code == 135) mode = "MEM_REPORT";
         else if (code == 136) mode = "MEM_REPLY";
         else if (code == 142) mode = "CONFIG_REPORT";
