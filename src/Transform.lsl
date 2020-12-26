@@ -48,7 +48,6 @@ integer changeOutfit;
 string msg;
 integer i;
 list types;
-//integer menuTime;
 key transformerID;
 integer readLine;
 integer readingNC;
@@ -77,13 +76,8 @@ integer typeChannel;
 
 integer transformLockExpire;
 
-//integer startup = 1;
-
-//integer menulimit = 9;     // 1.5 minute
-
 integer dbConfig;
 integer mustAgreeToType;
-//integer isTransformingKey;
 string typeFolderExpected;
 
 key kQuery;
@@ -106,13 +100,7 @@ setDollType(string stateName, integer automated) {
         stateName = "Regular";
     }
 
-    // If no change, abort
-    //if (stateName == dollType) {
-    //    debugSay(2,"DEBUG-DOLLTYPE","No doll type change necessary...");
-    //    return;
-    //}
-
-    debugSay(2,"DEBUG-DOLLTYPE","Changing (" + (string)automated + ") to type " + stateName + " from " + dollType);
+    debugSay(2,"DEBUG-DOLLTYPE","Changing (automated:" + (string)automated + ") dolltype to type " + stateName + " from " + dollType);
 
     // By not aborting, selecting the same state can cause a "refresh" ...
     // though our menus do not currently allow this
@@ -476,8 +464,6 @@ default {
             else if (name == "dialogChannel") {
                 dialogChannel = (integer)value;
 
-                //llSay(DEBUG_CHANNEL,"Dialog channel set to" + (string)dialogChannel);
-
                 rlvChannel = ~dialogChannel + 1;
                 typeChannel = dialogChannel - TYPE_CHANNEL_OFFSET;
 
@@ -589,9 +575,6 @@ default {
             string optName = llGetSubString(choice, 2, STRING_END);
             string curState = cdGetFirstChar(choice);
 
-            // for timing out the Menu
-            //menuTime = llGetTime();
-
             // Transforming options
             if ((choice == "Type...")        ||
                 (optName == "Verify Type")   ||
@@ -682,10 +665,6 @@ default {
                 // of type - and chose "Transform" from the menu
                 transformedViaMenu = YES;
                 setDollType(transform, NOT_AUTOMATED);
-#ifdef DEVELOPER_MODE
-                //llSay(DEBUG_CHANNEL,"randomDress called: Transform button");
-#endif
-                //lmInternalCommand("randomDress","",NULL_KEY);
             }
         }
         else if (code == TYPE_SELECTION) {
@@ -697,10 +676,6 @@ default {
                 // Doll (or a Controller) chose a Type - or no confirmation needed: just do it
                 transformedViaMenu = YES;
                 setDollType(choice, NOT_AUTOMATED);
-#ifdef DEVELOPER_MODE
-                //llSay(DEBUG_CHANNEL,"randomDress called: (Type) button");
-#endif
-                //lmInternalCommand("randomDress","",NULL_KEY);
             }
             else {
                 // This section is executed when:
@@ -795,10 +770,6 @@ default {
                         // outfitsFolder search is done: search for typeFolder
                         folderSearch(outfitsFolder,typeSearchChannel);
                     }
-                    //else {
-                          // typeFolder is set, or no typeFolder is expected
-                    //    lmInternalCommand("randomDress","",NULL_KEY);
-                    //}
                 }
             }
 
@@ -904,13 +875,6 @@ default {
                     lmSendConfig("nudeFolder",nudeFolder);
                     lmSendConfig("normalselfFolder",normalselfFolder);
                 }
-                //else {
-                //    debugSay(2,"DEBUG-SEARCHING","Random dress being chosen");
-#ifdef DEVELOPER_MODE
-                //    llSay(DEBUG_CHANNEL,"randomDress called after Search");
-#endif
-                //    lmInternalCommand("randomDress","",NULL_KEY);
-                //}
             }
         }
     }

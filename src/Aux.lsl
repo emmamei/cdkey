@@ -8,7 +8,6 @@
 
 #define DEBUG_HANDLER 1
 #include "include/GlobalDefines.lsl"
-// #include "include/Json.lsl"
 
 #define RUNNING 1
 #define NOT_RUNNING 0
@@ -72,7 +71,6 @@ default {
     // STATE ENTRY
     //----------------------------------------
     state_entry() {
-        //lmSendXonfig("debugLevel", (string)debugLevel);
         dollID = llGetOwner();
         dollName = lmMyDisplayName(dollID);
         isDoll = cdIsDoll(dollID);
@@ -120,7 +118,6 @@ default {
             else if (name == "keyLimit")                      maxMins = llRound((float)value / 60.0);
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
             else if (name == "backMenu")                     backMenu = value;
-            //else if (name == "quiet")                           quiet = (integer)value;
 #ifdef HOMING_BEACON
             else if (name == "homingBeacon")             homingBeacon = (integer)value;
 #endif
@@ -130,7 +127,6 @@ default {
             else if (name == "autoTP")                         autoTP = (integer)value;
             else if (name == "showPhrases")               showPhrases = (integer)value;
             else if (name == "RLVsupport")                 RLVsupport = (integer)value;
-//          else if (name == "canAFK")                         canAFK = (integer)value;
             else if (name == "allowCarry")                 allowCarry = (integer)value;
             else if (name == "allowDress")                 allowDress = (integer)value;
             else if (name == "allowPose")                   allowPose = (integer)value;
@@ -207,11 +203,6 @@ default {
                 // this is only called for Dolly - so...
                 string timeLeft = llList2String(split, 0);
                 list menu = [ "Ok" ];
-
-#ifdef DEVELOPER_MODE
-//              debugSay(2,"DEBUG-AUX","Building collapsedMenu...");
-//              llSay(DEBUG_CHANNEL,"collapseTime is " + (string)collapseTime + " at start of collapsedMenu");
-#endif
 
                 // is it possible to be collapsed but collapseTime be equal to 0.0?
                 if (collapsed) {
@@ -304,7 +295,6 @@ default {
                 // If is Dolly, whisk Dolly away to Location of Landmark
                 // If is someone else, give Landmark to them
                 if (cdIsDoll(id))
-                    //llMessageLinked(LINK_THIS, 305, "Aux|TP|" + LANDMARK_CDHOME, id);
                     lmInternalCommand("teleport", LANDMARK_CDHOME, id);
                 else llGiveInventory(id, LANDMARK_CDHOME);
             }
@@ -438,7 +428,6 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 msg = "See the helpfile for explanations.";
                 list plusList = [];
 
-                //plusList += cdGetButton("Quiet Key", id, quiet, 0);
                 plusList += cdGetButton("Type Text", id, hovertextOn, 0);
                 plusList += cdGetButton("Warnings", id, doWarnings, 0);
                 plusList += cdGetButton("Phrases", id, showPhrases, 0);
@@ -563,10 +552,6 @@ Parent - Take care choosing your parents; they have great control over Dolly and
             else if (code == SIM_RATING_CHG) {
                 simRating = llList2String(split, 0);
             }
-            // HippoUPDATE reply
-            //else if (code == HIPPO_UPDATE) {
-            //    if (data == "VERSION") llOwnerSay("Your key is already up to date");
-            //}
         }
     }
 

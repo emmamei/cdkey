@@ -21,8 +21,6 @@
 #define cdListenerDeactivate(a) llListenControl(a, 0)
 #define cdProfileURL(i) "secondlife:///app/agent/"+(string)(i)+"/about"
 
-//key listID                  = NULL_KEY;
-
 key lastWinderID;
 
 integer effectiveLimit;
@@ -79,8 +77,6 @@ default {
                 if (split == [""]) blacklist = [];
                 else blacklist = split;
             }
-            //else if (name == "busyIsAway")                 busyIsAway = (integer)value;
-            //else if (name == "quiet")                         quiet = (integer)value;
 
             //----------------------------------------
             // Shortcut: a
@@ -99,7 +95,6 @@ default {
             // Shortcut: c
             else if (c == "c") {
                      if (name == "collapsed")               collapsed = (integer)value;
-//              else if (name == "canAFK")                     canAFK = (integer)value;
                 else if (name == "canDressSelf")         canDressSelf = (integer)value;
                 else if (name == "canFly")                     canFly = (integer)value;
                 else if (name == "canSit")                     canSit = (integer)value;
@@ -624,9 +619,6 @@ default {
 
                         llSay(PUBLIC_CHANNEL,"Update starting...");
                         lmSendConfig("update","1");
-
-                        //cdRunScript("UpdaterClient");
-                        //llResetOtherScript("UpdaterClient");
                         return;
                     }
                     else if (choice == "detach") {
@@ -778,7 +770,6 @@ default {
                             s += "running normally: " + (string)llRound(timeLeftOnKey / SECS_PER_MIN) + " of " + (string)llFloor(keyLimit / SECS_PER_MIN) + " minutes remaining.";
                         }
 
-                        //llSendToAgent(s,id);
                         llOwnerSay(s);
                         return;
                     }

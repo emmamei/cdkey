@@ -287,15 +287,11 @@ default {
 
         scaleMem();
 
-        //debugSay(3,"DEBUG-CHECKRLV","Link message: code = " + (string)code);
-
         if (code == CONFIG) {
             name = llList2String(split, 0);
             split = llDeleteSubList(split, 0, 0);
             value = llList2String(split, 0);
             string c = llGetSubString(name, 0, 0);
-
-            debugSay(3,"DEBUG-CHECKRLV","Link message: CONFIG name = " + name);
 
             if (llListFindList([ "a", "c", "d", "w" ],(list)c) == NOT_FOUND) return;
 

@@ -32,9 +32,7 @@
 //  1: RLV restriction
 //  2: String CSV containing scripts using restriction
 //
-//list rlvStatus; ... not used
 list rlvRestrict;
-//list rlvRestrictions; ... not used
 
 string scriptName;
 string defaultBaseRLVcmd;
@@ -56,9 +54,6 @@ default {
     // STATE ENTRY
     //----------------------------------------
     state_entry() {
-        //dollID = llGetOwner();
-        //scriptName = llGetScriptName();
-
         cdInitializeSeq();
         scaleMem();
     }
@@ -128,7 +123,7 @@ default {
             string cmd = llList2String(split, 1);
             //split = llDeleteSubList(split, 0, 0);
 
-            debugSay(4,"DEBUG-STATUSRLV","Got RLV_CMD (315) from script " + script + ": " + cmd + " - " + commandString);
+            debugSay(4,"DEBUG-STATUSRLV","RLV_CMD script " + script + ": " + cmd + ": " + commandString);
 
             if (RLVok != TRUE) {
                 if (RLVok == UNSET) llSay(DEBUG_CHANNEL,"RLV command issued with RLV inactive! (" + commandString + ")");
@@ -155,22 +150,6 @@ default {
                     llSay(DEBUG_CHANNEL,"requested RLV command from " + script + " is too long!");
                     return;
                 }
-
-//integer rlvAlwaysrun;
-//integer rlvEdit;
-//integer rlvFartouch;
-//integer rlvSendchat;
-//integer rlvShowhovertextall;
-//integer rlvShowinv;
-//integer rlvShowloc;
-//integer rlvShowminimap;
-//integer rlvShownames;
-//integer rlvShowworldmap;
-//integer rlvSit;
-//integer rlvSittp;
-//integer rlvTplm;
-//integer rlvTploc;
-//integer rlvTplure;
 
                 // Split command string into multiple commands
                 list commandList;

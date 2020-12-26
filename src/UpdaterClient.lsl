@@ -152,7 +152,27 @@ default {
 
         string name = llList2String(split, 0);
 
-        debugSay(2,"DEBUG-UPDATER","Received link message code " + (string)code + " command: " + name);
+#ifdef DEVELOPER_MODE
+        string mode;
+
+             if (code == 15)  mode = "SEND_TO_CONTROLLER";
+        else if (code == 135) mode = "MEM_REPORT";
+        else if (code == 136) mode = "MEM_REPLY";
+        else if (code == 142) mode = "CONFIG_REPORT";
+        else if (code == 150) mode = "SIM_RATING_CHG";
+        else if (code == 300) mode = "CONFIG";
+        else if (code == 301) mode = "SET_CONFIG";
+        else if (code == 302) mode = "SANITY_CONFIG";
+        else if (code == 305) mode = "INTERNAL_CMD";
+        else if (code == 315) mode = "RLV_CMD";
+        else if (code == 350) mode = "RLV_RESET";
+        else if (code == 500) mode = "MENU_SELECTION";
+        else if (code == 502) mode = "POSE_SELECTION";
+        else if (code == 503) mode = "TYPE_SELECTION";
+        else                  mode = (string)code;
+
+        if (mode != "") { debugSay(2,"DEBUG-UPDATER","Received link message code " + mode + " command: " + name + " from " + script); }
+#endif
 
         if (code == CONFIG) {
 

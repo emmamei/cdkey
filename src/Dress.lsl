@@ -21,14 +21,10 @@
 
 #define nothingWorn(c,d) ((c) != "0") && ((c) != "1") && ((d) != "0") && ((d) != "1")
 #define dressVia(a) listInventoryOn(a)
-// #define dressViaMenu() listInventoryOn(menuDressChannel)
-// #define dressViaRandom() listInventoryOn(randomDressChannel)
 
 //========================================
 // VARIABLES
 //========================================
-
-//string bigsubfolder = "dressup"; //name of subfolder in RLV to always use if available. But also checks for outfits.
 
 // FIXME: This should be in a notecard so it can be changed without mangling the scripts.
 string outfitsURL = "outfits.htm";
@@ -39,15 +35,9 @@ string prefix;
 
 integer tempDressingLock = FALSE;  // allow only one dressing going on at a time
 
-//key setupID = NULL_KEY;
-
 string newOutfitName;
 string newOutfitFolder;
 string newOutfitPath;
-
-//string oldOutfitName;
-//string oldOutfitFolder;
-//string oldOutfitPath;
 
 // New simple listener setup we only
 // listen to rlvChannel directly the
@@ -81,16 +71,9 @@ string nudeFolder; // This is the ~nude we are using
 integer menuDressHandle;
 integer menuDressChannel;
 
-//integer fallbackFolder;
-
-//integer startup = 1;
 integer dressingFailures;
 
 integer outfitPage; // zero-indexed
-
-//string oldattachmentpoints;
-//string oldclothespoints;
-//integer newOutfitWordEnd;
 
 #define OUTFIT_PAGE_SIZE 9
 
@@ -388,10 +371,6 @@ default {
             else if (c == "n") {
                      if (name == "normalselfFolder")        normalselfFolder = value;
                 else if (name == "nudeFolder")                    nudeFolder = value;
-//              else if (name == "newOutfitName")              newOutfitName = value;
-//              else if (name == "newOutfitFolder")          newOutfitFolder = value;
-//              else if (name == "newOutfitPath")              newOutfitPath = value;
-//              else if (name == "newOutfit")                      newOutfit = value;
             }
 
             else if (c == "o") {
@@ -402,10 +381,6 @@ default {
                          lmSendConfig("normalselfFolder", normalselfFolder);
                          lmSendConfig("nudeFolder", nudeFolder);
                 }
-//              else if (name == "oldOutfitFolder")          oldOutfitFolder = value;
-//              else if (name == "oldOutfitPath")              oldOutfitPath = value;
-//              else if (name == "oldOutfitName")              oldOutfitName = value;
-//              else if (name == "oldOutfit")                      oldOutfit = value;
             }
 
             else if (name == "typeFolder")                    typeFolder = value;
@@ -417,7 +392,6 @@ default {
 
             // Internal command - one of:
             //
-            // * randomDress
             // * wearOutfit
             // * stripAll
             // * setHovertext
@@ -468,11 +442,6 @@ default {
                     // *OutfitPath       clothingFolder   - name of folder with outfit, relative to outfitsFolder
                     // *Outfit           -new-            - full path of outfit (outfitsFolder + "/" + clothingFolder + "/" + newOutfitName)
 
-                    //lmSendConfig("oldOutfitName",   (  oldOutfitName = newOutfitName));
-                    //lmSendConfig("oldOutfitFolder", (oldOutfitFolder = newOutfitFolder));
-                    //lmSendConfig("oldOutfitPath",   (  oldOutfitPath = newOutfitPath));
-                    //lmSendConfig("oldOutfit",       (      oldOutfit = newOutfit));
-
                     // Build the newOutfit* variables - but do they get used?
 
                     newOutfitFolder = outfitsFolder;
@@ -482,20 +451,13 @@ default {
                     if (clothingFolder != "")
                         newOutfit += clothingFolder + "/";
                     newOutfit += newOutfitName;
-
-//                  lmSendConfig("newOutfitName",   (newOutfitName));
-//                  lmSendConfig("newOutfitFolder", (newOutfitFolder));
-//                  lmSendConfig("newOutfitPath",   (newOutfitPath));
-//                  lmSendConfig("newOutfit",       (newOutfit));
                 }
 
-                //newOutfitWordEnd = llStringLength(newOutfit)  - 1;
-
-                debugSay(5,"DEBUG-DRESS","newOutfit is: " + newOutfit);
-                debugSay(5,"DEBUG-DRESS","newOutfitName is: " + newOutfitName);
-                debugSay(5,"DEBUG-DRESS","newOutfitFolder is: " + newOutfitFolder);
-                debugSay(5,"DEBUG-DRESS","newOutfitPath is: " + newOutfitPath);
-                debugSay(5,"DEBUG-DRESS","clothingFolder is: " + clothingFolder);
+                //debugSay(5,"DEBUG-DRESS","newOutfit is: " + newOutfit);
+                //debugSay(5,"DEBUG-DRESS","newOutfitName is: " + newOutfitName);
+                //debugSay(5,"DEBUG-DRESS","newOutfitFolder is: " + newOutfitFolder);
+                //debugSay(5,"DEBUG-DRESS","newOutfitPath is: " + newOutfitPath);
+                //debugSay(5,"DEBUG-DRESS","clothingFolder is: " + clothingFolder);
 
                 //----------------------------------------
                 // DRESSING
@@ -772,22 +734,6 @@ default {
             }
         }
         else if (code < 200) {
-            //if (code == 102) {
-            //    ;
-            //}
-
-            // else if (code == 104) {
-            //     if (script != "Start") return;
-            //     startup = 1;
-            // }
-            // else if (code == 105) {
-            //     if (script != "Start") return;
-            //     startup = 2;
-            // }
-            // else if (code == 110) {
-            //     initState = 105;
-            // }
-
             if (code == MEM_REPORT) {
                 memReport(cdMyScriptName(),cdListFloatElement(split, 0));
             }
@@ -824,10 +770,6 @@ default {
             // sends back a response.
             //
             // We just got a selected Outfit or new folder to go into
-
-            //outfitsMessage = "You may choose any outfit for " + pronounHerDoll + " to wear. ";
-            //if (dresserID == dollID) outfitsMessage += "See " + WEB_DOMAIN + outfitsURL + " for more information on outfits. ";
-            //outfitsMessage += "\n\n" + folderStatus();
 
             // Build outfit menu: note it is using the number before the period here
             integer select = (integer)llGetSubString(choice, 0, llSubStringIndex(choice, ".") - 1);
@@ -941,7 +883,6 @@ default {
             // Did we get anything at all?
             if (choice == "") {
                 cdDialogListen();
-                //llDialog(dresserID, "You gaze into " + pronounHerDoll + " closet, and see no outfits for Dolly to wear.", ["OK"], dialogChannel);
                 llDialog(dresserID, "No outfits to wear in this directory.", [ "OK", MAIN ], dialogChannel);
                 return;
             }
@@ -964,9 +905,7 @@ default {
 
                 if (itemName != newOutfitName) {
                     if (!isHiddenItem(prefix) && !isGroupItem(prefix)) {
-                        //debugSay(4, "DEBUG-DRESS", "dollType = " + dollType + "; prefix = " + prefix);
                         if (!isTransformingItem(prefix) || dollType == "Regular") {
-                            //debugSay(4, "DEBUG-DRESS", "Passed the test: " + itemName);
                             if (isRated(prefix)) {
                                 if (cdOutfitRating(itemName) <= cdRating2Integer(simRating)) {
                                     tmpList += itemName;
@@ -1008,9 +947,9 @@ default {
             if (dresserID == dollID) outfitsMessage = "You may choose any outfit to wear. ";
             else outfitsMessage = "You may choose any outfit for dolly to wear. ";
 
-            //if (totalOutfits > 0) outfitsMessage += ("There are " + (string)totalOutfits + " outfits to choose from. ");
+            if (totalOutfits > 0) outfitsMessage += ("There are " + (string)totalOutfits + " outfits to choose from. ");
 #ifdef DEVELOPER_MODE
-            //else llSay(DEBUG_CHANNEL,"No outfits in this directory?");
+            else llSay(DEBUG_CHANNEL,"No outfits in this directory?");
 #endif
             if (dresserID == dollID) outfitsMessage += "See the help file for more detailed information on outfits.";
             outfitsMessage += "\n\n" + folderStatus();
