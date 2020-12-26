@@ -335,7 +335,7 @@ default {
             string cmd = llList2String(split, 0);
             split = llDeleteSubList(split, 0, 0);
 
-            debugSay(3,"DEBUG-CHECKRLV","Internal command triggered: " + cmd);
+            //debugSay(3,"DEBUG-CHECKRLV","Internal command triggered: " + cmd);
 
             if (cmd == "doCheckRLV") {
                 doCheckRLV();
