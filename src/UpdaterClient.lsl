@@ -176,7 +176,7 @@ default {
         else if (code == 503) mode = "TYPE_SELECTION";
         else                  mode = (string)code;
 
-        if (mode != "") { debugSay(2,"DEBUG-UPDATER","Received link message code " + mode + " command: " + name + " from " + script); }
+        if (mode != "") { debugSay(2,"DEBUG-UPDATER","Link message #" + mode + " cmd: " + name + " [" + script + "]"); }
 #endif
 
         if (code == CONFIG) {
