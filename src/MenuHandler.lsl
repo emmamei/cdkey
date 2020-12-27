@@ -866,16 +866,8 @@ default {
                             else if (afterSpace == "RLV") {
                                 // we don't deal with RLVsupport here, as if RLVsupport is FALSE,
                                 // this choice is never made.
-                                if (isX) {
-                                    RLVok = TRUE; // in this script, mark it ok while we check elsewhere
-                                    debugSay(4,"DEBUG-MENU","Requesting a check of RLV");
-                                    lmDoCheckRLV();
-                                }
-                                else {
-                                    // since disabling RLV, just do it and report
-                                    RLVok = FALSE;
-                                    lmRLVreport(RLVok,"",0);
-                                }
+                                lmSendConfig("RLVok", (string)isX);
+                                lmRLVreport(RLVok,"",isX);
                             }
 
                             // if is not Doll, they can set and unset these options...
