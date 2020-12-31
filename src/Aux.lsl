@@ -47,7 +47,7 @@ integer textboxType;
 integer i;
 string msg;
 
-// Only place gender is currently set is in the preferences
+// Gender is set in the preferences and the option menu
 setGender(string gender) {
 
     if (gender == "male") {
@@ -466,12 +466,13 @@ Parent - Take care choosing your parents; they have great control over Dolly and
             }
             else if (llGetSubString(choice,0,6) == "Gender:") {
                 string s = llGetSubString(choice,7,-1);
+                debugSay(4,"DEBUG-AUX","Gender selected: " + s);
 
                 // Whatever the current element is - set gender
                 // to the next in a circular loop
 
-                     if (s == "Male")   setGender("female");
-                else if (s == "Female") setGender("male");
+                     if (s == "male")   setGender("female");
+                else if (s == "female") setGender("male");
 
                 llOwnerSay("Gender is now set to " + dollGender);
                 lmMenuReply("Key...", llGetDisplayName(id), id);
