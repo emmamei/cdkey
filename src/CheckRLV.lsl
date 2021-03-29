@@ -64,7 +64,7 @@ doCheckRLV() {
     llOwnerSay("Checking for RLV support");
 
     // Set up RLV listener
-    if (rlvChannel == 0) {
+    if (rlvChannel == 0) { // rlvChannel should be zero only when unset
         // Calculate positive (RLV compatible) rlvChannel
         rlvChannel = MAX_INT - (integer)llFrand(5000);
         rlvHandle = cdListenMine(rlvChannel);
@@ -221,6 +221,9 @@ default {
 #ifdef DEVELOPER_MODE
         myPath = "";
 #endif
+        llListenRemove(rlvHandle);
+        rlvChannel == 0;
+
         // Note this happens only at the very beginning
         doCheckRLV();
     }
