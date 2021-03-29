@@ -244,6 +244,8 @@ default {
                 else if (name == "canSelfTP")                   canSelfTP = (integer)value;
                 else if (name == "collapsed")                   collapsed = (integer)value;
                 else if (name == "configured")                 configured = (integer)value;
+                else if (name == "chatChannel")               chatChannel = (integer)value;
+                else if (name == "chatPrefix")                 chatPrefix = value;
             }
 
             // shortcut: d
@@ -574,6 +576,10 @@ default {
                 + "\n\nCurrent region FPS is " + formatFloat(llGetRegionFPS(),1) + " FPS and time dilation is " + formatFloat(llGetRegionTimeDilation(),3) + "."
 #endif
                 ;
+
+                if (isDoll) {
+                    msg += "\n\nCurrently listening on channel " + (string)chatChannel + " with prefix " + chatPrefix;
+                }
 
                 menu = llListSort(menu, 1, 1);
 

@@ -30,7 +30,6 @@ integer chatEnable           = TRUE;
 key chatFilter;
 string rlvAPIversion;
 
-integer chatChannel         = 75;
 integer chatHandle          = 0;
 
 default {
@@ -674,6 +673,9 @@ default {
                         if (lastWinderID) s += "\nLast winder was " + cdProfileURL(lastWinderID);
                         s += "\n";
 
+                        s += "\nChat channel = " + (string)chatChannel;
+                        s += "\nChat prefix = " + chatPrefix;
+
                         cdSayTo(s, id);
                         return;
                     }
@@ -1030,6 +1032,7 @@ default {
                             chatPrefix = newPrefix;
                             string s = "Chat prefix has been changed to " + llToLower(chatPrefix) + " the new prefix should now be used for all commands.";
                             cdSayToAgentPlusDoll(s, id);
+                            lmSetConfig("chatPrefix",(string)(chatPrefix));
                         }
                         return;
                     }

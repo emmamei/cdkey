@@ -56,6 +56,7 @@ integer canFly              = 1;
 integer canSelfTP           = 1;
 integer canSit              = 1;
 integer canStand            = 1;
+integer chatChannel         = 75;
 integer code;
 integer collapsed;
 integer collapseTime;

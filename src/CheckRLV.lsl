@@ -38,7 +38,6 @@ integer rlvChannel;
 integer rlvHandle;
 integer RLVck = MAX_RLVCHECK_TRIES;
 integer RLVstarted;
-integer chatChannel = 75;
 
 list rlvExceptions;
 
