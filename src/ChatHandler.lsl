@@ -506,14 +506,14 @@ default {
     Commands need to be prefixed with the prefix, which is currently " + llToLower(chatPrefix) + "
 
     help ........... this list of commands
-    menu ........... show main menu";
+    menu ........... show main menu
+    stat ........... concise current status";
                     string help2;
 
                     if (isDoll || isController) {
                         help += "
     build .......... list build configurations
     detach ......... detach key if possible
-    stat ........... concise current status
     stats .......... selected statistics and settings
     xstats ......... extended statistics and settings
     hide ........... make key invisible
@@ -677,34 +677,6 @@ default {
                         s += "\nChat prefix = " + chatPrefix;
 
                         cdSayTo(s, id);
-                        return;
-                    }
-                    else if (choice == "stat") {
-                        if (isDoll && hardcore) return;
-                        string msg = "Key is ";
-
-                        if (windRate > 0) {
-                            msg += "unwinding at a ";
-
-                            if (windRate == 1.0) msg += "normal rate.";
-                            else {
-                                if (windRate < 1.0) msg += "slowed rate of ";
-                                else if (windRate > 1.0) msg += "accelerated rate of ";
-
-                                msg += " of " + formatFloat(windRate, 1) + "x.";
-                            }
-
-                            float t1 = timeLeftOnKey / (SECS_PER_MIN * windRate);
-                            float t2 = effectiveLimit / (SECS_PER_MIN * windRate);
-                            float p = t1 * 100.0 / t2;
-
-                            msg += " Time remaining: " + (string)llRound(t1) + "/" +
-                                (string)llRound(t2) + " min (" + formatFloat(p, 2) + "% capacity).";
-
-                        } else msg += "currently stopped.";
-                        if (demoMode) msg += " (Demo mode active.)";
-
-                        cdSayTo(msg, id);
                         return;
                     }
                     else if (choice == "stats") {
@@ -888,6 +860,34 @@ default {
                         }
                     }
                     else cdMenuInject("Wind", name, id);
+                    return;
+                }
+                else if (choice == "stat") {
+                    if (isDoll && hardcore) return;
+                    string msg = "Key is ";
+
+                    if (windRate > 0) {
+                        msg += "unwinding at a ";
+
+                        if (windRate == 1.0) msg += "normal rate.";
+                        else {
+                            if (windRate < 1.0) msg += "slowed rate of ";
+                            else if (windRate > 1.0) msg += "accelerated rate of ";
+
+                            msg += " of " + formatFloat(windRate, 1) + "x.";
+                        }
+
+                        float t1 = timeLeftOnKey / (SECS_PER_MIN * windRate);
+                        float t2 = effectiveLimit / (SECS_PER_MIN * windRate);
+                        float p = t1 * 100.0 / t2;
+
+                        msg += " Time remaining: " + (string)llRound(t1) + "/" +
+                            (string)llRound(t2) + " min (" + formatFloat(p, 2) + "% capacity).";
+
+                    } else msg += "currently stopped.";
+                    if (demoMode) msg += " (Demo mode active.)";
+
+                    cdSayTo(msg, id);
                     return;
                 }
                 else if (choice == "menu") {
