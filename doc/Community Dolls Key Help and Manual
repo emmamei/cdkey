@@ -1,6 +1,6 @@
 Community Dolls Key
 ===================
-19 November 2014
+30 March 2020
 
 This Key is different from others; it is designed to force a wearer to interact with others and to make friends, build community, and to bring people together. Thus, some features that would be found in a normal BDSM-styled key is not found here.
 
@@ -18,8 +18,6 @@ There many, many, many New Features - perhaps too many to list. Here are some of
 * Support for many more outfits, with support for multiple pages and subfolders.
 
 * Outfits can be limited to certain Sim Ratings.
-
-* Color of the gem can be changed - and it shines too!
 
 * The amount of time for each wind can be changed
 
@@ -162,10 +160,6 @@ On the initial menu seen after a Key is touched are the following buttons:
 
     Help and Support is available for the Key here, including documentation.
 
-    * AFK
-
-    If the Doll is AFK (or Away From Keyboard) then the Dolly operates at a reduced unwinding rate, and with moderate restrictions in place. It is a sort of "low-power" mode for Dolly.
-
 Options Menu
 ------------
 
@@ -284,10 +278,6 @@ Options > Features
 
     The Key uses an external server to save the Key's settings from one run to the next. If this bothers you, then use this setting to go "offline" and no data will be stored externally.
 
-    * Allow AFK
-
-    Can the Doll go away from the keyboard (AFK)? This option determines the answer to this question.
-
     * Repeat Wind
 
     A user may wind the Dolly over and over, until the Dolly's Key is fully wound. If this option is set, then a different user must wind the Dolly each sequential time: no user may wind two times in a row.
@@ -302,10 +292,6 @@ Options > Key
     * Dolly Name
 
     The name of the Dolly may be set here. By default, the name is the first "word" in the Dolly's name. Any name may be set.
-
-    * Gem Color
-
-    The crystal gem contained within the Key has a color changing mechanism stored within it, and this menu option allows control over the color. Set colors may be used, or a custom color if desired.
 
     * Max Time
 
