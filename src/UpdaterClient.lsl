@@ -178,7 +178,7 @@ default {
         if (mode != "") { debugSay(2,"DEBUG-UPDATER","Link message #" + mode + " cmd: " + name + " [" + script + "]"); }
 #endif
 
-        if (code == CONFIG) {
+        if (code == SEND_CONFIG) {
 
             string value = llList2String(split, 1);
             //split = llDeleteSubList(split,0,0);

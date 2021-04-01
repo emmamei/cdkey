@@ -329,7 +329,7 @@ default {
 
         scaleMem();
 
-        if (code == CONFIG) {
+        if (code == SEND_CONFIG) {
 
             // Configuration settings
 

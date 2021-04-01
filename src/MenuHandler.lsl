@@ -207,7 +207,7 @@ default {
 
         scaleMem();
 
-        if (code == CONFIG) {
+        if (code == SEND_CONFIG) {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
             split = llDeleteSubList(split, 0, 0);

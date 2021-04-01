@@ -96,7 +96,7 @@ default {
 
         scaleMem();
 
-        if (code == CONFIG) {
+        if (code == SEND_CONFIG) {
             string name = cdListElement(split, 0);
             string value = cdListElement(split, 1);
 

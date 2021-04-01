@@ -59,7 +59,7 @@ default {
 
         scaleMem();
 
-        if (code == CONFIG) {
+        if (code == SEND_CONFIG) {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
             string c = cdGetFirstChar(name); // for speedup
@@ -741,7 +741,7 @@ default {
                     }
                     else if (choice == "powersave") {
                         if (isDoll) {
-                            lmSendConfig("lowScriptMode","1");
+                            lmSetConfig("lowScriptMode","1");
                             llOwnerSay("Power-save mode initiated");
                         }
                         return;
