@@ -32,7 +32,6 @@ float timerEvent;
 float listenTime;
 float memTime;
 string minsLeft;
-string curGemColour;
 string memOutput = "Script Memory Status:";
 integer maxMins;
 integer ncLine;
@@ -114,7 +113,6 @@ default {
 #endif
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "poserID")                       poserID = (key)value;
-            //else if (name == "normalGemColour")           normalGemColour = (vector)value;
             else if (name == "keyLimit")                      maxMins = llRound((float)value / 60.0);
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
             else if (name == "backMenu")                     backMenu = value;
