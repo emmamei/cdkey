@@ -165,8 +165,8 @@ default {
         else if (code == 136) mode = "MEM_REPLY";
         else if (code == 142) mode = "CONFIG_REPORT";
         else if (code == 150) mode = "SIM_RATING_CHG";
-        else if (code == 300) mode = "CONFIG";
-        else if (code == 301) mode = "SANITY_CONFIG";
+        else if (code == 300) mode = "SEND_CONFIG";
+        else if (code == 301) mode = "SET_CONFIG";
         else if (code == 305) mode = "INTERNAL_CMD";
         else if (code == 315) mode = "RLV_CMD";
         else if (code == 350) mode = "RLV_RESET";
