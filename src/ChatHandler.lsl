@@ -525,9 +525,11 @@ default {
     blacklist NN ... add to blacklist
     unblacklist NN . remove from blacklist";
 
+#ifdef EMERGENCY_WIND
                             if (!hardcore) help += "
     wind ........... trigger emergency autowind";
                         }
+#endif
 
                         //----------------------------------------
                         // Controller Help
@@ -794,10 +796,11 @@ default {
                 //   * uncarry
                 //
                 if (choice == "wind") {
-                    // if Dolly gives this command, its an Emergency Winder activation.
-                    // if someone else, it is a normal wind of the Doll.
-                    // if a Tester - it is a normal wind (Emergency Winder not available!)
+                    // A Normal Wind
 
+#ifdef EMERGENCY_WIND
+                    // This implements an emergency wind - but should be a different name
+                    // than "wind" (see issue #631)
                     if (isDoll) {
                         if (hardcore) return;
                         if (collapsed) {
@@ -817,7 +820,8 @@ default {
                             cdSayTo("Dolly is not collapsed; emergency winder is currently disengaged",id);
                         }
                     }
-                    else cdMenuInject("Wind", name, id);
+#endif
+                    cdMenuInject("Wind", name, id);
                     return;
                 }
                 else if (choice == "stat") {
