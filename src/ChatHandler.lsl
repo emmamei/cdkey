@@ -528,8 +528,8 @@ default {
 #ifdef EMERGENCY_WIND
                             if (!hardcore) help += "
     wind ........... trigger emergency autowind";
-                        }
 #endif
+                        }
 
                         //----------------------------------------
                         // Controller Help
