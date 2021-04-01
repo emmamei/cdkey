@@ -741,7 +741,7 @@ default {
                     }
                     else if (choice == "powersave") {
                         if (isDoll) {
-                            lmSetConfig("lowScriptMode","1");
+                            lmSendConfig("lowScriptMode","1");
                             llOwnerSay("Power-save mode initiated");
                         }
                         return;

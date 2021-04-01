@@ -23,7 +23,7 @@ float GlobalDefines_version=1.0;
 #define SIM_RATING_CHG    150
 #define CONFIG            300
 #define SET_CONFIG        301
-#define SANITY_CONFIG     302
+#define SANITY_CONFIG     301
 #define INTERNAL_CMD      305
 #define TIMING_CMD        310
 #define RLV_CMD           315
