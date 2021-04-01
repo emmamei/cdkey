@@ -338,7 +338,7 @@ default {
             string c = cdGetFirstChar(name);
 
             if (llListFindList([ "a", "R", "h", "p", "c", "d", "n", "t", "w", "o", "u" ], (list)c) == NOT_FOUND) return;
-            debugSay(6, "DEBUG-DRESS", "Link message: CONFIG name = " + name);
+            //debugSay(6, "DEBUG-DRESS", "Link message: CONFIG name = " + name);
 
             if (name == "dialogChannel") {
                 dialogChannel = (integer)value;
