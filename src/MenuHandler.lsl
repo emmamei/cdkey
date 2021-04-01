@@ -255,7 +255,6 @@ default {
                     //debugSay(4,"DEBUG-MENU","dialogChannel recieved and set to " + (string)dialogChannel);
                 }
                 else if (name == "detachable")                 detachable = (integer)value;
-                else if (name == "demoMode")                     demoMode = (integer)value;
                 else if (name == "dollType")                     dollType = value;
 #ifdef DEVELOPER_MODE
                 else if (name == "debugLevel")                 debugLevel = (integer)value;

@@ -52,9 +52,6 @@ integer poseExpire;
 // transformLockExpire in this script
 integer transformLockExpire;
 
-integer effectiveLimit;
-integer effectiveWindTime = 30;
-
 key simRatingQuery;
 
 //========================================
@@ -503,10 +500,6 @@ default {
             else if (c == "d") {
                      if (name == "dollDisplayName")       dollDisplayName = value;
                 else if (name == "dialogChannel")           dialogChannel = (integer)value;
-                else if (name == "demoMode") {
-                    if (demoMode = (integer)value) effectiveLimit = DEMO_LIMIT;
-                    else effectiveLimit = keyLimit;
-                }
                 else if (name == "dollType")                     dollType = value;
 #ifdef DEVELOPER_MODE
                 else if (name == "debugLevel")                 debugLevel = (integer)value;
@@ -542,13 +535,8 @@ default {
                 // if limit is less than time left on key, clip time remaining
                 if (timeLeftOnKey > keyLimit) timeLeftOnKey = keyLimit;
 
-                // set effectiveLimit appropriately
-                if (!demoMode) effectiveLimit = keyLimit;
-                else effectiveLimit = DEMO_LIMIT;
-
                 lmSendConfig("keyLimit", (string)keyLimit);
                 lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
-                //lmSendConfig("effectiveLimit", (string)effectiveLimit);
             }
             else if (name == "lastWinderID") {
                 lmSendConfig("lastWinderID", (string)(lastWinderID = (key)value));
@@ -560,7 +548,7 @@ default {
             }
             else if (name == "timeLeftOnKey") {
                 timeLeftOnKey = (integer)value;
-                if (timeLeftOnKey > effectiveLimit) timeLeftOnKey = effectiveLimit;
+                if (timeLeftOnKey > keyLimit) timeLeftOnKey = keyLimit;
 
                 lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
             }
@@ -636,7 +624,7 @@ default {
                 integer windAmount = llList2Integer(split, 0);
                 string name = llList2String(split, 1);
                 string mins = (string)llFloor(windAmount / SECS_PER_MIN);
-                string percent = formatFloat((float)timeLeftOnKey * 100.0 / (float)effectiveLimit, 1);
+                string percent = formatFloat((float)timeLeftOnKey * 100.0 / (float)keyLimit, 1);
 
                 // We're assuming that every winder has a non-null name, and every
                 // auto-wind has a null name... is that really true?
@@ -706,7 +694,7 @@ default {
                         // Doing it this way makes the wind amount independent of the amount
                         // of time in a single wind. It is also a form of hard-coding.
                         //
-                        windAmount = (integer)(effectiveLimit * 0.2);
+                        windAmount = (integer)(keyLimit * 0.2);
                         if (hardcore) { if (windAmount > 120) windAmount = 120; }
                         else { if (windAmount > 600) windAmount = 600; }
 
@@ -769,15 +757,10 @@ default {
                 }
 
                 // Here, dolly may be collapsed or not...
-                //
-                // effectiveWindTime allows us to preserve the real wind
-                // even when demo mode is active
-                if (demoMode) effectiveWindTime = 60;
-                else effectiveWindTime = windNormal;
 
                 // set the actual wind amount - but don't overwind
-                if (timeLeftOnKey + effectiveWindTime > effectiveLimit) windAmount = effectiveLimit - timeLeftOnKey;
-                else windAmount = effectiveWindTime;
+                if (timeLeftOnKey + windNormal > keyLimit) windAmount = keyLimit - timeLeftOnKey;
+                else windAmount = windNormal;
 
                 // The "winding" takes place here. Note that while timeLeftOnKey might
                 // be set - collapse is set a short time later - thus, timeLeftOnKey is greater
@@ -809,10 +792,10 @@ default {
                 else {
                     lmSendConfig("lastWinderID", (string)(lastWinderID = id));
 
-                    if (timeLeftOnKey == effectiveLimit) { // Fully wound
+                    if (timeLeftOnKey == keyLimit) { // Fully wound
                         if (id != dollID) {
                             if (hardcore) llOwnerSay("You have been fully wound by " + name + ".");
-                            else llOwnerSay("You have been fully wound by " + name + " - " + (string)llRound(effectiveLimit / (SECS_PER_MIN * windRate)) + " minutes remaining.");
+                            else llOwnerSay("You have been fully wound by " + name + " - " + (string)llRound(keyLimit / (SECS_PER_MIN * windRate)) + " minutes remaining.");
 
                             llSay(0, dollName + " has been fully wound by " + name + ". Thanks for winding Dolly!");
                             //cdSayTo(dollName + " is now fully wound. Thanks for winding Dolly!", id);
@@ -871,13 +854,8 @@ default {
                 // if limit is less than time left on key, clip time remaining
                 if (timeLeftOnKey > keyLimit) timeLeftOnKey = keyLimit;
 
-                // if not in demo mode set effectiveLimit
-                if (!demoMode) effectiveLimit = keyLimit;
-                else effectiveLimit = DEMO_LIMIT;
-
                 lmSendConfig("keyLimit", (string)keyLimit);
                 lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
-                //lmSendConfig("effectiveLimit", (string)effectiveLimit);
                 lmMenuReply("Key...","",id);
             }
             else if (choice == "Wind Time...") {

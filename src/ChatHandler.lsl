@@ -23,8 +23,6 @@
 
 key lastWinderID;
 
-integer effectiveLimit;
-
 string msg;
 integer chatEnable           = TRUE;
 key chatFilter;
@@ -114,11 +112,6 @@ default {
                 else if (name == "dollType")                 dollType = value;
                 else if (name == "dollGender")             dollGender = value;
                 else if (name == "dollDisplayName")   dollDisplayName = value;
-                else if (name == "demoMode") {
-                    demoMode = (integer)value;
-                    if (demoMode) effectiveLimit = DEMO_LIMIT;
-                    else effectiveLimit = keyLimit;
-                }
 #ifdef DEVELOPER_MODE
                 else if (name == "debugLevel")             debugLevel = (integer)value;
 #endif
@@ -136,11 +129,7 @@ default {
             }
 
             else if (name == "keyAnimation")         keyAnimation = value;
-            else if (name == "keyLimit") {
-                keyLimit = (integer)value;
-                if (!demoMode) effectiveLimit = keyLimit;
-                else effectiveLimit = DEMO_LIMIT;
-            }
+            else if (name == "keyLimit")             keyLimit = (integer)value;
 
             //----------------------------------------
             // Shortcut: w
@@ -522,7 +511,6 @@ default {
     ghost .......... make key visible and ghostly
     release ........ stop the current pose if possible
     unpose ......... stop the current pose if possible
-    demo ........... toggle demo mode
     [posename] ..... activate the named pose if possible
     listposes ...... list all poses
     channel ## ..... change channel
@@ -604,7 +592,6 @@ default {
                 //   * stat
                 //   * stats
                 //   * release/unpose
-                //   * demo
                 //   * hardcore (ADULT_MODE)
                 //   * collapse (DEVELOPER_MODE)
                 //   * powersave (DEVELOPER_MODE)
@@ -636,13 +623,11 @@ default {
                                    (string)(EMERGENCY_LIMIT_TIME / 60 / (integer)SECS_PER_MIN) + " hours\nEmergency Winder: ";
 
                         float windEmergency;
-                        windEmergency = effectiveLimit * 0.2;
+                        windEmergency = keyLimit * 0.2;
                         if (hardcore) { if (windEmergency > 120) windEmergency = 120; }
                         else { if (windEmergency > 600) windEmergency = 600; }
 
                         s += (string)((integer)(windEmergency / SECS_PER_MIN)) + " mins\n";
-
-                        if (demoMode) s += "Demo mode is enabled\n";
 
                         cdCapability(autoTP,           "Doll can", "be force teleported");
                         //cdCapability(canAFK,           "Doll can", "go AFK");
@@ -682,7 +667,7 @@ default {
                     else if (choice == "stats") {
                         if (isDoll && hardcore) return;
                         cdSayTo("Time remaining: " + (string)llRound(timeLeftOnKey / (SECS_PER_MIN * windRate)) + " minutes of " +
-                                    (string)llRound(effectiveLimit / (SECS_PER_MIN * windRate)) + " minutes.", id);
+                                    (string)llRound(keyLimit / (SECS_PER_MIN * windRate)) + " minutes.", id);
 
                         string msg;
 
@@ -718,33 +703,6 @@ default {
 
                         if ((poserID != NULL_KEY) && (poserID != dollID)) llOwnerSay("Dolly tries to wrest control of " + p + " body from the pose but " + s + " is no longer in control of " + p + " form.");
                         else lmMenuReply("Unpose", dollName, dollID);
-                        return;
-                    }
-
-                    // Demo: short time span
-                    else if (choice == "demo") {
-                        // Note that, unlike in the original key, demo mode is not
-                        // just a 5-minute limit - but rather a TEMPORARY 5-minute limit,
-                        // with previous settings saved...
-
-                        // Toggles demo mode
-                        lmSendConfig("demoMode", (string)(demoMode = !demoMode));
-
-                        string s = "Dolly's Key is now ";
-                        if (demoMode) {
-                            if (timeLeftOnKey > DEMO_LIMIT) lmSetConfig("timeLeftOnKey", (string)(timeLeftOnKey = DEMO_LIMIT));
-                            s += "in demo mode: " + (string)llRound(timeLeftOnKey / SECS_PER_MIN) + " of " + (string)llFloor(DEMO_LIMIT / SECS_PER_MIN) + " minutes remaining.";
-                        }
-                        else {
-                            // Q: currentlimit not set until later; how do we tell user what it is?
-                            // A: They are not in demoMode after this so the limit is going to be restored to keyLimit
-                            //    only exception would be if keyLimit was invalid however there will be a follow up message
-                            //    from Main stating this and giving the new value so not something we need to do here.
-
-                            s += "running normally: " + (string)llRound(timeLeftOnKey / SECS_PER_MIN) + " of " + (string)llFloor(keyLimit / SECS_PER_MIN) + " minutes remaining.";
-                        }
-
-                        llOwnerSay(s);
                         return;
                     }
 #ifdef ADULT_MODE
@@ -878,14 +836,13 @@ default {
                         }
 
                         float t1 = timeLeftOnKey / (SECS_PER_MIN * windRate);
-                        float t2 = effectiveLimit / (SECS_PER_MIN * windRate);
+                        float t2 = keyLimit / (SECS_PER_MIN * windRate);
                         float p = t1 * 100.0 / t2;
 
                         msg += " Time remaining: " + (string)llRound(t1) + "/" +
                             (string)llRound(t2) + " min (" + formatFloat(p, 2) + "% capacity).";
 
                     } else msg += "currently stopped.";
-                    if (demoMode) msg += " (Demo mode active.)";
 
                     cdSayTo(msg, id);
                     return;

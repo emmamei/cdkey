@@ -112,7 +112,7 @@ processConfiguration(string name, string value) {
 #ifdef ADULT_MODE
                       "strippable",
 #endif
-                      "pose silence", "auto tp", "dressable", "outfitable", "can dress", "demo mode",
+                      "pose silence", "auto tp", "dressable", "outfitable", "can dress",
                       "show phrases", "carryable", "repeatable wind", "ghost"
                     ];
 
@@ -121,7 +121,7 @@ processConfiguration(string name, string value) {
 #ifdef ADULT_MODE
                          "allowStrip",
 #endif
-                         "poseSilence", "autoTP", "allowDress", "allowDress", "canDressSelf", "demoMode",
+                         "poseSilence", "autoTP", "allowDress", "allowDress", "canDressSelf",
                          "showPhrases", "allowCarry", "allowRepeatWind", "ghost"
                        ];
 

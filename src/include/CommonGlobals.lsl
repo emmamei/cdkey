@@ -61,7 +61,6 @@ integer code;
 integer collapsed;
 integer collapseTime;
 integer configured;
-integer demoMode;
 integer detachable          = 1;
 integer doWarnings;
 integer hardcore;
