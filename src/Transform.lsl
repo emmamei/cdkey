@@ -252,6 +252,16 @@ default {
     //----------------------------------------
     // TIMER
     //----------------------------------------
+    //
+    // Timer is used when:
+    //    - Searching for RLV, and it times out
+    //    - Transform lock is active
+    //    - Homing device is active
+    //    - Phrases are being used
+    //
+    // These are all affected by lowScriptMode which reduces
+    // the number of timer calls.
+    //
     timer() {
 
         // No searching happens unless RLV is ok...
