@@ -591,7 +591,6 @@ default {
         }
         else if (code == INTERNAL_CMD) {
             string cmd = llList2String(split, 0);
-            string arg = llList2String(split, 1);
             split = llDeleteSubList(split, 0, 0);
             integer isController = cdIsController(id);
 
@@ -634,7 +633,7 @@ default {
                 else collapse(llList2Integer(split, 0));
             }
             else if (cmd == "winding") {
-                string name = arg;
+                string name = llList2String(split, 1);
 
                 // Four steps:
                 //   1. Can we wind up at all?
@@ -676,6 +675,7 @@ default {
                 // be set - collapse is set a short time later - thus, timeLeftOnKey is greater
                 // than zero, but collapse is still true.
                 lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey += windAmount));
+                lmSendConfig("lastWinderID", (string)(lastWinderID = id));
 
                 if (collapsed == NO_TIME) {
 
@@ -699,6 +699,11 @@ default {
                 string mins = (string)llFloor(windAmount / SECS_PER_MIN);
                 string percent = formatFloat((float)timeLeftOnKey * 100.0 / (float)keyLimit, 1);
 
+                // Two possible messages to go out:
+                //
+                //   1. Standard wind message
+                //   2. Fully wound message
+                //
                 // We're assuming that every winder has a non-null name, and every
                 // auto-wind has a null name... is that really true?
                 if (name != "") {
@@ -719,10 +724,26 @@ default {
                         cdSayTo("You turn " + dollDisplayName + "'s Key, and " + pronounSheDoll + " receives " +
                             mins + " more minutes of life (" + percent + "% capacity).", id);
                     }
+
+                    if (timeLeftOnKey == keyLimit) {
+
+                        // Fully wound
+
+                        if (dollID == id) {
+                            llOwnerSay("You have been fully wound!");
+                        }
+                        else {
+                            llSay(PUBLIC_CHANNEL,dollDisplayName + " has been fully wound by " + name + "! Thank you!");
+                        }
+                    }
                 }
                 else {
+                    // This should not happen - but if it does...
+#ifdef DEVELOPER_MODE
+                    llSay(DEBUG_CHANNEL,"No name received in Internal Command windMsg!");
+#endif
                     if (hardcore) llOwnerSay("Your key turns automatically, giving you additional minutes of life.");
-                    else llOwnerSay("Your key turns automatically, giving you an additional " + mins + " minutes of life.");
+                    else llOwnerSay("Your key turns automatically, giving you an additional " + mins + " minutes of life (" + percent + "% capacity).");
                 }
             }
         }
