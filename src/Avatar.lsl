@@ -10,7 +10,6 @@
 // #include "include/Json.lsl"
 
 //#define DEBUG_BADRLV
-//#define cdSayQuietly(x) { string z = x; if (quiet) llOwnerSay(z); else llSay(PUBLIC_CHANNEL,z); }
 #define NOT_IN_REGION ZERO_VECTOR
 #define cdLockMeisterCmd(a) llWhisper(LOCKMEISTER_CHANNEL,(string)dollID+a)
 #define MAX_RLVCHECK_TRIES 5
@@ -33,10 +32,6 @@ key rlvTPrequest;
 key mainCreator;
 #endif
 key lastAttachedID;
-// #ifdef DEVELOPER_MODE
-// float thisTimerEvent;
-// float timerInterval;
-// #endif
 
 // Note that this is not the "speed" nor is it a slowing factor
 // This is a vector of force applied against Dolly: headwind speed
@@ -50,8 +45,6 @@ vector newCarrierPos;
 string msg;
 string name;
 string value;
-
-//string barefeet;
 
 #ifdef DEVELOPER_MODE
 string myPath;
@@ -741,9 +734,7 @@ default {
                 else if (name == "debugLevel")               debugLevel = (integer)value;
 #endif
                 else if (name == "lowScriptMode")         lowScriptMode = (integer)value;
-                //else if (name == "quiet")                         quiet = (integer)value;
                 else if (name == "allowPose")                 allowPose = (integer)value;
-                //else if (name == "barefeet")                   barefeet = value;
                 else if (name == "dollType")                   dollType = value;
                 else if (name == "controllers") {
                     if (split == [""]) controllers = [];
@@ -798,11 +789,6 @@ default {
 
 #ifdef ADULT_MODE
             else if (choice == "Strip") {
-
-                // We separate this out for two reasones: a) saves space; b) separates the RLV
-                // processes so we can be sure this runs after the stripping process
-                //if (barefeet != "") lmRunRLVas("Dress","attachallover:" + barefeet + "=force,");
-
                 lmInternalCommand("strip", "", id);
             }
 #endif
@@ -811,16 +797,9 @@ default {
                 lmSendConfig("carrierName", (carrierName = name));
 
                 llSay(PUBLIC_CHANNEL, "Dolly " + dollName + " has been picked up by " + carrierName);
-                //if (!quiet) llSay(PUBLIC_CHANNEL, "Dolly " + dollName + " has been picked up by " + carrierName);
-                //else {
-                    //llOwnerSay("You have been picked up by " + carrierName);
-                    //llRegionSayTo(carrierID, 0, "You have picked up the doll " + dollName);
-                //}
             }
             else if (choice == "Uncarry") {
                 if (cdIsCarrier(id)) {
-                    //if (quiet) cdSayTo("You were carrying " + dollName + " and have now placed them down.", carrierID);
-                    //else
                     llSay(PUBLIC_CHANNEL, "Dolly " + dollName + " has been placed down by " + carrierName);
                 }
                 else {
@@ -828,13 +807,9 @@ default {
 
                     if (name) {
                         llSay(PUBLIC_CHANNEL, "Dolly " + dollName + " has been wrestled away from " + carrierName + " by " + llKey2Name(id));
-                        //if (quiet) cdSayTo("You have wrestled Dolly away from " + carrierName + ".", id);
-                        //else llSay(PUBLIC_CHANNEL, "Dolly " + dollName + " has been wrestled away from " + carrierName + " by " + llKey2Name(id));
                     }
                     else {
                         llSay(PUBLIC_CHANNEL, "Dolly " + dollName + " has been wrestled away from " + carrierName);
-                        //if (quiet) cdSayTo("You have wrestled Dolly away from " + carrierName + ".", id);
-                        //else llSay(PUBLIC_CHANNEL, "Dolly " + dollName + " has been wrestled away from " + carrierName);
                     }
                 }
 

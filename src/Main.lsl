@@ -30,10 +30,6 @@ string msg;
 integer minsLeft;
 float windRateFactor = 1.0;
 
-// #ifdef DEVELOPER_MODE
-// integer thisTimerEvent;
-// integer timerInterval;
-// #endif
 integer timerMark;
 integer lastTimerMark;
 integer timeSpan;
@@ -430,8 +426,6 @@ default {
                         if (minsLeft == 15 || minsLeft == 10 || minsLeft ==  5) {
 
                             llSay(PUBLIC_CHANNEL, dollName + " has " + (string)minsLeft + " minutes left before they run down!");
-                            //if (!quiet) llSay(PUBLIC_CHANNEL, dollName + " has " + (string)minsLeft + " minutes left before they run down!");
-                            //else llOwnerSay("You have " + (string)minsLeft + " minutes left before winding down!");
                             warned = 1; // have warned now: dont repeat same warning
                         }
                     }
@@ -441,9 +435,6 @@ default {
                 else {
                     // Dolly is DONE! Go down... and yell for help.
                     if (collapsed == NOT_COLLAPSED) {
-
-                        // This message is intentionally excluded from the quiet key setting as it is not good for dolls to simply go down silently.
-
                         llSay(PUBLIC_CHANNEL, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on Dolly's key.)");
                         collapse(NO_TIME); // currently equivalent to uncollapse()
                     }
@@ -505,11 +496,8 @@ default {
                 else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
             }
-            //else if (name == "quiet")                           quiet = (integer)value;
             else if (name == "hardcore")                     hardcore = (integer)value;
             else if (name == "hovertextOn")               hovertextOn = (integer)value;
-            //else if (name == "busyIsAway")                 busyIsAway = (integer)value;
-            //else if (name == "baseWindRate")             baseWindRate = (float)value;
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
