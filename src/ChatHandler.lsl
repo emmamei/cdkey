@@ -413,7 +413,7 @@ default {
                 return;
             }
 
-            lmInternalCommand("getTimeUpdates","",NULL_KEY);
+            //lmInternalCommand("getTimeUpdates","",NULL_KEY);
             debugSay(5,"DEBUG-CHAT",("Got a chat channel message: " + name + "/" + (string)id + "/" + msg));
             string prefix = cdGetFirstChar(msg);
 
