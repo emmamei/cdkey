@@ -429,8 +429,8 @@ default {
 
                         if (minsLeft == 15 || minsLeft == 10 || minsLeft ==  5) {
 
-                            llSay(0, dollName + " has " + (string)minsLeft + " minutes left before they run down!");
-                            //if (!quiet) llSay(0, dollName + " has " + (string)minsLeft + " minutes left before they run down!");
+                            llSay(PUBLIC_CHANNEL, dollName + " has " + (string)minsLeft + " minutes left before they run down!");
+                            //if (!quiet) llSay(PUBLIC_CHANNEL, dollName + " has " + (string)minsLeft + " minutes left before they run down!");
                             //else llOwnerSay("You have " + (string)minsLeft + " minutes left before winding down!");
                             warned = 1; // have warned now: dont repeat same warning
                         }
@@ -444,7 +444,7 @@ default {
 
                         // This message is intentionally excluded from the quiet key setting as it is not good for dolls to simply go down silently.
 
-                        llSay(0, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on Dolly's key.)");
+                        llSay(PUBLIC_CHANNEL, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on Dolly's key.)");
                         collapse(NO_TIME); // currently equivalent to uncollapse()
                     }
                 }
@@ -842,7 +842,7 @@ default {
                             if (hardcore) llOwnerSay("You have been fully wound by " + name + ".");
                             else llOwnerSay("You have been fully wound by " + name + " - " + (string)llRound(keyLimit / (SECS_PER_MIN * windRate)) + " minutes remaining.");
 
-                            llSay(0, dollName + " has been fully wound by " + name + ". Thanks for winding Dolly!");
+                            llSay(PUBLIC_CHANNEL, dollName + " has been fully wound by " + name + ". Thanks for winding Dolly!");
                             //cdSayTo(dollName + " is now fully wound. Thanks for winding Dolly!", id);
                         }
                         else {

@@ -543,7 +543,7 @@ default {
 
                 // When starting up, let people know...
                 if (newAttach && isAttached)
-                    llSay(0, llGetDisplayName(llGetOwner()) + " is now a dolly - anyone may play with their Key.");
+                    llSay(PUBLIC_CHANNEL, llGetDisplayName(llGetOwner()) + " is now a dolly - anyone may play with their Key.");
             }
             else if (code == MEM_REPORT) {
                 if (script == cdMyScriptName()) return;

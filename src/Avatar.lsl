@@ -10,7 +10,7 @@
 // #include "include/Json.lsl"
 
 //#define DEBUG_BADRLV
-//#define cdSayQuietly(x) { string z = x; if (quiet) llOwnerSay(z); else llSay(0,z); }
+//#define cdSayQuietly(x) { string z = x; if (quiet) llOwnerSay(z); else llSay(PUBLIC_CHANNEL,z); }
 #define NOT_IN_REGION ZERO_VECTOR
 #define cdLockMeisterCmd(a) llWhisper(LOCKMEISTER_CHANNEL,(string)dollID+a)
 #define MAX_RLVCHECK_TRIES 5
@@ -810,8 +810,8 @@ default {
                 lmSendConfig("carrierID", (string)(carrierID = id));
                 lmSendConfig("carrierName", (carrierName = name));
 
-                llSay(0, "Dolly " + dollName + " has been picked up by " + carrierName);
-                //if (!quiet) llSay(0, "Dolly " + dollName + " has been picked up by " + carrierName);
+                llSay(PUBLIC_CHANNEL, "Dolly " + dollName + " has been picked up by " + carrierName);
+                //if (!quiet) llSay(PUBLIC_CHANNEL, "Dolly " + dollName + " has been picked up by " + carrierName);
                 //else {
                     //llOwnerSay("You have been picked up by " + carrierName);
                     //llRegionSayTo(carrierID, 0, "You have picked up the doll " + dollName);
@@ -821,20 +821,20 @@ default {
                 if (cdIsCarrier(id)) {
                     //if (quiet) cdSayTo("You were carrying " + dollName + " and have now placed them down.", carrierID);
                     //else
-                    llSay(0, "Dolly " + dollName + " has been placed down by " + carrierName);
+                    llSay(PUBLIC_CHANNEL, "Dolly " + dollName + " has been placed down by " + carrierName);
                 }
                 else {
                     string name = llKey2Name(id);
 
                     if (name) {
-                        llSay(0, "Dolly " + dollName + " has been wrestled away from " + carrierName + " by " + llKey2Name(id));
+                        llSay(PUBLIC_CHANNEL, "Dolly " + dollName + " has been wrestled away from " + carrierName + " by " + llKey2Name(id));
                         //if (quiet) cdSayTo("You have wrestled Dolly away from " + carrierName + ".", id);
-                        //else llSay(0, "Dolly " + dollName + " has been wrestled away from " + carrierName + " by " + llKey2Name(id));
+                        //else llSay(PUBLIC_CHANNEL, "Dolly " + dollName + " has been wrestled away from " + carrierName + " by " + llKey2Name(id));
                     }
                     else {
-                        llSay(0, "Dolly " + dollName + " has been wrestled away from " + carrierName);
+                        llSay(PUBLIC_CHANNEL, "Dolly " + dollName + " has been wrestled away from " + carrierName);
                         //if (quiet) cdSayTo("You have wrestled Dolly away from " + carrierName + ".", id);
-                        //else llSay(0, "Dolly " + dollName + " has been wrestled away from " + carrierName);
+                        //else llSay(PUBLIC_CHANNEL, "Dolly " + dollName + " has been wrestled away from " + carrierName);
                     }
                 }
 
