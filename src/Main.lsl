@@ -120,7 +120,7 @@ uncollapse() {
 
     lmSendConfig("collapseTime", (string)(collapseTime = 0));
     lmSendConfig("collapsed", (string)(collapsed = 0));
-    lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
+    //lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
     lmInternalCommand("getTimeUpdates", "", id);
     lmInternalCommand("setHovertext", "", id);
 
@@ -149,8 +149,9 @@ collapse(integer newCollapseState) {
 
         // when dolly collapses, anyone can rescue
         lmSendConfig("lastWinderID", (string)(lastWinderID = NULL_KEY));
-        lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0));
 
+        //lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0));
+        timeLeftOnKey = 0;
         lmInternalCommand("getTimeUpdates", "", llGetKey());
 
         // Among other things, this will set the Key's turn rate
@@ -518,13 +519,15 @@ default {
                 keyLimit = (integer)value;
 
                 // if limit is negative clip it at a default
-                if (keyLimit < 0) keyLimit = 10800;
+                if (keyLimit < 0) keyLimit = 10800; // 3 hours
 
                 // if limit is less than time left on key, clip time remaining
-                if (timeLeftOnKey > keyLimit) timeLeftOnKey = keyLimit;
+                if (timeLeftOnKey > keyLimit) {
+                    timeLeftOnKey = keyLimit;
+                    lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
+                }
 
                 lmSendConfig("keyLimit", (string)keyLimit);
-                lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
             }
             else if (name == "lastWinderID") {
                 lmSendConfig("lastWinderID", (string)(lastWinderID = (key)value));
@@ -665,6 +668,8 @@ default {
                 lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey += windAmount));
                 lmSendConfig("lastWinderID", (string)(lastWinderID = id));
 
+                lmInternalCommand("windMsg", (string)windAmount + "|" + name, id);
+
                 if (collapsed == NO_TIME) {
 
                     // Just gave Dolly time: so now, uncollapse Dolly
@@ -677,8 +682,6 @@ default {
                     lmSendConfig("collapseTime", (string)(collapseTime = 0));
                     lmCollapse(0);
                 }
-
-                lmInternalCommand("windMsg", (string)windAmount + "|" + name, id);
             }
             else if (cmd == "windMsg") {
                 // this overlaps a global windAmount... bad!
@@ -884,11 +887,7 @@ default {
                 keyLimit = (integer)choice * SECS_PER_MIN;
                 cdSayTo("Key limit now set to " + (string)llFloor(keyLimit / SECS_PER_MIN) + " minutes",id);
 
-                // if limit is less than time left on key, clip time remaining
-                if (timeLeftOnKey > keyLimit) timeLeftOnKey = keyLimit;
-
                 lmSendConfig("keyLimit", (string)keyLimit);
-                lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
                 lmMenuReply("Key...","",id);
             }
             else if (choice == "Wind Time...") {
