@@ -573,7 +573,6 @@ default {
 
     debug # ........ set the debugging message verbosity 0-9
     timereporting .. set timereporting \"on\" or \"off\"
-    powersave ...... turn on powersave mode
     inject x#x#x ... inject a link message with \"code#data#key\"
     powersave ...... trigger a powersave event
     collapse ....... perform an immediate collapse (out of time)";
