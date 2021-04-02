@@ -591,6 +591,7 @@ default {
         }
         else if (code == INTERNAL_CMD) {
             string cmd = llList2String(split, 0);
+            string arg = llList2String(split, 1);
             split = llDeleteSubList(split, 0, 0);
             integer isController = cdIsController(id);
 
@@ -633,6 +634,7 @@ default {
                 else collapse(llList2Integer(split, 0));
             }
             else if (cmd == "winding") {
+                string name = arg;
 
                 // Four steps:
                 //   1. Can we wind up at all?
@@ -687,7 +689,8 @@ default {
                     lmSendConfig("collapseTime", (string)(collapseTime = 0));
                     lmCollapse(0);
                 }
-                //lmInternalCommand("windMsg", (string)windAmount + "|" + name, id);
+
+                lmInternalCommand("windMsg", (string)windAmount + "|" + name, id);
             }
             else if (cmd == "windMsg") {
                 // this overlaps a global windAmount... bad!
@@ -825,7 +828,7 @@ default {
                             llOwnerSay("You have fully wound yourself. Good going!");
                         }
                     } else {
-                        lmInternalCommand("windMsg", (string)windAmount + "|" + name, id);
+                        //lmInternalCommand("windMsg", (string)windAmount + "|" + name, id);
                         lmInternalCommand("mainMenu", "|" + name, id);
                     }
                 }

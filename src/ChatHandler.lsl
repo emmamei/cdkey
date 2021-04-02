@@ -821,7 +821,12 @@ default {
                         }
                     }
 #endif
-                    cdMenuInject("Wind", name, id);
+                    //cdMenuInject("Wind", name, id);
+                    lmInternalCommand("winding", "|" + name, id);
+
+                    // Problem: we don't know what the windAmount is...
+                    //lmInternalCommand("windMsg", (string)windAmount + "|" + name, id);
+
                     return;
                 }
                 else if (choice == "stat") {
