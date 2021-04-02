@@ -575,6 +575,19 @@ default {
             else if (name == "poseExpire")         poseExpire = (integer)value;
             else if (name == "carryExpire")       carryExpire = (integer)value;
             else if (name == "wearLockExpire") wearLockExpire = (integer)value;
+#ifdef DEVELOPER_MODE
+            else if (name == "chatChannel")         ;
+            else if (name == "chatFilter")          ;
+            else if (name == "dollGender")          ;
+            else if (name == "dollType")            ;
+            else if (name == "outfitsFolder")       ;
+            else if (name == "transformLockExpire") ;
+            else if (name == "blacklist")           ;
+            else if (name == "controllers")         ;
+            else {
+                llSay(DEBUG_CHANNEL,"SET_CONFIG received setting for " + name + " = " + (string)value);
+            }
+#endif
         }
         else if (code == INTERNAL_CMD) {
             string cmd = llList2String(split, 0);
@@ -618,6 +631,63 @@ default {
             else if (cmd == "collapse") {
                 if (collapsed) uncollapse(); // equivalent to collapse(NO_TIME)
                 else collapse(llList2Integer(split, 0));
+            }
+            else if (cmd == "winding") {
+
+                // Four steps:
+                //   1. Can we wind up at all?
+                //   2. Calculate wind time
+                //   3. Send out new timeLeftOnKey
+                //   4. React to wind (including uncollapse)
+
+#ifdef SINGLE_SELF_WIND
+                // Test and reject repeat windings from Dolly - no matter who Dolly is or what the settings are
+                if (allowSelfWind) {
+                    if (id == dollID) {
+                        if (id == lastWinderID) {
+                            llOwnerSay("You hae wound yourself once already; you must be wound by someone else before being able to wind again.");
+                            return;
+                        }
+                    }
+                }
+#endif
+                // Test and reject repeat winding as appropriate - Controllers and Carriers are not limited
+                // (odd sequence helps with short-circuiting and speed)
+                if (!allowRepeatWind) {
+                    if (!cdIsController(id)) {
+                        if (!cdIsCarrier(id)) {
+                            if (id == lastWinderID) {
+                                cdSayTo("Dolly needs to be wound by someone else before you can wind " + pronounHerDoll + " again.", id);
+                                return;
+                            }
+                        }
+                    }
+                }
+
+                // Here, dolly may be collapsed or not...
+
+                // set the actual wind amount - but don't overwind
+                if (timeLeftOnKey + windNormal > keyLimit) windAmount = keyLimit - timeLeftOnKey;
+                else windAmount = windNormal;
+
+                // The "winding" takes place here. Note that while timeLeftOnKey might
+                // be set - collapse is set a short time later - thus, timeLeftOnKey is greater
+                // than zero, but collapse is still true.
+                lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey += windAmount));
+
+                if (collapsed == NO_TIME) {
+
+                    // Just gave Dolly time: so now, uncollapse Dolly
+
+                    // We could call the code directly - but by doing this,
+                    // it's an asynchronous event, and not a function that
+                    // slows down the user.
+
+                    lmSendConfig("collapsed", (string)(collapsed = 0));
+                    lmSendConfig("collapseTime", (string)(collapseTime = 0));
+                    lmCollapse(0);
+                }
+                //lmInternalCommand("windMsg", (string)windAmount + "|" + name, id);
             }
             else if (cmd == "windMsg") {
                 // this overlaps a global windAmount... bad!
@@ -726,60 +796,11 @@ default {
             // Winding - pure and simple
             else if (choice == "Wind") {
 
-                // Four steps:
-                //   1. Can we wind up at all?
-                //   2. Calculate wind time
-                //   3. Send out new timeLeftOnKey
-                //   4. React to wind (including uncollapse)
+                lmInternalCommand("winding", "|" + name, id);
 
-#ifdef SINGLE_SELF_WIND
-                // Test and reject repeat windings from Dolly - no matter who Dolly is or what the settings are
-                if (allowSelfWind) {
-                    if (id == dollID) {
-                        if (id == lastWinderID) {
-                            llOwnerSay("You hae wound yourself once already; you must be wound by someone else before being able to wind again.");
-                            return;
-                        }
-                    }
-                }
-#endif
-                // Test and reject repeat winding as appropriate - Controllers and Carriers are not limited
-                // (odd sequence helps with short-circuiting and speed)
-                if (!allowRepeatWind) {
-                    if (!cdIsController(id)) {
-                        if (!cdIsCarrier(id)) {
-                            if (id == lastWinderID) {
-                                cdSayTo("Dolly needs to be wound by someone else before you can wind " + pronounHerDoll + " again.", id);
-                                return;
-                            }
-                        }
-                    }
-                }
-
-                // Here, dolly may be collapsed or not...
-
-                // set the actual wind amount - but don't overwind
-                if (timeLeftOnKey + windNormal > keyLimit) windAmount = keyLimit - timeLeftOnKey;
-                else windAmount = windNormal;
-
-                // The "winding" takes place here. Note that while timeLeftOnKey might
-                // be set - collapse is set a short time later - thus, timeLeftOnKey is greater
-                // than zero, but collapse is still true.
-                lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey += windAmount));
-
-                if (collapsed == NO_TIME) {
-
-                    // Just gave Dolly time: so now, uncollapse Dolly
-
-                    // We could call the code directly - but by doing this,
-                    // it's an asynchronous event, and not a function that
-                    // slows down the user.
-
-                    lmSendConfig("collapsed", (string)(collapsed = 0));
-                    lmSendConfig("collapseTime", (string)(collapseTime = 0));
-                    lmCollapse(0);
-                }
-
+                // This statement is only here to provide a reasonable response message
+                // and to trigger an appropriate menu dialog.
+                //
                 // Time value of 60s is somewhat arbitrary; it is however less than 1m
                 // So it really would not show up in minute based calculations
                 if (windAmount < 60) {

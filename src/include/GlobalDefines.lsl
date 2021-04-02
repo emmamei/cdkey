@@ -21,7 +21,6 @@ float GlobalDefines_version=1.0;
 #define MEM_REPLY         136
 #define CONFIG_REPORT     142
 #define SIM_RATING_CHG    150
-#define CONFIG            300
 #define SEND_CONFIG       300
 #define SET_CONFIG        301
 #define SANITY_CONFIG     301
