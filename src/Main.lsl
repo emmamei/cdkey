@@ -703,20 +703,23 @@ default {
                     // Note this makes no difference to waiting events, just other scripts
                     if (collapsed == 0) llSleep(0.5);
 
-                    if (dollID == id) {
-                        llOwnerSay("You managed to turn your key giving you " +
-                            mins + " more minutes of life (" + percent + "% capacity).");
+                    // If we the winding gives less than 30 seconds of time, then that
+                    // essentially means we are fully wound already.
+                    if (windAmount > 30) {
+                        if (dollID == id) {
+                            llOwnerSay("You managed to turn your key giving you " +
+                                mins + " more minutes of life (" + percent + "% capacity).");
+                        }
+                        else {
+                            if (hardcore) llOwnerSay("Your key has been cranked by " + name + ".");
+                            else llOwnerSay("Your key has been turned by " + name + " giving you " +
+                                mins + " more minutes of life (" + percent + "% capacity).");
+
+                            cdSayTo("You turn " + dollDisplayName + "'s Key, and " + pronounSheDoll + " receives " +
+                                mins + " more minutes of life (" + percent + "% capacity).", id);
+                        }
                     }
                     else {
-                        if (hardcore) llOwnerSay("Your key has been cranked by " + name + ".");
-                        else llOwnerSay("Your key has been turned by " + name + " giving you " +
-                            mins + " more minutes of life (" + percent + "% capacity).");
-
-                        cdSayTo("You turn " + dollDisplayName + "'s Key, and " + pronounSheDoll + " receives " +
-                            mins + " more minutes of life (" + percent + "% capacity).", id);
-                    }
-
-                    if (timeLeftOnKey == keyLimit) {
 
                         // Fully wound
 
