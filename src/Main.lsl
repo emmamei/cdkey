@@ -693,6 +693,10 @@ default {
                 string mins = (string)llFloor(windAmount / SECS_PER_MIN);
                 string percent = formatFloat((float)timeLeftOnKey * 100.0 / (float)keyLimit, 1);
 
+                // Eliminate zero minutes, and correct grammar
+                if (windAmount < 120) mins = "1 more minute";
+                else mins = mins + " more minutes";
+
                 // Two possible messages to go out:
                 //
                 //   1. Standard wind message
@@ -709,15 +713,15 @@ default {
                     // Dolly has been wound by a certain amount...
                     if (dollID == id) {
                         llOwnerSay("You managed to turn your key giving you " +
-                            mins + " more minutes of life (" + percent + "% capacity).");
+                            mins + " of life (" + percent + "% capacity).");
                     }
                     else {
                         if (hardcore) llOwnerSay("Your key has been cranked by " + name + ".");
                         else llOwnerSay("Your key has been turned by " + name + " giving you " +
-                            mins + " more minutes of life (" + percent + "% capacity).");
+                            mins + " of life (" + percent + "% capacity).");
 
                         cdSayTo("You turn " + dollDisplayName + "'s Key, and " + pronounSheDoll + " receives " +
-                            mins + " more minutes of life (" + percent + "% capacity).", id);
+                            mins + " of life (" + percent + "% capacity).", id);
                     }
 
                     // If we wound to 100% ... then Dolly has been fully wound.
