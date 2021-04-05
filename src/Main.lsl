@@ -662,6 +662,9 @@ default {
                 if (timeLeftOnKey + windNormal > keyLimit) windAmount = keyLimit - timeLeftOnKey;
                 else windAmount = windNormal;
 
+                // At this point, the winding amount could be minimal - that is,
+                // the Key is already fully wound. However - who really cares?
+
                 // The "winding" takes place here. Note that while timeLeftOnKey might
                 // be set - collapse is set a short time later - thus, timeLeftOnKey is greater
                 // than zero, but collapse is still true.
@@ -703,23 +706,22 @@ default {
                     // Note this makes no difference to waiting events, just other scripts
                     if (collapsed == 0) llSleep(0.5);
 
-                    // If we the winding gives less than 30 seconds of time, then that
-                    // essentially means we are fully wound already.
-                    if (windAmount > 30) {
-                        if (dollID == id) {
-                            llOwnerSay("You managed to turn your key giving you " +
-                                mins + " more minutes of life (" + percent + "% capacity).");
-                        }
-                        else {
-                            if (hardcore) llOwnerSay("Your key has been cranked by " + name + ".");
-                            else llOwnerSay("Your key has been turned by " + name + " giving you " +
-                                mins + " more minutes of life (" + percent + "% capacity).");
-
-                            cdSayTo("You turn " + dollDisplayName + "'s Key, and " + pronounSheDoll + " receives " +
-                                mins + " more minutes of life (" + percent + "% capacity).", id);
-                        }
+                    // Dolly has been wound by a certain amount...
+                    if (dollID == id) {
+                        llOwnerSay("You managed to turn your key giving you " +
+                            mins + " more minutes of life (" + percent + "% capacity).");
                     }
                     else {
+                        if (hardcore) llOwnerSay("Your key has been cranked by " + name + ".");
+                        else llOwnerSay("Your key has been turned by " + name + " giving you " +
+                            mins + " more minutes of life (" + percent + "% capacity).");
+
+                        cdSayTo("You turn " + dollDisplayName + "'s Key, and " + pronounSheDoll + " receives " +
+                            mins + " more minutes of life (" + percent + "% capacity).", id);
+                    }
+
+                    // If we wound to 100% ... then Dolly has been fully wound.
+                    if (timeLeftOnKey > keyLimit - 30) {
 
                         // Fully wound
 
@@ -727,6 +729,7 @@ default {
                             llOwnerSay("You have been fully wound!");
                         }
                         else {
+                            // Holler so people know and to give props to winder
                             llSay(PUBLIC_CHANNEL,dollDisplayName + " has been fully wound by " + name + "! Thank you!");
                         }
                     }
