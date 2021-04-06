@@ -596,25 +596,7 @@ default {
             split = llDeleteSubList(split, 0, 0);
             integer isController = cdIsController(id);
 
-            if (cmd == "getTimeUpdates") {
-
-
-                // The time variables are set this way:
-                //
-                //   * timeLeftOnKey (seconds) - positive seconds remaining (adjusted elsewhere)
-                //   * {wear|jam|pose|carry}Expire (time) - time of expiration
-                //   * collapseTime (time) - time of collapse
-
-                //if (cdTimeSet(timeLeftOnKey))        lmSendConfig("timeLeftOnKey",         (string)timeLeftOnKey);
-                //if (cdTimeSet(wearLockExpire))       lmSendConfig("wearLockExpire",        (string)wearLockExpire);
-                //if (cdTimeSet(transformLockExpire))  lmSendConfig("transformLockExpire",   (string)transformLockExpire);
-                //if (cdTimeSet(poseExpire))           lmSendConfig("poseExpire",            (string)poseExpire);
-                //if (cdTimeSet(carryExpire))          lmSendConfig("carryExpire",           (string)carryExpire);
-                //if (cdTimeSet(collapseTime))         lmSendConfig("collapseTime",          (string)collapseTime);
-
-                //lmSendConfig("windingDown",(string)windingDown);
-            }
-            else if (cmd == "setWindRate") {
+            if (cmd == "setWindRate") {
                 setWindRate();
             }
             else if (cmd == "collapse") {
@@ -667,7 +649,7 @@ default {
                 // be set - collapse is set a short time later - thus, timeLeftOnKey is greater
                 // than zero, but collapse is still true.
                 lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey += windAmount));
-                lmSendConfig("lastWinderID", (string)(lastWinderID = id));
+                if (lastWinderID != id) lmSendConfig("lastWinderID", (string)(lastWinderID = id));
 
                 lmInternalCommand("windMsg", (string)windAmount + "|" + name, id);
 
