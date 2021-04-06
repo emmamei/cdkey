@@ -50,7 +50,7 @@ string value;
 string myPath;
 #endif
 
-string userBaseRLVcmd;
+//string userBaseRLVcmd;
 
 integer hasCarrier;
 integer i;
@@ -708,7 +708,7 @@ default {
             }
             else if (name == "poseSilence")         poseSilence = (integer)value;
             else if (name == "hardcore")               hardcore = (integer)value;
-            else if (name == "userBaseRLVcmd")   userBaseRLVcmd = value;
+//            else if (name == "userBaseRLVcmd")   userBaseRLVcmd = value;
 #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")     timeReporting = (integer)value;
 #endif

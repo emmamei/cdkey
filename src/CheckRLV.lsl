@@ -31,7 +31,7 @@ string myPath;
 #endif
 
 string rlvAPIversion;
-string userBaseRLVcmd;
+//string userBaseRLVcmd;
 
 integer i;
 integer rlvChannel;
