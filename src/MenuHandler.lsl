@@ -63,6 +63,7 @@ integer isCarrier;
 integer isController;
 integer isDoll;
 integer numControllers;
+integer transformLockExpire;
 
 integer blacklistChannel;
 integer blacklistHandle;
@@ -213,18 +214,17 @@ default {
             split = llDeleteSubList(split, 0, 0);
             string c = cdGetFirstChar(name);
 
-                 if (name == "timeLeftOnKey")           timeLeftOnKey = (integer)value;
-            //else if (name == "baseWindRate")             baseWindRate = (float)value;
-            else if (name == "windRate")                     windRate = (float)value;
-            else if (name == "outfitsFolder")           outfitsFolder = value;
-            else if (name == "backMenu")                     backMenu = value;
-            else if (name == "hardcore")                     hardcore = (integer)value;
-//          else if (name == "windingDown")               windingDown = (integer)value;
-            else if (name == "lowScriptMode")           lowScriptMode = (integer)value;
-            else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
+                 if (name == "timeLeftOnKey")             timeLeftOnKey = (integer)value;
+            else if (name == "windRate")                       windRate = (float)value;
+            else if (name == "outfitsFolder")             outfitsFolder = value;
+            else if (name == "backMenu")                       backMenu = value;
+            else if (name == "hardcore")                       hardcore = (integer)value;
+            else if (name == "lowScriptMode")             lowScriptMode = (integer)value;
+            else if (name == "winderRechargeTime")   winderRechargeTime = (integer)value;
 
-            else if (name == "keyAnimation")             keyAnimation = value;
-            else if (name == "showPhrases")               showPhrases = (integer)value;
+            else if (name == "keyAnimation")               keyAnimation = value;
+            else if (name == "showPhrases")                 showPhrases = (integer)value;
+            else if (name == "transformLockExpire") transformLockExpire = (integer)value;
 
             // shortcut: a
             else if (c == "a") {
@@ -465,11 +465,13 @@ default {
                     // Only present the Types button if Dolly is not posed
                     if (keyAnimation == "" && allowDress) {
 
-                        // Members of the public are allowed if allowed
-                        if (!isDoll && !isController) menu += "Types...";
+                        if (transformLockExpire == 0) {
+                            // Members of the public are allowed if allowed
+                            if (!isDoll && !isController) menu += "Types...";
 
-                        // Dolly or Controllers always can use Types
-                        else menu += "Types...";
+                            // Dolly or Controllers always can use Types
+                            else menu += "Types...";
+                        }
                     }
 
                     // if dolly is sitting, dont allow poses
