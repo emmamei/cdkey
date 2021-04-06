@@ -120,8 +120,10 @@ setDollType(string stateName, integer automated) {
         }
     }
 
-    if (!automated) transformLockExpire = llGetUnixTime() + TRANSFORM_LOCK_TIME;
-    else transformLockExpire = 0;
+    // FIXME: automated used to set transformLockExpire only
+    //if (!automated) transformLockExpire = llGetUnixTime() + TRANSFORM_LOCK_TIME;
+    //else transformLockExpire = 0;
+    transformLockExpire = 0;
     lmSendConfig("transformLockExpire",(string)transformLockExpire);
 
     // We dont respond to this: we don't have to
@@ -167,6 +169,7 @@ reloadTypeNames(key id) {
             // if this is an ADULT key
             //
 #ifndef ADULT_MODE
+            // Don't allow Slut notecard to define Slut type (not an Adult Key)
             if (typeName != "Slut") types += typeName;
 #else
             types += typeName;
@@ -547,7 +550,8 @@ default {
         else if (code == RLV_RESET) {
             RLVok = (integer)choice;
             if (dollType == "") {
-                setDollType("Regular", AUTOMATED);
+                //setDollType("Regular", AUTOMATED);
+                lmSetConfig("dollType", "Regular");
                 llSay(DEBUG_CHANNEL,"RLV_RESET: dollType had to be fixed from blank");
             }
 
@@ -674,7 +678,8 @@ default {
                 // We get here because dolly had to confirm the change
                 // of type - and chose "Transform" from the menu
                 transformedViaMenu = YES;
-                setDollType(transform, NOT_AUTOMATED);
+                //setDollType(transform, NOT_AUTOMATED);
+                lmSetConfig("dollType", transform);
             }
         }
         else if (code == TYPE_SELECTION) {
@@ -685,7 +690,8 @@ default {
 
                 // Doll (or a Controller) chose a Type - or no confirmation needed: just do it
                 transformedViaMenu = YES;
-                setDollType(choice, NOT_AUTOMATED);
+                //setDollType(choice, NOT_AUTOMATED);
+                lmSetConfig("dollType", choice);
             }
             else {
                 // This section is executed when:
@@ -706,22 +712,23 @@ default {
             }
         }
         else if (code < 200) {
-            if (code == 102) {
+            if (code == INIT_STAGE2) {
                 configured = 1;
             }
-            else if (code == 104) {
+            else if (code == INIT_STAGE3) {
                 reloadTypeNames(NULL_KEY);
                 llSetTimerEvent(30.0);
 
                 // Might have been set in Prefs, so do this late
             }
-            else if (code == 110) {
+            else if (code == INIT_STAGE5) {
                 //initState = 105;
                 //
                 // note that dollType is ALREADY SET....
                 // this is bad form but allows us to defer the subroutine
                 // until now in the startup process
-                setDollType(dollType, AUTOMATED);
+                //setDollType(dollType, AUTOMATED);
+                lmSetConfig("dollType", dollType);
             }
             else if (code == MEM_REPORT) {
                 memReport(cdMyScriptName(),(float)choice);
