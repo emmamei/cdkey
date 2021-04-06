@@ -62,7 +62,6 @@ integer outfitSearching;
 integer findTypeFolder;
 
 integer useTypeFolder;
-integer transformedViaMenu;
 string transform;
 string typeFolder;
 
@@ -677,7 +676,6 @@ default {
             else if (choice == "Transform") {
                 // We get here because dolly had to confirm the change
                 // of type - and chose "Transform" from the menu
-                transformedViaMenu = YES;
                 //setDollType(transform, NOT_AUTOMATED);
                 lmSetConfig("dollType", transform);
             }
@@ -689,7 +687,6 @@ default {
                 transform = "";
 
                 // Doll (or a Controller) chose a Type - or no confirmation needed: just do it
-                transformedViaMenu = YES;
                 //setDollType(choice, NOT_AUTOMATED);
                 lmSetConfig("dollType", choice);
             }
