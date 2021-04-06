@@ -120,8 +120,7 @@ uncollapse() {
 
     lmSendConfig("collapseTime", (string)(collapseTime = 0));
     lmSendConfig("collapsed", (string)(collapsed = 0));
-    //lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
-    lmInternalCommand("getTimeUpdates", "", id);
+    lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
     lmInternalCommand("setHovertext", "", id);
 
     setWindRate();
@@ -146,13 +145,10 @@ collapse(integer newCollapseState) {
         collapseTime = llGetUnixTime();
         lmSendConfig("collapseTime", (string)collapseTime);
         lmSendConfig("collapsed", (string)(collapsed = newCollapseState));
+        lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0));
 
         // when dolly collapses, anyone can rescue
         lmSendConfig("lastWinderID", (string)(lastWinderID = NULL_KEY));
-
-        //lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0));
-        timeLeftOnKey = 0;
-        lmInternalCommand("getTimeUpdates", "", llGetKey());
 
         // Among other things, this will set the Key's turn rate
         setWindRate();
@@ -401,7 +397,22 @@ default {
             }
         }
 
-        if (windRate > 0) lmInternalCommand("getTimeUpdates", "", llGetKey());
+        //--------------------------------
+        // AFK AUTO ENABLE
+        //
+        // Check for agent away or agent busy (afk)
+        integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0);
+
+        if (dollAway != autoAfk) {
+            autoAfk = dollAway;
+            lmSetConfig("autoAfk", (string)autoAfk);
+
+            if (autoAfk) llOwnerSay("Dolly has gone afk; Key subsystems slowing...");
+            else         llOwnerSay("You hear the Key whir back to full power");
+
+            lmInternalCommand("setWindRate","",NULL_KEY);
+            lmInternalCommand("setHovertext", "", llGetKey());
+        }
 
 #ifdef LOCKON
         ifPermissions();
@@ -417,6 +428,7 @@ default {
             if (timeSpan != 0) {
                 // Key ticks down just a little further...
                 timeLeftOnKey -= (integer)(timeSpan * windRate);
+                lmSendConfig("timeLeftOnKey",(string)timeLeftOnKey);
 
                 // Now that we've ticked down a few - check for warnings, and check for collapse
                 if (timeLeftOnKey > 0) {
@@ -431,7 +443,6 @@ default {
                         }
                     }
                     else warned = 0;
-
                 }
                 else {
                     // Dolly is DONE! Go down... and yell for help.
@@ -502,7 +513,7 @@ default {
             else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
-            else if (name == "transformLockExpire")   transformLockExpire = (integer)value;
+            else if (name == "transformLockExpire") transformLockExpire = (integer)value;
 
             else if (name == "windAmount")                 windAmount = (integer)value;
             else if (name == "windNormal")                 windNormal = (integer)value;
@@ -587,19 +598,6 @@ default {
 
             if (cmd == "getTimeUpdates") {
 
-                // Check for agent away or agent busy (afk)
-                integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0);
-
-                if (dollAway != autoAfk) {
-                    autoAfk = dollAway;
-                    lmSetConfig("autoAfk", (string)autoAfk);
-
-                    if (autoAfk) llOwnerSay("Dolly has gone afk; Key subsystems slowing...");
-                    else         llOwnerSay("You hear the Key whir back to full power");
-
-                    lmInternalCommand("setWindRate","",NULL_KEY);
-                    lmInternalCommand("setHovertext", "", llGetKey());
-                }
 
                 // The time variables are set this way:
                 //
@@ -607,12 +605,12 @@ default {
                 //   * {wear|jam|pose|carry}Expire (time) - time of expiration
                 //   * collapseTime (time) - time of collapse
 
-                if (cdTimeSet(timeLeftOnKey))        lmSendConfig("timeLeftOnKey",         (string)timeLeftOnKey);
-                if (cdTimeSet(wearLockExpire))       lmSendConfig("wearLockExpire",        (string)wearLockExpire);
-                if (cdTimeSet(transformLockExpire))  lmSendConfig("transformLockExpire",   (string)transformLockExpire);
-                if (cdTimeSet(poseExpire))           lmSendConfig("poseExpire",            (string)poseExpire);
-                if (cdTimeSet(carryExpire))          lmSendConfig("carryExpire",           (string)carryExpire);
-                if (cdTimeSet(collapseTime))         lmSendConfig("collapseTime",          (string)collapseTime);
+                //if (cdTimeSet(timeLeftOnKey))        lmSendConfig("timeLeftOnKey",         (string)timeLeftOnKey);
+                //if (cdTimeSet(wearLockExpire))       lmSendConfig("wearLockExpire",        (string)wearLockExpire);
+                //if (cdTimeSet(transformLockExpire))  lmSendConfig("transformLockExpire",   (string)transformLockExpire);
+                //if (cdTimeSet(poseExpire))           lmSendConfig("poseExpire",            (string)poseExpire);
+                //if (cdTimeSet(carryExpire))          lmSendConfig("carryExpire",           (string)carryExpire);
+                //if (cdTimeSet(collapseTime))         lmSendConfig("collapseTime",          (string)collapseTime);
 
                 //lmSendConfig("windingDown",(string)windingDown);
             }

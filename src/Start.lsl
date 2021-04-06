@@ -670,7 +670,7 @@ default {
             // Read notecard: Preferences
             if (data == EOF) {
                 //lmSendConfig("ncPrefsLoadedUUID", llDumpList2String(llList2List((string)llGetInventoryKey(NOTECARD_PREFERENCES) + ncPrefsLoadedUUID, 0, 9),"|"));
-                lmInternalCommand("getTimeUpdates","",NULL_KEY);
+                //lmInternalCommand("getTimeUpdates","",NULL_KEY);
 
                 llOwnerSay("Preferences read in " + formatFloat(llGetTime() - ncStart, 2) + "s");
 
