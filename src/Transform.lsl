@@ -122,8 +122,7 @@ setDollType(string stateName, integer automated) {
     // FIXME: automated used to set transformLockExpire only
     //if (!automated) transformLockExpire = llGetUnixTime() + TRANSFORM_LOCK_TIME;
     //else transformLockExpire = 0;
-    transformLockExpire = 0;
-    lmSendConfig("transformLockExpire",(string)transformLockExpire);
+    //lmSetConfig("transformLockExpire","0");
 
     // We dont respond to this: we don't have to
     lmSendConfig("dollType", (dollType = stateName));
@@ -302,9 +301,10 @@ default {
         // transform lock: check time
         if (transformLockExpire) {
             if (transformLockExpire  <= llGetUnixTime()) {
-                lmSendConfig("transformLockExpire",(string)(transformLockExpire = 0));
+                lmSetConfig("transformLockExpire",(string)(transformLockExpire = 0));
             }
-            else lmSendConfig("transformLockExpire",(string)(transformLockExpire));
+            // Redundant
+            //else lmSetConfig("transformLockExpire",(string)(transformLockExpire));
         }
 
 #ifdef HOMING_BEACON
@@ -493,7 +493,9 @@ default {
                 setDollType(value, AUTOMATED);
             }
             else if (name == "transformLockExpire") {
-                lmSendConfig("transformLockExpire",(string)(transformLockExpire = (integer)value));
+                if (value == "0") transformLockExpire = 0;
+                else transformLockExpire = llGetUnixTime() + TRANSFORM_LOCK_TIME;
+                lmSendConfig("transformLockExpire",(string)(transformLockExpire));
             }
             else if (name == "outfitsFolder") {
                 lmSendConfig("outfitsFolder",outfitsFolder = value);
@@ -551,6 +553,7 @@ default {
             if (dollType == "") {
                 //setDollType("Regular", AUTOMATED);
                 lmSetConfig("dollType", "Regular");
+                lmSetConfig("transformLockExpire","0");
                 llSay(DEBUG_CHANNEL,"RLV_RESET: dollType had to be fixed from blank");
             }
 
@@ -678,6 +681,7 @@ default {
                 // of type - and chose "Transform" from the menu
                 //setDollType(transform, NOT_AUTOMATED);
                 lmSetConfig("dollType", transform);
+                lmSetConfig("transformLockExpire","1");
             }
         }
         else if (code == TYPE_SELECTION) {
@@ -689,6 +693,7 @@ default {
                 // Doll (or a Controller) chose a Type - or no confirmation needed: just do it
                 //setDollType(choice, NOT_AUTOMATED);
                 lmSetConfig("dollType", choice);
+                lmSetConfig("transformLockExpire","1");
             }
             else {
                 // This section is executed when:
@@ -726,6 +731,7 @@ default {
                 // until now in the startup process
                 //setDollType(dollType, AUTOMATED);
                 lmSetConfig("dollType", dollType);
+                lmSetConfig("transformLockExpire","0");
             }
             else if (code == MEM_REPORT) {
                 memReport(cdMyScriptName(),(float)choice);
