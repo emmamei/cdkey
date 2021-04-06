@@ -548,7 +548,7 @@ default {
             RLVok = (integer)choice;
             if (dollType == "") {
                 setDollType("Regular", AUTOMATED);
-                llSay(DEBUG_CHANNEL,"dollType had to be fixed from blank");
+                llSay(DEBUG_CHANNEL,"RLV_RESET: dollType had to be fixed from blank");
             }
 
             outfitsFolder = "";
