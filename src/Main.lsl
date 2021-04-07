@@ -436,7 +436,7 @@ default {
             }
         }
 
-        scaleMem();
+        //scaleMem();
     }
 
     //----------------------------------------
@@ -453,7 +453,7 @@ default {
         code              =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
-        scaleMem();
+        //scaleMem();
 
         if (code == SEND_CONFIG) {
             string name = llList2String(split, 0);
@@ -912,11 +912,13 @@ default {
                 timerStarted = 1;
             }
 
+#ifdef REPORTMEM
             else if (code == MEM_REPORT) {
                 float delay = llList2Float(split, 0);
                 scaleMem();
                 memReport(cdMyScriptName(),delay);
             }
+#endif
             else if (code == CONFIG_REPORT) {
                 cdConfigureReport();
             }

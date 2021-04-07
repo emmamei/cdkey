@@ -413,7 +413,7 @@ default {
             else debugSay(5,"DEBUG-TRANSFORM",s + " = " + t);
         }
 #endif
-        scaleMem();
+        //scaleMem();
 
         if (script == "Transform") return;
 
@@ -715,9 +715,11 @@ default {
                 lmSetConfig("dollType", dollType);
                 lmSetConfig("transformLockExpire","0");
             }
+#ifdef REPORTMEM
             else if (code == MEM_REPORT) {
                 memReport(cdMyScriptName(),(float)choice);
             }
+#endif
             else if (code == CONFIG_REPORT) {
                 cdConfigureReport();
             }
