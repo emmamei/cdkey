@@ -17,10 +17,9 @@
 #define lmUncollapse() lmInternalCommand("collapse","0",NULL_KEY)
 
 // Note that some doll types are special....
-//    - regular: used for standard Dolls, including non-transformable
-//    - slut: can be stripped (like Pleasure Dolls)
+//    - Regular: used for standard Dolls, including non-transformable
+//    - Slut: can be stripped (like Pleasure Dolls)
 //    - Display: poses dont time out
-//    - Key: doesnt wind down - Doll can be worn by other Dolly as Key
 
 //========================================
 // VARIABLES
@@ -208,8 +207,8 @@ default {
             lmRating(simRating);
 
 #ifdef ADULT_MODE
-            if (allowStrip || (dollType == "Slut") || hardcore) {
-                if (simRating == "PG")
+            if (simRating == "PG") {
+                if (allowStrip || (dollType == "Slut") || hardcore)
                     llOwnerSay("This region is rated G - so stripping is disabled.");
             }
 #endif

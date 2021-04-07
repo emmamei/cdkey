@@ -95,7 +95,6 @@ setDollType(string stateName, integer automated) {
     stateName = cdGetFirstChar(llToUpper(stateName)) + cdButFirstChar(llToLower(stateName));
 
     if (stateName == "") {
-        //llSay(DEBUG_CHANNEL,"Attempt made to set dollType to null string by " + script + "! Setting to Regular...");
         stateName = "Regular";
     }
 
@@ -118,11 +117,6 @@ setDollType(string stateName, integer automated) {
             debugSay(2,"DEBUG-DOLLTYPE","Found notecard: " + typeNotecard);
         }
     }
-
-    // FIXME: automated used to set transformLockExpire only
-    //if (!automated) transformLockExpire = llGetUnixTime() + TRANSFORM_LOCK_TIME;
-    //else transformLockExpire = 0;
-    //lmSetConfig("transformLockExpire","0");
 
     // We dont respond to this: we don't have to
     lmSendConfig("dollType", (dollType = stateName));
@@ -289,7 +283,7 @@ default {
         if (timeReporting) {
             string s;
 
-            s = "Transform Timer fired, interval " + (string)(llGetTime() - lastTimerEvent) + "s. (lowScriptMode ";
+            s = "Transform Timer fired, interval " + formatFloat(llGetTime() - lastTimerEvent,2) + "s. (lowScriptMode ";
             if (lowScriptMode) s += "is active).";
             else s += "is not active).";
 
