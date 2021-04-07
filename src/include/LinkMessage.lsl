@@ -42,7 +42,7 @@ cdLinkMessage(integer target, integer opt, integer code, string data, key id) {
 #define lmSendToAgent(msg, id)                          cdLinkMessage(LINK_THIS,0,11,msg,id)
 #define lmSendToAgentPlusDoll(msg,id)                   cdLinkMessage(LINK_THIS,0,12,msg,id)
 #define lmSendToController(msg)                         cdLinkMessage(LINK_THIS,0,15,msg,llGetKey())
-#define lmConfigComplete(count)                         cdLinkMessage(LINK_THIS,0,102,(string)(count),llGetKey())
+//#define lmConfigComplete(count)                         cdLinkMessage(LINK_THIS,0,102,(string)(count),llGetKey())
 #define lmInitState(num)                                cdLinkMessage(LINK_THIS,0,(num),(string)(num),llGetKey())
 #define lmMemReport(delay,id)                           cdLinkMessage(LINK_THIS,0,135,(string)delay,id)
 #define lmMemReply(s)                                   cdLinkMessage(LINK_THIS,0,136,s,llGetKey())
