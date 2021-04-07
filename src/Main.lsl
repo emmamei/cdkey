@@ -3,8 +3,6 @@
 //========================================
 //
 // vim:sw=4 et nowrap filetype=lsl
-//
-// DATE: 24 November 2020
 
 #include "include/GlobalDefines.lsl"
 
@@ -20,6 +18,7 @@
 //    - Regular: used for standard Dolls, including non-transformable
 //    - Slut: can be stripped (like Pleasure Dolls)
 //    - Display: poses dont time out
+//    - Domme: messages shift focus slightly
 
 //========================================
 // VARIABLES
@@ -43,8 +42,6 @@ integer warned;
 integer wearLockExpire;
 integer carryExpire;
 integer poseExpire;
-// Note that unlike the others, we do not maintain
-// transformLockExpire in this script
 integer transformLockExpire;
 
 key simRatingQuery;
@@ -74,18 +71,16 @@ float setWindRate() {
 
     debugSay(4,"DEBUG-MAIN","setWindRate() running");
 
-    // if AFK then unwinding slows...
+    // if AFK then unwinding slows; if collapsed it stops
          if (autoAfk)   newWindRate = 0.5; // 50% speed
     else if (collapsed) newWindRate = 0.0; // 0% speed
     else                newWindRate = 1.0; // 100% speed
 
     if (newWindRate != windRate) {
         lmSendConfig("windRate", (string)(windRate = newWindRate));         // current rate
-        //lmSendConfig("windingDown", (string)(windingDown = (windRate > 0.0)));   // boolean
 
         debugSay(2,"DEBUG-MAIN","windRate now set to " + (string)windRate);
         debugSay(6,"DEBUG-MAIN","collapsed is currently " + (string)collapsed);
-        //debugSay(6,"DEBUG-MAIN","windingDown is currently " + (string)windingDown);
 
         // llTargetOmega: With a normalized vector (first parameter), the spin rate
         // is in radians per second - 2𝜋 radians equals 1 full rotation.
@@ -97,7 +92,6 @@ float setWindRate() {
         // The windRate variable allows the changing of the key's rotation speed based
         // on external factors.
 
-        // Only need to do this when windingDown changes
         if (windRate == 0.0) {
             debugSay(4,"DEBUG-MAIN","setting spin to zero...");
             llTargetOmega(ZERO_VECTOR, 0.0, 0.0);
@@ -113,8 +107,6 @@ float setWindRate() {
 
 uncollapse() {
     // Revive dolly back from being collapsed
-    //string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
-    //cdSetHovertext("",INFO); // uses primText
     key id = llGetKey();
 
     lmSendConfig("collapseTime", (string)(collapseTime = 0));
@@ -152,8 +144,6 @@ collapse(integer newCollapseState) {
         // Among other things, this will set the Key's turn rate
         setWindRate();
 
-        //string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
-        //cdSetHovertext("Disabled Dolly!",CRITICAL); // uses primText
         lmInternalCommand("setHovertext", "", llGetKey());
     }
 }
@@ -175,8 +165,6 @@ default {
 
         cdInitializeSeq();
 
-        //lmSendConfig("windingDown", (string)(windingDown = (windRate > 0)));   // boolean
-        //lmSendConfig("baseWindRate", (string)baseWindRate); // base rate: 1.0
         lmSendConfig("windRate", (string)(windRate = 1.0)); // base rate: 100%
     }
 
@@ -193,8 +181,6 @@ default {
         isAttached = cdAttached();
         if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
 
-        //lmSendConfig("windingDown", (string)(windingDown = (windRate > 0)));   // boolean
-        //lmSendConfig("baseWindRate", (string)baseWindRate); // base rate: 1.0
         lmSendConfig("windRate", (string)(windRate = RATE_STANDARD));         // current rate
     }
 
@@ -298,8 +284,6 @@ default {
                 // lowScriptMode continues...
                 debugSay(2,"DEBUG-MAIN", "Low Script Mode active and bumped");
                 lastLowScriptTime = llGetUnixTime();
-                //lmSendConfig("lowScriptMode",(string)(lowScriptMode = 1));
-                //lowScriptTimer = 1;
             }
             else {
                 lowScriptModeSpan = llGetUnixTime() - lastLowScriptTime;
@@ -332,7 +316,6 @@ default {
                 llSetTimerEvent(LOW_RATE);
             }
             else {
-                //lmSendConfig("lowScriptMode",(string)(lowScriptMode = 0));
                 llSetTimerEvent(STD_RATE);
             }
         }
@@ -616,7 +599,7 @@ default {
                 if (allowSelfWind) {
                     if (id == dollID) {
                         if (id == lastWinderID) {
-                            llOwnerSay("You hae wound yourself once already; you must be wound by someone else before being able to wind again.");
+                            llOwnerSay("You have wound yourself once already; you must be wound by someone else before being able to wind again.");
                             return;
                         }
                     }
@@ -637,12 +620,13 @@ default {
 
                 // Here, dolly may be collapsed or not...
 
-                // set the actual wind amount - but don't overwind
+                // Rather than clip afterwards, we clip the windAmount beforehand:
+                // this lets us correctly report how many minutes were wound
                 if (timeLeftOnKey + windNormal > keyLimit) windAmount = keyLimit - timeLeftOnKey;
                 else windAmount = windNormal;
 
                 // At this point, the winding amount could be minimal - that is,
-                // the Key is already fully wound. However - who really cares?
+                // the Key is already fully wound. However - at this point who really cares?
 
                 // The "winding" takes place here. Note that while timeLeftOnKey might
                 // be set - collapse is set a short time later - thus, timeLeftOnKey is greater
@@ -673,7 +657,7 @@ default {
                 string percent = formatFloat((float)timeLeftOnKey * 100.0 / (float)keyLimit, 1);
 
                 // Eliminate zero minutes, and correct grammar
-                if (windAmount < 120) mins = "1 more minute";
+                if (windAmount < 120) mins = "about a minute";
                 else mins = mins + " more minutes";
 
                 // Two possible messages to go out:
@@ -901,7 +885,7 @@ default {
         }
         // Quick shortcut...
         else if (code < 200) {
-            if (code == 102) {
+            if (code == INIT_STAGE2) {
                 configured = 1;
 
                      if (lowScriptMode) llSetTimerEvent(LOW_RATE);
@@ -911,7 +895,7 @@ default {
                 timerStarted = 1;
             }
 
-            else if (code == 104) {
+            else if (code == INIT_STAGE3) {
                 dollID = llGetOwner();
                 dollName = lmMyDisplayName(dollID);
 
@@ -919,7 +903,7 @@ default {
                 setWindRate();
             }
 
-            else if (code == 105) {
+            else if (code == INIT_STAGE4) {
 
                      if (lowScriptMode) llSetTimerEvent(LOW_RATE);
                 else if (!isAttached)   llSetTimerEvent(60.0);
