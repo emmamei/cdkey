@@ -285,7 +285,7 @@ default {
         code      =  i & 0x000003FF;
         split     = llDeleteSubList(split, 0, 0 + optHeader);
 
-        scaleMem();
+        //scaleMem();
 
         if (code == SEND_CONFIG) {
             name = llList2String(split, 0);
@@ -418,14 +418,16 @@ default {
             }
         }
         else if (code < 200) {
-            if (code == MEM_REPORT) {
-                float delay = llList2Float(split, 0);
-                memReport(cdMyScriptName(),delay);
-            }
-            else if (code == CONFIG_REPORT) {
+            if (code == CONFIG_REPORT) {
 
                 cdConfigureReport();
             }
+#ifdef DEVELOPER_MODE
+            else if (code == MEM_REPORT) {
+                float delay = llList2Float(split, 0);
+                memReport(cdMyScriptName(),delay);
+            }
+#endif
         }
     }
 

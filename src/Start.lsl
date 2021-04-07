@@ -391,7 +391,7 @@ default {
         code              =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
-        scaleMem();
+        //scaleMem();
 
         if (code == SEND_CONFIG) {
             string name = llList2String(split, 0);
@@ -545,12 +545,14 @@ default {
                 if (newAttach && isAttached)
                     llSay(PUBLIC_CHANNEL, llGetDisplayName(llGetOwner()) + " is now a dolly - anyone may play with their Key.");
             }
+#ifdef DEVELOPER_MODE
             else if (code == MEM_REPORT) {
                 if (script == cdMyScriptName()) return;
 
                 float delay = llList2Float(split, 0);
                 memReport(cdMyScriptName(),delay);
             }
+#endif
             else if (code == CONFIG_REPORT) {
                 cdConfigureReport();
             }

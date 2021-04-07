@@ -55,7 +55,7 @@ default {
     //----------------------------------------
     state_entry() {
         cdInitializeSeq();
-        scaleMem();
+        //scaleMem();
     }
 
     //----------------------------------------
@@ -63,7 +63,7 @@ default {
     //----------------------------------------
     on_rez(integer start) {
         cdInitializeSeq();
-        scaleMem();
+        //scaleMem();
     }
 
     //----------------------------------------
@@ -94,7 +94,7 @@ default {
         code              =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
-        scaleMem();
+        //scaleMem();
 
         if (code == SEND_CONFIG) {
             string name = cdListElement(split, 0);
@@ -320,15 +320,17 @@ default {
                 lmRunRLVcmd("restoreRLV","");
         }
         else if (code < 200) {
-            if (code == MEM_REPORT) {
+            if (code == CONFIG_REPORT) {
+
+                cdConfigureReport();
+            }
+#ifdef DEVELOPER_MODE
+            else if (code == MEM_REPORT) {
                 float delay = cdListFloatElement(split, 0);
 
                 memReport(cdMyScriptName(),delay);
             }
-            else if (code == CONFIG_REPORT) {
-
-                cdConfigureReport();
-            }
+#endif
         }
     }
 }

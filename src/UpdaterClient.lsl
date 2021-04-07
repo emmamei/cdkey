@@ -148,7 +148,7 @@ default {
         code              =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
-        scaleMem();
+        //scaleMem();
 
         string name = llList2String(split, 0);
 

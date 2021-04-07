@@ -912,10 +912,10 @@ default {
                 timerStarted = 1;
             }
 
-#ifdef REPORTMEM
+#ifdef DEVELOPER_MODE
             else if (code == MEM_REPORT) {
                 float delay = llList2Float(split, 0);
-                scaleMem();
+                //scaleMem();
                 memReport(cdMyScriptName(),delay);
             }
 #endif

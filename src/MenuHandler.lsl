@@ -206,7 +206,7 @@ default {
         code              =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
-        scaleMem();
+        //scaleMem();
 
         if (code == SEND_CONFIG) {
             string name = llList2String(split, 0);
@@ -616,16 +616,18 @@ default {
                 if (data == "Start") configured = 1;
 
                 doDialogChannel();
-                scaleMem();
+                //scaleMem();
             }
             else if (code == 110) {
                 //startup = 0;
                 ;
             }
+#ifdef DEVELOPER_MODE
             else if (code == MEM_REPORT) {
                 float delay = llList2Float(split, 0);
                 memReport(cdMyScriptName(),delay);
             }
+#endif
             else if (code == CONFIG_REPORT) {
 
                 cdConfigureReport();

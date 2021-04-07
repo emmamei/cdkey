@@ -314,7 +314,7 @@ default {
         code              =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
-        scaleMem();
+        //scaleMem();
 
         if (code == SEND_CONFIG) {
 
@@ -698,15 +698,7 @@ default {
             }
         }
         else if (code < 200) {
-            if (code == MEM_REPORT) {
-                memReport(cdMyScriptName(),cdListFloatElement(split, 0));
-            }
-            else if (code == CONFIG_REPORT) {
-
-                cdConfigureReport();
-
-            }
-            else if (code == SIM_RATING_CHG) {
+            if (code == SIM_RATING_CHG) {
                 simRating = cdListElement(split, 0);
                 integer outfitRating = cdOutfitRating(newOutfitName);
                 integer regionRating = cdRating2Integer(simRating);
@@ -714,6 +706,14 @@ default {
                 debugSay(3, "DEBUG-DRESS", "Region rating " + simRating + " outfit " + newOutfitName + " outfitRating: " + (string)outfitRating +
                             " regionRating: " + (string)regionRating);
             }
+            else if (code == CONFIG_REPORT) {
+                cdConfigureReport();
+            }
+#ifdef DEVELOPER_MODE
+            else if (code == MEM_REPORT) {
+                memReport(cdMyScriptName(),cdListFloatElement(split, 0));
+            }
+#endif
         }
     }
 
@@ -927,7 +927,7 @@ default {
             newOutfitsList = [];
         }
 
-        scaleMem();
+        //scaleMem();
     }
 }
 

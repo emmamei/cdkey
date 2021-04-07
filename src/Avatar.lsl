@@ -685,7 +685,7 @@ default {
         code      =  i & 0x000003FF;
         split     = llDeleteSubList(split, 0, 0 + optHeader);
 
-        scaleMem();
+        //scaleMem();
 
         if (code == SEND_CONFIG) {
             name = llList2String(split, 0);
@@ -882,9 +882,11 @@ default {
                 ifPermissions();
                 oneAnimation();
             }
+#ifdef DEVELOPER_MODE
             else if (code == MEM_REPORT) {
                 memReport("Avatar",llList2Float(split,0));
             }
+#endif
             else if (code == CONFIG_REPORT) {
                 cdConfigureReport();
             }

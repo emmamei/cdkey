@@ -715,7 +715,7 @@ default {
                 lmSetConfig("dollType", dollType);
                 lmSetConfig("transformLockExpire","0");
             }
-#ifdef REPORTMEM
+#ifdef DEVELOPER_MODE
             else if (code == MEM_REPORT) {
                 memReport(cdMyScriptName(),(float)choice);
             }

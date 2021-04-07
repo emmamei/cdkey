@@ -96,7 +96,7 @@ default {
         code      =  i & 0x000003FF;
         split     = llDeleteSubList(split, 0, 0 + optHeader);
 
-        scaleMem();
+        //scaleMem();
 
         if (code == SEND_CONFIG) {
             string name = llList2String(split, 0);
@@ -509,20 +509,19 @@ Parent - Take care choosing your parents; they have great control over Dolly and
             }
             else if (code == 102) {
                 configured = 1;
-                scaleMem();
+                //scaleMem();
             }
 #ifdef DEVELOPER_MODE
             else if (code == 110) {
                 llSleep(5.0);
                 lmMemReport(0.5, dollID);
             }
-#endif
             else if (code == MEM_REPORT) {
                 float delay  = llList2Float(split, 0);
                 memReportID = id;
                 memReport("Aux",1.0);
             }
-
+#endif
             else if (code == MEM_REPLY) {
                 memReporting = 1;
                 llSetTimerEvent(5.0); // when timer goes off, we assume completion
