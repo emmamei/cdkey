@@ -3,12 +3,6 @@
 //========================================
 //
 // vim:sw=4 et nowrap filetype=lsl
-//
-// DATE: 24 November 2020
-
-// 29 March: Formatting and general cleanup
-// Aug 14, totally changing
-// Nov. 12, adding compatibility with hypnosisHUD
 
 #include "include/GlobalDefines.lsl"
 
@@ -115,20 +109,20 @@ setDollType(string stateName) {
         }
     }
 
-    // We dont respond to this: we don't have to
     lmSendConfig("dollType", (dollType = stateName));
-
     llOwnerSay("You have become a " + dollType + " Doll.");
 
+    // Now search for a Type folder for Dolly and set it
     typeFolder = "";
-
     outfitSearchTries = 0;
     typeSearchTries = 0;
 
     // if RLV is non-functional, dont search for a Type Folder
     if (RLVok == TRUE) {
         debugSay(2,"DEBUG-DOLLTYPE","Searching for " + typeFolderExpected);
+
         outfitsSearchTimer = llGetTime();
+
         typeSearchHandle = cdListenMine(typeSearchChannel);
         folderSearch(outfitsFolder,typeSearchChannel);
     }
@@ -157,11 +151,11 @@ reloadTypeNames(key id) {
             // The Slut model is allowed (in a normal fashion)
             // if this is an ADULT key
             //
-#ifndef ADULT_MODE
+#ifdef ADULT_MODE
+            types += typeName;
+#else
             // Don't allow Slut notecard to define Slut type (not an Adult Key)
             if (typeName != "Slut") types += typeName;
-#else
-            types += typeName;
 #endif
         }
     }
@@ -174,6 +168,7 @@ reloadTypeNames(key id) {
     //
     if (llListFindList(types, (list)"Display") == NOT_FOUND) types += [ "Display" ];
 #ifdef ADULT_MODE
+    // This makes the process location-dependent...
     if (simRating == "MATURE" || simRating == "ADULT")
         if (llListFindList(types, (list)"Slut") == NOT_FOUND) types += [ "Slut" ];
 #endif
@@ -674,8 +669,14 @@ default {
             }
         }
         else if (code == TYPE_SELECTION) {
-            // "choice" is a valid Type: change to it as appropriate
+            // A Doll Type was chosen: change to it as is appropriate
 
+            // Accessor is either:
+            //    * Dolly
+            //    * Controller
+            //    * Other when Dolly does not have to agree
+            //    * Other when Dolly is hardcore
+            //
             if (cdIsDoll(id) || cdIsController(id) || !mustAgreeToType || hardcore) {
                 transform = "";
 
@@ -684,11 +685,7 @@ default {
                 lmSetConfig("transformLockExpire","1");
             }
             else {
-                // This section is executed when:
-                //
-                // 1. Accessor is NOT Dolly, AND
-                // 2. Accessor is NOT a Controller, AND
-                // 3. Dolly must agree to Type...
+                // This part is when Dolly needs to agree
 
                 // A member of the public chose a Type and confirmation is required
                 cdSayTo("Getting confirmation from Doll...",id);
@@ -712,8 +709,6 @@ default {
                 // Might have been set in Prefs, so do this late
             }
             else if (code == INIT_STAGE5) {
-                //initState = 105;
-                //
                 // note that dollType is ALREADY SET....
                 // this is bad form but allows us to defer the subroutine
                 // until now in the startup process
@@ -767,13 +762,13 @@ default {
                     debugSay(2,"DEBUG-SEARCHING","outfitsFolder = " + outfitsFolder);
 
                     lmSendConfig("outfitsFolder", outfitsFolder);
-                    //lmSendConfig("typeFolder", typeFolder);
-                    //lmSendConfig("useTypeFolder", (string)useTypeFolder);
 
                     debugSay(2,"DEBUG-SEARCHING","typeFolder = \"" + typeFolder + "\" and typeFolderExpected = \"" + typeFolderExpected + "\"");
+
                     // Search for a typeFolder...
                     if (typeFolder == "" && typeFolderExpected != "") {
                         debugSay(2,"DEBUG-SEARCHING","Outfit folder found in " + (string)(llGetTime() - outfitsSearchTimer) + "s; searching for typeFolder");
+
                         // outfitsFolder search is done: search for typeFolder
                         folderSearch(outfitsFolder,typeSearchChannel);
                     }
