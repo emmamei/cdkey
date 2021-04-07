@@ -193,27 +193,17 @@ listInventoryOn(integer channel) {
     }
 }
 
+setDresser(key id) {
+    dresserID = id;
+    if (id == NULL_KEY) dresserName = "";
+    else dresserName = llGetDisplayName(dresserID);
+}
+
 integer isDresser(key id) {
-    if (dresserID == NULL_KEY || llGetAgentSize(dresserID) == ZERO_VECTOR) {
-        // No dresser currently: set it to id
-
-        // check if id is something other than an avatar: and fake up TRUE val if so
-        if (llGetAgentSize(id) == ZERO_VECTOR) return TRUE;
-
-        dresserID = id;
-        dresserName = llGetDisplayName(dresserID);
-
-        if (!cdIsDoll(dresserID))
-            if (!hardcore)
-                llOwnerSay("secondlife:///app/agent/" + (string)dresserID + "/about is looking at your dress menu");
-    }
-    else if (dresserID != id) {
+    if (dresserID != id)
         cdSayTo("You go to look in Dolly's closet for clothes, and find that " + dresserName + " is already there looking", id);
-        return FALSE;
-    }
 
-    // dresserID == id .... therefore, id IS the dresser...
-    return TRUE;
+    return (dresserID == id);
 }
 
 changeComplete(integer success) {
@@ -259,9 +249,6 @@ changeComplete(integer success) {
 
     tempDressingLock = FALSE;
     llSetTimerEvent(0.0);
-
-    dresserID = NULL_KEY;
-    dresserName = "";
 }
 
 #ifdef DEVELOPER_MODE
@@ -415,6 +402,7 @@ default {
                     return;
                 }
 
+                setDresser(id);
                 if (outfitsFolder != "") {
 #ifdef DEVELOPER_MODE
                     // If we are in developer mode we are in danger of the key being ripped
@@ -537,7 +525,7 @@ default {
                 // and all of the new outfit should be attached. Nothing is locked.
 
                 //----------------------------------------
-                // *** NEW STEP #4
+                // STEP #4
 
                 // Remove rest of old outfit (using saved folder)
 
@@ -573,7 +561,7 @@ default {
                 llSleep(1.0);
 
                 //----------------------------------------
-                // *** NEW STEP #5
+                // STEP #5
 
                 debugSay(2,"DEBUG-DRESS","*** STEP 5 ***");
 
@@ -583,7 +571,7 @@ default {
                 llSleep(1.0);
 
                 //----------------------------------------
-                // *** NEW STEP #6
+                // STEP #6
 
                 debugSay(2,"DEBUG-DRESS","*** STEP 6 ***");
 
@@ -601,42 +589,18 @@ default {
                 debugSay(2,"DEBUG-DRESS","*** END DRESSING SEQUENCE ***");
 
                 //----------------------------------------
-                // STEP #6
-
-                // Now remove everything in the outfits folder (typeically "> Outfits")
-                // which is not locked down - and then attach everything in the new outfit
-                // again
-                //debugSay(2, "DEBUG-DRESS", "Removing everything in Outfits folder: " + outfitsFolder);
-                //lmRunRLV("detachall:" + outfitsFolder + "=force");
-
-                //----------------------------------------
                 // STEP #7
-
-                // And now send an attempt to clean up any remaining stray pieces: remove rest of
-                // clothing not otherwise locked
-                //list parts = [ "gloves","jacket","pants","shirt",
-                //               "shoes","skirt","socks","underpants",
-                //               "undershirt","alpha","pelvis","left foot",
-                //               "right foot","r lower leg","l lower leg",
-                //               "r forearm","l forearm","r upper arm",
-                //               "l upper arm","r upper leg","l upper leg" ];
-                //
-                //debugSay(2, "DEBUG-DRESS", "Removing all parts....");
-                //lmRunRLV("detachallthis:" + llDumpList2String(parts, "=force,detachallthis:") + "=force");
-
-                //----------------------------------------
-                // STEP #8
 
                 // Attach everything one last time - in case we knocked something off we need
                 //debugSay(2, "DEBUG-DRESS", "Reattach new outfit: " + newOutfit);
                 //lmRunRLV("attachall:" + newOutfit + "=force");
 
-                //llSetTimerEvent(15.0);
                 oldOutfit = newOutfit;
 
                 llListenRemove(menuDressHandle);
 
                 changeComplete(TRUE);
+                setDresser(NULL_KEY);
             }
             else if (cmd == "resetBody") {
                 // Force attach nude elements
@@ -707,9 +671,9 @@ default {
 
             if (choice == "Outfits..." && !tempDressingLock) {
                 // This is required: there are side effects
-                if (id) {
-                    if (!isDresser(id)) return;
-                }
+                //if (id) {
+                //    if (!isDresser(id)) return;
+                //}
 
                 debugSay(2, "DEBUG-DRESS", "Outfit menu; outfit Folder = " + outfitsFolder);
                 if (wearLock) {
