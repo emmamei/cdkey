@@ -255,22 +255,16 @@ default {
         //
         // Same thing happens on startup with lastTimerMark = 0
 
-        if (timeSpan > 120) {
-            // Check sanity of timeSpan
-            timeSpan = 0;
-            lastTimerMark = timerMark;
-        }
+        if (timeSpan > 120) timeSpan = 0;
 
 #ifdef DEVELOPER_MODE
-        thisTimerEvent = llGetTime();
-
-        if (lastTimerEvent) {
-            timerInterval = thisTimerEvent - lastTimerEvent;
+        if (timeSpan) {
             if (timeReporting)
-                debugSay(5,"DEBUG-MAIN","Main Timer fired, interval " + formatFloat(timerInterval,2) + "s.");
+                debugSay(5,"DEBUG-MAIN","Main Timer fired, interval " + formatFloat(timeSpan,2) + "s.");
         }
-        lastTimerEvent = thisTimerEvent;
 #endif
+
+        lastTimerMark = timerMark;
 
         //----------------------------------------
         // LOW SCRIPT MODE
@@ -319,11 +313,6 @@ default {
                 llSetTimerEvent(STD_RATE);
             }
         }
-
-        //----------------------------------------
-        // TIME SAVED (TIMER INTERVAL)
-
-        lastTimerMark = timerMark;
 
         //----------------------------------------
         // CHECK COLLAPSE STATE
@@ -410,6 +399,7 @@ default {
             if (timeSpan != 0) {
                 // Key ticks down just a little further...
                 timeLeftOnKey -= (integer)(timeSpan * windRate);
+                if (timeLeftOnKey < 0) timeLeftOnKey = 0;
                 lmSendConfig("timeLeftOnKey",(string)timeLeftOnKey);
 
                 // Now that we've ticked down a few - check for warnings, and check for collapse

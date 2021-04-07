@@ -28,7 +28,6 @@
 key memReportID;
 key lmRequest;
 list memList;
-float timerEvent;
 float listenTime;
 float memTime;
 string minsLeft;

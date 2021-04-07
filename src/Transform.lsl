@@ -46,6 +46,11 @@ key transformerID;
 integer readLine;
 integer readingNC;
 string typeNotecard;
+integer timerMark;
+
+#ifdef DEVELOPER_MODE
+integer lastTimerMark;
+#endif
 
 integer outfitSearchTries;
 integer typeSearchTries;
@@ -251,6 +256,8 @@ default {
     //
     timer() {
 
+        timerMark = llGetUnixTime();
+
         // No searching happens unless RLV is ok...
         //
         // Checks happen when:
@@ -275,38 +282,44 @@ default {
         if (timeReporting) {
             string s;
 
-            s = "Transform Timer fired, interval " + formatFloat(llGetTime() - lastTimerEvent,2) + "s. (lowScriptMode ";
-            if (lowScriptMode) s += "is active).";
-            else s += "is not active).";
+            if (lastTimerMark > 0) {
+                s = "Transform Timer fired, interval " + formatFloat(timerMark - lastTimerMark,2) + "s";
+                if (lowScriptMode) s += " (lowScriptMode enabled)";
+                s += ".";
 
-            debugSay(5,"DEBUG-TRANSFORM",s);
+                debugSay(5,"DEBUG-TRANSFORM",s);
+            }
 
-            lastTimerEvent = llGetTime();
+            lastTimerMark = timerMark;
         }
 #endif
-        // transform lock: check time
+        //----------------------------------------
+        // TRANSFORM LOCK
+        //
         if (transformLockExpire) {
-            if (transformLockExpire  <= llGetUnixTime()) {
+            if (transformLockExpire  <= timerMark) {
                 lmSetConfig("transformLockExpire",(string)(transformLockExpire = 0));
             }
-            // Redundant
-            //else lmSetConfig("transformLockExpire",(string)(transformLockExpire));
         }
 
 #ifdef HOMING_BEACON
+        //----------------------------------------
+        // HOMING BEACON: AUTO-TRANSPORT
+        //
         if (homingBeacon) {
             string timeLeft = llList2String(split, 0);
 
             // is it possible to be collapsed but collapseTime be equal to 0.0?
             if (collapsed) {
-                float timeCollapsed = llGetUnixTime() - collapseTime;
-
-                if (timeCollapsed > TIME_BEFORE_TP)
+                if ((timerMark - collapseTime) > TIME_BEFORE_TP)
                     if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK)
                         lmInternalCommand("teleport", LANDMARK_HOME, id);
             }
         }
 #endif
+        //----------------------------------------
+        // OUTFIT SEARCH
+        //
         if (RLVok == TRUE) {
             // if we get here then the search RLV timed out
             if (outfitSearching) {
@@ -343,7 +356,7 @@ default {
 
         //----------------------------------------
         // SHOW PHRASES
-
+        //
         if (showPhrases) {
             if (phraseCount) {
 
@@ -376,8 +389,8 @@ default {
         }
 
         //----------------------------------------
-        // SET TIMER INTERVAL
-
+        // ADJUST NEXT TIMER INTERVAL
+        //
         if (lowScriptMode) llSetTimerEvent(LOW_RATE);
         else llSetTimerEvent(STD_RATE);
     }
