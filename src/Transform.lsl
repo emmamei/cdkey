@@ -87,10 +87,7 @@ list currentPhrases;
 // FUNCTIONS
 //========================================
 
-#define AUTOMATED 1
-#define NOT_AUTOMATED 0
-
-setDollType(string stateName, integer automated) {
+setDollType(string stateName) {
     // Convert state name to Title case
     stateName = cdGetFirstChar(llToUpper(stateName)) + cdButFirstChar(llToLower(stateName));
 
@@ -98,7 +95,7 @@ setDollType(string stateName, integer automated) {
         stateName = "Regular";
     }
 
-    debugSay(2,"DEBUG-DOLLTYPE","Changing (automated:" + (string)automated + ") dolltype to type " + stateName + " from " + dollType);
+    debugSay(2,"DEBUG-DOLLTYPE","Changing dolltype to type " + stateName + " from " + dollType);
 
     // By not aborting, selecting the same state can cause a "refresh" ...
     // though our menus do not currently allow this
@@ -484,7 +481,7 @@ default {
             string value = cdListElement(split, 1);
 
             if (name == "dollType") {
-                setDollType(value, AUTOMATED);
+                setDollType(value);
             }
             else if (name == "transformLockExpire") {
                 if (value == "0") transformLockExpire = 0;
@@ -545,7 +542,6 @@ default {
         else if (code == RLV_RESET) {
             RLVok = (integer)choice;
             if (dollType == "") {
-                //setDollType("Regular", AUTOMATED);
                 lmSetConfig("dollType", "Regular");
                 lmSetConfig("transformLockExpire","0");
                 llSay(DEBUG_CHANNEL,"RLV_RESET: dollType had to be fixed from blank");
@@ -673,7 +669,6 @@ default {
             else if (choice == "Transform") {
                 // We get here because dolly had to confirm the change
                 // of type - and chose "Transform" from the menu
-                //setDollType(transform, NOT_AUTOMATED);
                 lmSetConfig("dollType", transform);
                 lmSetConfig("transformLockExpire","1");
             }
@@ -685,7 +680,6 @@ default {
                 transform = "";
 
                 // Doll (or a Controller) chose a Type - or no confirmation needed: just do it
-                //setDollType(choice, NOT_AUTOMATED);
                 lmSetConfig("dollType", choice);
                 lmSetConfig("transformLockExpire","1");
             }
@@ -723,7 +717,6 @@ default {
                 // note that dollType is ALREADY SET....
                 // this is bad form but allows us to defer the subroutine
                 // until now in the startup process
-                //setDollType(dollType, AUTOMATED);
                 lmSetConfig("dollType", dollType);
                 lmSetConfig("transformLockExpire","0");
             }
