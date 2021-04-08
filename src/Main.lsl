@@ -482,7 +482,7 @@ default {
             }
             else if (name == "hardcore")                     hardcore = (integer)value;
             else if (name == "hovertextOn")               hovertextOn = (integer)value;
-            else if (name == "keyAnimation")             keyAnimation = value;
+            //else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
             else if (name == "transformLockExpire") transformLockExpire = (integer)value;

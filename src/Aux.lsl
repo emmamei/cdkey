@@ -110,7 +110,7 @@ default {
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
-            else if (name == "keyAnimation")             keyAnimation = value;
+            //else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "poserID")                       poserID = (key)value;
             else if (name == "keyLimit")                      maxMins = llRound((float)value / 60.0);
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
@@ -147,6 +147,7 @@ default {
                 if (split == [""]) blacklist = [];
                 else blacklist = split;
             }
+#ifdef NONE
             else if (name == "dollType") {
                 dollType = value;
 
@@ -162,10 +163,10 @@ default {
                 // the pose timer needs to be reset and eliminated
                 //
                 if (!hardcore) { // if hardcore, there IS no timer
-                    if (keyAnimation != "") {
-                        if (keyAnimation != ANIMATION_COLLAPSED) {
-                            if (poserID != dollID) {
-                                if (configured) {
+                    if (keyAnimation != "") { // currently posed
+                        if (keyAnimation != ANIMATION_COLLAPSED) { // not collapsed
+                            if (poserID != dollID) { // poser is not dolly
+                                if (configured) { // key is configured
 
                                     if (dollType == "Display")
                                         llOwnerSay("As you feel yourself become a " + dollType + " Doll you feel a sense of helplessness knowing you will remain posed until released.");
@@ -179,6 +180,7 @@ default {
                     }
                 }
             }
+#endif
             else if (name == "dialogChannel") {
                 dialogChannel = (integer)value;
                 textboxChannel = dialogChannel - 1111;

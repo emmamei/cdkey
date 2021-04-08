@@ -406,6 +406,8 @@ default {
                 if (split == [""]) blacklist = [];
                 else blacklist = split;
             }
+
+            // keyAnimation used to set RLV... Seems odd
             else if (name == "keyAnimation") {
                 string oldKeyAnimation = keyAnimation;
                 keyAnimation = value;

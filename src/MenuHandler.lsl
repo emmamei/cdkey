@@ -222,7 +222,9 @@ default {
             else if (name == "lowScriptMode")             lowScriptMode = (integer)value;
             else if (name == "winderRechargeTime")   winderRechargeTime = (integer)value;
 
+            // keyAnimation used to test for being posed
             else if (name == "keyAnimation")               keyAnimation = value;
+
             else if (name == "showPhrases")                 showPhrases = (integer)value;
             else if (name == "transformLockExpire") transformLockExpire = (integer)value;
 
