@@ -55,6 +55,8 @@ string myPath;
 integer hasCarrier;
 integer i;
 integer posePage;
+integer timerMark;
+integer lastTimerMark;
 
 // This acts as a cache of
 // current poses in inventory
@@ -912,14 +914,15 @@ default {
         llSetTimerEvent(animRefreshRate);
 
 #ifdef DEVELOPER_MODE
-        thisTimerEvent = llGetTime();
+        if (timeReporting) {
+            timerMark = llGetUnixTime();
 
-        if (lastTimerEvent) {
-            timerInterval = thisTimerEvent - lastTimerEvent;
-            if (timeReporting)
-                debugSay(5,"DEBUG-AVATAR","Avatar Timer fired, interval " + formatFloat(timerInterval,2) + "s.");
+            if (lastTimerMark) {
+                debugSay(5,"DEBUG-AVATAR","Avatar Timer fired, interval " + formatFloat(timerMark - lastTimerMark,2) + "s.");
+            }
+
+            lastTimerMark = timerMark;
         }
-        lastTimerEvent = thisTimerEvent;
 #endif
     }
 

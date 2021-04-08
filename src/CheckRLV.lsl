@@ -438,16 +438,6 @@ default {
     // Timer fires for only one reason: RLVcheck timeout
 
     timer() {
-#ifdef DEVELOPER_MODE
-        thisTimerEvent = llGetTime();
-
-        if (cdAttached()) timerInterval = thisTimerEvent - lastTimerEvent;
-        lastTimerEvent = thisTimerEvent;
-
-        if (timeReporting)
-            debugSay(5,"DEBUG-CHECKRLV","CheckRLV Timer fired, interval " + formatFloat(timerInterval,3) + "s.");
-#endif
-
         // RLVok shouldn't be TRUE here: timer would be shut off
         debugSay(2,"DEBUG-RLV","RLV check failed...");
 
