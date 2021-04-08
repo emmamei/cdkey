@@ -164,8 +164,6 @@ default {
                     // Either find "=n" or "=y" and handle it
                     command = llList2String(commandList,index);
                     ending = llGetSubString(command,-2,-1);
-                    debugSay(4,"DEBUG-STATUSRLV","RestrictRLVcmd: command = " + command);
-                    debugSay(4,"DEBUG-STATUSRLV","RestrictRLVcmd: ending = " + ending);
 
                     llOwnerSay("@" + command);
                 }
@@ -315,7 +313,6 @@ default {
         else if (code == RLV_RESET) {
             RLVok = llList2Integer(split, 0);
 
-            //debugSay(4,"DEBUG-STATUSRLV","rlvCommand (refresh) activated");
             if (RLVok == TRUE)
                 lmRunRLVcmd("restoreRLV","");
         }
