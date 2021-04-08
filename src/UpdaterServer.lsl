@@ -70,10 +70,6 @@ sendUpdate() {
     index = numScripts;
     myName = llGetScriptName();
 
-    //llOwnerSay("touchingID = " + (string)touchingID);
-    //llOwnerSay(  "targetID = " + (string)  targetID);
-    //llOwnerSay("pin = " + (string)pin);
-
     // scan all scripts in our inventory, could be more than one needs updating.
     while (index--) {
 
@@ -181,12 +177,13 @@ default {
         }
 
         lmSetHovertext("Awaiting update client...");
+        llSay(PUBLIC_CHANNEL,"Ready to begin update...");
+        llSay(PUBLIC_CHANNEL,"*** KEY WILL RESET AFTER UPDATE ***");
 
         // Create a private listener, and open it
         comChannel = (((integer)("0x" + llGetSubString((string)touchingID, -8, -1)) & 0x3FFFFFFF) ^ 0xBFFFFFFF ) + UNIQ;    // UNIQ is the private channel for this owner
         comHandle = llListen(comChannel,"","","");
 
-        //llRegionSayTo(touchingID, PUBLIC_CHANNEL, "Put non-running scripts into inventory and touch this to send them to remote prims.");
         llSetTimerEvent(UPDATE_TIMEOUT);
     }
 
