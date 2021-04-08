@@ -137,9 +137,6 @@ posePageN(string choice, key id) {
 
     poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
 
-    debugSay(6,"DEBUG-AVATAR","Loop index initialized at " + (string)i + " poses");
-    debugSay(6,"DEBUG-AVATAR","Current pose list = " + llDumpList2String(poseList, ","));
-
     if (poseList == []) buildList = TRUE;
 
     i = poseCount; // loopIndex
@@ -168,15 +165,11 @@ posePageN(string choice, key id) {
                (isController && posePrefix == "!") ||
                (posePrefix != "!" && posePrefix != ".")) {
 
-                debugSay(6,"DEBUG-AVATAR","Pose #" + (string)(i+1) + " (" + poseName + ") added: " + llDumpList2String(tmpList, ","));
+                debugSay(6,"DEBUG-AVATAR","Pose #" + (string)(i+1) + " added: " + poseName);
                 tmpList += poseName;
             }
         }
     }
-
-    debugSay(6,"DEBUG-AVATAR","Pose list contains: " + llDumpList2String(tmpList, ","));
-    //if (buildList)
-    //    cdSayTo("Read complete: found " + (string)llGetListLength(tmpList) + " viable poses.",id);
 
     if (choice == "Poses Next") {
         posePage++;
@@ -204,11 +197,9 @@ posePageN(string choice, key id) {
         }
     }
 
-    debugSay(6,"DEBUG-AVATAR","Pose list contains: " + llDumpList2String(tmpList, ","));
     poseCount = llGetListLength(poseList);
     debugSay(4,"DEBUG-AVATAR","Found " + (string)poseCount + " poses");
 
-    debugSay(4,"DEBUG-AVATAR","Now on page " + (string)posePage + " and index " + (string)poseIndex);
     tmpList = llListSort(tmpList, 1, 1);
     if (poseCount > 9) {
         // Get a 9-count slice from tmpList for dialog
@@ -220,7 +211,6 @@ posePageN(string choice, key id) {
 
     lmSendConfig("backMenu",(backMenu = MAIN));
     tmpList += [ "Back..." ];
-    debugSay(6,"DEBUG-AVATAR","Pose list contains: " + llDumpList2String(tmpList, ","));
 
     msg = "Select the pose to put dolly into";
     if (keyAnimation) msg += " (current pose is " + keyAnimation + ")";
@@ -612,11 +602,12 @@ default {
             poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
 
             i = poseCount;
+            debugSay(4,"DEBUG-AVATAR","Refreshing list of poses on inventory change");
 
             while (i--) {
                 // This takes time:
                 poseName = llGetInventoryName(INVENTORY_ANIMATION, i);
-                debugSay(6,"DEBUG-AVATAR","Pose #" + (string)(i+1) + " (" + poseName + ") found: " + llDumpList2String(poseList, ","));
+                debugSay(6,"DEBUG-AVATAR","Pose #" + (string)(i+1) + " found: " + poseName);
 
                 // Collect all viable poses: skip the collapse animation
                 if (poseName != ANIMATION_COLLAPSED)
@@ -659,13 +650,15 @@ default {
         newAttach = (lastAttachedID != dollID);
         lastAttachedID = id;
 
+        debugSay(4,"DEBUG-AVATAR","Checking poses on attach");
+
         poseList = [];
         poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
         i = poseCount;
         while (i--) {
             // This takes time:
             poseName = llGetInventoryName(INVENTORY_ANIMATION, i + 1);
-            debugSay(6,"DEBUG-AVATAR","Adding pose #" + (string)i + " (" + poseName + "): " + llDumpList2String(poseList, ","));
+            debugSay(6,"DEBUG-AVATAR","Adding pose #" + (string)i + ": " + poseName);
 
             // Collect all viable poses: skip the collapse animation
             if (poseName != ANIMATION_COLLAPSED)
