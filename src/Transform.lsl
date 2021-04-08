@@ -679,6 +679,7 @@ default {
                 // of type - and chose "Transform" from the menu
                 lmSetConfig("dollType", transform);
                 lmSetConfig("transformLockExpire","1");
+                transform = "";
             }
         }
         else if (code == TYPE_SELECTION) {

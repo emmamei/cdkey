@@ -37,6 +37,9 @@ key lastAttachedID;
 // This is a vector of force applied against Dolly: headwind speed
 // is a good way to think of it
 float afkSlowWalkSpeed = 30;
+
+// Note that this is just a starting point; animRefreshRate is
+// adaptive
 float animRefreshRate = 8.0;
 
 vector carrierPos;

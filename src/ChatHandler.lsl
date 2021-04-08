@@ -872,12 +872,6 @@ default {
                         // Collapsed animation is special: skip it
                         if (thisPose != ANIMATION_COLLAPSED) {
 
-                            // Doll sees all animations
-                            // Controller sees only animations with a "!" prefix
-                            // Animations with no prefix are seen by all
-                            //
-                            // -- or --
-                            //
                             // Doll sees all animations regardless of prefix
                             // Controller sees animations with no prefix and a "!" prefix
                             // General public sees only those animations with no prefix
