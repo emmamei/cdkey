@@ -756,10 +756,8 @@ default {
                     //
                     else if (choice == "hide") {
                         visible = FALSE;
-                        visibility = 0.0;
 
-                        llSetLinkAlpha(LINK_SET, (float)visibility, ALL_SIDES);
-                        lmSendConfig("visibility", (string)visibility);
+                        llSetLinkAlpha(LINK_SET, 0.0, ALL_SIDES);
                         lmSendConfig("isVisible", (string)visible);
                         return;
                     }
@@ -767,7 +765,6 @@ default {
                         visible = TRUE;
 
                         llSetLinkAlpha(LINK_SET, (float)visibility, ALL_SIDES);
-                        lmSendConfig("visibility", (string)visibility);
                         lmSendConfig("isVisible", (string)visible);
                         return;
                     }
