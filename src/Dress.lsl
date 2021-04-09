@@ -874,7 +874,6 @@ default {
             string itemName;
             string prefix;
             list tmpList;
-            integer totalOutfits;
 
             debugSay(6, "DEBUG-DRESS", "Filtering outfit data");
             // Filter list of outfits (directories) to choose
@@ -892,7 +891,6 @@ default {
                                 }
                             }
                             else {
-                                if (!((cdGetFirstChar(choice) == ">") || (cdGetFirstChar(choice) == "*"))) totalOutfits++;
                                 tmpList += itemName;
                             }
                         }
@@ -927,10 +925,6 @@ default {
             if (dresserID == dollID) outfitsMessage = "You may choose any outfit to wear. ";
             else outfitsMessage = "You may choose any outfit for dolly to wear. ";
 
-            if (totalOutfits > 0) outfitsMessage += ("There are " + (string)totalOutfits + " outfits to choose from. ");
-#ifdef DEVELOPER_MODE
-            else llSay(DEBUG_CHANNEL,"No outfits in this directory?");
-#endif
             if (dresserID == dollID) outfitsMessage += "See the help file for more detailed information on outfits.";
             outfitsMessage += "\n\n" + folderStatus();
 
