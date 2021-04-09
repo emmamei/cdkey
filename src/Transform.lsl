@@ -438,7 +438,7 @@ default {
             split = llDeleteSubList(split,0,0);
 
                  if (name == "collapsed")                   collapsed = (integer)value;
-            else if (name == "autoAfk")                       autoAfk = (integer)value;
+            //else if (name == "isAFK")                       isAFK = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")           timeReporting = (integer)value;
             else if (name == "debugLevel")                 debugLevel = (integer)value;

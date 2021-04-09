@@ -656,7 +656,7 @@ default {
         }
 
         // when attaching key, user is NOT AFK...
-        lmSetConfig("autoAfk", "0");
+        lmSetConfig("isAFK", "0");
 
         // reset collapse environment
         lmInternalCommand("collapse", (string)collapsed, llGetKey());

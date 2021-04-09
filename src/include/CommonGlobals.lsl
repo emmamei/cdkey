@@ -47,7 +47,7 @@ integer allowSelfWind       = 1;
 #ifdef ADULT_MODE
 integer allowStrip          = 1;
 #endif
-integer autoAfk             = 0; // autoAfk is the current automated afk setting, not a flag
+integer isAFK               = 0; // current AFK state
 integer autoTP;
 integer busyIsAway;
 integer canAFK              = 1;

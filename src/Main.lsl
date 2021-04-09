@@ -135,7 +135,7 @@ float setWindRate() {
     debugSay(4,"DEBUG-MAIN","setWindRate() running");
 
     // if AFK then unwinding slows; if collapsed it stops
-         if (autoAfk)   newWindRate = 0.5; // 50% speed
+         if (isAFK)     newWindRate = 0.5; // 50% speed
     else if (collapsed) newWindRate = 0.0; // 0% speed
     else                newWindRate = 1.0; // 100% speed
 
@@ -437,11 +437,11 @@ default {
         // Check for agent away or agent busy (afk)
         integer dollAway = ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0);
 
-        if (dollAway != autoAfk) {
-            autoAfk = dollAway;
-            lmSetConfig("autoAfk", (string)autoAfk);
+        if (dollAway != isAFK) {
+            isAFK = dollAway;
+            lmSetConfig("isAFK", (string)isAFK);
 
-            if (autoAfk) llOwnerSay("Dolly has gone afk; Key subsystems slowing...");
+            if (isAFK) llOwnerSay("Dolly has gone afk; Key subsystems slowing...");
             else         llOwnerSay("You hear the Key whir back to full power");
 
             lmInternalCommand("setWindRate","",NULL_KEY);
@@ -523,11 +523,11 @@ default {
                 else if (name == "carrierName")               carrierName = value;
                 else if (name == "canAFK")                         canAFK = (integer)value;
                 else if (name == "configured")                 configured = (integer)value;
-                else if (name == "collapsed")                    collapsed = (integer)value;
+                else if (name == "collapsed")                   collapsed = (integer)value;
             }
             else if (name == "allowRepeatWind")       allowRepeatWind = (integer)value;
             else if (name == "allowDress")                 allowDress = (integer)value;
-            else if (name == "autoAfk")                       autoAfk = (integer)value;
+            else if (name == "isAFK")                           isAFK = (integer)value;
 #ifdef ADULT_MODE
             else if (name == "allowStrip")                 allowStrip = (integer)value;
 #endif
@@ -578,8 +578,8 @@ default {
             else if (name == "lastWinderID") {
                 lmSendConfig("lastWinderID", (string)(lastWinderID = (key)value));
             }
-            else if (name == "autoAfk") {
-                lmSendConfig("autoAfk", (string)(autoAfk = (integer)value));
+            else if (name == "isAFK") {
+                lmSendConfig("isAFK", (string)(isAFK = (integer)value));
                 lmInternalCommand("setHovertext", "", llGetKey());
                 setWindRate();
             }
