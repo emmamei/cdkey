@@ -21,6 +21,7 @@
 
 #define nothingWorn(c,d) ((c) != "0") && ((c) != "1") && ((d) != "0") && ((d) != "1")
 #define dressVia(a) listInventoryOn(a)
+#define clearDresser() dresserID = NULL_KEY
 
 //========================================
 // VARIABLES
@@ -193,17 +194,22 @@ listInventoryOn(integer channel) {
     }
 }
 
-setDresser(key id) {
-    dresserID = id;
-    if (id == NULL_KEY) dresserName = "";
-    else dresserName = llGetDisplayName(dresserID);
-}
-
+// This function serves as a lock of sorts
+//
+// If there is already a dresser in progress, then
+// it returns false. If not, then the dresser is assigned
+// and the function returns TRUE.
+//
+// This also presumes that the dresser is cleared when
+// necessary, and all exits from dressing must be accounted
+// for. Use the clearDresser() macro to reset the lock.
+//
 integer isDresser(key id) {
-    if (dresserID != id)
-        cdSayTo("You go to look in Dolly's closet for clothes, and find that " + dresserName + " is already there looking", id);
-
-    return (dresserID == id);
+    if (dresserID == NULL_KEY) {
+        dresserID = id;
+        return TRUE;
+    }
+    else return (dresserID == id);
 }
 
 changeComplete(integer success) {
@@ -298,7 +304,16 @@ default {
     // ON_REZ
     //----------------------------------------
     on_rez(integer start) {
-        ; //startup = 2;
+        clearDresser();
+    }
+
+    //----------------------------------------
+    // TIMER
+    //----------------------------------------
+    // Used for time-outs on menu selections
+    timer() {
+        llSetTimerEvent(0.0);
+        clearDresser();
     }
 
     //----------------------------------------
@@ -402,7 +417,6 @@ default {
                     return;
                 }
 
-                setDresser(id);
                 if (outfitsFolder != "") {
 #ifdef DEVELOPER_MODE
                     // If we are in developer mode we are in danger of the key being ripped
@@ -600,7 +614,7 @@ default {
                 llListenRemove(menuDressHandle);
 
                 changeComplete(TRUE);
-                setDresser(NULL_KEY);
+                clearDresser();
             }
             else if (cmd == "resetBody") {
                 // Force attach nude elements
@@ -670,13 +684,14 @@ default {
             string name = cdListElement(split, 1);
 
             if (choice == "Outfits..." && !tempDressingLock) {
-                // This is required: there are side effects
-                //if (id) {
-                //    if (!isDresser(id)) return;
-                //}
+                if (!isDresser(id)) {
+                    cdSayTo("You go to look in Dolly's closet for clothes, and find that " + llGetDisplayName(dresserID) + " is already there looking", id);
+                    return;
+                }
 
                 debugSay(2, "DEBUG-DRESS", "Outfit menu; outfit Folder = " + outfitsFolder);
                 if (wearLock) {
+                    clearDresser();
                     cdDialogListen();
                     llDialog(dresserID, "Clothing was just changed; cannot change right now.", ["OK"], dialogChannel);
                     return;
@@ -691,6 +706,7 @@ default {
                     dressVia(menuDressChannel);
                 }
                 else {
+                    clearDresser();
                     if (RLVok == TRUE) llSay(DEBUG_CHANNEL,"outfitsFolder is unset.");
                     else llSay(DEBUG_CHANNEL,"You cannot be dressed without RLV active.");
                     return;
@@ -724,7 +740,7 @@ default {
         // We have our answer so now we can turn the listener off until our next request
 
         // Request max memory to avoid constant having to bump things up and down
-        llSetMemoryLimit(65536);
+        //llSetMemoryLimit(65536);
 
         debugSay(6, "DEBUG-DRESS", "Listener called[" + (string)channel + "]: " + name + "|" + choice);
 
@@ -887,7 +903,7 @@ default {
             outfitsList = tmpList;
             tmpList = [];
 
-            debugSay(6, "DEBUG-DRESS", "Any outfits remaining?");
+            debugSay(6, "DEBUG-DRESS", "Filtered list = " + llDumpList2String(outfitsList,","));
             // we've gone through and cleaned up the list - but is anything left?
             if (outfitsList == []) {
                 outfitsList = []; // free memory
@@ -919,8 +935,11 @@ default {
             outfitsMessage += "\n\n" + folderStatus();
 
             // Provide a dialog to user to choose new outfit
+            cdDialogListen();
+            //outfitsHandle = cdListenAll(outfitsChannel);
             cdListenAll(outfitsChannel);
             lmSendConfig("backMenu",(backMenu = MAIN));
+
             llDialog(dresserID, outfitsMessage, dialogSort(newOutfitsList), outfitsChannel);
 
             llSetTimerEvent(60.0);
