@@ -222,16 +222,18 @@ default {
     timer() {
 
         if (waiting) {
-        if (waitingRetries > 0) {
-        debugSay(2,"DEBUG-UPDATER","Update retry: remaining retries: " + (string)waitingRetries);
-        waitingRetries--;
-        llSetTimerEvent(BEGIN_TIMEOUT);
-        llRegionSay(comChannel, (string)llGetLinkKey(LINK_THIS) + "^" + (string)pin);
-        }
-        else {
-        llSay(DEBUG_CHANNEL,"Updater failed to respond. Restarting key.");
-        llSetScriptState("Start", RUNNING);
-        cdResetKey(); // Key state is may or may not be ok, and scripts are at full-stop...
+            if (waitingRetries > 0) {
+                debugSay(2,"DEBUG-UPDATER","Update retry: remaining retries: " + (string)waitingRetries);
+
+                waitingRetries--;
+
+                llSetTimerEvent(BEGIN_TIMEOUT);
+                llRegionSay(comChannel, (string)llGetLinkKey(LINK_THIS) + "^" + (string)pin);
+            }
+            else {
+                llSay(DEBUG_CHANNEL,"Updater failed to respond. Restarting key.");
+                llSetScriptState("Start", RUNNING);
+                cdResetKey(); // Key state is may or may not be ok, and scripts are at full-stop...
             }
         }
         else {
