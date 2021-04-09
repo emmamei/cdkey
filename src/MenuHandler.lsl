@@ -465,7 +465,8 @@ default {
                     }
 
                     // Only present the Types button if Dolly is not posed
-                    if (keyAnimation == "" && allowDress) {
+                    //if (keyAnimation == "" && allowDress) {
+                    if (keyAnimation == "") {
 
                         if (transformLockExpire == 0) {
                             // Members of the public are allowed if allowed
