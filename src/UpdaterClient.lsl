@@ -45,12 +45,13 @@ integer UNIQ = 1246;       // the private channel unique to the owner of this pr
 // Not tuneable
 #define UPDATE_TIMEOUT 30
 #define BEGIN_TIMEOUT 10
+#define MAX_RETRIES 5
 integer comChannel;
 integer comHandle;
 integer pin;             // a random pin for security
 integer updating;
 integer waiting;
-integer waitingRetries = 5;
+integer waitingRetries = MAX_RETRIES;
 integer scriptCount;
 integer scriptIndex;
 key owner;
@@ -223,6 +224,9 @@ default {
 
         if (waiting) {
             if (waitingRetries > 0) {
+                // Note this is a count DOWN... so waitingRetries starts with MAX_RETRIES
+                if (waitingRetries == MAX_RETRIES) llSay(PUBLIC_CHANNEL, "Click the updater to begin update...");
+
                 debugSay(2,"DEBUG-UPDATER","Update retry: remaining retries: " + (string)waitingRetries);
 
                 waitingRetries--;
