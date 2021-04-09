@@ -774,6 +774,7 @@ default {
             // Winding - pure and simple
             else if (choice == "Wind") {
 
+                // This happens asynchronously... not like a subroutine
                 lmInternalCommand("winding", "|" + name, id);
 
                 // This statement is only here to provide a reasonable response message
@@ -781,7 +782,7 @@ default {
                 //
                 // Time value of 60s is somewhat arbitrary; it is however less than 1m
                 // So it really would not show up in minute based calculations
-                if (windAmount < 60) {
+                if (keyLimit - timeLeftOnKey < 60) {
 
                     // note that this message might go out even if we "wound" Dolly with 30 seconds
                     // more... but in the grand scheme of things, she was fully wound: so say so
