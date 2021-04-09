@@ -151,6 +151,7 @@ default {
         //scaleMem();
 
         string name = llList2String(split, 0);
+        string value = llList2String(split, 1);
 
 #ifdef DEVELOPER_MODE
         string mode;
@@ -175,13 +176,10 @@ default {
         else if (code == 503) mode = "TYPE_SELECTION";
         else                  mode = (string)code;
 
-        if (mode != "") { debugSay(2,"DEBUG-UPDATER","Link message #" + mode + " cmd: " + name + " [" + script + "]"); }
+        if (mode != "") { debugSay(2,"DEBUG-LINKMONITOR","Link message #" + mode + " cmd: " + name + " [" + script + "] = " + value); }
 #endif
 
         if (code == SEND_CONFIG) {
-
-            string value = llList2String(split, 1);
-            //split = llDeleteSubList(split,0,0);
 
             if (name == "update") {
                 if (updating == 1) return;
