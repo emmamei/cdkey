@@ -90,11 +90,11 @@ setDollType(string stateName) {
     // Convert state name to Title case
     stateName = cdGetFirstChar(llToUpper(stateName)) + cdButFirstChar(llToLower(stateName));
 
+    debugSay(2,"DEBUG-DOLLTYPE","Changing dolltype to type '" + stateName + "' from '" + dollType + "'");
+
     if (stateName == "") {
         stateName = "Regular";
     }
-
-    debugSay(2,"DEBUG-DOLLTYPE","Changing dolltype to type " + stateName + " from " + dollType);
 
     // By not aborting, selecting the same state can cause a "refresh" ...
     // though our menus do not currently allow this
@@ -428,7 +428,7 @@ default {
 #endif
         //scaleMem();
 
-        if (script == "Transform") return;
+        if (script == "Transform" && code != SET_CONFIG) return; // WHY?
 
         if (code == SEND_CONFIG) {
 
@@ -488,6 +488,7 @@ default {
             string name = cdListElement(split, 0);
             string value = cdListElement(split, 1);
 
+            debugSay(2,"DEBUG-TRANSFORM","SET_CONFIG[" + name + "] = " + value);
             if (name == "dollType") {
                 setDollType(value);
             }
@@ -683,6 +684,8 @@ default {
             }
         }
         else if (code == TYPE_SELECTION) {
+            debugSay(2,"DEBUG-DOLLTYPE","Changing doll type to " + choice);
+
             // A Doll Type was chosen: change to it as is appropriate
 
             // Accessor is either:
