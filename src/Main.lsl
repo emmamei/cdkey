@@ -586,9 +586,9 @@ default {
 
 #ifdef SINGLE_SELF_WIND
                 // Test and reject repeat windings from Dolly - no matter who Dolly is or what the settings are
-                if (allowSelfWind) {
-                    if (id == dollID) {
-                        if (id == lastWinderID) {
+                if (allowSelfWind) { // is self-wind allowed?
+                    if (id == dollID) { // is winder Dolly?
+                        if (id == lastWinderID) { // is last winder also Dolly?
                             llOwnerSay("You have wound yourself once already; you must be wound by someone else before being able to wind again.");
                             return;
                         }

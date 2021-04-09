@@ -7,6 +7,9 @@
 /* adds a homing beacon: an automatic TP home for collapsed dollies */
 // #define HOMING_BEACON 1
 
+/* requires someone to wind dolly before dolly can self-wind a second time */
+// #define SINGLE_SELF_WIND 1
+
 /* make the outfits paging rollover from end to beginning and vice versa - or stop */
 #define ROLLOVER 1
 

@@ -82,6 +82,9 @@ string outfitsFolder;
 list dialogKeys;
 list dialogNames;
 list dialogButtons;
+#ifdef SINGLE_SELF_WIND
+key lastWinderID;
+#endif
 
 //========================================
 // FUNCTIONS
@@ -221,6 +224,9 @@ default {
             else if (name == "hardcore")                       hardcore = (integer)value;
             else if (name == "lowScriptMode")             lowScriptMode = (integer)value;
             else if (name == "winderRechargeTime")   winderRechargeTime = (integer)value;
+#ifdef SINGLE_SELF_WIND
+            else if (name == "lastWinderID")               lastWinderID = (key)value;
+#endif
 
             // keyAnimation used to test for being posed
             else if (name == "keyAnimation")               keyAnimation = value;
@@ -552,7 +558,13 @@ default {
                         if (keyAnimation == "") menu += [ "Options..." ];
                     }
                     menu += [ "Help...", "Update" ];
-                    if (allowSelfWind) menu += [ "Wind" ];
+                    if (allowSelfWind) {
+#ifdef SINGLE_SELF_WIND
+                        if (lastWinderID != dollID) menu += [ "Wind" ];
+#else
+                        menu += [ "Wind" ];
+#endif
+                    }
                 }
                 else {
                     // this includes any Controller that is NOT Dolly
