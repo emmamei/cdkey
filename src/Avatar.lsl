@@ -368,8 +368,8 @@ oneAnimation() {
         if (animList != [ animKey ]) {
 
             debugSay(2,"DEBUG-ANIM","Animations list not as expected: " + llDumpList2String(animList,","));
-            debugSay(2,"DEBUG-ANIM","Animation key = " + (string)animKey);
-            debugSay(2,"DEBUG-ANIM","Animation = " + keyAnimation);
+            //debugSay(2,"DEBUG-ANIM","Animation key = " + (string)animKey);
+            //debugSay(2,"DEBUG-ANIM","Animation = " + keyAnimation);
 
             // animStart() would stop everything; we only want to
             // stop all the rogue animations OTHER than what we want
@@ -607,7 +607,7 @@ default {
             while (i--) {
                 // This takes time:
                 poseName = llGetInventoryName(INVENTORY_ANIMATION, i);
-                debugSay(6,"DEBUG-AVATAR","Pose #" + (string)(i+1) + " found: " + poseName);
+                //debugSay(6,"DEBUG-AVATAR","Pose #" + (string)(i+1) + " found: " + poseName);
 
                 // Collect all viable poses: skip the collapse animation
                 if (poseName != ANIMATION_COLLAPSED)
