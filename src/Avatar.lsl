@@ -586,8 +586,8 @@ default {
 
 #ifdef DEVELOPER_MODE
             msg = "Region ";
-            if (llGetParcelFlags(llGetPos()) & PARCEL_FLAG_ALLOW_SCRIPTS) msg += "does not allow scripts";
-            else msg += "allows scripts";
+            if (llGetParcelFlags(llGetPos()) & PARCEL_FLAG_ALLOW_SCRIPTS) msg += "allows scripts";
+            else msg += "does not allow scripts";
 
             debugSay(2,"DEBUG-AVATAR",msg);
             debugSay(2,"DEBUG-AVATAR","Region FPS: " + formatFloat(llGetRegionFPS(),1) + "; Region Time Dilation: " + formatFloat(llGetRegionTimeDilation(),3));
