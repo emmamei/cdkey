@@ -66,6 +66,69 @@ ifPermissions() {
 }
 #endif
 
+doWinding(string name, key id) {
+    // Four steps:
+    //   1. Can we wind up at all?
+    //   2. Calculate wind time
+    //   3. Send out new timeLeftOnKey
+    //   4. React to wind (including uncollapse)
+
+#ifdef SINGLE_SELF_WIND
+    // Test and reject repeat windings from Dolly - no matter who Dolly is or what the settings are
+    if (allowSelfWind) { // is self-wind allowed?
+        if (id == dollID) { // is winder Dolly?
+            if (id == lastWinderID) { // is last winder also Dolly?
+                llOwnerSay("You have wound yourself once already; you must be wound by someone else before being able to wind again.");
+                            return;
+            }
+        }
+    }
+#endif
+    // Test and reject repeat winding as appropriate - Controllers and Carriers are not limited
+    // (odd sequence helps with short-circuiting and speed)
+    if (!allowRepeatWind) {
+        if (!cdIsController(id)) {
+            if (!cdIsCarrier(id)) {
+                if (id == lastWinderID) {
+                    cdSayTo("Dolly needs to be wound by someone else before you can wind " + pronounHerDoll + " again.", id);
+                    return;
+                }
+            }
+        }
+    }
+
+    // Here, dolly may be collapsed or not...
+
+    // Rather than clip afterwards, we clip the windAmount beforehand:
+    // this lets us correctly report how many minutes were wound
+    if (timeLeftOnKey + windNormal > keyLimit) windAmount = keyLimit - timeLeftOnKey;
+    else windAmount = windNormal;
+
+    // At this point, the winding amount could be minimal - that is,
+    // the Key is already fully wound. However - at this point who really cares?
+
+    // The "winding" takes place here. Note that while timeLeftOnKey might
+    // be set - collapse is set a short time later - thus, timeLeftOnKey is greater
+    // than zero, but collapse is still true.
+    lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey += windAmount));
+    if (lastWinderID != id) lmSendConfig("lastWinderID", (string)(lastWinderID = id));
+
+    lmInternalCommand("windMsg", (string)windAmount + "|" + name, id);
+
+    if (collapsed == NO_TIME) {
+
+        // Just gave Dolly time: so now, uncollapse Dolly
+
+        // We could call the code directly - but by doing this,
+        // it's an asynchronous event, and not a function that
+        // slows down the user.
+
+        lmSendConfig("collapsed", (string)(collapsed = 0));
+        lmSendConfig("collapseTime", (string)(collapseTime = 0));
+        lmCollapse(0);
+    }
+}
+
 float setWindRate() {
     float newWindRate;
 
@@ -576,68 +639,10 @@ default {
                 else collapse(llList2Integer(split, 0));
             }
             else if (cmd == "winding") {
-                string name = llList2String(split, 1);
-
-                // Four steps:
-                //   1. Can we wind up at all?
-                //   2. Calculate wind time
-                //   3. Send out new timeLeftOnKey
-                //   4. React to wind (including uncollapse)
-
-#ifdef SINGLE_SELF_WIND
-                // Test and reject repeat windings from Dolly - no matter who Dolly is or what the settings are
-                if (allowSelfWind) { // is self-wind allowed?
-                    if (id == dollID) { // is winder Dolly?
-                        if (id == lastWinderID) { // is last winder also Dolly?
-                            llOwnerSay("You have wound yourself once already; you must be wound by someone else before being able to wind again.");
-                            return;
-                        }
-                    }
-                }
-#endif
-                // Test and reject repeat winding as appropriate - Controllers and Carriers are not limited
-                // (odd sequence helps with short-circuiting and speed)
-                if (!allowRepeatWind) {
-                    if (!cdIsController(id)) {
-                        if (!cdIsCarrier(id)) {
-                            if (id == lastWinderID) {
-                                cdSayTo("Dolly needs to be wound by someone else before you can wind " + pronounHerDoll + " again.", id);
-                                return;
-                            }
-                        }
-                    }
-                }
-
-                // Here, dolly may be collapsed or not...
-
-                // Rather than clip afterwards, we clip the windAmount beforehand:
-                // this lets us correctly report how many minutes were wound
-                if (timeLeftOnKey + windNormal > keyLimit) windAmount = keyLimit - timeLeftOnKey;
-                else windAmount = windNormal;
-
-                // At this point, the winding amount could be minimal - that is,
-                // the Key is already fully wound. However - at this point who really cares?
-
-                // The "winding" takes place here. Note that while timeLeftOnKey might
-                // be set - collapse is set a short time later - thus, timeLeftOnKey is greater
-                // than zero, but collapse is still true.
-                lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey += windAmount));
-                if (lastWinderID != id) lmSendConfig("lastWinderID", (string)(lastWinderID = id));
-
-                lmInternalCommand("windMsg", (string)windAmount + "|" + name, id);
-
-                if (collapsed == NO_TIME) {
-
-                    // Just gave Dolly time: so now, uncollapse Dolly
-
-                    // We could call the code directly - but by doing this,
-                    // it's an asynchronous event, and not a function that
-                    // slows down the user.
-
-                    lmSendConfig("collapsed", (string)(collapsed = 0));
-                    lmSendConfig("collapseTime", (string)(collapseTime = 0));
-                    lmCollapse(0);
-                }
+                // We do this in a subroutine: this allows winding to happen from THIS
+                // script in a synchronous fashion: if this function is moved, this will
+                // have to be changed.
+                doWinding(llList2String(split, 1),id);
             }
             else if (cmd == "windMsg") {
                 // this overlaps a global windAmount... bad!
@@ -774,8 +779,9 @@ default {
             // Winding - pure and simple
             else if (choice == "Wind") {
 
-                // This happens asynchronously... not like a subroutine
-                lmInternalCommand("winding", "|" + name, id);
+                // The internal command happens asynchronously... not like a subroutine... this is a problem
+                //lmInternalCommand("winding", "|" + name, id);
+                doWinding(name,id);
 
                 // This statement is only here to provide a reasonable response message
                 // and to trigger an appropriate menu dialog.
