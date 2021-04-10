@@ -781,52 +781,6 @@ default {
 
                 // The winding process also handles messages directly
                 doWinding(name,id);
-
-#ifdef NOT_USED
-                //----------------------------------------
-                // FULLY WOUND?
-                //----------------------------------------
-                // Everything from here down is done if Dolly is fully wound...
-                // is any of this really necessary? Perhaps some small part of it...
-
-                // Two possibilities:
-                //    1. Normal wind to 100%
-                //    2. Minimal wind to 100%
-                //
-                // Does it really matter which? We could handle both just the same.
-
-                // This statement is only here to provide a reasonable response message
-                // and to trigger an appropriate menu dialog.
-                //
-                // Time value of 60s is somewhat arbitrary; it is however less than 1m
-                // So it really would not show up in minute based calculations
-                if (keyLimit - timeLeftOnKey < 60) {
-
-                    // note that this message might go out even if we "wound" Dolly with 30 seconds
-                    // more... but in the grand scheme of things, she was fully wound: so say so
-                    cdDialogListen();
-                    llDialog(id, "Dolly is already fully wound.", [MAIN], dialogChannel);
-                }
-                else {
-                    lmSendConfig("lastWinderID", (string)(lastWinderID = id));
-
-                    if (timeLeftOnKey == keyLimit) { // Fully wound
-                        if (id != dollID) {
-                            if (hardcore) llOwnerSay("You have been fully wound by " + name + ".");
-                            else llOwnerSay("You have been fully wound by " + name + " - " + (string)llRound(keyLimit / (SECS_PER_MIN * windRate)) + " minutes remaining.");
-
-                            llSay(PUBLIC_CHANNEL, dollName + " has been fully wound by " + name + ". Thanks for winding Dolly!");
-                            //cdSayTo(dollName + " is now fully wound. Thanks for winding Dolly!", id);
-                        }
-                        else {
-                            llOwnerSay("You have fully wound yourself. Good going!");
-                        }
-                    } else {
-                        //lmInternalCommand("windMsg", (string)windAmount + "|" + name, id);
-                        lmInternalCommand("mainMenu", "|" + name, id);
-                    }
-                }
-#endif
                 lmInternalCommand("mainMenu", "|" + name, id);
             }
 
