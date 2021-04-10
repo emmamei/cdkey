@@ -147,7 +147,7 @@ default {
                 if (split == [""]) blacklist = [];
                 else blacklist = split;
             }
-#ifdef NONE
+#ifdef NOT_USED
             else if (name == "dollType") {
                 dollType = value;
 
