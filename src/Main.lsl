@@ -668,7 +668,7 @@ default {
                     // Note this makes no difference to waiting events, just other scripts
                     if (collapsed == 0) llSleep(0.5);
 
-                    // Dolly has been wound by a certain amount...
+                    // Give informational message depending on who wound us
                     if (dollID == id) {
                         llOwnerSay("You managed to turn your key giving you " +
                             mins + " of life (" + percent + "% capacity).");
@@ -779,9 +779,21 @@ default {
             // Winding - pure and simple
             else if (choice == "Wind") {
 
-                // The internal command happens asynchronously... not like a subroutine... this is a problem
-                //lmInternalCommand("winding", "|" + name, id);
+                // The winding process also handles messages directly
                 doWinding(name,id);
+
+#ifdef NOT_USED
+                //----------------------------------------
+                // FULLY WOUND?
+                //----------------------------------------
+                // Everything from here down is done if Dolly is fully wound...
+                // is any of this really necessary? Perhaps some small part of it...
+
+                // Two possibilities:
+                //    1. Normal wind to 100%
+                //    2. Minimal wind to 100%
+                //
+                // Does it really matter which? We could handle both just the same.
 
                 // This statement is only here to provide a reasonable response message
                 // and to trigger an appropriate menu dialog.
@@ -814,6 +826,8 @@ default {
                         lmInternalCommand("mainMenu", "|" + name, id);
                     }
                 }
+#endif
+                lmInternalCommand("mainMenu", "|" + name, id);
             }
 
             // Note that Max Times are "m" and Wind Times are "min" - this is on purpose to
