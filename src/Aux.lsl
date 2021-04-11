@@ -36,7 +36,6 @@ integer maxMins;
 integer ncLine;
 integer memReporting;
 integer isDoll;
-integer resetBody;
 
 integer textboxChannel;
 integer textboxHandle;
@@ -235,15 +234,23 @@ default {
 
             if (choice == "Help...") {
                 msg = "Here you can find various options to get help with your key and to connect with the community.";
-                list plusList = [ "Join Group", "Visit Dollhouse", "Visit Website", "Visit Blog", "Visit Development", "Help Notecard" ];
+                list plusList = [ "Join Group", "Visit Dollhouse", "Visit Website", "Visit Blog", "Visit Development" ];
 
                 // Note - to do this Key handout properly, we'd need an infinite Key:
                 // a Key which contains a Key which contains a Key which contains a Key...
                 // Like a never-ending matrushka doll.
                 //
-                if (!cdIsDoll(id))
+                if (!cdIsDoll(id)) {
                     if ((llGetInventoryType(OBJECT_KEY) == INVENTORY_OBJECT))
                         plusList += [ "Get Key" ];
+                }
+                else {
+                    // This is to totally reset Dolly's worn body, using the saved ~normalself and ~nude folders
+                    plusList += [ "Reset Body" ];
+                }
+
+                if ((llGetInventoryType(NOTECARD_HELP) == INVENTORY_NOTECARD))
+                    plusList += [ "Help Notecard" ];
 
                 // Remember, a doll cannot be her own controller, unless there is no other
                 if (cdIsController(id)) plusList += "Reset Key";
@@ -251,8 +258,12 @@ default {
                 cdDialogListen();
                 llDialog(id, msg, dialogSort(plusList + MAIN), dialogChannel);
             }
-            else if (choice == "Help Notecard")
+            else if (choice == "Reset Body") {
+                lmInternalCommand("resetBody","",id);
+            }
+            else if (choice == "Help Notecard") {
                 llGiveInventory(id,NOTECARD_HELP);
+            }
             else if (choice == "Get Key") {
                 llGiveInventory(id,OBJECT_KEY);
             }
@@ -406,10 +417,6 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 // One-way options
                 if (cdIsController(id)) {
                     plusList = llListInsertList(plusList, cdGetButton("Rpt Wind", id, allowRepeatWind, 1), 6);
-                }
-
-                if (isDoll) {
-                    plusList += cdGetButton("Body Reset", id, resetBody, 0);
                 }
 
                 lmSendConfig("backMenu",(backMenu = "Options..."));

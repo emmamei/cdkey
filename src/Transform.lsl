@@ -37,6 +37,7 @@
 //========================================
 string nudeFolder;
 string normalselfFolder;
+string normaloutfitFolder;
 integer phraseCount;
 integer changeOutfit;
 string msg;
@@ -744,6 +745,7 @@ default {
             list folderList = llCSV2List(choice);
             nudeFolder = "";
             normalselfFolder = "";
+            normaloutfitFolder = "";
 
             if (outfitsFolder == "") {
                 // vague substring check done here for speed
@@ -759,8 +761,9 @@ default {
                     if (outfitsFolder != "") {
                         // This brute force setting is fine: we are searching for the Outfits
                         // folder, and this is the initial setting
-                        if (~llListFindList(folderList, (list)"~nude"))        lmSendConfig("nudeFolder",      (nudeFolder       = outfitsFolder + "/~nude"));
-                        if (~llListFindList(folderList, (list)"~normalself"))  lmSendConfig("normalselfFolder",(normalselfFolder = outfitsFolder + "/~normalself"));
+                        if (~llListFindList(folderList, (list)"~nude"))         lmSendConfig("nudeFolder",        (nudeFolder       = outfitsFolder + "/~nude"));
+                        if (~llListFindList(folderList, (list)"~normalself"))   lmSendConfig("normalselfFolder",  (normalselfFolder = outfitsFolder + "/~normalself"));
+                        if (~llListFindList(folderList, (list)"~normaloutfit")) lmSendConfig("normaloutfitFolder",(normaloutfitFolder = outfitsFolder + "/~normaloutfit"));
                     }
 
                     debugSay(2,"DEBUG-SEARCHING","outfitsFolder = " + outfitsFolder);
@@ -880,6 +883,7 @@ default {
 
                     lmSendConfig("nudeFolder",nudeFolder);
                     lmSendConfig("normalselfFolder",normalselfFolder);
+                    lmSendConfig("normaloutfitFolder",normaloutfitFolder);
                 }
             }
         }

@@ -67,6 +67,7 @@ string outfitsFolder;  // This contains folders of clothing to be worn
 string activeFolder; // This is the lookup folder to search
 string typeFolder; // This is the folder we want for our doll type
 string normalselfFolder; // This is the ~normalself we are using
+string normaloutfitFolder; // This is the ~normaloutfit we are using
 string nudeFolder; // This is the ~nude we are using
 
 integer menuDressHandle;
@@ -170,7 +171,7 @@ listInventoryOn(integer channel) {
 
     // activeFolder is the folder (full path) we are looking at with our Menu
     // outfitsFolder is where all outfits are stored, including
-    //     ~normalself, ~nude, and all the type folders
+    //     ~normalself, ~normaloutfit, ~nude, and all the type folders
     // clothingFolder is the current folder for clothing, relative
     //     to the outfitsFolder
 
@@ -270,6 +271,7 @@ string folderStatus() {
            "\nCurrent Folder: " + activeFolder +
            "\nType Folder: " + typeFolderExists +
            "\nUse ~normalself: " + normalselfFolder +
+           "\nUse ~normaloutfit: " + normaloutfitFolder +
            "\nUse ~nude: " + nudeFolder;
 }
 #else
@@ -372,15 +374,18 @@ default {
 #endif
             else if (c == "n") {
                      if (name == "normalselfFolder")        normalselfFolder = value;
+                else if (name == "normaloutfitFolder")    normaloutfitFolder = value;
                 else if (name == "nudeFolder")                    nudeFolder = value;
             }
 
             else if (c == "o") {
                      if (name == "outfitsFolder") {
                          outfitsFolder = value;
-                         normalselfFolder = outfitsFolder + "/~normalself";
-                         nudeFolder       = outfitsFolder + "/~nude";
+                         normalselfFolder   = outfitsFolder + "/~normalself";
+                         normaloutfitFolder = outfitsFolder + "/~normaloutfit";
+                         nudeFolder         = outfitsFolder + "/~nude";
                          lmSendConfig("normalselfFolder", normalselfFolder);
+                         lmSendConfig("normaloutfitFolder", normaloutfitFolder);
                          lmSendConfig("nudeFolder", nudeFolder);
                 }
             }
@@ -617,6 +622,10 @@ default {
                 clearDresser();
             }
             else if (cmd == "resetBody") {
+
+#ifndef ADULT_MODE
+                if (normaloutfitFolder == "") return;
+#endif
                 // Force attach nude elements
                 if (nudeFolder)       lmRunRLV("detachthis:" + nudeFolder       + "=y,attachall:" + nudeFolder       + "=force");
                 if (normalselfFolder) lmRunRLV("detachthis:" + normalselfFolder + "=y,attachall:" + normalselfFolder + "=force");
@@ -625,16 +634,19 @@ default {
                 if (nudeFolder)       lmRunRLV("detachthis:" + nudeFolder       + "=n");
                 if (normalselfFolder) lmRunRLV("detachthis:" + normalselfFolder + "=n");
 
-                // Remove all else
-                lmRunRLV("detachall:" + outfitsFolder + "=force");
+                // Remove all else from the top, outfits and all the rest
+                lmRunRLV("detachall:#RLV=force");
 
                 // Clear old outfit settings
                 oldOutfit = "";
                 newOutfit = "";
 
                 // Clear locks and force attach
-                if (nudeFolder)       lmRunRLV("detachthis:" + nudeFolder       + "=y,attachall:" + nudeFolder       + "=force");
-                if (normalselfFolder) lmRunRLV("detachthis:" + normalselfFolder + "=y,attachall:" + normalselfFolder + "=force");
+                if (nudeFolder)         lmRunRLV("detachthis:" + nudeFolder       + "=y,attachall:" + nudeFolder       + "=force");
+                if (normalselfFolder)   lmRunRLV("detachthis:" + normalselfFolder + "=y,attachall:" + normalselfFolder + "=force");
+
+                // Add normal outfit
+                lmRunRLV("attachallover:" + normaloutfitFolder + "=force");
             }
 #ifdef ADULT_MODE
             else if (cmd == "stripAll") {
