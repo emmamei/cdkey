@@ -236,6 +236,9 @@ default {
                 msg = "Here you can find various options to get help with your key and to connect with the community.";
                 list plusList = [ "Join Group", "Visit Dollhouse", "Visit Website", "Visit Blog", "Visit Development" ];
 
+                if ((llGetInventoryType(NOTECARD_HELP) == INVENTORY_NOTECARD))
+                    plusList += [ "Help Notecard" ];
+
                 // Note - to do this Key handout properly, we'd need an infinite Key:
                 // a Key which contains a Key which contains a Key which contains a Key...
                 // Like a never-ending matrushka doll.
@@ -248,9 +251,6 @@ default {
                     // This is to totally reset Dolly's worn body, using the saved ~normalself and ~nude folders
                     plusList += [ "Reset Body" ];
                 }
-
-                if ((llGetInventoryType(NOTECARD_HELP) == INVENTORY_NOTECARD))
-                    plusList += [ "Help Notecard" ];
 
                 // Remember, a doll cannot be her own controller, unless there is no other
                 if (cdIsController(id)) plusList += "Reset Key";

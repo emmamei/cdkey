@@ -627,26 +627,26 @@ default {
                 if (normaloutfitFolder == "") return;
 #endif
                 // Force attach nude elements
-                if (nudeFolder)       lmRunRLV("detachthis:" + nudeFolder       + "=y,attachall:" + nudeFolder       + "=force");
-                if (normalselfFolder) lmRunRLV("detachthis:" + normalselfFolder + "=y,attachall:" + normalselfFolder + "=force");
+                if (nudeFolder)         lmRunRLV("detachthis:" + nudeFolder         + "=y,attachall:" + nudeFolder         + "=force");
+                if (normalselfFolder)   lmRunRLV("detachthis:" + normalselfFolder   + "=y,attachall:" + normalselfFolder   + "=force");
+                if (normaloutfitFolder) lmRunRLV("detachthis:" + normaloutfitFolder + "=y,attachall:" + normaloutfitFolder + "=force");
 
                 // Lock default body
-                if (nudeFolder)       lmRunRLV("detachthis:" + nudeFolder       + "=n");
-                if (normalselfFolder) lmRunRLV("detachthis:" + normalselfFolder + "=n");
+                if (nudeFolder)         lmRunRLV("detachthis:" + nudeFolder         + "=n");
+                if (normalselfFolder)   lmRunRLV("detachthis:" + normalselfFolder   + "=n");
+                if (normaloutfitFolder) lmRunRLV("detachthis:" + normaloutfitFolder + "=n");
 
                 // Remove all else from the top, outfits and all the rest
-                lmRunRLV("detachall:#RLV=force");
+                lmRunRLV("detachall:=force");
 
                 // Clear old outfit settings
                 oldOutfit = "";
                 newOutfit = "";
 
                 // Clear locks and force attach
-                if (nudeFolder)         lmRunRLV("detachthis:" + nudeFolder       + "=y,attachall:" + nudeFolder       + "=force");
-                if (normalselfFolder)   lmRunRLV("detachthis:" + normalselfFolder + "=y,attachall:" + normalselfFolder + "=force");
-
-                // Add normal outfit
-                lmRunRLV("attachallover:" + normaloutfitFolder + "=force");
+                if (nudeFolder)         lmRunRLV("detachthis:" + nudeFolder         + "=y,attachall:" + nudeFolder         + "=force");
+                if (normalselfFolder)   lmRunRLV("detachthis:" + normalselfFolder   + "=y,attachall:" + normalselfFolder   + "=force");
+                if (normaloutfitFolder) lmRunRLV("detachthis:" + normaloutfitFolder + "=y,attachall:" + normaloutfitFolder + "=force");
             }
 #ifdef ADULT_MODE
             else if (cmd == "stripAll") {
