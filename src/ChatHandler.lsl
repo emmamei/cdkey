@@ -820,7 +820,14 @@ default {
                     }
 #endif
                     //cdMenuInject("Wind", name, id);
-                    lmInternalCommand("winding", "|" + name, id);
+                    if (collapsed) {
+                        if (!isDoll) {
+                            lmInternalCommand("winding", "|" + name, id);
+                        }
+                    }
+                    else {
+                        lmInternalCommand("winding", "|" + name, id);
+                    }
 
                     // Problem: we don't know what the windAmount is...
                     //lmInternalCommand("windMsg", (string)windAmount + "|" + name, id);
