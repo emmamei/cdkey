@@ -854,6 +854,18 @@ default {
                     cdSayTo(msg, id);
                     return;
                 }
+                else if (choice == "outfits") {
+                    cdMenuInject("Outfits...", name, id);
+                    return;
+                }
+                else if (choice == "types") {
+                    cdMenuInject("Types...", name, id);
+                    return;
+                }
+                else if (choice == "options") {
+                    cdMenuInject("Options...", name, id);
+                    return;
+                }
                 else if (choice == "menu") {
                     cdMenuInject(MAIN, name, id);
                     return;
