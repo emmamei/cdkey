@@ -14,11 +14,6 @@ float KeySharedFuncs_version=1.0;
 
 #define cdWakeScript(a) llSetScriptState(a,1); lmInternalCommand("wakeScript", a, llGetKey())
 
-#ifdef DEVELOPER_MODE
-float lastTimerEvent;
-float thisTimerEvent;
-float timerInterval;
-#endif
 integer timerStarted;
 
 #define CHECK "✔"
