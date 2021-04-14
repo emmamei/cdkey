@@ -626,6 +626,10 @@ default {
 #ifndef ADULT_MODE
                 if (normaloutfitFolder == "") return;
 #endif
+                // Clear old outfit settings
+                oldOutfit = "";
+                newOutfit = "";
+
                 // Force attach nude elements
                 if (nudeFolder)         lmRunRLV("detachthis:" + nudeFolder         + "=y,attachall:" + nudeFolder         + "=force");
                 if (normalselfFolder)   lmRunRLV("detachthis:" + normalselfFolder   + "=y,attachall:" + normalselfFolder   + "=force");
@@ -639,10 +643,6 @@ default {
                 // Remove all else from the top, outfits and all the rest
                 lmRunRLV("detachall:=force");
 
-                // Clear old outfit settings
-                oldOutfit = "";
-                newOutfit = "";
-
                 // Clear locks and force attach
                 if (nudeFolder)         lmRunRLV("detachthis:" + nudeFolder         + "=y,attachall:" + nudeFolder         + "=force");
                 if (normalselfFolder)   lmRunRLV("detachthis:" + normalselfFolder   + "=y,attachall:" + normalselfFolder   + "=force");
@@ -650,12 +650,13 @@ default {
             }
 #ifdef ADULT_MODE
             else if (cmd == "stripAll") {
+                oldOutfit = "";
+                newOutfit = "";
+
                 if (nudeFolder)       lmRunRLV("detachthis:" + nudeFolder       + "=n");
                 if (normalselfFolder) lmRunRLV("detachthis:" + normalselfFolder + "=n");
 
                 lmRunRLV("detachall:" + outfitsFolder + "=force");
-                oldOutfit = "";
-                newOutfit = "";
 
                 if (nudeFolder)       lmRunRLV("detachthis:" + nudeFolder       + "=y,attachall:" + nudeFolder       + "=force");
                 if (normalselfFolder) lmRunRLV("detachthis:" + normalselfFolder + "=y,attachall:" + normalselfFolder + "=force");
@@ -934,10 +935,9 @@ default {
             else newOutfitsList += [ "Outfits Prev", "Outfits Next" ];
             newOutfitsList += [ "Back..." ];
 
-            if (dresserID == dollID) outfitsMessage = "You may choose any outfit to wear. ";
+            if (dresserID == dollID) outfitsMessage = "You may choose any outfit to wear. See the help file for more detailed information on outfits.";
             else outfitsMessage = "You may choose any outfit for dolly to wear. ";
 
-            if (dresserID == dollID) outfitsMessage += "See the help file for more detailed information on outfits.";
             outfitsMessage += "\n\n" + folderStatus();
 
             // Provide a dialog to user to choose new outfit
