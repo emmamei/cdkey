@@ -760,6 +760,7 @@ default {
                 else {
                     // At this point, either clothingFolder has ONE item in it, or it is null.
                     // It should not be null - because that needs to go up to MAIN menu, not UPMENU.
+                    // (Same thing for when clothingFolder equals an in-use typeFolder.)
                     //
                     // Since having one single item means no "/" we need to adjust clothingFolder manually
                     //
@@ -932,7 +933,13 @@ default {
             // Did we get anything at all?
             if (choice == "") {
                 cdDialogListen();
-                llDialog(dresserID, "No outfits to wear in this directory.", [ "OK" ], dialogChannel);
+                //outfitsHandle = cdListenAll(outfitsChannel);
+                cdListenAll(outfitsChannel);
+
+                backMenu = UPMENU;
+                llDialog(dresserID, "No outfits to wear in this directory.", [ "Back..." ], outfitsChannel);
+
+                llSetTimerEvent(60.0);
                 return;
             }
 
@@ -975,7 +982,13 @@ default {
             if (outfitsList == []) {
                 outfitsList = []; // free memory
                 cdDialogListen();
-                llDialog(dresserID, "No wearable outfits in this directory.", [ "OK" ], dialogChannel);
+                cdListenAll(outfitsChannel);
+
+                backMenu = UPMENU;
+                llDialog(dresserID, "No wearable outfits in this directory.", [ "Back..." ], outfitsChannel);
+
+                llSetTimerEvent(60.0);
+
                 return;
             }
 
@@ -1001,8 +1014,13 @@ default {
             //outfitsHandle = cdListenAll(outfitsChannel);
             cdListenAll(outfitsChannel);
 
-            if (clothingFolder == "") lmSendConfig("backMenu",(backMenu = MAIN));
-            else lmSendConfig("backMenu",(backMenu = UPMENU));
+            // if clothingFolder is at the top, then go to MAIN... but typeFolder
+            // might be active...
+            if ((useTypeFolder && clothingFolder == typeFolder) || (clothingFolder == ""))
+                backMenu = MAIN;
+            else
+                backMenu = UPMENU;
+            lmSendConfig("backMenu",backMenu);
 
             llDialog(dresserID, outfitsMessage, dialogSort(newOutfitsList), outfitsChannel);
 
