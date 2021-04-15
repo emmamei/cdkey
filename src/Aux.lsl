@@ -256,7 +256,7 @@ default {
                 if (cdIsController(id)) plusList += "Reset Key";
 
                 cdDialogListen();
-                llDialog(id, msg, dialogSort(plusList + MAIN), dialogChannel);
+                llDialog(id, msg, dialogSort(plusList + "Back..."), dialogChannel);
             }
             else if (choice == "Reset Body") {
                 lmInternalCommand("resetBody","",id);
