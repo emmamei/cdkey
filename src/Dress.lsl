@@ -141,7 +141,9 @@ retryDirSearch() {
     if (clothingFolder == "") return;
 
     // Retry at Outfits top level
-    lmSendConfig("clothingFolder", (clothingFolder = ""));
+    // FIXME: what about Type folders?
+    clothingFolder = "";
+    //lmSendConfig("clothingFolder", clothingFolder);
     dressVia(randomDressChannel); // recursion
 }
 
@@ -382,7 +384,7 @@ default {
             else if (c == "c") {
                      if (name == "canDressSelf")                canDressSelf = (integer)value;
                 else if (name == "collapsed")                      collapsed = (integer)value;
-                else if (name == "clothingFolder")            clothingFolder = value;
+//              else if (name == "clothingFolder")            clothingFolder = value;
             }
 
 #ifdef DEVELOPER_MODE
@@ -731,7 +733,7 @@ default {
                     if (useTypeFolder) clothingFolder = typeFolder;
                     else clothingFolder = "";
 
-                    lmSendConfig("clothingFolder", clothingFolder);
+                    //lmSendConfig("clothingFolder", clothingFolder);
                     dressVia(menuDressChannel);
                 }
                 else {
@@ -755,7 +757,8 @@ default {
 
                 if (lastElement != -1) {
                     debugSay(6, "DEBUG-DRESS", "Up Menu: found separator");
-                    lmSendConfig("clothingFolder", (clothingFolder = llGetSubString(clothingFolder,0,lastElement - 1)));
+                    clothingFolder = llGetSubString(clothingFolder,0,lastElement - 1);
+                    //lmSendConfig("clothingFolder", clothingFolder);
                 }
                 else {
                     // At this point, either clothingFolder has ONE item in it, or it is null.
@@ -765,7 +768,8 @@ default {
                     // Since having one single item means no "/" we need to adjust clothingFolder manually
                     //
                     debugSay(6, "DEBUG-DRESS", "Up Menu: found no separator");
-                    lmSendConfig("clothingFolder", (clothingFolder = ""));
+                    clothingFolder = "";
+                    //lmSendConfig("clothingFolder", clothingFolder);
                 }
 
                 dressVia(menuDressChannel); // recursion: put up a new Primary menu
@@ -902,7 +906,7 @@ default {
                     else clothingFolder += ("/" + choice);
 
                     debugSay(6, "DEBUG-DRESS", "Generating new list of outfits...");
-                    lmSendConfig("clothingFolder", clothingFolder); // this is current folder relative to outfitsFolder
+                    //lmSendConfig("clothingFolder", clothingFolder); // this is current folder relative to outfitsFolder
                     lmSendConfig("backMenu",(backMenu = UPMENU));
                     dressVia(menuDressChannel); // recursion: put up a new Primary menu
 
