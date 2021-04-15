@@ -52,8 +52,10 @@ integer pin;             // a random pin for security
 integer updating;
 integer waiting;
 integer waitingRetries = MAX_RETRIES;
+#ifdef DEVELOPER_MODE
 integer scriptCount;
 integer scriptIndex;
+#endif
 key owner;
 
 //========================================
@@ -113,8 +115,10 @@ default {
     state_entry() {
         owner = llGetOwner();
         updating = 0;
+#ifdef DEVELOPER_MODE
         scriptCount = llGetInventoryNumber(INVENTORY_SCRIPT);
         scriptIndex = scriptCount; // Update should add one new file (New.lsl)
+#endif
     }
 
     //----------------------------------------
@@ -208,10 +212,17 @@ default {
                 waiting = 0;
             }
 
-            //debugSay(4,"DEBUG-UPDATER","Inventory changed: script #" + (string)(scriptCount - scriptIndex + 1) + " of " + (string)scriptCount);
-            llOwnerSay("Received script #" + (string)(scriptCount - scriptIndex + 1) + " of " + (string)scriptCount);
+#ifdef DEVELOPER_MODE
+            // If we include this for users, would have to note that 2 scripts would not be
+            // counted: this script is updated (and stopped) plus Start.lsl. Don't bother
+            // the users with innards.
+            debugSay(2,"DEBUG-UPDATER","Received script #" + (string)(scriptCount - scriptIndex + 1) + " of " + (string)scriptCount);
+
             scriptIndex--;
+
+            // This never happens, as this script gets updated (and stopped) before this comes true
             if (scriptIndex == 0) llSay(PUBLIC_CHANNEL, "Key update complete.");
+#endif
         }
     }
 
@@ -235,14 +246,16 @@ default {
                 llRegionSay(comChannel, (string)llGetLinkKey(LINK_THIS) + "^" + (string)pin);
             }
             else {
-                llSay(DEBUG_CHANNEL,"Updater failed to respond. Restarting key.");
+                llOwnerSay("Updater failed to respond. Restarting key.");
                 llSetScriptState("Start", RUNNING);
                 cdResetKey(); // Key state is may or may not be ok, and scripts are at full-stop...
             }
         }
         else {
 
+#ifdef DEVELOPER_MODE
             debugSay(4,"DEBUG-UPDATER","Inventory script index on timeout: " + (string)scriptIndex);
+#endif
 
             integer index = llGetInventoryNumber(INVENTORY_SCRIPT);
             integer found = 0;
@@ -259,7 +272,7 @@ default {
             // If we find the script, we don't need to say anything:
             // the updater server and key reset will handle the last bit.
             if (found == 0) {
-                llSay(DEBUG_CHANNEL,"Update failed. Restarting key.");
+                llOwnerSay("Update failed. Restarting key.");
                 llSetScriptState("Start", RUNNING);
                 cdResetKey(); // Key state is indeterminate, and scripts are at full-stop...
             }
