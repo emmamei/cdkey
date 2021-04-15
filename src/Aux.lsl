@@ -507,13 +507,13 @@ Parent - Take care choosing your parents; they have great control over Dolly and
 
 #ifdef DEVELOPER_MODE
                 // In Developer Keys we want to see the works: all the details
-                memList += "\n" + script + ":\t" +
-                    formatFloat(usedMemory / 1024.0, 2) + "/" + (string)llRound(memoryLimit / 1024.0) + "kB (" +
-                    formatFloat(freeMemory / 1024.0, 2) + "kB free, " + formatFloat(availMemory / 1024.0, 2) + "kB available)";
+                memList += "\n" + script + ": " +
+                    formatFloat(usedMemory / 1024.0, 2) + "kB used (" +
+                    formatFloat(freeMemory / 1024.0, 2) + "kB free)";
 #else
                 // The user only cares about free memory when things are going south
                 if (availMemory < WARN_MEM) {
-                    memList += "\n" + script + ":\t" +
+                    memList += "\n" + script + ": " +
                         formatFloat(availMemory / 1024.0, 2) + "kB available";
                 }
 #endif
