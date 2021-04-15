@@ -73,6 +73,7 @@ string defaultPoseRLVcmd = "fly=n,tplm=n,tplure=n,tploc=n,sittp=n,fartouch=n";
 //integer introLine;
 //integer introLines;
 
+integer startParameter;
 integer resetState;
 #define RESET_NONE 0
 #define RESET_NORMAL 1
@@ -365,8 +366,10 @@ doRestart() {
         script = llGetInventoryName(INVENTORY_SCRIPT, n);
         if (script != "Start") {
 
-            cdRunScript(script);
-            llResetOtherScript(script);
+            // We are assuming here that llSetScriptState after llRemoteLoadScriptPin
+            // update resets the script
+            if (startParameter == 100) cdRunScript(script);
+            else llResetOtherScript(script);
         }
     }
 
@@ -565,11 +568,13 @@ default {
     // STATE ENTRY
     //----------------------------------------
     state_entry() {
+        startParameter = llGetStartParameter();
+
         // This helps during debugging to set off the reset sequence in logs
         llOwnerSay("******** KEY RESET ********");
 
         // start parameter can ONLY be set via llRemoteLoadScriptPin()
-        if (llGetStartParameter() == 100) {
+        if (startParameter == 100) {
             llOwnerSay("Key has been updated.");
         }
 
@@ -600,7 +605,7 @@ default {
 #endif
         readPreferences();
         llSleep(0.1);
-        lmInternalCommand("collapse", "0", llGetKey());
+        lmInternalCommand("collapse", "0", keyID);
     }
 
     //----------------------------------------
@@ -660,7 +665,7 @@ default {
         lmSetConfig("isAFK", "0");
 
         // reset collapse environment
-        lmInternalCommand("collapse", (string)collapsed, llGetKey());
+        lmInternalCommand("collapse", (string)collapsed, keyID);
 
         lastAttachPoint = cdAttached();
         lastAttachAvatar = id;

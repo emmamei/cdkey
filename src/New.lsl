@@ -42,7 +42,7 @@ doRestart() {
 default {
     state_entry() {
         if (llGetStartParameter() == 100) {
-            llOwnerSay("Key has been updated.");
+            llOwnerSay("Key update complete.");
         }
 
         llOwnerSay("Update was successful.");
