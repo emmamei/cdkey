@@ -48,6 +48,7 @@ float GlobalDefines_version=1.0;
 
 #define VSTR  + "\nScript Date: " + PACKAGE_VERSION
 #define MAIN "~Main Menu~"
+#define UPMENU "~Up~"
 // Collapse animation - and documentation
 #define ANIMATION_COLLAPSED "collapse"
 // Carry distance for the new carry code
