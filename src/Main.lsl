@@ -170,12 +170,12 @@ float setWindRate() {
 
 uncollapse() {
     // Revive dolly back from being collapsed
-    key id = llGetKey();
+    //key id = llGetKey();
 
     lmSendConfig("collapseTime", (string)(collapseTime = 0));
     lmSendConfig("collapsed", (string)(collapsed = 0));
     lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
-    lmInternalCommand("setHovertext", "", id);
+    lmInternalCommand("setHovertext", "", keyID);
 
     setWindRate();
 }
@@ -207,7 +207,7 @@ collapse(integer newCollapseState) {
         // Among other things, this will set the Key's turn rate
         setWindRate();
 
-        lmInternalCommand("setHovertext", "", llGetKey());
+        lmInternalCommand("setHovertext", "", keyID);
     }
 }
 
@@ -239,7 +239,7 @@ default {
         RLVok = UNSET;
         timerStarted = 1;
         configured = 1;
-        lmInternalCommand("setHovertext", "", llGetKey());
+        lmInternalCommand("setHovertext", "", keyID);
         llSetTimerEvent(30.0);
 
         isAttached = cdAttached();
@@ -391,7 +391,7 @@ default {
         // Did the pose expire? If so, unpose Dolly
         if (poseExpire) {
             if (poseExpire <= timerMark) {
-                lmMenuReply("Unpose", "", llGetKey());
+                lmMenuReply("Unpose", "", keyID);
                 lmSendConfig("poseExpire", (string)(poseExpire = 0));
             }
             lmSendConfig("poseExpire", (string)poseExpire);
@@ -446,7 +446,7 @@ default {
             else         llOwnerSay("You hear the Key whir back to full power");
 
             lmInternalCommand("setWindRate","",NULL_KEY);
-            lmInternalCommand("setHovertext", "", llGetKey());
+            lmInternalCommand("setHovertext", "", keyID);
         }
 
 #ifdef LOCKON
@@ -581,7 +581,7 @@ default {
             }
             else if (name == "isAFK") {
                 lmSendConfig("isAFK", (string)(isAFK = (integer)value));
-                lmInternalCommand("setHovertext", "", llGetKey());
+                lmInternalCommand("setHovertext", "", keyID);
                 setWindRate();
             }
             else if (name == "timeLeftOnKey") {
