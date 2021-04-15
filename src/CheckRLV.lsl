@@ -201,6 +201,7 @@ default {
     //----------------------------------------
     state_entry() {
         dollName = llGetDisplayName(dollID = llGetOwner());
+        keyID = llGetKey();
 
 #ifdef DEVELOPER_MODE
         myPath = "";

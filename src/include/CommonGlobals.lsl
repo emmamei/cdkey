@@ -7,6 +7,7 @@ float CommonGlobals_version=1.0;
 //----------------------------
 key carrierID               = NULL_KEY;
 key dollID                  = NULL_KEY;
+key keyID                   = NULL_KEY;
 key dresserID               = NULL_KEY;
 key keyAnimationID          = NULL_KEY;
 key poserID                 = NULL_KEY;

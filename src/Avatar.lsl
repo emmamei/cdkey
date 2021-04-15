@@ -554,6 +554,7 @@ default {
     //----------------------------------------
     state_entry() {
         dollName = llGetDisplayName(dollID = llGetOwner());
+        keyID = llGetKey();
 
         RLVok = UNSET;
         cdInitializeSeq();

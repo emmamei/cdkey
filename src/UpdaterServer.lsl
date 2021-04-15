@@ -76,7 +76,7 @@ sendUpdate() {
         name = llGetInventoryName(INVENTORY_SCRIPT, index);
 
         // bypass this script, and the Start script...
-        if (name != myName && name != "Start") {
+        if (name != myName && name != "Start" && name != "UpdaterClient") {
 
             lmSetHovertext("Updating script: " + name + "...");
             llRegionSayTo(targetID, PUBLIC_CHANNEL, "Sending script " + name);
@@ -84,8 +84,12 @@ sendUpdate() {
         }
     }
 
+    // Updating UpdaterClient
+    lmSetHovertext("Updating script: UpdaterClient");
+    llRemoteLoadScriptPin(targetID, "UpdaterClient", pin, NOT_RUNNING, 100);
+
     // Updating Start, and starting after should reset key cleanly
-    lmSetHovertext("Updating Script (Start) and Resetting Key...");
+    lmSetHovertext("Updating script: Start (and Resetting Key)");
     llRemoteLoadScriptPin(targetID, "Start", pin, RUNNING, 100);
 
     lmSetHovertext("Update complete!");

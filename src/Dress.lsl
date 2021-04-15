@@ -313,6 +313,7 @@ default {
     //----------------------------------------
     state_entry() {
         dollID = llGetOwner();
+        keyID = llGetKey();
 
         cdInitializeSeq();
     }

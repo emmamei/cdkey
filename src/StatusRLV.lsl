@@ -55,6 +55,7 @@ default {
     //----------------------------------------
     state_entry() {
         cdInitializeSeq();
+        keyID = llGetKey();
         //scaleMem();
     }
 

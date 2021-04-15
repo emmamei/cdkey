@@ -222,6 +222,7 @@ default {
     state_entry() {
         RLVok = UNSET;
         dollID = llGetOwner();
+        keyID = llGetKey();
         dollName = lmMyDisplayName(dollID);
         isAttached = cdAttached();
         if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);

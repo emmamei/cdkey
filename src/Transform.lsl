@@ -228,6 +228,7 @@ folderSearch(string folder, integer channel) {
 default {
     state_entry() {
         dollID =   llGetOwner();
+        keyID =   llGetKey();
         dollName = lmMyDisplayName(dollID);
 
         cdInitializeSeq();

@@ -576,6 +576,7 @@ default {
         initTimer = llGetTime();
 
         dollID = llGetOwner();
+        keyID = llGetKey();
         dollName = lmMyDisplayName(dollID);
 
         rlvWait = 1;
