@@ -91,6 +91,12 @@ setDollType(string stateName) {
     // Convert state name to Title case
     stateName = cdGetFirstChar(llToUpper(stateName)) + cdButFirstChar(llToLower(stateName));
 
+    reloadTypeNames(NULL_KEY);
+    if (llListFindList(types, (list)stateName) == NOT_FOUND) {
+      llSay(DEBUG_CHANNEL,"Invalid Doll Type specified!");
+      return;
+    }
+
 //  if (stateName == dollType) {
 //      llSay(DEBUG_CHANNEL,"Setting Doll Type (" + dollType + ") unnecessarily!");
 //      return; // Short-circuit
