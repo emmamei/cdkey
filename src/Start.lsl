@@ -175,7 +175,7 @@ processConfiguration(string name, string value) {
         }
         else if (name == "doll type") {
             // should be part of a valid set
-            lmSetConfig("dollType", value);
+            if (value != dollType) lmSetConfig("dollType", value);
         }
         else if (name == "chat channel") {
             // cant be 0 or MAXINT (DEBUG_CHANNEL)
@@ -405,6 +405,7 @@ default {
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                  debugLevel = (integer)value;
 #endif
+            else if (name == "dollType")                      dollType = value;
             else if (name == "blacklist") {
                 if (split == [""]) blacklist = [];
                 else blacklist = split;
