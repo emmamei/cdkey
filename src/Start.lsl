@@ -44,7 +44,7 @@ integer prefsRead;
 integer ncLine;
 integer failedReset;
 
-float ncStart;
+//float ncStart;
 integer lastAttachPoint;
 key lastAttachAvatar;
 
@@ -281,7 +281,7 @@ processConfiguration(string name, string value) {
 //          and runs doneConfiguration if no notecard is found
 
 readPreferences() {
-    ncStart = llGetTime();
+    //ncStart = llGetTime();
 
     // Check to see if the file exists and is a notecard
     if (cdNotecardExists(NOTECARD_PREFERENCES)) {
@@ -683,7 +683,7 @@ default {
                 //lmSendConfig("ncPrefsLoadedUUID", llDumpList2String(llList2List((string)llGetInventoryKey(NOTECARD_PREFERENCES) + ncPrefsLoadedUUID, 0, 9),"|"));
                 //lmInternalCommand("getTimeUpdates","",NULL_KEY);
 
-                llOwnerSay("Preferences read in " + formatFloat(llGetTime() - ncStart, 2) + "s");
+                //llOwnerSay("Preferences read in " + formatFloat(llGetTime() - ncStart, 2) + "s");
 
                 prefsRead = PREFS_READ;
                 lmInitState(101);
