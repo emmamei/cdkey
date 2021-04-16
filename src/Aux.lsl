@@ -487,16 +487,17 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 //scaleMem();
             }
 #ifdef DEVELOPER_MODE
+            // Generate memory report on startup
             else if (code == 110) {
                 llSleep(5.0);
                 lmMemReport(0.5, dollID);
             }
+#endif
             else if (code == MEM_REPORT) {
                 float delay  = llList2Float(split, 0);
                 memReportID = id;
                 memReport("Aux",1.0);
             }
-#endif
             else if (code == MEM_REPLY) {
                 memReporting = 1;
                 llSetTimerEvent(5.0); // when timer goes off, we assume completion
