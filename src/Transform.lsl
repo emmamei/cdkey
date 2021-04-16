@@ -55,7 +55,7 @@ integer lastTimerMark;
 
 integer outfitSearchTries;
 integer typeSearchTries;
-float outfitsSearchTimer;
+//float outfitsSearchTimer;
 string outfitsFolder;
 integer outfitSearching;
 
@@ -132,7 +132,7 @@ setDollType(string stateName) {
     if (RLVok == TRUE) {
         debugSay(4,"DEBUG-DOLLTYPE","Searching for " + typeFolderExpected);
 
-        outfitsSearchTimer = llGetTime();
+        //outfitsSearchTimer = llGetTime();
 
         typeSearchHandle = cdListenMine(typeSearchChannel);
         folderSearch(outfitsFolder,typeSearchChannel);
@@ -571,7 +571,7 @@ default {
                         typeSearchTries = 0;
                         outfitSearchTries = 0;
 
-                        outfitsSearchTimer = llGetTime();
+                        //outfitsSearchTimer = llGetTime();
                         // Start the search
                         folderSearch(outfitsFolder,outfitSearchChannel);
                     }
@@ -780,7 +780,7 @@ default {
 
                     // Search for a typeFolder...
                     if (typeFolder == "" && typeFolderExpected != "") {
-                        debugSay(6,"DEBUG-SEARCHING","Outfit folder found in " + (string)(llGetTime() - outfitsSearchTimer) + "s; searching for typeFolder");
+                        //debugSay(6,"DEBUG-SEARCHING","Outfit folder found in " + (string)(llGetTime() - outfitsSearchTimer) + "s; searching for typeFolder");
 
                         // outfitsFolder search is done: search for typeFolder
                         folderSearch(outfitsFolder,typeSearchChannel);
@@ -862,8 +862,8 @@ default {
                     // we finished our outfit search: so end the search and
                     // put out results
                     outfitSearching = 0;
-                    llOwnerSay("Outfits search completed in " + (string)(llGetTime() - outfitsSearchTimer) + "s");
-                    outfitsSearchTimer = 0;
+                    //llOwnerSay("Outfits search completed in " + (string)(llGetTime() - outfitsSearchTimer) + "s");
+                    //outfitsSearchTimer = 0;
                     nudeFolder = "";
                     normalselfFolder = "";
 
