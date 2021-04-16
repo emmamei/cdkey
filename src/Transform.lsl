@@ -99,9 +99,7 @@ setDollType(string stateName) {
     else debugSay(2,"DEBUG-DOLLTYPE","Changing dolltype to type '" + stateName + "' from '" + dollType + "'");
 #endif
 
-    if (stateName == "") {
-        stateName = "Regular";
-    }
+    if (stateName == "") stateName = "Regular";
 
     // By not aborting, selecting the same state can cause a "refresh" ...
     // though our menus do not currently allow this
@@ -121,6 +119,7 @@ setDollType(string stateName) {
         }
     }
 
+    // This propogates dollType value to the rest of the system
     lmSendConfig("dollType", (dollType = stateName));
     llOwnerSay("You have become a " + dollType + " Doll.");
 
@@ -543,11 +542,11 @@ default {
 
         else if (code == RLV_RESET) {
             RLVok = (integer)choice;
-            if (dollType == "") {
-                lmSetConfig("dollType", "Regular");
-                lmSetConfig("transformLockExpire","0");
-                llSay(DEBUG_CHANNEL,"RLV_RESET: dollType had to be fixed from blank");
-            }
+//          if (dollType == "") {
+//              lmSetConfig("dollType", "Regular");
+//              lmSetConfig("transformLockExpire","0");
+//              llSay(DEBUG_CHANNEL,"RLV_RESET: dollType had to be fixed from blank");
+//          }
 
             outfitsFolder = "";
             typeFolder = "";
