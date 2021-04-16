@@ -91,12 +91,13 @@ setDollType(string stateName) {
     // Convert state name to Title case
     stateName = cdGetFirstChar(llToUpper(stateName)) + cdButFirstChar(llToLower(stateName));
 
-    if (stateName == dollType) {
-        llSay(DEBUG_CHANNEL,"Setting Doll Type (" + dollType + ") unnecessarily!");
-        return; // Short-circuit
-    }
+//  if (stateName == dollType) {
+//      llSay(DEBUG_CHANNEL,"Setting Doll Type (" + dollType + ") unnecessarily!");
+//      return; // Short-circuit
+//  }
 #ifdef DEVELOPER_MODE
-    else debugSay(2,"DEBUG-DOLLTYPE","Changing dolltype to type '" + stateName + "' from '" + dollType + "'");
+//  else
+    debugSay(2,"DEBUG-DOLLTYPE","Changing dolltype to type '" + stateName + "' from '" + dollType + "'");
 #endif
 
     if (stateName == "") stateName = "Regular";
@@ -482,7 +483,7 @@ default {
 
             debugSay(6,"DEBUG-TRANSFORM","SET_CONFIG[" + name + "] = " + value);
             if (name == "dollType") {
-                setDollType(value);
+                if (value != dollType) setDollType(value);
             }
             else if (name == "transformLockExpire") {
                 if (value == "0") transformLockExpire = 0;
