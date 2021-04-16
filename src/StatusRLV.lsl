@@ -103,8 +103,9 @@ default {
 
 #ifdef DEVELOPER_MODE
                  if (name == "debugLevel") debugLevel = (integer)value;
+            else
 #endif
-            else if (name == "defaultBaseRLVcmd") defaultBaseRLVcmd = value;
+            if (name == "defaultBaseRLVcmd") defaultBaseRLVcmd = value;
             return;
         }
 
