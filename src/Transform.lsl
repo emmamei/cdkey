@@ -91,7 +91,13 @@ setDollType(string stateName) {
     // Convert state name to Title case
     stateName = cdGetFirstChar(llToUpper(stateName)) + cdButFirstChar(llToLower(stateName));
 
-    debugSay(2,"DEBUG-DOLLTYPE","Changing dolltype to type '" + stateName + "' from '" + dollType + "'");
+    if (stateName == dollType) {
+        llSay(DEBUG_CHANNEL,"Setting Doll Type (" + dollType + ") unnecessarily!");
+        return; // Short-circuit
+    }
+#ifdef DEVELOPER_MODE
+    else debugSay(2,"DEBUG-DOLLTYPE","Changing dolltype to type '" + stateName + "' from '" + dollType + "'");
+#endif
 
     if (stateName == "") {
         stateName = "Regular";
@@ -125,7 +131,7 @@ setDollType(string stateName) {
 
     // if RLV is non-functional, dont search for a Type Folder
     if (RLVok == TRUE) {
-        debugSay(2,"DEBUG-DOLLTYPE","Searching for " + typeFolderExpected);
+        debugSay(4,"DEBUG-DOLLTYPE","Searching for " + typeFolderExpected);
 
         outfitsSearchTimer = llGetTime();
 
@@ -475,7 +481,7 @@ default {
             string name = cdListElement(split, 0);
             string value = cdListElement(split, 1);
 
-            debugSay(2,"DEBUG-TRANSFORM","SET_CONFIG[" + name + "] = " + value);
+            debugSay(6,"DEBUG-TRANSFORM","SET_CONFIG[" + name + "] = " + value);
             if (name == "dollType") {
                 setDollType(value);
             }
@@ -495,10 +501,10 @@ default {
             if (cmd == "optionsMenu") {
                 list pluslist;
                 lmSendConfig("backMenu",(backMenu = MAIN));
-                debugSay(2,"DEBUG-OPTIONS","Building Options menu...");
-                debugSay(2,"DEBUG-OPTIONS","isDoll = " + (string)cdIsDoll(id));
-                debugSay(2,"DEBUG-OPTIONS","isCarrier = " + (string)cdIsCarrier(id));
-                debugSay(2,"DEBUG-OPTIONS","isUserController = " + (string)cdIsUserController(id));
+                debugSay(6,"DEBUG-OPTIONS","Building Options menu...");
+                debugSay(6,"DEBUG-OPTIONS","isDoll = " + (string)cdIsDoll(id));
+                debugSay(6,"DEBUG-OPTIONS","isCarrier = " + (string)cdIsCarrier(id));
+                debugSay(6,"DEBUG-OPTIONS","isUserController = " + (string)cdIsUserController(id));
 
                 if (cdIsDoll(id)) {
                     msg = "See the help file for information on these options.";
@@ -529,7 +535,7 @@ default {
                 // someone who shouldn't see the Options menu did.
                 else return;
 
-                debugSay(2,"DEBUG-OPTIONS","Options menu built; presenting to " + (string)id);
+                debugSay(6,"DEBUG-OPTIONS","Options menu built; presenting to " + (string)id);
                 cdDialogListen();
                 llDialog(id, msg, dialogSort(pluslist + "Back..."), dialogChannel);
             }
@@ -740,7 +746,7 @@ default {
         //
         if (channel == outfitSearchChannel) {
             llListenRemove(outfitSearchHandle);
-            debugSay(2,"DEBUG-SEARCHING","Channel #1 received (outfitsFolder = \"" + outfitsFolder + "\"): " + choice);
+            debugSay(6,"DEBUG-SEARCHING","Channel #1 received (outfitsFolder = \"" + outfitsFolder + "\"): " + choice);
             outfitSearching = 1; // if we get here - well, we're outfit searchiung ja?
 
             list folderList = llCSV2List(choice);
@@ -767,15 +773,15 @@ default {
                         if (~llListFindList(folderList, (list)"~normaloutfit")) lmSendConfig("normaloutfitFolder",(normaloutfitFolder = outfitsFolder + "/~normaloutfit"));
                     }
 
-                    debugSay(2,"DEBUG-SEARCHING","outfitsFolder = " + outfitsFolder);
+                    debugSay(6,"DEBUG-SEARCHING","outfitsFolder = " + outfitsFolder);
 
                     lmSendConfig("outfitsFolder", outfitsFolder);
 
-                    debugSay(2,"DEBUG-SEARCHING","typeFolder = \"" + typeFolder + "\" and typeFolderExpected = \"" + typeFolderExpected + "\"");
+                    debugSay(6,"DEBUG-SEARCHING","typeFolder = \"" + typeFolder + "\" and typeFolderExpected = \"" + typeFolderExpected + "\"");
 
                     // Search for a typeFolder...
                     if (typeFolder == "" && typeFolderExpected != "") {
-                        debugSay(2,"DEBUG-SEARCHING","Outfit folder found in " + (string)(llGetTime() - outfitsSearchTimer) + "s; searching for typeFolder");
+                        debugSay(6,"DEBUG-SEARCHING","Outfit folder found in " + (string)(llGetTime() - outfitsSearchTimer) + "s; searching for typeFolder");
 
                         // outfitsFolder search is done: search for typeFolder
                         folderSearch(outfitsFolder,typeSearchChannel);
@@ -809,14 +815,14 @@ default {
                 return;
             }
 
-            debugSay(2,"DEBUG-SEARCHING","typeFolder search: looking for type folder: \"" + typeFolderExpected + "\": " + choice);
-            debugSay(2,"DEBUG-SEARCHING","typeFolder search: Outfits folder previously found to be \"" + outfitsFolder + "\"");
+            debugSay(6,"DEBUG-SEARCHING","typeFolder search: looking for type folder: \"" + typeFolderExpected + "\": " + choice);
+            debugSay(6,"DEBUG-SEARCHING","typeFolder search: Outfits folder previously found to be \"" + outfitsFolder + "\"");
 
             // We should NOT be here if the following statement is false.... RIGHT?
             if (typeFolderExpected != "" && typeFolder != typeFolderExpected) {
                 list folderList = llCSV2List(choice);
 
-                debugSay(2,"DEBUG-SEARCHING","looking for typeFolder(Expected) = " + typeFolderExpected);
+                debugSay(6,"DEBUG-SEARCHING","looking for typeFolder(Expected) = " + typeFolderExpected);
                 // This comparison is inexact - but a quick check to see
                 // if the typeFolderExpected is contained in the string
                 if (llSubStringIndex(choice,typeFolderExpected) >= 0) {
@@ -852,7 +858,7 @@ default {
                 // a type change?
                 if (outfitSearching) {
 
-                    debugSay(2,"DEBUG-SEARCHING","Ending an outfit Search...");
+                    debugSay(6,"DEBUG-SEARCHING","Ending an outfit Search...");
 
                     // we finished our outfit search: so end the search and
                     // put out results

@@ -181,7 +181,7 @@ default {
         else if (code == 503) mode = "TYPE_SELECTION";
         else                  mode = (string)code;
 
-        if (mode != "") { debugSay(2,"DEBUG-LINKMONITOR","Link message #" + mode + " cmd: " + name + " [" + script + "] = " + value); }
+        if (mode != "") { debugSay(8,"DEBUG-LINKMONITOR","Link message #" + mode + " cmd: " + name + " [" + script + "] = " + value); }
 #endif
 
         if (code == SEND_CONFIG) {

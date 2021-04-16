@@ -572,7 +572,7 @@ default {
         //llStopMoveToTarget();
         //llTargetRemove(targetHandle);
 
-        debugSay(2,"DEBUG-AVATAR","ifPermissions (on_rez)");
+        debugSay(5,"DEBUG-AVATAR","ifPermissions (on_rez)");
         ifPermissions();
     }
 
@@ -590,9 +590,9 @@ default {
             if (llGetParcelFlags(llGetPos()) & PARCEL_FLAG_ALLOW_SCRIPTS) msg += "allows scripts";
             else msg += "does not allow scripts";
 
-            debugSay(2,"DEBUG-AVATAR",msg);
-            debugSay(2,"DEBUG-AVATAR","Region FPS: " + formatFloat(llGetRegionFPS(),1) + "; Region Time Dilation: " + formatFloat(llGetRegionTimeDilation(),3));
-            debugSay(2,"DEBUG-AVATAR","ifPermissions (changed)");
+            debugSay(3,"DEBUG-AVATAR",msg);
+            debugSay(3,"DEBUG-AVATAR","Region FPS: " + formatFloat(llGetRegionFPS(),1) + "; Region Time Dilation: " + formatFloat(llGetRegionTimeDilation(),3));
+            debugSay(5,"DEBUG-AVATAR","ifPermissions (changed)");
 #endif
             ifPermissions();
         }
@@ -643,7 +643,7 @@ default {
 
 #ifdef DEVELOPER_MODE
             debugSay(2,"DEBUG-AVATAR","Region FPS: " + formatFloat(llGetRegionFPS(),1) + "; Region Time Dilation: " + formatFloat(llGetRegionTimeDilation(),3));
-            debugSay(2,"DEBUG-AVATAR","ifPermissions (attach)");
+            debugSay(5,"DEBUG-AVATAR","ifPermissions (attach)");
 #endif
             ifPermissions();
         }
@@ -702,7 +702,7 @@ default {
                     else if (cdCollapsedAnim()) keyAnimation = "";
                     lmSendConfig("keyAnimation", keyAnimation);
 
-                    debugSay(2,"DEBUG-AVATAR","ifPermissions (link_message 300/collapsed)");
+                    debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 300/collapsed)");
                     ifPermissions();
             }
             else if (name == "poseSilence")         poseSilence = (integer)value;
@@ -723,7 +723,7 @@ default {
                     lmSendConfig("keyAnimationID", (string)(keyAnimationID = animStart(keyAnimation)));
                 }
 
-                debugSay(2,"DEBUG-AVATAR","ifPermissions (link_message 300/keyAnimation)");
+                debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 300/keyAnimation)");
                 ifPermissions();
             }
             else if (name == "poserID")                 poserID = (key)value;
@@ -750,7 +750,7 @@ default {
                 return;
             }
 
-            debugSay(2,"DEBUG-AVATAR","ifPermissions (link_message 300)");
+            debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 300)");
             ifPermissions();
         }
         else if (code == INTERNAL_CMD) {
@@ -876,7 +876,7 @@ default {
         }
         else if (code < 200) {
             if (code == 110) {
-                debugSay(2,"DEBUG-AVATAR","ifPermissions (link_message 110)");
+                debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 110)");
 
                 ifPermissions();
                 oneAnimation();

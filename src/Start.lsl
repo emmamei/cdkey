@@ -700,7 +700,7 @@ default {
                     string value =          llStringTrim(llGetSubString(data, index + 1, -1),STRING_TRIM) ;
 
                     // this is the heart of preferences processing
-                    debugSay(2, "DEBUG-START", "Processing configuration: name = " + name + "; value = " + value);
+                    debugSay(6, "DEBUG-START", "Processing configuration: name = " + name + "; value = " + value);
                     processConfiguration(name, value);
                 }
 
