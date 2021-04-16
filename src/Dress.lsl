@@ -715,12 +715,15 @@ default {
             string name = cdListElement(split, 1);
 
             if (choice == "Outfits..." && !tempDressingLock) {
+                // Check for dresser lockout
                 if (!isDresser(id)) {
                     cdSayTo("You go to look in Dolly's closet for clothes, and find that " + llGetDisplayName(dresserID) + " is already there looking", id);
                     return;
                 }
 
                 debugSay(2, "DEBUG-DRESS", "Outfit menu; outfit Folder = " + outfitsFolder);
+
+                // Check to see if clothing has been worn long enough before changing (wearLock)
                 if (wearLock) {
                     clearDresser();
                     cdDialogListen();
@@ -730,8 +733,12 @@ default {
 
                 if (outfitsFolder != "") {
                     debugSay(2, "DEBUG-DRESS", "Outfit menu; outfit Folder is not empty");
+
+#ifndef PRESERVE_DIRECTORY
+                    // These reset the current directory location for the menu
                     if (useTypeFolder) clothingFolder = typeFolder;
                     else clothingFolder = "";
+#endif
 
                     //lmSendConfig("clothingFolder", clothingFolder);
                     dressVia(menuDressChannel);
