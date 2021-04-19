@@ -327,20 +327,23 @@ key animStart(string animation) {
 clearAnimations() {
     // Clear all animations
 
+    // Get list of all current animations
     animList = llGetAnimationList(dollID);
     animKey = NULL_KEY;
 
-    //integer animCount = llGetListLength(animList);
     i = llGetListLength(animList);
 
+    // Clear current saved animation if any
     keyAnimation = "";
-    lmSendConfig("keyAnimationID", (string)(keyAnimationID = NULL_KEY));
+    if (keyAnimationID != NULL_KEY) lmSendConfig("keyAnimationID", (string)(keyAnimationID = NULL_KEY));
 
+    // Stop all currently active animations
     while (i--) {
         animKey = llList2Key(animList, i);
         if (animKey) llStopAnimation(animKey);
     }
 
+    // Reset current animations
     llStartAnimation("Stand");
     animRefreshRate = 0.0;
     clearAnim = 0;
@@ -400,11 +403,15 @@ oneAnimation() {
 
     // animKey should now be the key of a running animation - the only animation...
     // keyAnimationID, if not corrupted, is the previous animation...
+    //
+    // This sequence sets keyAnimationID and propogates the results, then
+    // computes the animation refresh.
 
     if (keyAnimationID == NULL_KEY) {
         if (animKey != NULL_KEY) {
             lmSendConfig("keyAnimationID", (string)(keyAnimationID = animKey));
 
+            // This sets the refresh rate to 10s or 8s
             if (lowScriptMode) animRefreshRate = 10.0;
             else animRefreshRate = 8.0;
         }
@@ -437,11 +444,11 @@ oneAnimation() {
             // No interference - so run less often
             if (lowScriptMode) {
                 animRefreshRate += cdAddRefresh();
-                if (animRefreshRate > 30.0) animRefreshRate = 30.0;
+                if (animRefreshRate > 30.0) animRefreshRate = 30.0; // clip refresh rate to 30s
             }
             else {
                 animRefreshRate *= 1.3; // Note this converts a linear increase to a geometric increase
-                if (animRefreshRate > 60.0) animRefreshRate = 60.0;
+                if (animRefreshRate > 60.0) animRefreshRate = 60.0; //  clip refresh rate to 60s
             }
         }
     }
@@ -495,7 +502,8 @@ ifPermissions() {
 
     if (permMask & PERMISSION_TRIGGER_ANIMATION) {
 
-        //animList = llGetAnimationList(dollID);
+        // The big work is done in clearAnimations() and in
+        // oneAnimation
 
         if (clearAnim) clearAnimations();
         else if (cdAnimated()) oneAnimation(); 
@@ -896,15 +904,14 @@ default {
     // TIMER
     //----------------------------------------
 
-    // Timer fires for three reasons:
-    //
-    //    1. RLV check timeout
-    //    2. Animation refresh
-    //    3. ifPermissions check
-    //
-    // Is it really necessary to do ifPermissions repeatedly?
+    // Timer is used solely to check for animations and to
+    // compute the animation refresh time
 
     timer() {
+
+        // The big work is done in clearAnimations() and in
+        // oneAnimation
+
         if (clearAnim) clearAnimations();
         else if (cdAnimated()) oneAnimation(); 
 
