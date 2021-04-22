@@ -338,10 +338,16 @@ clearAnimations() {
     if (keyAnimationID != NULL_KEY) lmSendConfig("keyAnimationID", (string)(keyAnimationID = NULL_KEY));
 
     // Stop all currently active animations
+    //
+    // Note that this will stop current system animations, but they
+    // will not "stay down" and will return, although will not be playing
+    //
     while (i--) {
         animKey = llList2Key(animList, i);
         if (animKey) llStopAnimation(animKey);
     }
+
+    llSay(99,"stop"); // Turns off dances: customarily on channel 99
 
     // Reset current animations
     llStartAnimation("Stand");
@@ -351,7 +357,7 @@ clearAnimations() {
 }
 
 oneAnimation() {
-    integer upRefresh;
+    //integer upRefresh;
 
     // Strip down to a single animation (keyAnimation)
 
@@ -364,94 +370,16 @@ oneAnimation() {
     if ((animKey = llGetInventoryKey(keyAnimation)) == NULL_KEY) 
         animKey = keyAnimationID;
 
-    animList = llGetAnimationList(dollID);
-    if (animKey) {
+    animKey = animStart(keyAnimation);
 
-        // if animKey is running alone - we've nothing to do...
-        if (animList != [ animKey ]) {
+    if (animKey != NULL_KEY) {
+        lmSendConfig("keyAnimationID", (string)(keyAnimationID = animKey));
 
-            debugSay(2,"DEBUG-ANIM","Animations list not as expected: " + llDumpList2String(animList,","));
-            //debugSay(2,"DEBUG-ANIM","Animation key = " + (string)animKey);
-            //debugSay(2,"DEBUG-ANIM","Animation = " + keyAnimation);
-
-            // animStart() would stop everything; we only want to
-            // stop all the rogue animations OTHER than what we want
-            // to keep running
-
-            key animKeyI;
-
-            if (llListFindList(animList, [ animKey ]) == NOT_FOUND) {
-                // Animation isn't running currently: let animStart() handle it
-                animKey = animStart(keyAnimation);
-            }
-            else {
-                // animKey animation IS running... don't stop it; stop everything else
-
-                // Other animations are trying to "get in"; make note of it
-                upRefresh = 1;
-
-                i = llGetListLength(animList);
-                while (i--) {
-                    animKeyI = llList2Key(animList, i);
-
-                    if (animKeyI != animKey) llStopAnimation(animKeyI);
-                }
-            }
-        }
+        // This adjusts the refresh rate for lowscript mode
+        if (lowScriptMode) animRefreshRate = 60.0;
+        else animRefreshRate = 30.0;
     }
-    else animKey = animStart(keyAnimation);
-
-    // animKey should now be the key of a running animation - the only animation...
-    // keyAnimationID, if not corrupted, is the previous animation...
-    //
-    // This sequence sets keyAnimationID and propogates the results, then
-    // computes the animation refresh.
-
-    if (keyAnimationID == NULL_KEY) {
-        if (animKey != NULL_KEY) {
-            lmSendConfig("keyAnimationID", (string)(keyAnimationID = animKey));
-
-            // This sets the refresh rate to 10s or 8s
-            if (lowScriptMode) animRefreshRate = 10.0;
-            else animRefreshRate = 8.0;
-        }
-        else animRefreshRate = 0.0;
-    }
-    else {
-        if (animKey != keyAnimationID)
-            lmSendConfig("keyAnimationID", (string)(keyAnimationID = animKey));
-
-        // this makes the refresh rate "adaptive": if nothing happens,
-        // another frame's worth is added to the refresh rate each time;
-        // if an animation takes over or tries to - the refresh rate is
-        // cut in half. There is also clipping at the maximum and minimum times
-        //
-        // Note that the refresh times are dependent on Frames: the busier a
-        // region is, the longer time between refreshes - and vice versa.
-        // Helps to keep things accurate and perhaps not be so brutal to
-        // a busy region - also keeps us from having two timer events collide
-
-        if (upRefresh) {
-            // We found our animation being interfered with; cut the refreshRate
-            // so that we run more often: and "fight back" for our animation
-            animRefreshRate /= 2.0;                                     // -50%
-
-            if (animRefreshRate < cdMinRefresh())
-                animRefreshRate = cdMinRefresh();                   // Minimum amount of time (by Frames)
-            upRefresh = 0;
-        }
-        else {
-            // No interference - so run less often
-            if (lowScriptMode) {
-                animRefreshRate += cdAddRefresh();
-                if (animRefreshRate > 30.0) animRefreshRate = 30.0; // clip refresh rate to 30s
-            }
-            else {
-                animRefreshRate *= 1.3; // Note this converts a linear increase to a geometric increase
-                if (animRefreshRate > 60.0) animRefreshRate = 60.0; //  clip refresh rate to 60s
-            }
-        }
-    }
+    else animRefreshRate = 0.0;
 
     debugSay(4, "DEBUG-ANIM", "Animation Refresh Rate: " + formatFloat(animRefreshRate,2));
 }
