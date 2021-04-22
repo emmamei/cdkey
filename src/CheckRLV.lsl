@@ -124,18 +124,17 @@ activateRLVBase() {
     if (!canStand)  baseRLV += "unsit=n,";          else baseRLV += "unsit=y,";
     if (!canSit)    baseRLV += "sit=n";             else baseRLV += "sit=y";
 
-    lmRunRLVas("Base", baseRLV);
-    lmSendConfig("defaultBaseRLVcmd",(string)baseRLV); // save the defaults
-    outfitRLVLock();
-
     // Add users choice of extended base RLV restrictions
     //
     // Normally, this wouldn't be run - but if prefs have
     // already been run, and this is called, set the user
     // base too...
     //
-    //if (userBaseRLVcmd != "")
-    //    lmRunRLVas("UserBase", userBaseRLVcmd);
+    //if (userBaseRLVcmd != "") baseRLV += "," + userBaseRLVcmd;
+
+    lmRunRLVas("Base", baseRLV);
+    lmSendConfig("defaultBaseRLVcmd",(string)baseRLV); // save the defaults
+    outfitRLVLock();
 }
 
 outfitRLVLock() {
@@ -296,10 +295,11 @@ default {
 
             if (llListFindList([ "a", "c", "d", "w" ],(list)c) == NOT_FOUND) return;
 
-                 if (name == "autoTP")        {       autoTP = (integer)value; lmRunRLVBoolean("accepttp", !autoTP); }
-            else if (name == "hardcore")      {     hardcore = (integer)value; outfitRLVLock(); }
+                 if (name == "autoTP")            {       autoTP = (integer)value; lmRunRLVBoolean("accepttp", !autoTP); }
+            else if (name == "hardcore")          {     hardcore = (integer)value; outfitRLVLock(); }
+            //else if (name == "userBaseRLVcmd")    {  userBaseRLVcmd = value; }
 #ifdef DEVELOPER_MODE
-            else if (name == "debugLevel")    {   debugLevel = (integer)value; }
+            else if (name == "debugLevel")        {   debugLevel = (integer)value; }
 #endif
             else if (c == "c") {
                      if (name == "canSelfTP")     {    canSelfTP = (integer)value; lmRunRLVBoolean("tplm", canSelfTP); lmRunRLVBoolean("tploc", canSelfTP); }

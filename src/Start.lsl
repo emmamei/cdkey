@@ -196,14 +196,23 @@ processConfiguration(string name, string value) {
             lmSendConfig("debugLevel", (string)debugLevel);
         }
 #endif
-//      else if (name == "collapse rlv") {
+        else if (name == "base rlv") {
             // has to be valid rlv
+            defaultBaseRLVcmd += "," + value;
+            lmSendConfig("defaultBaseRLVcmd", value);
+        }
+        else if (name == "collapse rlv") {
+            // has to be valid rlv
+            defaultCollapseRLVcmd += "," + value;
             //lmSendConfig("userCollapseRLVcmd", value);
-//      }
-//      else if (name == "pose rlv") {
+            lmSendConfig("defaultCollapseRLVcmd", value);
+        }
+        else if (name == "pose rlv") {
             // has to be valid rlv
-//          lmSendConfig("userPoseRLVcmd", value);
-//      }
+            defaultPoseRLVcmd += "," + value;
+            //lmSendConfig("userPoseRLVcmd", value);
+            lmSendConfig("defaultPoseRLVcmd", value);
+        }
 
         // Note that the entries "max time" and "wind time" are
         // somewhat unique in that they affect each other: so,
