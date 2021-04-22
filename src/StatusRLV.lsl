@@ -35,7 +35,7 @@
 list rlvRestrict;
 
 string scriptName;
-string defaultBaseRLVcmd;
+//string defaultBaseRLVcmd;
 integer statusChannel = 55117;
 integer statusHandle;
 integer rlvCmdIssued;
@@ -105,7 +105,7 @@ default {
                  if (name == "debugLevel") debugLevel = (integer)value;
             else
 #endif
-            if (name == "defaultBaseRLVcmd") defaultBaseRLVcmd = value;
+            //if (name == "defaultBaseRLVcmd") defaultBaseRLVcmd = value;
             return;
         }
 
