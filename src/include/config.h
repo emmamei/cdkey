@@ -19,9 +19,11 @@
 /* Defines the Default wind amount */
 #define WIND_DEFAULT 1800.0
 
-/* enable the inclusion of adult features such as stripping and slut doll in
-   the key */
+/* enable the inclusion of adult features such as stripping and slut doll in the key */
 #define ADULT_MODE 1
+
+/* enable adding user RLV commands to base collapse and pose RLV commands */
+#define USER_RLV 1
 
 /* enable the start up introduction/hypno text provided that the required
    "Intro Text" notecard is also present */

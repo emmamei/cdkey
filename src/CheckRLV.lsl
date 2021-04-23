@@ -31,7 +31,6 @@ string myPath;
 #endif
 
 string rlvAPIversion;
-//string userBaseRLVcmd;
 
 integer i;
 integer rlvChannel;
@@ -123,14 +122,6 @@ activateRLVBase() {
     if (!canFly)    baseRLV += "fly=n,";            else baseRLV += "fly=y,";
     if (!canStand)  baseRLV += "unsit=n,";          else baseRLV += "unsit=y,";
     if (!canSit)    baseRLV += "sit=n";             else baseRLV += "sit=y";
-
-    // Add users choice of extended base RLV restrictions
-    //
-    // Normally, this wouldn't be run - but if prefs have
-    // already been run, and this is called, set the user
-    // base too...
-    //
-    //if (userBaseRLVcmd != "") baseRLV += "," + userBaseRLVcmd;
 
     lmRunRLVas("Base", baseRLV);
     lmSendConfig("defaultBaseRLVcmd",(string)baseRLV); // save the defaults
@@ -297,7 +288,6 @@ default {
 
                  if (name == "autoTP")            {       autoTP = (integer)value; lmRunRLVBoolean("accepttp", !autoTP); }
             else if (name == "hardcore")          {     hardcore = (integer)value; outfitRLVLock(); }
-            //else if (name == "userBaseRLVcmd")    {  userBaseRLVcmd = value; }
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")        {   debugLevel = (integer)value; }
 #endif

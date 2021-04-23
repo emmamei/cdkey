@@ -53,8 +53,6 @@ string value;
 string myPath;
 #endif
 
-//string userBaseRLVcmd;
-
 integer hasCarrier;
 integer i;
 integer posePage;
@@ -643,7 +641,6 @@ default {
             }
             else if (name == "poseSilence")         poseSilence = (integer)value;
             else if (name == "hardcore")               hardcore = (integer)value;
-//            else if (name == "userBaseRLVcmd")   userBaseRLVcmd = value;
 #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")     timeReporting = (integer)value;
 #endif

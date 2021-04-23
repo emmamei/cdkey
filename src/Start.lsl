@@ -55,14 +55,7 @@ integer i;
 string attachName;
 integer isAttached;
 
-// These RLV commands are set by the user
-//string userAfkRLVcmd;
-//string userBaseRLVcmd;
-//string userCollapseRLVcmd;
-//string userPoseRLVcmd;
-
 // These are hardcoded and should never change during normal operation
-//string defaultAfkRLVcmd = "fly=n,sendchat=n,tplm=n,tplure=n,tploc=n,sittp=n,fartouch=n,alwaysrun=n";
 string defaultBaseRLVcmd = "";
 string defaultCollapseRLVcmd = "fly=n,sendchat=n,tplm=n,tplure=n,tploc=n,showinv=n,edit=n,sit=n,sittp=n,fartouch=n,showworldmap=n,showminimap=n,showloc=n,shownames=n,showhovertextall=n";
 
@@ -102,7 +95,9 @@ processConfiguration(string name, string value) {
 #ifdef DEVELOPER_MODE
                      "debug level",
 #endif
+#ifdef USER_RLV
                      "collapse rlv", "pose rlv",
+#endif
                      "doll gender", "helpless dolly", "chat mode", "controller", "blacklist"
                    ];
 
@@ -196,11 +191,7 @@ processConfiguration(string name, string value) {
             lmSendConfig("debugLevel", (string)debugLevel);
         }
 #endif
-//      else if (name == "base rlv") {
-            // has to be valid rlv
-//          defaultBaseRLVcmd += "," + value;
-//          lmSendConfig("defaultBaseRLVcmd", value);
-//      }
+#ifdef USER_RLV
         else if (name == "collapse rlv") {
             // has to be valid rlv
             defaultCollapseRLVcmd += "," + value;
@@ -211,6 +202,7 @@ processConfiguration(string name, string value) {
             defaultPoseRLVcmd += "," + value;
             lmSendConfig("defaultPoseRLVcmd", value);
         }
+#endif
 
         // Note that the entries "max time" and "wind time" are
         // somewhat unique in that they affect each other: so,
@@ -433,10 +425,6 @@ default {
                             if (defaultPoseRLVcmd) {
                                 lmRestrictRLV(defaultPoseRLVcmd);
                             }
-//                          if (userPoseRLVcmd) {
-                                //lmRunRLVas("UserPose", userPoseRLVcmd);
-//                              lmRestrictRLV(userPoseRLVcmd);
-//                          }
                         }
                         else if (oldKeyAnimation != keyAnimation) {
                             // animation just became null
@@ -446,9 +434,6 @@ default {
                     }
                 }
             }
-//          else if (name == "userCollapseRLVcmd")  userCollapseRLVcmd = value;
-//          else if (name == "userPoseRLVcmd")          userPoseRLVcmd = value;
-//          else if (name == "userAfkRLVcmd")            userAfkRLVcmd = value;
             else if (name == "defaultBaseRLVcmd")    defaultBaseRLVcmd = value;
 
             else if (name == "collapsed") {
@@ -459,7 +444,6 @@ default {
                     if (collapsed) {
                         // We are collapsed: activate RLV restrictions
                         lmRestrictRLV(defaultCollapseRLVcmd);
-//                      if (userCollapseRLVcmd != "") lmRestrictRLV(userCollapseRLVcmd);
                     }
                     else {
                         if (wasCollapsed) {
@@ -515,7 +499,6 @@ default {
                     // Are we posed? Trigger RLV restrictions for being posed
                     if (cdPoseAnim()) {
                         lmRestrictRLV(defaultPoseRLVcmd);
-//                      if (userPoseRLVcmd != "") lmRestrictRLV(userPoseRLVcmd);
                     }
                 }
             }
