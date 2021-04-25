@@ -64,7 +64,6 @@ integer lastTimerMark;
 list poseList;
 integer poseCount;
 
-string poseName;
 integer poseChannel;
 key animKey;
 list animList;
@@ -72,6 +71,7 @@ list animList;
 key grantorID;
 integer permMask;
 
+string poseName;
 vector pointTo;
 integer clearAnim = 1;
 integer locked;
@@ -132,6 +132,7 @@ posePageN(string choice, key id) {
     integer isDoll = cdIsDoll(id);
     integer isController = cdIsController(id);
     integer buildList;
+    string poseEntry;
 
     poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
 
@@ -140,13 +141,13 @@ posePageN(string choice, key id) {
     i = poseCount; // loopIndex
     while (i--) {
         if (buildList) {
-            poseName = llGetInventoryName(INVENTORY_ANIMATION, i);
-            if (poseName != ANIMATION_COLLAPSED) {
-                if (poseName == "") llSay(DEBUG_CHANNEL,"null pose entry!");
-                else poseList += poseName;
+            poseEntry = llGetInventoryName(INVENTORY_ANIMATION, i);
+            if (poseEntry != ANIMATION_COLLAPSED) {
+                if (poseEntry == "") llSay(DEBUG_CHANNEL,"null pose entry!");
+                else poseList += poseEntry;
             }
         }
-        else poseName = llList2String(poseList, i);
+        else poseEntry = llList2String(poseList, i);
 
         // Is the pose a pose we can show in the menu?
         //
@@ -156,15 +157,15 @@ posePageN(string choice, key id) {
         // * Show animations like .foo to Dolly only
         // * Show animations like foo to all
         //
-        if (poseName != ANIMATION_COLLAPSED && poseName != keyAnimation && poseName != "") {
-            posePrefix = cdGetFirstChar(poseName);
+        if (poseEntry != ANIMATION_COLLAPSED && poseEntry != keyAnimation && poseEntry != "") {
+            posePrefix = cdGetFirstChar(poseEntry);
 
             if (isDoll ||
                (isController && posePrefix == "!") ||
                (posePrefix != "!" && posePrefix != ".")) {
 
-                debugSay(6,"DEBUG-AVATAR","Pose #" + (string)(i+1) + " added: " + poseName);
-                tmpList += poseName;
+                debugSay(6,"DEBUG-AVATAR","Pose #" + (string)(i+1) + " added: " + poseEntry);
+                tmpList += poseEntry;
             }
         }
     }
@@ -533,6 +534,7 @@ default {
         else if (change & CHANGED_INVENTORY) {
             // Doing this whenever inventory changes is ok: the update process stops this script;
             // otherwise, the only cost is time.
+            string poseEntry;
             poseList = [];
             poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
 
@@ -541,12 +543,12 @@ default {
 
             while (i--) {
                 // This takes time:
-                poseName = llGetInventoryName(INVENTORY_ANIMATION, i);
-                //debugSay(6,"DEBUG-AVATAR","Pose #" + (string)(i+1) + " found: " + poseName);
+                poseEntry = llGetInventoryName(INVENTORY_ANIMATION, i);
+                //debugSay(6,"DEBUG-AVATAR","Pose #" + (string)(i+1) + " found: " + poseEntry);
 
                 // Collect all viable poses: skip the collapse animation
-                if (poseName != ANIMATION_COLLAPSED)
-                    poseList += poseName;
+                if (poseEntry != ANIMATION_COLLAPSED)
+                    poseList += poseEntry;
             }
 
             poseList = llListSort(poseList, 1, 1);
@@ -587,17 +589,18 @@ default {
 
         debugSay(4,"DEBUG-AVATAR","Checking poses on attach");
 
+        string poseEntry;
         poseList = [];
         poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
         i = poseCount;
         while (i--) {
             // This takes time:
-            poseName = llGetInventoryName(INVENTORY_ANIMATION, i + 1);
-            debugSay(6,"DEBUG-AVATAR","Adding pose #" + (string)i + ": " + poseName);
+            poseEntry = llGetInventoryName(INVENTORY_ANIMATION, i + 1);
+            debugSay(6,"DEBUG-AVATAR","Adding pose #" + (string)i + ": " + poseEntry);
 
             // Collect all viable poses: skip the collapse animation
-            if (poseName != ANIMATION_COLLAPSED)
-                poseList += poseName;
+            if (poseEntry != ANIMATION_COLLAPSED)
+                poseList += poseEntry;
         }
         poseList = llListSort(poseList, 1, 1);
 
@@ -789,16 +792,18 @@ default {
             }
 
             else {
+                string expire;
+
                 llSay(PUBLIC_CHANNEL,"Pose " + choice + " selected.");
 
                 // The Real Meat: We have an animation (pose) name
                 lmSendConfig("keyAnimation", (string)(keyAnimation = choice));
+                lmSendConfig("poseName", (string)(poseName = choice));
                 lmSendConfig("poserID", (string)(poserID = id));
 
-                if (dollType == "Display" || hardcore)
-                    lmSetConfig("poseExpire", "0");
-                else
-                    lmSetConfig("poseExpire", (string)(llGetUnixTime() + POSE_TIMEOUT));
+                if (dollType == "Display" || hardcore) expire = "0";
+                else expire = (string)(llGetUnixTime() + POSE_TIMEOUT);
+                lmSetConfig("poseExpire", expire);
 
                 oneAnimation();
                 if (poseSilence || hardcore) lmRunRLV("sendchat=n");
