@@ -172,7 +172,6 @@ float setWindRate() {
 
 uncollapse() {
     // Revive dolly back from being collapsed
-    //key id = llGetKey();
 
     lmSendConfig("collapseTime", (string)(collapseTime = 0));
     lmSendConfig("collapsed", (string)(collapsed = 0));
@@ -491,8 +490,6 @@ default {
                 }
             }
         }
-
-        //scaleMem();
     }
 
     //----------------------------------------
@@ -508,8 +505,6 @@ default {
         optHeader         =     (i & 0x00000C00) >> 10;
         code              =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
-
-        //scaleMem();
 
         if (code == SEND_CONFIG) {
             string name = llList2String(split, 0);
@@ -883,7 +878,6 @@ default {
 #ifdef DEVELOPER_MODE
             else if (code == MEM_REPORT) {
                 float delay = llList2Float(split, 0);
-                //scaleMem();
                 memReport(cdMyScriptName(),delay);
             }
 #endif

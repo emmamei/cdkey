@@ -95,8 +95,6 @@ default {
         code      =  i & 0x000003FF;
         split     = llDeleteSubList(split, 0, 0 + optHeader);
 
-        //scaleMem();
-
         if (code == SEND_CONFIG) {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
@@ -110,7 +108,6 @@ default {
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
-            //else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "poserID")                       poserID = (key)value;
             else if (name == "keyLimit")                      maxMins = llRound((float)value / 60.0);
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
@@ -214,8 +211,6 @@ default {
                     // if Dolly is stripped by someone else, Dolly cannot
                     // dress for a time: wearLock is activated
 
-                    //lmInternalCommand("wearLock", (string)(wearLock = 1), NULL_KEY);
-                    //lmSendConfig("wearLock", (string)(wearLock = 1));
                     lmSetConfig("wearLock", "1");
 
                     llOwnerSay("You have been stripped and may not redress for " + (string)llRound(WEAR_LOCK_TIMEOUT / 60.0) + " minutes.");
@@ -286,9 +281,6 @@ default {
             else if (choice == "Update") {
                 llSay(PUBLIC_CHANNEL,"Update starting....");
                 lmSendConfig("update","1");
-
-                //cdRunScript("UpdaterClient");
-                //llResetOtherScript("UpdaterClient");
             }
 
             else if (choice == "Access...") {
@@ -484,7 +476,6 @@ Parent - Take care choosing your parents; they have great control over Dolly and
             }
             else if (code == 102) {
                 configured = 1;
-                //scaleMem();
             }
 #ifdef DEVELOPER_MODE
             // Generate memory report on startup

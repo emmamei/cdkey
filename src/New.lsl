@@ -30,7 +30,6 @@ doRestart() {
         if (script != "Start") {
 
             cdRunScript(script);
-            //llResetOtherScript(script);
         }
     }
 
@@ -46,8 +45,6 @@ default {
         }
 
         llOwnerSay("Update was successful.");
-
-        //doRestart();
 
         llSleep(1.0);
         llRemoveInventory(llGetScriptName());

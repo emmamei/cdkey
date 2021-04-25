@@ -60,8 +60,6 @@ default {
         code              =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
-        //scaleMem();
-
         if (code == SEND_CONFIG) {
             string name = llList2String(split, 0);
             string value = llList2String(split, 1);
@@ -420,7 +418,6 @@ default {
                 return;
             }
 
-            //lmInternalCommand("getTimeUpdates","",NULL_KEY);
             debugSay(5,"DEBUG-CHAT",("Got a chat channel message: " + name + "/" + (string)id + "/" + msg));
             string prefix = cdGetFirstChar(msg);
 
@@ -434,7 +431,6 @@ default {
 
             if (prefix == "*") {
                 // *prefix is global, strip from choice and continue
-                //prefix = llGetSubString(msg,0,0);
                 msg = llGetSubString(msg,1,-1);
             }
             else if (prefix == "#") {
@@ -444,7 +440,6 @@ default {
                 if (isDoll) return;
                 else {
                     // #prefix is an all others prefix like with OC etc
-                    //prefix = llGetSubString(msg,0,0);
                     msg = llGetSubString(msg,1,-1);
                 }
             }
@@ -638,7 +633,6 @@ default {
                         s += (string)((integer)(windEmergency / SECS_PER_MIN)) + " mins\n";
 
                         cdCapability(autoTP,           "Doll can", "be force teleported");
-                        //cdCapability(canAFK,           "Doll can", "go AFK");
                         cdCapability(canFly,           "Doll can", "fly");
                         cdCapability(canSit,           "Doll can", "sit");
                         cdCapability(canStand,         "Doll can", "stand");
@@ -824,7 +818,6 @@ default {
                         }
                     }
 #endif
-                    //cdMenuInject("Wind", name, id);
                     if (collapsed) {
                         if (!isDoll) {
                             lmInternalCommand("winding", "|" + name, id);
@@ -833,9 +826,6 @@ default {
                     else {
                         lmInternalCommand("winding", "|" + name, id);
                     }
-
-                    // Problem: we don't know what the windAmount is...
-                    //lmInternalCommand("windMsg", (string)windAmount + "|" + name, id);
 
                     return;
                 }
