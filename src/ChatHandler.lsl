@@ -510,6 +510,7 @@ default {
     hide ........... make key invisible
     unhide ......... make key visible
     show ........... make key visible
+    visible ........ make key visible
     ghost .......... make key visible and ghostly
     release ........ stop the current pose if possible
     unpose ......... stop the current pose if possible
@@ -756,13 +757,15 @@ default {
                     else if (choice == "hide") {
                         visible = FALSE;
 
+                        cdSayTo("The key shimmers, then fades from view.",id);
                         llSetLinkAlpha(LINK_SET, 0.0, ALL_SIDES);
                         lmSendConfig("isVisible", (string)visible);
                         return;
                     }
-                    else if (choice == "unhide" || choice == "show") {
+                    else if (choice == "unhide" || choice == "show" || choice == "visible") {
                         visible = TRUE;
 
+                        cdSayTo("A bright light appears where the key should be, then disappears slowly, revealing a spotless key.",id);
                         llSetLinkAlpha(LINK_SET, (float)visibility, ALL_SIDES);
                         lmSendConfig("isVisible", (string)visible);
                         return;
@@ -771,8 +774,14 @@ default {
                         visible = TRUE;
 
                         // This toggles ghostliness
-                        if (visibility != 1.0) visibility = 1.0;
-                        else visibility = GHOST_VISIBILITY;
+                        if (visibility != 1.0) {
+                            visibility = 1.0;
+                            cdSayTo("You see the key sparkle slightly, then fade back into full view.",id);
+                        }
+                        else {
+                            visibility = GHOST_VISIBILITY;
+                            cdSayTo("A cloud of sparkles forms around the key, and it fades to a ghostly presence.",id);
+                        }
 
                         llSetLinkAlpha(LINK_SET, (float)visibility, ALL_SIDES);
                         lmSendConfig("visibility", (string)visibility);
