@@ -71,9 +71,6 @@ startUpdate() {
 #ifdef LISTENER
     comHandle = llListen(comChannel,"","","");
 #endif
-    //llOwnerSay("client = " + (string)owner);
-    //llOwnerSay("client pin = " + (string)pin);
-
     // This is the key to the whole operation
     llSetRemoteScriptAccessPin(pin);
 
@@ -153,8 +150,6 @@ default {
         code              =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
-        //scaleMem();
-
         string name = llList2String(split, 0);
         string value = llList2String(split, 1);
 
@@ -196,6 +191,9 @@ default {
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel") debugLevel = (integer)value;
 #endif
+        }
+        else if (code == CONFIG_REPORT) {
+            cdConfigureReport();
         }
     }
 
