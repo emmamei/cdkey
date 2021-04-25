@@ -44,6 +44,8 @@ integer carryExpire;
 integer poseExpire;
 integer transformLockExpire;
 
+string poseName;
+
 key simRatingQuery;
 
 //========================================
@@ -546,7 +548,6 @@ default {
             }
             else if (name == "hardcore")                     hardcore = (integer)value;
             else if (name == "hovertextOn")               hovertextOn = (integer)value;
-            //else if (name == "keyAnimation")             keyAnimation = value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
             else if (name == "transformLockExpire") transformLockExpire = (integer)value;
@@ -643,6 +644,7 @@ default {
                 // We do this in a subroutine: this allows winding to happen from THIS
                 // script in a synchronous fashion: if this function is moved, this will
                 // have to be changed.
+                debugSay(6,"DEBUG-MAIN","received winding cmd");
                 doWinding(llList2String(split, 1),id);
             }
             else if (cmd == "windMsg") {

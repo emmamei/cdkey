@@ -28,6 +28,8 @@ integer chatEnable           = TRUE;
 key chatFilter;
 string rlvAPIversion;
 
+string poseName;
+
 integer chatHandle          = 0;
 
 default {
@@ -123,13 +125,15 @@ default {
             // Shortcut: p
             else if (c == "p") {
                      if (name == "poseSilence")           poseSilence = (integer)value;
+                else if (name == "poseID")                     poseID = (key)value;
+                else if (name == "poseName")                 poseName = value;
                 else if (name == "poserID")                   poserID = (key)value;
                 else if (name == "poserName")               poserName = value;
                 else if (name == "pronounHerDoll")     pronounHerDoll = value;
                 else if (name == "pronounSheDoll")     pronounSheDoll = value;
             }
 
-            else if (name == "keyAnimation")         keyAnimation = value;
+            else if (name == "keyAnimation")         poseName = value;
             else if (name == "keyLimit")             keyLimit = (integer)value;
 
             //----------------------------------------
@@ -906,10 +910,10 @@ default {
                                 (isController && (thisPrefix == "!")) ||
                                 (thisPrefix == "")) {
 
-                                if (keyAnimation == thisPose) cdSayTo("\t*\t" + thisPose, id);
+                                if (poseName == thisPose) cdSayTo("\t*\t" + thisPose, id);
                                 else cdSayTo("\t\t" + thisPose, id);
                             }
-                            else if (keyAnimation == thisPose) cdSayTo("\t*\t{private}", id);
+                            else if (poseName == thisPose) cdSayTo("\t*\t{private}", id);
                         }
                     }
                     return;

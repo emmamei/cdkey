@@ -71,6 +71,7 @@ integer controlChannel;
 integer controlHandle;
 integer poseChannel;
 integer poseHandle;
+string poseName;
 integer typeChannel;
 integer typeHandle;
 string isDollName;
@@ -230,7 +231,8 @@ default {
 #endif
 
             // keyAnimation used to test for being posed
-            else if (name == "keyAnimation")               keyAnimation = value;
+            else if (name == "keyAnimation")             { keyAnimation = value; poseName = value; }
+            else if (name == "poseName")                       poseName = value;
 
             else if (name == "showPhrases")                 showPhrases = (integer)value;
             else if (name == "transformLockExpire") transformLockExpire = (integer)value;
@@ -472,7 +474,6 @@ default {
                     }
 
                     // Only present the Types button if Dolly is not posed
-                    //if (keyAnimation == "" && allowDress) {
                     if (keyAnimation == "") {
 
                         if (transformLockExpire == 0) {
