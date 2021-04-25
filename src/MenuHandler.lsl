@@ -619,11 +619,11 @@ default {
 
                 //--------------------
                 // Update Button
-                if (isDoll && keyAnimation == "") menu += [ "Update" ];
+                if (isDoll) if (keyAnimation == "") menu += [ "Update" ];
 
                 //--------------------
                 // Detach Button
-                if (isDoll && detachable && keyAnimation == "") menu += [ "Detach" ];
+                if (isDoll) if (detachable) if (keyAnimation == "") menu += [ "Detach" ];
 
                 //--------------------
                 // Wind Button
