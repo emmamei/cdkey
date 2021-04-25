@@ -63,6 +63,8 @@ string defaultCollapseRLVcmd = "fly=n,sendchat=n,tplm=n,tplure=n,tploc=n,showinv
 // Also allow touch - for Dolly to access Key
 string defaultPoseRLVcmd = "fly=n,tplm=n,tplure=n,tploc=n,sittp=n,fartouch=n";
 
+string poseName;
+
 //integer introLine;
 //integer introLines;
 
@@ -404,33 +406,30 @@ default {
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                  debugLevel = (integer)value;
 #endif
+            else if (name == "collapsed")                    collapsed = (integer)value;
             else if (name == "dollType")                      dollType = value;
             else if (name == "blacklist") {
                 if (split == [""]) blacklist = [];
                 else blacklist = split;
             }
 
-            // keyAnimation used to set RLV... Seems odd
-            else if (name == "keyAnimation") {
-                string oldKeyAnimation = keyAnimation;
-                keyAnimation = value;
+            else if ((name == "keyAnimation") || (name == "poseName")) {
+                poseName = value;
 
-                if (!collapsed) {
+                //lmSendConfig("poseName", value);
+
+                if ((!collapsed) && (RLVok == TRUE)) {
 
                     // Dolly is operating normally (not collapsed)
+                    // and this is a pose, not a collapse
 
-                    if (RLVok == TRUE) {
-                        if (cdPoseAnim()) {
-                            // keyAnimation is a pose of some sort
-                            if (defaultPoseRLVcmd) {
-                                lmRestrictRLV(defaultPoseRLVcmd);
-                            }
-                        }
-                        else if (oldKeyAnimation != keyAnimation) {
-                            // animation just became null
-                            debugSay(2, "DEBUG-START", "Clearing on keyAnimation");
-                            lmRunRLVcmd("clearRLVcmd",defaultBaseRLVcmd);
-                        }
+                    if (poseName == "" && !collapsed) {
+                        // Not collapsed or posed - so clear to base RLV
+                        lmRunRLVcmd("clearRLVcmd",defaultBaseRLVcmd);
+                    }
+                    else {
+                        // Posed: activate RLV restrictions
+                        lmRestrictRLV(defaultPoseRLVcmd);
                     }
                 }
             }
