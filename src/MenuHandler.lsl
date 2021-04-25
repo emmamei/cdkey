@@ -224,6 +224,7 @@ default {
             else if (name == "outfitsFolder")             outfitsFolder = value;
             else if (name == "backMenu")                       backMenu = value;
             else if (name == "hardcore")                       hardcore = (integer)value;
+            else if (name == "keyLimit")                       keyLimit = (integer)value;
             else if (name == "lowScriptMode")             lowScriptMode = (integer)value;
             else if (name == "winderRechargeTime")   winderRechargeTime = (integer)value;
 #ifdef SINGLE_SELF_WIND
@@ -346,8 +347,6 @@ default {
                 // Prepare listeners: this allows for lag time by doing this up front
 
                 cdListenerActivate(dialogHandle); // is this redundant?
-                //lmSendConfig("dialogChannel", (string)(dialogChannel));
-
                 cdDialogListen();
 
                 //----------------------------------------
@@ -390,46 +389,87 @@ default {
                 // key functions with a few exceptions; note too, that the
                 // collapsedMenu handles ALL aspects...
 
+                //----------------------------------------
+                // FULL (NORMAL) MENU
+                //
+                // Button list:
+                // * Visible
+                // * Unwind
+                // * Outfits
+                // * Types
+                // * Poses/Unpose
+                // * Carry
+                // * Uncarry
+                // * Strip
+                // * Update
+                // * Detach
+                // * Wind
+                // * Options
+                // * Help
+
+                // if this is Dolly and Dolly is collapsed: show Dolly other menu
                 if (collapsed && isDoll) {
                     lmInternalCommand("collapsedMenu", timeLeft, NULL_KEY);
                     return;
                 }
 
+                // After this point, we can assume that Dolly is not collapsed
+
                 // When the doll is carried the carrier has exclusive control
-                else if (hasCarrier) {
+                if (hasCarrier) {
                     // Doll has carrier - but who clicked her key?
-                    //
+
+                    //--------------------
                     // ...Carrier?
                     if (isCarrier) {
                         msg = "Uncarry frees " + dollName + " when you are done with " + pronounHerDoll + ". ";
                         menu = ["Uncarry"];
-                        if (collapsed) {
-                            msg += "(Doll is collapsed.) ";
-                        }
+                        if (collapsed) msg += "(Doll is collapsed.) ";
                     }
+
+                    //--------------------
                     // ...Controller (NOT Dolly)
                     else if (cdIsController(id) && !isDoll) {
                         msg = dollName + " is being carried by " + carrierName + ". ";
                         menu = ["Uncarry"];
                     }
+
+                    //--------------------
                     // ...Dolly or member of public
                     else {
                         lmInternalCommand("carriedMenu", carrierName, NULL_KEY);
+                        return;
                     }
                 }
 
-                // The Dolly has no carrier... continue...
-
-                // Two types of folks will never get here: 1) a collapsed Dolly who
-                // clicked on her Key, and 2) Dolly or a member of the public who clicked on
-                // a carried Dolly's Key.
+                // We can assume here (if Dolly is being carried) that:
+                // 1. The carrier is looking at the key
+                // 2. A controller is looking at the key
                 //
-                // All the rest pass through this point.
+                // If Dolly is not being carried, then no more assumptions can be made.
 
-                //----------------------------------------
-                // FULL (NORMAL) MENU
+                //--------------------
+                // Options Button
+                if (isDoll) {
+
+                    // Give Dolly only options if not posed
+                    if (keyAnimation == "") menu += [ "Options..." ];
+                }
+
+                else {
+                    // Give controllers access to options
+                    if (isController) menu += "Options...";
+                }
+
+                //--------------------
+                // Help Button
+                menu += [ "Help..." ];
+
+                // Standard Main Menu
                 //
-                if (!collapsed && (!hasCarrier || isCarrier)) {
+                // We know that Dolly is not collapsed...
+                //
+                if (!hasCarrier || isCarrier) {
                     // State: not collapsed; and either: a) toucher is carrier; or b) doll has no carrier...
                     // Put another way, a carrier gets the same menu Dolly would if she has no carrier.
                     //
@@ -439,19 +479,26 @@ default {
                     //   3. Controller
                     //   4. Someone else
 
-                    // Options only available to dolly
+                    // Buttons:
+
+                    //--------------------
+                    // Visible Button
                     if (isDoll) {
                         menu += "Visible";
                     }
-                    else {
+
+                    //--------------------
+                    // Unwind Button
+                    if (!isDoll) {
                         manpage = "communitydoll.htm";
 
                         // Toucher is not Doll.... could be anyone
-                        msg =  dollName + " is a doll and likes to be treated like " +
-                                "a doll. So feel free to use these options. ";
+                        msg =  dollName + " is a doll and likes to be treated like a doll. So feel free to use these options. ";
                         menu += "Unwind";
                     }
 
+                    //--------------------
+                    // Outfits Button
                     if (RLVok == TRUE) {
                         // Can the doll be dressed? Add menu button
                         //
@@ -473,8 +520,10 @@ default {
                         }
                     }
 
-                    // Only present the Types button if Dolly is not posed
+                    //--------------------
+                    // Types Button
                     if (keyAnimation == "") {
+                        // Only present the Types button if Dolly is not posed
 
                         if (transformLockExpire == 0) {
                             // Members of the public are allowed if allowed
@@ -485,8 +534,10 @@ default {
                         }
                     }
 
-                    // if dolly is sitting, dont allow poses
+                    //--------------------
+                    // Poses and Unpose Buttons
                     if (!(llGetAgentInfo(llGetOwner()) & AGENT_SITTING)) { // Agent not sitting
+                        // if dolly is sitting, dont allow poses
                         integer poseCount;
                         poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
 
@@ -498,8 +549,7 @@ default {
                                 // but NOT when posed by someone else.
 
                                 if (isDoll) {
-                                    if (poserID == dollID)
-                                        menu += [ "Poses...", "Unpose" ];
+                                    if (poserID == dollID) menu += [ "Poses...", "Unpose" ];
                                 }
 
                                 // If accessor is NOT Dolly... allow the public access if
@@ -525,11 +575,17 @@ default {
                         }
                     }
 
+                    //--------------------
+                    // Carry Button
                     // Fix for issue #157
+                    //
+                    // Dolly doesn't carry self...
                     if (!isDoll) {
+
+                        // Dolly has no carrier
                         if (!hasCarrier) {
-                            // Allowing Dolly to carry herself is nonsense... others can
-                            // if Dolly allows it, but a Controller can no matter what
+
+                            // Dolly can be carried if allowed, and Controller can at any time
                             if (allowCarry || hardcore || isController) {
                                 msg += "Carry option picks up " + dollName + " and temporarily makes the Dolly exclusively yours. ";
                                 menu += "Carry";
@@ -538,12 +594,18 @@ default {
                     }
 
 #ifdef ADULT_MODE
+                    //--------------------
+                    // Strip Button
                     // Is doll strippable?
                     if (RLVok == TRUE) {
                         if (simRating == "MATURE" || simRating == "ADULT") {
+
+                            // Only show for Slut Dollies
                             if (dollType == "Slut" || hardcore) {
                                 menu += "Strip";
                             }
+
+                            // Otherwise, show if Strip is allowed, and Dress is allowed
                             else if (allowStrip && allowDress) {
                                 if (isController || isCarrier || isDoll) menu += "Strip";
                             }
@@ -555,32 +617,36 @@ default {
                 // At this point, we have no assumptions about
                 // whether Dolly is collapsed, carried, or whatnot.
 
+                //--------------------
+                // Update Button
+                if (isDoll && keyAnimation == "") menu += [ "Update" ];
+
+                //--------------------
+                // Detach Button
+                if (isDoll && detachable && keyAnimation == "") menu += [ "Detach" ];
+
+                //--------------------
+                // Wind Button
                 if (isDoll) {
-                    if (!collapsed) {
-                        if (keyAnimation == "") menu += [ "Options..." ];
-                    }
-                    menu += [ "Help...", "Update" ];
                     if (allowSelfWind) {
+                        if (keyLimit - timeLeftOnKey > 30) {
 #ifdef SINGLE_SELF_WIND
-                        if (lastWinderID != dollID) menu += [ "Wind" ];
+                            if (lastWinderID != dollID) menu += [ "Wind" ];
 #else
-                        menu += [ "Wind" ];
+                            menu += [ "Wind" ];
 #endif
+                        }
+                        else menu += [ "-" ];
                     }
                 }
                 else {
-                    // this includes any Controller that is NOT Dolly
-                    if (isController) {
-                        menu += "Options...";
-
-                        // Do we want Dolly to hae Detach capability... ever?
-                        if (detachable) menu += [ "Detach" ];
-                    }
-                    menu += [ "Wind", "Help..." ];
+                    if (keyLimit - timeLeftOnKey > 30) menu += [ "Wind" ];
+                    else menu += [ "-" ];
                 }
 
-                if (lowScriptMode)
-                    msg += "Key is in power-saving mode. ";
+                //--------------------
+                // END OF BUTTONS
+                if (lowScriptMode) msg += "Key is in power-saving mode. ";
 
 #ifdef DEVELOPER_MODE
                 if (RLVok == UNSET) msg += "Still checking for RLV support some features unavailable. ";
@@ -601,7 +667,7 @@ default {
                     msg += "\n\nCurrently listening on channel " + (string)chatChannel + " with prefix " + chatPrefix;
                 }
 
-                menu = llListSort(menu, 1, 1);
+                //menu = llListSort(menu, 1, 1);
 
                 // This is needed because we want to sort by name;
                 // this section puts the checkmark marker on both
@@ -613,7 +679,7 @@ default {
                 msg = timeLeft + msg;
                 timeLeft = "";
 
-                //debugSay(4,"DEBUG-MENU","Menu being displayed and results on channel " + (string)dialogChannel);
+                debugSay(4,"DEBUG-MENU","Menu being displayed with " + (string)(llGetListLength(menu)) + " buttons.");
                 llDialog(id, msg, dialogSort(menu), dialogChannel);
                 llSetTimerEvent(MENU_TIMEOUT);
             }

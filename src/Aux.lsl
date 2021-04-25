@@ -244,12 +244,17 @@ default {
                         plusList += [ "Get Key" ];
                 }
                 else {
-                    // This is to totally reset Dolly's worn body, using the saved ~normalself and ~nude folders
-                    plusList += [ "Reset Body" ];
+                    if (!collapsed && keyAnimation != "")
+                        // This is to totally reset Dolly's worn body, using the saved ~normalself and ~nude folders
+                        plusList += [ "Reset Body" ];
                 }
 
                 // Remember, a doll cannot be her own controller, unless there is no other
-                if (cdIsController(id)) plusList += "Reset Key";
+                if (isDoll) {
+                    if (!collapsed) plusList += "Reset Key";
+                }
+                else if (cdIsController(id))
+                    plusList += "Reset Key";
 
                 cdDialogListen();
                 llDialog(id, msg, dialogSort(plusList + "Back..."), dialogChannel);
