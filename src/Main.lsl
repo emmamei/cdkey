@@ -411,7 +411,7 @@ default {
             lmSendConfig("carryExpire", (string)carryExpire);
         }
         else {
-            if (carrierID) {
+            if (cdCarried()) {
                 // Dolly is carried and no carry expire in place
                 if (llGetAgentSize(carrierID) == ZERO_VECTOR) {
                     // No carrier present: start carry timeout
@@ -516,7 +516,7 @@ default {
                 if (name == "carrierID") {
                     carrierID = (key)value;
 
-                    if (carrierID) lmSendConfig("carryExpire", (string)(carryExpire = llGetUnixTime() + CARRY_TIMEOUT));
+                    if (cdCarried()) carryExpire = llGetUnixTime() + CARRY_TIMEOUT;
                 }
                 else if (name == "carrierName")               carrierName = value;
                 else if (name == "canAFK")                         canAFK = (integer)value;
@@ -607,7 +607,6 @@ default {
             }
 
             else if (name == "poseExpire")         poseExpire = (integer)value;
-            else if (name == "carryExpire")       carryExpire = (integer)value;
             else if (name == "wearLockExpire") wearLockExpire = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "chatChannel")         ;
