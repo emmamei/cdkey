@@ -36,6 +36,7 @@ integer maxMins;
 integer ncLine;
 integer memReporting;
 integer isDoll;
+string poseName;
 
 integer textboxChannel;
 integer textboxHandle;
@@ -131,6 +132,7 @@ default {
             else if (name == "allowRepeatWind")       allowRepeatWind = (integer)value;
             else if (name == "allowSelfWind")           allowSelfWind = (integer)value;
             else if (name == "dollDisplayName")       dollDisplayName = value;
+            else if (name == "keyAnimation")                 poseName = value;
             else if (name == "doWarnings")                 doWarnings = (integer)value;
             else if (name == "hardcore")                     hardcore = (integer)value;
             else if (name == "poseSilence")               poseSilence = (integer)value;
@@ -239,22 +241,19 @@ default {
                 // a Key which contains a Key which contains a Key which contains a Key...
                 // Like a never-ending matrushka doll.
                 //
-                if (!cdIsDoll(id)) {
-                    if ((llGetInventoryType(OBJECT_KEY) == INVENTORY_OBJECT))
-                        plusList += [ "Get Key" ];
+
+                if (cdIsDoll(id)) {
+                    if (!collapsed) if (poseName == "")
+                        // This is to totally reset Dolly's worn body,
+                        // using the ~normalself, ~normaloutfit,  and ~nude folders
+                        plusList += [ "Reset Body", "Reset Key" ];
                 }
                 else {
-                    if (!collapsed && keyAnimation != "")
-                        // This is to totally reset Dolly's worn body, using the saved ~normalself and ~nude folders
-                        plusList += [ "Reset Body" ];
-                }
+                    if ((llGetInventoryType(OBJECT_KEY) == INVENTORY_OBJECT))
+                        plusList += [ "Get Key" ];
 
-                // Remember, a doll cannot be her own controller, unless there is no other
-                if (isDoll) {
-                    if (!collapsed) plusList += "Reset Key";
+                    if (cdIsController(id)) plusList += "Reset Key";
                 }
-                else if (cdIsController(id))
-                    plusList += "Reset Key";
 
                 cdDialogListen();
                 llDialog(id, msg, dialogSort(plusList + "Back..."), dialogChannel);
