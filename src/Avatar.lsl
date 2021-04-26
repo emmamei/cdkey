@@ -139,6 +139,7 @@ posePageN(string choice, key id) {
 
     i = poseCount; // loopIndex
     while (i--) {
+        // Build list of poses
         if (buildList) {
             poseEntry = llGetInventoryName(INVENTORY_ANIMATION, i);
             if (poseEntry != ANIMATION_COLLAPSED) {
@@ -154,10 +155,8 @@ posePageN(string choice, key id) {
         //
         if (poseEntry != ANIMATION_COLLAPSED && poseEntry != keyAnimation && poseEntry != "") {
 
-            if (isDoll) {
-                debugSay(6,"DEBUG-AVATAR","Pose #" + (string)(i+1) + " added: " + poseEntry);
-                tmpList += poseEntry;
-            }
+            debugSay(6,"DEBUG-AVATAR","Pose #" + (string)(i+1) + " added: " + poseEntry);
+            tmpList += poseEntry;
         }
     }
 
