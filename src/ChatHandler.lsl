@@ -699,15 +699,6 @@ default {
                         lmMemReport(1.0,id);
                         return;
                     }
-                    else if (choice == "release" || choice == "unpose") {
-                        if (isDoll && hardcore) return;
-                        string p = pronounHerDoll;
-                        string s = pronounSheDoll;
-
-                        if ((poserID != NULL_KEY) && (poserID != dollID)) llOwnerSay("Dolly tries to wrest control of " + p + " body from the pose but " + s + " is no longer in control of " + p + " form.");
-                        else lmMenuReply("Unpose", dollName, dollID);
-                        return;
-                    }
 #ifdef ADULT_MODE
                     else if (choice == "hardcore") {
 
@@ -895,6 +886,27 @@ default {
                             else cdSayTo("\t\t" + poseCurrent, id);
                         }
                     }
+                    return;
+                }
+                else if (choice == "release" || choice == "unpose") {
+                    if (isDoll && hardcore) return;
+
+                    if (poseName == "")
+                        cdSayTo("Dolly is not posed.",id);
+
+                    else if (isDoll) {
+                        if (poserID != dollID) {
+                            llOwnerSay("Dolly tries to wrest control of " + pronounHerDoll +
+                                " body from the pose but " + pronounSheDoll +
+                                " is no longer in control of " + pronounHerDoll + " form.");
+                        }
+                    }
+
+                    else {
+                        cdSayTo("Dolly feels her pose release, and stretches her limbs, so long frozen.",id);
+                        lmMenuReply("Unpose", dollName, dollID);
+                    }
+
                     return;
                 }
                 else if (choice == "carry") {
