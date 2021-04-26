@@ -283,7 +283,7 @@ default {
             else if (choice == "Join Group")
                 cdSayTo("Here is your link to the Community Dolls group profile: " + WEB_GROUP, id);
             else if (choice == "Update") {
-                llSay(PUBLIC_CHANNEL,"Update starting....");
+                //llSay(PUBLIC_CHANNEL,"Update starting....");
                 lmSendConfig("update","1");
             }
 

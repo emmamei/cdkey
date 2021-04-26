@@ -607,7 +607,7 @@ default {
                     }
                     else if (choice == "update") {
 
-                        llSay(PUBLIC_CHANNEL,"Update starting...");
+                        //llSay(PUBLIC_CHANNEL,"Update starting...");
                         lmSendConfig("update","1");
                         return;
                     }

@@ -182,7 +182,7 @@ default {
 
         lmSetHovertext("Awaiting update client...");
         llSay(PUBLIC_CHANNEL,"Ready to begin update...");
-        llSay(PUBLIC_CHANNEL,"*** KEY WILL RESET AFTER UPDATE ***");
+        llOwnerSay("*** KEY WILL RESET AFTER UPDATE ***");
 
         // Create a private listener, and open it
         comChannel = (((integer)("0x" + llGetSubString((string)touchingID, -8, -1)) & 0x3FFFFFFF) ^ 0xBFFFFFFF ) + UNIQ;    // UNIQ is the private channel for this owner

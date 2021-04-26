@@ -413,7 +413,9 @@ default {
                     return;
                 }
 
-                // After this point, we can assume that Dolly is not collapsed
+                // After this point, we can assume one of two things:
+                // 1. Menu is for Dolly, and Dolly is not collapsed
+                // 2. Menu is for others
 
                 // When the doll is carried the carrier has exclusive control
                 if (hasCarrier) {
@@ -467,9 +469,7 @@ default {
 
                 // Standard Main Menu
                 //
-                // We know that Dolly is not collapsed...
-                //
-                if (!hasCarrier || isCarrier) {
+                if (!collapsed && (!hasCarrier || isCarrier)) {
                     // State: not collapsed; and either: a) toucher is carrier; or b) doll has no carrier...
                     // Put another way, a carrier gets the same menu Dolly would if she has no carrier.
                     //
@@ -619,15 +619,16 @@ default {
 
                 //--------------------
                 // Update Button
-                if (isDoll) if (keyAnimation == "") menu += [ "Update" ];
-
                 //--------------------
                 // Detach Button
-                if (isDoll) if (detachable) if (keyAnimation == "") menu += [ "Detach" ];
-
                 //--------------------
                 // Wind Button
                 if (isDoll) {
+                    if (keyAnimation == "") {
+                        menu += [ "Update" ];
+                        if (detachable) menu += [ "Detach" ];
+                    }
+
                     if (allowSelfWind) {
                         if (keyLimit - timeLeftOnKey > 30) {
 #ifdef SINGLE_SELF_WIND
