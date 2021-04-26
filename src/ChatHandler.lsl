@@ -883,36 +883,16 @@ default {
                 }
                 else if (choice == "listposes") {
                     integer n = llGetInventoryNumber(INVENTORY_ANIMATION);
-
-                    string thisPose; string thisPrefix;
+                    string poseCurrent;
 
                     while(n) {
-                        thisPose = llGetInventoryName(INVENTORY_ANIMATION, --n);
-                        thisPrefix = cdGetFirstChar(thisPose);
-
-                        if ((thisPrefix != "!") && (thisPrefix != ".")) thisPrefix = "";
+                        poseCurrent = llGetInventoryName(INVENTORY_ANIMATION, --n);
 
                         // Collapsed animation is special: skip it
-                        if (thisPose != ANIMATION_COLLAPSED) {
+                        if (poseCurrent != ANIMATION_COLLAPSED) {
 
-                            // Doll sees all animations regardless of prefix
-                            // Controller sees animations with no prefix and a "!" prefix
-                            // General public sees only those animations with no prefix
-                            //
-                            // -- or --
-                            //
-                            // "!" prefix is seen by Doll and Controller
-                            // "." prefix is seen by Doll
-                            // Other animations with no prefix are seen by all
-                            //
-                            if (isDoll ||
-                                (isController && (thisPrefix == "!")) ||
-                                (thisPrefix == "")) {
-
-                                if (poseName == thisPose) cdSayTo("\t*\t" + thisPose, id);
-                                else cdSayTo("\t\t" + thisPose, id);
-                            }
-                            else if (poseName == thisPose) cdSayTo("\t*\t{private}", id);
+                            if (poseName == poseCurrent) cdSayTo("\t*\t" + poseCurrent, id);
+                            else cdSayTo("\t\t" + poseCurrent, id);
                         }
                     }
                     return;

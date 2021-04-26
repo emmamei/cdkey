@@ -126,7 +126,6 @@ followCarrier(key id) {
 }
 
 posePageN(string choice, key id) {
-    string posePrefix;
     integer poseIndex;
     list tmpList;
     integer isDoll = cdIsDoll(id);
@@ -152,18 +151,10 @@ posePageN(string choice, key id) {
         // Is the pose a pose we can show in the menu?
         //
         // * Skip the current animation and the collapse animation
-        // * Show all animations to Dolly
-        // * Show animations like !foo to Controller
-        // * Show animations like .foo to Dolly only
-        // * Show animations like foo to all
         //
         if (poseEntry != ANIMATION_COLLAPSED && poseEntry != keyAnimation && poseEntry != "") {
-            posePrefix = cdGetFirstChar(poseEntry);
 
-            if (isDoll ||
-               (isController && posePrefix == "!") ||
-               (posePrefix != "!" && posePrefix != ".")) {
-
+            if (isDoll) {
                 debugSay(6,"DEBUG-AVATAR","Pose #" + (string)(i+1) + " added: " + poseEntry);
                 tmpList += poseEntry;
             }
