@@ -268,7 +268,7 @@ default {
                 // this is a blanket clear, but it doesn't mean to us what
                 // it means normally: we have a base RLV set
 
-                llSay(DEBUG_CHANNEL,"RLV clear command issued from " + script);
+                debugSay(2,"DEBUG-STATUSRLV","RLV clear command issued from " + script);
                 //llOwnerSay("@clear"); // clear
 #ifdef LOCKON
                 llOwnerSay("@detach=n"); // detach
