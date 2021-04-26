@@ -402,23 +402,29 @@ default {
         // CARRY EXPIRATION
 
         if (carryExpire) {
-            // carry has an expiration in play
+            debugSay(6,"DEBUG-MAIN","checking carrier presence");
+
+            // check to see if carrier seen in the last few minutes
             if (carryExpire <= timerMark) {
-                // carry has timed out: drop dolly
+
+                // carrier vanished: drop dolly
+                cdSayTo("You have not been seen for " + (string)(CARRY_TIMEOUT/60) + " minutes; dropping Dolly.",carrierID);
+                llOwnerSay("Your carrier has not been seen for " + (string)(CARRY_TIMEOUT/60) + " minutes.");
+
                 lmMenuReply("Uncarry", carrierName, carrierID);
                 carryExpire = 0;
             }
-            lmSendConfig("carryExpire", (string)carryExpire);
-        }
-        else {
-            if (cdCarried()) {
-                // Dolly is carried and no carry expire in place
-                if (llGetAgentSize(carrierID) == ZERO_VECTOR) {
-                    // No carrier present: start carry timeout
+            else {
+                // carry has not expired: check for carrier
+                if (llGetAgentSize(carrierID) != ZERO_VECTOR) {
+
+                    debugSay(6,"DEBUG-MAIN","carrier seen");
+
+                    // No carrier present: bump carry timeout
                     carryExpire = llGetUnixTime() + CARRY_TIMEOUT;
-                    lmSendConfig("carryExpire", (string)carryExpire);
                 }
             }
+            lmSendConfig("carryExpire", (string)carryExpire);
         }
 
         //----------------------------------------
