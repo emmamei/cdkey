@@ -52,7 +52,7 @@ float GlobalDefines_version=1.0;
 // Collapse animation - and documentation
 #define ANIMATION_COLLAPSED "collapse"
 // Carry distance for the new carry code
-#define CARRY_RANGE 1.5
+#define CARRY_RANGE 2.5
 // llTakeControls() mask all available controls
 #define CONTROL_ALL 0x5000033f
 // llTakeControls() mask for the basic movement keys (4 arrow keys)
