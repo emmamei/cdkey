@@ -98,6 +98,7 @@ default {
                 else if (name == "canSit")                     canSit = (integer)value;
                 else if (name == "canStand")                 canStand = (integer)value;
                 else if (name == "canSelfTP")               canSelfTP = (integer)value;
+                else if (name == "carrierID")               carrierID = (key)value;
                 else if (name == "configured")             configured = (integer)value;
                 else if (name == "collapseTime")         collapseTime = (integer)value;
                 else if (name == "controllers") {
@@ -658,7 +659,20 @@ default {
                         else if (RLVok == TRUE) s += "RLV is active.\nRLV version: " + rlvAPIversion;
                         else s += "RLV is not active.\n";
 
-                        if (lastWinderID) s += "\nLast winder was " + cdProfileURL(lastWinderID);
+                        if (lastWinderID) {
+                            s += "\nLast winder was " + cdProfileURL(lastWinderID);
+#ifdef SELF_WIND
+                            s += " (someone else will have to wind next)";
+#endif
+                        }
+                        if (allowCarry) {
+                            if (carrierID) {
+                                s += "\nDolly is currently being carried by " + cdProfileURL(carrierID);
+                            }
+                            else {
+                                s += "\nDolly is not currently being carried.";
+                            }
+                        }
                         s += "\n";
 
                         s += "\nChat channel = " + (string)chatChannel;
