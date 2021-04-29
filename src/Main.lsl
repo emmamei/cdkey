@@ -412,7 +412,7 @@ default {
                 llOwnerSay("Your carrier has not been seen for " + (string)(CARRY_TIMEOUT/60) + " minutes.");
 
                 lmMenuReply("Uncarry", carrierName, carrierID);
-                carryExpire = 0;
+                //carryExpire = 0;
             }
             else {
                 // carry has not expired: check for carrier
@@ -422,9 +422,9 @@ default {
 
                     // No carrier present: bump carry timeout
                     carryExpire = llGetUnixTime() + CARRY_TIMEOUT;
+                    lmSendConfig("carryExpire", (string)carryExpire);
                 }
             }
-            lmSendConfig("carryExpire", (string)carryExpire);
         }
 
         //----------------------------------------
@@ -523,6 +523,8 @@ default {
                     carrierID = (key)value;
 
                     if (cdCarried()) carryExpire = llGetUnixTime() + CARRY_TIMEOUT;
+                    else carryExpire = 0;
+                    //lmSendConfig("carryExpire", (string)carryExpire);
                 }
                 else if (name == "carrierName")               carrierName = value;
                 else if (name == "canAFK")                         canAFK = (integer)value;
