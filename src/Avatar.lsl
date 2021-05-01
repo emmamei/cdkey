@@ -26,6 +26,7 @@
 #define ADD_FRAMES 20
 #define cdMinRefresh() ((1.0/llGetRegionFPS()) * MIN_FRAMES)
 #define cdAddRefresh() ((1.0/llGetRegionFPS()) * ADD_FRAMES)
+#define cdMenuInject(a,b,c) lmMenuReply((a),b,c);
 
 key rlvTPrequest;
 #ifdef LOCKON
@@ -325,6 +326,7 @@ clearAnimations() {
     // Clear current saved animation if any
     keyAnimation = "";
     if (keyAnimationID != NULL_KEY) lmSendConfig("keyAnimationID", (string)(keyAnimationID = NULL_KEY));
+    if         (poseID != NULL_KEY) lmSendConfig("poseID",         (string)(        poseID = NULL_KEY));
 
     // Stop all currently active animations
     //
