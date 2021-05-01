@@ -113,7 +113,7 @@ default {
         owner = llGetOwner();
         updating = 0;
 #ifdef DEVELOPER_MODE
-        scriptCount = llGetInventoryNumber(INVENTORY_SCRIPT);
+        scriptCount = llGetInventoryNumber(INVENTORY_SCRIPT) - 1; // Two scripts are uncounted
         scriptIndex = scriptCount; // Update should add one new file (New.lsl)
 #endif
     }
