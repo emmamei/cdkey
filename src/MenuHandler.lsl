@@ -680,7 +680,8 @@ default {
                 msg = timeLeft + msg;
                 timeLeft = "";
 
-                debugSay(4,"DEBUG-MENU","Menu being displayed with " + (string)(llGetListLength(menu)) + " buttons.");
+                if (llGetListLength(menu) > 12)
+                    llSay(DEBUG_CHANNEL,"Menu appears to have overfilled with buttons (" + (string)(llGetListLength(menu)));
                 llDialog(id, msg, dialogSort(menu), dialogChannel);
                 llSetTimerEvent(MENU_TIMEOUT);
             }
