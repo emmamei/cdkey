@@ -39,12 +39,8 @@ key lastAttachedID;
 // is a good way to think of it
 float afkSlowWalkSpeed = 30;
 
-// Note that this is just a starting point; animRefreshRate is
-// adaptive
-float animRefreshRate = 8.0;
-
-vector carrierPos;
-vector newCarrierPos;
+// Note that this is just a starting point; timerRate is adaptive
+float timerRate = 30.0;
 
 string msg;
 string name;
@@ -54,11 +50,15 @@ string value;
 string myPath;
 #endif
 
-integer hasCarrier;
 integer i;
 integer posePage;
 integer timerMark;
 integer lastTimerMark;
+integer carryExpire;
+integer timeMark;
+integer reachedTarget = FALSE;
+integer hasCarrier;
+integer nearCarrier;
 
 // This acts as a cache of
 // current poses in inventory
@@ -73,57 +73,51 @@ key grantorID;
 integer permMask;
 
 string poseName;
-vector pointTo;
 integer clearAnim = 1;
 integer locked;
 integer targetHandle;
 integer newAttach = 1;
-integer atTarget;
+
+//========================================
+// FUNCTIONS [CARRY]
+//========================================
+//
+// Because of the importance of these, and the possibility of different methods
+// of performing these functions, these have been separated out.
+//
+// Functions:
+//     * startFollow(id)
+//     * keepFollow(id)
+//     * stopFollow(id)
+//     * drunkardsWalk()
+//     * dropCarrier(id)
+//
+// Follow is begun either by the setting of the Carrier ID or by the Dolly
+// being unposed. The latter is because Dolly could be carried and posed;
+// when put down, Dolly follows. Before that, Dolly is static and in pose.
+
+#define TURN_TOWARDS
+
+#include "include/Follow.inc" // Uses timer + llMoveToTarget()
+//#include "include/Follow2.inc" // Uses llTarget and llMoveToTarget
 
 //========================================
 // FUNCTIONS
 //========================================
 
-followCarrier(key id) {
+float adjustTimer() {
+    float x;
 
-    if (!atTarget && hasCarrier && keyAnimation== "") {
-        // Dolly is being carried and is movable
-
-        // Get updated position and set target
-        newCarrierPos = llList2Vector(llGetObjectDetails(id, [OBJECT_POS]), 0);
-
-        if (newCarrierPos) {
-            // Carrier is present
-            targetHandle = llTarget(carrierPos, CARRY_RANGE);
-
-            carrierPos = newCarrierPos;
-
-            // Move to and turn toward target
-            pointTo = carrierPos - llGetPos();
-
-            lmRunRLV("setrot:" + (string)(llAtan2(pointTo.x, pointTo.y)) + "=force");
-            llMoveToTarget(carrierPos, 0.7);
-        }
-        else {
-            // Carrier has disappeared: drop
-            hasCarrier = 0;
-            newCarrierPos = ZERO_VECTOR;
-            carrierPos = ZERO_VECTOR;
-            // Full stop: avatar comes to stop
-            llTargetRemove(targetHandle);
-            llStopMoveToTarget();
-
-            lmSendConfig("carrierID", (string)(carrierID = NULL_KEY));
-            lmSendConfig("carrierName", (carrierName = ""));
-        }
+    if (hasCarrier) {
+        if (nearCarrier) x = 2.0;
+        else x = 0.5;
     }
     else {
-        // Dolly either has no carrier, or is frozen in place
-
-        // Full stop: avatar comes to stop
-        llTargetRemove(targetHandle);
-        llStopMoveToTarget();
+        if (lowScriptMode) x = 60.0;
+        else x = 30.0;
     }
+
+    return x;
 }
 
 posePageN(string choice, key id) {
@@ -342,7 +336,8 @@ clearAnimations() {
 
     // Reset current animations
     llStartAnimation("Stand");
-    animRefreshRate = 0.0;
+    if (hasCarrier) keepFollow(carrierID);
+    llSetTimerEvent(timerRate = adjustTimer());
     clearAnim = 0;
     cdLockMeisterCmd("booton");
 }
@@ -364,15 +359,19 @@ oneAnimation() {
     animKey = animStart(keyAnimation);
 
     if (animKey != NULL_KEY) {
+        // We have an actual pose...
         lmSendConfig("keyAnimationID", (string)(keyAnimationID = animKey));
+        lmSendConfig("poseID", (string)(poseID = animKey));
 
-        // This adjusts the refresh rate for lowscript mode
-        if (lowScriptMode) animRefreshRate = 60.0;
-        else animRefreshRate = 30.0;
+        // Stop following carrier if we have one
+        if (hasCarrier) {
+            // Stop following carrier, and freeze
+            stopFollow(carrierID);
+        }
+
+        // This adjusts the refresh rate
+        llSetTimerEvent(timerRate = adjustTimer());
     }
-    else animRefreshRate = 0.0;
-
-    debugSay(4, "DEBUG-ANIM", "Animation Refresh Rate: " + formatFloat(animRefreshRate,2));
 }
 
 ifPermissions() {
@@ -427,7 +426,7 @@ ifPermissions() {
         if (clearAnim) clearAnimations();
         else if (cdAnimated()) oneAnimation(); 
 
-        llSetTimerEvent(animRefreshRate);
+        llSetTimerEvent(timerRate = adjustTimer());
     }
 
     //----------------------------------------
@@ -468,7 +467,7 @@ ifPermissions() {
     //----------------------------------------
     // Moving to Target
 
-    followCarrier(carrierID);
+    //if (hasCarrier) if (keyAnimation == "") startFollow(carrierID);
 }
 
 //========================================
@@ -510,7 +509,6 @@ default {
         if (change & (CHANGED_REGION | CHANGED_TELEPORT)) {
             llStopMoveToTarget();
             llTargetRemove(targetHandle);
-
 
 #ifdef DEVELOPER_MODE
             msg = "Region ";
@@ -562,9 +560,8 @@ default {
 
         locked = 0;
 
-        //llSetStatus(STATUS_PHYSICS,TRUE);
-        llStopMoveToTarget();
-        llTargetRemove(targetHandle);
+        debugSay(2,"DEBUG-FOLLOW","dropCarrier(): from attach");
+        dropCarrier(carrierID);
 
         if (id) {
             ifPermissions();
@@ -620,11 +617,7 @@ default {
             value = llList2String(split, 1);
             split = llDeleteSubList(split, 0, 0);
 
-            if (name == "carrierID") {
-                carrierID = (key)value;
-                hasCarrier = cdCarried();
-            }
-            else if (name == "collapsed") {
+                 if (name == "collapsed") {
                     collapsed = (integer)value;
 
                     if (collapsed) keyAnimation = ANIMATION_COLLAPSED;
@@ -635,6 +628,7 @@ default {
                     ifPermissions();
             }
             else if (name == "poseSilence")         poseSilence = (integer)value;
+            else if (name == "carryExpire")         carryExpire = (integer)value;
             else if (name == "hardcore")               hardcore = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")     timeReporting = (integer)value;
@@ -678,7 +672,7 @@ default {
                 return;
             }
 
-            debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 300)");
+            //debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 300)");
             ifPermissions();
         }
         else if (code == INTERNAL_CMD) {
@@ -720,28 +714,15 @@ default {
             }
 #endif
             else if (choice == "Carry") {
-                lmSendConfig("carrierID", (string)(carrierID = id));
-                lmSendConfig("carrierName", (carrierName = name));
-
+                setCarrier(id);
                 llSay(PUBLIC_CHANNEL, "Dolly " + dollName + " has been picked up by " + carrierName);
+                startFollow(carrierID);
             }
             else if (choice == "Uncarry") {
-                if (cdIsCarrier(id)) {
-                    llSay(PUBLIC_CHANNEL, "Dolly " + dollName + " has been placed down by " + carrierName);
-                }
-                else {
-                    string name = llKey2Name(id);
+                llSay(PUBLIC_CHANNEL, "Dolly " + dollName + " has been placed down by " + carrierName);
 
-                    if (name) {
-                        llSay(PUBLIC_CHANNEL, "Dolly " + dollName + " has been wrestled away from " + carrierName + " by " + llKey2Name(id));
-                    }
-                    else {
-                        llSay(PUBLIC_CHANNEL, "Dolly " + dollName + " has been wrestled away from " + carrierName);
-                    }
-                }
-
-                lmSendConfig("carrierID", (string)(carrierID = NULL_KEY));
-                lmSendConfig("carrierName", (carrierName = ""));
+                debugSay(2,"DEBUG-FOLLOW","dropCarrier(): from Uncarry button");
+                dropCarrier(carrierID);
             }
 
             // Unpose: remove animation and poser
@@ -755,6 +736,10 @@ default {
                 clearAnimations();
                 if (poseSilence || hardcore) lmRunRLV("sendchat=y");
                 ifPermissions();
+
+                // if we have carrier, start following them again
+                debugSay(2,"DEBUG-FOLLOW","startFollow(): from Unpose button");
+                if (hasCarrier) startFollow(carrierID);
             }
 
             else if (choice == "Poses...") {
@@ -831,13 +816,13 @@ default {
 
     timer() {
 
+        if (hasCarrier) keepFollow(carrierID);
+
         // The big work is done in clearAnimations() and in
         // oneAnimation
 
         if (clearAnim) clearAnimations();
         else if (cdAnimated()) oneAnimation(); 
-
-        llSetTimerEvent(animRefreshRate);
 
 #ifdef DEVELOPER_MODE
         if (timeReporting) {
@@ -850,28 +835,6 @@ default {
             lastTimerMark = timerMark;
         }
 #endif
-    }
-
-    //----------------------------------------
-    // AT TARGET
-    //----------------------------------------
-    at_target(integer num, vector target, vector me) {
-
-        atTarget = TRUE;
-        followCarrier(carrierID);
-
-        // Full stop: avatar comes to stop
-        llTargetRemove(targetHandle);
-        llStopMoveToTarget();
-    }
-
-    //----------------------------------------
-    // NOT AT TARGET
-    //----------------------------------------
-    not_at_target() {
-
-        atTarget = FALSE;
-        followCarrier(carrierID);
     }
 
 #ifdef SLOW_WALK
