@@ -166,6 +166,7 @@ docollapse() {
     lmSendConfig("collapseTime", (string)(collapseTime = llGetUnixTime()));
     lmSendConfig("collapsed", (string)(collapsed = TRUE));
     lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0));
+    lmSendConfig("keyAnimation", (keyAnimation = ANIMATION_COLLAPSED));
 
     if (RLVok == TRUE && defaultCollapseRLVcmd != "") {
         lmRestrictRLV(defaultCollapseRLVcmd);
@@ -186,6 +187,7 @@ uncollapse() {
     lmSendConfig("collapseTime", (string)(collapseTime = 0));
     lmSendConfig("collapsed", (string)(collapsed = FALSE));
     lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
+    lmSendConfig("keyAnimation", (keyAnimation = ""));
 
     lmInternalCommand("setHovertext", "", keyID);
 
@@ -195,32 +197,6 @@ uncollapse() {
 
     setWindRate();
 }
-
-#ifdef NOT_USED
-// This function is confusing: it was changed from a function to collapse dolly,
-// to one that handled multiple collapse states, including not collapsed.
-//
-// This function will be phased out..
-//
-collapse(integer newCollapseState) {
-    // Dolly is in a new collapse state: collapsed, or not
-
-    // The following code makes "uncollapse()" and "collapse(0)" equivalent...
-    // Both uncollapse() and collapse(0) are used; the latter is most useful
-    // when the state is unknown (though could be zero); the former is useful
-    // when collapse(NO_TIME) or collapse(0) is given directly.
-
-    if (newCollapseState == NOT_COLLAPSED) {
-        uncollapse();
-        return;
-    }
-
-    // If we are already collapsed, then there is nothing to do here
-    if (collapsed == NOT_COLLAPSED) {
-        docollapse();
-    }
-}
-#endif
 
 //========================================
 // STATES

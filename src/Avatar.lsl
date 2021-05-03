@@ -620,10 +620,6 @@ default {
                  if (name == "collapsed") {
                     collapsed = (integer)value;
 
-                    if (collapsed) keyAnimation = ANIMATION_COLLAPSED;
-                    else if (cdCollapsedAnim()) keyAnimation = "";
-                    lmSendConfig("keyAnimation", keyAnimation);
-
                     debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 300/collapsed)");
                     ifPermissions();
             }
