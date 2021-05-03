@@ -9,7 +9,6 @@
 #include "include/GlobalDefines.lsl"
 
 #define NOT_IN_REGION ZERO_VECTOR
-#define cdLockMeisterCmd(a) llWhisper(LOCKMEISTER_CHANNEL,(string)dollID+a)
 #define MAX_RLVCHECK_TRIES 5
 #define RLV_TIMEOUT 30.0
 #define UNSET -1

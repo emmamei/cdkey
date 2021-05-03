@@ -10,6 +10,9 @@
 #define cdListMin(a) llListStatistics(LIST_STAT_MIN,a)
 #define cdTimeSet(a) (a!=0)
 #define cdResetKey() llResetOtherScript("Start")
+#define cdLockMeisterCmd(a) llWhisper(LOCKMEISTER_CHANNEL,(string)dollID+a)
+#define cdAOoff() llWhisper(LOCKMEISTER_CHANNEL,(string)dollID+"bootoff")
+#define cdAOon()  llWhisper(LOCKMEISTER_CHANNEL,(string)dollID+"booton")
 #define UNSET -1
 
 // Note that some doll types are special....
@@ -179,6 +182,7 @@ docollapse() {
     setWindRate();
 
     lmInternalCommand("setHovertext", "", keyID);
+    cdAOoff();
 }
 
 uncollapse() {
@@ -196,6 +200,7 @@ uncollapse() {
     }
 
     setWindRate();
+    cdAOon();
 }
 
 //========================================
