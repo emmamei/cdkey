@@ -319,8 +319,8 @@ clearAnimations() {
 
     // Clear current saved animation if any
     keyAnimation = "";
-    if (keyAnimationID != NULL_KEY) lmSendConfig("keyAnimationID", (string)(keyAnimationID = NULL_KEY));
-    if         (poseID != NULL_KEY) lmSendConfig("poseID",         (string)(        poseID = NULL_KEY));
+    keyAnimationID = NULL_KEY;
+    poseID = NULL_KEY;
 
     // Stop all currently active animations
     //
@@ -360,8 +360,8 @@ oneAnimation() {
 
     if (animKey != NULL_KEY) {
         // We have an actual pose...
-        lmSendConfig("keyAnimationID", (string)(keyAnimationID = animKey));
-        lmSendConfig("poseID", (string)(poseID = animKey));
+        keyAnimationID = animKey;
+        poseID = animKey;
 
         // Stop following carrier if we have one
         if (hasCarrier) {
@@ -630,6 +630,7 @@ default {
             else if (name == "timeReporting")     timeReporting = (integer)value;
 #endif
             else if (name == "keyAnimation") {
+                // This is where animations are managed... including collapse.
                 string oldanim = keyAnimation;
                 keyAnimation = value;
 
@@ -638,7 +639,7 @@ default {
                     if ((oldanim != "") && (keyAnimation != oldanim)) {    // Issue #139 Moving directly from one animation to another make certain keyAnimationID does not holdover to the new animation.
                         keyAnimationID = NULL_KEY;
                     }
-                    lmSendConfig("keyAnimationID", (string)(keyAnimationID = animStart(keyAnimation)));
+                    keyAnimationID = animStart(keyAnimation);
                 }
 
                 debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 300/keyAnimation)");
@@ -663,7 +664,6 @@ default {
                     dialogChannel = (integer)value;
                     poseChannel = dialogChannel - POSE_CHANNEL_OFFSET;
                 }
-                else if (name == "keyAnimationID")       keyAnimationID = (key)value;
 
                 return;
             }
