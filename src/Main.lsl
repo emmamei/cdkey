@@ -162,6 +162,9 @@ float setWindRate() {
 }
 
 docollapse() {
+    list oldAnimList;
+    integer i;
+
     // Note that this command zaps the amount of time remaining:
     // if dolly is collapsed, she is by definition out of time...
     //
@@ -169,11 +172,20 @@ docollapse() {
     lmSendConfig("collapseTime", (string)(collapseTime = llGetUnixTime()));
     lmSendConfig("collapsed", (string)(collapsed = TRUE));
     lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0));
-    lmSendConfig("keyAnimation", (keyAnimation = ANIMATION_COLLAPSED));
 
     if (RLVok == TRUE && defaultCollapseRLVcmd != "") {
         lmRestrictRLV(defaultCollapseRLVcmd);
     }
+
+    //lmSendConfig("keyAnimation", (keyAnimation = ANIMATION_COLLAPSED));
+    oldAnimList = llGetAnimationList(dollID);
+    i = llGetListLength(oldAnimList);
+
+    // Stop all animations
+    while (i--)
+        llStopAnimation(llList2Key(oldAnimList, i));
+
+    llStartAnimation(ANIMATION_COLLAPSED);
 
     // when dolly collapses, anyone can rescue
     lmSendConfig("lastWinderID", (string)(lastWinderID = NULL_KEY));
@@ -186,6 +198,9 @@ docollapse() {
 }
 
 uncollapse() {
+    list oldAnimList;
+    integer i;
+
     // Revive dolly back from being collapsed
 
     lmSendConfig("collapseTime", (string)(collapseTime = 0));
@@ -199,8 +214,18 @@ uncollapse() {
         lmRunRLVcmd("clearRLVcmd","");
     }
 
+    //lmSendConfig("keyAnimation", (keyAnimation = ANIMATION_COLLAPSED));
+    oldAnimList = llGetAnimationList(dollID);
+    i = llGetListLength(oldAnimList);
+
+    // Stop all animations
+    while (i--)
+        llStopAnimation(llList2Key(oldAnimList, i));
+
     setWindRate();
     cdAOon();
+    llStartAnimation("Stand");
+
 }
 
 //========================================
