@@ -440,25 +440,12 @@ ifPermissions() {
             // accept their controls, but no need to pass on: ignore all input.
             llTakeControls(ALL_CONTROLS, TRUE, FALSE);
 
-#ifdef SLOW_WALK
-        else if (afk) {
-            // Dolly is AFK
-
-            // To slow movement during AFK, we do not want to lock the doll's controls completely; we
-            // want to instead respond to the input, so we need ACCEPT=TRUE, PASS_ON=TRUE
-            //debugSay(2,"DEBUG-AVATAR","Controls taken for AFK Dolly");
-            llTakeControls(ALL_CONTROLS, TRUE, TRUE);
-        }
-#endif
         else {
             // Dolly is not AFK nor collapsed nor posed
 
             // We do not want to release the controls if the land is noScript; doing so
             // would effectively shut down the key until one entered Script-enabled
             // land again
-#ifdef SLOW_WALK
-            llSetForce(<0, 0, 0>, TRUE);
-#endif
             llTakeControls(ALL_CONTROLS, FALSE, TRUE);
         }
     }
@@ -831,64 +818,6 @@ default {
         }
 #endif
     }
-
-#ifdef SLOW_WALK
-    //----------------------------------------
-    // CONTROL
-    //----------------------------------------
-
-    // Control event allows us to respond to control inputs made by the
-    // avatar which has granted the script PERMISSION_TAKE_CONTROLS.
-    //
-    // In our case it is used here with physics calls to slow movement for
-    // a doll when in AFK mode.  This will work regardless of whether the
-    // doll is in RLV or not though RLV is a bonus as it allows us to prevent
-    // running.
-    //
-    // In any case, the slowdown will affect running as much as walking,
-    // if running is allowed.
-    //
-    // If there is a way to slow down flying, we'd have to know these
-    // things: 1) is the agent moving? 2) what direction is the agent moving
-    // in? 3) is the agent falling? There doesn't seem to be any way to
-    // get all of that. The reason for the last is that a free fall should
-    // not be slowed down except by Dolly flying - it is Dolly's exertions
-    // that are slowed, not gravity.
-
-    control(key id, integer level, integer edge) {
-
-        // Event params are key avatar id, integer level representing keys
-        // currently held and integer edge representing keys which have
-        // been pressed or released in this period (Since last control event).
-
-        //debugSay(2,"DEBUG-AVATAR","Control hit for AFK Dolly");
-        if (id == dollID) {
-
-            // If a key was just pressed, stop: we could be going in a different
-            // direction.   If a key was released, then no going anywhere: full stop.
-            // This relates to the force against Dolly - NOT Dolly herself.
-            if (edge & (CONTROL_FWD | CONTROL_BACK | CONTROL_RIGHT | CONTROL_LEFT | CONTROL_UP | CONTROL_DOWN))
-                llSetForce(<0, 0, 0>, TRUE);
-
-            if (afk) {
-                if (poseAnimation == ANIMATION_NONE) {
-                    if (llGetAgentInfo(dollID) & (AGENT_WALKING | AGENT_ALWAYS_RUN | AGENT_FLYING)) {
-                        // This will run the appropriate llSetForce command repeatedly as long as
-                        // the key is held down. This may or may not be desired, but it should not
-                        // lead to erroneous operation.
-
-                             if (level & CONTROL_FWD)   llSetForce(<-1, 0, 0> * afkSlowWalkSpeed, TRUE);
-                        else if (level & CONTROL_BACK)  llSetForce(< 1, 0, 0> * afkSlowWalkSpeed, TRUE);
-                        else if (level & CONTROL_RIGHT) llSetForce(< 0, 1, 0> * afkSlowWalkSpeed, TRUE);
-                        else if (level & CONTROL_LEFT)  llSetForce(< 0,-1, 0> * afkSlowWalkSpeed, TRUE);
-                        else if (level & CONTROL_UP)    llSetForce(< 0, 0, 1> * afkSlowWalkSpeed, TRUE);
-                        else if (level & CONTROL_DOWN)  llSetForce(< 0, 0,-1> * afkSlowWalkSpeed, TRUE);
-                    }
-                }
-            }
-        }
-    }
-#endif
 
     //----------------------------------------
     // DATASERVER
