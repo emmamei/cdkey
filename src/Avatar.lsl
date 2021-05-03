@@ -66,8 +66,6 @@ list poseList;
 integer poseCount;
 
 integer poseChannel;
-key animKey;
-list animList;
 
 key grantorID;
 integer permMask;
@@ -200,18 +198,20 @@ posePageN(string choice, key id) {
     llDialog(id, msg, dialogSort(tmpList), poseChannel);
 }
 
-key animStart(string animation) {
+key startAnimation(string animation) {
     list oldAnimList;
     list newAnimList;
     integer oldAnimListLen;
     integer newAnimListLen;
+    key animKey;
     integer j;
 
-    if (animation == "") return NULL_KEY;
+    if (animation == ANIMATION_NONE) return NULL_KEY;
 
     if ((llGetPermissionsKey() != dollID) || (!(llGetPermissions() & PERMISSION_TRIGGER_ANIMATION)))
         return NULL_KEY;
 
+#ifdef NOT_USED
     oldAnimList = llGetAnimationList(dollID);
     oldAnimListLen = llGetListLength(oldAnimList);
     i = oldAnimListLen;
@@ -220,12 +220,16 @@ key animStart(string animation) {
     while (i--)
         llStopAnimation(llList2Key(oldAnimList, i));
 
-    //oldAnimList = llGetAnimationList(dollID);
     i = oldAnimListLen;
+#endif
 
-    //key animID = llGetInventoryKey(animation); // Only works on full perm animations
+    // We need the key of the animation, but this method only works on full perm animations
+    //key animID = llGetInventoryKey(animation);
     llStartAnimation(animation);
+    return llList2String(llGetAnimationList(llGetPermissionsKey()), -1);
 
+#ifdef NOT_USED
+    // Find the key
     newAnimList = llGetAnimationList(dollID);
     newAnimListLen = llGetListLength(newAnimList);
     j = newAnimListLen;
@@ -304,9 +308,13 @@ key animStart(string animation) {
     }
 
     return NULL_KEY;
+#endif
 }
 
 clearAnimation() {
+    list animList;
+    key animKey;
+
     // Clear all animations
 
     // Get list of all current animations
@@ -340,6 +348,8 @@ clearAnimation() {
 }
 
 setAnimation() {
+    key animKey;
+
     //integer upRefresh;
 
     // Strip down to a single animation (poseAnimation)
@@ -353,7 +363,7 @@ setAnimation() {
     if ((animKey = llGetInventoryKey(poseAnimation)) == NULL_KEY) 
         animKey = poseAnimationID;
 
-    animKey = animStart(poseAnimation);
+    animKey = startAnimation(poseAnimation);
 
     if (animKey != NULL_KEY) {
         // We have an actual pose...
@@ -625,7 +635,7 @@ default {
                     if ((oldanim != ANIMATION_NONE) && (poseAnimation != oldanim)) {    // Issue #139 Moving directly from one animation to another make certain poseAnimationID does not holdover to the new animation.
                         poseAnimationID = NULL_KEY;
                     }
-                    poseAnimationID = animStart(poseAnimation);
+                    poseAnimationID = startAnimation(poseAnimation);
                 }
 
                 debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 300/poseAnimation)");
