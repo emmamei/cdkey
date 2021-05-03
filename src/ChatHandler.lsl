@@ -742,8 +742,9 @@ default {
 #ifdef DEVELOPER_MODE
                     else if (choice == "collapse") {
                         if (isDoll) {
-                            lmSetConfig("timeLeftOnKey","10");
-                            llOwnerSay("Immediate collapse triggered: ten seconds to collapse");
+                            //lmSetConfig("timeLeftOnKey","10");
+                            llOwnerSay("Immediate collapse triggered...");
+                            lmInternalCommand("collapse", "1", id);
                         }
                         return;
                     }
