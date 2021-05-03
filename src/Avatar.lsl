@@ -634,9 +634,10 @@ default {
                 string oldanim = keyAnimation;
                 keyAnimation = value;
 
-                if cdNoAnim() clearAnim = 1;
+                if (keyAnimation == ANIMATION_NONE) clearAnim = 1;
                 else {
-                    if ((oldanim != "") && (keyAnimation != oldanim)) {    // Issue #139 Moving directly from one animation to another make certain keyAnimationID does not holdover to the new animation.
+                    // we know that keyAnimation contains an actual pose
+                    if ((oldanim != ANIMATION_NONE) && (keyAnimation != oldanim)) {    // Issue #139 Moving directly from one animation to another make certain keyAnimationID does not holdover to the new animation.
                         keyAnimationID = NULL_KEY;
                     }
                     keyAnimationID = animStart(keyAnimation);
