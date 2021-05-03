@@ -72,7 +72,6 @@ list animList;
 key grantorID;
 integer permMask;
 
-integer clearAnim = 1;
 integer locked;
 integer targetHandle;
 integer newAttach = 1;
@@ -307,7 +306,7 @@ key animStart(string animation) {
     return NULL_KEY;
 }
 
-clearAnimations() {
+clearAnimation() {
     // Clear all animations
 
     // Get list of all current animations
@@ -337,11 +336,10 @@ clearAnimations() {
     llStartAnimation("Stand");
     if (hasCarrier) keepFollow(carrierID);
     llSetTimerEvent(timerRate = adjustTimer());
-    clearAnim = 0;
     cdLockMeisterCmd("booton");
 }
 
-oneAnimation() {
+setAnimation() {
     //integer upRefresh;
 
     // Strip down to a single animation (poseAnimation)
@@ -419,11 +417,13 @@ ifPermissions() {
 
     if (permMask & PERMISSION_TRIGGER_ANIMATION) {
 
-        // The big work is done in clearAnimations() and in
-        // oneAnimation
+        // The big work is done in clearAnimation() and in
+        // setAnimation
 
-        if (clearAnim) clearAnimations();
-        else if (poseAnimation != ANIMATION_NONE) oneAnimation(); 
+        if (poseAnimation == ANIMATION_NONE)
+            clearAnimation();
+        else
+            setAnimation(); 
 
         llSetTimerEvent(timerRate = adjustTimer());
     }
@@ -620,8 +620,7 @@ default {
                 string oldanim = poseAnimation;
                 poseAnimation = value;
 
-                if (poseAnimation == ANIMATION_NONE) clearAnim = 1;
-                else {
+                if (poseAnimation != ANIMATION_NONE) {
                     // we know that poseAnimation contains an actual pose
                     if ((oldanim != ANIMATION_NONE) && (poseAnimation != oldanim)) {    // Issue #139 Moving directly from one animation to another make certain poseAnimationID does not holdover to the new animation.
                         poseAnimationID = NULL_KEY;
@@ -716,7 +715,7 @@ default {
                 // poseExpire is being set elsewhere
                 lmSetConfig("poseExpire", "0");
 
-                clearAnimations();
+                clearAnimation();
                 if (poseSilence || hardcore) lmRunRLV("sendchat=y");
                 ifPermissions();
 
@@ -764,7 +763,7 @@ default {
                 else expire = (string)(llGetUnixTime() + POSE_TIMEOUT);
                 lmSetConfig("poseExpire", expire);
 
-                oneAnimation();
+                setAnimation();
                 if (poseSilence || hardcore) lmRunRLV("sendchat=n");
             }
         }
@@ -776,7 +775,7 @@ default {
                 debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 110)");
 
                 ifPermissions();
-                oneAnimation();
+                setAnimation();
             }
 #ifdef DEVELOPER_MODE
             else if (code == MEM_REPORT) {
@@ -800,11 +799,13 @@ default {
 
         if (hasCarrier) keepFollow(carrierID);
 
-        // The big work is done in clearAnimations() and in
-        // oneAnimation
+        // The big work is done in clearAnimation() and in
+        // setAnimation
 
-        if (clearAnim) clearAnimations();
-        else if (poseAnimation != ANIMATION_NONE) oneAnimation(); 
+        if (poseAnimation == ANIMATION_NONE)
+            clearAnimation();
+        else
+            setAnimation(); 
 
 #ifdef DEVELOPER_MODE
         if (timeReporting) {
