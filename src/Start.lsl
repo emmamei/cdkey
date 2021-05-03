@@ -180,7 +180,7 @@ processConfiguration(string name, string value) {
         }
         else if (name == "dolly name") {
             // should be printable
-            lmSendConfig("dollDisplayName", value);
+            lmSendConfig("dollDisplayName", (dollDisplayName = value));
         }
 #ifdef DEVELOPER_MODE
         else if (name == "debug level") {
@@ -435,24 +435,6 @@ default {
             }
             else if (name == "defaultBaseRLVcmd")    defaultBaseRLVcmd = value;
 
-            else if (name == "collapsed") {
-                integer wasCollapsed = collapsed;
-                collapsed = (integer)value;
-
-                if (RLVok == TRUE) {
-                    if (collapsed) {
-                        // We are collapsed: activate RLV restrictions
-                        lmRestrictRLV(defaultCollapseRLVcmd);
-                    }
-                    else {
-                        if (wasCollapsed) {
-                            // We were collapsed but aren't now... so clear RLV restrictions
-                            debugSay(2, "DEBUG-START", "Clearing on collapsed");
-                            lmRunRLVcmd("clearRLVcmd","");
-                        }
-                    }
-                }
-            }
             else if (name == "dollDisplayName") {
                 if (script != cdMyScriptName()) {
                     dollDisplayName = value;

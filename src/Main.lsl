@@ -11,8 +11,6 @@
 #define cdTimeSet(a) (a!=0)
 #define cdResetKey() llResetOtherScript("Start")
 #define UNSET -1
-#define lmCollapse(a) lmInternalCommand("collapse",(string)(a),NULL_KEY)
-#define lmUncollapse() lmInternalCommand("collapse","0",NULL_KEY)
 
 // Note that some doll types are special....
 //    - Regular: used for standard Dolls, including non-transformable
@@ -43,6 +41,7 @@ integer wearLockExpire;
 integer carryExpire;
 integer poseExpire;
 integer transformLockExpire;
+string defaultCollapseRLVcmd;
 
 string poseName;
 
@@ -117,18 +116,7 @@ doWinding(string name, key id) {
 
     lmInternalCommand("windMsg", (string)windAmount + "|" + name, id);
 
-    if (collapsed == NO_TIME) {
-
-        // Just gave Dolly time: so now, uncollapse Dolly
-
-        // We could call the code directly - but by doing this,
-        // it's an asynchronous event, and not a function that
-        // slows down the user.
-
-        lmSendConfig("collapsed", (string)(collapsed = 0));
-        lmSendConfig("collapseTime", (string)(collapseTime = 0));
-        lmCollapse(0);
-    }
+    if (collapsed) uncollapse();
 }
 
 float setWindRate() {
@@ -170,17 +158,50 @@ float setWindRate() {
     return windRate;
 }
 
+docollapse() {
+    // Note that this command zaps the amount of time remaining:
+    // if dolly is collapsed, she is by definition out of time...
+    //
+    collapseTime = llGetUnixTime();
+    lmSendConfig("collapseTime", (string)(collapseTime = llGetUnixTime()));
+    lmSendConfig("collapsed", (string)(collapsed = TRUE));
+    lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0));
+
+    if (RLVok == TRUE && defaultCollapseRLVcmd != "") {
+        lmRestrictRLV(defaultCollapseRLVcmd);
+    }
+
+    // when dolly collapses, anyone can rescue
+    lmSendConfig("lastWinderID", (string)(lastWinderID = NULL_KEY));
+
+    // Among other things, this will set the Key's turn rate
+    setWindRate();
+
+    lmInternalCommand("setHovertext", "", keyID);
+}
+
 uncollapse() {
     // Revive dolly back from being collapsed
 
     lmSendConfig("collapseTime", (string)(collapseTime = 0));
-    lmSendConfig("collapsed", (string)(collapsed = 0));
+    lmSendConfig("collapsed", (string)(collapsed = FALSE));
     lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
+
     lmInternalCommand("setHovertext", "", keyID);
+
+    if (RLVok == TRUE) {
+        lmRunRLVcmd("clearRLVcmd","");
+    }
 
     setWindRate();
 }
 
+#ifdef NOT_USED
+// This function is confusing: it was changed from a function to collapse dolly,
+// to one that handled multiple collapse states, including not collapsed.
+//
+// This function will be phased out..
+//
 collapse(integer newCollapseState) {
     // Dolly is in a new collapse state: collapsed, or not
 
@@ -196,21 +217,10 @@ collapse(integer newCollapseState) {
 
     // If we are already collapsed, then there is nothing to do here
     if (collapsed == NOT_COLLAPSED) {
-
-        collapseTime = llGetUnixTime();
-        lmSendConfig("collapseTime", (string)collapseTime);
-        lmSendConfig("collapsed", (string)(collapsed = newCollapseState));
-        lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0));
-
-        // when dolly collapses, anyone can rescue
-        lmSendConfig("lastWinderID", (string)(lastWinderID = NULL_KEY));
-
-        // Among other things, this will set the Key's turn rate
-        setWindRate();
-
-        lmInternalCommand("setHovertext", "", keyID);
+        docollapse();
     }
 }
+#endif
 
 //========================================
 // STATES
@@ -383,8 +393,7 @@ default {
         // CHECK COLLAPSE STATE
 
         // False collapse? Collapsed = 1 while timeLeftOnKey is positive is an invalid condition
-        if (collapsed == NO_TIME)
-            if (timeLeftOnKey > 0) lmUncollapse();
+        if (collapsed) if (timeLeftOnKey > 0) uncollapse();
 
         //----------------------------------------
         // POSE TIMED OUT?
@@ -489,9 +498,9 @@ default {
                 }
                 else {
                     // Dolly is DONE! Go down... and yell for help.
-                    if (collapsed == NOT_COLLAPSED) {
+                    if (collapsed) {
                         llSay(PUBLIC_CHANNEL, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on Dolly's key.)");
-                        collapse(NO_TIME); // currently equivalent to uncollapse()
+                        docollapse();
                     }
                 }
             }
@@ -542,9 +551,10 @@ default {
                 else blacklist = split;
             }
             else if (c == "d") {
-                     if (name == "dollDisplayName")       dollDisplayName = value;
-                else if (name == "dialogChannel")           dialogChannel = (integer)value;
-                else if (name == "dollType")                     dollType = value;
+                     if (name == "dollDisplayName")             dollDisplayName = value;
+                else if (name == "dialogChannel")                 dialogChannel = (integer)value;
+                else if (name == "dollType")                           dollType = value;
+                else if (name == "defaultCollapseRLVcmd") defaultCollapseRLVcmd = value;
 #ifdef DEVELOPER_MODE
                 else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
@@ -639,8 +649,14 @@ default {
                 setWindRate();
             }
             else if (cmd == "collapse") {
-                if (collapsed) uncollapse(); // equivalent to collapse(NO_TIME)
-                else collapse(llList2Integer(split, 0));
+                integer collapseState = llList2Integer(split, 0);
+
+                // The collapse internal command...
+
+                if (collapsed != collapseState) { // if equal, nothing to do
+                    if (collapseState) docollapse(); // this compresses all possible states into one
+                    else uncollapse();
+                }
             }
             else if (cmd == "winding") {
                 // We do this in a subroutine: this allows winding to happen from THIS
@@ -715,7 +731,7 @@ default {
             RLVok = llList2Integer(split, 0);
 
             // refresh collapse state... no escape!
-            collapse(collapsed);
+            if (collapsed) docollapse();
 
             if (RLVok == TRUE) {
                 if (!allowDress && !hardcore) llOwnerSay("The public cannot dress you.");
@@ -744,7 +760,7 @@ default {
                     // Winder is recharged and usable.
                     windAmount = 0;
 
-                    if (collapsed == NO_TIME) {
+                    if (collapsed) {
                         lmSendToController(dollName + " has activated the emergency winder.");
 
                         // default is 20% of max, but no more than 10 minutes
@@ -758,7 +774,7 @@ default {
 
                         lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = windAmount));
                         lmSendConfig("winderRechargeTime", (string)(winderRechargeTime = (llGetUnixTime() + EMERGENCY_LIMIT_TIME)));
-                        lmUncollapse();
+                        uncollapse();
 
                         string s = "With an electical sound the motor whirrs into life, ";
                         if (hardcore) llOwnerSay("and you can feel your joints reanimating as time is added.");
@@ -849,7 +865,7 @@ default {
                     dialogSort(windChoices + [ MAIN ]), dialogChannel);
             }
             else if (choice == "Unwind") {
-                collapse(NO_TIME); // currently equivalent to uncollapse()
+                docollapse();
                 cdSayTo("Dolly collapses, " + pronounHerDoll + " key unwound",id);
             }
         }
