@@ -200,7 +200,7 @@ posePageN(string choice, key id) {
     llDialog(id, msg, dialogSort(tmpList), poseChannel);
 }
 
-key startAnimation(string animation) {
+key startAnimation(string anim) {
     list oldAnimList;
     list newAnimList;
     integer oldAnimListLen;
@@ -208,7 +208,7 @@ key startAnimation(string animation) {
     key animKey;
     integer j;
 
-    if (animation == ANIMATION_NONE) return NULL_KEY;
+    if (anim == ANIMATION_NONE) return NULL_KEY;
 
     if ((llGetPermissionsKey() != dollID) || (!(llGetPermissions() & PERMISSION_TRIGGER_ANIMATION)))
         return NULL_KEY;
@@ -226,8 +226,8 @@ key startAnimation(string animation) {
 #endif
 
     // We need the key of the animation, but this method only works on full perm animations
-    //key animID = llGetInventoryKey(animation);
-    llStartAnimation(animation);
+    //key animID = llGetInventoryKey(anim);
+    llStartAnimation(anim);
     return llList2String(llGetAnimationList(llGetPermissionsKey()), -1);
 
 #ifdef NOT_USED
@@ -253,7 +253,7 @@ key startAnimation(string animation) {
     // NO animations are running: stopping animations succeeded
     // but animation start failed
     else if (j == 0)
-        llSay(DEBUG_CHANNEL,"Animation (" + animation + ") start failed!");
+        llSay(DEBUG_CHANNEL,"Animation (" + anim + ") start failed!");
 
     // Couldn't stop all animations - which should only
     // happen if the last and only animation was a looped animation...
@@ -349,7 +349,7 @@ clearAnimation() {
     cdAOon();
 }
 
-setAnimation() {
+setAnimation(string anim) {
     key animKey;
 
     //integer upRefresh;
@@ -358,11 +358,17 @@ setAnimation() {
 
     cdAOoff();
 
-    animKey = startAnimation(poseAnimation);
+    // Already animated: stop it first
+    if (poseAnimationID != NULL_KEY) {
+        llStopAnimation(poseAnimationID);
+    }
+
+    animKey = startAnimation(anim);
 
     if (animKey != NULL_KEY) {
         // We have an actual pose...
         poseAnimationID = animKey;
+        poseAnimation = anim;
 
         // Stop following carrier if we have one
         if (hasCarrier) {
@@ -397,22 +403,22 @@ ifPermissions() {
     // Don't do anything unless attached
     if (!llGetAttached()) return;
 
-    grantorID = llGetPermissionsKey();
+    //grantorID = llGetPermissionsKey();
     permMask = llGetPermissions();
 
     // If permissions granted to someone other than Dolly,
     // start over...
-     if (grantorID != dollID) {
-        if (grantorID) cdResetKey();
-    }
+    //if (grantorID != dollID) {
+    //   if (grantorID) cdResetKey();
+    //}
 
-    if ((permMask & PERMISSION_MASK) != PERMISSION_MASK) {
-        // llRequestPermissions runs this function: means a double run if PERMISSION_MASK is off-kilter
-        llRequestPermissions(dollID, PERMISSION_MASK);
-        return;
-        }
+    //if ((permMask & PERMISSION_MASK) != PERMISSION_MASK) {
+    //    // llRequestPermissions runs this function: means a double run if PERMISSION_MASK is off-kilter
+    //    llRequestPermissions(dollID, PERMISSION_MASK);
+    //    return;
+    //    }
 
-    if (grantorID == NULL_KEY) return;
+    //if (grantorID == NULL_KEY) return;
 
     // only way to get here is grantorID is dollID
 
@@ -422,12 +428,12 @@ ifPermissions() {
     if (permMask & PERMISSION_TRIGGER_ANIMATION) {
 
         // The big work is done in clearAnimation() and in
-        // setAnimation
+        // setAnimation()
 
         if (poseAnimation == ANIMATION_NONE)
             clearAnimation();
         else
-            setAnimation(); 
+            setAnimation(poseAnimation); 
 
         llSetTimerEvent(timerRate = adjustTimer());
     }
@@ -441,23 +447,18 @@ ifPermissions() {
             // Dolly is "frozen": either collapsed or posed
 
             // When collapsed or posed the doll should not be able to move at all; so the key will
-            // accept their controls, but no need to pass on: ignore all input.
+            // accept their attempts to move, but ignore them
             llTakeControls(ALL_CONTROLS, TRUE, FALSE);
 
         else {
-            // Dolly is not AFK nor collapsed nor posed
+            // Dolly is not collapsed nor posed
 
-            // We do not want to release the controls if the land is noScript; doing so
-            // would effectively shut down the key until one entered Script-enabled
-            // land again
+            // We do not want to completely release the controls in case the current sim does not
+            // allow scripts. If controls were released, key scripts would stop until entering a
+            // script-enabled sim
             llTakeControls(ALL_CONTROLS, FALSE, TRUE);
         }
     }
-
-    //----------------------------------------
-    // Moving to Target
-
-    //if (hasCarrier) if (poseAnimation == "") startFollow(carrierID);
 }
 
 //========================================
@@ -489,7 +490,7 @@ default {
         //llTargetRemove(targetHandle);
 
         debugSay(5,"DEBUG-AVATAR","ifPermissions (on_rez)");
-        ifPermissions();
+        llRequestPermissions(dollID, PERMISSION_MASK);
     }
 
     //----------------------------------------
@@ -509,7 +510,7 @@ default {
             debugSay(3,"DEBUG-AVATAR","Region FPS: " + formatFloat(llGetRegionFPS(),1) + "; Region Time Dilation: " + formatFloat(llGetRegionTimeDilation(),3));
             debugSay(5,"DEBUG-AVATAR","ifPermissions (changed)");
 #endif
-            ifPermissions();
+            llRequestPermissions(dollID, PERMISSION_MASK);
         }
         else if (change & CHANGED_INVENTORY) {
             // Doing this whenever inventory changes is ok: the update process stops this script;
@@ -554,13 +555,11 @@ default {
         dropCarrier(carrierID);
 
         if (id) {
-            ifPermissions();
-
 #ifdef DEVELOPER_MODE
             debugSay(2,"DEBUG-AVATAR","Region FPS: " + formatFloat(llGetRegionFPS(),1) + "; Region Time Dilation: " + formatFloat(llGetRegionTimeDilation(),3));
             debugSay(5,"DEBUG-AVATAR","ifPermissions (attach)");
 #endif
-            ifPermissions();
+            llRequestPermissions(dollID, PERMISSION_MASK);
         }
 
         newAttach = (lastAttachedID != dollID);
@@ -611,7 +610,7 @@ default {
                     collapsed = (integer)value;
 
                     debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 300/collapsed)");
-                    ifPermissions();
+                    llRequestPermissions(dollID, PERMISSION_MASK);
             }
             else if (name == "poseSilence")         poseSilence = (integer)value;
             else if (name == "carryExpire")         carryExpire = (integer)value;
@@ -620,20 +619,8 @@ default {
             else if (name == "timeReporting")     timeReporting = (integer)value;
 #endif
             else if (name == "poseAnimation") {
-                // This is where animations are managed... including collapse.
-                string oldanim = poseAnimation;
+                // Note that poses are handled as a choice... not here
                 poseAnimation = value;
-
-                if (poseAnimation != ANIMATION_NONE) {
-                    // we know that poseAnimation contains an actual pose
-                    if ((oldanim != ANIMATION_NONE) && (poseAnimation != oldanim)) {    // Issue #139 Moving directly from one animation to another make certain poseAnimationID does not holdover to the new animation.
-                        poseAnimationID = NULL_KEY;
-                    }
-                    poseAnimationID = startAnimation(poseAnimation);
-                }
-
-                debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 300/poseAnimation)");
-                ifPermissions();
             }
             else if (name == "poserID")                 poserID = (key)value;
             else {
@@ -659,7 +646,7 @@ default {
             }
 
             //debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 300)");
-            ifPermissions();
+            llRequestPermissions(dollID, PERMISSION_MASK);
         }
         else if (code == INTERNAL_CMD) {
             string cmd = llList2String(split, 0);
@@ -719,9 +706,8 @@ default {
                 // poseExpire is being set elsewhere
                 lmSetConfig("poseExpire", "0");
 
-                clearAnimation();
+                llRequestPermissions(dollID, PERMISSION_MASK); // animates
                 if (poseSilence || hardcore) lmRunRLV("sendchat=y");
-                ifPermissions();
 
                 // if we have carrier, start following them again
                 debugSay(2,"DEBUG-FOLLOW","startFollow(): from Unpose button");
@@ -755,19 +741,27 @@ default {
             }
 
             else {
+                // None of the other choices are valid: it's a pose
                 string expire;
 
                 llSay(PUBLIC_CHANNEL,"Pose " + choice + " selected.");
+
+                if (poseAnimationID != NULL_KEY) {
+                    llStopAnimation(poseAnimationID);
+                    debugSay(4,"DEBUG-AVATAR","Stopping old animation " + poseAnimation + " (" + (string)poseAnimationID + ")");
+                }
 
                 // The Real Meat: We have an animation (pose) name
                 lmSendConfig("poseAnimation", (string)(poseAnimation = choice));
                 lmSendConfig("poserID", (string)(poserID = id));
 
+                debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 300/poseAnimation)");
+                llRequestPermissions(dollID, PERMISSION_MASK); // starts animations
+
                 if (dollType == "Display" || hardcore) expire = "0";
                 else expire = (string)(llGetUnixTime() + POSE_TIMEOUT);
                 lmSetConfig("poseExpire", expire);
 
-                setAnimation();
                 if (poseSilence || hardcore) lmRunRLV("sendchat=n");
             }
         }
@@ -779,7 +773,7 @@ default {
                 debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 110)");
 
                 ifPermissions();
-                setAnimation();
+                setAnimation("");
             }
 #ifdef DEVELOPER_MODE
             else if (code == MEM_REPORT) {
@@ -802,14 +796,7 @@ default {
     timer() {
 
         if (hasCarrier) keepFollow(carrierID);
-
-        // The big work is done in clearAnimation() and in
-        // setAnimation
-
-        if (poseAnimation == ANIMATION_NONE)
-            clearAnimation();
-        else
-            setAnimation(); 
+        llRequestPermissions(dollID, PERMISSION_MASK); // animates
 
 #ifdef DEVELOPER_MODE
         if (timeReporting) {
