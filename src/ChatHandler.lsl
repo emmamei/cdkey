@@ -797,11 +797,16 @@ default {
                 //
                 // These are the commands that anyone can give:
                 //   * wind
-                //   * outfits
-                //   * menu
                 //   * listposes
                 //   * carry
                 //   * uncarry
+                //
+                // And menu shortcuts:
+                //   * outfits
+                //   * types
+                //   * options
+                //   * poses
+                //   * menu
                 //
                 if (choice == "wind") {
                     // A Normal Wind
@@ -873,6 +878,10 @@ default {
                 }
                 else if (choice == "types") {
                     cdMenuInject("Types...", name, id);
+                    return;
+                }
+                else if (choice == "poses") {
+                    cdMenuInject("Poses...", name, id);
                     return;
                 }
                 else if (choice == "options") {
