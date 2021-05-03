@@ -51,6 +51,8 @@ float GlobalDefines_version=1.0;
 #define UPMENU "~Up~"
 // Collapse animation - and documentation
 #define ANIMATION_COLLAPSED "collapse"
+// No animation
+#define ANIMATION_NONE ""
 // Carry distance for the new carry code
 #define CARRY_RANGE 2.5
 // llTakeControls() mask all available controls
