@@ -191,7 +191,7 @@ uncollapse() {
     lmSendConfig("collapseTime", (string)(collapseTime = 0));
     lmSendConfig("collapsed", (string)(collapsed = FALSE));
     lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
-    lmSendConfig("keyAnimation", (keyAnimation = ""));
+    lmSendConfig("keyAnimation", (keyAnimation = ANIMATION_NONE));
 
     lmInternalCommand("setHovertext", "", keyID);
 

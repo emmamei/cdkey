@@ -318,7 +318,7 @@ clearAnimations() {
     i = llGetListLength(animList);
 
     // Clear current saved animation if any
-    keyAnimation = "";
+    keyAnimation = ANIMATION_NONE;
     keyAnimationID = NULL_KEY;
     poseID = NULL_KEY;
 
@@ -434,7 +434,7 @@ ifPermissions() {
 
     if (permMask & PERMISSION_TAKE_CONTROLS) {
 
-        if (keyAnimation != "")
+        if (keyAnimation != ANIMATION_NONE)
             // Dolly is "frozen": either collapsed or posed
 
             // When collapsed or posed the doll should not be able to move at all; so the key will
@@ -723,7 +723,7 @@ default {
 
             // Unpose: remove animation and poser
             else if (choice == "Unpose") {
-                lmSendConfig("keyAnimation", (string)(keyAnimation = ""));
+                lmSendConfig("keyAnimation", (string)(keyAnimation = ANIMATION_NONE));
                 lmSendConfig("poserID", (string)(poserID = NULL_KEY));
 
                 // poseExpire is being set elsewhere
@@ -872,7 +872,7 @@ default {
                 llSetForce(<0, 0, 0>, TRUE);
 
             if (afk) {
-                if (keyAnimation == "") {
+                if (keyAnimation == ANIMATION_NONE) {
                     if (llGetAgentInfo(dollID) & (AGENT_WALKING | AGENT_ALWAYS_RUN | AGENT_FLYING)) {
                         // This will run the appropriate llSetForce command repeatedly as long as
                         // the key is held down. This may or may not be desired, but it should not
