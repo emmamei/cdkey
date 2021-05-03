@@ -125,34 +125,52 @@ posePageN(string choice, key id) {
     integer isController = cdIsController(id);
     integer buildList;
     string poseEntry;
+    integer foundCollapse;
 
     poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
+    if (poseCount < 2) {
+        // we need at least 2 animations:
+        // collapse + pose
+        llSay(DEBUG_CHANNEL,"No animations!");
+        return;
+    }
 
+    // we are buffering inside poseList
     if (poseList == []) buildList = TRUE;
 
-    i = poseCount; // loopIndex
-    while (i--) {
-        // Build list of poses
-        if (buildList) {
+    // Create the poseList and tmpList... tmpList is for the dialog
+    if (buildList) {
+        i = poseCount; // loopIndex
+        while (i--) {
+            // Build list of poses
             poseEntry = llGetInventoryName(INVENTORY_ANIMATION, i);
             if (poseEntry != ANIMATION_COLLAPSED) {
-                if (poseEntry == "") llSay(DEBUG_CHANNEL,"null pose entry!");
-                else poseList += poseEntry;
+                poseList += poseEntry;
+                if (poseEntry != poseAnimation) tmpList += poseEntry;
+            }
+            else {
+                foundCollapse = TRUE;
             }
         }
-        else poseEntry = llList2String(poseList, i);
-
-        // Is the pose a pose we can show in the menu?
-        //
-        // * Skip the current animation and the collapse animation
-        //
-        if (poseEntry != ANIMATION_COLLAPSED && poseEntry != poseAnimation && poseEntry != "") {
-
-            debugSay(6,"DEBUG-AVATAR","Pose #" + (string)(i+1) + " added: " + poseEntry);
-            tmpList += poseEntry;
+    }
+    else {
+        // since we dont have to build the poseList, remove the current
+        // pose if any to create tmpList
+        if (poseAnimation != ANIMATION_NONE) {
+            if (~(i = llListFindList(poseList, [ poseAnimation ]))) {
+                tmpList = llDeleteSubList(poseList, i, i);
+            }
+        }
+        else {
+            poseList = tmpList;
         }
     }
 
+    if (foundCollapse) poseCount--; // eliminate collapse anim from count
+    else llSay(DEBUG_CHANNEL,"No collapse animation found!");
+
+    // Now handle the specific dialog choice made, using tmpList
+    //
     if (choice == "Poses Next") {
         posePage++;
         poseIndex = (posePage - 1) * 9;
@@ -179,8 +197,8 @@ posePageN(string choice, key id) {
         }
     }
 
-    poseCount = llGetListLength(poseList);
     debugSay(4,"DEBUG-AVATAR","Found " + (string)poseCount + " poses");
+    debugSay(4,"DEBUG-AVATAR","tmpList = " + llDumpList2String(tmpList,","));
 
     tmpList = llListSort(tmpList, 1, 1);
     if (poseCount > 9) {
@@ -190,6 +208,8 @@ posePageN(string choice, key id) {
     else {
         tmpList += [ "-", "-" ];
     }
+
+    debugSay(4,"DEBUG-AVATAR","tmpList (revised) = " + llDumpList2String(tmpList,","));
 
     lmSendConfig("backMenu",(backMenu = MAIN));
     tmpList += [ "Back..." ];
