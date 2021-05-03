@@ -90,21 +90,6 @@ key lastWinderID;
 // FUNCTIONS
 //========================================
 
-// This function generates a new dialogChannel and opens it -
-// EVERY time it is called... possibly for a security feature
-// using a dialogChannel periodic change setup
-
-//doDialogChannelWithReset() {
-//    uniqueID = 0;
-//    dialogChannel = 0;
-//
-//    llListenRemove(dialogHandle);
-//    llListenRemove(poseHandle);
-//    llListenRemove(typeHandle);
-//
-//    doDialogChannel();
-//}
-
 chooseDialogChannel() {
     debugSay(4,"DEBUG-MENU","chooseDialogChannel() called");
 

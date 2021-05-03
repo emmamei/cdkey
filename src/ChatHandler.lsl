@@ -122,7 +122,6 @@ default {
             // Shortcut: p
             else if (c == "p") {
                      if (name == "poseSilence")           poseSilence = (integer)value;
-                else if (name == "poseID")                     poseID = (key)value;
                 else if (name == "poseAnimation")       poseAnimation = value;
                 else if (name == "poserID")                   poserID = (key)value;
                 else if (name == "poserName")               poserName = value;

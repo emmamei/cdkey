@@ -10,9 +10,7 @@ key dollID                  = NULL_KEY;
 key keyID                   = NULL_KEY;
 key dresserID               = NULL_KEY;
 key poseAnimationID         = NULL_KEY;
-key poseID                  = NULL_KEY;
 key poserID                 = NULL_KEY;
-key uniqueID                = NULL_KEY;
 
 list blacklist              = [];
 //list BuiltinControllers     = BUILTIN_CONTROLLERS;

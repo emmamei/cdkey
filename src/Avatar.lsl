@@ -12,6 +12,8 @@
 //#define DEBUG_BADRLV
 #define NOT_IN_REGION ZERO_VECTOR
 #define cdLockMeisterCmd(a) llWhisper(LOCKMEISTER_CHANNEL,(string)dollID+a)
+#define cdAOoff() llWhisper(LOCKMEISTER_CHANNEL,(string)dollID+"bootoff")
+#define cdAOon()  llWhisper(LOCKMEISTER_CHANNEL,(string)dollID+"booton")
 #define MAX_RLVCHECK_TRIES 5
 #define RLV_TIMEOUT 20.0
 #define POSE_CHANNEL_OFFSET 777
@@ -326,7 +328,6 @@ clearAnimation() {
     // Clear current saved animation if any
     poseAnimation = ANIMATION_NONE;
     poseAnimationID = NULL_KEY;
-    poseID = NULL_KEY;
 
     // Stop all currently active animations
     //
@@ -342,9 +343,10 @@ clearAnimation() {
 
     // Reset current animations
     llStartAnimation("Stand");
+
     if (hasCarrier) keepFollow(carrierID);
     llSetTimerEvent(timerRate = adjustTimer());
-    cdLockMeisterCmd("booton");
+    cdAOon();
 }
 
 setAnimation() {
@@ -354,21 +356,13 @@ setAnimation() {
 
     // Strip down to a single animation (poseAnimation)
 
-    cdLockMeisterCmd("bootoff");
-
-    // poseAnimationID is null so grab the real thing. Note that
-    // poseAnimationID is expected to match poseAnimation, but does it
-    // really?
-
-    if ((animKey = llGetInventoryKey(poseAnimation)) == NULL_KEY) 
-        animKey = poseAnimationID;
+    cdAOoff();
 
     animKey = startAnimation(poseAnimation);
 
     if (animKey != NULL_KEY) {
         // We have an actual pose...
         poseAnimationID = animKey;
-        poseID = animKey;
 
         // Stop following carrier if we have one
         if (hasCarrier) {
