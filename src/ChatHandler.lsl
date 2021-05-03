@@ -28,8 +28,6 @@ integer chatEnable           = TRUE;
 key chatFilter;
 string rlvAPIversion;
 
-string poseName;
-
 integer chatHandle          = 0;
 
 default {
@@ -125,14 +123,13 @@ default {
             else if (c == "p") {
                      if (name == "poseSilence")           poseSilence = (integer)value;
                 else if (name == "poseID")                     poseID = (key)value;
-                else if (name == "poseName")                 poseName = value;
+                else if (name == "poseAnimation")       poseAnimation = value;
                 else if (name == "poserID")                   poserID = (key)value;
                 else if (name == "poserName")               poserName = value;
                 else if (name == "pronounHerDoll")     pronounHerDoll = value;
                 else if (name == "pronounSheDoll")     pronounSheDoll = value;
             }
 
-            else if (name == "keyAnimation")         poseName = value;
             else if (name == "keyLimit")             keyLimit = (integer)value;
 
             //----------------------------------------
@@ -704,7 +701,7 @@ default {
 
                         cdSayTo(msg, id);
 
-                        if (!cdCollapsedAnim() && cdAnimated()) {
+                        if (poseAnimation != ANIMATION_NONE) {
                         //    llOwnerSay(dollID, "Current pose: " + currentAnimation);
                         //    llOwnerSay(dollID, "Pose time remaining: " + (string)(poseTime / SECS_PER_MIN) + " minutes.");
                             llOwnerSay("Doll is posed.");
@@ -897,7 +894,7 @@ default {
                         // Collapsed animation is special: skip it
                         if (poseCurrent != ANIMATION_COLLAPSED) {
 
-                            if (poseName == poseCurrent) cdSayTo("\t*\t" + poseCurrent, id);
+                            if (poseAnimation == poseCurrent) cdSayTo("\t*\t" + poseCurrent, id);
                             else cdSayTo("\t\t" + poseCurrent, id);
                         }
                     }
@@ -906,7 +903,7 @@ default {
                 else if (choice == "release" || choice == "unpose") {
                     if (isDoll && hardcore) return;
 
-                    if (poseName == "")
+                    if (poseAnimation == "")
                         cdSayTo("Dolly is not posed.",id);
 
                     else if (isDoll) {

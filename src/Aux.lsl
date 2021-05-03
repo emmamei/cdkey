@@ -36,7 +36,6 @@ integer maxMins;
 integer ncLine;
 integer memReporting;
 integer isDoll;
-string poseName;
 
 integer textboxChannel;
 integer textboxHandle;
@@ -132,7 +131,7 @@ default {
             else if (name == "allowRepeatWind")       allowRepeatWind = (integer)value;
             else if (name == "allowSelfWind")           allowSelfWind = (integer)value;
             else if (name == "dollDisplayName")       dollDisplayName = value;
-            else if (name == "keyAnimation")                 poseName = value;
+            else if (name == "poseAnimation")           poseAnimation = value;
             else if (name == "doWarnings")                 doWarnings = (integer)value;
             else if (name == "hardcore")                     hardcore = (integer)value;
             else if (name == "poseSilence")               poseSilence = (integer)value;
@@ -243,7 +242,7 @@ default {
                 //
 
                 if (cdIsDoll(id)) {
-                    if (!collapsed) if (poseName == "")
+                    if (!collapsed) if (poseAnimation == ANIMATION_NONE)
                         // This is to totally reset Dolly's worn body,
                         // using the ~normalself, ~normaloutfit,  and ~nude folders
                         plusList += [ "Reset Body", "Reset Key" ];

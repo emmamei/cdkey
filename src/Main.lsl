@@ -46,8 +46,6 @@ integer poseExpire;
 integer transformLockExpire;
 string defaultCollapseRLVcmd;
 
-string poseName;
-
 key simRatingQuery;
 
 //========================================
@@ -177,7 +175,6 @@ docollapse() {
         lmRestrictRLV(defaultCollapseRLVcmd);
     }
 
-    //lmSendConfig("keyAnimation", (keyAnimation = ANIMATION_COLLAPSED));
     oldAnimList = llGetAnimationList(dollID);
     i = llGetListLength(oldAnimList);
 
@@ -206,7 +203,6 @@ uncollapse() {
     lmSendConfig("collapseTime", (string)(collapseTime = 0));
     lmSendConfig("collapsed", (string)(collapsed = FALSE));
     lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
-    lmSendConfig("keyAnimation", (keyAnimation = ANIMATION_NONE));
 
     lmInternalCommand("setHovertext", "", keyID);
 
@@ -214,7 +210,6 @@ uncollapse() {
         lmRunRLVcmd("clearRLVcmd","");
     }
 
-    //lmSendConfig("keyAnimation", (keyAnimation = ANIMATION_COLLAPSED));
     oldAnimList = llGetAnimationList(dollID);
     i = llGetListLength(oldAnimList);
 

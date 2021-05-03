@@ -33,7 +33,7 @@ startFollow(key id) {
 
 keepFollow(key id) {
     // if Dolly is posed, stop moving
-    if (keyAnimation != "") {
+    if (poseAnimation != ANIMATION_NONE) {
         // Note we are still being carried - but being in a pose, we're
         // not going anywhere.
         llStopMoveToTarget();

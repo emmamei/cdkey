@@ -72,7 +72,6 @@ list animList;
 key grantorID;
 integer permMask;
 
-string poseName;
 integer clearAnim = 1;
 integer locked;
 integer targetHandle;
@@ -148,7 +147,7 @@ posePageN(string choice, key id) {
         //
         // * Skip the current animation and the collapse animation
         //
-        if (poseEntry != ANIMATION_COLLAPSED && poseEntry != keyAnimation && poseEntry != "") {
+        if (poseEntry != ANIMATION_COLLAPSED && poseEntry != poseAnimation && poseEntry != "") {
 
             debugSay(6,"DEBUG-AVATAR","Pose #" + (string)(i+1) + " added: " + poseEntry);
             tmpList += poseEntry;
@@ -197,7 +196,7 @@ posePageN(string choice, key id) {
     tmpList += [ "Back..." ];
 
     msg = "Select the pose to put dolly into";
-    if (keyAnimation) msg += " (current pose is " + keyAnimation + ")";
+    if (poseAnimation) msg += " (current pose is " + poseAnimation + ")";
 
     llDialog(id, msg, dialogSort(tmpList), poseChannel);
 }
@@ -318,8 +317,8 @@ clearAnimations() {
     i = llGetListLength(animList);
 
     // Clear current saved animation if any
-    keyAnimation = ANIMATION_NONE;
-    keyAnimationID = NULL_KEY;
+    poseAnimation = ANIMATION_NONE;
+    poseAnimationID = NULL_KEY;
     poseID = NULL_KEY;
 
     // Stop all currently active animations
@@ -345,22 +344,22 @@ clearAnimations() {
 oneAnimation() {
     //integer upRefresh;
 
-    // Strip down to a single animation (keyAnimation)
+    // Strip down to a single animation (poseAnimation)
 
     cdLockMeisterCmd("bootoff");
 
-    // keyAnimationID is null so grab the real thing. Note that
-    // keyAnimationID is expected to match keyAnimation, but does it
+    // poseAnimationID is null so grab the real thing. Note that
+    // poseAnimationID is expected to match poseAnimation, but does it
     // really?
 
-    if ((animKey = llGetInventoryKey(keyAnimation)) == NULL_KEY) 
-        animKey = keyAnimationID;
+    if ((animKey = llGetInventoryKey(poseAnimation)) == NULL_KEY) 
+        animKey = poseAnimationID;
 
-    animKey = animStart(keyAnimation);
+    animKey = animStart(poseAnimation);
 
     if (animKey != NULL_KEY) {
         // We have an actual pose...
-        keyAnimationID = animKey;
+        poseAnimationID = animKey;
         poseID = animKey;
 
         // Stop following carrier if we have one
@@ -383,7 +382,7 @@ ifPermissions() {
     //   * attach
     //   * link_message 110
     //   * link_message 300/collapsed
-    //   * link_message 300/keyAnimation
+    //   * link_message 300/poseAnimation
     //   * link_message 300
     //   * link_message 500
     //   * timer
@@ -424,7 +423,7 @@ ifPermissions() {
         // oneAnimation
 
         if (clearAnim) clearAnimations();
-        else if (cdAnimated()) oneAnimation(); 
+        else if (poseAnimation != ANIMATION_NONE) oneAnimation(); 
 
         llSetTimerEvent(timerRate = adjustTimer());
     }
@@ -434,7 +433,7 @@ ifPermissions() {
 
     if (permMask & PERMISSION_TAKE_CONTROLS) {
 
-        if (keyAnimation != ANIMATION_NONE)
+        if (poseAnimation != ANIMATION_NONE)
             // Dolly is "frozen": either collapsed or posed
 
             // When collapsed or posed the doll should not be able to move at all; so the key will
@@ -467,7 +466,7 @@ ifPermissions() {
     //----------------------------------------
     // Moving to Target
 
-    //if (hasCarrier) if (keyAnimation == "") startFollow(carrierID);
+    //if (hasCarrier) if (poseAnimation == "") startFollow(carrierID);
 }
 
 //========================================
@@ -629,21 +628,21 @@ default {
 #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")     timeReporting = (integer)value;
 #endif
-            else if (name == "keyAnimation") {
+            else if (name == "poseAnimation") {
                 // This is where animations are managed... including collapse.
-                string oldanim = keyAnimation;
-                keyAnimation = value;
+                string oldanim = poseAnimation;
+                poseAnimation = value;
 
-                if (keyAnimation == ANIMATION_NONE) clearAnim = 1;
+                if (poseAnimation == ANIMATION_NONE) clearAnim = 1;
                 else {
-                    // we know that keyAnimation contains an actual pose
-                    if ((oldanim != ANIMATION_NONE) && (keyAnimation != oldanim)) {    // Issue #139 Moving directly from one animation to another make certain keyAnimationID does not holdover to the new animation.
-                        keyAnimationID = NULL_KEY;
+                    // we know that poseAnimation contains an actual pose
+                    if ((oldanim != ANIMATION_NONE) && (poseAnimation != oldanim)) {    // Issue #139 Moving directly from one animation to another make certain poseAnimationID does not holdover to the new animation.
+                        poseAnimationID = NULL_KEY;
                     }
-                    keyAnimationID = animStart(keyAnimation);
+                    poseAnimationID = animStart(poseAnimation);
                 }
 
-                debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 300/keyAnimation)");
+                debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 300/poseAnimation)");
                 ifPermissions();
             }
             else if (name == "poserID")                 poserID = (key)value;
@@ -724,7 +723,7 @@ default {
 
             // Unpose: remove animation and poser
             else if (choice == "Unpose") {
-                lmSendConfig("keyAnimation", (string)(keyAnimation = ANIMATION_NONE));
+                lmSendConfig("poseAnimation", (string)(poseAnimation = ANIMATION_NONE));
                 lmSendConfig("poserID", (string)(poserID = NULL_KEY));
 
                 // poseExpire is being set elsewhere
@@ -771,8 +770,7 @@ default {
                 llSay(PUBLIC_CHANNEL,"Pose " + choice + " selected.");
 
                 // The Real Meat: We have an animation (pose) name
-                lmSendConfig("keyAnimation", (string)(keyAnimation = choice));
-                lmSendConfig("poseName", (string)(poseName = choice));
+                lmSendConfig("poseAnimation", (string)(poseAnimation = choice));
                 lmSendConfig("poserID", (string)(poserID = id));
 
                 if (dollType == "Display" || hardcore) expire = "0";
@@ -819,7 +817,7 @@ default {
         // oneAnimation
 
         if (clearAnim) clearAnimations();
-        else if (cdAnimated()) oneAnimation(); 
+        else if (poseAnimation != ANIMATION_NONE) oneAnimation(); 
 
 #ifdef DEVELOPER_MODE
         if (timeReporting) {
@@ -873,7 +871,7 @@ default {
                 llSetForce(<0, 0, 0>, TRUE);
 
             if (afk) {
-                if (keyAnimation == ANIMATION_NONE) {
+                if (poseAnimation == ANIMATION_NONE) {
                     if (llGetAgentInfo(dollID) & (AGENT_WALKING | AGENT_ALWAYS_RUN | AGENT_FLYING)) {
                         // This will run the appropriate llSetForce command repeatedly as long as
                         // the key is held down. This may or may not be desired, but it should not

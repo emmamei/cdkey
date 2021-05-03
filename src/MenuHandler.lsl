@@ -71,7 +71,6 @@ integer controlChannel;
 integer controlHandle;
 integer poseChannel;
 integer poseHandle;
-string poseName;
 integer typeChannel;
 integer typeHandle;
 string isDollName;
@@ -231,9 +230,8 @@ default {
             else if (name == "lastWinderID")               lastWinderID = (key)value;
 #endif
 
-            // keyAnimation used to test for being posed
-            else if (name == "keyAnimation")             { keyAnimation = value; poseName = value; }
-            else if (name == "poseName")                       poseName = value;
+            // poseAnimation used to test for being posed
+            else if (name == "poseAnimation")             poseAnimation = value;
 
             else if (name == "showPhrases")                 showPhrases = (integer)value;
             else if (name == "transformLockExpire") transformLockExpire = (integer)value;
@@ -455,7 +453,7 @@ default {
                 if (isDoll) {
 
                     // Give Dolly only options if not posed
-                    if (keyAnimation == "") menu += [ "Options..." ];
+                    if (poseAnimation == ANIMATION_NONE) menu += [ "Options..." ];
                 }
 
                 else {
@@ -512,7 +510,7 @@ default {
                         }
                         else {
                             if (isDoll) {
-                                if (canDressSelf && keyAnimation == "" && !hardcore) menu += "Outfits...";
+                                if (canDressSelf && poseAnimation == ANIMATION_NONE && !hardcore) menu += "Outfits...";
                             }
                             else {
                                 if (hardcore || allowDress || isController) menu += "Outfits...";
@@ -522,7 +520,7 @@ default {
 
                     //--------------------
                     // Types Button
-                    if (keyAnimation == "") {
+                    if (poseAnimation == ANIMATION_NONE) {
                         // Only present the Types button if Dolly is not posed
 
                         if (transformLockExpire == 0) {
@@ -542,7 +540,7 @@ default {
                         poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
 
                         if (poseCount > 1) {
-                            if (keyAnimation != "") {
+                            if (poseAnimation != ANIMATION_NONE) {
                                 msg += "Doll is currently posed. ";
 
                                 // If accessor is Dolly... allow Dolly to pose and unpose,
@@ -624,7 +622,7 @@ default {
                 //--------------------
                 // Wind Button
                 if (isDoll) {
-                    if (keyAnimation == "") {
+                    if (poseAnimation == ANIMATION_NONE) {
                         menu += [ "Update" ];
                         if (detachable) menu += [ "Detach" ];
                     }

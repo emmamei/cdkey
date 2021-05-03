@@ -63,8 +63,6 @@ string defaultCollapseRLVcmd = "fly=n,sendchat=n,tplm=n,tplure=n,tploc=n,showinv
 // Also allow touch - for Dolly to access Key
 string defaultPoseRLVcmd = "fly=n,tplm=n,tplure=n,tploc=n,sittp=n,fartouch=n";
 
-string poseName;
-
 //integer introLine;
 //integer introLines;
 
@@ -413,17 +411,17 @@ default {
                 else blacklist = split;
             }
 
-            else if ((name == "keyAnimation") || (name == "poseName")) {
-                poseName = value;
+            else if (name == "poseAnimation") {
+                poseAnimation = value;
 
-                //lmSendConfig("poseName", value);
+                //lmSendConfig("poseAnimation", value);
 
                 if ((!collapsed) && (RLVok == TRUE)) {
 
                     // Dolly is operating normally (not collapsed)
                     // and this is a pose, not a collapse
 
-                    if (poseName == "" && !collapsed) {
+                    if (poseAnimation == "" && !collapsed) {
                         // Not collapsed or posed - so clear to base RLV
                         lmRunRLVcmd("clearRLVcmd",defaultBaseRLVcmd);
                     }
@@ -478,7 +476,7 @@ default {
                     lmRunRLVcmd("clearRLVcmd","");
 
                     // Are we posed? Trigger RLV restrictions for being posed
-                    if (cdPoseAnim()) {
+                    if (poseAnimation != ANIMATION_NONE) {
                         lmRestrictRLV(defaultPoseRLVcmd);
                     }
                 }

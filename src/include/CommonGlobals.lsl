@@ -9,7 +9,7 @@ key carrierID               = NULL_KEY;
 key dollID                  = NULL_KEY;
 key keyID                   = NULL_KEY;
 key dresserID               = NULL_KEY;
-key keyAnimationID          = NULL_KEY;
+key poseAnimationID         = NULL_KEY;
 key poseID                  = NULL_KEY;
 key poserID                 = NULL_KEY;
 key uniqueID                = NULL_KEY;
@@ -28,8 +28,7 @@ string dollDisplayName;
 // dollType has a default, but don't set it here'
 string dollType;
 string dresserName;
-string keyAnimation;
-//string poseName;
+string poseAnimation;
 string poserName;
 string pronounHerDoll       = "Her";
 string pronounSheDoll       = "She";
