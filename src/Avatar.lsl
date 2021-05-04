@@ -64,7 +64,7 @@ integer nearCarrier;
 
 // This acts as a cache of
 // current poses in inventory
-list poseList;
+list poseBufferedList;
 integer poseCount;
 
 integer poseChannel;
@@ -123,7 +123,6 @@ posePageN(string choice, key id) {
     list tmpList;
     integer isDoll = cdIsDoll(id);
     integer isController = cdIsController(id);
-    integer buildList;
     string poseEntry;
     integer foundCollapse;
 
@@ -135,39 +134,40 @@ posePageN(string choice, key id) {
         return;
     }
 
-    // we are buffering inside poseList
-    if (poseList == []) buildList = TRUE;
+    // Create the poseBufferedList and tmpList... tmpList is for the dialog
+    if (poseBufferedList == []) {
 
-    // Create the poseList and tmpList... tmpList is for the dialog
-    if (buildList) {
         i = poseCount; // loopIndex
+
         while (i--) {
             // Build list of poses
             poseEntry = llGetInventoryName(INVENTORY_ANIMATION, i);
+
             if (poseEntry != ANIMATION_COLLAPSED) {
-                poseList += poseEntry;
+                poseBufferedList += poseEntry;
                 if (poseEntry != poseAnimation) tmpList += poseEntry;
             }
             else {
                 foundCollapse = TRUE;
             }
         }
+
+        if (foundCollapse) poseCount--;
+        else llSay(DEBUG_CHANNEL,"No collapse animation found!");
     }
     else {
-        // since we dont have to build the poseList, remove the current
+        // since we dont have to build the poseBufferedList, remove the current
         // pose if any to create tmpList
         if (poseAnimation != ANIMATION_NONE) {
-            if (~(i = llListFindList(poseList, [ poseAnimation ]))) {
-                tmpList = llDeleteSubList(poseList, i, i);
+            if (~(i = llListFindList(poseBufferedList, [ poseAnimation ]))) {
+                tmpList = llDeleteSubList(poseBufferedList, i, i);
             }
         }
         else {
-            poseList = tmpList;
+            poseBufferedList = tmpList;
         }
     }
 
-    if (foundCollapse) poseCount--; // eliminate collapse anim from count
-    else llSay(DEBUG_CHANNEL,"No collapse animation found!");
 
     // Now handle the specific dialog choice made, using tmpList
     //
@@ -381,6 +381,8 @@ setAnimation(string anim) {
     // Already animated: stop it first
     if (poseAnimationID != NULL_KEY) {
         llStopAnimation(poseAnimationID);
+        poseAnimationID = NULL_KEY;
+        poseAnimation = ANIMATION_NONE;
     }
 
     animKey = startAnimation(anim);
@@ -536,7 +538,7 @@ default {
             // Doing this whenever inventory changes is ok: the update process stops this script;
             // otherwise, the only cost is time.
             string poseEntry;
-            poseList = [];
+            poseBufferedList = [];
             poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
 
             i = poseCount;
@@ -549,10 +551,10 @@ default {
 
                 // Collect all viable poses: skip the collapse animation
                 if (poseEntry != ANIMATION_COLLAPSED)
-                    poseList += poseEntry;
+                    poseBufferedList += poseEntry;
             }
 
-            poseList = llListSort(poseList, 1, 1);
+            poseBufferedList = llListSort(poseBufferedList, 1, 1);
         }
     }
 
@@ -588,7 +590,7 @@ default {
         debugSay(4,"DEBUG-AVATAR","Checking poses on attach");
 
         string poseEntry;
-        poseList = [];
+        poseBufferedList = [];
         poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
         i = poseCount;
         while (i--) {
@@ -598,9 +600,9 @@ default {
 
             // Collect all viable poses: skip the collapse animation
             if (poseEntry != ANIMATION_COLLAPSED)
-                poseList += poseEntry;
+                poseBufferedList += poseEntry;
         }
-        poseList = llListSort(poseList, 1, 1);
+        poseBufferedList = llListSort(poseBufferedList, 1, 1);
 
         // Note: this is initial, before receiving any new config events
         //lmInternalCommand("setWindRate","",NULL_KEY);
