@@ -51,23 +51,6 @@ key simRatingQuery;
 //========================================
 // FUNCTIONS
 //========================================
-#ifdef LOCKON
-ifPermissions() {
-    key grantor = llGetPermissionsKey();
-    integer perm = llGetPermissions();
-
-    if (grantor != NULL_KEY && grantor != dollID) {
-        cdResetKey();
-        llSleep(10);
-    }
-
-    if ((perm & PERMISSION_MASK) != PERMISSION_MASK) {
-        llRequestPermissions(dollID, PERMISSION_MASK);
-        return;
-    }
-}
-#endif
-
 doWinding(string name, key id) {
     // Four steps:
     //   1. Can we wind up at all?
@@ -466,10 +449,6 @@ default {
             lmInternalCommand("setHovertext", "", keyID);
         }
 
-#ifdef LOCKON
-        ifPermissions();
-#endif
-        //--------------------------------
         // WINDING DOWN.....
         //
         // A specific test for collapsed status is no longer required here as
@@ -910,12 +889,6 @@ default {
             }
         }
     }
-
-#ifdef LOCKON
-    run_time_permissions(integer perm) {
-        ifPermissions();
-    }
-#endif
 }
 
 //========== MAIN ==========
