@@ -309,86 +309,6 @@ setAnimation(string anim) {
     }
 }
 
-ifPermissions() {
-    // This is repeatedly and frequently called - pays to be fast
-    //
-    // ifPermissions is called in these locations at writing:
-    //   * on_rez
-    //   * changed
-    //   * attach
-    //   * link_message 110
-    //   * link_message 300/collapsed
-    //   * link_message 300/poseAnimation
-    //   * link_message 300
-    //   * link_message 500
-    //   * timer
-    //   * run_time_permissions
-    //
-    // Note especially the call during run_time_permissions:
-    // that section is called by llRequestPermissions() and
-    // similar functions - from within this function...
-
-    // Don't do anything unless attached
-    if (!llGetAttached()) return;
-
-    //grantorID = llGetPermissionsKey();
-    permMask = llGetPermissions();
-
-    // If permissions granted to someone other than Dolly,
-    // start over...
-    //if (grantorID != dollID) {
-    //   if (grantorID) cdResetKey();
-    //}
-
-    //if ((permMask & PERMISSION_MASK) != PERMISSION_MASK) {
-    //    // llRequestPermissions runs this function: means a double run if PERMISSION_MASK is off-kilter
-    //    llRequestPermissions(dollID, PERMISSION_MASK);
-    //    return;
-    //    }
-
-    //if (grantorID == NULL_KEY) return;
-
-    // only way to get here is grantorID is dollID
-
-    //----------------------------------------
-    // PERMISSION_TRIGGER_ANIMATION
-
-    if (permMask & PERMISSION_TRIGGER_ANIMATION) {
-
-        // The big work is done in clearAnimation() and in
-        // setAnimation()
-
-        if (poseAnimation == ANIMATION_NONE)
-            clearAnimation();
-        else
-            setAnimation(poseAnimation); 
-
-        llSetTimerEvent(timerRate = adjustTimer());
-    }
-
-    //----------------------------------------
-    // PERMISSION_TAKE_CONTROLS
-
-    if (permMask & PERMISSION_TAKE_CONTROLS) {
-
-        if (poseAnimation != ANIMATION_NONE)
-            // Dolly is "frozen": either collapsed or posed
-
-            // When collapsed or posed the doll should not be able to move at all; so the key will
-            // accept their attempts to move, but ignore them
-            llTakeControls(ALL_CONTROLS, TRUE, FALSE);
-
-        else {
-            // Dolly is not collapsed nor posed
-
-            // We do not want to completely release the controls in case the current sim does not
-            // allow scripts. If controls were released, key scripts would stop until entering a
-            // script-enabled sim
-            llTakeControls(ALL_CONTROLS, FALSE, TRUE);
-        }
-    }
-}
-
 //========================================
 // STATES
 //========================================
@@ -763,7 +683,46 @@ default {
     //----------------------------------------
     run_time_permissions(integer perm) {
         debugSay(2,"DEBUG-AVATAR","ifPermissions (run_time_permissions)");
-        ifPermissions();
+
+        // Don't do anything unless attached
+        if (!llGetAttached()) return;
+
+        permMask = llGetPermissions();
+
+        //----------------------------------------
+        // PERMISSION_TRIGGER_ANIMATION
+
+        if (permMask & PERMISSION_TRIGGER_ANIMATION) {
+
+            // The big work is done in clearAnimation() and setAnimation()
+
+            if (poseAnimation == ANIMATION_NONE) clearAnimation();
+            else setAnimation(poseAnimation); 
+
+            llSetTimerEvent(timerRate = adjustTimer());
+        }
+
+        //----------------------------------------
+        // PERMISSION_TAKE_CONTROLS
+
+        if (permMask & PERMISSION_TAKE_CONTROLS) {
+
+            if (poseAnimation != ANIMATION_NONE)
+                // Dolly is "frozen": either collapsed or posed
+
+                // When collapsed or posed the doll should not be able to move at all; so the key will
+                // accept their attempts to move, but ignore them
+                llTakeControls(ALL_CONTROLS, TRUE, FALSE);
+
+            else {
+                // Dolly is not collapsed nor posed
+
+                // We do not want to completely release the controls in case the current sim does not
+                // allow scripts. If controls were released, key scripts would stop until entering a
+                // script-enabled sim
+                llTakeControls(ALL_CONTROLS, FALSE, TRUE);
+            }
+        }
     }
 }
 
