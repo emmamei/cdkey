@@ -120,7 +120,7 @@ float adjustTimer() {
 
 posePageN(string choice, key id) {
     integer poseIndex;
-    list tmpList;
+    list poseDialogButtons;
     integer isDoll = cdIsDoll(id);
     integer isController = cdIsController(id);
     string poseEntry;
@@ -134,7 +134,7 @@ posePageN(string choice, key id) {
         return;
     }
 
-    // Create the poseBufferedList and tmpList... tmpList is for the dialog
+    // Create the poseBufferedList and poseDialogButtons... poseDialogButtons is for the dialog
     if (poseBufferedList == []) {
 
         i = poseCount; // loopIndex
@@ -145,7 +145,7 @@ posePageN(string choice, key id) {
 
             if (poseEntry != ANIMATION_COLLAPSED) {
                 poseBufferedList += poseEntry;
-                if (poseEntry != poseAnimation) tmpList += poseEntry;
+                if (poseEntry != poseAnimation) poseDialogButtons += poseEntry;
             }
             else {
                 foundCollapse = TRUE;
@@ -157,19 +157,19 @@ posePageN(string choice, key id) {
     }
     else {
         // since we dont have to build the poseBufferedList, remove the current
-        // pose if any to create tmpList
+        // pose if any to create poseDialogButtons
         if (poseAnimation != ANIMATION_NONE) {
             if (~(i = llListFindList(poseBufferedList, [ poseAnimation ]))) {
-                tmpList = llDeleteSubList(poseBufferedList, i, i);
+                poseDialogButtons = llDeleteSubList(poseBufferedList, i, i);
             }
         }
         else {
-            poseBufferedList = tmpList;
+            poseBufferedList = poseDialogButtons;
         }
     }
 
 
-    // Now handle the specific dialog choice made, using tmpList
+    // Now handle the specific dialog choice made, using poseDialogButtons
     //
     if (choice == "Poses Next") {
         posePage++;
@@ -198,26 +198,26 @@ posePageN(string choice, key id) {
     }
 
     debugSay(4,"DEBUG-AVATAR","Found " + (string)poseCount + " poses");
-    debugSay(4,"DEBUG-AVATAR","tmpList = " + llDumpList2String(tmpList,","));
+    debugSay(4,"DEBUG-AVATAR","poseDialogButtons = " + llDumpList2String(poseDialogButtons,","));
 
-    tmpList = llListSort(tmpList, 1, 1);
+    poseDialogButtons = llListSort(poseDialogButtons, 1, 1);
     if (poseCount > 9) {
-        // Get a 9-count slice from tmpList for dialog
-        tmpList = llList2List(tmpList, poseIndex, poseIndex + 8) + [ "Poses Prev", "Poses Next" ];
+        // Get a 9-count slice from poseDialogButtons for dialog
+        poseDialogButtons = llList2List(poseDialogButtons, poseIndex, poseIndex + 8) + [ "Poses Prev", "Poses Next" ];
     }
     else {
-        tmpList += [ "-", "-" ];
+        poseDialogButtons += [ "-", "-" ];
     }
 
-    debugSay(4,"DEBUG-AVATAR","tmpList (revised) = " + llDumpList2String(tmpList,","));
+    debugSay(4,"DEBUG-AVATAR","poseDialogButtons (revised) = " + llDumpList2String(poseDialogButtons,","));
 
     lmSendConfig("backMenu",(backMenu = MAIN));
-    tmpList += [ "Back..." ];
+    poseDialogButtons += [ "Back..." ];
 
     msg = "Select the pose to put dolly into";
     if (poseAnimation) msg += " (current pose is " + poseAnimation + ")";
 
-    llDialog(id, msg, dialogSort(tmpList), poseChannel);
+    llDialog(id, msg, dialogSort(poseDialogButtons), poseChannel);
 }
 
 key startAnimation(string anim) {
@@ -233,104 +233,10 @@ key startAnimation(string anim) {
     if ((llGetPermissionsKey() != dollID) || (!(llGetPermissions() & PERMISSION_TRIGGER_ANIMATION)))
         return NULL_KEY;
 
-#ifdef NOT_USED
-    oldAnimList = llGetAnimationList(dollID);
-    oldAnimListLen = llGetListLength(oldAnimList);
-    i = oldAnimListLen;
-
-    // Stop all animations
-    while (i--)
-        llStopAnimation(llList2Key(oldAnimList, i));
-
-    i = oldAnimListLen;
-#endif
-
     // We need the key of the animation, but this method only works on full perm animations
     //key animID = llGetInventoryKey(anim);
     llStartAnimation(anim);
     return llList2String(llGetAnimationList(llGetPermissionsKey()), -1);
-
-#ifdef NOT_USED
-    // Find the key
-    newAnimList = llGetAnimationList(dollID);
-    newAnimListLen = llGetListLength(newAnimList);
-    j = newAnimListLen;
-
-    // This section not only grabs the ID of the running
-    // animation, but also checks to see that all former
-    // animations were stopped... if we shortcut, we
-    // lose that capability
-    //
-    // We test for three possibilities:
-    //    1. There's only one animation currently running
-    //    2. There's no animations running (error)
-    //    3. There's two animations running: one failed to stop
-    //    4. There's only one animation running that wasn't before
-
-    // only one animation running: assume its ours and return its ID
-    if (j == 1) return llList2Key(newAnimList, 0);
-
-    // NO animations are running: stopping animations succeeded
-    // but animation start failed
-    else if (j == 0)
-        llSay(DEBUG_CHANNEL,"Animation (" + anim + ") start failed!");
-
-    // Couldn't stop all animations - which should only
-    // happen if the last and only animation was a looped animation...
-    // We've started another animation so it won't be the only one:
-    // so try again...
-    else if (j == 2) {
-
-        // The old list doesn't have the new animation in it - so iterate
-        // over it and kill that last animation...
-
-        i = llGetListLength(oldAnimList);
-        if (i == 1) {
-            // oldAnimList contains one animation we couldn't stop...
-            // After trying to stop it again, we check the running animations
-            // again to see if we have just the one (presumably) ours:
-            // if so, we can return it immediately
-
-            llStopAnimation(llList2Key(oldAnimList, 0));
-            j = llGetListLength(newAnimList = llGetAnimationList(dollID));
-            if (j == 1) return llList2Key(newAnimList, 0);
-        }
-        else {
-            // old list is not 1: several animations did not stop
-            llSay(DEBUG_CHANNEL,"Animation stop failed: " + (string)i + " animations were still running; start failed");
-        }
-    }
-    else if (j - i == 1) {
-        // Several animations other than ours are still running, not just one
-        llSay(DEBUG_CHANNEL,"Animation stop failed: " + (string)i + " animations are still running");
-
-        // At this point we have multiple animations that did not stop;
-        // so iterate over the list and try to stop them all again
-        //
-        // Note that if some animations have started in the meantime
-        // other than ours, they won't be stopped either...
-
-        // We have two lists, one of which is one longer than the other...
-        // we want to find the ONE key which is different
-
-        // Starting from the end is faster because we can imply a
-        // test against zero - but also because that is likely
-        // where the difference is... but can't assume that is true
-        while(i--) {
-            animKey = llList2Key(oldAnimList, i);
-
-            if (llListFindList(newAnimList, [ animKey ]) == NOT_FOUND)
-                // There's only one element different between the two...
-                // or should be - we could have a situation where
-                // one animation was stopped and another started
-                // "behind our backs" on top of what we did - but
-                // we consider this unlikely
-                return animKey;
-        }
-    }
-
-    return NULL_KEY;
-#endif
 }
 
 clearAnimation() {
@@ -794,8 +700,9 @@ default {
             if (code == 110) {
                 debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 110)");
 
-                ifPermissions();
-                setAnimation("");
+                poseAnimation = "";
+                poseAnimationID = NULL_KEY;
+                llRequestPermissions(dollID, PERMISSION_MASK);
             }
 #ifdef DEVELOPER_MODE
             else if (code == MEM_REPORT) {
