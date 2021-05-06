@@ -47,6 +47,7 @@ float timerRate = 30.0;
 string msg;
 string name;
 string value;
+string currentAnimation;
 
 #ifdef DEVELOPER_MODE
 string myPath;
@@ -104,18 +105,20 @@ integer newAttach = 1;
 //========================================
 
 float adjustTimer() {
-    float x;
+
+#define LOW_SPEED_CARRY_RATE 2.0
+#define HI_SPEED_CARRY_RATE 0.5
+#define LOW_SCRIPT_RATE 60.0
+#define NORMAL_RATE 30.0
 
     if (hasCarrier) {
-        if (nearCarrier) x = 2.0;
-        else x = 0.5;
+        if (nearCarrier) return LOW_SPEED_CARRY_RATE;
+        else return HI_SPEED_CARRY_RATE;
     }
     else {
-        if (lowScriptMode) x = 60.0;
-        else x = 30.0;
+        if (lowScriptMode) return LOW_SCRIPT_RATE;
+        else return NORMAL_RATE;
     }
-
-    return x;
 }
 
 posePageN(string choice, key id) {
@@ -134,6 +137,8 @@ posePageN(string choice, key id) {
         return;
     }
 
+#define notCurrentAnimation(p) ((p) != poseAnimation)
+
     // Create the poseBufferedList and poseDialogButtons... poseDialogButtons is for the dialog
     if (poseBufferedList == []) {
 
@@ -145,7 +150,7 @@ posePageN(string choice, key id) {
 
             if (poseEntry != ANIMATION_COLLAPSED) {
                 poseBufferedList += poseEntry;
-                if (poseEntry != poseAnimation) poseDialogButtons += poseEntry;
+                if (notCurrentAnimation(poseEntry)) poseDialogButtons += poseEntry;
             }
             else {
                 foundCollapse = TRUE;
@@ -153,7 +158,7 @@ posePageN(string choice, key id) {
         }
 
         if (foundCollapse) poseCount--;
-        else llSay(DEBUG_CHANNEL,"No collapse animation found!");
+        else llSay(DEBUG_CHANNEL,"No collapse animation (\"" + (string)(ANIMATION_COLLAPSED) + "\") found!");
     }
     else {
         // since we dont have to build the poseBufferedList, remove the current
@@ -168,31 +173,53 @@ posePageN(string choice, key id) {
         }
     }
 
+#define MAX_DIALOG_ENTRIES 9
+#define numberOfDialogPages(p) (llFloor((p) / MAX_DIALOG_ENTRIES) + 1)
+#define indexOfPage(p) (((p) - 1) * MAX_DIALOG_ENTRIES)
 
-    // Now handle the specific dialog choice made, using poseDialogButtons
+    list bottomDialogLine;
+
+    // Now select the appropriate slice of the total list, showing nine buttons
+    // at a time
     //
     if (choice == "Poses Next") {
         posePage++;
-        poseIndex = (posePage - 1) * 9;
-        if (poseIndex > poseCount) {
+        poseIndex = indexOfPage(posePage);
+
 #ifdef ROLLOVER
+        bottomDialogLine += [ "Poses Prev", "Poses Next" ];
+#endif
+
+        if (poseIndex > poseCount) {
+            // We've gone past the end of the list of poses...
+#ifdef ROLLOVER
+            // Reset to page one and continue
             posePage = 1;
             poseIndex = 0;
 #else
             posePage--; // backtrack
-            poseIndex = (posePage - 1) * 9; // recompute
+            poseIndex = indexOfPage(posePage); // recompute
+            bottomDialogLine += [ "Poses Prev", "-" ];
 #endif
         }
     }
     else if (choice == "Poses Prev") {
         posePage--;
-        if (posePage == 0) {
+
 #ifdef ROLLOVER
-            posePage = llFloor(poseCount / 9) + 1;
-            poseIndex = (posePage - 1) * 9;
+        bottomDialogLine += [ "Poses Prev", "Poses Next" ];
+#endif
+
+        if (posePage == 0) {
+            // We've gone past the first entry in the list of poses
+#ifdef ROLLOVER
+            // Reset to the last page and continue
+            posePage = numberOfDialogPages(poseCount);
+            poseIndex = indexOfPage(posePage);
 #else
             posePage = 1;
             poseIndex = 0;
+            bottomDialogLine += [ "-", "Poses Next" ];
 #endif
         }
     }
@@ -201,11 +228,16 @@ posePageN(string choice, key id) {
     debugSay(4,"DEBUG-AVATAR","poseDialogButtons = " + llDumpList2String(poseDialogButtons,","));
 
     poseDialogButtons = llListSort(poseDialogButtons, 1, 1);
-    if (poseCount > 9) {
+
+    if (poseCount > MAX_DIALOG_ENTRIES) {
         // Get a 9-count slice from poseDialogButtons for dialog
-        poseDialogButtons = llList2List(poseDialogButtons, poseIndex, poseIndex + 8) + [ "Poses Prev", "Poses Next" ];
+        poseDialogButtons = llList2List(poseDialogButtons, poseIndex, poseIndex + 8) + bottomDialogLine;
     }
     else {
+        // Can display all poses on one page
+        //
+        // Note that if we get here, it is impossible for the Next and Prev sections to run: first time around,
+        // they aren't options; second time around, we get here and don't offer the options.
         poseDialogButtons += [ "-", "-" ];
     }
 
@@ -445,9 +477,9 @@ default {
 
                  if (name == "collapsed") {
                     collapsed = (integer)value;
+                    llRequestPermissions(dollID, PERMISSION_MASK);
 
                     debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 300/collapsed)");
-                    llRequestPermissions(dollID, PERMISSION_MASK);
             }
             else if (name == "poseSilence")         poseSilence = (integer)value;
             else if (name == "carryExpire")         carryExpire = (integer)value;
@@ -483,7 +515,7 @@ default {
             }
 
             //debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 300)");
-            llRequestPermissions(dollID, PERMISSION_MASK);
+            //llRequestPermissions(dollID, PERMISSION_MASK);
         }
         else if (code == INTERNAL_CMD) {
             string cmd = llList2String(split, 0);
@@ -612,10 +644,10 @@ default {
             RLVok = llList2Integer(split, 0);
         }
         else if (code < 200) {
-            if (code == 110) {
+            if (code == INIT_STAGE5) {
                 debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 110)");
 
-                poseAnimation = "";
+                poseAnimation = ANIMATION_NONE;
                 poseAnimationID = NULL_KEY;
                 llRequestPermissions(dollID, PERMISSION_MASK);
             }
@@ -640,7 +672,7 @@ default {
     timer() {
 
         if (hasCarrier) keepFollow(carrierID);
-        llRequestPermissions(dollID, PERMISSION_MASK); // animates
+        //llRequestPermissions(dollID, PERMISSION_MASK); // animates
 
 #ifdef DEVELOPER_MODE
         if (timeReporting) {
@@ -660,16 +692,16 @@ default {
     //----------------------------------------
     dataserver(key request, string data) {
 
+#define getRegionLocation(d) (llGetRegionCorner() + ((vector)data))
+#define locationToString(d) ((string)(llFloor(d.x)) + "/" + ((string)(llFloor(d.y))) + "/" + ((string)(llFloor(d.z))))
+
         if (request == rlvTPrequest) {
-            vector global = llGetRegionCorner() + (vector)data;
+            vector global = getRegionLocation(data);
 
             llOwnerSay("Dolly is now teleporting.");
 
             // Note this will be rejected if @unsit=n or @tploc=n are active
-            lmRunRLVas("TP", "tpto:" +
-                    (string) llFloor( global.x ) + "/" +
-                    (string) llFloor( global.y ) + "/" +
-                    (string) llFloor( global.z ) + "=force");
+            lmRunRLVas("TP", "tpto:" + locationToString(global) + "=force");
         }
     }
 
@@ -691,14 +723,22 @@ default {
 
             // The big work is done in clearPoseAnimation() and setPoseAnimation()
 
-            if (poseAnimation == ANIMATION_NONE) clearPoseAnimation();
-            else setPoseAnimation(poseAnimation); 
+#define poseChanged (currentAnimation != poseAnimation)
+
+            if (poseChanged) {
+                if (poseAnimation == ANIMATION_NONE) clearPoseAnimation();
+                else setPoseAnimation(poseAnimation); 
+                currentAnimation = poseAnimation;
+            }
 
             llSetTimerEvent(timerRate = adjustTimer());
         }
 
         //----------------------------------------
         // PERMISSION_TAKE_CONTROLS
+
+#define disableMovementControl() llTakeControls(ALL_CONTROLS, TRUE, FALSE)
+#define enableMovementControl() llTakeControls(ALL_CONTROLS, FALSE, TRUE)
 
         if (permMask & PERMISSION_TAKE_CONTROLS) {
 
@@ -707,7 +747,7 @@ default {
 
                 // When collapsed or posed the doll should not be able to move at all; so the key will
                 // accept their attempts to move, but ignore them
-                llTakeControls(ALL_CONTROLS, TRUE, FALSE);
+                disableMovementControl();
 
             else {
                 // Dolly is not collapsed nor posed
@@ -715,7 +755,7 @@ default {
                 // We do not want to completely release the controls in case the current sim does not
                 // allow scripts. If controls were released, key scripts would stop until entering a
                 // script-enabled sim
-                llTakeControls(ALL_CONTROLS, FALSE, TRUE);
+                enableMovementControl();
             }
         }
     }
