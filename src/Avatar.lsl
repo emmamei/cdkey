@@ -29,6 +29,8 @@
 #define cdMinRefresh() ((1.0/llGetRegionFPS()) * MIN_FRAMES)
 #define cdAddRefresh() ((1.0/llGetRegionFPS()) * ADD_FRAMES)
 #define cdMenuInject(a,b,c) lmMenuReply((a),b,c);
+#define currentlyPosed(p) ((p) != ANIMATION_NONE)
+#define notCurrentlyPosed(p) ((p) == ANIMATION_NONE)
 
 key rlvTPrequest;
 #ifdef LOCKON
@@ -122,31 +124,51 @@ float adjustTimer() {
 }
 
 posePageN(string choice, key id) {
+    // posePage is the number of the page of poses;
+    // poseIndex is a direct index into the list of
+    // poses
+    //
     integer poseIndex;
+
     list poseDialogButtons;
     integer isDoll = cdIsDoll(id);
     integer isController = cdIsController(id);
     string poseEntry;
     integer foundCollapse;
 
-    poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
-    if (poseCount < 2) {
-        // we need at least 2 animations:
-        // collapse + pose
-        llSay(DEBUG_CHANNEL,"No animations!");
-        return;
-    }
-
 #define notCurrentAnimation(p) ((p) != poseAnimation)
+#define getAnimationName(n) llGetInventoryName(INVENTORY_ANIMATION, (n));
+#define getAnimationCount() llGetInventoryNumber(INVENTORY_ANIMATION);
 
-    // Create the poseBufferedList and poseDialogButtons... poseDialogButtons is for the dialog
+    debugSay(4,"DEBUG-AVATAR","poseBufferedList = " + llDumpList2String(poseBufferedList,","));
+    debugSay(4,"DEBUG-AVATAR","poseCount = " + (string)poseCount);
+
+    // Create the poseBufferedList and poseDialogButtons...
     if (poseBufferedList == []) {
+
+        poseCount = getAnimationCount();
+
+        if (poseCount == 0) {
+            llSay(DEBUG_CHANNEL,"No animations! (must have collapse animation and one pose minimum)");
+            return;
+        }
+        else if (poseCount == 1) {
+            string poseName;
+
+            poseName = getAnimationName(0);
+
+            // Either we have one solitary pose, or collapse only
+            if (poseName == ANIMATION_COLLAPSED) llSay(DEBUG_CHANNEL,"No animations!");
+            else llSay(DEBUG_CHANNEL,"No collapse animation (\"" + (string)(ANIMATION_COLLAPSED) + "\") found!");
+
+            return;
+        }
 
         i = poseCount; // loopIndex
 
         while (i--) {
             // Build list of poses
-            poseEntry = llGetInventoryName(INVENTORY_ANIMATION, i);
+            poseEntry = getAnimationName(i);
 
             if (poseEntry != ANIMATION_COLLAPSED) {
                 poseBufferedList += poseEntry;
@@ -157,27 +179,33 @@ posePageN(string choice, key id) {
             }
         }
 
-        if (foundCollapse) poseCount--;
-        else llSay(DEBUG_CHANNEL,"No collapse animation (\"" + (string)(ANIMATION_COLLAPSED) + "\") found!");
+        if (foundCollapse == FALSE) {
+            llSay(DEBUG_CHANNEL,"No collapse animation (\"" + (string)(ANIMATION_COLLAPSED) + "\") found!");
+            return;
+        }
     }
     else {
         // since we dont have to build the poseBufferedList, remove the current
         // pose if any to create poseDialogButtons
-        if (poseAnimation != ANIMATION_NONE) {
+        if (currentlyPosed(poseAnimation)) {
             if (~(i = llListFindList(poseBufferedList, [ poseAnimation ]))) {
                 poseDialogButtons = llDeleteSubList(poseBufferedList, i, i);
             }
         }
         else {
-            poseBufferedList = poseDialogButtons;
+            poseDialogButtons = poseBufferedList;
         }
     }
 
-#define MAX_DIALOG_ENTRIES 9
-#define numberOfDialogPages(p) (llFloor((p) / MAX_DIALOG_ENTRIES) + 1)
-#define indexOfPage(p) (((p) - 1) * MAX_DIALOG_ENTRIES)
+#define MAX_DIALOG_BUTTONS 9
+#define numberOfDialogPages(p) (llFloor((p) / MAX_DIALOG_BUTTONS) + 1)
+#define indexOfPage(p) (((p) - 1) * MAX_DIALOG_BUTTONS)
 
     list bottomDialogLine;
+
+#ifdef ROLLOVER
+    bottomDialogLine = [ "Poses Prev", "Poses Next" ];
+#endif
 
     // Now select the appropriate slice of the total list, showing nine buttons
     // at a time
@@ -185,10 +213,6 @@ posePageN(string choice, key id) {
     if (choice == "Poses Next") {
         posePage++;
         poseIndex = indexOfPage(posePage);
-
-#ifdef ROLLOVER
-        bottomDialogLine += [ "Poses Prev", "Poses Next" ];
-#endif
 
         if (poseIndex > poseCount) {
             // We've gone past the end of the list of poses...
@@ -199,16 +223,12 @@ posePageN(string choice, key id) {
 #else
             posePage--; // backtrack
             poseIndex = indexOfPage(posePage); // recompute
-            bottomDialogLine += [ "Poses Prev", "-" ];
+            bottomDialogLine = [ "Poses Prev", "-" ];
 #endif
         }
     }
     else if (choice == "Poses Prev") {
         posePage--;
-
-#ifdef ROLLOVER
-        bottomDialogLine += [ "Poses Prev", "Poses Next" ];
-#endif
 
         if (posePage == 0) {
             // We've gone past the first entry in the list of poses
@@ -219,32 +239,35 @@ posePageN(string choice, key id) {
 #else
             posePage = 1;
             poseIndex = 0;
-            bottomDialogLine += [ "-", "Poses Next" ];
+            bottomDialogLine = [ "-", "Poses Next" ];
 #endif
         }
     }
 
     debugSay(4,"DEBUG-AVATAR","Found " + (string)poseCount + " poses");
+    debugSay(4,"DEBUG-AVATAR","Page = " + (string)posePage + "; Index = " + (string)poseIndex);
     debugSay(4,"DEBUG-AVATAR","poseDialogButtons = " + llDumpList2String(poseDialogButtons,","));
 
     poseDialogButtons = llListSort(poseDialogButtons, 1, 1);
 
-    if (poseCount > MAX_DIALOG_ENTRIES) {
+    if (poseCount > MAX_DIALOG_BUTTONS) {
         // Get a 9-count slice from poseDialogButtons for dialog
-        poseDialogButtons = llList2List(poseDialogButtons, poseIndex, poseIndex + 8) + bottomDialogLine;
+        poseDialogButtons = llList2List(poseDialogButtons, poseIndex, poseIndex + 8) + bottomDialogLine + [ "Back..." ];
     }
     else {
         // Can display all poses on one page
         //
         // Note that if we get here, it is impossible for the Next and Prev sections to run: first time around,
         // they aren't options; second time around, we get here and don't offer the options.
-        poseDialogButtons += [ "-", "-" ];
+        //
+        // Note too, that even with ROLLOVER nothing other than ignoring Forward and Backwards makes sense.
+        //
+        poseDialogButtons += [ "-", "-", "Back..." ];
     }
 
     debugSay(4,"DEBUG-AVATAR","poseDialogButtons (revised) = " + llDumpList2String(poseDialogButtons,","));
 
     lmSendConfig("backMenu",(backMenu = MAIN));
-    poseDialogButtons += [ "Back..." ];
 
     msg = "Select the pose to put dolly into";
     if (poseAnimation) msg += " (current pose is " + poseAnimation + ")";
@@ -304,7 +327,7 @@ setPoseAnimation(string anim) {
         poseAnimation = ANIMATION_NONE;
     }
 
-    if (anim == ANIMATION_NONE) return;
+    if (notCurrentlyPosed(anim)) return;
 
     //if ((llGetPermissionsKey() != dollID) || (!(llGetPermissions() & PERMISSION_TRIGGER_ANIMATION)))
     //    return NULL_KEY;
@@ -726,7 +749,7 @@ default {
 #define poseChanged (currentAnimation != poseAnimation)
 
             if (poseChanged) {
-                if (poseAnimation == ANIMATION_NONE) clearPoseAnimation();
+                if (notCurrentlyPosed(poseAnimation)) clearPoseAnimation();
                 else setPoseAnimation(poseAnimation); 
                 currentAnimation = poseAnimation;
             }
@@ -742,7 +765,7 @@ default {
 
         if (permMask & PERMISSION_TAKE_CONTROLS) {
 
-            if (poseAnimation != ANIMATION_NONE)
+            if (currentlyPosed(poseAnimation))
                 // Dolly is "frozen": either collapsed or posed
 
                 // When collapsed or posed the doll should not be able to move at all; so the key will
