@@ -220,26 +220,7 @@ posePageN(string choice, key id) {
     llDialog(id, msg, dialogSort(poseDialogButtons), poseChannel);
 }
 
-key startAnimation(string anim) {
-    list oldAnimList;
-    list newAnimList;
-    integer oldAnimListLen;
-    integer newAnimListLen;
-    key animKey;
-    integer j;
-
-    if (anim == ANIMATION_NONE) return NULL_KEY;
-
-    if ((llGetPermissionsKey() != dollID) || (!(llGetPermissions() & PERMISSION_TRIGGER_ANIMATION)))
-        return NULL_KEY;
-
-    // We need the key of the animation, but this method only works on full perm animations
-    //key animID = llGetInventoryKey(anim);
-    llStartAnimation(anim);
-    return llList2String(llGetAnimationList(llGetPermissionsKey()), -1);
-}
-
-clearAnimation() {
+clearPoseAnimation() {
     list animList;
     key animKey;
 
@@ -275,7 +256,7 @@ clearAnimation() {
     cdAOon();
 }
 
-setAnimation(string anim) {
+setPoseAnimation(string anim) {
     key animKey;
 
     //integer upRefresh;
@@ -291,7 +272,15 @@ setAnimation(string anim) {
         poseAnimation = ANIMATION_NONE;
     }
 
-    animKey = startAnimation(anim);
+    if (anim == ANIMATION_NONE) return;
+
+    //if ((llGetPermissionsKey() != dollID) || (!(llGetPermissions() & PERMISSION_TRIGGER_ANIMATION)))
+    //    return NULL_KEY;
+
+    // We need the key of the animation, but this method only works on full perm animations
+    //key animID = llGetInventoryKey(anim);
+    llStartAnimation(anim);
+    animKey = llList2String(llGetAnimationList(llGetPermissionsKey()), -1);
 
     if (animKey != NULL_KEY) {
         // We have an actual pose...
@@ -513,6 +502,12 @@ default {
                 string choice = llList2String(split, 0);
                 posePageN(choice,id);
             }
+            else if (cmd == "startFollow") {
+                startFollow(carrierID);
+            }
+            else if (cmd == "stopFollow") {
+                stopFollow(carrierID);
+            }
         }
         else if (code == MENU_SELECTION) {
             string choice = llList2String(split, 0);
@@ -694,10 +689,10 @@ default {
 
         if (permMask & PERMISSION_TRIGGER_ANIMATION) {
 
-            // The big work is done in clearAnimation() and setAnimation()
+            // The big work is done in clearPoseAnimation() and setPoseAnimation()
 
-            if (poseAnimation == ANIMATION_NONE) clearAnimation();
-            else setAnimation(poseAnimation); 
+            if (poseAnimation == ANIMATION_NONE) clearPoseAnimation();
+            else setPoseAnimation(poseAnimation); 
 
             llSetTimerEvent(timerRate = adjustTimer());
         }
