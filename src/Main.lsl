@@ -34,6 +34,7 @@ integer lastTimerMark;
 integer timeSpan;
 integer lowScriptModeSpan;
 integer isAttached;
+integer permMask;
 
 key lastWinderID;
 
@@ -154,6 +155,18 @@ docollapse() {
     lmSendConfig("collapsed", (string)(collapsed = TRUE));
     lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0));
 
+    if (poseAnimation == ANIMATION_NONE) {
+        lmSendConfig("poseAnimation", ANIMATION_NONE);
+        lmSendConfig("poserID", NULL_KEY);
+        lmSetConfig("poseExpire", "0");
+
+        //if (poseSilence || hardcore) lmRunRLV("sendchat=y");
+        //if (cdCarried()) startFollow(carrierID);
+    }
+
+    if (cdCarried())
+        lmInternalCommand("stopFollow", (string)carrierID, keyID);
+
     if (RLVok == TRUE && defaultCollapseRLVcmd != "") {
         lmRestrictRLV(defaultCollapseRLVcmd);
     }
@@ -165,7 +178,8 @@ docollapse() {
     while (i--)
         llStopAnimation(llList2Key(oldAnimList, i));
 
-    llStartAnimation(ANIMATION_COLLAPSED);
+    // This will trigger animation
+    llRequestPermissions(dollID, PERMISSION_MASK);
 
     // when dolly collapses, anyone can rescue
     lmSendConfig("lastWinderID", (string)(lastWinderID = NULL_KEY));
@@ -202,8 +216,12 @@ uncollapse() {
 
     setWindRate();
     cdAOon();
-    llStartAnimation("Stand");
 
+    // This will trigger animation
+    llRequestPermissions(dollID, PERMISSION_MASK);
+
+    if (cdCarried())
+        lmInternalCommand("startFollow", (string)carrierID, keyID);
 }
 
 //========================================
@@ -887,6 +905,27 @@ default {
             else if (code == CONFIG_REPORT) {
                 cdConfigureReport();
             }
+        }
+    }
+
+    //----------------------------------------
+    // RUN TIME PERMISSIONS
+    //----------------------------------------
+    run_time_permissions(integer perm) {
+        debugSay(2,"DEBUG-AVATAR","ifPermissions (run_time_permissions)");
+
+        // Don't do anything unless attached
+        if (!llGetAttached()) return;
+
+        permMask = llGetPermissions();
+
+        //----------------------------------------
+        // PERMISSION_TRIGGER_ANIMATION
+
+        if (permMask & PERMISSION_TRIGGER_ANIMATION) {
+
+            if (collapsed) llStartAnimation(ANIMATION_COLLAPSED);
+            else llStartAnimation("Stand");
         }
     }
 }
