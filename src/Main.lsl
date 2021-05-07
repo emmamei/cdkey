@@ -469,9 +469,7 @@ default {
 
         // WINDING DOWN.....
         //
-        // A specific test for collapsed status is no longer required here as
-        // being collapsed is one of several conditions which forces the wind
-        // rate to be 0.
+        // The only reason Dolly's time would be zero is if they are collapsed and out of time...
 
         if (windRate > 0) {
             if (timeSpan != 0) {
@@ -496,7 +494,7 @@ default {
                 }
                 else {
                     // Dolly is DONE! Go down... and yell for help.
-                    if (collapsed) {
+                    if (!collapsed) {
                         llSay(PUBLIC_CHANNEL, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on Dolly's key.)");
                         docollapse();
                     }
