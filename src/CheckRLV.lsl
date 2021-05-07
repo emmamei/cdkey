@@ -116,6 +116,10 @@ activateRLVBase() {
     string baseRLV = "detach=n,";
 #endif
 
+    // This adjusts the default "base" RLV based on Dolly's settings...
+    //
+    // In this, defaultBaseRLVcmd is much more flexible than the other defaults
+    //
     if (autoTP)     baseRLV += "accepttp=n,";       else baseRLV += "accepttp=y,";
     if (!canSelfTP) baseRLV += "tplm=n,tploc=n,";   else baseRLV += "tplm=y,tploc=y,";
     if (!canFly)    baseRLV += "fly=n,";            else baseRLV += "fly=y,";

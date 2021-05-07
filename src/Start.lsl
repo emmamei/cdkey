@@ -55,14 +55,6 @@ integer i;
 string attachName;
 integer isAttached;
 
-// These are hardcoded and should never change during normal operation
-string defaultBaseRLVcmd = "";
-string defaultCollapseRLVcmd = "fly=n,sendchat=n,tplm=n,tplure=n,tploc=n,showinv=n,edit=n,sit=n,sittp=n,fartouch=n,showworldmap=n,showminimap=n,showloc=n,shownames=n,showhovertextall=n";
-
-// Default PoseRLV does not include silence: that is optional
-// Also allow touch - for Dolly to access Key
-string defaultPoseRLVcmd = "fly=n,tplm=n,tplure=n,tploc=n,sittp=n,fartouch=n";
-
 //integer introLine;
 //integer introLines;
 
@@ -291,11 +283,10 @@ readPreferences() {
         ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ncLine);
     }
     else {
-        // File missing - report for debugging only
-        debugSay(1, "DEBUG-START", "No configuration found (" + NOTECARD_PREFERENCES + ")");
+        llOwnerSay("No preferences file was found (\"" + NOTECARD_PREFERENCES + "\")");
 
         prefsRead = PREFS_NOT_READ;
-        lmInitState(101);
+        lmInitState(INIT_STAGE1);
     }
 }
 
@@ -307,7 +298,7 @@ doneConfiguration(integer prefsRead) {
     // the variable prefsRead allows us to know if prefs were read...
     // but how do we use this knowledge?
 
-    if (!prefsRead) llOwnerSay("No preferences were read");
+    //if (!prefsRead) llOwnerSay("No preferences were read");
 
     // Make sure the wind is a reasonable value. If not:
     // windNormal is set to force six winds - but rounded to a
@@ -320,12 +311,15 @@ doneConfiguration(integer prefsRead) {
 
     resetState = RESET_NONE;
 
-    // The messages 102, 104, 105 - and 110 - are not handled by us,
+    // The init stages enumerated here are not handled by us,
     // but by others. They are a message that things are done here, and certain
     // items are are completed.
+    //
+    // FIXME: These stages are fired off near simultaneously, not sequentially.
+    //
     debugSay(3,"DEBUG-START","Configuration done - starting init code 102 and 104 and 105");
-    lmInitState(102);
-    lmInitState(104);
+    lmInitState(INIT_STAGE2);
+    lmInitState(INIT_STAGE3);
     lmInitState(105);
 
     //initializationCompleted
@@ -345,7 +339,7 @@ doneConfiguration(integer prefsRead) {
 
     if (isAttached) cdSetKeyName(dollDisplayName + "'s Key");
 
-    lmInitState(110);
+    lmInitState(INIT_STAGE5);
 
     debugSay(3,"DEBUG-START","doneConfiguration done - exiting");
 }
@@ -489,13 +483,13 @@ default {
             if (selection == "Reset Key") cdResetKey();
         }
         else if (code < 200) {
-            if (code == 101) {
+            if (code == INIT_STAGE1) {
                 doneConfiguration(prefsRead);
             }
-            else if (code == 102) {
+            else if (code == INIT_STAGE2) {
                 ;
             }
-            else if (code == 110) {
+            else if (code == INIT_STAGE5) {
                 
                 msg = "Initialization completed in " +
                       formatFloat((llGetTime() - initTimer), 1) + "s" +
@@ -655,7 +649,7 @@ default {
                 //llOwnerSay("Preferences read in " + formatFloat(llGetTime() - ncStart, 2) + "s");
 
                 prefsRead = PREFS_READ;
-                lmInitState(101);
+                lmInitState(INIT_STAGE1);
             }
             else {
                 // Strip comments (prefs)
