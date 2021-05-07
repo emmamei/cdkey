@@ -881,6 +881,11 @@ default {
                     return;
                 }
                 else if (choice == "poses") {
+                    if (arePosesPresent() == FALSE) {
+                        cdSayTo("No poses present.",id);
+                        return;
+                    }
+
                     cdMenuInject("Poses...", name, id);
                     return;
                 }
@@ -893,6 +898,11 @@ default {
                     return;
                 }
                 else if (choice == "listposes") {
+                    if (arePosesPresent() == FALSE) {
+                        cdSayTo("No poses present.",id);
+                        return;
+                    }
+
                     integer n = llGetInventoryNumber(INVENTORY_ANIMATION);
                     string poseCurrent;
 
@@ -1138,20 +1148,8 @@ default {
             if (msg != ANIMATION_COLLAPSED) {
                 if (!(llGetAgentInfo(llGetOwner()) & AGENT_SITTING)) { // Agent not sitting
                     if (llGetInventoryType(msg) == INVENTORY_ANIMATION) {
-                        string firstChar = cdGetFirstChar(msg);
-
-                        // if animation starts with "." only Doll has access to it
-                        if (firstChar == ".") {
-                            if (isDoll) { lmPoseReply(msg, name, id); }
-                        }
-                        // if animation starts with "!" only Doll and Controllers have access to it
-                        else if (firstChar == "!") {
-                            if (isDoll || isController) { lmPoseReply(msg, name, id); }
-                        }
-                        else {
-                            // It's a pose but from a member of the public
-                            if (allowPose || hardcore) lmPoseReply(msg, name, id);
-                        }
+                        // We don't have to do any testing for poses here: if the specified pose exists, we use it
+                        lmPoseReply(msg, name, id);
                     }
 #ifdef DEVELOPER_MODE
                     else {

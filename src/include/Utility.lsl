@@ -33,6 +33,64 @@ list dialogSort(list srcButtons) {
     return outButtons;
 }
 
+#define isCollapseAnimationPresent() (llGetInventoryType(ANIMATION_COLLAPSED) == INVENTORY_ANIMATION)
+
+integer numberOfPosesPresent() {
+    integer poseCount;
+
+    poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
+
+    if (poseCount > 0) {
+        // There are animations - but one could be the collapse animation
+        if (isCollapseAnimationPresent()) poseCount--;
+    }
+
+    return poseCount;
+}
+
+integer arePosesPresent() {
+    integer poseCount;
+    integer inventoryType;
+
+    poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
+
+    if (poseCount == 0) {
+        llSay(DEBUG_CHANNEL, "No animations found!");
+    }
+    else {
+        // Either there are more than two animations, which means at least one pose -
+        // or there is one pose, which may or may not be a pose (could be a collapse animation)
+        if (poseCount > 2) return TRUE;
+        else if (!isCollapseAnimationPresent()) return TRUE;
+    }
+
+    return FALSE;
+}
+
+#define getNotecardName(n) llGetInventoryName(INVENTORY_NOTECARD, (n));
+
+integer areTypesPresent() {
+    integer notecardCount;
+    integer i;
+
+    notecardCount = llGetInventoryNumber(INVENTORY_NOTECARD);
+
+    if (notecardCount == 0) {
+        return FALSE;
+    }
+    else {
+        // There are notecards, but are they notecards for types?
+        i = notecardCount;
+
+        while(i--) {
+            // Types have notecards starting with "*"
+            if (cdGetFirstChar(getNotecardName(i)) == "*") return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
 memReport(string script, float delay) {
     if (delay != 0.0) llSleep(delay);
 

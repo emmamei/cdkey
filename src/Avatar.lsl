@@ -148,19 +148,8 @@ posePageN(string choice, key id) {
 
         poseCount = getAnimationCount();
 
-        if (poseCount == 0) {
+        if (arePosesPresent() == FALSE) {
             llSay(DEBUG_CHANNEL,"No animations! (must have collapse animation and one pose minimum)");
-            return;
-        }
-        else if (poseCount == 1) {
-            string poseName;
-
-            poseName = getAnimationName(0);
-
-            // Either we have one solitary pose, or collapse only
-            if (poseName == ANIMATION_COLLAPSED) llSay(DEBUG_CHANNEL,"No animations!");
-            else llSay(DEBUG_CHANNEL,"No collapse animation (\"" + (string)(ANIMATION_COLLAPSED) + "\") found!");
-
             return;
         }
 

@@ -521,10 +521,8 @@ default {
                     // Poses and Unpose Buttons
                     if (!(llGetAgentInfo(llGetOwner()) & AGENT_SITTING)) { // Agent not sitting
                         // if dolly is sitting, dont allow poses
-                        integer poseCount;
-                        poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
 
-                        if (poseCount > 1) {
+                        if (arePosesPresent()) {
                             if (poseAnimation != ANIMATION_NONE) {
                                 msg += "Doll is currently posed. ";
 
@@ -551,10 +549,6 @@ default {
                                 // Notice again: Carrier can only pose Dolly if permitted.
                                 if ((!isDoll && allowPose) || isDoll || isController) menu += "Poses...";
                             }
-                        }
-                        else {
-                             if (poseCount == 1) llSay(DEBUG_CHANNEL, "No poses found!");
-                        else if (poseCount == 0) llSay(DEBUG_CHANNEL, "No poses found! Key won't work without collapse animation!");
                         }
                     }
 
