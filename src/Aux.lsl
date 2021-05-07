@@ -229,12 +229,20 @@ default {
             string choice = llList2String(split, 0);
             string avatar = llList2String(split, 1);
 
+#define isObjectPresent(o) (llGetInventoryType(o) == INVENTORY_OBJECT)
+#define isNotecardPresent(n) (llGetInventoryType(n) == INVENTORY_NOTECARD)
+#define isLandmarkPresent(a) (llGetInventoryType(a) == INVENTORY_LANDMARK)
+#define notPosed() (poseAnimation == ANIMATION_NONE)
+
             if (choice == "Help...") {
                 msg = "Here you can find various options to get help with your key and to connect with the community.";
-                list plusList = [ "Join Group", "Visit Dollhouse", "Visit Website", "Visit Blog", "Visit Development" ];
+                list helpMenuList = [ "Join Group", "Visit Website", "Visit Blog", "Visit Development" ];
 
-                if ((llGetInventoryType(NOTECARD_HELP) == INVENTORY_NOTECARD))
-                    plusList += [ "Help Notecard" ];
+                if (isNotecardPresent(NOTECARD_HELP))
+                    helpMenuList += [ "Help Notecard" ];
+
+                if (isLandmarkPresent(LANDMARK_CDHOME))
+                    helpMenuList += [ "Visit Dollhouse" ];
 
                 // Note - to do this Key handout properly, we'd need an infinite Key:
                 // a Key which contains a Key which contains a Key which contains a Key...
@@ -242,20 +250,25 @@ default {
                 //
 
                 if (cdIsDoll(id)) {
-                    if (!collapsed) if (poseAnimation == ANIMATION_NONE)
+
+                    if (!collapsed) if (notPosed())
+
                         // This is to totally reset Dolly's worn body,
                         // using the ~normalself, ~normaloutfit,  and ~nude folders
-                        plusList += [ "Reset Body", "Reset Key" ];
+                        //
+                        // Note that Dolly cannot be posed and cannot be collapsed to access these
+                        //
+                        helpMenuList += [ "Reset Body", "Reset Key" ];
                 }
                 else {
-                    if ((llGetInventoryType(OBJECT_KEY) == INVENTORY_OBJECT))
-                        plusList += [ "Get Key" ];
+                    if (isObjectPresent(OBJECT_KEY))
+                        helpMenuList += [ "Get Key" ];
 
-                    if (cdIsController(id)) plusList += "Reset Key";
+                    if (cdIsController(id)) helpMenuList += "Reset Key";
                 }
 
                 cdDialogListen();
-                llDialog(id, msg, dialogSort(plusList + "Back..."), dialogChannel);
+                llDialog(id, msg, dialogSort(helpMenuList) + [ "Back..." ], dialogChannel);
             }
             else if (choice == "Reset Body") {
                 lmInternalCommand("resetBody","",id);
