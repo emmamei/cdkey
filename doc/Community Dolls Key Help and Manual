@@ -1,6 +1,6 @@
 Community Dolls Key
 ===================
-30 March 2020
+5 May 2021
 
 This Key is different from others; it is designed to force a wearer to interact with others and to make friends, build community, and to bring people together. Thus, some features that would be found in a normal BDSM-styled key is not found here.
 
@@ -11,7 +11,7 @@ New Features Over Previous Model
 
 There many, many, many New Features - perhaps too many to list. Here are some of them:
 
-* Built-in Demo Mode - for trying key out
+* Child version of the Key without Stripping and without other Adult capabilities
 
 * Better Carrying handling - Carried Dolly stays close and moves more smoothly
 
@@ -23,25 +23,31 @@ There many, many, many New Features - perhaps too many to list. Here are some of
 
 * Repeat windings are greatly simplified - and can be allowed, or not, as desired.
 
+* Windings can be limited to single winds by each person, requiring a different person to wind next
+
+* Self-winding is optional
+
 * Unwinding a Dolly is now possible.
 
-* Holding a Key is now possible.
-
 * A posed Dolly can optionally be a silent Dolly (using RLV).
+
+* A posed Dolly can run out of time - and then collapse.
 
 * Multiple Dolly Controllers are possible.
 
 * A Blacklist is available with multiple entries available.
 
-* In AFK mode, the Dolly continues to run down - but at a lower rate.  Thus a Dolly in AFK CAN run out of time.
-
-* When the Dolly goes into Away status, the Dolly automatically enters the "low power mode" (AFK).
-
-* An emergency winder is available on a limited basis (with a recharge time).
+* When the Dolly goes into Away status, the Dolly automatically enters the AFK mode, running down at a slower rate.
 
 * A chat interface is available.
 
-* Poses can be selectively limited to Dolly use or to Dolly and Controller use only
+* Chat commands provide access to select menu dialogs
+
+* Doll body can be reset, putting on all items in ~normalself, ~nude, and ~normaloutfit
+
+* Scripts can be put into a Key of your choice
+
+* Key can be made invisible, or visible - OR ghostly (only via chat interface)
 
 Configuration of #RLV Folder
 ----------------------------
@@ -52,7 +58,7 @@ To be able to wear an item on demand, the Key uses a set of folders located in #
 
 The first thing is to create a "> Outfits" folder (without the quotes).  The folder is "marked" with a ">" symbol, which is a standard naming convention in the #RLV folder. You can create a multi-level tree using this convention inside your outfit folder.
 
-Inside the #RLV folder you will need two specific folders:
+Inside the >Outfits folder you will need two specific folders:
 
     Folder: ~normalself
 
@@ -61,6 +67,10 @@ Inside the #RLV folder you will need two specific folders:
     Folder: ~nude
 
     Items that may need to be put on frequently after an outfit - such as bare feet, jewelry, tattoos, and such can be placed here. These items are re-worn after every outfit change.
+
+    Folder: ~normaloutfit
+
+    This folder contains an outfit that will be worn when the Doll's body is reset.
 
 If the contents of both the ~normalself and ~nude folders are worn, you should be in your "natural" nude state. This state may be used as a basis for a "Nude" button in the future.
 
@@ -92,12 +102,12 @@ Access to each pose can be limited through the use of a prefix. No prefix means 
 
 Poses can also be activated through the chat interface (described below). Specify a pose at the command line (with or without prefix) to activate it:
 
-    /75 kneel
-    /75 !kneel
+    /75 mr kneel
 
-To release a pose, use the "release" command:
+To release a pose, use the "release" or "unpose" command:
 
-    /75 release
+    /75 mr release
+    /75 mr unpose
 
 Menus and Control
 -----------------
@@ -115,9 +125,9 @@ A Carrier takes control of the Dolly, and locks out the rest of the general publ
 Preferences Card
 ----------------
 
-The Preferences can be set on a NoteCard within the Key called "Preferences"; there is an example notecard included. Note that each line within the NoteCard increases the processing time; so it is best to keep the card's number of lines to a minimum.
+The Preferences can be set on a NoteCard within the Key called "Preferences"; there is an example notecard included. Note that each line within the NoteCard increases the processing time; so it is best to keep the card's number of lines to a minimum (including comments).
 
-The example card should contain all the documentation for what it supports and what options are available.
+The example Preferences card should contain all the documentation for what it supports and what options are available.
 
 Main Menu
 ---------
@@ -130,11 +140,11 @@ On the initial menu seen after a Key is touched are the following buttons:
 
     Normally, the Dolly may be wound several times in a row by a winder.  If the Repeat Winding option is unset, then a Winder is not able to wind the Dolly repeatedly, but must be wound by different people in succession.
 
-    * Type of Doll
+    * Types
 
     Convert the dolly to a particular Type of Doll. This will provide the Doll with a select choice of outfits (if set up) for that Type, and will also send text affirmations and suggestions to the Doll pertaining to the Doll Type selected.
 
-    * Dress
+    * Outfits
 
     This will dress the Doll in a chosen outfit. If the Doll is a specific Doll Type, and outfits are set up properly, then this list of outfits will be specific to the Type of Doll chosen.
 
@@ -156,7 +166,7 @@ On the initial menu seen after a Key is touched are the following buttons:
 
     If the key is detachable, then this button appears in the main menu.  Upon clicking this button, the Key will be detached and no longer available.
 
-    * Help/Support
+    * Help
 
     Help and Support is available for the Key here, including documentation.
 
@@ -250,14 +260,6 @@ Options > Features
 
     The Doll Type can be made visible to all through hovertext over the Key. This selects or deselects this possibility.
 
-    * Quiet Key
-
-    A Quiet Key puts very little out to the general chat, usually only displaying messages to the user who would be most interested in the message.
-
-    * Pleasure Doll
-
-    A "Pleasure Doll" is one that is available for sex at any time, and may be stripped and used by its owner or carrier. With this option, any Doll Type may become a "Pleasure Doll" and have this capability.
-
     * Warnings
 
     Warnings can be put out that you are running out of time soon.  This option activates or deactivates these warnings.
@@ -273,10 +275,6 @@ Options > Features
     * Carryable
 
     Can the Doll be Carried? This option will make the Doll available to be carried or not.
-
-    * Offline
-
-    The Key uses an external server to save the Key's settings from one run to the next. If this bothers you, then use this setting to go "offline" and no data will be stored externally.
 
     * Repeat Wind
 
@@ -364,9 +362,9 @@ Chat Commands
 
 The Key has a chat interface on Channel 75, though the channel can be set to whatever you like with a chat command. To talk to your Key, use local chat with a line like:
 
-    /75 stat
+    /75 mr stat
 
-This does a status report. You must always prefix the command with "/75" (or whatever channel is being used). If you are using an RLV item that restricts chat, you may find yourself cut off from talking to your Key this way.
+This does a status report. You must always prefix the command with the channel number ("/75" by default, or whatever channel is being used) and then by your chosen prefix (first initial plus last initial of your name). If you are using an RLV item that restricts chat, you may find yourself cut off from talking to your Key this way.
 
 Commands are these:
 
@@ -383,10 +381,6 @@ Commands are these:
 
     This adds a controller by name to the list of controllers on the Key.
 
-    demo
-
-    Toggle Demo Mode. The Key's time limit is set to 5 minutes, and wind times adjusted. The previous maximum time and wind times are preserved for when demo mode is exited.
-
     detach
 
     Detaches the key from the wearer. After this command executes, the key is no longer available as it has been removed.
@@ -395,13 +389,14 @@ Commands are these:
 
     This provides a short, quick, help - a list of commands.
 
-    poses
+    listposes
 
     This lists the available poses in the Key.
 
     release
+    unpose
 
-    This releases the user from the current pose, if possibble.
+    These commands release the user from the current pose, if possibble.
 
     stat
     stats
@@ -411,11 +406,31 @@ Commands are these:
 
     wind
 
-    This is the emergency winder. It can be activated once every 12 hours.
+    This allows Dolly or others to wind Dolly from the command line.
 
-Demo Mode
----------
-When Demo Mode is activated, the key goes to a 5 minute maximum, and winding is adjusted accordingly. If a single wind amount is being used, the wind time is set to 1 minute. All functions remain operational in their normal ways.
+    poses
 
-The purpose is to allow people to try the key out, see what it is like to be collapsed and to be wound and returned to normal. There is no functional difference between a demo key and the normal key but time.
+    This brings up the Poses dialog menu.
+
+    menu
+
+    This brings up the Main dialog menu.
+
+    outfits
+
+    This brings up the last Outfits menu.
+
+Creating a Key from Scratch
+---------------------------
+
+To create a Key from scratch, it is not hard. Follow these steps:
+
+    1. Add scripts to the Key (without "New" and without "UpdaterServer" scripts)
+    2. Add animation named "collapse" for when Dolly runs out of time
+    3. Add other animations for poses
+    4. (Optional) Add the Help file to have Help available from the Key
+    5. (Optional) Add the "Home" Landmark in order to use the Homing Beacon
+    6. (Optional) Add a Community Dolls Landmark in order to be able to meet fellow Dolls through the Key
+    7. (Optional) Add a Preferences card to set preferences on Key reset
+    8. (Optional) Add type notecards - consisting of a name of a type prefixed by a "*" (such as "*Japanese" or "*Dominant")
 

@@ -1,13 +1,5 @@
 The key contains several optional features for advanced users which are not available through the menu interface.
 
-Selective access poses
-You can choose to make some poses available only to the doll themselves or only to the doll and controllers by adding a prefix symbol to the animation name.
-
-. Prefix - Makes the pose private and only available to the doll themselves for example .private
-! Prefix - Makes the pose only available to the doll and those listed as controllers for example !kneel
-
-Both types of prefixed pose can be started by the doll by typing the name on channel 75 with or without the prefix itself, ie you can simply type /75kneel instead of /75!kneel if you wish.  However do not specify two poses with names that differ only by the prefix ie you should not have .pose and !pose in the key.
-
 Rating restricted outfits
 You can make an outfit rating restricted such that it will not show in lower rated sims by prefixing the start of the outfit name with either {A} for Adult which will be hidden whenever you are in a Moderate or General sim, or {M} for Moderate rating which will not be visible while in a General sim.
 

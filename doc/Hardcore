@@ -1,21 +1,29 @@
 HARDCORE MODE
 =============
-18 February 2015
+5 May 2021
 
-Hardcore mode does a wide variety of things, and changes the Key's
+The general idea behind hardcore mode is a few things:
+
+    * Dolly can activate hardcore mode but cannot deactivate it
+    * Dolly is not aware of the status of the Key or of time left
+    * Dolly cannot turn off public options
+    * Poses are silent and there is no time limit: Dolly remains posed until someone unposes Dolly
+    * Dolly cannot dress or wind self
+    * Key cannot be detached
+
+Specifically, hardcore mode does a wide variety of things, and changes the Key's
 operation in some interesting ways:
 
-* Dolly does not get reports of how much time is left or added
-* Dolly does not get reports of who accessed her and how
-* Dolly can enter hardcore mode but cannot exit
-* Controller (except Dolly) is the only one who can exit hardcore mode
-* Dolly cannot disallow the public from dressing her
-* Dolly cannot disallow the public from carrying her
-* Dolly cannot disallow the public from posing her
-* Dolly cannot disallow the public from stripping her
-* Poses no longer have time limits, regardless of doll type
-* Poses are silent - Dolly cannot speak during a pose
-* Dolly cannot dress self
-* Emergency winder is disabled
-* Key is not detachable
-* stats related chat commands are disabled
+    * Dolly does not get reports of how much time is left or added
+    * Dolly does not get reports of who accessed her and how
+    * Dolly can enter hardcore mode but cannot exit
+    * Controller (except Dolly) is the only one who can exit hardcore mode
+    * Dolly cannot disallow the public from dressing her
+    * Dolly cannot disallow the public from carrying her
+    * Dolly cannot disallow the public from posing her
+    * Dolly cannot disallow the public from stripping her
+    * Poses no longer have time limits, regardless of doll type
+    * Poses are silent - Dolly cannot speak during a pose
+    * Dolly cannot dress self
+    * Key is not detachable
+    * stats related chat commands are disabled
