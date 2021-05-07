@@ -9,11 +9,24 @@ float GlobalDefines_version=1.0;
 #include "config.h"
 
 // Link message codes
+
+// Init stages
+//
+// Stage 1: Preferences have now been read (if any)
 #define INIT_STAGE1       101
+
+// Stage 2: Runs after post-configuration, including wind time etc.
 #define INIT_STAGE2       102
+
+// Stage 3:
 #define INIT_STAGE3       104
+
+// Stage 4:
 #define INIT_STAGE4       105
+
+// Stage 5: All startup stages are complete: report and finish
 #define INIT_STAGE5       110
+
 // #define E 11
 // #define F 12
 // #define G 15

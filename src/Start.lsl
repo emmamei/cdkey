@@ -315,33 +315,7 @@ doneConfiguration(integer prefsRead) {
     // but by others. They are a message that things are done here, and certain
     // items are are completed.
     //
-    // FIXME: These stages are fired off near simultaneously, not sequentially.
-    //
-    debugSay(3,"DEBUG-START","Configuration done - starting init code 102 and 104 and 105");
     lmInitState(INIT_STAGE2);
-    lmInitState(INIT_STAGE3);
-    lmInitState(105);
-
-    //initializationCompleted
-    //isAttached = cdAttached();
-
-    if (dollDisplayName == "") {
-        string name = dollName;
-        integer i = llSubStringIndex(name, " ");
-
-        if (i != NOT_FOUND) name = llGetSubString(name, 0, i - 1);
-
-        lmSendConfig("dollDisplayName", (dollDisplayName = "Dolly " + name));
-    }
-
-    // WearLock should be clear
-    lmSetConfig("wearLock","0");
-
-    if (isAttached) cdSetKeyName(dollDisplayName + "'s Key");
-
-    lmInitState(INIT_STAGE5);
-
-    debugSay(3,"DEBUG-START","doneConfiguration done - exiting");
 }
 
 doRestart() {
@@ -484,12 +458,37 @@ default {
         }
         else if (code < 200) {
             if (code == INIT_STAGE1) {
+                debugSay(3,"DEBUG-START","Stage 1 begun.");
                 doneConfiguration(prefsRead);
             }
             else if (code == INIT_STAGE2) {
-                ;
+                debugSay(3,"DEBUG-START","Stage 2 begun.");
+                lmInitState(INIT_STAGE3);
+            }
+            else if (code == INIT_STAGE3) {
+                debugSay(3,"DEBUG-START","Stage 3 begun.");
+                lmInitState(INIT_STAGE4);
+            }
+            else if (code == INIT_STAGE4) {
+                debugSay(3,"DEBUG-START","Stage 4 begun.");
+                if (dollDisplayName == "") {
+                    string name = dollName;
+                    integer i = llSubStringIndex(name, " ");
+
+                    if (i != NOT_FOUND) name = llGetSubString(name, 0, i - 1);
+
+                    lmSendConfig("dollDisplayName", (dollDisplayName = "Dolly " + name));
+                }
+
+                // WearLock should be clear
+                lmSetConfig("wearLock","0");
+
+                if (isAttached) cdSetKeyName(dollDisplayName + "'s Key");
+
+                lmInitState(INIT_STAGE5);
             }
             else if (code == INIT_STAGE5) {
+                debugSay(3,"DEBUG-START","Stage 5 begun.");
                 
                 msg = "Initialization completed in " +
                       formatFloat((llGetTime() - initTimer), 1) + "s" +
