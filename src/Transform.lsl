@@ -42,7 +42,7 @@ integer phraseCount;
 integer changeOutfit;
 string msg;
 integer i;
-list types;
+list typeBufferedList;
 key transformerID;
 integer readLine;
 integer readingNC;
@@ -92,7 +92,7 @@ setDollType(string stateName) {
     stateName = cdGetFirstChar(llToUpper(stateName)) + cdButFirstChar(llToLower(stateName));
 
     reloadTypeNames(NULL_KEY);
-    if (llListFindList(types, (list)stateName) == NOT_FOUND) {
+    if (llListFindList(typeBufferedList, (list)stateName) == NOT_FOUND) {
       llSay(DEBUG_CHANNEL,"Invalid Doll Type specified!");
       return;
     }
@@ -154,42 +154,49 @@ reloadTypeNames(key id) {
     string typeName;
 
     integer n = llGetInventoryNumber(INVENTORY_NOTECARD);
-    types = [];
 
-    while(n) {
-        typeName = llGetInventoryName(INVENTORY_NOTECARD, --n);
-
-        if (cdGetFirstChar(typeName) == TYPE_FLAG) {
-            typeName = cdButFirstChar(typeName);
-
-            // Disallow several types of Keys: if we allowed
-            // these, then creating a notecard would enable
-            // the type without any access controls
-            //
-            // The Slut model is allowed (in a normal fashion)
-            // if this is an ADULT key
-            //
-#ifdef ADULT_MODE
-            types += typeName;
-#else
-            // Don't allow Slut notecard to define Slut type (not an Adult Key)
-            if (typeName != "Slut") types += typeName;
-#endif
-        }
+    if (n == 0) {
+        llOwnerSay("No types found.");
+        return;
     }
 
-    //We don't need a Notecard to be present for these to be active
-    //
-    // Note the following rules of the built-in types:
-    //   - Display: Notecard is ok but not needed
-    //   - Slut: rejects type even if Notecard is present if not ADULT, else Notecard ok but not needed
-    //
-    if (llListFindList(types, (list)"Display") == NOT_FOUND) types += [ "Display" ];
+    if (typeBufferedList == []) {
+
+        while(n) {
+            typeName = llGetInventoryName(INVENTORY_NOTECARD, --n);
+
+            if (cdGetFirstChar(typeName) == TYPE_FLAG) {
+                typeName = cdButFirstChar(typeName);
+
+                // Disallow several types of Keys: if we allowed
+                // these, then creating a notecard would enable
+                // the type without any access controls
+                //
+                // The Slut model is allowed (in a normal fashion)
+                // if this is an ADULT key
+                //
+    #ifdef ADULT_MODE
+                typeBufferedList += typeName;
+    #else
+                // Don't allow Slut notecard to define Slut type (not an Adult Key)
+                if (typeName != "Slut") typeBufferedList += typeName;
+    #endif
+            }
+        }
+
+        //We don't need a Notecard to be present for these to be active
+        //
+        // Note the following rules of the built-in types:
+        //   - Display: Notecard is ok but not needed
+        //   - Slut: rejects type even if Notecard is present if not ADULT, else Notecard ok but not needed
+        //
+        if (llListFindList(typeBufferedList, (list)"Display") == NOT_FOUND) typeBufferedList += [ "Display" ];
 #ifdef ADULT_MODE
-    // This makes the process location-dependent...
-    if (simRating == "MATURE" || simRating == "ADULT")
-        if (llListFindList(types, (list)"Slut") == NOT_FOUND) types += [ "Slut" ];
+        // This makes the process location-dependent...
+        if (simRating == "MATURE" || simRating == "ADULT")
+            if (llListFindList(typeBufferedList, (list)"Slut") == NOT_FOUND) typeBufferedList += [ "Slut" ];
 #endif
+    }
 }
 
 // Folders need to be searched for: the outfits folder, and the
@@ -651,11 +658,11 @@ default {
 
                     // We need a new list var to be able to change the display, not the
                     // available types
-                    list choices = types;
+                    list typeMenuChoices = typeBufferedList;
 
                     // Delete the current type: transforming to current type is redundant
-                    if ((i = llListFindList(choices, (list)dollType)) != NOT_FOUND) {
-                        choices = llDeleteSubList(choices, i, i);
+                    if ((i = llListFindList(typeMenuChoices, (list)dollType)) != NOT_FOUND) {
+                        typeMenuChoices = llDeleteSubList(typeMenuChoices, i, i);
                     }
 
                     if (cdIsDoll(id)) msg += "What type of doll do you want to be?";
@@ -668,7 +675,7 @@ default {
 
                     lmSendConfig("backMenu",(backMenu = MAIN));
                     cdDialogListen();
-                    llDialog(id, msg, dialogSort(llListSort(choices, 1, 1) + "Back..."), typeChannel);
+                    llDialog(id, msg, dialogSort(llListSort(typeMenuChoices, 1, 1) + "Back..."), typeChannel);
                 }
                 debugSay(5,"DEBUG-TYPES","Transform complete");
             }
@@ -719,8 +726,11 @@ default {
                 configured = 1;
             }
             else if (code == INIT_STAGE3) {
+                // this loads the type names buffer
                 reloadTypeNames(NULL_KEY);
-                llSetTimerEvent(30.0);
+
+                if (lowScriptMode) llSetTimerEvent(LOW_RATE);
+                else llSetTimerEvent(STD_RATE);
 
                 // Might have been set in Prefs, so do this late
             }
@@ -728,7 +738,11 @@ default {
                 // note that dollType is ALREADY SET....
                 // this is bad form but allows us to defer the subroutine
                 // until now in the startup process
+
+                // This updates the doll type using setDollType()
                 lmSetConfig("dollType", dollType);
+
+                // This clears the transformation lock
                 lmSetConfig("transformLockExpire","0");
             }
 #ifdef DEVELOPER_MODE
