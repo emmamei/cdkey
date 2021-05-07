@@ -45,7 +45,7 @@ integer wearLockExpire;
 integer carryExpire;
 integer poseExpire;
 integer transformLockExpire;
-string defaultCollapseRLVcmd;
+string defaultCollapseRLVcmd = "fly=n,sendchat=n,tplm=n,tplure=n,tploc=n,showinv=n,edit=n,sit=n,sittp=n,fartouch=n,showworldmap=n,showminimap=n,showloc=n,shownames=n,showhovertextall=n";
 
 key simRatingQuery;
 
@@ -155,7 +155,9 @@ docollapse() {
     lmSendConfig("collapsed", (string)(collapsed = TRUE));
     lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0));
 
-    if (poseAnimation == ANIMATION_NONE) {
+#define notPosed (poseAnimation == ANIMATION_NONE)
+
+    if (notPosed) {
         lmSendConfig("poseAnimation", ANIMATION_NONE);
         lmSendConfig("poserID", NULL_KEY);
         lmSetConfig("poseExpire", "0");
@@ -167,7 +169,7 @@ docollapse() {
     if (cdCarried())
         lmInternalCommand("stopFollow", (string)carrierID, keyID);
 
-    if (RLVok == TRUE && defaultCollapseRLVcmd != "") {
+    if (RLVok == TRUE) {
         lmRestrictRLV(defaultCollapseRLVcmd);
     }
 
@@ -479,7 +481,15 @@ default {
                 lmSendConfig("timeLeftOnKey",(string)timeLeftOnKey);
 
                 // Now that we've ticked down a few - check for warnings, and check for collapse
-                if (timeLeftOnKey > 0) {
+                if (timeLeftOnKey == 0) {
+                    // Dolly is DONE! Go down... and yell for help.
+                    if (!collapsed) {
+                        llSay(PUBLIC_CHANNEL, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on Dolly's key.)");
+                        docollapse();
+                    }
+                }
+#ifdef NOT_USED
+                else {
 
                     if (doWarnings && !warned) {
                         minsLeft = llRound(timeLeftOnKey / (SECS_PER_MIN * windRate));
@@ -492,13 +502,7 @@ default {
                     }
                     else warned = 0;
                 }
-                else {
-                    // Dolly is DONE! Go down... and yell for help.
-                    if (!collapsed) {
-                        llSay(PUBLIC_CHANNEL, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on Dolly's key.)");
-                        docollapse();
-                    }
-                }
+#endif
             }
         }
     }
