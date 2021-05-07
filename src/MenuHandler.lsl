@@ -674,13 +674,13 @@ default {
             RLVok = llList2Integer(split, 0);
         }
         else if (code < 200) {
-            if (code == 102) {
+            if (code == INIT_STAGE2) {
                 if (data == "Start") configured = 1;
 
                 doDialogChannel();
                 //scaleMem();
             }
-            else if (code == 110) {
+            else if (code == INIT_STAGE5) {
                 //startup = 0;
                 ;
             }

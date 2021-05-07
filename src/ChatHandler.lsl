@@ -355,7 +355,7 @@ default {
             rlvAPIversion = llList2String(split, 1);
         }
         else if (code < 200) {
-            if (code == 110) {
+            if (code == INIT_STAGE5) {
                 if (chatPrefix == "") {
                     // If chat prefix is not configured elsewhere, we default to
                     // using the initials of the dolly's name in legacy name format.

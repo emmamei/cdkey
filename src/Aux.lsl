@@ -490,12 +490,12 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                     lmInternalCommand("instantMessage", msg, targetKey);
                 }
             }
-            else if (code == 102) {
+            else if (code == INIT_STAGE2) {
                 configured = 1;
             }
 #ifdef DEVELOPER_MODE
             // Generate memory report on startup
-            else if (code == 110) {
+            else if (code == INIT_STAGE5) {
                 llSleep(5.0);
                 lmMemReport(0.5, dollID);
             }
