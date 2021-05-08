@@ -808,8 +808,6 @@ default {
                     }
                 }
             }
-
-
         }
         else if (channel == typeSearchChannel) {
 
