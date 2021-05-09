@@ -17,10 +17,7 @@
 #define cdListenerActivate(a) llListenControl(a, 1)
 #define cdResetKey() llResetOtherScript("Start")
 #define cdHaltTimer() llSetTimerEvent(0.0);
-#define lmRunRLVBoolean(a,b) if ((b) == 1) { lmRunRLV((a)+"=y"); } else { lmRunRLV((a)+"=n"); }
-
-// Note we bypass this, and call the routine directly
-#define lmDoCheckRLV() lmInternalCommand("doCheckRLV","",NULL_KEY)
+#define rlvSetIf(a,b) if ((b) == 1) { lmRunRLV((a)+"=y"); } else { lmRunRLV((a)+"=n"); }
 
 string name;
 string value;
@@ -34,8 +31,8 @@ string rlvAPIversion;
 integer i;
 integer rlvChannel;
 integer rlvHandle;
-integer RLVck = MAX_RLVCHECK_TRIES;
-integer RLVstarted;
+integer rlvCheck = MAX_RLVCHECK_TRIES;
+integer rlvStarted;
 
 list rlvExceptions;
 
@@ -54,14 +51,16 @@ list rlvExceptions;
 // even if RLV has already been checked, this WILL
 // run again...
 
+#define NO_CHANNEL 0
+
 // This is the main place where the RLV listener is opened.
 
-doCheckRLV() {
+startRlvCheck() {
     // Checking for RLV
     llOwnerSay("Checking for RLV support");
 
-    // Set up RLV listener
-    if (rlvChannel == 0) { // rlvChannel should be zero only when unset
+    // Set up listener to receive RLV command output
+    if (rlvChannel == NO_CHANNEL) {
         // Calculate positive (RLV compatible) rlvChannel
         rlvChannel = MAX_INT - (integer)llFrand(5000);
         rlvHandle = cdListenMine(rlvChannel);
@@ -70,18 +69,18 @@ doCheckRLV() {
     }
 
     // Configure variables
-    RLVck = MAX_RLVCHECK_TRIES;
+    rlvCheck = MAX_RLVCHECK_TRIES;
     RLVok = UNSET;
     RLVsupport = UNSET;
     rlvAPIversion = "";
-    RLVstarted = FALSE;
+    rlvStarted = FALSE;
 
 #ifdef DEVELOPER_MODE
     myPath = "";
 #endif
 
     debugSay(2,"DEBUG-RLV","starting a check for RLV");
-    checkRLVcore();
+    rlvCheckTry();
 }
 
 // This the actual check - and is run multiple times
@@ -92,22 +91,22 @@ doCheckRLV() {
 // If RLVok was TRUE, then no more check tries are needed.
 // If RLVok is FALSE, then there should be no more tries to make.
 
-checkRLVcore() {
+rlvCheckTry() {
     // Check RLV: this could be called multiple times (retries)
-    debugSay(2,"DEBUG-RLV","checking for RLV - try " + (string)(MAX_RLVCHECK_TRIES - RLVck) + " of " + (string)MAX_RLVCHECK_TRIES);
+    debugSay(2,"DEBUG-RLV","checking for RLV - try " + (string)(MAX_RLVCHECK_TRIES - rlvCheck) + " of " + (string)MAX_RLVCHECK_TRIES);
 
-    // Decrease number of retries - RLVck is check counter
-    RLVck -= 1;
+    // Decrease number of retries - rlvCheck is check counter
+    rlvCheck -= 1;
 
     // Timeout: if no listener reply received, time out
     llSetTimerEvent(RLV_TIMEOUT);
 
     // Switch to older command if newer one fails
-    if (RLVck > 2) llOwnerSay("@versionnew=" + (string)rlvChannel);
+    if (rlvCheck > 2) llOwnerSay("@versionnew=" + (string)rlvChannel);
     else           llOwnerSay("@version="    + (string)rlvChannel);
 }
 
-activateRLVBase() {
+rlvActivateBase() {
     if (RLVok != TRUE) return;
 
 #ifdef DEVELOPER_MODE
@@ -128,10 +127,10 @@ activateRLVBase() {
 
     lmRunRLVas("Base", baseRLV);
     lmSendConfig("defaultBaseRLVcmd",(string)baseRLV); // save the defaults
-    outfitRLVLock();
+    rlvOutfitLock();
 }
 
-outfitRLVLock() {
+rlvOutfitLock() {
 #ifdef LOCKON
     if (!canDressSelf || hardcore || collapsed || wearLock) {
         // Lock outfit down tight
@@ -150,11 +149,11 @@ outfitRLVLock() {
 //
 // This is designed to be called repetitively...
 
-activateRLV() {
+rlvActivate() {
 
     // At this point RLVok is TRUE
 
-    if (!RLVstarted) { // This is the only reason RLVstarted exists
+    if (!rlvStarted) { // This is the only reason rlvStarted exists
         lmRunRLVcmd("clearRLVcmd","");
 
         llOwnerSay("Enabling RLV mode");
@@ -178,10 +177,10 @@ activateRLV() {
         lmRLVreport(RLVok, rlvAPIversion, 0);
     }
 
-    activateRLVBase();
+    rlvActivateBase();
 
     // If we get here - RLVok is already set
-    RLVstarted = TRUE;
+    rlvStarted = TRUE;
 }
 
 //========================================
@@ -200,7 +199,7 @@ default {
         myPath = "";
 #endif
         cdInitializeSeq();
-        doCheckRLV();
+        startRlvCheck();
     }
 
     //----------------------------------------
@@ -218,33 +217,32 @@ default {
         rlvChannel == 0;
 
         // Note this happens only at the very beginning
-        doCheckRLV();
+        startRlvCheck();
     }
 
     //----------------------------------------
     // ATTACH
     //----------------------------------------
     attach(key id) {
-
-        if (id) doCheckRLV();
+        if (id) startRlvCheck();
     }
 
     //----------------------------------------
     // LISTEN
     //----------------------------------------
-    listen(integer chan, string name, key id, string msg) {
+    listen(integer channel, string name, key id, string msg) {
 
-        debugSay(2, "DEBUG-AVATAR", "Listener tripped on channel " + (string)chan);
+        debugSay(2, "DEBUG-AVATAR", "Listener tripped on channel " + (string)channel);
         debugSay(2, "DEBUG-AVATAR", "Listener data = " + (string)msg);
 
         // Initial RLV Check results are being processed here
         //
-        if (chan == rlvChannel) {
+        if (channel == rlvChannel) {
             debugSay(2, "DEBUG-RLV", "RLV Message received: " + msg);
 
-            if ((llGetSubString(msg, 0, 13) == "RestrainedLove") ||
-                (llGetSubString(msg, 0, 13) == "RestrainedLife")) {
-
+            // Could be RestrainedLove or RestrainedLife - just
+            // check enough letters to account for both
+            if (llGetSubString(msg, 0, 10) == "RestrainedL") {
                 rlvAPIversion = msg;
                 debugSay(2, "DEBUG-RLV", "RLV Version: " + rlvAPIversion);
             }
@@ -256,14 +254,8 @@ default {
             RLVok = TRUE;
             RLVsupport = TRUE;
 
-            activateRLV();
+            rlvActivate();
         }
-#ifdef DEVELOPER_MODE
-        else {
-            llSay(DEBUG_CHANNEL,"Received RLV response data on wrong channel! (" + (string)chan +
-                ") - msg = " + msg);
-        }
-#endif
     }
 
     //----------------------------------------
@@ -289,18 +281,18 @@ default {
 
             if (llListFindList([ "a", "c", "d", "w" ],(list)c) == NOT_FOUND) return;
 
-                 if (name == "autoTP")            {       autoTP = (integer)value; lmRunRLVBoolean("accepttp", !autoTP); }
-            else if (name == "hardcore")          {     hardcore = (integer)value; outfitRLVLock(); }
+                 if (name == "autoTP")            {       autoTP = (integer)value; rlvSetIf("accepttp", !autoTP); }
+            else if (name == "hardcore")          {     hardcore = (integer)value; rlvOutfitLock(); }
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")        {   debugLevel = (integer)value; }
 #endif
             else if (c == "c") {
-                     if (name == "canSelfTP")     {    canSelfTP = (integer)value; lmRunRLVBoolean("tplm", canSelfTP); lmRunRLVBoolean("tploc", canSelfTP); }
-                else if (name == "canDressSelf")  { canDressSelf = (integer)value; outfitRLVLock(); }
-                else if (name == "canFly")        {       canFly = (integer)value; lmRunRLVBoolean("fly", canFly); }
-                else if (name == "canStand")      {     canStand = (integer)value; lmRunRLVBoolean("unsit", canStand); }
-                else if (name == "canSit")        {       canSit = (integer)value; lmRunRLVBoolean("sit", canSit); }
-                else if (name == "collapsed")     {    collapsed = (integer)value; outfitRLVLock(); }
+                     if (name == "canSelfTP")     {    canSelfTP = (integer)value; rlvSetIf("tplm", canSelfTP); rlvSetIf("tploc", canSelfTP); }
+                else if (name == "canDressSelf")  { canDressSelf = (integer)value; rlvOutfitLock(); }
+                else if (name == "canFly")        {       canFly = (integer)value; rlvSetIf("fly", canFly); }
+                else if (name == "canStand")      {     canStand = (integer)value; rlvSetIf("unsit", canStand); }
+                else if (name == "canSit")        {       canSit = (integer)value; rlvSetIf("sit", canSit); }
+                else if (name == "collapsed")     {    collapsed = (integer)value; rlvOutfitLock(); }
                 else if (name == "controllers") {
                     if (split == [""]) controllers = [];
                     else controllers = split;
@@ -318,7 +310,7 @@ default {
                 rlvHandle = cdListenMine(rlvChannel);
                 cdListenerActivate(rlvHandle);
             }
-            else if (name == "wearLock") { wearLock = (integer)value; outfitRLVLock(); }
+            else if (name == "wearLock") { wearLock = (integer)value; rlvOutfitLock(); }
         }
         else if (code == RLV_RESET) {
             RLVok = llList2Integer(split, 0);
@@ -334,7 +326,7 @@ default {
             //debugSay(3,"DEBUG-CHECKRLV","Internal command triggered: " + cmd);
 
             if (cmd == "doCheckRLV") {
-                doCheckRLV();
+                startRlvCheck();
             }
             else if (cmd == "addExceptions") {
                 string exceptionKey = llList2String(split, 0);
@@ -358,25 +350,15 @@ default {
 
                 integer i;
 
-                if cdCarried() {
+                // Add carrier to list of exceptions
+                if (cdCarried()) {
                     if (llListFindList(exceptions, (list)carrierID) != NOT_FOUND) exceptions += carrierID;
                 }
 
-                // Dolly not allowed to be on this list
+                // Dolly not allowed to be one of the exceptions
                 //
-                // Most likely, Dolly might be in Builtin Controllers list...
-
                 if ((i = llListFindList(exceptions, (list)dollID)) != NOT_FOUND)
                     llDeleteSubList(exceptions, i, i);
-
-                //debugSay(5,"DEBUG-CHECKRLV","Checking to see if exceptions have changed");
-                // Goal is to check and see if the exceptions have changed...
-                // If we make it through here, they have changed.
-                //if (rlvExceptions == exceptions) { // compares item count only
-                //    if (rlvExceptions == []) return; // compares list to null
-                //    if (!llListFindList(rlvExceptions, exceptions)) return;
-                //}
-                //debugSay(5,"DEBUG-CHECKRLV","Exceptions have changed");
 
                 rlvExceptions = exceptions; // save current exceptions
 
@@ -435,8 +417,8 @@ default {
         // RLVok shouldn't be TRUE here: timer would be shut off
         debugSay(2,"DEBUG-RLV","RLV check failed...");
 
-        if (RLVck > 0) {
-            checkRLVcore(); // try again
+        if (rlvCheck > 0) {
+            rlvCheckTry(); // try again
         }
         else {
             llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");

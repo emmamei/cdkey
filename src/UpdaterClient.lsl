@@ -31,16 +31,12 @@
 // Remote prim updater for scripts.  This registers the prim to accept scripts from a server in the same region.
 // :CODE:
 
-#define RUNNING 1
-#define NOT_RUNNING 0
 #define lmLocalSay(a) llSay(PUBLIC_CHANNEL,(a))
-#define cdResetKey() llResetOtherScript("Start")
+#define cdKeyInfo(a) ((string)(llGetLinkKey(LINK_THIS)) + "^" + ((string)(a)))
 
 //========================================
 // VARIABLES
 //========================================
-
-integer UNIQ = 1246;       // the private channel unique to the owner of this prim
 
 // Not tuneable
 #define UPDATE_TIMEOUT 30
@@ -50,8 +46,8 @@ integer comChannel;
 integer comHandle;
 integer pin;             // a random pin for security
 integer updating;
-integer waiting;
-integer waitingRetries = MAX_RETRIES;
+integer comWaitingForResponse;
+integer comRetries = MAX_RETRIES;
 #ifdef DEVELOPER_MODE
 integer scriptCount;
 integer scriptIndex;
@@ -65,9 +61,9 @@ key owner;
 startUpdate() {
     // All we do is create a key for the gate, then give a copy to the
     // updater via the comChannel
-    pin = llCeil(llFrand(123456) + 654321);
+    pin = generateRandomPin();
 
-    comChannel = (((integer)("0x" + llGetSubString((string)owner, -8, -1)) & 0x3FFFFFFF) ^ 0xBFFFFFFF ) + UNIQ;    // 1234 is the private channel for this owner
+    comChannel = generateRandomComChannel();
 #ifdef LISTENER
     comHandle = llListen(comChannel,"","","");
 #endif
@@ -75,9 +71,11 @@ startUpdate() {
     llSetRemoteScriptAccessPin(pin);
 
     // Trigger the update
-    waiting = TRUE;
+    comWaitingForResponse = TRUE;
     llSetTimerEvent(BEGIN_TIMEOUT);
-    llRegionSay(comChannel, (string)llGetLinkKey(LINK_THIS) + "^" + (string)pin);
+
+    // This is the command that lets the Updater know the pin, which begins the update
+    llRegionSay(comChannel, cdKeyInfo(pin));
 
     llOwnerSay("Key ready for update...");
 }
@@ -202,12 +200,13 @@ default {
     //----------------------------------------
     changed(integer change) {
         if (change & CHANGED_INVENTORY) {
+            // This triggers each time the Updater updates a file
             if (updating == 0) return; // Inventory changed, but we're not updating now...
 
             llSetTimerEvent(UPDATE_TIMEOUT);
-            if (waiting) {
+            if (comWaitingForResponse) {
                 llSay(PUBLIC_CHANNEL, "Key update in progress...");
-                waiting = 0;
+                comWaitingForResponse = 0;
             }
 
 #ifdef DEVELOPER_MODE
@@ -231,17 +230,20 @@ default {
     // in case we rez, our UUID changed, so we check in
     timer() {
 
-        if (waiting) {
-            if (waitingRetries > 0) {
-                // Note this is a count DOWN... so waitingRetries starts with MAX_RETRIES
-                if (waitingRetries == MAX_RETRIES) llSay(PUBLIC_CHANNEL, "Click the updater to begin update...");
+        if (comWaitingForResponse) {
 
-                debugSay(2,"DEBUG-UPDATER","Update retry: remaining retries: " + (string)waitingRetries);
+            // Waiting for a response from the Key Updater
 
-                waitingRetries--;
+            if (comRetries > 0) {
+                // Note this is a count DOWN... so comRetries starts with MAX_RETRIES
+                if (comRetries == MAX_RETRIES) llSay(PUBLIC_CHANNEL, "Click the updater to begin update...");
+
+                debugSay(2,"DEBUG-UPDATER","Update retry: remaining retries: " + (string)comRetries);
+
+                comRetries--;
 
                 llSetTimerEvent(BEGIN_TIMEOUT);
-                llRegionSay(comChannel, (string)llGetLinkKey(LINK_THIS) + "^" + (string)pin);
+                llRegionSay(comChannel, cdKeyInfo(pin));
             }
             else {
                 llOwnerSay("Updater failed to respond. Restarting key.");
@@ -250,30 +252,15 @@ default {
             }
         }
         else {
+            // Timer expired during an update
 
 #ifdef DEVELOPER_MODE
             debugSay(4,"DEBUG-UPDATER","Inventory script index on timeout: " + (string)scriptIndex);
 #endif
 
-            integer index = llGetInventoryNumber(INVENTORY_SCRIPT);
-            integer found = 0;
-
             llSetTimerEvent(0.0);
-
-            // scan all scripts in our inventory, could be more than one needs updating.
-            while (index--) {
-                if (llGetInventoryName(INVENTORY_SCRIPT, index) == "New") {
-                    found = 1;
-                }
-            }
-
-            // If we find the script, we don't need to say anything:
-            // the updater server and key reset will handle the last bit.
-            if (found == 0) {
-                llOwnerSay("Update failed. Restarting key.");
-                llSetScriptState("Start", RUNNING);
-                cdResetKey(); // Key state is indeterminate, and scripts are at full-stop...
-            }
+            llOwnerSay("Update stopped unexpectedly.");
+            cdResetKey();
         }
     }
 }

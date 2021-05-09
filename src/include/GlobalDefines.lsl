@@ -45,6 +45,8 @@ float GlobalDefines_version=1.0;
 #define POSE_SELECTION    502
 #define TYPE_SELECTION    503
 
+#define UNIQ 1245 // unique channel for updaters to communicate on
+
 #define cdSetHovertext(x,c) if(primText!=x)llSetText(x,c,1.0)
 #define RED    <1.0,0.0,0.0>
 #define YELLOW <1.0,1.0,0.0>
@@ -149,6 +151,9 @@ float GlobalDefines_version=1.0;
 //#define BUILTIN_CONTROLLERS BuiltinControllers
 //#define ALL_CONTROLLERS USER_CONTROLLERS + BUILTIN_CONTROLLERS
 
+#define RUNNING 1
+#define NOT_RUNNING 0
+
 #define LOW_FPS 30.0
 #define LOW_DILATION 0.6
 #define cdLowScriptTrigger   (llGetRegionFPS() < LOW_FPS || llGetRegionTimeDilation() < LOW_DILATION)
@@ -191,6 +196,10 @@ float GlobalDefines_version=1.0;
 #define cdListenAll(a) llListen(a, NO_FILTER, NO_FILTER, NO_FILTER)
 #define cdListenMine(a)   llListen(a, NO_FILTER, dollID, NO_FILTER)
 #define cdSayTo(m,i) llRegionSayTo(i, 0, m)
+#define cdResetKey() llResetOtherScript("Start")
+
+#define generateRandomComChannel() ((((integer)("0x" + llGetSubString((string)owner, -8, -1)) & 0x3FFFFFFF) ^ 0xBFFFFFFF ) + UNIQ)
+#define generateRandomPin() (llCeil(llFrand(123456) + 654321))
 
 #define CHECK "✔"
 #define CROSS "✘"

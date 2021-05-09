@@ -37,10 +37,8 @@
 // VARIABLES
 //========================================
 
-// tunables
-integer TITLE = TRUE;      // show how many scripts can be updated in hover text
-integer UNIQ = 1246;       // the private channel unique to the owner of this prim - MUST MATCH in client and server
-integer UPDATE_TIMEOUT = 60;  // timeout in 60 seconds
+#define UPDATE_TIMEOUT 60
+#define START_PARAMETER 100
 
 // globals
 integer comChannel ;       // we listen on this channel. It is unique to this owner and a subchannel
@@ -49,7 +47,7 @@ integer comHandle;
 integer pin;
 key targetID;
 key owner;
-key touchingID;
+key toucherID;
 integer publicMode = 0;
 
 #define lmSetHovertext(a)  llSetText((a), <1,1,1>, 1)
@@ -80,17 +78,17 @@ sendUpdate() {
 
             lmSetHovertext("Updating script: " + name + "...");
             llRegionSayTo(targetID, PUBLIC_CHANNEL, "Sending script " + name);
-            llRemoteLoadScriptPin(targetID, name, pin, NOT_RUNNING, 100);
+            llRemoteLoadScriptPin(targetID, name, pin, NOT_RUNNING, START_PARAMETER);
         }
     }
 
     // Updating UpdaterClient
     lmSetHovertext("Updating script: UpdaterClient");
-    llRemoteLoadScriptPin(targetID, "UpdaterClient", pin, NOT_RUNNING, 100);
+    llRemoteLoadScriptPin(targetID, "UpdaterClient", pin, NOT_RUNNING, START_PARAMETER);
 
     // Updating Start, and starting after should reset key cleanly
     lmSetHovertext("Updating script: Start (and Resetting Key)");
-    llRemoteLoadScriptPin(targetID, "Start", pin, RUNNING, 100);
+    llRemoteLoadScriptPin(targetID, "Start", pin, RUNNING, START_PARAMETER);
 
     lmSetHovertext("Update complete!");
     llRegionSayTo(targetID, PUBLIC_CHANNEL, "Update complete!");
@@ -136,7 +134,7 @@ default {
         list params = llParseString2List(msg, ["^"], []);
 
         // guaranteed to be on comChannel...
-        if (owner != touchingID) return;
+        if (owner != toucherID) return;
 
         lmSetHovertext("Updating...");
         llSay(PUBLIC_CHANNEL,"Beginning update with nearby key...");
@@ -148,7 +146,7 @@ default {
 
         // targetID is the object UUID
         // owner is the owner of this updater
-        // touchingID is the person touching this updater
+        // toucherID is the person touching this updater
 
         sendUpdate();
     }
@@ -172,10 +170,10 @@ default {
 
     touch_start(integer what) {
 
-        touchingID = llDetectedKey(0);
+        toucherID = llDetectedKey(0);
 
         // This prevents anyone but the owner from using this updater
-        if (touchingID != owner) {
+        if (toucherID != owner) {
             llSay(PUBLIC_CHANNEL,"You are not allowed access to this updater.");
             return;
         }
@@ -185,7 +183,7 @@ default {
         llOwnerSay("*** KEY WILL RESET AFTER UPDATE ***");
 
         // Create a private listener, and open it
-        comChannel = (((integer)("0x" + llGetSubString((string)touchingID, -8, -1)) & 0x3FFFFFFF) ^ 0xBFFFFFFF ) + UNIQ;    // UNIQ is the private channel for this owner
+        comChannel = generateRandomComChannel();
         comHandle = llListen(comChannel,"","","");
 
         llSetTimerEvent(UPDATE_TIMEOUT);
