@@ -33,6 +33,7 @@
 
 #define lmLocalSay(a) llSay(PUBLIC_CHANNEL,(a))
 #define cdKeyInfo(a) ((string)(llGetLinkKey(LINK_THIS)) + "^" + ((string)(a)))
+#define cdResetKey() llResetOtherScript("Start")
 
 //========================================
 // VARIABLES

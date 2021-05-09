@@ -196,7 +196,9 @@ float GlobalDefines_version=1.0;
 #define cdListenAll(a) llListen(a, NO_FILTER, NO_FILTER, NO_FILTER)
 #define cdListenMine(a)   llListen(a, NO_FILTER, dollID, NO_FILTER)
 #define cdSayTo(m,i) llRegionSayTo(i, 0, m)
-#define cdResetKey() llResetOtherScript("Start")
+
+// Can't define cdResetKey here because it is different in Start.lsl than it is in others
+//#define cdResetKey() llResetOtherScript("Start")
 
 #define generateRandomComChannel() ((((integer)("0x" + llGetSubString((string)owner, -8, -1)) & 0x3FFFFFFF) ^ 0xBFFFFFFF ) + UNIQ)
 #define generateRandomPin() (llCeil(llFrand(123456) + 654321))

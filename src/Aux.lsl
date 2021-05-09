@@ -230,7 +230,6 @@ default {
             string avatar = llList2String(split, 1);
 
 #define isObjectPresent(o) (llGetInventoryType(o) == INVENTORY_OBJECT)
-#define isNotecardPresent(n) (llGetInventoryType(n) == INVENTORY_NOTECARD)
 #define isLandmarkPresent(a) (llGetInventoryType(a) == INVENTORY_LANDMARK)
 #define notPosed() (poseAnimation == ANIMATION_NONE)
 
