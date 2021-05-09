@@ -45,7 +45,7 @@ float Config_version=1.0;
 #define OPT_KEY_MODE ["Mode=Normal"]
 #endif
 
-#define BUILD_REPORT (OPT_ADULT + OPT_KEY_MODE + OPT_ROLLOVER + OPT_SINGLEWIND + OPT_HOMING + OPT_WIND )
+#define BUILD_REPORT (OPT_ADULT + OPT_KEY_MODE + OPT_ROLLOVER + OPT_SINGLEWIND + OPT_HOMING + OPT_PRESERVE_DIRECTORY + OPT_WIND )
 
 #define lmConfigReport() llMessageLinked(LINK_THIS, 142, cdMyScriptName(), NULL_KEY)
 
