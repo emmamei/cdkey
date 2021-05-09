@@ -151,10 +151,9 @@ rlvOutfitLock() {
 
 rlvActivate() {
 
-    // At this point RLVok is TRUE
+    // This only runs if RLV is found and active
 
     if (!rlvStarted) { // This is the only reason rlvStarted exists
-        lmRunRLVcmd("clearRLVcmd","");
 
         llOwnerSay("Enabling RLV mode");
 
@@ -172,6 +171,7 @@ rlvActivate() {
 #endif
         lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
         lmSendConfig("RLVsupport",(string)RLVsupport);
+        lmRunRLVcmd("clearRLVcmd",""); // Run after RLVok and RLVsupport have been propogated
 
         // This generates a 350 link message (RLV_RESET)
         lmRLVreport(RLVok, rlvAPIversion, 0);

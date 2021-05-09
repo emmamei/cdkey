@@ -100,10 +100,12 @@ default {
             string name = cdListElement(split, 0);
             string value = cdListElement(split, 1);
 
+                 if (name == "RLVok")              RLVok = (integer)value;
+            else if (name == "RLVsupport")    RLVsupport = (integer)value;
 #ifdef DEVELOPER_MODE
-                 if (name == "debugLevel") debugLevel = (integer)value;
-            else
+            else if (name == "debugLevel")    debugLevel = (integer)value;
 #endif
+            else
             return;
         }
 
@@ -126,7 +128,7 @@ default {
             debugSay(4,"DEBUG-STATUSRLV","RLV_CMD script " + script + ": " + cmd + ": " + commandString);
 
             if (RLVok != TRUE) {
-                if (RLVok == UNSET) llSay(DEBUG_CHANNEL,"RLV command issued with RLV inactive! (" + commandString + ")");
+                if (RLVok == UNSET) llSay(DEBUG_CHANNEL,"RLV command issued with RLV inactive from " + script + "! (" + commandString + ")");
                 return;
             }
 
