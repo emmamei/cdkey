@@ -26,13 +26,16 @@
 
 #define CHATMSG_MAXLEN 896
 #define SCRIPT_MAXMEM 65536
+#define COMPLETE_CLEAR 1
 
+#ifndef COMPLETE_CLEAR
 // rlvStatus is a list with stride 2:
 //
 //  1: RLV restriction
 //  2: String CSV containing scripts using restriction
 //
 list rlvRestrict;
+#endif
 
 string scriptName;
 integer statusChannel = 55117;
@@ -66,6 +69,7 @@ default {
         //scaleMem();
     }
 
+#ifndef COMPLETE_CLEAR
     //----------------------------------------
     // LISTEN
     //----------------------------------------
@@ -80,6 +84,7 @@ default {
             rlvRestrict = (rlvRestrict=[]) + rlvRestrict + llParseString2List(data, [ "/" ], []);
         }
     }
+#endif
 
     //----------------------------------------
     // LINK MESSAGE
@@ -153,6 +158,9 @@ default {
                     return;
                 }
 
+#ifdef COMPLETE_CLEAR
+                llOwnerSay("@" + commandString);
+#else
                 // Split command string into multiple commands
                 list commandList;
                 commandList = llParseString2List(commandString,[","],[""]);
@@ -172,7 +180,9 @@ default {
 
 
                 rlvRestrict = (rlvRestrict=[]) + rlvRestrict + commandString;
+#endif
             }
+#ifndef COMPLETE_CLEAR
             else if (cmd == "restoreRLV") {
                 // The goal of the restoreRLV command is to take saved RLV
                 // restrictions and restore them after logon or RLV activation
@@ -237,6 +247,7 @@ default {
                 llOwnerSay("@getstatus:edit="      + (string)statusChannel);
                 llOwnerSay("@getstatus:fartouch="  + (string)statusChannel);
             }
+#endif
             else if (cmd == "runRLVcmd") {
                 if (commandString == "clear") {
                     llSay(DEBUG_CHANNEL,"Clear command run from " + script + " using lmRunRLVcmd");
@@ -262,19 +273,24 @@ default {
                 // complete zap of all RLV - such as from SafeWord
                 llOwnerSay("@clear");
                 RLVok = FALSE;
+#ifndef COMPLETE_CLEAR
                 rlvRestrict = [];
+#endif
             }
             else if (cmd == "clearRLVcmd") {
                 // this is a blanket clear, but it doesn't mean to us what
                 // it means normally: we have a base RLV set
 
                 debugSay(2,"DEBUG-STATUSRLV","RLV clear command issued from " + script);
-                //llOwnerSay("@clear"); // clear
 #ifdef LOCKON
                 llOwnerSay("@detach=n"); // detach
 #else
                 llOwnerSay("@detach=y"); // detach
 #endif
+
+#ifdef COMPLETE_CLEAR
+                llOwnerSay("@clear"); // clear
+#else
                 rlvRestrict = [];
 
                 // Default restrictions used by the key:
@@ -304,7 +320,7 @@ default {
                 llOwnerSay("@clear=fartouch");
                 llOwnerSay("@clear=send");
                 llOwnerSay("@clear=recv");
-
+#endif
                 if (commandString != "")
                     llOwnerSay("@" + commandString); // restore restrictions if need be
 

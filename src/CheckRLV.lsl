@@ -372,10 +372,9 @@ default {
                 // RecvEmote: being able to recieve an emote from someone
 
                 debugSay(5,"DEBUG-CHECKRLV","Reloading RLV exceptions");
-                // SELECTIVE clear: exceptions only
-                llOwnerSay("@clear=tplure:,clear=accepttp:");
-                llOwnerSay("@clear=sendim:,clear=recvim:");
-                llOwnerSay("@clear=recvchat:,clear=recvemote:");
+
+                // SELECTIVE clear: exceptions-related restrictions
+                llOwnerSay("@clear=tplure:,clear=accepttp:,clear=sendim:,clear=recvim:,clear=recvchat:,clear=recvemote:");
 
                 string exceptionKey;
                 i = llGetListLength(exceptions);
