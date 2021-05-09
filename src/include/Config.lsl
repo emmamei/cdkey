@@ -19,22 +19,24 @@ float Config_version=1.0;
 #define OPT_SINGLEWIND []
 #endif
 
+#ifdef PRESERVE_DIRECTORY
+#define OPT_PRESERVE_DIRECTORY ["PreserveDirectory"]
+#else
+#define OPT_PRESERVE_DIRECTORY []
+#endif
+
 #ifdef ROLLOVER
 #define OPT_ROLLOVER ["RollOver"]
 #else
 #define OPT_ROLLOVER []
 #endif
 
+#define OPT_WIND ["DefaultWind=" + (string)llFloor(WIND_DEFAULT / 60.0)]
+
 #ifdef ADULT_MODE
 #define OPT_ADULT ["Adult"]
 #else
 #define OPT_ADULT ["Child"]
-#endif
-
-#ifdef DEBUG_LEVEL
-#define OPT_DEBUG ["Debug="+(string)DEBUG_LEVEL]
-#else
-#define OPT_DEBUG []
 #endif
 
 #ifdef DEVELOPER_MODE
@@ -43,7 +45,7 @@ float Config_version=1.0;
 #define OPT_KEY_MODE ["Mode=Normal"]
 #endif
 
-#define BUILD_REPORT (OPT_ADULT + OPT_KEY_MODE + OPT_DEBUG + OPT_ROLLOVER + OPT_SINGLEWIND + OPT_HOMING)
+#define BUILD_REPORT (OPT_ADULT + OPT_KEY_MODE + OPT_ROLLOVER + OPT_SINGLEWIND + OPT_HOMING + OPT_WIND )
 
 #define lmConfigReport() llMessageLinked(LINK_THIS, 142, cdMyScriptName(), NULL_KEY)
 

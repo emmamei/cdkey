@@ -115,7 +115,7 @@ integer rlvTploc;
 integer rlvTplure;
 
 #ifdef DEVELOPER_MODE
-integer debugLevel          = DEBUG_LEVEL;
+integer debugLevel;
 #endif
 
 integer dialogChannel;

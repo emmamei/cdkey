@@ -46,12 +46,6 @@
 #define LOCKON 1
 #endif
 
-#ifdef DEVELOPER_MODE
-/* enable additional debugging messages up to specified threshold.
-   the debug level can be changed at the chat line or in prefs */
-#define DEBUG_LEVEL 0
-#endif
-
 //========================================
 // PACKAGE DATA
 //========================================

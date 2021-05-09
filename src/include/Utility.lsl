@@ -115,14 +115,6 @@ memReport(string script, float delay) {
 #define debugSay(level,prefix,msg)
 #endif
 
-// debugPrint is for "one-off" quickie debugging...
-// not permanent system-wide configuration
-#ifdef DEBUG_PRINT
-#define debugPrint(a) llOwnerSay(a)
-#else
-#define debugPrint(a)
-#endif
-
 /*
  * ----------------------------------------
  * NUMERIC FUNCTIONS
