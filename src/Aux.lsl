@@ -30,7 +30,6 @@ key lmRequest;
 list memList;
 float listenTime;
 float memTime;
-string minsLeft;
 string memOutput = "Script Memory Status:";
 integer maxMins;
 integer ncLine;
@@ -132,7 +131,7 @@ default {
             else if (name == "allowSelfWind")           allowSelfWind = (integer)value;
             else if (name == "dollDisplayName")       dollDisplayName = value;
             else if (name == "poseAnimation")           poseAnimation = value;
-            else if (name == "doWarnings")                 doWarnings = (integer)value;
+//          else if (name == "doWarnings")                 doWarnings = (integer)value;
             else if (name == "hardcore")                     hardcore = (integer)value;
             else if (name == "poseSilence")               poseSilence = (integer)value;
             else if (name == "detachable")                 detachable = (integer)value;
@@ -413,7 +412,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 list plusList = [];
 
                 plusList += cdGetButton("Type Text", id, hovertextOn, 0);
-                plusList += cdGetButton("Warnings", id, doWarnings, 0);
+//              plusList += cdGetButton("Warnings", id, doWarnings, 0);
                 plusList += cdGetButton("Phrases", id, showPhrases, 0);
 #ifdef HOMING_BEACON
                 plusList += cdGetButton("Homing Beacon", id, homingBeacon, 0);

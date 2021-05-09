@@ -934,7 +934,7 @@ default {
 #ifdef HOMING_BEACON
                             else if (afterSpace == "Homing Beacon") lmSendConfig("homingBeacon",  (string)isX);
 #endif
-                            else if (afterSpace == "Warnings")      lmSendConfig("doWarnings",    (string)isX);
+//                          else if (afterSpace == "Warnings")      lmSendConfig("doWarnings",    (string)isX);
                             else if (afterSpace == "RLV") {
                                 // we don't deal with RLVsupport here, as if RLVsupport is FALSE,
                                 // this choice is never made.

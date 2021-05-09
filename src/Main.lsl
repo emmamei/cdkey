@@ -26,7 +26,6 @@
 //========================================
 
 string msg;
-integer minsLeft;
 float windRateFactor = 1.0;
 
 integer timerMark;
@@ -40,7 +39,6 @@ key lastWinderID;
 
 integer lowScriptTimer;
 integer lastLowScriptTime;
-integer warned;
 integer wearLockExpire;
 integer carryExpire;
 integer poseExpire;
@@ -468,6 +466,7 @@ default {
             lmInternalCommand("setHovertext", "", keyID);
         }
 
+        //--------------------------------
         // WINDING DOWN.....
         //
         // The only reason Dolly's time would be zero is if they are collapsed and out of time...
@@ -481,27 +480,13 @@ default {
 
                 // Now that we've ticked down a few - check for warnings, and check for collapse
                 if (timeLeftOnKey == 0) {
+
                     // Dolly is DONE! Go down... and yell for help.
                     if (!collapsed) {
                         llSay(PUBLIC_CHANNEL, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on Dolly's key.)");
                         docollapse();
                     }
                 }
-#ifdef NOT_USED
-                else {
-
-                    if (doWarnings && !warned) {
-                        minsLeft = llRound(timeLeftOnKey / (SECS_PER_MIN * windRate));
-
-                        if (minsLeft == 15 || minsLeft == 10 || minsLeft ==  5) {
-
-                            llSay(PUBLIC_CHANNEL, dollName + " has " + (string)minsLeft + " minutes left before they run down!");
-                            warned = 1; // have warned now: dont repeat same warning
-                        }
-                    }
-                    else warned = 0;
-                }
-#endif
             }
         }
     }
