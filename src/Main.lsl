@@ -868,16 +868,21 @@ default {
                 cdSayTo("Dolly collapses, " + pronounHerDoll + " key unwound",id);
             }
         }
+
         // Quick shortcut...
         else if (code < 200) {
+
+#define UNATTACHED_RATE 60.0
+
             if (code == INIT_STAGE2) {
-                configured = 1;
-
-                     if (lowScriptMode) llSetTimerEvent(LOW_RATE);
-                else if (!isAttached)   llSetTimerEvent(60.0);
-                else                    llSetTimerEvent(STD_RATE);
-
-                timerStarted = 1;
+//              configured = 1;
+//
+//                   if (lowScriptMode) llSetTimerEvent(LOW_RATE);
+//              else if (!isAttached)   llSetTimerEvent(UNATTACHED_RATE);
+//              else                    llSetTimerEvent(STD_RATE);
+//
+//              timerStarted = 1;
+                ;
             }
 
             else if (code == INIT_STAGE3) {
@@ -891,7 +896,7 @@ default {
             else if (code == INIT_STAGE4) {
 
                      if (lowScriptMode) llSetTimerEvent(LOW_RATE);
-                else if (!isAttached)   llSetTimerEvent(60.0);
+                else if (!isAttached)   llSetTimerEvent(UNATTACHED_RATE);
                 else                    llSetTimerEvent(STD_RATE);
 
                 timerStarted = 1;
