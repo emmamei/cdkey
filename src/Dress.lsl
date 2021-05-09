@@ -375,10 +375,7 @@ default {
             else if (name == "isAFK")                              isAFK = (integer)value;
             else if (name == "RLVok")                              RLVok = (integer)value;
             else if (name == "hovertextOn")                  hovertextOn = (integer)value;
-            else if (name == "dollType") {
-                if (value == "") dollType = "Regular";
-                else dollType = value;
-            }
+            else if (name == "dollType")                        dollType = value;
             else if (name == "pronounHerDoll")            pronounHerDoll = value;
             else if (name == "pronounSheDoll")            pronounSheDoll = value;
             else if (c == "c") {

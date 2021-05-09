@@ -87,33 +87,28 @@ list currentPhrases;
 // FUNCTIONS
 //========================================
 
-setDollType(string stateName) {
+setDollType(string typeName) {
     // Convert state name to Title case
-    stateName = cdGetFirstChar(llToUpper(stateName)) + cdButFirstChar(llToLower(stateName));
+    //typeName = cdGetFirstChar(llToUpper(typeName)) + cdButFirstChar(llToLower(typeName));
 
     reloadTypeNames(NULL_KEY);
-    if (llListFindList(typeBufferedList, (list)stateName) == NOT_FOUND) {
+    if (llListFindList(typeBufferedList, (list)typeName) == NOT_FOUND) {
       llSay(DEBUG_CHANNEL,"Invalid Doll Type specified!");
       return;
     }
 
-//  if (stateName == dollType) {
-//      llSay(DEBUG_CHANNEL,"Setting Doll Type (" + dollType + ") unnecessarily!");
-//      return; // Short-circuit
-//  }
-#ifdef DEVELOPER_MODE
-//  else
-    debugSay(2,"DEBUG-DOLLTYPE","Changing dolltype to type '" + stateName + "' from '" + dollType + "'");
-#endif
+    if (typeName == "") typeName = "Regular";
 
-    if (stateName == "") stateName = "Regular";
+#ifdef DEVELOPER_MODE
+    debugSay(2,"DEBUG-DOLLTYPE","Changing dolltype to type '" + typeName + "' from '" + dollType + "'");
+#endif
 
     // By not aborting, selecting the same state can cause a "refresh" ...
     // though our menus do not currently allow this
     currentPhrases = [];
     readLine = 0;
-    typeNotecard = TYPE_FLAG + stateName;
-    typeFolderExpected = TYPE_FLAG + stateName;
+    typeNotecard = TYPE_FLAG + typeName;
+    typeFolderExpected = TYPE_FLAG + typeName;
 
     // Look for Notecard for the Doll Type and start reading it if showPhrases is enabled
     //
@@ -127,7 +122,7 @@ setDollType(string stateName) {
     }
 
     // This propogates dollType value to the rest of the system
-    lmSendConfig("dollType", (dollType = stateName));
+    lmSendConfig("dollType", (dollType = typeName));
     llOwnerSay("You have become a " + dollType + " Doll.");
 
     // Now search for a Type folder for Dolly and set it
