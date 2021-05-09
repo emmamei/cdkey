@@ -335,8 +335,10 @@ doRestart() {
 
             // We are assuming here that llSetScriptState after llRemoteLoadScriptPin
             // update resets the script
-            if (startParameter == 100) cdRunScript(script);
-            else llResetOtherScript(script);
+            //if (startParameter == 100) cdRunScript(script);
+            //else llResetOtherScript(script);
+            cdRunScript(script);
+            llResetOtherScript(script);
         }
     }
 
@@ -463,6 +465,33 @@ default {
             }
             else if (code == INIT_STAGE2) {
                 debugSay(3,"DEBUG-START","Stage 2 begun.");
+
+                // Check for items necessary for proper operation
+                // and give error messages or warnings
+                //
+                if (!(arePosesPresent()))
+                    llSay(DEBUG_CHANNEL,"No pose animations are present!");
+
+                if (!(isCollapseAnimationPresent()))
+                    llSay(DEBUG_CHANNEL,"No collapse animation!");
+
+                if (!(isPreferencesNotecardPresent())) {
+                    llOwnerSay("No preferences notecard present.");
+
+                    // This only checks for Preferences Example notecard if Preferences notecard is missing
+                    if (!(isNotecardPresent("Preferences Example")))
+                        llOwnerSay("No preferences example file present.");
+                }
+
+                if (!(isNotecardPresent(NOTECARD_HELP)))
+                    llOwnerSay("No help file present.");
+
+                if (!(isLandmarkPresent(LANDMARK_CDHOME)))
+                    llOwnerSay("No Community Dolls home landmark present.");
+
+                if (!(isLandmarkPresent(LANDMARK_HOME)))
+                    llOwnerSay("No home landmark present: Homing beacon will be disabled.");
+
                 lmInitState(INIT_STAGE3);
             }
             else if (code == INIT_STAGE3) {
@@ -526,6 +555,23 @@ default {
             }
         }
     }
+
+    // * state_entry:
+    //     - This will run if it has not already run, and before on_rez and attach
+    //
+    // * on_rez:
+    //     - This section will run before attach when attaching from inventory or when logging in
+    //
+    // * attach:
+    //     - This runs when Dolly logs in or attaches from inventory or attaches from ground
+    //
+    // THUS:
+    //
+    // * Brand New Key Worn: state_entry, on_rez, attach
+    // * Dolly Attaches Her Key: on_rez, attach
+    // * Dolly Logs In: on_rez, attach
+    // * Dolly Updates Key: state_entry
+    // * Dolly Resets Key: state_entry
 
     //----------------------------------------
     // STATE ENTRY
@@ -680,19 +726,26 @@ default {
     changed(integer change) {
         if (change & CHANGED_OWNER) {
 
-            integer nCards = llGetInventoryNumber(INVENTORY_NOTECARD);
-            string name;
+            // Remove preferences notecard if present
+            if (isPreferencesNotecardPresent())
+                    llRemoveInventory(NOTECARD_PREFERENCES);
 
-            i = nCards;
-            while (i--) {
-                name = llGetInventoryName(INVENTORY_NOTECARD,i);
-                if (name == NOTECARD_PREFERENCES) {
-                    llRemoveInventory(name);
-                }
+            llOwnerSay("You have a new key! Congratulations!\n");
+
+            if (isNotecardPresent("Preferences Example")) {
+                llOwnerSay("Look at the example Preferences file in the Key contents to see how to set the preferences for your new key.");
+                llGiveInventory(llGetOwner(), "Preferences Example");
             }
 
-            llOwnerSay("You have a new key! Congratulations!\n" +
-                "Look at PreferencesExample to see how to set the preferences for your new key.");
+            if (isNotecardPresent(NOTECARD_HELP)) {
+                llOwnerSay("Look at help file to learn about your key.");
+                llGiveInventory(llGetOwner(), NOTECARD_HELP);
+            }
+
+            if (isLandmarkPresent(LANDMARK_CDHOME)) {
+                llOwnerSay("Here is the landmark to the Community Dolls home sim.");
+                llGiveInventory(llGetOwner(), LANDMARK_CDHOME);
+            }
 
             llSleep(1.0);
             cdResetKey(); // start over with no preferences
