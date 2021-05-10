@@ -645,10 +645,15 @@ default {
                 oldOutfit = "";
                 newOutfit = "";
 
-#define rlvLockFolderRecursive(a) ("detachallthis:" + (a) + "=n")
+#define rlvLockKey()    ("detach=n")
+#define rlvUnlockKey()  ("detach=y")
+#define rlvLockFolderRecursive(a)   ("detachallthis:" + (a) + "=n")
 #define rlvUnlockFolderRecursive(a) ("detachallthis:" + (a) + "=y")
 #define rlvAttachFolderRecursive(a) ("attachall:" + (a) + "=force")
 #define rlvDetachAllRecursive()     ("detachall:=force")
+
+                // LOCK the key in place
+                lmRunRLV(rlvLockKey());
 
                 // Force attach nude elements
                 if (nudeFolder)         lmRunRLV(rlvUnlockFolderRecursive(nudeFolder)         + "," + rlvAttachFolderRecursive(nudeFolder));
@@ -672,6 +677,9 @@ default {
                 if (nudeFolder)         lmRunRLV(rlvUnlockFolderRecursive(nudeFolder));
                 if (normalselfFolder)   lmRunRLV(rlvUnlockFolderRecursive(normalselfFolder));
                 if (normaloutfitFolder) lmRunRLV(rlvUnlockFolderRecursive(normaloutfitFolder));
+
+                // Clear Key lockon
+                lmRunRLV(rlvUnlockKey());
             }
 #ifdef ADULT_MODE
             else if (cmd == "stripAll") {
