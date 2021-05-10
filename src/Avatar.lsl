@@ -495,6 +495,8 @@ default {
             }
             else if (name == "poseSilence")         poseSilence = (integer)value;
             else if (name == "carryExpire")         carryExpire = (integer)value;
+            else if (name == "carrierID")             carrierID = value;
+            else if (name == "carrierName")         carrierName = value;
             else if (name == "hardcore")               hardcore = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")     timeReporting = (integer)value;
