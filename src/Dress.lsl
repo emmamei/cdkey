@@ -652,9 +652,10 @@ default {
 #define rlvAttachFolderRecursive(a) ("attachall:" + (a) + "=force")
 #define rlvDetachAllRecursive()     ("detachall:=force")
 
+#ifndef LOCKON
                 // LOCK the key in place
                 lmRunRLV(rlvLockKey());
-
+#endif
                 // Force attach nude elements
                 if (nudeFolder)         lmRunRLV(rlvUnlockFolderRecursive(nudeFolder)         + "," + rlvAttachFolderRecursive(nudeFolder));
                 if (normalselfFolder)   lmRunRLV(rlvUnlockFolderRecursive(normalselfFolder)   + "," + rlvAttachFolderRecursive(normalselfFolder));
@@ -678,8 +679,10 @@ default {
                 if (normalselfFolder)   lmRunRLV(rlvUnlockFolderRecursive(normalselfFolder));
                 if (normaloutfitFolder) lmRunRLV(rlvUnlockFolderRecursive(normaloutfitFolder));
 
+#ifndef LOCKON
                 // Clear Key lockon
                 lmRunRLV(rlvUnlockKey());
+#endif
             }
 #ifdef ADULT_MODE
             else if (cmd == "stripAll") {

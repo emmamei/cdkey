@@ -135,7 +135,10 @@ rlvActivateBase() {
     rlvOutfitLock();
 }
 
+// Lock the outfit on the wearer
+//
 rlvOutfitLock() {
+
 #ifdef LOCKON
     if (!canDressSelf || hardcore || collapsed || wearLock) {
         // Lock outfit down tight
@@ -168,8 +171,7 @@ rlvActivate() {
         // via the menu. To make the key truly "undetachable", we get
         // rid of the menu item to unlock it
 
-        if (RLVok == TRUE)
-            lmRunRLVas("Base", "detach=n");  //locks key
+        lmRunRLVas("Base", "detach=n");  //locks key
 #else
         // if Doll is one of the developers... dont lock:
         // prevents inadvertent lock-in during development
