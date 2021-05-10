@@ -55,8 +55,7 @@ integer lastTimerMark;
 
 integer outfitSearchTries;
 integer typeSearchTries;
-//float outfitsSearchTimer;
-string outfitsFolder;
+string outfitFolder;
 integer outfitSearching;
 
 integer findTypeFolder;
@@ -135,8 +134,6 @@ setDollType(string typeName) {
     // if RLV is non-functional, dont search for a Type Folder
     if (RLVok == TRUE) {
         debugSay(4,"DEBUG-DOLLTYPE","Searching for " + typeFolderExpected);
-
-        //outfitsSearchTimer = llGetTime();
 
         typeSearchHandle = cdListenMine(typeSearchChannel);
 
@@ -218,7 +215,7 @@ reloadTypeNames(key id) {
 outfitSearch(integer channel) {
 
     // This should bypass repeated calls to search for outfit folder
-    if (outfitsFolder != "") return;
+    if (outfitFolder != "") return;
 
     // Start folder search
     lmRunRLV("getinv=" + (string)channel);
@@ -233,14 +230,14 @@ outfitSearch(integer channel) {
 typeSearch(integer channel) {
 
     // Start folder search
-    lmRunRLV("getinv:" + outfitsFolder + "=" + (string)channel);
+    lmRunRLV("getinv:" + outfitFolder + "=" + (string)channel);
     llSetTimerEvent(RLV_TIMEOUT);
 }
 
 systemSearch(integer channel) {
 
     // Start folder search
-    lmRunRLV("getinv:" + outfitsFolder + "=" + (string)channel);
+    lmRunRLV("getinv:" + outfitFolder + "=" + (string)channel);
     llSetTimerEvent(RLV_TIMEOUT);
 }
 
@@ -323,7 +320,7 @@ default {
         //    2. Multiple retries for each search
         //    3. Searching for a Types folder
         //
-        // outfitsFolder = Top Level folder that contains all outfits (e.g., "> Outfits")
+        // outfitFolder = Top Level folder that contains all outfits (e.g., "> Outfits")
         // typeFolder = Folder related to current Doll Type (e.g., "*Japanese")
         // typeFolderExpected = Computed but untested typeFolder
 
@@ -378,7 +375,7 @@ default {
                 // search failed... search failures ("failure to find")
                 // are marked by the listener code.
 
-                if (outfitsFolder == "") {
+                if (outfitFolder == "") {
                     if (outfitSearchTries++ < MAX_SEARCH_RETRIES)
 
                         // Try another search for outfits
@@ -538,8 +535,9 @@ default {
                 else transformLockExpire = llGetUnixTime() + TRANSFORM_LOCK_TIME;
                 lmSendConfig("transformLockExpire",(string)(transformLockExpire));
             }
-            else if (name == "outfitsFolder") {
-                lmSendConfig("outfitsFolder",outfitsFolder = value);
+            else if (name == "outfitsFolder" || name == "outfitFolder") {
+                lmSendConfig("outfitsFolder",outfitFolder = value);
+                lmSendConfig("outfitFolder",outfitFolder = value);
             }
         }
         else if (code == INTERNAL_CMD) {
@@ -597,7 +595,7 @@ default {
 //              llSay(DEBUG_CHANNEL,"RLV_RESET: dollType had to be fixed from blank");
 //          }
 
-            outfitsFolder = "";
+            outfitFolder = "";
             typeFolder = "";
             outfitSearchTries = 0;
             typeSearchTries = 0;
@@ -608,13 +606,13 @@ default {
                     typeSearchHandle = cdListenMine(typeSearchChannel);
                     outfitSearchHandle = cdListenMine(outfitSearchChannel);
 
-                    if (outfitsFolder == "" && !outfitSearching) {
+                    if (outfitFolder == "" && !outfitSearching) {
                         // No outfit folder: let's search.
 
                         debugSay(2,"DEBUG-RLVOK","Searching for Outfits and Typefolders");
 
                         outfitSearching = 1;
-                        outfitsFolder = "";
+                        outfitFolder = "";
                         typeFolder = "";
                         useTypeFolder = 0;
                         typeSearchTries = 0;
@@ -800,7 +798,7 @@ default {
         //
         if (channel == outfitSearchChannel) {
             llListenRemove(outfitSearchHandle);
-            debugSay(6,"DEBUG-SEARCHING","Channel #1 received (outfitsFolder = \"" + outfitsFolder + "\"): " + choice);
+            debugSay(6,"DEBUG-SEARCHING","Channel #1 received (outfitFolder = \"" + outfitFolder + "\"): " + choice);
             outfitSearching = 1; // if we get here - well, we're outfit searchiung ja?
 
             list folderList = llCSV2List(choice);
@@ -809,29 +807,30 @@ default {
             normalselfFolder = "";
             normaloutfitFolder = "";
 
-            if (outfitsFolder == "") { // FIXME: if we're here, then outfitsFolder better be blank, yes?
+            if (outfitFolder == "") { // FIXME: if we're here, then outfitFolder better be blank, yes?
                 // vague substring check done here for speed
                 if (llSubStringIndex(choice,"Outfits") >= 0) {
 
                     // exact match check
-                         if (~llListFindList(folderList, (list)"> Outfits"))  outfitsFolder = "> Outfits";
-                    else if (~llListFindList(folderList, (list)"Outfits"))    outfitsFolder = "Outfits";
+                         if (~llListFindList(folderList, (list)"> Outfits"))  outfitFolder = "> Outfits";
+                    else if (~llListFindList(folderList, (list)"Outfits"))    outfitFolder = "Outfits";
 
                 }
                 else if (llSubStringIndex(choice,"Dressup") >= 0) {
 
-                         if (~llListFindList(folderList, (list)"> Dressup"))  outfitsFolder = "> Dressup";
-                    else if (~llListFindList(folderList, (list)"Dressup"))    outfitsFolder = "Dressup";
+                         if (~llListFindList(folderList, (list)"> Dressup"))  outfitFolder = "> Dressup";
+                    else if (~llListFindList(folderList, (list)"Dressup"))    outfitFolder = "Dressup";
                 }
 
-                debugSay(6,"DEBUG-SEARCHING","outfitsFolder = " + outfitsFolder);
+                debugSay(6,"DEBUG-SEARCHING","outfitFolder = " + outfitFolder);
 
-                // Send the outfitsFolder so all will know, no matter what it is
-                lmSendConfig("outfitsFolder", outfitsFolder);
+                // Send the outfitFolder so all will know, no matter what it is
+                lmSendConfig("outfitsFolder", outfitFolder);
+                lmSendConfig("outfitFolder", outfitFolder);
 
                 debugSay(6,"DEBUG-SEARCHING","typeFolder = \"" + typeFolder + "\" and typeFolderExpected = \"" + typeFolderExpected + "\"");
 
-                // Now that we have a designated outfitsFolder, search for a typeFolder if needed
+                // Now that we have a designated outfitFolder, search for a typeFolder if needed
                 searchForTypeFolder = (typeFolder == "" && typeFolderExpected != ""); // FIXME: how do we get here?
 
                 if (searchForTypeFolder) {
@@ -854,19 +853,20 @@ default {
 
             // if there is no outfits folder we mark the type folder search
             // as "failed" and don't use a type folder...
-            if (outfitsFolder == "") {
+            if (outfitFolder == "") {
                 useTypeFolder = NO;
                 typeFolder = "";
                 typeFolderExpected = "";
 
-                lmSendConfig("outfitsFolder", outfitsFolder);
+                lmSendConfig("outfitsFolder", outfitFolder);
+                lmSendConfig("outfitFolder", outfitFolder);
                 lmSendConfig("useTypeFolder", "0");
                 lmSendConfig("typeFolder", "");
                 return;
             }
 
             debugSay(6,"DEBUG-SEARCHING","typeFolder search: looking for type folder: \"" + typeFolderExpected + "\": " + choice);
-            debugSay(6,"DEBUG-SEARCHING","typeFolder search: Outfits folder previously found to be \"" + outfitsFolder + "\"");
+            debugSay(6,"DEBUG-SEARCHING","typeFolder search: Outfits folder previously found to be \"" + outfitFolder + "\"");
 
             // We should NOT be here if the following statement is false.... RIGHT?
             if (typeFolderExpected != "" && typeFolder != typeFolderExpected) {
@@ -897,12 +897,13 @@ default {
                     typeFolderExpected = "";
                 }
 
-                lmSendConfig("outfitsFolder", outfitsFolder);
+                lmSendConfig("outfitsFolder", outfitFolder);
+                lmSendConfig("outfitFolder", outfitFolder);
                 lmSendConfig("useTypeFolder", (string)useTypeFolder);
                 lmSendConfig("typeFolder", typeFolder);
 
                 // at this point we've either found the typeFolder or not,
-                // and the outfitsFolder is set
+                // and the outfitFolder is set
 
                 // are we doing the initial complete search? or is this just
                 // a type change?
@@ -910,11 +911,8 @@ default {
 
                     debugSay(6,"DEBUG-SEARCHING","Ending an outfit Search...");
 
-                    // we finished our outfit search: so end the search and
-                    // put out results
+                    // we finished our outfit search: so end the search and put out results
                     outfitSearching = 0;
-                    //llOwnerSay("Outfits search completed in " + (string)(llGetTime() - outfitsSearchTimer) + "s");
-                    //outfitsSearchTimer = 0;
                     nudeFolder = "";
                     normalselfFolder = "";
 
@@ -924,18 +922,18 @@ default {
                     // It also means that any ~nudeFolder and/or ~normalselfFolder found along side the Outfits folder
                     // will override any inside of the same
 
-                    if (~llListFindList(folderList, (list)"~nude")) nudeFolder = outfitsFolder + "/~nude";
+                    if (~llListFindList(folderList, (list)"~nude")) nudeFolder = outfitFolder + "/~nude";
                     else {
-                        llOwnerSay("WARN: No nude (~nude) folder found in your outfits folder (\"" + outfitsFolder + "\")...");
+                        llOwnerSay("WARN: No nude (~nude) folder found in your outfits folder (\"" + outfitFolder + "\")...");
 #ifdef DEVELOPER_MODE
-                        llSay(DEBUG_CHANNEL,"No ~nude folder found in \"" + outfitsFolder + "\"");
+                        llSay(DEBUG_CHANNEL,"No ~nude folder found in \"" + outfitFolder + "\"");
 #endif
                     }
 
-                    if (~llListFindList(folderList, (list)"~normalself")) normalselfFolder = outfitsFolder + "/~normalself";
+                    if (~llListFindList(folderList, (list)"~normalself")) normalselfFolder = outfitFolder + "/~normalself";
                     else {
-                        llOwnerSay("ERROR: No normal self (~normalself) folder found in your outfits folder (\"" + outfitsFolder + "\")... this folder is necessary for proper operation");
-                        llSay(DEBUG_CHANNEL,"No ~normalself folder found in \"" + outfitsFolder + "\": this folder is required for proper Key operation");
+                        llOwnerSay("ERROR: No normal self (~normalself) folder found in your outfits folder (\"" + outfitFolder + "\")... this folder is necessary for proper operation");
+                        llSay(DEBUG_CHANNEL,"No ~normalself folder found in \"" + outfitFolder + "\": this folder is required for proper Key operation");
                     }
 
                     lmSendConfig("nudeFolder",nudeFolder);
@@ -958,20 +956,20 @@ default {
             // It also means that any ~nudeFolder and/or ~normalselfFolder found along side the Outfits folder
             // will override any inside of the same
 
-            if (~llListFindList(folderList, (list)"~nude")) nudeFolder = outfitsFolder + "/~nude";
+            if (~llListFindList(folderList, (list)"~nude")) nudeFolder = outfitFolder + "/~nude";
             else {
-                llOwnerSay("WARN: No nude (~nude) folder found in your outfits folder (\"" + outfitsFolder + "\")...");
+                llOwnerSay("WARN: No nude (~nude) folder found in your outfits folder (\"" + outfitFolder + "\")...");
             }
 
-            if (~llListFindList(folderList, (list)"~normalself")) normalselfFolder = outfitsFolder + "/~normalself";
+            if (~llListFindList(folderList, (list)"~normalself")) normalselfFolder = outfitFolder + "/~normalself";
             else {
-                llOwnerSay("ERROR: No normal self (~normalself) folder found in your outfits folder (\"" + outfitsFolder + "\")... this folder is necessary for proper operation");
-                llSay(DEBUG_CHANNEL,"No ~normalself folder found in \"" + outfitsFolder + "\": this folder is required for proper Key operation");
+                llOwnerSay("ERROR: No normal self (~normalself) folder found in your outfits folder (\"" + outfitFolder + "\")... this folder is necessary for proper operation");
+                llSay(DEBUG_CHANNEL,"No ~normalself folder found in \"" + outfitFolder + "\": this folder is required for proper Key operation");
             }
 
-            if (~llListFindList(folderList, (list)"~normaloutfit")) normaloutfitFolder = outfitsFolder + "/~normaloutfit";
+            if (~llListFindList(folderList, (list)"~normaloutfit")) normaloutfitFolder = outfitFolder + "/~normaloutfit";
             else {
-                llOwnerSay("WARN: No normaloutfit (~normaloutfit) folder found in your outfits folder (\"" + outfitsFolder + "\")...");
+                llOwnerSay("WARN: No normaloutfit (~normaloutfit) folder found in your outfits folder (\"" + outfitFolder + "\")...");
             }
 
             lmSendConfig("nudeFolder",nudeFolder);

@@ -76,7 +76,7 @@ string isDollName;
 
 string mistressName;
 string menuName;
-string outfitsFolder;
+string outfitFolder;
 
 list dialogKeys;
 list dialogNames;
@@ -204,7 +204,7 @@ default {
 
                  if (name == "timeLeftOnKey")             timeLeftOnKey = (integer)value;
             else if (name == "windRate")                       windRate = (float)value;
-            else if (name == "outfitsFolder")             outfitsFolder = value;
+            else if (name == "outfitFolder")             outfitFolder = value;
             else if (name == "backMenu")                       backMenu = value;
             else if (name == "hardcore")                       hardcore = (integer)value;
             else if (name == "keyLimit")                       keyLimit = (integer)value;
@@ -489,7 +489,7 @@ default {
                         // Note that this means Carriers cannot change Dolly unless
                         // permitted: this is appropriate.
 
-                        if (outfitsFolder == "") {
+                        if (outfitFolder == "") {
                             llSay(DEBUG_CHANNEL, "Outfits folder is blank!");
                         }
                         else {

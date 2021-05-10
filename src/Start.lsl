@@ -157,7 +157,7 @@ processConfiguration(string name, string value) {
     else if ((i = cdListElementP(configs,name)) != NOT_FOUND) {
         if (name == "outfits path") {
             // should be present
-            lmSetConfig("outfitsFolder", value);
+            lmSetConfig("outfitFolder", value);
         }
         else if (name == "doll type") {
             // should be part of a valid set

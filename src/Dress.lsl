@@ -28,8 +28,8 @@
 //========================================
 
 // FIXME: This should be in a notecard so it can be changed without mangling the scripts.
-string outfitsURL = "outfits.htm";
-string outfitsMessage;
+string outfitURL = "outfits.htm";
+string outfitMessage;
 string msg;
 
 string prefix;
@@ -47,8 +47,8 @@ string newOutfitPath;
 #ifdef RLV_BASE_CHANNEL
 integer rlvBaseChannel;
 #endif
-integer outfitsChannel;
-integer outfitsHandle;
+integer outfitChannel;
+integer outfitHandle;
 integer change;
 integer pushRandom;
 
@@ -59,11 +59,11 @@ string oldOutfit;
 string wearFolder;
 string unwearFolder;
 
-list outfitsList;
+list outfitList;
 integer useTypeFolder;
 
 string clothingFolder; // This contains clothing to be worn
-string outfitsFolder;  // This contains folders of clothing to be worn
+string outfitFolder;  // This contains folders of clothing to be worn
 string activeFolder; // This is the lookup folder to search
 string typeFolder; // This is the folder we want for our doll type
 string normalselfFolder; // This is the ~normalself we are using
@@ -97,7 +97,7 @@ integer uSubStringLastIndex(string hay, string pin) {
     return index2;
 }
 
-list outfitsPage(list outfitList) {
+list outfitPageN(list outfitList) {
     integer newOutfitCount = llGetListLength(outfitList) - 1;
     integer currentIndex = (outfitPage - 1) * OUTFIT_PAGE_SIZE;
     integer tmpEnd;
@@ -111,7 +111,7 @@ list outfitsPage(list outfitList) {
     string outfitName;
     list tmpList;
 
-    tmpList = llList2List(outfitsList, currentIndex, currentIndex + 8);
+    tmpList = llList2List(outfitList, currentIndex, currentIndex + 8);
     n = llGetListLength(tmpList);
     tmpEnd = n - 1;
 
@@ -181,18 +181,18 @@ rlvRequest(string rlv, integer channel) {
 
 listInventoryOn(integer channel) {
 
-    if (outfitsFolder == "") {
+    if (outfitFolder == "") {
         llOwnerSay("No suitable outfits folder found, so unfortunately you will not be able to be dressed");
         return;
     }
 
     // activeFolder is the folder (full path) we are looking at with our Menu
-    // outfitsFolder is where all outfits are stored, including
+    // outfitFolder is where all outfits are stored, including
     //     ~normalself, ~normaloutfit, ~nude, and all the type folders
     // clothingFolder is the current folder for clothing, relative
-    //     to the outfitsFolder
+    //     to the outfitFolder
 
-    activeFolder = outfitsFolder;
+    activeFolder = outfitFolder;
     if (clothingFolder != "") activeFolder += "/" + clothingFolder;
 
 #ifdef DEVELOPER_MODE
@@ -284,7 +284,7 @@ string folderStatus() {
 
     if (typeFolder == "") typeFolderExists = "";
 
-    return "Outfits Folder: " + outfitsFolder +
+    return "Outfits Folder: " + outfitFolder +
            "\nCurrent Folder: " + activeFolder +
            "\nType Folder: " + typeFolderExists +
            "\nUse ~normalself: " + normalselfFolder +
@@ -300,7 +300,7 @@ string folderStatus() {
 
     if (typeFolder == "") typeFolderExists = "n/a";
 
-    return "Outfits Folder: " + outfitsFolder +
+    return "Outfits Folder: " + outfitFolder +
            "\nType Folder: " + typeFolderExists;
 }
 #endif
@@ -368,8 +368,8 @@ default {
                 rlvBaseChannel = dialogChannel ^ 0x80000000; // Xor with the sign bit forcing the positive channel needed by RLV spec.
 #endif
                 menuDressChannel = (dialogChannel ^ 0x80000000) + 2666; // Xor with the sign bit forcing the positive channel needed by RLV spec.
-                outfitsChannel = dialogChannel + 15; // arbitrary offset
-                debugSay(6, "DEBUG-DRESS", "outfits Channel set to " + (string)outfitsChannel);
+                outfitChannel = dialogChannel + 15; // arbitrary offset
+                debugSay(6, "DEBUG-DRESS", "outfits Channel set to " + (string)outfitChannel);
 
             }
             else if (name == "isAFK")                              isAFK = (integer)value;
@@ -394,11 +394,11 @@ default {
             }
 
             else if (c == "o") {
-                     if (name == "outfitsFolder") {
-                         outfitsFolder = value;
-                         normalselfFolder   = outfitsFolder + "/~normalself";
-                         normaloutfitFolder = outfitsFolder + "/~normaloutfit";
-                         nudeFolder         = outfitsFolder + "/~nude";
+                     if (name == "outfitFolder") {
+                         outfitFolder = value;
+                         normalselfFolder   = outfitFolder + "/~normalself";
+                         normaloutfitFolder = outfitFolder + "/~normaloutfit";
+                         nudeFolder         = outfitFolder + "/~nude";
                          lmSendConfig("normalselfFolder", normalselfFolder);
                          lmSendConfig("normaloutfitFolder", normaloutfitFolder);
                          lmSendConfig("nudeFolder", nudeFolder);
@@ -437,7 +437,7 @@ default {
                     return;
                 }
 
-                if (outfitsFolder != "") {
+                if (outfitFolder != "") {
 #ifdef DEVELOPER_MODE
                     // If we are in developer mode we are in danger of the key being ripped
                     // off here.  We therefore will use a temporary @detach=n restriction.
@@ -460,13 +460,13 @@ default {
                     // this without using a link message?
                     //
                     // *OutfitName       newOutfitName    - name of outfit
-                    // *OutfitFolder     outfitsFolder    - name of main outfits folder
-                    // *OutfitPath       clothingFolder   - name of folder with outfit, relative to outfitsFolder
-                    // *Outfit           -new-            - full path of outfit (outfitsFolder + "/" + clothingFolder + "/" + newOutfitName)
+                    // *OutfitFolder     outfitFolder    - name of main outfits folder
+                    // *OutfitPath       clothingFolder   - name of folder with outfit, relative to outfitFolder
+                    // *Outfit           -new-            - full path of outfit (outfitFolder + "/" + clothingFolder + "/" + newOutfitName)
 
                     // Build the newOutfit* variables - but do they get used?
 
-                    newOutfitFolder = outfitsFolder;
+                    newOutfitFolder = outfitFolder;
                       newOutfitPath = clothingFolder;
 
                     newOutfit = newOutfitFolder + "/";
@@ -488,10 +488,10 @@ default {
                 // Steps to dressing avi:
                 //
                 // Overview: Attach everything we need, and lock them afterwards.
-                // Next, detach the old outfit - then detach the entire outfitsFolder
+                // Next, detach the old outfit - then detach the entire outfitFolder
                 // just in case (everything we want should be locked on). Next,
                 // go through all clothing parts and detach them if possible.
-                // Finally, Attach everything in the outfitsFolder just in case.
+                // Finally, Attach everything in the outfitFolder just in case.
                 //
                 // Attach and Lock (Base):
                 //
@@ -511,7 +511,7 @@ default {
                 //
                 // 5) Detach oldOutfitFolder
                 //       (using @detachall:=force )
-                // 6) Detach entire outfitsFolder
+                // 6) Detach entire outfitFolder
                 //       (using @detachall:=force )
                 // 7) Go through clothing parts and detach
                 //       (using @detachallthis:=force on each part)
@@ -589,8 +589,8 @@ default {
                 else {
                     // If no oldOutfitFolder, then just detach everything
                     // outside of the newFolder and ~normalself and ~nude
-                    debugSay(2, "DEBUG-DRESS", "Removing all other outfits from " + outfitsFolder);
-                    cdForceDetach(outfitsFolder);
+                    debugSay(2, "DEBUG-DRESS", "Removing all other outfits from " + outfitFolder);
+                    cdForceDetach(outfitFolder);
                 }
                 llSleep(1.0);
 
@@ -692,7 +692,7 @@ default {
                 if (nudeFolder)       lmRunRLV("detachthis:" + nudeFolder       + "=n");
                 if (normalselfFolder) lmRunRLV("detachthis:" + normalselfFolder + "=n");
 
-                lmRunRLV("detachall:" + outfitsFolder + "=force");
+                lmRunRLV("detachall:" + outfitFolder + "=force");
 
                 if (nudeFolder)       lmRunRLV("detachthis:" + nudeFolder       + "=y,attachall:" + nudeFolder       + "=force");
                 if (normalselfFolder) lmRunRLV("detachthis:" + normalselfFolder + "=y,attachall:" + normalselfFolder + "=force");
@@ -739,7 +739,7 @@ default {
                     return;
                 }
 
-                debugSay(2, "DEBUG-DRESS", "Outfit menu; outfit Folder = " + outfitsFolder);
+                debugSay(2, "DEBUG-DRESS", "Outfit menu; outfit Folder = " + outfitFolder);
 
                 // Check to see if clothing has been worn long enough before changing (wearLock)
                 if (wearLock) {
@@ -749,7 +749,7 @@ default {
                     return;
                 }
 
-                if (outfitsFolder != "") {
+                if (outfitFolder != "") {
                     debugSay(2, "DEBUG-DRESS", "Outfit menu; outfit Folder is not empty");
 
 #ifndef PRESERVE_DIRECTORY
@@ -763,7 +763,7 @@ default {
                 }
                 else {
                     clearDresser();
-                    if (RLVok == TRUE) llSay(DEBUG_CHANNEL,"outfitsFolder is unset.");
+                    if (RLVok == TRUE) llSay(DEBUG_CHANNEL,"outfitFolder is unset.");
                     else llSay(DEBUG_CHANNEL,"You cannot be dressed without RLV active.");
                     return;
                 }
@@ -775,7 +775,7 @@ default {
                 // Strip out last element from slash forward
                 integer lastElement;
 
-                outfitsList = [];
+                outfitList = [];
                 debugSay(6, "DEBUG-DRESS", "Up Menu: clothingFolder = \"" + clothingFolder + "\"");
 
                 lastElement = uSubStringLastIndex(clothingFolder,"/");
@@ -835,7 +835,7 @@ default {
         //----------------------------------------
         // CHANNELS
 
-        if (channel == outfitsChannel) {
+        if (channel == outfitChannel) {
             // This channel handles the responses from the Outfits menus,
             // including all outfits, Next, Prev, and Back...
             // are done by listener2665); we get here after the first menu
@@ -845,7 +845,7 @@ default {
 
             // Build outfit menu: note it is using the number before the period here
             integer select = (integer)llGetSubString(choice, 0, llSubStringIndex(choice, ".") - 1);
-            if (select != 0) choice = cdListElement(outfitsList, select - 1);
+            if (select != 0) choice = cdListElement(outfitList, select - 1);
             // else we have a normal selection, not a numeric one
 
             debugSay(6, "DEBUG-DRESS", "Secondary outfits menu: choice = " + choice + "; select = " + (string)select);
@@ -858,17 +858,17 @@ default {
                 // - Outfits Prev
 
                 if (!isDresser(id)) {
-                    outfitsList = [];
+                    outfitList = [];
                     return;
                 }
 
                 if (choice == "Outfits Next") {
 #ifdef ROLLOVER
                     outfitPage++;
-                    if ((outfitPage - 1) * OUTFIT_PAGE_SIZE > llGetListLength(outfitsList))
+                    if ((outfitPage - 1) * OUTFIT_PAGE_SIZE > llGetListLength(outfitList))
                         outfitPage = 1;
 #else
-                    if (outfitPage * OUTFIT_PAGE_SIZE < llGetListLength(outfitsList))
+                    if (outfitPage * OUTFIT_PAGE_SIZE < llGetListLength(outfitList))
                         outfitPage++;
 #endif
                 }
@@ -876,7 +876,7 @@ default {
 #ifdef ROLLOVER
                     outfitPage--;
                     if (outfitPage < 1)
-                        outfitPage = llFloor((llGetListLength(outfitsList) + (OUTFIT_PAGE_SIZE / 2)) / (float)OUTFIT_PAGE_SIZE);
+                        outfitPage = llFloor((llGetListLength(outfitList) + (OUTFIT_PAGE_SIZE / 2)) / (float)OUTFIT_PAGE_SIZE);
 #else
                     if (outfitPage != 1)
                         outfitPage--;
@@ -894,14 +894,14 @@ default {
 
                 // We only get here if we are wandering about in the same directory...
                 cdDialogListen();
-                outfitsHandle = cdListenAll(outfitsChannel);
-                // outfitsMessage was built by the initial call to listener2666
-                llDialog(dresserID, outfitsMessage, dialogSort(outfitsPage(outfitsList) + dialogItems), outfitsChannel);
+                outfitHandle = cdListenAll(outfitChannel);
+                // outfitMessage was built by the initial call to listener2666
+                llDialog(dresserID, outfitMessage, dialogSort(outfitPageN(outfitList) + dialogItems), outfitChannel);
                 llSetTimerEvent(60.0);
 
             }
             else if (choice == "Back...") {
-                outfitsList = [];
+                outfitList = [];
                 lmMenuReply(backMenu, llGetDisplayName(id), id);
 
                 // Reset to Main Menu
@@ -909,11 +909,11 @@ default {
             }
 #ifdef NOT_USED
             else if (choice == MAIN) {
-                outfitsList = [];
+                outfitList = [];
                 lmMenuReply(MAIN,"",id);
             }
 #endif
-            else if (cdListElementP(outfitsList, choice) != NOT_FOUND) {
+            else if (cdListElementP(outfitList, choice) != NOT_FOUND) {
                 // This is the actual processing of an Outfit Menu entry -
                 // either a folder or a single outfit item.
                 //
@@ -921,7 +921,7 @@ default {
                 // No standard user should be entering this way anyway
                 //if (!isDresser(id)) return;
 
-                outfitsList = [];
+                outfitList = [];
                 if ((cdGetFirstChar(choice) == ">") || (cdGetFirstChar(choice) == "*")) {
 
                     // if a Folder was chosen, we have to descend into it by
@@ -931,7 +931,7 @@ default {
                     else clothingFolder += ("/" + choice);
 
                     debugSay(6, "DEBUG-DRESS", "Generating new list of outfits...");
-                    //lmSendConfig("clothingFolder", clothingFolder); // this is current folder relative to outfitsFolder
+                    //lmSendConfig("clothingFolder", clothingFolder); // this is current folder relative to outfitFolder
                     lmSendConfig("backMenu",(backMenu = UPMENU));
                     dressVia(menuDressChannel); // recursion: put up a new Primary menu
 
@@ -962,18 +962,18 @@ default {
             // Did we get anything at all?
             if (choice == "") {
                 cdDialogListen();
-                //outfitsHandle = cdListenAll(outfitsChannel);
-                cdListenAll(outfitsChannel);
+                //outfitHandle = cdListenAll(outfitChannel);
+                cdListenAll(outfitChannel);
 
                 backMenu = UPMENU;
-                llDialog(dresserID, "No outfits to wear in this directory.", [ "Back..." ], outfitsChannel);
+                llDialog(dresserID, "No outfits to wear in this directory.", [ "Back..." ], outfitChannel);
 
                 llSetTimerEvent(60.0);
                 return;
             }
 
             //fallbackFolder = 0;
-            outfitsList = llParseString2List(choice, [","], []);
+            outfitList = llParseString2List(choice, [","], []);
 
             integer n;
             string itemName;
@@ -982,9 +982,9 @@ default {
 
             debugSay(6, "DEBUG-DRESS", "Filtering outfit data");
             // Filter list of outfits (directories) to choose
-            n = llGetListLength(outfitsList);
+            n = llGetListLength(outfitList);
             while (n--) {
-                itemName = cdListElement(outfitsList, n);
+                itemName = cdListElement(outfitList, n);
                 prefix = cdGetFirstChar(itemName);
 
                 if (itemName != newOutfitName) {
@@ -1003,18 +1003,18 @@ default {
                 }
             }
 
-            outfitsList = tmpList;
+            outfitList = tmpList;
             tmpList = [];
 
-            debugSay(6, "DEBUG-DRESS", "Filtered list = " + llDumpList2String(outfitsList,","));
+            debugSay(6, "DEBUG-DRESS", "Filtered list = " + llDumpList2String(outfitList,","));
             // we've gone through and cleaned up the list - but is anything left?
-            if (outfitsList == []) {
-                outfitsList = []; // free memory
+            if (outfitList == []) {
+                outfitList = []; // free memory
                 cdDialogListen();
-                cdListenAll(outfitsChannel);
+                cdListenAll(outfitChannel);
 
                 backMenu = UPMENU;
-                llDialog(dresserID, "No wearable outfits in this directory.", [ "Back..." ], outfitsChannel);
+                llDialog(dresserID, "No wearable outfits in this directory.", [ "Back..." ], outfitChannel);
 
                 llSetTimerEvent(60.0);
 
@@ -1022,26 +1022,26 @@ default {
             }
 
             // Sort: slow bubble sort
-            outfitsList = llListSort(outfitsList, 1, TRUE);
+            outfitList = llListSort(outfitList, 1, TRUE);
 
             // Now create appropriate menu page from full outfits list
             outfitPage = 1;
 
-            list newOutfitsList = outfitsPage(outfitsList);
+            list newOutfitList = outfitPageN(outfitList);
 
-            if (llGetListLength(outfitsList) < 10) newOutfitsList += [ "-", "-" ];
-            else newOutfitsList += [ "Outfits Prev", "Outfits Next" ];
-            newOutfitsList += [ "Back..." ];
+            if (llGetListLength(outfitList) < 10) newOutfitList += [ "-", "-" ];
+            else newOutfitList += [ "Outfits Prev", "Outfits Next" ];
+            newOutfitList += [ "Back..." ];
 
-            if (dresserID == dollID) outfitsMessage = "You may choose any outfit to wear. See the help file for more detailed information on outfits.";
-            else outfitsMessage = "You may choose any outfit for dolly to wear. ";
+            if (dresserID == dollID) outfitMessage = "You may choose any outfit to wear. See the help file for more detailed information on outfits.";
+            else outfitMessage = "You may choose any outfit for dolly to wear. ";
 
-            outfitsMessage += "\n\n" + folderStatus();
+            outfitMessage += "\n\n" + folderStatus();
 
             // Provide a dialog to user to choose new outfit
             cdDialogListen();
-            //outfitsHandle = cdListenAll(outfitsChannel);
-            cdListenAll(outfitsChannel);
+            //outfitHandle = cdListenAll(outfitChannel);
+            cdListenAll(outfitChannel);
 
             // if clothingFolder is at the top, then go to MAIN... but typeFolder
             // might be active...
@@ -1051,10 +1051,10 @@ default {
                 backMenu = UPMENU;
             lmSendConfig("backMenu",backMenu);
 
-            llDialog(dresserID, outfitsMessage, dialogSort(newOutfitsList), outfitsChannel);
+            llDialog(dresserID, outfitMessage, dialogSort(newOutfitList), outfitChannel);
 
             llSetTimerEvent(60.0);
-            newOutfitsList = [];
+            newOutfitList = [];
         }
 
         //scaleMem();

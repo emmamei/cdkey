@@ -610,19 +610,6 @@ default {
 
             else if (name == "poseExpire")         poseExpire = (integer)value;
             else if (name == "wearLockExpire") wearLockExpire = (integer)value;
-#ifdef DEVELOPER_MODE
-            else if (name == "chatChannel")         ;
-            else if (name == "chatFilter")          ;
-            else if (name == "dollGender")          ;
-            else if (name == "dollType")            ;
-            else if (name == "outfitsFolder")       ;
-            else if (name == "transformLockExpire") ;
-            else if (name == "blacklist")           ;
-            else if (name == "controllers")         ;
-            else {
-                llSay(DEBUG_CHANNEL,"SET_CONFIG received setting for " + name + " = " + (string)value);
-            }
-#endif
         }
         else if (code == INTERNAL_CMD) {
             string cmd = llList2String(split, 0);
