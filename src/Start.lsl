@@ -28,7 +28,6 @@
 #define PREFS_READ 1
 #define PREFS_NOT_READ 0
 
-#define cdSetKeyName(a) llSetObjectName(a)
 #define cdResetKeyName() llSetObjectName(PACKAGE_NAME + " " + __DATE__)
 
 //=======================================
@@ -59,12 +58,12 @@ integer isAttached;
 //integer introLines;
 
 integer startParameter;
-integer resetState;
+//integer resetState;
 #define RESET_NONE 0
 #define RESET_NORMAL 1
 #define RESET_STARTUP 2
 
-integer rlvWait;
+//integer rlvWait;
 
 //=======================================
 // FUNCTIONS
@@ -272,7 +271,6 @@ processConfiguration(string name, string value) {
 //          and runs doneConfiguration if no notecard is found
 
 readPreferences() {
-    //ncStart = llGetTime();
 
     // Check to see if the file exists and is a notecard
     if (cdNotecardExists(NOTECARD_PREFERENCES)) {
@@ -286,36 +284,8 @@ readPreferences() {
         llOwnerSay("No preferences file was found (\"" + NOTECARD_PREFERENCES + "\")");
 
         prefsRead = PREFS_NOT_READ;
-        lmInitState(INIT_STAGE1);
+        lmInitState(INIT_STAGE3);
     }
-}
-
-// PURPOSE: doneConfiguration is called after preferences are done:
-//          that is, preferences have been read if they exist
-
-doneConfiguration(integer prefsRead) {
-    // By now preferences SHOULD have been read - if there were any.
-    // the variable prefsRead allows us to know if prefs were read...
-    // but how do we use this knowledge?
-
-    //if (!prefsRead) llOwnerSay("No preferences were read");
-
-    // Make sure the wind is a reasonable value. If not:
-    // windNormal is set to force six winds - but rounded to a
-    // value divided by 5. (The latter step is merely for user
-    // comfort, rather than a strange and odd number coming out.)
-    if (windNormal > keyLimit) windNormal = (keyLimit / 6) % 5;
-
-    lmSendConfig("windNormal",(string)windNormal);
-    lmSetConfig("keyLimit",(string)keyLimit);
-
-    resetState = RESET_NONE;
-
-    // The init stages enumerated here are not handled by us,
-    // but by others. They are a message that things are done here, and certain
-    // items are are completed.
-    //
-    lmInitState(INIT_STAGE2);
 }
 
 doRestart() {
@@ -333,16 +303,13 @@ doRestart() {
         script = llGetInventoryName(INVENTORY_SCRIPT, n);
         if (script != "Start") {
 
-            // We are assuming here that llSetScriptState after llRemoteLoadScriptPin
-            // update resets the script
-            //if (startParameter == 100) cdRunScript(script);
-            //else llResetOtherScript(script);
+            // Set other scripts to running, then reset them all
             cdRunScript(script);
             llResetOtherScript(script);
         }
     }
 
-    resetState = RESET_NONE;
+    //resetState = RESET_NONE;
 }
 
 //========================================
@@ -402,26 +369,10 @@ default {
                 }
             }
             else if (name == "defaultBaseRLVcmd")    defaultBaseRLVcmd = value;
-
-            else if (name == "dollDisplayName") {
-                if (script != cdMyScriptName()) {
-                    dollDisplayName = value;
-
-                    if (dollDisplayName == "") {
-                        string name = dollName;
-                        integer space = llSubStringIndex(name, " ");
-
-                        if (space != NOT_FOUND) name = llGetSubString(name, 0, space -1);
-
-                        lmSendConfig("dollDisplayName", (dollDisplayName = "Dolly " + name));
-                    }
-                    if (isAttached) cdSetKeyName(dollDisplayName + "'s Key");
-                }
-            }
         }
         else if (code == RLV_RESET) {
             RLVok = llList2Integer(split, 0);
-            rlvWait = 0;
+            //rlvWait = 0;
 
             if (newAttach) {
 
@@ -461,10 +412,13 @@ default {
         else if (code < 200) {
             if (code == INIT_STAGE1) {
                 debugSay(3,"DEBUG-START","Stage 1 begun.");
-                doneConfiguration(prefsRead);
+
+                lmInternalCommand("collapse", "0", keyID);
             }
             else if (code == INIT_STAGE2) {
                 debugSay(3,"DEBUG-START","Stage 2 begun.");
+
+                readPreferences();
 
                 // Check for items necessary for proper operation
                 // and give error messages or warnings
@@ -491,8 +445,6 @@ default {
 
                 if (!(isLandmarkPresent(LANDMARK_HOME)))
                     llOwnerSay("No home landmark present: Homing beacon will be disabled.");
-
-                lmInitState(INIT_STAGE3);
             }
             else if (code == INIT_STAGE3) {
                 debugSay(3,"DEBUG-START","Stage 3 begun.");
@@ -500,19 +452,22 @@ default {
             }
             else if (code == INIT_STAGE4) {
                 debugSay(3,"DEBUG-START","Stage 4 begun.");
+                string name = dollName;
+
+                // Check if dollDisplayName is unset
                 if (dollDisplayName == "") {
-                    string name = dollName;
-                    integer i = llSubStringIndex(name, " ");
+                    integer i = llSubStringIndex(dollName, " ");
 
-                    if (i != NOT_FOUND) name = llGetSubString(name, 0, i - 1);
-
-                    lmSendConfig("dollDisplayName", (dollDisplayName = "Dolly " + name));
+                    // if a space is found, use the first word as the name
+                    if (i != NOT_FOUND) dollDisplayName = "Dolly " + llGetSubString(dollName, 0, i - 1);
+                    else dollDisplayName = "Dolly " + dollName;
                 }
 
                 // WearLock should be clear
                 lmSetConfig("wearLock","0");
 
-                if (isAttached) cdSetKeyName(dollDisplayName + "'s Key");
+                lmSendConfig("dollDisplayName", dollDisplayName);
+                cdSetKeyName(dollDisplayName + "'s Key");
 
                 lmInitState(INIT_STAGE5);
             }
@@ -593,9 +548,9 @@ default {
         keyID = llGetKey();
         dollName = lmMyDisplayName(dollID);
 
-        rlvWait = 1;
+        //rlvWait = 1;
         cdInitializeSeq();
-        resetState = RESET_STARTUP;
+        //resetState = RESET_STARTUP;
 
         isAttached = cdAttached();
         if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
@@ -608,20 +563,7 @@ default {
         doRestart();
         llSleep(0.5);
 
-#ifdef DEVELOPER_MODE
-        // Set the debug level for all scripts early
-        lmSendConfig("debugLevel",(string)debugLevel);
-#endif
-        readPreferences();
-        llSleep(0.1);
-        lmInternalCommand("collapse", "0", keyID);
-    }
-
-    //----------------------------------------
-    // TOUCH START
-    //----------------------------------------
-    touch_start(integer num) {
-        if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
+        lmInitState(INIT_STAGE1);
     }
 
     //----------------------------------------
@@ -634,10 +576,12 @@ default {
 
         isAttached = cdAttached();
         if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
-        //else cdResetKeyName();
 
-        //RLVok = UNSET;
 #ifdef DEVELOPER_MODE
+        // Note this should be set by prefs, but the prefs require a lot before
+        // they are read
+        debugLevel = 8;
+
         // Set the debug level for all scripts early
         lmSendConfig("debugLevel",(string)debugLevel);
 #endif
@@ -681,20 +625,37 @@ default {
     }
 
     //----------------------------------------
+    // TOUCH START
+    //----------------------------------------
+    touch_start(integer num) {
+        if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
+    }
+
+    //----------------------------------------
     // DATASERVER
     //----------------------------------------
     dataserver(key query_id, string data) {
 
         if (query_id == ncPrefsKey) {
-            // Read notecard: Preferences
-            if (data == EOF) {
-                //lmSendConfig("ncPrefsLoadedUUID", llDumpList2String(llList2List((string)llGetInventoryKey(NOTECARD_PREFERENCES) + ncPrefsLoadedUUID, 0, 9),"|"));
-                //lmInternalCommand("getTimeUpdates","",NULL_KEY);
 
-                //llOwnerSay("Preferences read in " + formatFloat(llGetTime() - ncStart, 2) + "s");
+            // Read notecard: Preferences
+
+            if (data == EOF) {
+
+                // Make sure the wind is a reasonable value. If not:
+                // windNormal is set to force six winds - but rounded to a
+                // value divided by 5. (The latter step is merely for user
+                // comfort, rather than a strange and odd number coming out.)
+                if (windNormal > keyLimit) {
+                    windNormal = (keyLimit / 6) % 5;
+                    llSay(DEBUG_CHANNEL,"Wind setting exceeds max time on key! (changed to " + (string)(windNormal) + ")");
+                }
+
+                lmSendConfig("windNormal",(string)windNormal);
+                lmSetConfig("keyLimit",(string)keyLimit);
 
                 prefsRead = PREFS_READ;
-                lmInitState(INIT_STAGE1);
+                lmInitState(INIT_STAGE3);
             }
             else {
                 // Strip comments (prefs)

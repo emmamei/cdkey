@@ -1067,9 +1067,12 @@ default {
                         integer len;
                         integer j;
                         integer lenAllSymbols;
-                        string oldName = llGetObjectName();
 
-                        llSetObjectName(dollDisplayName);
+                        string oldName = llGetObjectName();
+                        
+                        // Change name so it will seem to come from us directly
+                        cdSetKeyName(dollDisplayName);
+
                         allSymbols = doubledSymbols + pairedSymbols;
                         lenAllSymbols = llStringLength(allSymbols);
                         param = " " + param + " ";
@@ -1093,7 +1096,9 @@ default {
                             else param = c1 + param + c2;
                         }
                         llSay(PUBLIC_CHANNEL,param);
-                        llSetObjectName(oldName);
+
+                        // Restore to proper key name
+                        cdSetKeyName(oldName);
                         return;
                     }
 #ifdef DEVELOPER_MODE

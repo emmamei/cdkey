@@ -25,7 +25,6 @@
 #define cdMenuInject(a) lmMenuReply((a),name,id);
 #define cdResetKey() llResetOtherScript("Start")
 #define lmCollapse(a) lmInternalCommand("collapse",(string)(a),NULL_KEY)
-#define lmDoCheckRLV() lmInternalCommand("doCheckRLV","",NULL_KEY)
 
 // Wait for the user for 5 minutes - but for a program, only
 // wait 60s. The request for a dialog menu should happen before then -

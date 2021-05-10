@@ -33,6 +33,7 @@ integer rlvChannel;
 integer rlvHandle;
 integer rlvCheck = MAX_RLVCHECK_TRIES;
 integer rlvStarted;
+integer initializing = TRUE;
 
 list rlvExceptions;
 
@@ -53,8 +54,12 @@ list rlvExceptions;
 
 #define NO_CHANNEL 0
 
-// This is the main place where the RLV listener is opened.
-
+// This is the place where the RLV listener is opened,
+// and the search for RLV begins.
+//
+// Note that this now does NOT run automatically on startup,
+// but waits for the Start script to activate it.
+//
 startRlvCheck() {
     // Checking for RLV
     llOwnerSay("Checking for RLV support");
@@ -199,7 +204,7 @@ default {
         myPath = "";
 #endif
         cdInitializeSeq();
-        startRlvCheck();
+        //startRlvCheck();
     }
 
     //----------------------------------------
@@ -217,14 +222,16 @@ default {
         rlvChannel == 0;
 
         // Note this happens only at the very beginning
-        startRlvCheck();
+        //startRlvCheck();
     }
 
     //----------------------------------------
     // ATTACH
     //----------------------------------------
     attach(key id) {
-        if (id) startRlvCheck();
+
+        // Let INIT_STAGE1 activate the RLV check..
+        //if (initializing == TRUE) if (id) startRlvCheck();
     }
 
     //----------------------------------------
@@ -246,9 +253,11 @@ default {
                 rlvAPIversion = msg;
                 debugSay(2, "DEBUG-RLV", "RLV Version: " + rlvAPIversion);
             }
+#ifdef DEVELOPER_MODE
             else {
                 debugSay(2, "DEBUG-RLV", "Unknown RLV response message: " + msg);
             }
+#endif
 
             cdHaltTimer();
             RLVok = TRUE;
@@ -318,6 +327,8 @@ default {
             debugSay(4,"DEBUG-MENU","RLV Reset: Updating exceptions");
             if (RLVok == TRUE)
                 lmInternalCommand("reloadExceptions", script, NULL_KEY);
+
+            if (initializing) lmInitState(INIT_STAGE2);
         }
         else if (code == INTERNAL_CMD) {
             string cmd = llList2String(split, 0);
@@ -325,7 +336,7 @@ default {
 
             //debugSay(3,"DEBUG-CHECKRLV","Internal command triggered: " + cmd);
 
-            if (cmd == "doCheckRLV") {
+            if (cmd == "startRlvCheck") {
                 startRlvCheck();
             }
             else if (cmd == "addExceptions") {
@@ -393,7 +404,17 @@ default {
             }
         }
         else if (code < 200) {
-            if (code == CONFIG_REPORT) {
+                 if (code == INIT_STAGE1) {
+
+                startRlvCheck();  // once RLV is determined, this triggers STAGE3
+
+            }
+            else if (code == INIT_STAGE5) {
+
+                initializing = FALSE;
+
+            }
+            else if (code == CONFIG_REPORT) {
 
                 cdConfigureReport();
             }

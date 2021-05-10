@@ -645,23 +645,33 @@ default {
                 oldOutfit = "";
                 newOutfit = "";
 
+#define rlvLockFolderRecursive(a) ("detachallthis:" + (a) + "=n")
+#define rlvUnlockFolderRecursive(a) ("detachallthis:" + (a) + "=y")
+#define rlvAttachFolderRecursive(a) ("attachall:" + (a) + "=force")
+#define rlvDetachAllRecursive()     ("detachall:=force")
+
                 // Force attach nude elements
-                if (nudeFolder)         lmRunRLV("detachthis:" + nudeFolder         + "=y,attachall:" + nudeFolder         + "=force");
-                if (normalselfFolder)   lmRunRLV("detachthis:" + normalselfFolder   + "=y,attachall:" + normalselfFolder   + "=force");
-                if (normaloutfitFolder) lmRunRLV("detachthis:" + normaloutfitFolder + "=y,attachall:" + normaloutfitFolder + "=force");
+                if (nudeFolder)         lmRunRLV(rlvUnlockFolderRecursive(nudeFolder)         + "," + rlvAttachFolderRecursive(nudeFolder));
+                if (normalselfFolder)   lmRunRLV(rlvUnlockFolderRecursive(normalselfFolder)   + "," + rlvAttachFolderRecursive(normalselfFolder));
+                if (normaloutfitFolder) lmRunRLV(rlvUnlockFolderRecursive(normaloutfitFolder) + "," + rlvAttachFolderRecursive(normaloutfitFolder));
 
                 // Lock default body
-                if (nudeFolder)         lmRunRLV("detachthis:" + nudeFolder         + "=n");
-                if (normalselfFolder)   lmRunRLV("detachthis:" + normalselfFolder   + "=n");
-                if (normaloutfitFolder) lmRunRLV("detachthis:" + normaloutfitFolder + "=n");
+                if (nudeFolder)         lmRunRLV(rlvLockFolderRecursive(nudeFolder));
+                if (normalselfFolder)   lmRunRLV(rlvLockFolderRecursive(normalselfFolder));
+                if (normaloutfitFolder) lmRunRLV(rlvLockFolderRecursive(normaloutfitFolder));
 
                 // Remove all else from the top, outfits and all the rest
-                lmRunRLV("detachall:=force");
+                lmRunRLV(rlvDetachAllRecursive());
 
                 // Clear locks and force attach
-                if (nudeFolder)         lmRunRLV("detachthis:" + nudeFolder         + "=y,attachall:" + nudeFolder         + "=force");
-                if (normalselfFolder)   lmRunRLV("detachthis:" + normalselfFolder   + "=y,attachall:" + normalselfFolder   + "=force");
-                if (normaloutfitFolder) lmRunRLV("detachthis:" + normaloutfitFolder + "=y,attachall:" + normaloutfitFolder + "=force");
+                //if (nudeFolder)         lmRunRLV(rlvLockFolderRecursive(nudeFolder) + "attachall:" + nudeFolder         + "=force");
+                //if (normalselfFolder)   lmRunRLV(rlvLockFolderRecursive(nudeFolder) + "attachall:" + normalselfFolder   + "=force");
+                //if (normaloutfitFolder) lmRunRLV(rlvLockFolderRecursive(nudeFolder) + "attachall:" + normaloutfitFolder + "=force");
+
+                // Clear locks
+                if (nudeFolder)         lmRunRLV(rlvUnlockFolderRecursive(nudeFolder));
+                if (normalselfFolder)   lmRunRLV(rlvUnlockFolderRecursive(normalselfFolder));
+                if (normaloutfitFolder) lmRunRLV(rlvUnlockFolderRecursive(normaloutfitFolder));
             }
 #ifdef ADULT_MODE
             else if (cmd == "stripAll") {
