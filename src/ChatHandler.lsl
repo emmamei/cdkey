@@ -59,8 +59,8 @@ default {
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
         if (code == SEND_CONFIG) {
-            string name = llList2String(split, 0);
-            string value = llList2String(split, 1);
+            string name = (string)split[0];
+            string value = (string)split[1];
             string c = cdGetFirstChar(name); // for speedup
             split = llDeleteSubList(split,0,0);
 
@@ -140,8 +140,8 @@ default {
             }
         }
         else if (code == SET_CONFIG) {
-            string setName = llList2String(split, 0);
-            string value = llList2String(split, 1);
+            string setName = (string)split[0];
+            string value = (string)split[1];
 
             if (setName == "chatChannel") {
                 // Change listening chat channel
@@ -189,13 +189,13 @@ default {
             }
         }
         else if (code == INTERNAL_CMD) {
-            string cmd = llList2String(split, 0);
+            string cmd = (string)split[0];
 
             if ((cmd == "addMistress") ||
                 (cmd == "addBlacklist")) {
 
-                string uuid = llList2String(split, 1);
-                string name = llList2String(split, 2);
+                string uuid = (string)split[1];
+                string name = (string)split[2];
                 string nameURI = "secondlife:///app/agent/" + uuid + "/displayname";
 
                 debugSay(5,"DEBUG-ADDMISTRESS","Blacklist = " + llDumpList2String(blacklist,"|") + " (" + (string)llGetListLength(blacklist) + ")");
@@ -288,8 +288,8 @@ default {
             else if ((cmd == "remMistress") ||
                      (cmd == "remBlacklist")) {
 
-                string uuid = llList2String(split, 1);
-                string name = llList2String(split, 2);
+                string uuid = (string)split[1];
+                string name = (string)split[2];
 
                 if (name == "") {
                     llSay(DEBUG_CHANNEL,"No name alloted with this user.");
@@ -351,8 +351,8 @@ default {
             }
         }
         else if (code == RLV_RESET) {
-            RLVok = llList2Integer(split, 0);
-            rlvAPIversion = llList2String(split, 1);
+            RLVok = (integer)split[0];
+            rlvAPIversion = (string)split[1];
         }
         else if (code < 200) {
             if (code == INIT_STAGE5) {
@@ -370,7 +370,7 @@ default {
             }
 #ifdef DEVELOPER_MODE
             else if (code == MEM_REPORT) {
-                memReport(cdMyScriptName(),llList2Float(split, 0));
+                memReport(cdMyScriptName(),(float)split[0]);
             }
 #endif
             else if (code == CONFIG_REPORT) {

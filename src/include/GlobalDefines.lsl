@@ -8,6 +8,10 @@ float GlobalDefines_version=1.0;
 
 #include "config.h"
 
+// Set Firestorm options, just in case
+#define USE_LAZY_LISTS
+#define USE_SWITCHES
+
 // Link message codes
 
 // Init stages

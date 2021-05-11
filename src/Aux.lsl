@@ -95,8 +95,8 @@ default {
         split     = llDeleteSubList(split, 0, 0 + optHeader);
 
         if (code == SEND_CONFIG) {
-            string name = llList2String(split, 0);
-            string value = llList2String(split, 1);
+            string name = (string)split[0];
+            string value = (string)split[1];
 
             split = llDeleteSubList(split, 0, 0);
 
@@ -150,20 +150,20 @@ default {
             }
         }
         else if (code == SET_CONFIG) {
-                string name = llList2String(split, 0);
-                string value = llList2String(split, 1);
+                string name = (string)split[0];
+                string value = (string)split[1];
 
                 split = llDeleteSubList(split, 0, 0);
 
                 if (name == "dollGender") setGender(value);
         }
         else if (code == INTERNAL_CMD) {
-            string cmd = llList2String(split, 0);
+            string cmd = (string)split[0];
             split = llDeleteSubList(split, 0, 0);
 
             if (cmd == "collapsedMenu") {
                 // this is only called for Dolly - so...
-                string timeLeft = llList2String(split, 0);
+                string timeLeft = (string)split[0];
                 list menu = [ "Ok" ];
 
                 // is it possible to be collapsed but collapseTime be equal to 0.0?
@@ -204,7 +204,7 @@ default {
 #ifdef ADULT_MODE
             else if (cmd == "strip") {
                 // llToLower() may be superfluous here
-                string part = llToLower(llList2String(split, 0));
+                string part = llToLower((string)split[0]);
 
                 if (id != dollID) {
 
@@ -221,12 +221,12 @@ default {
 #endif
         }
         else if (code == RLV_RESET) {
-            RLVok = llList2Integer(split, 0);
+            RLVok = (integer)split[0];
             debugSay(4,"DEBUG-AUX","RLVok set to " + (string)RLVok);
         }
         else if (code == MENU_SELECTION) {
-            string choice = llList2String(split, 0);
-            string avatar = llList2String(split, 1);
+            string choice = (string)split[0];
+            string avatar = (string)split[1];
 
 #define isObjectPresent(o) (llGetInventoryType(o) == INVENTORY_OBJECT)
 #define isLandmarkPresent(a) (llGetInventoryType(a) == INVENTORY_LANDMARK)
@@ -478,12 +478,12 @@ Parent - Take care choosing your parents; they have great control over Dolly and
 
                 //----------------------------------------
                 // lmSendToController
-                msg = llList2String(split, 0);
+                msg = (string)split[0];
                 key targetKey;
                 integer n = llGetListLength(cdList2ListStrided(controllers, 0, -1, 2));
 
                 while (n--) {
-                    targetKey = llList2Key(controllers, (n << 1));
+                    targetKey = (key)controllers[(n << 1]);
 
                     lmInternalCommand("instantMessage", msg, targetKey);
                 }
@@ -499,17 +499,17 @@ Parent - Take care choosing your parents; they have great control over Dolly and
             }
 #endif
             else if (code == MEM_REPORT) {
-                float delay  = llList2Float(split, 0);
+                float delay  = (float)split[0];
                 memReportID = id;
                 memReport("Aux",1.0);
             }
             else if (code == MEM_REPLY) {
                 memReporting = 1;
                 llSetTimerEvent(5.0); // when timer goes off, we assume completion
-                float usedMemory  = llList2Float(split, 0);
-                float memoryLimit = llList2Float(split, 1);
-                float freeMemory  = llList2Float(split, 2);
-                float availMemory = llList2Float(split, 3);
+                float usedMemory  = (float)split[0];
+                float memoryLimit = (float)split[1];
+                float freeMemory  = (float)split[2];
+                float availMemory = (float)split[3];
 
 #ifdef DEVELOPER_MODE
                 // In Developer Keys we want to see the works: all the details
@@ -529,7 +529,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
             }
 
             else if (code == SIM_RATING_CHG) {
-                simRating = llList2String(split, 0);
+                simRating = (string)split[0];
             }
         }
     }

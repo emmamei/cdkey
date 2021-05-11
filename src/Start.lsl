@@ -333,8 +333,8 @@ default {
         //scaleMem();
 
         if (code == SEND_CONFIG) {
-            string name = llList2String(split, 0);
-            string value = llList2String(split, 1);
+            string name = (string)split[0];
+            string value = (string)split[1];
             split = llDeleteSubList(split,0,0);
 
                  if (name == "keyLimit")                      keyLimit = (integer)value;
@@ -371,7 +371,7 @@ default {
             else if (name == "defaultBaseRLVcmd")    defaultBaseRLVcmd = value;
         }
         else if (code == RLV_RESET) {
-            RLVok = llList2Integer(split, 0);
+            RLVok = (integer)split[0];
             //rlvWait = 0;
 
             if (newAttach) {
@@ -404,8 +404,8 @@ default {
             }
         }
         else if (code == MENU_SELECTION) {
-            string selection = llList2String(split, 0);
-            string name = llList2String(split, 1);
+            string selection = (string)split[0];
+            string name = (string)split[1];
 
             if (selection == "Reset Key") cdResetKey();
         }
@@ -501,7 +501,7 @@ default {
             else if (code == MEM_REPORT) {
                 if (script == cdMyScriptName()) return;
 
-                float delay = llList2Float(split, 0);
+                float delay = (float)split[0];
                 memReport(cdMyScriptName(),delay);
             }
 #endif

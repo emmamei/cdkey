@@ -138,8 +138,8 @@ default {
 
         lmSetHovertext("Updating...");
         llSay(PUBLIC_CHANNEL,"Beginning update with nearby key...");
-        targetID = llList2Key(params, 0);
-        pin = llList2Integer(params, 1);
+        targetID = (key)params[0];
+        pin = (integer)params[1];
 
         llListenRemove(comHandle);
         llSetTimerEvent(0.0);

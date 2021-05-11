@@ -285,9 +285,9 @@ default {
         //scaleMem();
 
         if (code == SEND_CONFIG) {
-            name = llList2String(split, 0);
+            name = (string)split[0];
             split = llDeleteSubList(split, 0, 0);
-            value = llList2String(split, 0);
+            value = (string)split[0];
             string c = llGetSubString(name, 0, 0);
 
             if (llListFindList([ "a", "c", "d", "w" ],(list)c) == NOT_FOUND) return;
@@ -324,7 +324,7 @@ default {
             else if (name == "wearLock") { wearLock = (integer)value; rlvOutfitLock(); }
         }
         else if (code == RLV_RESET) {
-            RLVok = llList2Integer(split, 0);
+            RLVok = (integer)split[0];
 
             debugSay(4,"DEBUG-MENU","RLV Reset: Updating exceptions");
             if (RLVok == TRUE)
@@ -333,7 +333,7 @@ default {
             if (initializing) lmInitState(INIT_STAGE2);
         }
         else if (code == INTERNAL_CMD) {
-            string cmd = llList2String(split, 0);
+            string cmd = (string)split[0];
             split = llDeleteSubList(split, 0, 0);
 
             //debugSay(3,"DEBUG-CHECKRLV","Internal command triggered: " + cmd);
@@ -342,7 +342,7 @@ default {
                 startRlvCheck();
             }
             else if (cmd == "addExceptions") {
-                string exceptionKey = llList2String(split, 0);
+                string exceptionKey = (string)split[0];
 
                 llOwnerSay("@tplure:"    + (string)(exceptionKey) + "=add," +
                             "accepttp:"  + (string)(exceptionKey) + "=add," +
@@ -392,7 +392,7 @@ default {
                 string exceptionKey;
                 i = llGetListLength(exceptions);
                 while (i--) {
-                    exceptionKey = llList2String(exceptions, i);
+                    exceptionKey = (string)exceptions[i];
 
                     // This assumes that exceptions are a block...
                     // for now they are
@@ -422,7 +422,7 @@ default {
             }
 #ifdef DEVELOPER_MODE
             else if (code == MEM_REPORT) {
-                float delay = llList2Float(split, 0);
+                float delay = (float)split[0];
                 memReport(cdMyScriptName(),delay);
             }
 #endif

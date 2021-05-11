@@ -197,8 +197,8 @@ default {
         //scaleMem();
 
         if (code == SEND_CONFIG) {
-            string name = llList2String(split, 0);
-            string value = llList2String(split, 1);
+            string name = (string)split[0];
+            string value = (string)split[1];
             split = llDeleteSubList(split, 0, 0);
             string c = cdGetFirstChar(name);
 
@@ -274,8 +274,8 @@ default {
             }
         }
         else if (code == SET_CONFIG) {
-            string name = llList2String(split, 0);
-            string value = llList2String(split, 1);
+            string name = (string)split[0];
+            string value = (string)split[1];
 
             split = llDeleteSubList(split, 0, 0);
 
@@ -292,7 +292,7 @@ default {
             }
         }
         else if (code == INTERNAL_CMD) {
-            string cmd = llList2String(split, 0);
+            string cmd = (string)split[0];
             split = llDeleteSubList(split, 0, 0);
 
             if (cmd == "dialogListen") {
@@ -655,14 +655,14 @@ default {
             }
         }
         else if (code == MENU_SELECTION) {
-            string name = llList2String(split, 0);
+            string name = (string)split[0];
 
             if (name == "Options...") {
                 lmInternalCommand("optionsMenu", llGetDisplayName(id), id);
             }
         }
         else if (code == RLV_RESET) {
-            RLVok = llList2Integer(split, 0);
+            RLVok = (integer)split[0];
         }
         else if (code < 200) {
             if (code == INIT_STAGE2) {
@@ -677,7 +677,7 @@ default {
             }
 #ifdef DEVELOPER_MODE
             else if (code == MEM_REPORT) {
-                float delay = llList2Float(split, 0);
+                float delay = (float)split[0];
                 memReport(cdMyScriptName(),delay);
             }
 #endif
@@ -687,7 +687,7 @@ default {
 
             }
             else if (code == SIM_RATING_CHG) {
-                simRating = llList2String(split, 0);
+                simRating = (string)split[0];
             }
         }
     }
@@ -1022,11 +1022,11 @@ default {
                     dialogButtons = [];
                     n = llGetListLength(dialogKeys);
 
-                    //for (i = 0; i < n; i++) dialogButtons += llGetSubString((string)(i+1) + ". " + llList2String(dialogNames, i), 0, 23);
+                    //for (i = 0; i < n; i++) dialogButtons += llGetSubString((string)(i+1) + ". " + (string)dialogNames[i], 0, 23);
 
                     i = n;
                     while (i--)
-                        dialogButtons += llGetSubString((string)(i + 1) + ". " + llList2String(dialogNames, i), 0, 23);
+                        dialogButtons += llGetSubString((string)(i + 1) + ". " + (string)dialogNames[i], 0, 23);
 
                     if (beforeSpace == CIRCLE_PLUS) {
                         if (n < 11) {
@@ -1068,7 +1068,7 @@ default {
                             i = n; 
                             string idX;
                             while (i--) {
-                                idX = llList2String(dialogKeys, n - i - 2);
+                                idX = (string)dialogKeys[n - i - 2];
                                 msg += "\n" + (string)(n - i) + "." +
                                        "secondlife:///app/agent/" + idX + "/about";
                             }
@@ -1109,8 +1109,8 @@ default {
 
             string button = choice;
             integer i = llListFindList(dialogButtons, [ choice ]);
-            string name = llList2String(dialogNames, i);
-            string uuid = llList2String(dialogKeys, i);
+            string name = (string)dialogNames[i];
+            string uuid = (string)dialogKeys[i];
 
             if (channel == blacklistChannel) {
 

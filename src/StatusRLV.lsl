@@ -115,7 +115,7 @@ default {
         }
 
         else if (code == INTERNAL_CMD) {
-            string cmd = llList2String(split, 0);
+            string cmd = (string)split[0];
             split = llDeleteSubList(split, 0, 0);
 
             if (cmd == "instantMessage") {
@@ -127,7 +127,7 @@ default {
         }
         else if (code == RLV_CMD) {
             string commandString = cdListElement(split, 2);
-            string cmd = llList2String(split, 1);
+            string cmd = (string)split[1];
             //split = llDeleteSubList(split, 0, 0);
 
             debugSay(4,"DEBUG-STATUSRLV","RLV_CMD script " + script + ": " + cmd + ": " + commandString);
@@ -193,7 +193,7 @@ default {
                 string cmd;
                 i = ~llGetListLength(rlvRestrict);
                 while (i++) {
-                    cmd = llList2String(rlvRestrict, i);
+                    cmd = (string)rlvRestrict[i];
                     llOwnerSay("@" + cmd);
                 }
             }
@@ -329,7 +329,7 @@ default {
             }
         }
         else if (code == RLV_RESET) {
-            RLVok = llList2Integer(split, 0);
+            RLVok = (integer)split[0];
 
             if (RLVok == TRUE)
                 lmRunRLVcmd("restoreRLV","");

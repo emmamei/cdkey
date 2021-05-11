@@ -175,7 +175,7 @@ docollapse() {
 
     // Stop all animations
     while (i--)
-        llStopAnimation(llList2Key(oldAnimList, i));
+        llStopAnimation((key)oldAnimList[i]);
 
     // This will trigger animation
     llRequestPermissions(dollID, PERMISSION_MASK);
@@ -211,7 +211,7 @@ uncollapse() {
 
     // Stop all animations
     while (i--)
-        llStopAnimation(llList2Key(oldAnimList, i));
+        llStopAnimation((key)oldAnimList[i]);
 
     setWindRate();
     cdAOon();
@@ -506,8 +506,8 @@ default {
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
         if (code == SEND_CONFIG) {
-            string name = llList2String(split, 0);
-            string value = llList2String(split, 1);
+            string name = (string)split[0];
+            string value = (string)split[1];
             split = llDeleteSubList(split, 0, 0);
             string c = cdGetFirstChar(name);
 
@@ -556,8 +556,8 @@ default {
 #endif
         }
         else if (code == SET_CONFIG) {
-            string name = llList2String(split, 0);
-            string value = llList2String(split, 1);
+            string name = (string)split[0];
+            string value = (string)split[1];
             split = llDeleteSubList(split, 0, 0);
 
             if (name == "keyLimit") {
@@ -612,7 +612,7 @@ default {
             else if (name == "wearLockExpire") wearLockExpire = (integer)value;
         }
         else if (code == INTERNAL_CMD) {
-            string cmd = llList2String(split, 0);
+            string cmd = (string)split[0];
             split = llDeleteSubList(split, 0, 0);
             integer isController = cdIsController(id);
 
@@ -620,7 +620,7 @@ default {
                 setWindRate();
             }
             else if (cmd == "collapse") {
-                integer collapseState = llList2Integer(split, 0);
+                integer collapseState = (integer)split[0];
 
                 // The collapse internal command...
 
@@ -634,12 +634,12 @@ default {
                 // script in a synchronous fashion: if this function is moved, this will
                 // have to be changed.
                 debugSay(6,"DEBUG-MAIN","received winding cmd");
-                doWinding(llList2String(split, 1),id);
+                doWinding((string)split[1],id);
             }
             else if (cmd == "windMsg") {
                 // this overlaps a global windAmount... bad!
-                integer windAmount = llList2Integer(split, 0);
-                string name = llList2String(split, 1);
+                integer windAmount = (integer)split[0];
+                string name = (string)split[1];
                 string mins = (string)llFloor(windAmount / SECS_PER_MIN);
                 string percent = formatFloat((float)timeLeftOnKey * 100.0 / (float)keyLimit, 1);
 
@@ -699,7 +699,7 @@ default {
             }
         }
         else if (code == RLV_RESET) {
-            RLVok = llList2Integer(split, 0);
+            RLVok = (integer)split[0];
 
             // refresh collapse state... no escape!
             if (collapsed) docollapse();
@@ -715,8 +715,8 @@ default {
             simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
         }
         else if (code == MENU_SELECTION) {
-            string choice = llList2String(split, 0);
-            string name = llList2String(split, 1);
+            string choice = (string)split[0];
+            string name = (string)split[1];
 
             if (choice == MAIN) {
                 // call actual Menu code
@@ -876,7 +876,7 @@ default {
 
 #ifdef DEVELOPER_MODE
             else if (code == MEM_REPORT) {
-                float delay = llList2Float(split, 0);
+                float delay = (float)split[0];
                 memReport(cdMyScriptName(),delay);
             }
 #endif

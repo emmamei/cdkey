@@ -322,7 +322,7 @@ default {
         // HOMING BEACON: AUTO-TRANSPORT
         //
         if (homingBeacon) {
-            string timeLeft = llList2String(split, 0);
+            string timeLeft = (string)split[0];
 
             // is it possible to be collapsed but collapseTime be equal to 0.0?
             if (collapsed) {
@@ -383,7 +383,7 @@ default {
             if (phraseCount) {
 
                 // select a phrase from the notecard at random
-                string phrase  = llList2String(currentPhrases, llFloor(llFrand(phraseCount)));
+                string phrase  = (string)currentPhrases[llFloor(llFrand(phraseCount))];
 
                 // Starting with a '*' marks a fragment; with none,
                 // the phrase is used as is
@@ -511,7 +511,7 @@ default {
             }
         }
         else if (code == INTERNAL_CMD) {
-            string cmd = llList2String(split, 0);
+            string cmd = (string)split[0];
             split = llDeleteSubList(split, 0, 0);
 
             if (cmd == "optionsMenu") {

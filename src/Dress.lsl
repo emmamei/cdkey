@@ -111,7 +111,7 @@ list outfitPageN(list outfitList) {
     string outfitName;
     list tmpList;
 
-    tmpList = llList2List(outfitList, currentIndex, currentIndex + 8);
+    tmpList = (list)outfitList[currentIndex, currentIndex + 8];
     n = llGetListLength(tmpList);
     tmpEnd = n - 1;
 
@@ -716,7 +716,7 @@ default {
                 else                  { cdSetHovertext("",                       ( WHITE  )); }
             }
             else if (cmd == "carriedMenu") {
-                string carrierName = llList2String(split, 0);
+                string carrierName = (string)split[0];
 
                 if (cdIsDoll(id)) {
                     msg = "You are being carried by " + carrierName + ". ";
@@ -732,7 +732,7 @@ default {
 
             // RLV check is resetting values
 
-            RLVok = llList2Integer(split, 0);
+            RLVok = (integer)split[0];
         }
         else if (code == MENU_SELECTION)  {
 

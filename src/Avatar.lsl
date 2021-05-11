@@ -241,7 +241,7 @@ posePageN(string choice, key id) {
 
     if (poseCount > MAX_DIALOG_BUTTONS) {
         // Get a 9-count slice from poseDialogButtons for dialog
-        poseDialogButtons = llList2List(poseDialogButtons, poseIndex, poseIndex + 8) + bottomDialogLine + [ "Back..." ];
+        poseDialogButtons = (list)poseDialogButtons[poseIndex, poseIndex + 8] + bottomDialogLine + [ "Back..." ];
     }
     else {
         // Can display all poses on one page
@@ -286,7 +286,7 @@ clearPoseAnimation() {
     // will not "stay down" and will return, although will not be playing
     //
     while (i--) {
-        animKey = llList2Key(animList, i);
+        animKey = (key)animList[i];
         if (animKey) llStopAnimation(animKey);
     }
 
@@ -324,6 +324,8 @@ setPoseAnimation(string anim) {
     // We need the key of the animation, but this method only works on full perm animations
     //key animID = llGetInventoryKey(anim);
     llStartAnimation(anim);
+
+    // We cant use lazy lists here, as this is a *generated* list not a named list
     animKey = llList2String(llGetAnimationList(llGetPermissionsKey()), -1);
 
     if (animKey != NULL_KEY) {
@@ -483,8 +485,8 @@ default {
         //scaleMem();
 
         if (code == SEND_CONFIG) {
-            name = llList2String(split, 0);
-            value = llList2String(split, 1);
+            name = (string)split[0];
+            value = (string)split[1];
             split = llDeleteSubList(split, 0, 0);
 
                  if (name == "collapsed") {
@@ -532,7 +534,7 @@ default {
             //llRequestPermissions(dollID, PERMISSION_MASK);
         }
         else if (code == INTERNAL_CMD) {
-            string cmd = llList2String(split, 0);
+            string cmd = (string)split[0];
             split = llDeleteSubList(split, 0, 0);
 
             if (cmd == "detach") {
@@ -540,12 +542,12 @@ default {
                 else llDetachFromAvatar();
             }
             else if (cmd == "teleport") {
-                string lm = llList2String(split, 0);
+                string lm = (string)split[0];
                 llRegionSayTo(id, 0, "Teleporting dolly " + dollName + " to  landmark " + lm + ".");
                 rlvTPrequest = llRequestInventoryData(lm);
             }
             else if (cmd == "posePageN") {
-                string choice = llList2String(split, 0);
+                string choice = (string)split[0];
                 posePageN(choice,id);
             }
             else if (cmd == "startFollow") {
@@ -556,9 +558,9 @@ default {
             }
         }
         else if (code == MENU_SELECTION) {
-            string choice = llList2String(split, 0);
+            string choice = (string)split[0];
             string choice5 = llGetSubString(choice,0,4);
-            string name = llList2String(split, 1);
+            string name = (string)split[1];
 
             // Dolly is poseable:
             //    * by members of the Public IF allowed
@@ -614,7 +616,7 @@ default {
             }
         }
         else if (code == POSE_SELECTION) {
-            string choice = llList2String(split, 0);
+            string choice = (string)split[0];
 
             // it could be Poses Next or Poses Prev instead of an Anim
             if (choice == "Poses Next" || choice == "Poses Prev") {
@@ -655,7 +657,7 @@ default {
             }
         }
         else if (code == RLV_RESET) {
-            RLVok = llList2Integer(split, 0);
+            RLVok = (integer)split[0];
         }
         else if (code < 200) {
             if (code == INIT_STAGE5) {
