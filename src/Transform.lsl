@@ -90,7 +90,11 @@ integer findTypeFolder;
 
 integer useTypeFolder;
 string transform;
-string typeFolder;
+
+// These dual variables allow us to separate the actual valid typeFolder
+// from the one being searched for
+string typeFolder; // Valid and current typeFolder
+string typeFolderExpected; // typeFolder being searched for
 
 integer rlvChannel;
 integer typeSearchHandle;
@@ -106,7 +110,6 @@ integer transformLockExpire;
 
 integer dbConfig;
 integer mustAgreeToType;
-string typeFolderExpected;
 
 key kQuery;
 
@@ -159,7 +162,7 @@ setDollType(string typeName) {
     outfitSearchTries = 0;
     typeSearchTries = 0;
 
-    // if RLV is non-functional, dont search for a Type Folder
+    // Only search for a type folder - outfit folder - if RLV is active
     if (RLVok == TRUE) {
         debugSay(4,"DEBUG-DOLLTYPE","Searching for " + typeFolderExpected);
 
@@ -168,7 +171,6 @@ setDollType(string typeName) {
         // Search for type folder
         typeSearch(typeSearchChannel);
     }
-    // if NOT RLVok then we have a DollType with no associated typeFolder...
 
     lmInternalCommand("setWindRate","",NULL_KEY);
     debugSay(2,"DEBUG-DOLLTYPE","Changed to type " + dollType);
@@ -768,47 +770,53 @@ default {
         //
         if (channel == outfitSearchChannel) {
             llListenRemove(outfitSearchHandle);
+
+#ifdef DEVELOPER_MODE
+            if (outfitFolder != "") {
+                llSay(DEBUG_CHANNEL,"outfit folder search called unnecessarily!");
+                return;
+            }
+#endif
+
             debugSay(6,"DEBUG-SEARCHING","Channel #1 received (outfitFolder = \"" + outfitFolder + "\"): " + choice);
             outfitSearching = 1; // if we get here - well, we're outfit searchiung ja?
 
             list folderList = llCSV2List(choice);
-            integer searchForTypeFolder;
+            //integer searchForTypeFolder;
             nudeFolder = "";
             normalselfFolder = "";
             normaloutfitFolder = "";
 
-            if (outfitFolder == "") { // FIXME: if we're here, then outfitFolder better be blank, yes?
-                // vague substring check done here for speed
-                if (llSubStringIndex(choice,"Outfits") >= 0) {
+            // vague substring check done here for speed
+            if (llSubStringIndex(choice,"Outfits") >= 0) {
 
-                    // exact match check
-                         if (~llListFindList(folderList, (list)"> Outfits"))  outfitFolder = "> Outfits";
-                    else if (~llListFindList(folderList, (list)"Outfits"))    outfitFolder = "Outfits";
+                // exact match check
+                     if (~llListFindList(folderList, (list)"> Outfits"))  outfitFolder = "> Outfits";
+                else if (~llListFindList(folderList, (list)"Outfits"))    outfitFolder = "Outfits";
 
-                }
-                else if (llSubStringIndex(choice,"Dressup") >= 0) {
-
-                         if (~llListFindList(folderList, (list)"> Dressup"))  outfitFolder = "> Dressup";
-                    else if (~llListFindList(folderList, (list)"Dressup"))    outfitFolder = "Dressup";
-                }
-
-                debugSay(6,"DEBUG-SEARCHING","outfitFolder = " + outfitFolder);
-
-                // Send the outfitFolder so all will know, no matter what it is
-                lmSendConfig("outfitsFolder", outfitFolder);
-                lmSendConfig("outfitFolder", outfitFolder);
-
-                debugSay(6,"DEBUG-SEARCHING","typeFolder = \"" + typeFolder + "\" and typeFolderExpected = \"" + typeFolderExpected + "\"");
-
-                // Now that we have a designated outfitFolder, search for a typeFolder if needed
-                searchForTypeFolder = (typeFolder == "" && typeFolderExpected != ""); // FIXME: how do we get here?
-
-                if (searchForTypeFolder) {
-
-                    // Search for outfits folder complete; now search for Type folder
-                    typeSearch(typeSearchChannel);
-                }
             }
+            else if (llSubStringIndex(choice,"Dressup") >= 0) {
+
+                     if (~llListFindList(folderList, (list)"> Dressup"))  outfitFolder = "> Dressup";
+                else if (~llListFindList(folderList, (list)"Dressup"))    outfitFolder = "Dressup";
+            }
+
+            debugSay(6,"DEBUG-SEARCHING","outfitFolder = " + outfitFolder);
+
+            // Send the outfitFolder so all will know, no matter what it is
+            lmSendConfig("outfitsFolder", outfitFolder);
+            lmSendConfig("outfitFolder", outfitFolder);
+
+            //debugSay(6,"DEBUG-SEARCHING","typeFolder = \"" + typeFolder + "\" and typeFolderExpected = \"" + typeFolderExpected + "\"");
+
+            // Now that we have a designated outfitFolder, search for a typeFolder if needed
+            //searchForTypeFolder = (typeFolder == "" && typeFolderExpected != ""); // FIXME: how do we get here?
+
+            //if (searchForTypeFolder) {
+
+            //    // Search for outfits folder complete; now search for Type folder
+            //    typeSearch(typeSearchChannel);
+            //}
         }
         else if (channel == typeSearchChannel) {
 
