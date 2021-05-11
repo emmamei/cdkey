@@ -32,6 +32,34 @@
 #define MAX_SEARCH_RETRIES 2
 #define RLV_TIMEOUT 15.0
 
+// Folders need to be searched for: the outfits folder, and the
+// type folder also - plus the ~nude and ~normal folders on top
+// of that.
+//
+// First, search for outfits folder. Not finding this should be
+// an error.
+//
+// Once found, find a type folder within the outfits folder.
+// This type folder search may be repeated, and not finding one
+// is not an error.
+//
+// The ~nude and ~normal folders should be within the outfits folder,
+// but could be at the same level too.
+//
+// Both major searches (outfits and type) are combined with a timeout
+// and multiple retry.
+
+// The typeSearch and systemSearch start the same way, but the channels are
+// different...
+//
+// Define macros to make the process more readable
+
+#define folderSearch(a) lmRunRLV("getinv:" + outfitFolder + "=" + (string)(a)); \
+    llSetTimerEvent(RLV_TIMEOUT)
+
+#define typeSearch(a)   folderSearch(a)
+#define systemSearch(a) folderSearch(a)
+
 //========================================
 // VARIABLES
 //========================================
@@ -195,75 +223,16 @@ reloadTypeNames(key id) {
     }
 }
 
-// Folders need to be searched for: the outfits folder, and the
-// type folder also - plus the ~nude and ~normal folders on top
-// of that.
-//
-// First, search for outfits folder. Not finding this should be
-// an error.
-//
-// Once found, find a type folder within the outfits folder.
-// This type folder search may be repeated, and not finding one
-// is not an error.
-//
-// The ~nude and ~normal folders should be within the outfits folder,
-// but could be at the same level too.
-//
-// Both major searches (outfits and type) are combined with a timeout
-// and multiple retry.
-
 outfitSearch(integer channel) {
 
     // This should bypass repeated calls to search for outfit folder
+    //
+    // Note that this means if you switch from one Outfits folder name
+    // to another, this will fail: a key reset will be needed
+    //
     if (outfitFolder != "") return;
 
-    // Start folder search
-    lmRunRLV("getinv=" + (string)channel);
-    llSetTimerEvent(RLV_TIMEOUT);
-}
-
-// The typeSearch and systemSearch start the same way, but the channels are
-// different...
-//
-// They are separate here for clarity purposes
-
-typeSearch(integer channel) {
-
-    // Start folder search
-    lmRunRLV("getinv:" + outfitFolder + "=" + (string)channel);
-    llSetTimerEvent(RLV_TIMEOUT);
-}
-
-systemSearch(integer channel) {
-
-    // Start folder search
-    lmRunRLV("getinv:" + outfitFolder + "=" + (string)channel);
-    llSetTimerEvent(RLV_TIMEOUT);
-}
-
-folderSearch(string folder, integer channel) {
-    integer handle;
-
-    if (channel == 0) {
-        if (folder != "") {
-            llSay(DEBUG_CHANNEL,"Searching folder " + folder + " invalid with no channel!");
-        }
-        else {
-            llSay(DEBUG_CHANNEL,"Searching folder (unspecified) invalid with no channel!");
-        }
-        return;
-    }
-
-    debugSay(2,"DEBUG-FOLDERSEARCH","folderSearch: Searching within \"" + folder + "\"");
-
-    // The folder search starts as a RLV @getinv call...
-    //
-    if (folder == "") lmRunRLV("getinv=" + (string)channel);
-    else lmRunRLV("getinv:" + folder + "=" + (string)channel);
-
-    // The next stage is the listener, while we create a time
-    // out to timeout the RLV call...
-    llSetTimerEvent(RLV_TIMEOUT);
+    folderSearch(channel);
 }
 
 //========================================
@@ -384,11 +353,12 @@ default {
                     else llListenRemove(outfitSearchHandle);
                 } else {
                     if (typeFolder == "" && typeFolderExpected != "") {
-                        if (typeSearchTries++ < MAX_SEARCH_RETRIES)
+                        if (typeSearchTries++ < MAX_SEARCH_RETRIES) {
 
                             // Try another search for Type directories
                             typeSearch(typeSearchChannel);
 
+                        }
                         else llListenRemove(typeSearchHandle);
                     }
                 }
