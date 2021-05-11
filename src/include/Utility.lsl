@@ -70,7 +70,7 @@ integer arePosesPresent() {
     return FALSE;
 }
 
-#define getNotecardName(n) llGetInventoryName(INVENTORY_NOTECARD, (n));
+#define getNotecardName(n) llGetInventoryName(INVENTORY_NOTECARD, (n))
 
 integer areTypesPresent() {
     integer notecardCount;

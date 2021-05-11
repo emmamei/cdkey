@@ -396,12 +396,12 @@ default {
             else if (c == "o") {
                      if (name == "outfitFolder") {
                          outfitFolder = value;
-                         normalselfFolder   = outfitFolder + "/~normalself";
-                         normaloutfitFolder = outfitFolder + "/~normaloutfit";
-                         nudeFolder         = outfitFolder + "/~nude";
-                         lmSendConfig("normalselfFolder", normalselfFolder);
-                         lmSendConfig("normaloutfitFolder", normaloutfitFolder);
-                         lmSendConfig("nudeFolder", nudeFolder);
+                         //normalselfFolder   = outfitFolder + "/~normalself";
+                         //normaloutfitFolder = outfitFolder + "/~normaloutfit";
+                         //nudeFolder         = outfitFolder + "/~nude";
+                         //lmSendConfig("normalselfFolder", normalselfFolder);
+                         //lmSendConfig("normaloutfitFolder", normaloutfitFolder);
+                         //lmSendConfig("nudeFolder", nudeFolder);
                 }
             }
 
@@ -638,19 +638,22 @@ default {
             }
             else if (cmd == "resetBody") {
 
-#ifndef ADULT_MODE
-                if (normaloutfitFolder == "") return;
-#endif
+                if (normaloutfitFolder == "") {
+                    llOwnerSay("ERROR: Cannot reset body form without ~normaloutfit present.");
+                    return;
+                }
+
                 // Clear old outfit settings
                 oldOutfit = "";
                 newOutfit = "";
 
 #define rlvLockKey()    ("detach=n")
 #define rlvUnlockKey()  ("detach=y")
+
 #define rlvLockFolderRecursive(a)   ("detachallthis:" + (a) + "=n")
 #define rlvUnlockFolderRecursive(a) ("detachallthis:" + (a) + "=y")
-#define rlvAttachFolderRecursive(a) ("attachall:" + (a) + "=force")
-#define rlvDetachAllRecursive()     ("detachall:=force")
+#define rlvAttachFolderRecursive(a) (    "attachall:" + (a) + "=force")
+#define rlvDetachAllRecursive(a)    (    "detachall:" + (a) + "=force")
 
 #ifndef LOCKON
                 // LOCK the key in place
@@ -667,7 +670,7 @@ default {
                 if (normaloutfitFolder) lmRunRLV(rlvLockFolderRecursive(normaloutfitFolder));
 
                 // Remove all else from the top, outfits and all the rest
-                lmRunRLV(rlvDetachAllRecursive());
+                lmRunRLV(rlvDetachAllRecursive(outfitFolder));
 
                 // Clear locks and force attach
                 //if (nudeFolder)         lmRunRLV(rlvLockFolderRecursive(nudeFolder) + "attachall:" + nudeFolder         + "=force");

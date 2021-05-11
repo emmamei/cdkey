@@ -925,15 +925,19 @@ default {
                     if (~llListFindList(folderList, (list)"~nude")) nudeFolder = outfitFolder + "/~nude";
                     else {
                         llOwnerSay("WARN: No nude (~nude) folder found in your outfits folder (\"" + outfitFolder + "\")...");
-#ifdef DEVELOPER_MODE
                         llSay(DEBUG_CHANNEL,"No ~nude folder found in \"" + outfitFolder + "\"");
-#endif
                     }
 
                     if (~llListFindList(folderList, (list)"~normalself")) normalselfFolder = outfitFolder + "/~normalself";
                     else {
                         llOwnerSay("ERROR: No normal self (~normalself) folder found in your outfits folder (\"" + outfitFolder + "\")... this folder is necessary for proper operation");
                         llSay(DEBUG_CHANNEL,"No ~normalself folder found in \"" + outfitFolder + "\": this folder is required for proper Key operation");
+                    }
+
+                    if (~llListFindList(folderList, (list)"~normaloutfit")) normaloutfitFolder = outfitFolder + "/~normaloutfit";
+                    else {
+                        llOwnerSay("ERROR: No normal self (~normaloutfit) folder found in your outfits folder (\"" + outfitFolder + "\")... this folder is necessary for proper operation");
+                        llSay(DEBUG_CHANNEL,"No ~normaloutfit folder found in \"" + outfitFolder + "\": this folder is required for proper Key operation");
                     }
 
                     lmSendConfig("nudeFolder",nudeFolder);
