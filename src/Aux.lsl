@@ -248,7 +248,6 @@ default {
                 //
 
                 if (cdIsDoll(id)) {
-
                     if (!collapsed) if (notPosed())
 
                         // This is to totally reset Dolly's worn body,
@@ -256,7 +255,8 @@ default {
                         //
                         // Note that Dolly cannot be posed and cannot be collapsed to access these
                         //
-                        helpMenuList += [ "Reset Body", "Reset Key" ];
+                        helpMenuList += [ "Reset Body", "Reset Key", "Update" ];
+                        //if (detachable) menu += [ "Detach" ];
                 }
                 else {
                     if (isObjectPresent(OBJECT_KEY))
@@ -266,7 +266,7 @@ default {
                 }
 
                 cdDialogListen();
-                llDialog(id, msg, dialogSort(helpMenuList) + [ "Back..." ], dialogChannel);
+                llDialog(id, msg, [ "Back..." ] + dialogSort(helpMenuList), dialogChannel);
             }
             else if (choice == "Reset Body") {
                 lmInternalCommand("resetBody","",id);

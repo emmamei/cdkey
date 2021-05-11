@@ -535,21 +535,27 @@ default {
                 // STEP #1
 
                 // Restore our usual look from the ~normalself folder...
+                //
+                // NOTE that this may not be what is wanted, especially if Dolly has changed
+                // the standard (or current) look outside of the Key's mechanisms. Not all
+                // things in ~normalself and ~nude may necessarily be worn at outfit change time.
+                //
+                // On top of that, this does not attach ~nude as written...
 
 #define cdLock(a)   lmRunRLV("detachallthis:"+(a)+"=n")
 #define cdUnlock(a) lmRunRLV("detachallthis:"+(a)+"=y")
 #define cdAttach(a) lmRunRLV("attachallover:"+(a)+"=force") 
 #define cdForceDetach(a) lmRunRLV("detachall:"+(a)+"=force");
 
-                // This attaches ~normalself and locks it
-                debugSay(2,"DEBUG-DRESS","*** STEP 1 ***");
-                debugSay(2,"DEBUG-DRESS","attach and lock for normal self folder: " + normalselfFolder);
-                cdAttach(normalselfFolder);
+                // This attaches ~normalself
+                //debugSay(2,"DEBUG-DRESS","*** STEP 1 ***");
+                //debugSay(2,"DEBUG-DRESS","attach normalself folder: " + normalselfFolder);
+                //cdAttach(normalselfFolder);
 
                 //----------------------------------------
                 // STEP #3
 
-                // attach the new folder and lock it down - and prevent nude
+                // attach the new folder
 
                 debugSay(2,"DEBUG-DRESS","*** STEP 3 ***");
                 debugSay(2, "DEBUG-DRESS", "Attaching outfit from " + newOutfit);
@@ -568,18 +574,22 @@ default {
                 // We don't want anything in these directories to be popped off
 
                 // Step 4a: Unlock previous locks
-                if (normalselfFolder != "") { cdUnlock(normalselfFolder); }
-                if (      nudeFolder != "") { cdUnlock(      nudeFolder); }
+                //if (normalselfFolder != "") { cdUnlock(normalselfFolder); }
+                //if (      nudeFolder != "") { cdUnlock(      nudeFolder); }
 
-                cdUnlock(newOutfit);
-                llSleep(1.0);
+                //cdUnlock(newOutfit);
+                //llSleep(1.0);
 
                 // Step 4b: Lock items so they don't get thrown off
                 if (normalselfFolder != "") { cdLock(normalselfFolder); }
                 if (      nudeFolder != "") { cdLock(      nudeFolder); }
 
                 cdLock(newOutfit);
-                llSleep(5.0);
+
+                debugSay(2,"DEBUG-DRESS","*** STEP 4C ***");
+                debugSay(2,"DEBUG-DRESS","oldOutfit == \"" + oldOutfit + "\"");
+
+                // We don't want anything in these directories to be popped off
 
                 // Step 4c: Remove oldOutfit or alternately entire Outfits dir
                 if (oldOutfit != "") {
@@ -592,17 +602,20 @@ default {
                     debugSay(2, "DEBUG-DRESS", "Removing all other outfits from " + outfitFolder);
                     cdForceDetach(outfitFolder);
                 }
-                llSleep(1.0);
 
                 //----------------------------------------
                 // STEP #5
-
+                //
+                // Thought here is that there could be another outfit with much of the
+                // current one included; thus, this reattaches all that may have "slipped off"
+                //
+                // It may be that this interaction between two outfits needs to be verbotten
+                //
                 debugSay(2,"DEBUG-DRESS","*** STEP 5 ***");
 
                 // Attach new outfit again
                 debugSay(2, "DEBUG-DRESS", "Attaching outfit again from " + newOutfit);
                 cdAttach(newOutfit);
-                llSleep(1.0);
 
                 //----------------------------------------
                 // STEP #6
@@ -621,13 +634,6 @@ default {
                 llSleep(1.0);
 
                 debugSay(2,"DEBUG-DRESS","*** END DRESSING SEQUENCE ***");
-
-                //----------------------------------------
-                // STEP #7
-
-                // Attach everything one last time - in case we knocked something off we need
-                //debugSay(2, "DEBUG-DRESS", "Reattach new outfit: " + newOutfit);
-                //lmRunRLV("attachall:" + newOutfit + "=force");
 
                 oldOutfit = newOutfit;
 

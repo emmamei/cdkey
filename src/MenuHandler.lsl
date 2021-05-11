@@ -594,16 +594,8 @@ default {
                 // whether Dolly is collapsed, carried, or whatnot.
 
                 //--------------------
-                // Update Button
-                //--------------------
-                // Detach Button
-                //--------------------
                 // Wind Button
                 if (isDoll) {
-                    if (poseAnimation == ANIMATION_NONE) {
-                        menu += [ "Update" ];
-                        if (detachable) menu += [ "Detach" ];
-                    }
 
                     if (allowSelfWind) {
                         if (keyLimit - timeLeftOnKey > 30) {
