@@ -838,8 +838,8 @@ default {
                 typeFolder = "";
                 typeFolderExpected = "";
 
-                lmSendConfig("outfitsFolder", outfitFolder);
-                lmSendConfig("outfitFolder", outfitFolder);
+                //lmSendConfig("outfitsFolder", outfitFolder);
+                //lmSendConfig("outfitFolder", outfitFolder);
                 lmSendConfig("useTypeFolder", "0");
                 lmSendConfig("typeFolder", "");
                 return;
@@ -877,11 +877,12 @@ default {
                     typeFolderExpected = "";
                 }
 
-                lmSendConfig("outfitsFolder", outfitFolder);
-                lmSendConfig("outfitFolder", outfitFolder);
+                //lmSendConfig("outfitsFolder", outfitFolder);
+                //lmSendConfig("outfitFolder", outfitFolder);
                 lmSendConfig("useTypeFolder", (string)useTypeFolder);
                 lmSendConfig("typeFolder", typeFolder);
 
+#ifdef NOT_USED
                 // at this point we've either found the typeFolder or not,
                 // and the outfitFolder is set
 
@@ -924,6 +925,7 @@ default {
                     lmSendConfig("normalselfFolder",normalselfFolder);
                     lmSendConfig("normaloutfitFolder",normaloutfitFolder);
                 }
+#endif
             }
         }
         else if (channel == systemSearchChannel) {
