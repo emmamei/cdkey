@@ -636,19 +636,22 @@ default {
 
                 integer i;
 
-                debugSay(5,"DEBUG-TYPES","Types selected");
                 // Doll must remain in a type for a period of time
                 if (transformLockExpire) {
-                    debugSay(5,"DEBUG-TYPES","Transform locked");
+                    debugSay(5,"DEBUG-TYPES","Transform is currently locked");
 
                     if (cdIsDoll(id)) msg = "You " + msg3 + " you were " + msg4;
                     else msg = dollName + msg3 + " Dolly was " + msg4;
 
-                    // This conditional is needed in case the timing is off...
-                    if ((i = llFloor((transformLockExpire - llGetUnixTime()) / SEC_TO_MIN)) > 0) {
+                    if (transformLockExpire - llGetUnixTime() > 0) {
                         if (cdIsDoll(id)) msg += "You ";
                         else msg += "Dolly ";
-                        msg += " can be transformed in " + (string)i + " minutes. ";
+
+                        msg += " can be transformed in ";
+
+                        i = llFloor((transformLockExpire - llGetUnixTime()) / SEC_TO_MIN);
+                        if (i > 0) msg += (string)i + " minutes. ";
+                        else msg += "less than a minute. ";
                     }
 
                     llDialog(id, msg, ["OK"], DISCARD_CHANNEL);
@@ -681,7 +684,6 @@ default {
                     cdDialogListen();
                     llDialog(id, msg, dialogSort(llListSort(typeMenuChoices, 1, 1) + "Back..."), typeDialogChannel);
                 }
-                debugSay(5,"DEBUG-TYPES","Transform complete");
             }
 
             // Transform
