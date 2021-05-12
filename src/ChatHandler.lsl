@@ -64,11 +64,12 @@ default {
             string c = cdGetFirstChar(name); // for speedup
             split = llDeleteSubList(split,0,0);
 
-                 if (name == "timeLeftOnKey")           timeLeftOnKey = (integer)value;
+                 if (name == "timeLeftOnKey")     timeLeftOnKey = (integer)value;
 #ifdef DEVELOPER_MODE
-            else if (name == "timeReporting")           timeReporting = (integer)value;
+            else if (name == "timeReporting")     timeReporting = (integer)value;
 #endif
-            else if (name == "hardcore")                     hardcore = (integer)value;
+            else if (name == "hardcore")               hardcore = (integer)value;
+            else if (name == "RLVok")                     RLVok = (integer)value;
             else if (name == "blacklist") {
                 if (split == [""]) blacklist = [];
                 else blacklist = split;

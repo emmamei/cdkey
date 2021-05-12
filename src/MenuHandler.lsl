@@ -204,7 +204,8 @@ default {
 
                  if (name == "timeLeftOnKey")             timeLeftOnKey = (integer)value;
             else if (name == "windRate")                       windRate = (float)value;
-            else if (name == "outfitFolder")             outfitFolder = value;
+            else if (name == "outfitFolder")               outfitFolder = value;
+            else if (name == "RLVok")                             RLVok = (integer)value;
             else if (name == "backMenu")                       backMenu = value;
             else if (name == "hardcore")                       hardcore = (integer)value;
             else if (name == "keyLimit")                       keyLimit = (integer)value;
@@ -379,12 +380,10 @@ default {
                 // * Unwind
                 // * Outfits
                 // * Types
-                // * Poses/Unpose
-                // * Carry
-                // * Uncarry
+                // * Poses
+                // * Unpose
+                // * Carry/Uncarry
                 // * Strip
-                // * Update
-                // * Detach
                 // * Wind
                 // * Options
                 // * Help
@@ -490,7 +489,7 @@ default {
                         // permitted: this is appropriate.
 
                         if (outfitFolder == "") {
-                            llSay(DEBUG_CHANNEL, "Outfits folder is blank!");
+                            llSay(DEBUG_CHANNEL, "Outfits folder is unset!");
                         }
                         else {
                             if (isDoll) {

@@ -294,6 +294,7 @@ default {
 
                  if (name == "autoTP")            {       autoTP = (integer)value; rlvSetIf("accepttp", !autoTP); }
             else if (name == "hardcore")          {     hardcore = (integer)value; rlvOutfitLock(); }
+            else if (name == "RLVok")             {        RLVok = (integer)value; }
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")        {   debugLevel = (integer)value; }
 #endif

@@ -120,6 +120,7 @@ default {
             else if (name == "autoTP")                         autoTP = (integer)value;
             else if (name == "showPhrases")               showPhrases = (integer)value;
             else if (name == "RLVsupport")                 RLVsupport = (integer)value;
+            else if (name == "RLVok")                           RLVok = (integer)value;
             else if (name == "allowCarry")                 allowCarry = (integer)value;
             else if (name == "allowDress")                 allowDress = (integer)value;
             else if (name == "allowPose")                   allowPose = (integer)value;
