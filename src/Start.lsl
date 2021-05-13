@@ -92,6 +92,9 @@ processConfiguration(string name, string value) {
 #ifdef USER_RLV
                      "collapse rlv", "pose rlv",
 #endif
+#ifndef ADULT_MODE
+                     "strippable",
+#endif
                      "doll gender", "helpless dolly", "chat mode", "controller", "blacklist"
                    ];
 
@@ -178,29 +181,43 @@ processConfiguration(string name, string value) {
             // should be printable
             lmSendConfig("dollDisplayName", (dollDisplayName = value));
         }
-#ifdef DEVELOPER_MODE
+#ifndef ADULT_MODE
+        else if (name == "strippable") {
+            ; // Nothing to do
+        }
+#endif
         else if (name == "debug level") {
+#ifdef DEVELOPER_MODE
             // has to be between 0 and 9
+            llSay(DEBUG_CHANNEL,"INFO: debug Level being overwritten from the builtin default of " + (string)debugLevel);
             debugLevel = (integer)value;
 
             if (debugLevel > 9) debugLevel = 9;
             else if (debugLevel < 0) debugLevel = 0;
 
             lmSendConfig("debugLevel", (string)debugLevel);
-        }
+#else
+            ; // Nothing to do
 #endif
-#ifdef USER_RLV
+        }
         else if (name == "collapse rlv") {
+#ifdef USER_RLV
             // has to be valid rlv
             defaultCollapseRLVcmd += "," + value;
             lmSendConfig("defaultCollapseRLVcmd", value);
+#else
+            ; // Nothing to do
+#endif
         }
         else if (name == "pose rlv") {
+#ifdef USER_RLV
             // has to be valid rlv
             defaultPoseRLVcmd += "," + value;
             lmSendConfig("defaultPoseRLVcmd", value);
-        }
+#else
+            ; // Nothing to do
 #endif
+        }
 
         // Note that the entries "max time" and "wind time" are
         // somewhat unique in that they affect each other: so,
