@@ -474,7 +474,7 @@ default {
 
         // Parse link message header information
         split             =     cdSplitArgs(data);
-        script            =     cdListElement(split, 0);
+        script            =     (string)split[0];
         remoteSeq         =     (i & 0xFFFF0000) >> 16;
         optHeader         =     (i & 0x00000C00) >> 10;
         code              =      i & 0x000003FF;
@@ -482,8 +482,8 @@ default {
 
         transformerID = id;
 
-        string choice = cdListElement(split, 0);
-        string name = cdListElement(split, 1);
+        string choice = (string)split[0];
+        string name = (string)split[1];
 
         // This means that ANY link message sent by Transform is ignored by these
         // items, except for the SET_CONFIG section...
@@ -498,8 +498,8 @@ default {
 
         if (code == SEND_CONFIG) {
 
-            string name = cdListElement(split, 0);
-            string value = cdListElement(split, 1);
+            string name = (string)split[0];
+            string value = (string)split[1];
 
             split = llDeleteSubList(split,0,0);
 
@@ -552,8 +552,8 @@ default {
 
         else if (code == SET_CONFIG) {
 
-            string name = cdListElement(split, 0);
-            string value = cdListElement(split, 1);
+            string name = (string)split[0];
+            string value = (string)split[1];
 
             debugSay(6,"DEBUG-TRANSFORM","SET_CONFIG[" + name + "] = " + value);
             if (name == "dollType") {

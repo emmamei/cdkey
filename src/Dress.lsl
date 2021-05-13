@@ -124,7 +124,7 @@ list outfitPageN(list outfitList) {
         // x ................ current list index (0 - max)
         // +1 ............... convert to 1-index
         // +currentIndex .... offset by currentPage index
-        outfitName = (string)(currentIndex + x + 1) + ". " + cdListElement(tmpList, x);
+        outfitName = (string)(currentIndex + x + 1) + ". " + (string)tmpList[x];
 
         chat += "\n" + outfitName;
         output += (list)llGetSubString(outfitName, 0, 23);
@@ -343,7 +343,7 @@ default {
 
         // Parse link message header information
         split             =     cdSplitArgs(data);
-        script            =     cdListElement(split, 0);
+        script            =     (string)split[0];
         remoteSeq         =     (i & 0xFFFF0000) >> 16;
         optHeader         =     (i & 0x00000C00) >> 10;
         code              =      i & 0x000003FF;
@@ -355,8 +355,8 @@ default {
 
             // Configuration settings
 
-            string name = cdListElement(split, 0);
-            string value = cdListElement(split, 1);
+            string name = (string)split[0];
+            string value = (string)split[1];
             string c = cdGetFirstChar(name);
 
             if (llListFindList([ "a", "R", "h", "p", "c", "d", "n", "t", "w", "o", "u" ], (list)c) == NOT_FOUND) return;
@@ -419,7 +419,7 @@ default {
             // * setHovertext
             // * carriedMenu
 
-            string cmd = cdListElement(split, 0);
+            string cmd = (string)split[0];
             split = llDeleteSubList(split, 0, 0);
 
             if (cmd == "wearOutfit") {
@@ -428,7 +428,7 @@ default {
                 // Note that the value may or may NOT come from this script:
                 // ergo, the reason this overwrite is here.
 
-                newOutfitName = cdListElement(split, 0);
+                newOutfitName = (string)split[0];
 
                 // Abort if no outfit...
 
@@ -738,8 +738,8 @@ default {
 
             // Selection from menu
 
-            string choice = cdListElement(split, 0);
-            string name = cdListElement(split, 1);
+            string choice = (string)split[0];
+            string name = (string)split[1];
 
             if (choice == "Outfits..." && !tempDressingLock) {
                 // Check for dresser lockout
@@ -812,7 +812,7 @@ default {
         }
         else if (code < 200) {
             if (code == SIM_RATING_CHG) {
-                simRating = cdListElement(split, 0);
+                simRating = (string)split[0];
                 integer outfitRating = cdOutfitRating(newOutfitName);
                 integer regionRating = cdRating2Integer(simRating);
 
@@ -854,7 +854,7 @@ default {
 
             // Build outfit menu: note it is using the number before the period here
             integer select = (integer)llGetSubString(choice, 0, llSubStringIndex(choice, ".") - 1);
-            if (select != 0) choice = cdListElement(outfitList, select - 1);
+            if (select != 0) choice = (string)outfitList[select - 1];
             // else we have a normal selection, not a numeric one
 
             debugSay(6, "DEBUG-DRESS", "Secondary outfits menu: choice = " + choice + "; select = " + (string)select);
@@ -993,7 +993,7 @@ default {
             // Filter list of outfits (directories) to choose
             n = llGetListLength(outfitList);
             while (n--) {
-                itemName = cdListElement(outfitList, n);
+                itemName = (string)outfitList[n];
                 prefix = cdGetFirstChar(itemName);
 
                 if (itemName != newOutfitName) {
