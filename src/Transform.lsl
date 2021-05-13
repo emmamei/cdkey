@@ -395,6 +395,7 @@ default {
                 }
                 else {
                     llListenRemove(typeSearchHandle);
+                    typeSearchHandle = 0;
 
                     typeFolder = "";
                     typeFolderExpected = "";
@@ -830,6 +831,7 @@ default {
         //
         if (channel == outfitSearchChannel) {
             llListenRemove(outfitSearchHandle);
+            outfitSearchHandle = 0;
             adjustTimer();
 
             debugSay(6,"DEBUG-SEARCHING","Search channel received: " + choice);
@@ -920,6 +922,7 @@ default {
             // Note that, unlike the dialog channel, the type search channel is
             // removed and recreated... maybe it should not be
             llListenRemove(typeSearchHandle);
+            typeSearchHandle = 0;
             adjustTimer();
 
             // if there is no outfits folder we mark the type folder search
@@ -1020,6 +1023,10 @@ default {
             }
         }
         else if (channel == systemSearchChannel) {
+            llListenRemove(systemSearchHandle);
+            systemSearchHandle = 0;
+            adjustTimer();
+
             list folderList = llCSV2List(choice);
             lmInitState(INIT_STAGE4); // start next phase
 
