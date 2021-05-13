@@ -93,7 +93,7 @@ default {
 
         // Parse link message header information
         split             =     cdSplitArgs(data);
-        script            =     cdListElement(split, 0);
+        script            =     (string)split[0];
         remoteSeq         =     (i & 0xFFFF0000) >> 16;
         optHeader         =     (i & 0x00000C00) >> 10;
         code              =      i & 0x000003FF;
@@ -102,8 +102,8 @@ default {
         //scaleMem();
 
         if (code == SEND_CONFIG) {
-            string name = cdListElement(split, 0);
-            string value = cdListElement(split, 1);
+            string name = (string)split[0];
+            string value = (string)split[1];
 
                  if (name == "RLVok")              RLVok = (integer)value;
             else if (name == "RLVsupport")    RLVsupport = (integer)value;
@@ -126,7 +126,7 @@ default {
             }
         }
         else if (code == RLV_CMD) {
-            string commandString = cdListElement(split, 2);
+            string commandString = (string)split[2];
             string cmd = (string)split[1];
             //split = llDeleteSubList(split, 0, 0);
 
@@ -144,7 +144,7 @@ default {
                 //
                 // Once this command is widely used, storeRLV will be unneeded.
 
-                script = cdListElement(split,0);
+                script = (string)split[0];
                 list tmpList;
 
                 // This could thereotically happen...
@@ -202,8 +202,8 @@ default {
                 // restrictions and save them into a variable, and thus
                 // preserve the restrictions for later logon
 
-                script = cdListElement(split,0);
-                string commandString = cdListElement(split, 1);
+                script = (string)split[0];
+                string commandString = (string)split[1];
                 list tmpList;
 
                 // *** We don't need to do this, if we implement an internal

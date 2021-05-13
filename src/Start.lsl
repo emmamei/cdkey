@@ -148,7 +148,7 @@ processConfiguration(string name, string value) {
             return;
         }
 
-        string name = cdListElement(settingName,i);
+        string name = (string)settingName[i];
 
         // Special handling for ghost setting: value is a boolean,
         // but result is to change the visibility value...
@@ -331,7 +331,7 @@ default {
 
         // Parse link message header information
         split             =     cdSplitArgs(data);
-        script            =     cdListElement(split, 0);
+        script            =     (string)split[0];
         remoteSeq         =     (i & 0xFFFF0000) >> 16;
         optHeader         =     (i & 0x00000C00) >> 10;
         code              =      i & 0x000003FF;
