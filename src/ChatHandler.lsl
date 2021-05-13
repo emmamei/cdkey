@@ -25,7 +25,7 @@ key lastWinderID;
 
 string msg;
 integer chatEnable           = TRUE;
-key chatFilter;
+//key chatFilter;
 string rlvAPIversion;
 
 integer chatHandle          = 0;
@@ -41,7 +41,7 @@ default {
 
         // Beware listener is now available to users other than the doll
         // make sure to take this into account within all handlers.
-        chatHandle = llListen(chatChannel, "", chatFilter, "");
+        chatHandle = llListen(chatChannel, "", "", "");
         cdInitializeSeq();
     }
 
@@ -166,13 +166,14 @@ default {
 
                     // Reset chat channel with new channel number
                     llListenRemove(chatHandle);
-                    chatHandle = llListen(chatChannel, "", chatFilter, "");
+                    chatHandle = llListen(chatChannel, "", "", "");
                     lmSendConfig("chatChannel",(string)chatChannel);
                 }
                 else {
                     llSay(DEBUG_CHANNEL,"Attempted to set channel to invalid value!");
                 }
             }
+#ifdef NOT_USED
             else if (setName == "chatFilter") {
                 // Change filter on the listening chat channel
                 //
@@ -188,6 +189,7 @@ default {
                 chatHandle = llListen(chatChannel, "", chatFilter, "");
                 lmSendConfig("chatChannel",(string)chatChannel);
             }
+#endif
         }
         else if (code == INTERNAL_CMD) {
             string cmd = (string)split[0];
@@ -341,6 +343,7 @@ default {
                 lmSetConfig("blacklist",   llDumpList2String(blacklist,   "|") );
                 lmSetConfig("controllers", llDumpList2String(controllers, "|") );
             }
+#ifdef NOT_USED
             else if (cmd == "chatDisable") {
                 // Turn off chat channel entirely
                 //
@@ -350,6 +353,7 @@ default {
                 llListenRemove(chatHandle);
                 lmSetConfig("chatChannel",(string)(0));
             }
+#endif
         }
         else if (code == RLV_RESET) {
             RLVok = (integer)split[0];

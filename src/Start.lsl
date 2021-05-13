@@ -95,7 +95,7 @@ processConfiguration(string name, string value) {
 #ifndef ADULT_MODE
                      "strippable",
 #endif
-                     "doll gender", "helpless dolly", "chat mode", "controller", "blacklist"
+                     "doll gender", "helpless dolly", "controller", "blacklist"
                    ];
 
     // The settings list and the settingName list much match up
@@ -258,6 +258,7 @@ processConfiguration(string name, string value) {
                         "recvchat:"  + uuid + "=add," +
                         "recvemote:" + uuid + "=add");
         }
+#ifdef NOT_USED
         else if (name == "chat mode") {
             // Set the way chat operates
 
@@ -268,6 +269,7 @@ processConfiguration(string name, string value) {
             else if (value == "disabled") lmInternalCommand("chatDisable","",NULL_KEY);
             else if (value != "world") llSay(DEBUG_CHANNEL,"Bad chat mode (" + value + ")");
         }
+#endif
         else if (name == "helpless dolly") {
             // Note inverted sense of this value: this is intentional
             if (value == "1") lmSendConfig("canSelfTP", "0");
