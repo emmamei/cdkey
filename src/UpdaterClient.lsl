@@ -31,7 +31,7 @@
 // Remote prim updater for scripts.  This registers the prim to accept scripts from a server in the same region.
 // :CODE:
 
-#define lmLocalSay(a) llSay(PUBLIC_CHANNEL,(a))
+#define cdLocalSay(a) llSay(PUBLIC_CHANNEL,(a))
 #define cdKeyInfo(a) ((string)(llGetLinkKey(LINK_THIS)) + "^" + ((string)(a)))
 #define cdResetKey() llResetOtherScript("Start")
 
@@ -78,7 +78,7 @@ startUpdate() {
     // This is the command that lets the Updater know the pin, which begins the update
     llRegionSay(comChannel, cdKeyInfo(pin));
 
-    llOwnerSay("Key ready for update...");
+    //llOwnerSay("Key ready for update...");
 }
 
 doHalt() {
