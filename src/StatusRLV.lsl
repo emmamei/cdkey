@@ -122,7 +122,7 @@ default {
 
                 // This is segregated for speed: this script (StatusRLV) doesn't have
                 // an overriding need to not have a 2s delay in it
-                llInstantMessage(id,llList2String(split,0));
+                llInstantMessage(id,(string)split[0]);
             }
         }
         else if (code == RLV_CMD) {
@@ -172,7 +172,7 @@ default {
 
                 while(index++) {
                     // Either find "=n" or "=y" and handle it
-                    command = llList2String(commandList,index);
+                    command = (string)commandList[index];
                     ending = llGetSubString(command,-2,-1);
 
                     llOwnerSay("@" + command);
@@ -343,7 +343,7 @@ default {
             }
 #ifdef DEVELOPER_MODE
             else if (code == MEM_REPORT) {
-                float delay = cdListFloatElement(split, 0);
+                float delay = (float)split[0];
 
                 memReport(cdMyScriptName(),delay);
             }

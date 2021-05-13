@@ -26,7 +26,7 @@ list dialogSort(list srcButtons) {
     list outButtons;
 
     while (llGetListLength(srcButtons) != 0) {
-        outButtons += llList2List(srcButtons, -3, -1);
+        outButtons += (list)srcButtons[-3, -1];
         srcButtons = llDeleteSubList(srcButtons, -3, -1);
     }
 
@@ -227,8 +227,8 @@ list unix2DateTime(integer unixtime) {
 }
 
 string monthName(integer month, integer long) {
-    if (month >= 0 && month < 12 && long == 2) return llList2String(MONTHS_FULL, month);
-    else if (month >= 0 && month < 12 && long == 1) return llList2String(MONTHS_SHORT, month);
+    if (month >= 0 && month < 12 && long == 2) return (string)MONTHS_FULL[month]);
+    else if (month >= 0 && month < 12 && long == 1) return (string)MONTHS_SHORT[month]);
     else if (month >= 0 && month < 12 && long == 0) return (string)month;
     else return "";
 }
@@ -236,9 +236,9 @@ string monthName(integer month, integer long) {
 string dateString(list timelist, string seperator, integer long) {
     if (seperator == "") seperator = "-";
 
-    integer year       = llList2Integer(timelist,0);
-    integer month      = llList2Integer(timelist,1);
-    integer day        = llList2Integer(timelist,2);
+    integer year       = (integer)timelist[0];
+    integer month      = (integer)timelist[1];
+    integer day        = (integer)timelist[2];
 
     return (string)day + seperator + monthName(month - 1, long) + seperator + (string)year;
 }
@@ -246,9 +246,9 @@ string dateString(list timelist, string seperator, integer long) {
 string timeString(list timelist) {
     integer index = 0;
     if (llGetListLength(timelist) == 6) index += 3;
-    string  hourstr     = llGetSubString ( (string) (100 + llList2Integer(timelist, index++) ), -2, -1);
-    string  minutestr   = llGetSubString ( (string) (100 + llList2Integer(timelist, index++) ), -2, -1);
-    string  secondstr   = llGetSubString ( (string) (100 + llList2Integer(timelist, index++) ), -2, -1);
+    string  hourstr     = llGetSubString ( (string) (100 + (integer)timelist[index++] ), -2, -1);
+    string  minutestr   = llGetSubString ( (string) (100 + (integer)timelist[index++] ), -2, -1);
+    string  secondstr   = llGetSubString ( (string) (100 + (integer)timelist[index++] ), -2, -1);
     return  hourstr + ":" + minutestr + ":" + secondstr;
 }
 

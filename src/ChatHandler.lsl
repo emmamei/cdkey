@@ -1117,9 +1117,9 @@ default {
                     }
                     else if (choice == "inject") {
                         list params = llParseString2List(param, ["#"], []);
-                        key paramKey = llList2Key(params,2); // NULL_KEY if not valid
-                        string paramData = "ChatHandler|" + llList2String(params,1);
-                        integer paramCode = llList2Integer(params,0);
+                        key paramKey = (key)params[2]; // NULL_KEY if not valid
+                        string paramData = "ChatHandler|" + (string)params[1];
+                        integer paramCode = (integer)params[0];
                         string s;
 
                         llOwnerSay("Injected link message code " + (string)paramCode + " with data " + (string)paramData + " and key " + (string)paramKey);

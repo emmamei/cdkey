@@ -42,7 +42,8 @@ keepFollow(key id) {
 
     // We are not posed...
 
-    carrierPosNew = llList2Vector(llGetObjectDetails(id, [OBJECT_POS]), 0);
+    list objectDetails = llGetObjectDetails(id, [OBJECT_POS]);
+    carrierPosNew = (vector)objectDetails[0];
 
     if (carrierPosNew) {
 

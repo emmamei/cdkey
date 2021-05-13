@@ -326,7 +326,8 @@ setPoseAnimation(string anim) {
     llStartAnimation(anim);
 
     // We cant use lazy lists here, as this is a *generated* list not a named list
-    animKey = llList2String(llGetAnimationList(llGetPermissionsKey()), -1);
+    list animList = llGetAnimationList(llGetPermissionsKey());
+    animKey = (string)animList[-1];
 
     if (animKey != NULL_KEY) {
         // We have an actual pose...
@@ -670,7 +671,7 @@ default {
             }
 #ifdef DEVELOPER_MODE
             else if (code == MEM_REPORT) {
-                memReport("Avatar",llList2Float(split,0));
+                memReport("Avatar",(float)split[0]);
             }
 #endif
             else if (code == CONFIG_REPORT) {

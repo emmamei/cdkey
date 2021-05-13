@@ -185,13 +185,10 @@ float GlobalDefines_version=1.0;
 // List definitions: makes things easier to comprehend
 
 // Note: ....P in names is a LISP convention: acts like a question mark
-#define cdListElement(a,b) llList2String(a, b)
-#define cdListFloatElement(a,b) llList2Float(a, b)
-#define cdListIntegerElement(a,b) llList2Integer(a, b)
 #define cdListElementP(a,b) llListFindList(a, [ b ])
 #define cdSplitArgs(a) llParseStringKeepNulls((a), [ "|" ], [])
 #define cdSplitString(a) llParseString2List(a, [ "," ], [])
-#define cdList2ListStrided(src,start,end,every) llList2ListStrided(llList2List(src, start, end), 0, -1, every)
+#define cdList2ListStrided(src,start,end,every) llList2ListStrided((list)src[start, end], 0, -1, every)
 #define cdGetFirstChar(a) llGetSubString(a, 0, 0)
 #define cdButFirstChar(a) llGetSubString(a, 1, STRING_END)
 #define cdChat(a) llSay(0, a)

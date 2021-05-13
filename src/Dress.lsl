@@ -708,7 +708,8 @@ default {
             }
 #endif
             else if (cmd == "setHovertext") {
-                string primText = llList2String(llGetPrimitiveParams([ PRIM_TEXT ]), 0);
+                list paramList = llGetPrimitiveParams([ PRIM_TEXT ]);
+                string primText = (string)paramList[0];
 
                      if (collapsed)   { cdSetHovertext("Disabled Dolly!",        ( RED    )); }
                 else if (isAFK)       { cdSetHovertext(dollType + " Doll (AFK)", ( YELLOW )); }
@@ -824,7 +825,7 @@ default {
             }
 #ifdef DEVELOPER_MODE
             else if (code == MEM_REPORT) {
-                memReport(cdMyScriptName(),cdListFloatElement(split, 0));
+                memReport(cdMyScriptName(),(float)split[0]);
             }
 #endif
         }
