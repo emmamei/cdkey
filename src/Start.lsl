@@ -38,7 +38,7 @@ float delayTime = 15.0; // in seconds
 float initTimer;
 
 key ncPrefsKey;
-integer prefsRead;
+//integer prefsRead;
 
 integer ncLine;
 integer failedReset;
@@ -53,6 +53,9 @@ integer i;
 
 string attachName;
 integer isAttached;
+
+string outfitFolderExpected;
+string dollTypeExpected;
 
 //integer introLine;
 //integer introLines;
@@ -156,12 +159,16 @@ processConfiguration(string name, string value) {
     // Check for non-boolean settings
     else if ((i = cdListElementP(configs,name)) != NOT_FOUND) {
         if (name == "outfits path") {
-            // should be present
-            lmSetConfig("outfitFolder", value);
+            // Defer actual setting of outfitsFolder until later
+            //
+            //lmSetConfig("outfitFolder", value);
+            outfitFolderExpected = value;
         }
         else if (name == "doll type") {
-            // should be part of a valid set
-            if (value != dollType) lmSetConfig("dollType", value);
+            // Defer actual setting of dollType until later
+            //
+            //lmSetConfig("dollType", value);
+            dollTypeExpected = value;
         }
         else if (name == "chat channel") {
             // cant be 0 or MAXINT (DEBUG_CHANNEL)
@@ -283,7 +290,7 @@ readPreferences() {
     else {
         llOwnerSay("No preferences file was found (\"" + NOTECARD_PREFERENCES + "\")");
 
-        prefsRead = PREFS_NOT_READ;
+        //prefsRead = PREFS_NOT_READ;
         lmInitState(INIT_STAGE3);
     }
 }
@@ -447,10 +454,20 @@ default {
                     llOwnerSay("No home landmark present: Homing beacon will be disabled.");
             }
             else if (code == INIT_STAGE3) {
+                // Stage 3 is triggered by CheckRLV completing its RLV checks...
+                //
+                // At this point, RLV has been determined and set
                 debugSay(3,"DEBUG-START","Stage 3 begun.");
-                lmInitState(INIT_STAGE4);
+
+                // Put out settings that we may or may not have read in the preferences file,
+                // with their appropriate defaults as necessary
+                lmSetConfig("outfitFolder", outfitFolderExpected);
+                lmSetConfig("dollType", dollTypeExpected);
             }
             else if (code == INIT_STAGE4) {
+                // Stage 4 is triggered by Transform completing its search for an outfit folder...
+                //
+                // At this point, outfitFolder has been set one way or the other
                 debugSay(3,"DEBUG-START","Stage 4 begun.");
                 string name = dollName;
 
@@ -654,7 +671,7 @@ default {
                 lmSendConfig("windNormal",(string)windNormal);
                 lmSetConfig("keyLimit",(string)keyLimit);
 
-                prefsRead = PREFS_READ;
+                //prefsRead = PREFS_READ;
                 lmInitState(INIT_STAGE3);
             }
             else {

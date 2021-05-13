@@ -26,11 +26,20 @@
 #define NOT_RUNNING 0
 #define cdRunScript(a) llSetScriptState(a, RUNNING);
 #define cdStopScript(a) llSetScriptState(a, NOT_RUNNING);
+#define getInv(a,b) \
+    if (a == "") lmRunRLV("getinv=" + (string)(b)); \
+    else lmRunRLV("getinv:" + a + "=" + (string)(b))
 
 #define isFound(a) (a!="")
 #define isNotFound(a) (a=="")
+
+// Note that these two values are used by ALL searches...
 #define MAX_SEARCH_RETRIES 2
 #define RLV_TIMEOUT 15.0
+
+#define adjustTimer() \
+    if (lowScriptMode) llSetTimerEvent(LOW_RATE);\
+    else llSetTimerEvent(STD_RATE)
 
 // Folders need to be searched for: the outfits folder, and the
 // type folder also - plus the ~nude and ~normal folders on top
@@ -54,11 +63,15 @@
 //
 // Define macros to make the process more readable
 
-#define folderSearch(a) lmRunRLV("getinv:" + outfitFolder + "=" + (string)(a)); \
+#define folderSearch(a,b) \
+    b = cdListenMine(a);\
+    getInv(outfitFolder,a);\
     llSetTimerEvent(RLV_TIMEOUT)
 
-#define typeSearch(a)   folderSearch(a)
-#define systemSearch(a) folderSearch(a)
+#define typeSearch(a,b)   folderSearch(a,b)
+#define systemSearch(a,b) folderSearch(a,b)
+
+#define outfitSearchComplete (outfitFolder != "")
 
 //========================================
 // VARIABLES
@@ -81,10 +94,10 @@ integer timerMark;
 integer lastTimerMark;
 #endif
 
+integer outfitSearching;
 integer outfitSearchTries;
 integer typeSearchTries;
-string outfitFolder;
-integer outfitSearching;
+integer systemSearchTries;
 
 integer findTypeFolder;
 
@@ -95,6 +108,16 @@ string transform;
 // from the one being searched for
 string typeFolder; // Valid and current typeFolder
 string typeFolderExpected; // typeFolder being searched for
+
+// And dual variables for outfit too, just like type - except these only
+// get used if the preferences file has an entry in it
+string outfitFolder;
+string outfitFolderExpected;
+
+// And dual variables for dollType too, just like type - except these only
+// get used if the preferences file has an entry in it
+//string dollType;
+string dollTypeExpected;
 
 integer rlvChannel;
 integer typeSearchHandle;
@@ -169,10 +192,10 @@ setDollType(string typeName) {
         typeSearchHandle = cdListenMine(typeSearchChannel);
 
         // Search for type folder
-        typeSearch(typeSearchChannel);
+        typeSearch(typeSearchChannel,typeSearchHandle);
     }
 
-    lmInternalCommand("setWindRate","",NULL_KEY);
+    lmInternalCommand("setWindRate","",NULL_KEY); // runs in Main
     debugSay(2,"DEBUG-DOLLTYPE","Changed to type " + dollType);
 }
 
@@ -225,16 +248,19 @@ reloadTypeNames(key id) {
     }
 }
 
-outfitSearch(integer channel) {
+outfitSearch(integer channel,integer handle) {
 
     // This should bypass repeated calls to search for outfit folder
     //
     // Note that this means if you switch from one Outfits folder name
     // to another, this will fail: a key reset will be needed
     //
-    if (outfitFolder != "") return;
+    //if (outfitFolder != "") return;
+    outfitSearching = TRUE;
 
-    folderSearch(channel);
+    debugSay(6,"DEBUG-SEARCHING","outfitSearch in progress (RLVok = " + (string)RLVok + ")");
+
+    folderSearch(channel,handle);
 }
 
 //========================================
@@ -330,50 +356,71 @@ default {
             if (collapsed) {
                 if ((timerMark - collapseTime) > TIME_BEFORE_TP)
                     if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK)
-                        lmInternalCommand("teleport", LANDMARK_HOME, id);
+                        lmInternalCommand("teleport", LANDMARK_HOME, id); // runs in Avatar
             }
         }
 #endif
         //----------------------------------------
-        // OUTFIT SEARCH
+        // OUTFIT SEARCH: RLV TIMEOUTS
         //
         if (RLVok == TRUE) {
-            // if we get here then the search RLV timed out
-            if (outfitSearching) {
-                // Note carefully - if the search tries is maxed,
-                // that means that the attempted RLV call failed
-                // and the listener got nothing - NOT that the
-                // search failed... search failures ("failure to find")
-                // are marked by the listener code.
+            // If RLVok is true, then check if outfit searches need to be retried...
+            if (outfitSearchHandle) {
+                if (outfitSearchTries++ < MAX_SEARCH_RETRIES)
 
-                if (outfitFolder == "") {
-                    if (outfitSearchTries++ < MAX_SEARCH_RETRIES)
+                    // Try another search for outfits
+                    outfitSearch(outfitSearchChannel,outfitSearchHandle);
 
-                        // Try another search for outfits
-                        outfitSearch(outfitSearchChannel);
-
-                    else llListenRemove(outfitSearchHandle);
-                } else {
-                    if (typeFolder == "" && typeFolderExpected != "") {
-                        if (typeSearchTries++ < MAX_SEARCH_RETRIES) {
-
-                            // Try another search for Type directories
-                            typeSearch(typeSearchChannel);
-
-                        }
-                        else llListenRemove(typeSearchHandle);
-                    }
-                }
-            }
-            else {
-                if (typeSearchHandle) {
-                    llListenRemove(typeSearchHandle);
-                    typeSearchHandle = 0;
-                }
-
-                if (outfitSearchHandle) {
+                else {
                     llListenRemove(outfitSearchHandle);
                     outfitSearchHandle = 0;
+                    outfitSearching = FALSE;
+
+                    outfitFolder = "";
+                    typeFolder = "";
+                    outfitFolderExpected = "";
+                    typeFolderExpected = "";
+
+                    llSay(DEBUG_CHANNEL,"Outfit search FAILED. No outfits or types are available.");
+                    adjustTimer();
+                    lmInitState(INIT_STAGE4); // start next phase
+                }
+            }
+            else if (typeSearchHandle) {
+                if (typeSearchTries++ < MAX_SEARCH_RETRIES) {
+
+                    // Try another search for Type directories
+                    typeSearch(typeSearchChannel,typeSearchHandle);
+
+                }
+                else {
+                    llListenRemove(typeSearchHandle);
+
+                    typeFolder = "";
+                    typeFolderExpected = "";
+
+                    llSay(DEBUG_CHANNEL,"Type search FAILED. No types are available.");
+                    adjustTimer();
+                }
+            }
+            else if (systemSearchHandle) {
+                if (systemSearchTries++ < MAX_SEARCH_RETRIES) {
+
+                    // Try another search for outfits
+                    systemSearch(systemSearchChannel,systemSearchHandle);
+
+                }
+                else {
+                    llListenRemove(systemSearchHandle);
+                    systemSearchHandle = 0;
+
+                    nudeFolder = "";
+                    normalselfFolder = "";
+                    normaloutfitFolder = "";
+
+                    llSay(DEBUG_CHANNEL,"Outfit search FAILED. No system folders were found.");
+                    adjustTimer();
+                    lmInitState(INIT_STAGE4); // start next phase
                 }
             }
         }
@@ -415,8 +462,8 @@ default {
         //----------------------------------------
         // ADJUST NEXT TIMER INTERVAL
         //
-        if (lowScriptMode) llSetTimerEvent(LOW_RATE);
-        else llSetTimerEvent(STD_RATE);
+        //if (lowScriptMode) llSetTimerEvent(LOW_RATE);
+        //else llSetTimerEvent(STD_RATE);
     }
 
     //----------------------------------------
@@ -437,7 +484,16 @@ default {
         string choice = cdListElement(split, 0);
         string name = cdListElement(split, 1);
 
-        if (script == "Transform" && code != SET_CONFIG) return; // WHY?
+        // This means that ANY link message sent by Transform is ignored by these
+        // items, except for the SET_CONFIG section...
+        //
+        // Link messages sent by other scripts are not ignored in the slightest..
+        //
+        // This script uses SEND_CONFIG extensively, plus a couple RLV calls and
+        // internal commands. Ignoring SEND_CONFIG is probably wise, but the
+        // rest is likely overkill, though not problematic in practice.
+        //
+        if (script == "Transform" && code != SET_CONFIG) return;
 
         if (code == SEND_CONFIG) {
 
@@ -463,7 +519,7 @@ default {
                 if (split == [""]) controllers = [];
                 else controllers = split;
             }
-            else if (name == "canAFK")                         canAFK = (integer)value;
+            else if (name == "RLVok")                           RLVok = (integer)value;
             else if (name == "mustAgreeToType")       mustAgreeToType = (integer)value;
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
 #ifdef HOMING_BEACON
@@ -500,16 +556,23 @@ default {
 
             debugSay(6,"DEBUG-TRANSFORM","SET_CONFIG[" + name + "] = " + value);
             if (name == "dollType") {
-                if (value != dollType) setDollType(value);
+                if (value != dollType) {
+                    dollTypeExpected = value;
+
+                    // Here, this conditional allows us to "set" dollTypeExpected, but defer the actual
+                    // setting until stage 5 below.
+                    if (outfitSearchComplete) setDollType(value);
+                }
             }
             else if (name == "transformLockExpire") {
                 if (value == "0") transformLockExpire = 0;
                 else transformLockExpire = llGetUnixTime() + TRANSFORM_LOCK_TIME;
                 lmSendConfig("transformLockExpire",(string)(transformLockExpire));
             }
-            else if (name == "outfitsFolder" || name == "outfitFolder") {
-                lmSendConfig("outfitsFolder",outfitFolder = value);
-                lmSendConfig("outfitFolder",outfitFolder = value);
+            else if (name == "outfitFolder") {
+                // Search for and validate user-specified outfit folder
+                outfitFolderExpected = value;
+                outfitSearch(outfitSearchChannel,outfitSearchHandle);
             }
         }
         else if (code == INTERNAL_CMD) {
@@ -561,6 +624,7 @@ default {
 
         else if (code == RLV_RESET) {
             RLVok = (integer)choice;
+#ifdef NOT_USED
 //          if (dollType == "") {
 //              lmSetConfig("dollType", "Regular");
 //              lmSetConfig("transformLockExpire","0");
@@ -583,7 +647,7 @@ default {
 
                         debugSay(2,"DEBUG-RLVOK","Searching for Outfits and Typefolders");
 
-                        outfitSearching = 1;
+                        outfitSearching = TRUE;
                         outfitFolder = "";
                         typeFolder = "";
                         useTypeFolder = 0;
@@ -591,10 +655,11 @@ default {
                         outfitSearchTries = 0;
 
                         // Initial search to set global variables up
-                        outfitSearch(outfitSearchChannel);
+                        outfitSearch(outfitSearchChannel,outfitSearchHandle);
                     }
                 }
             }
+#endif
         }
         else if (code == MENU_SELECTION) {
             string optName = llGetSubString(choice, 2, STRING_END);
@@ -735,18 +800,11 @@ default {
                 // this loads the type names buffer
                 reloadTypeNames(NULL_KEY);
 
-                if (lowScriptMode) llSetTimerEvent(LOW_RATE);
-                else llSetTimerEvent(STD_RATE);
-
                 // Might have been set in Prefs, so do this late
             }
             else if (code == INIT_STAGE5) {
-                // note that dollType is ALREADY SET....
-                // this is bad form but allows us to defer the subroutine
-                // until now in the startup process
-
                 // This updates the doll type using setDollType()
-                lmSetConfig("dollType", dollType);
+                lmSetConfig("dollType", dollTypeExpected);
 
                 // This clears the transformation lock
                 lmSetConfig("transformLockExpire","0");
@@ -772,16 +830,24 @@ default {
         //
         if (channel == outfitSearchChannel) {
             llListenRemove(outfitSearchHandle);
+            adjustTimer();
 
+            debugSay(6,"DEBUG-SEARCHING","Search channel received: " + choice);
+            debugSay(6,"DEBUG-SEARCHING","Search channel - outfitFolder = \"" + outfitFolder + "\"");
+            debugSay(6,"DEBUG-SEARCHING","Search channel - outfitFolderExpected = \"" + outfitFolderExpected + "\"");
 #ifdef DEVELOPER_MODE
             if (outfitFolder != "") {
+
+                // Once the outfitFolder has been found, no need to repeat the search
+                //
+                // This does mean that the key will have to be reset to use a different
+                // outfit folder... but not an unreasonable expectation, given buffered items
+                // and other whatnot.
+                //
                 llSay(DEBUG_CHANNEL,"outfit folder search called unnecessarily!");
                 return;
             }
 #endif
-
-            debugSay(6,"DEBUG-SEARCHING","Channel #1 received (outfitFolder = \"" + outfitFolder + "\"): " + choice);
-            outfitSearching = 1; // if we get here - well, we're outfit searchiung ja?
 
             list folderList = llCSV2List(choice);
             //integer searchForTypeFolder;
@@ -789,24 +855,42 @@ default {
             normalselfFolder = "";
             normaloutfitFolder = "";
 
-            // vague substring check done here for speed
-            if (llSubStringIndex(choice,"Outfits") >= 0) {
+            debugSay(6,"DEBUG-SEARCHING","folderList: " + llDumpList2String(folderList,","));
 
-                // exact match check
-                     if (~llListFindList(folderList, (list)"> Outfits"))  outfitFolder = "> Outfits";
-                else if (~llListFindList(folderList, (list)"Outfits"))    outfitFolder = "Outfits";
-
-            }
-            else if (llSubStringIndex(choice,"Dressup") >= 0) {
-
-                     if (~llListFindList(folderList, (list)"> Dressup"))  outfitFolder = "> Dressup";
-                else if (~llListFindList(folderList, (list)"Dressup"))    outfitFolder = "Dressup";
+            // Are we searching for something specific? Bypass defaults if so
+            if (outfitFolderExpected != "") {
+                if (~llListFindList(folderList, (list)outfitFolderExpected))  outfitFolder = outfitFolderExpected;
+                else llSay(DEBUG_CHANNEL,"Outfit folder \"" + outfitFolderExpected + "\" could not be found - searching for defaults");
+                // else outfitFolder is unaffected - and remains unset
             }
 
-            debugSay(6,"DEBUG-SEARCHING","outfitFolder = " + outfitFolder);
+            // Search for defaults if no outfit folder specified, but *ALSO* if search for specified folder fails
+            if (outfitFolderExpected == "" || outfitFolder == "") {
+                // Search for the defaults...
+                debugSay(6,"DEBUG-SEARCHING","Searching for default outfit folders...");
+
+                // vague substring check done here for speed
+                if (llSubStringIndex(choice,"Outfits") >= 0) {
+
+                    // exact match check
+                         if (~llListFindList(folderList, (list)"> Outfits"))  outfitFolder = "> Outfits";
+                    else if (~llListFindList(folderList, (list)"Outfits"))    outfitFolder = "Outfits";
+
+                }
+                else if (llSubStringIndex(choice,"Dressup") >= 0) {
+
+                         if (~llListFindList(folderList, (list)"> Dressup"))  outfitFolder = "> Dressup";
+                    else if (~llListFindList(folderList, (list)"Dressup"))    outfitFolder = "Dressup";
+                }
+            }
+
+            // At this point, either the outfit folder has been set to a default, to a user-specified folder that
+            // was found and used, or none of them have been found
+
+            debugSay(6,"DEBUG-SEARCHING","outfitFolder = \"" + outfitFolder + "\"");
 
             // Send the outfitFolder so all will know, no matter what it is
-            lmSendConfig("outfitsFolder", outfitFolder);
+            //lmSendConfig("outfitsFolder", outfitFolder);
             lmSendConfig("outfitFolder", outfitFolder);
 
             //debugSay(6,"DEBUG-SEARCHING","typeFolder = \"" + typeFolder + "\" and typeFolderExpected = \"" + typeFolderExpected + "\"");
@@ -817,8 +901,14 @@ default {
             //if (searchForTypeFolder) {
 
             //    // Search for outfits folder complete; now search for Type folder
-            //    typeSearch(typeSearchChannel);
+            //    typeSearch(typeSearchChannel,typeSearchHandle);
             //}
+
+            outfitSearching = FALSE;
+
+            // Type folder is not directly related to outfit folder searching; system folders are
+            // completely inseparable
+            systemSearch(systemSearchChannel,systemSearchHandle);
         }
         else if (channel == typeSearchChannel) {
 
@@ -830,6 +920,7 @@ default {
             // Note that, unlike the dialog channel, the type search channel is
             // removed and recreated... maybe it should not be
             llListenRemove(typeSearchHandle);
+            adjustTimer();
 
             // if there is no outfits folder we mark the type folder search
             // as "failed" and don't use a type folder...
@@ -893,7 +984,7 @@ default {
                     debugSay(6,"DEBUG-SEARCHING","Ending an outfit Search...");
 
                     // we finished our outfit search: so end the search and put out results
-                    outfitSearching = 0;
+                    outfitSearching = FALSE;
                     nudeFolder = "";
                     normalselfFolder = "";
 
@@ -930,8 +1021,9 @@ default {
         }
         else if (channel == systemSearchChannel) {
             list folderList = llCSV2List(choice);
+            lmInitState(INIT_STAGE4); // start next phase
 
-            outfitSearching = 0;
+            //outfitSearching = FALSE;
             nudeFolder = "";
             normalselfFolder = "";
             normaloutfitFolder = "";
@@ -961,6 +1053,8 @@ default {
             lmSendConfig("nudeFolder",nudeFolder);
             lmSendConfig("normalselfFolder",normalselfFolder);
             lmSendConfig("normaloutfitFolder",normaloutfitFolder);
+            llSleep(1.0);
+            lmInitState(INIT_STAGE4); // start next phase
         }
     }
 
