@@ -109,8 +109,8 @@ default {
             //----------------------------------------
             // Shortcut: d
             else if (c == "d") {
-                     if (name == "detachable")             detachable = (integer)value;
-                else if (name == "dollType")                 dollType = value;
+                     //if (name == "detachable")             detachable = (integer)value;
+                     if (name == "dollType")                 dollType = value;
                 else if (name == "dollGender")             dollGender = value;
                 else if (name == "dollDisplayName")   dollDisplayName = value;
 #ifdef DEVELOPER_MODE
@@ -609,6 +609,7 @@ default {
                         lmSendConfig("update","1");
                         return;
                     }
+#ifdef NOT_USED
                     else if (choice == "detach") {
                         if (isDoll && hardcore) return;
 
@@ -617,6 +618,7 @@ default {
 
                         return;
                     }
+#endif
                     else if (choice == "xstats") {
                         if (isDoll && hardcore) return;
                         string s = "Extended stats:\n\nDoll is a " + dollType + " Doll.\nWind amount: " +
@@ -642,7 +644,7 @@ default {
                         cdCapability(hardcore,         "Doll is", "currently in hardcore mode");
 
                         // These settings all are affected by hardcore
-                        cdCapability((detachable && !hardcore),    "Doll can", "detach " + pronounHerDoll + " key");
+                        //cdCapability((detachable && !hardcore),    "Doll can", "detach " + pronounHerDoll + " key");
                         cdCapability((allowPose || hardcore),      "Doll can", "be posed by the public");
                         cdCapability((allowDress || hardcore),     "Doll can", "be dressed by the public");
                         cdCapability((allowCarry || hardcore),     "Doll can", "be carried by the public");

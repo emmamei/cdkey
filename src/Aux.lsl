@@ -135,7 +135,7 @@ default {
 //          else if (name == "doWarnings")                 doWarnings = (integer)value;
             else if (name == "hardcore")                     hardcore = (integer)value;
             else if (name == "poseSilence")               poseSilence = (integer)value;
-            else if (name == "detachable")                 detachable = (integer)value;
+            //else if (name == "detachable")                 detachable = (integer)value;
             else if (name == "canSelfTP")                   canSelfTP = (integer)value;
 #ifdef ADULT_MODE
             else if (name == "allowStrip")             allowStrip = (integer)value;
@@ -362,7 +362,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
 
                     // One-way options
                     if (!hardcore) {
-                        plusList += cdGetButton("Detachable", id, detachable, 1);
+                        //plusList += cdGetButton("Detachable", id, detachable, 1);
                         plusList += cdGetButton("Silent Pose", id, poseSilence, 1);
                         plusList += cdGetButton("Self Dress", id, canDressSelf, 1);
                     }

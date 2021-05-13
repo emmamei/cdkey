@@ -424,6 +424,7 @@ default {
     // ATTACH
     //----------------------------------------
     attach(key id) {
+#ifdef NOT_USED
         if (id == NULL_KEY && (!detachable || hardcore) && !locked) {
             // Detaching key somehow...
 
@@ -432,6 +433,7 @@ default {
             lmSendToController(dollName + " has bypassed the Key's bio-lock and detached the Key.");
             llOwnerSay("You have bypassed your Key's bio-lock systems and your controllers have been notified.");
         }
+#endif
 
         locked = 0;
 
@@ -511,11 +513,11 @@ default {
             }
             else if (name == "poserID")                 poserID = (key)value;
             else {
-                     if (name == "detachable")               detachable = (integer)value;
+                     //if (name == "detachable")               detachable = (integer)value;
+                     if (name == "lowScriptMode")         lowScriptMode = (integer)value;
 #ifdef DEVELOPER_MODE
                 else if (name == "debugLevel")               debugLevel = (integer)value;
 #endif
-                else if (name == "lowScriptMode")         lowScriptMode = (integer)value;
                 else if (name == "allowPose")                 allowPose = (integer)value;
                 else if (name == "dollType")                   dollType = value;
                 else if (name == "controllers") {

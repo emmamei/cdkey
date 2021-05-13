@@ -249,7 +249,7 @@ default {
                     dialogChannel = (integer)value;
                     //debugSay(4,"DEBUG-MENU","dialogChannel recieved and set to " + (string)dialogChannel);
                 }
-                else if (name == "detachable")                 detachable = (integer)value;
+                //else if (name == "detachable")                 detachable = (integer)value;
 #ifdef ADULT_MODE
                 // if not Adult Mode we don't need this...
                 else if (name == "dollType")                     dollType = value;
@@ -807,8 +807,8 @@ default {
 
             if (space == NOT_FOUND) {
                 // no space was found in the Menu button selection
-                     if (choice == "Detach") lmInternalCommand("detach", "", id);
-                else if (choice == "Accept") lmInternalCommand("addMistress", (string)id + "|" + name, id);
+                     if (choice == "Accept") lmInternalCommand("addMistress", (string)id + "|" + name, id);
+                //else if (choice == "Detach") lmInternalCommand("detach", "", id);
                 else if (choice == "Decline") ; // do nothing
             }
             else {
@@ -893,7 +893,7 @@ default {
                             // However! if X is true and isDoll and is NOT Controller - then skip to next...
                                  if (afterSpace == "Self TP")    lmSendConfig("canSelfTP",    (string)(canSelfTP = isX));
                             else if (afterSpace == "Self Dress") lmSendConfig("canDressSelf", (string)(canDressSelf = isX));
-                            else if (afterSpace == "Detachable") lmSendConfig("detachable",   (string)(detachable = isX));
+                            //else if (afterSpace == "Detachable") lmSendConfig("detachable",   (string)(detachable = isX));
                             else if (afterSpace == "Flying")     lmSendConfig("canFly",       (string)isX);
                             else if (afterSpace == "Sitting")    lmSendConfig("canSit",       (string)isX);
                             else if (afterSpace == "Standing")   lmSendConfig("canStand",     (string)isX);
@@ -904,7 +904,7 @@ default {
                             // Dolly (accessor) is trying to enable: reject
                                  if (afterSpace == "Self TP")    llOwnerSay("The Self TP option cannot be re-enabled by you.");
                             else if (afterSpace == "Self Dress") llOwnerSay("The Self Dress option cannot be re-enabled by you.");
-                            else if (afterSpace == "Detachable") llOwnerSay("The Detachable option cannot be re-enabled by you.");
+                            //else if (afterSpace == "Detachable") llOwnerSay("The Detachable option cannot be re-enabled by you.");
                             else if (afterSpace == "Flying")     llOwnerSay("The Flying option cannot be re-enabled by you.");
                             else if (afterSpace == "Sitting")    llOwnerSay("The Sitting option cannot be re-enabled by you.");
                             else if (afterSpace == "Standing")   llOwnerSay("The Standing option cannot be re-enabled by you.");

@@ -101,7 +101,7 @@ processConfiguration(string name, string value) {
     // The settings list and the settingName list much match up
     // with entries
     list settings = [ "hardcore", "busy is away",
-                      "can fly", "poseable", "can sit", "can stand", "can dress self", "detachable",
+                      "can fly", "poseable", "can sit", "can stand", "can dress self",
 #ifdef ADULT_MODE
                       "strippable",
 #endif
@@ -110,7 +110,7 @@ processConfiguration(string name, string value) {
                     ];
 
     list settingName = [ "hardcore", "busyIsAway",
-                         "canFly", "allowPose", "canSit", "canStand", "canDressSelf", "detachable",
+                         "canFly", "allowPose", "canSit", "canStand", "canDressSelf",
 #ifdef ADULT_MODE
                          "allowStrip",
 #endif
