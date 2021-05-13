@@ -18,6 +18,8 @@
 #define cdResetKey() llResetOtherScript("Start")
 #define cdHaltTimer() llSetTimerEvent(0.0);
 #define rlvSetIf(a,b) if ((b) == 1) { lmRunRLV((a)+"=y"); } else { lmRunRLV((a)+"=n"); }
+#define rlvLockOutfit()   lmRunRLVas("Dress", "unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
+#define rlvUnlockOutfit() lmRunRLVas("Dress", "unsharedwear=y,unsharedunwear=y,attachallthis:=y,detachallthis:=y");
 
 string name;
 string value;
@@ -34,6 +36,7 @@ integer rlvHandle;
 integer rlvCheck = MAX_RLVCHECK_TRIES;
 integer rlvStarted;
 integer initializing = TRUE;
+integer isOutfitLocked = FALSE;
 
 list rlvExceptions;
 
@@ -140,16 +143,29 @@ rlvActivateBase() {
 rlvOutfitLock() {
 
 #ifdef LOCKON
+
+    // Lock the current outfit if one of these is true:
+    //
+    //    * Dolly cannot dress themselves
+    //    * Dolly is in hardcore mode
+    //    * Dolly is collapsed
+    //    * Dolly is in "wear lock"
+    //
+    // This means Dolly is forbidden to change the current outfit
+    //
     if (!canDressSelf || hardcore || collapsed || wearLock) {
         // Lock outfit down tight
-        lmRunRLVas("Dress", "unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
+        if (isOutfitLocked == FALSE) rlvLockOutfit();
+        isOutfitLocked = TRUE;
     }
     else {
-        lmRunRLVas("Dress", "unsharedwear=y,unsharedunwear=y,attachallthis:=y,detachallthis:=y");
+        if (isOutfitLocked == TRUE) rlvUnlockOutfit();
+        isOutfitLocked = FALSE;
     }
 #else
     // Don't lock on developers
-    lmRunRLVas("Dress", "unsharedwear=y,unsharedunwear=y,attachallthis:=y,detachallthis:=y");
+    //if (isOutfitLocked == TRUE) rlvUnlockOutfit();
+    ;
 #endif
 }
 
