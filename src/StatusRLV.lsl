@@ -266,6 +266,8 @@ default {
                     return;
                 }
 
+                debugSay(6,"DEBUG-STATUSRLV","RLV received: @" + commandString);
+
                 llOwnerSay("@" + commandString);
                 //lmInternalCommand("storeRLV",script + "|" + commandString,NULL_KEY);
             }
