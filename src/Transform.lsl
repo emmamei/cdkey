@@ -383,7 +383,7 @@ default {
 
                     llSay(DEBUG_CHANNEL,"Outfit search FAILED. No outfits or types are available.");
                     adjustTimer();
-                    lmInitState(INIT_STAGE4); // start next phase
+                    lmInitState(INIT_STAGE4); // Outfits search failed: continue
                 }
             }
             else if (typeSearchHandle) {
@@ -421,7 +421,7 @@ default {
 
                     llSay(DEBUG_CHANNEL,"Outfit search FAILED. No system folders were found.");
                     adjustTimer();
-                    lmInitState(INIT_STAGE4); // start next phase
+                    lmInitState(INIT_STAGE4); // System folder search failed: continue
                 }
             }
         }
@@ -1028,7 +1028,6 @@ default {
             adjustTimer();
 
             list folderList = llCSV2List(choice);
-            lmInitState(INIT_STAGE4); // start next phase
 
             //outfitSearching = FALSE;
             nudeFolder = "";
@@ -1061,7 +1060,7 @@ default {
             lmSendConfig("normalselfFolder",normalselfFolder);
             lmSendConfig("normaloutfitFolder",normaloutfitFolder);
             llSleep(1.0);
-            lmInitState(INIT_STAGE4); // start next phase
+            lmInitState(INIT_STAGE4); // Outfits and System folder search succeeded: continue
         }
     }
 
