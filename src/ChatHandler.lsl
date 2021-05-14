@@ -610,7 +610,7 @@ default {
                     else if (choice == "update") {
 
                         //llSay(PUBLIC_CHANNEL,"Update starting...");
-                        lmSendConfig("update","1");
+                        lmSendConfig("update", "1");
                         return;
                     }
 #ifdef NOT_USED
@@ -747,7 +747,7 @@ default {
                         if (isDoll) {
                             //lmSetConfig("timeLeftOnKey","10");
                             llOwnerSay("Immediate collapse triggered...");
-                            lmInternalCommand("collapse", "1", id);
+                            lmInternalCommand("collapse", (string)TRUE, id);
                         }
                         return;
                     }

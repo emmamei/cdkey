@@ -439,7 +439,7 @@ default {
             if (code == INIT_STAGE1) {
                 debugSay(3,"DEBUG-START","Stage 1 begun.");
 
-                lmInternalCommand("collapse", "0", keyID);
+                lmInternalCommand("collapse", (string)FALSE, keyID);
             }
             else if (code == INIT_STAGE2) {
                 debugSay(3,"DEBUG-START","Stage 2 begun.");
