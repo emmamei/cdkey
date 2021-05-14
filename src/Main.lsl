@@ -625,8 +625,8 @@ default {
 
                 // The collapse internal command...
 
-                if (collapsed != collapseState) { // if equal, nothing to do
-                    if (collapseState) docollapse(); // this compresses all possible states into one
+                if (collapsed != collapseState) { // if equal, no change needed
+                    if (collapseState) docollapse();
                     else uncollapse();
                 }
             }
