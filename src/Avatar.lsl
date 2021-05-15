@@ -31,6 +31,7 @@
 #define cdMenuInject(a,b,c) lmMenuReply((a),b,c);
 #define currentlyPosed(p) ((p) != ANIMATION_NONE)
 #define notCurrentlyPosed(p) ((p) == ANIMATION_NONE)
+#define poseChanged (currentAnimation != poseAnimation)
 
 key rlvTPrequest;
 #ifdef LOCKON
@@ -369,12 +370,12 @@ default {
     on_rez(integer start) {
         // Set up key when rezzed
 
-        RLVok = UNSET;
+        //RLVok = UNSET;
         //llStopMoveToTarget();
         //llTargetRemove(targetHandle);
 
-        debugSay(5,"DEBUG-AVATAR","ifPermissions (on_rez)");
-        llRequestPermissions(dollID, PERMISSION_MASK);
+        //debugSay(5,"DEBUG-AVATAR","ifPermissions (on_rez)");
+        //llRequestPermissions(dollID, PERMISSION_MASK);
     }
 
     //----------------------------------------
@@ -394,7 +395,7 @@ default {
             debugSay(3,"DEBUG-AVATAR","Region FPS: " + formatFloat(llGetRegionFPS(),1) + "; Region Time Dilation: " + formatFloat(llGetRegionTimeDilation(),3));
             debugSay(5,"DEBUG-AVATAR","ifPermissions (changed)");
 #endif
-            llRequestPermissions(dollID, PERMISSION_MASK);
+            //llRequestPermissions(dollID, PERMISSION_MASK);
         }
         else if (change & CHANGED_INVENTORY) {
             // Doing this whenever inventory changes is ok: the update process stops this script;
@@ -424,6 +425,8 @@ default {
     // ATTACH
     //----------------------------------------
     attach(key id) {
+        RLVok = UNSET;
+
 #ifdef NOT_USED
         if (id == NULL_KEY && (!detachable || hardcore) && !locked) {
             // Detaching key somehow...
@@ -456,9 +459,11 @@ default {
         string poseEntry;
         poseBufferedList = [];
         poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
+
         i = poseCount;
+
         while (i--) {
-            // This takes time:
+
             poseEntry = llGetInventoryName(INVENTORY_ANIMATION, i + 1);
             debugSay(6,"DEBUG-AVATAR","Adding pose #" + (string)i + ": " + poseEntry);
 
@@ -494,9 +499,11 @@ default {
 
                  if (name == "collapsed") {
                     collapsed = (integer)value;
+
+                    // Reset pose?
                     llRequestPermissions(dollID, PERMISSION_MASK);
 
-                    debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 300/collapsed)");
+                    llSetTimerEvent(timerRate = adjustTimer());
             }
             else if (name == "poseSilence")         poseSilence = (integer)value;
             else if (name == "carryExpire")         carryExpire = (integer)value;
@@ -601,7 +608,8 @@ default {
                 // poseExpire is being set elsewhere
                 lmSetConfig("poseExpire", "0");
 
-                llRequestPermissions(dollID, PERMISSION_MASK); // animates
+                clearPoseAnimation();
+
                 if (poseSilence || hardcore) lmRunRLV("sendchat=y");
 
                 // if we have carrier, start following them again
@@ -651,7 +659,7 @@ default {
                 lmSendConfig("poserID", (string)(poserID = id));
 
                 debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 300/poseAnimation)");
-                llRequestPermissions(dollID, PERMISSION_MASK); // starts animations
+                setPoseAnimation(poseAnimation); 
 
                 if (dollType == "Display" || hardcore) expire = "0";
                 else expire = (string)(llGetUnixTime() + POSE_TIMEOUT);
@@ -669,7 +677,7 @@ default {
 
                 poseAnimation = ANIMATION_NONE;
                 poseAnimationID = NULL_KEY;
-                llRequestPermissions(dollID, PERMISSION_MASK);
+                clearPoseAnimation();
             }
 #ifdef DEVELOPER_MODE
             else if (code == MEM_REPORT) {
@@ -742,8 +750,6 @@ default {
         if (permMask & PERMISSION_TRIGGER_ANIMATION) {
 
             // The big work is done in clearPoseAnimation() and setPoseAnimation()
-
-#define poseChanged (currentAnimation != poseAnimation)
 
             if (poseChanged) {
                 if (notCurrentlyPosed(poseAnimation)) clearPoseAnimation();
