@@ -734,7 +734,7 @@ default {
         // Don't do anything unless attached
         if (!llGetAttached()) return;
 
-        permMask = llGetPermissions();
+        permMask = perm;
 
         //----------------------------------------
         // PERMISSION_TRIGGER_ANIMATION

@@ -13,6 +13,11 @@
 #define cdLockMeisterCmd(a) llWhisper(LOCKMEISTER_CHANNEL,(string)dollID+a)
 #define cdAOoff() llWhisper(LOCKMEISTER_CHANNEL,(string)dollID+"bootoff")
 #define cdAOon()  llWhisper(LOCKMEISTER_CHANNEL,(string)dollID+"booton")
+#define requestPermToCollapse() llRequestPermissions(dollID, PERMISSION_MASK)
+#define ALL_CONTROLS (CONTROL_FWD|CONTROL_BACK|CONTROL_LEFT|CONTROL_RIGHT|CONTROL_ROT_LEFT|CONTROL_ROT_RIGHT|CONTROL_UP|CONTROL_DOWN|CONTROL_LBUTTON|CONTROL_ML_LBUTTON)
+#define disableMovementControl() llTakeControls(ALL_CONTROLS, TRUE, FALSE)
+#define enableMovementControl() llTakeControls(ALL_CONTROLS, FALSE, TRUE)
+
 #define UNSET -1
 
 // Note that some doll types are special....
@@ -178,7 +183,8 @@ docollapse() {
         llStopAnimation((key)oldAnimList[i]);
 
     // This will trigger animation
-    llRequestPermissions(dollID, PERMISSION_MASK);
+    llStartAnimation(ANIMATION_COLLAPSED);
+    disableMovementControl();
 
     // when dolly collapses, anyone can rescue
     lmSendConfig("lastWinderID", (string)(lastWinderID = NULL_KEY));
@@ -217,7 +223,8 @@ uncollapse() {
     cdAOon();
 
     // This will trigger animation
-    llRequestPermissions(dollID, PERMISSION_MASK);
+    llStartAnimation("Stand");
+    enableMovementControl();
 
     if (cdCarried())
         lmInternalCommand("startFollow", (string)carrierID, keyID);
@@ -236,8 +243,9 @@ default {
         dollID = llGetOwner();
         keyID = llGetKey();
         dollName = lmMyDisplayName(dollID);
+
         isAttached = cdAttached();
-        if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
+        if (isAttached) requestPermToCollapse();
 
         cdInitializeSeq();
 
@@ -255,9 +263,17 @@ default {
         llSetTimerEvent(30.0);
 
         isAttached = cdAttached();
-        if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
+        if (isAttached) requestPermToCollapse();
 
         lmSendConfig("windRate", (string)(windRate = RATE_STANDARD));         // current rate
+    }
+
+
+    //----------------------------------------
+    // ATTACH
+    //----------------------------------------
+    attach(key id) {
+        requestPermToCollapse();
     }
 
     //----------------------------------------
@@ -891,12 +907,12 @@ default {
     // RUN TIME PERMISSIONS
     //----------------------------------------
     run_time_permissions(integer perm) {
+        permMask = perm;
+
         debugSay(2,"DEBUG-AVATAR","ifPermissions (run_time_permissions)");
 
         // Don't do anything unless attached
         if (!llGetAttached()) return;
-
-        permMask = llGetPermissions();
 
         //----------------------------------------
         // PERMISSION_TRIGGER_ANIMATION
@@ -905,6 +921,25 @@ default {
 
             if (collapsed) llStartAnimation(ANIMATION_COLLAPSED);
             else llStartAnimation("Stand");
+        }
+
+        //----------------------------------------
+        // PERMISSION_TAKE_CONTROLS
+
+        if (permMask & PERMISSION_TAKE_CONTROLS) {
+
+            if (collapsed) {
+                // Dolly is "frozen": collapsed
+
+                // When collapsed the doll should not be able to move at all; so the key will
+                // accept their attempts to move, but ignore them
+                disableMovementControl();
+
+            }
+            else {
+                // Dolly is not collapsed
+                enableMovementControl();
+            }
         }
     }
 }

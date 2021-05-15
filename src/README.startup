@@ -1,0 +1,45 @@
+STARTUP EVENTS
+==============
+
+* state_entry:
+    - This will run if it has not already run, and before on_rez and attach
+
+* on_rez:
+    - This section will run before attach when attaching from inventory or when logging in
+
+* attach:
+    - This runs when Dolly logs in or attaches from inventory or attaches from ground
+
+THUS:
+
+* Brand New Key Worn: state_entry, on_rez, attach
+* Dolly Attaches Her Key: on_rez, attach
+* Dolly Logs In: on_rez, attach
+* Dolly Updates Key: state_entry
+* Dolly Resets Key: state_entry
+* Dolly Rezzes Key on Ground: on_rez
+
+The only time that attach and on_rez are different is if the Key is rezzed but *NOT* attached...
+
+Thus, the best separation of items in the Key is:
+
+1. Tasks that must be performed at initialization: state_entry
+2. Tasks that must be performed only on attached keys: attach
+3. Tasks that must be performed, even on keys that are NOT attached: on_rez
+
+Given this, it seems that 90% of what happens in on_rez should be moved to an attach() event.
+Note that the attach() event doesn't have to determine if we are attached: we are. Instead of:
+
+    if (attached()) doSomething;
+
+We can do this:
+
+    attach(key id) {
+        doSomething;
+    }
+
+A good place to start examining the roles of the three initialization events is the page for
+on_rez:
+
+http://wiki.secondlife.com/wiki/On_rez
+

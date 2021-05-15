@@ -30,6 +30,11 @@
 
 #define cdResetKeyName() llSetObjectName(PACKAGE_NAME + " " + __DATE__)
 
+// If we have permissions, we don't need to do it again
+// If we do not, getting permissions does what we need
+#define workInNoScriptLand(d) if (permUnset) llRequestPermissions((d), PERMISSION_MASK)
+#define makeWorkInNoScriptLand(d) llRequestPermissions((d), PERMISSION_MASK)
+
 //=======================================
 // VARIABLES
 //=======================================
@@ -547,23 +552,6 @@ default {
         }
     }
 
-    // * state_entry:
-    //     - This will run if it has not already run, and before on_rez and attach
-    //
-    // * on_rez:
-    //     - This section will run before attach when attaching from inventory or when logging in
-    //
-    // * attach:
-    //     - This runs when Dolly logs in or attaches from inventory or attaches from ground
-    //
-    // THUS:
-    //
-    // * Brand New Key Worn: state_entry, on_rez, attach
-    // * Dolly Attaches Her Key: on_rez, attach
-    // * Dolly Logs In: on_rez, attach
-    // * Dolly Updates Key: state_entry
-    // * Dolly Resets Key: state_entry
-
     //----------------------------------------
     // STATE ENTRY
     //----------------------------------------
@@ -589,7 +577,9 @@ default {
         //resetState = RESET_STARTUP;
 
         isAttached = cdAttached();
-        if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
+        if (isAttached) {
+            makeWorkInNoScriptLand(dollID);
+        }
         else {
             llOwnerSay("Key not attached");
             //cdResetKeyName();
@@ -611,7 +601,9 @@ default {
         dollName = lmMyDisplayName(dollID);
 
         isAttached = cdAttached();
-        if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
+        if (isAttached) {
+            makeWorkInNoScriptLand(dollID);
+        }
 
 #ifdef DEVELOPER_MODE
         // Note this should be set by prefs, but the prefs require a lot before
@@ -627,7 +619,6 @@ default {
     // ATTACH
     //----------------------------------------
     attach(key id) {
-
         lmInternalCommand("setWindRate","",NULL_KEY);
         if (id == NULL_KEY) {
 
@@ -644,8 +635,7 @@ default {
             isAttached = 1;
             llMessageLinked(LINK_SET, 106, "Start|attached|" + (string)isAttached, id);
 
-            if (llGetPermissionsKey() == dollID && (llGetPermissions() & PERMISSION_TAKE_CONTROLS) != 0) llTakeControls(CONTROL_MOVE, 1, 1);
-            else llRequestPermissions(dollID, PERMISSION_MASK);
+            makeWorkInNoScriptLand(dollID);
 
             if (lastAttachAvatar == NULL_KEY) newAttach = 1;
         }
@@ -660,6 +650,7 @@ default {
         lastAttachAvatar = id;
     }
 
+#ifdef NOT_USED
     //----------------------------------------
     // TOUCH START
     //----------------------------------------
@@ -667,6 +658,7 @@ default {
         if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
     }
 
+#endif
     //----------------------------------------
     // DATASERVER
     //----------------------------------------
@@ -762,8 +754,15 @@ default {
     // RUN TIME PERMISSIONS
     //----------------------------------------
     run_time_permissions(integer perm) {
+
+        //----------------------------------------
+        // PERMISSION_TAKE_CONTROLS
+
+        // This is pro-forma: permission is autogranted to attached avatars
         if (perm & PERMISSION_TAKE_CONTROLS) {
-            llTakeControls(CONTROL_MOVE, 1, 1);
+
+            // By doing this, we permit the Key to work in no-script land
+            llTakeControls(CONTROL_MOVE, TRUE, TRUE);
         }
     }
 }

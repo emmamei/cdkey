@@ -1,0 +1,38 @@
+USE OF PERMISSIONS
+==================
+14 May 2021
+
+Attachments are special, in that the permissions requested are automatically
+granted.  Permissions are normally used to request permission from other
+users such as for animation and so forth - generating permission request
+dialogs for the other user.
+
+Permissions are also granted on a per script basis, so each script needs
+to request the permissions it needs to operate. Once granted, it is not
+necessary to keep requesting permissions.
+
+It should be possible to buffer the permissions process, such that
+once granted the permissions will remain.
+
+Permissions are requested by:
+
+* Avatar.lsl
+* Main.lsl
+* Start.lsl
+
+Start.lsl requests permissions to take control of movement - a transparent
+control - in order to act like a "vehicle" and bypass no-script restrictions.
+
+Avatar.lsl requests permissions to animate, as poses happen in this script.
+It also requests permissions to control movement, in order to freeze the avatar
+when posed.
+
+Main.lsl requests permissions to animate to handle collapse. It should also
+freeze movement like Avatar.lsl does.
+
+It is probably a good idea to replace the "llRequestPermissions" call with a
+macro that explicitly shows what we are doing, and hides the complications
+of a call initial readers may not understand...
+
+Permissions are lost on detach, so attaching the Key needs to request
+permissions afresh.
