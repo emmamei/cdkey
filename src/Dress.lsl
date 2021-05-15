@@ -917,12 +917,6 @@ default {
                 // Reset to Main Menu
                 //lmSendConfig("backMenu",(backMenu = MAIN));
             }
-#ifdef NOT_USED
-            else if (choice == MAIN) {
-                outfitList = [];
-                lmMenuReply(MAIN,"",id);
-            }
-#endif
             else if (cdListElementP(outfitList, choice) != NOT_FOUND) {
                 // This is the actual processing of an Outfit Menu entry -
                 // either a folder or a single outfit item.

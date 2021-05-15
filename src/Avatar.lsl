@@ -411,7 +411,7 @@ default {
     attach(key id) {
         RLVok = UNSET;
 
-#ifdef NOT_USED
+#ifdef NOT_USED // Warn controller if any that Dolly has detached key
         if (id == NULL_KEY && (!detachable || hardcore) && !locked) {
             // Detaching key somehow...
 

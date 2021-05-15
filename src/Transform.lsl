@@ -625,42 +625,6 @@ default {
 
         else if (code == RLV_RESET) {
             RLVok = (integer)choice;
-#ifdef NOT_USED
-//          if (dollType == "") {
-//              lmSetConfig("dollType", "Regular");
-//              lmSetConfig("transformLockExpire","0");
-//              llSay(DEBUG_CHANNEL,"RLV_RESET: dollType had to be fixed from blank");
-//          }
-
-            outfitFolder = "";
-            typeFolder = "";
-            outfitSearchTries = 0;
-            typeSearchTries = 0;
-            changeOutfit = 1;
-
-            if (RLVok == TRUE) {
-                if (rlvChannel) {
-                    typeSearchHandle = cdListenMine(typeSearchChannel);
-                    outfitSearchHandle = cdListenMine(outfitSearchChannel);
-
-                    if (outfitFolder == "" && !outfitSearching) {
-                        // No outfit folder: let's search.
-
-                        debugSay(2,"DEBUG-RLVOK","Searching for Outfits and Typefolders");
-
-                        outfitSearching = TRUE;
-                        outfitFolder = "";
-                        typeFolder = "";
-                        useTypeFolder = 0;
-                        typeSearchTries = 0;
-                        outfitSearchTries = 0;
-
-                        // Initial search to set global variables up
-                        outfitSearch(outfitSearchChannel,outfitSearchHandle);
-                    }
-                }
-            }
-#endif
         }
         else if (code == MENU_SELECTION) {
             string optName = llGetSubString(choice, 2, STRING_END);
@@ -975,51 +939,6 @@ default {
                 //lmSendConfig("outfitFolder", outfitFolder);
                 lmSendConfig("useTypeFolder", (string)useTypeFolder);
                 lmSendConfig("typeFolder", typeFolder);
-
-#ifdef NOT_USED
-                // at this point we've either found the typeFolder or not,
-                // and the outfitFolder is set
-
-                // are we doing the initial complete search? or is this just
-                // a type change?
-                if (outfitSearching) {
-
-                    debugSay(6,"DEBUG-SEARCHING","Ending an outfit Search...");
-
-                    // we finished our outfit search: so end the search and put out results
-                    outfitSearching = FALSE;
-                    nudeFolder = "";
-                    normalselfFolder = "";
-
-                    // Check for ~nude and ~normalself in the same level as the typeFolder
-                    //
-                    // This suggests that normalselfFolder and nudeFolder are "set-once" variables - which seems logical.
-                    // It also means that any ~nudeFolder and/or ~normalselfFolder found along side the Outfits folder
-                    // will override any inside of the same
-
-                    if (~llListFindList(folderList, (list)"~nude")) nudeFolder = outfitFolder + "/~nude";
-                    else {
-                        llOwnerSay("WARN: No nude (~nude) folder found in your outfits folder (\"" + outfitFolder + "\")...");
-                        llSay(DEBUG_CHANNEL,"No ~nude folder found in \"" + outfitFolder + "\"");
-                    }
-
-                    if (~llListFindList(folderList, (list)"~normalself")) normalselfFolder = outfitFolder + "/~normalself";
-                    else {
-                        llOwnerSay("ERROR: No normal self (~normalself) folder found in your outfits folder (\"" + outfitFolder + "\")... this folder is necessary for proper operation");
-                        llSay(DEBUG_CHANNEL,"No ~normalself folder found in \"" + outfitFolder + "\": this folder is required for proper Key operation");
-                    }
-
-                    if (~llListFindList(folderList, (list)"~normaloutfit")) normaloutfitFolder = outfitFolder + "/~normaloutfit";
-                    else {
-                        llOwnerSay("ERROR: No normal self (~normaloutfit) folder found in your outfits folder (\"" + outfitFolder + "\")... this folder is necessary for proper operation");
-                        llSay(DEBUG_CHANNEL,"No ~normaloutfit folder found in \"" + outfitFolder + "\": this folder is required for proper Key operation");
-                    }
-
-                    lmSendConfig("nudeFolder",nudeFolder);
-                    lmSendConfig("normalselfFolder",normalselfFolder);
-                    lmSendConfig("normaloutfitFolder",normaloutfitFolder);
-                }
-#endif
             }
         }
         else if (channel == systemSearchChannel) {

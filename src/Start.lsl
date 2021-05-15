@@ -263,18 +263,6 @@ processConfiguration(string name, string value) {
                         "recvchat:"  + uuid + "=add," +
                         "recvemote:" + uuid + "=add");
         }
-#ifdef NOT_USED
-        else if (name == "chat mode") {
-            // Set the way chat operates
-
-            // Note that a value of "world" doesn't actually require any action at all
-            value = llToLower(value);
-
-            if (value == "dolly") lmSetConfig("chatFilter",(string)dollID);
-            else if (value == "disabled") lmInternalCommand("chatDisable","",NULL_KEY);
-            else if (value != "world") llSay(DEBUG_CHANNEL,"Bad chat mode (" + value + ")");
-        }
-#endif
         else if (name == "helpless dolly") {
             // Note inverted sense of this value: this is intentional
             if (value == "1") lmSendConfig("canSelfTP", "0");
@@ -650,15 +638,6 @@ default {
         lastAttachAvatar = id;
     }
 
-#ifdef NOT_USED
-    //----------------------------------------
-    // TOUCH START
-    //----------------------------------------
-    touch_start(integer num) {
-        if (isAttached) llRequestPermissions(dollID, PERMISSION_MASK);
-    }
-
-#endif
     //----------------------------------------
     // DATASERVER
     //----------------------------------------

@@ -173,23 +173,6 @@ default {
                     llSay(DEBUG_CHANNEL,"Attempted to set channel to invalid value!");
                 }
             }
-#ifdef NOT_USED
-            else if (setName == "chatFilter") {
-                // Change filter on the listening chat channel
-                //
-                // Note: This is a one-time event, and done only by preferences
-
-                // if the chatChannel is zero then the chatFilter cannot be changed
-                if (chatChannel == 0) return;
-
-                chatFilter = (key)value;
-
-                // Reset chat channel with new filter
-                llListenRemove(chatHandle);
-                chatHandle = llListen(chatChannel, "", chatFilter, "");
-                lmSendConfig("chatChannel",(string)chatChannel);
-            }
-#endif
         }
         else if (code == INTERNAL_CMD) {
             string cmd = (string)split[0];
@@ -343,17 +326,6 @@ default {
                 lmSetConfig("blacklist",   llDumpList2String(blacklist,   "|") );
                 lmSetConfig("controllers", llDumpList2String(controllers, "|") );
             }
-#ifdef NOT_USED
-            else if (cmd == "chatDisable") {
-                // Turn off chat channel entirely
-                //
-                // Note that this is a one-time event, and only happens in preferences.
-                // Note, too, that this eseentially disables most of this script.
-
-                llListenRemove(chatHandle);
-                lmSetConfig("chatChannel",(string)(0));
-            }
-#endif
         }
         else if (code == RLV_RESET) {
             RLVok = (integer)split[0];
@@ -613,16 +585,6 @@ default {
                         lmSendConfig("update", "1");
                         return;
                     }
-#ifdef NOT_USED
-                    else if (choice == "detach") {
-                        if (isDoll && hardcore) return;
-
-                        if (detachable || isController) lmInternalCommand("detach", "", NULL_KEY);
-                        else cdSayTo("Key can't be detached...", id);
-
-                        return;
-                    }
-#endif
                     else if (choice == "xstats") {
                         if (isDoll && hardcore) return;
                         string s = "Extended stats:\n\nDoll is a " + dollType + " Doll.\nWind amount: " +
