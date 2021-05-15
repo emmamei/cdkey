@@ -23,6 +23,9 @@
 #define cdListenerDeactivate(a) llListenControl(a, 0)
 #define cdListenerActivate(a) llListenControl(a, 1)
 #define cdResetKey() llResetOtherScript("Start")
+#define notCurrentAnimation(p) ((p) != poseAnimation)
+#define getAnimationName(n) llGetInventoryName(INVENTORY_ANIMATION, (n));
+#define getAnimationCount() llGetInventoryNumber(INVENTORY_ANIMATION);
 
 #define MIN_FRAMES 20
 #define ADD_FRAMES 20
@@ -124,6 +127,35 @@ float adjustTimer() {
     }
 }
 
+bufferPoses() {
+    string poseEntry;
+    integer foundCollapse;
+
+    poseCount = getAnimationCount();
+
+    if (arePosesPresent() == FALSE) {
+        llSay(DEBUG_CHANNEL,"No animations! (must have collapse animation and one pose minimum)");
+        return;
+    }
+
+    i = poseCount; // loopIndex
+
+    while (i--) {
+        // Build list of poses
+        poseEntry = getAnimationName(i);
+
+        if (poseEntry != ANIMATION_COLLAPSED) poseBufferedList += poseEntry;
+        else foundCollapse = TRUE;
+    }
+
+    if (foundCollapse == FALSE) {
+        llSay(DEBUG_CHANNEL,"No collapse animation (\"" + (string)(ANIMATION_COLLAPSED) + "\") found!");
+        return;
+    }
+
+    poseBufferedList = llListSort(poseBufferedList,1,1);
+}
+
 posePageN(string choice, key id) {
     // posePage is the number of the page of poses;
     // poseIndex is a direct index into the list of
@@ -134,57 +166,26 @@ posePageN(string choice, key id) {
     list poseDialogButtons;
     integer isDoll = cdIsDoll(id);
     integer isController = cdIsController(id);
-    string poseEntry;
-    integer foundCollapse;
-
-#define notCurrentAnimation(p) ((p) != poseAnimation)
-#define getAnimationName(n) llGetInventoryName(INVENTORY_ANIMATION, (n));
-#define getAnimationCount() llGetInventoryNumber(INVENTORY_ANIMATION);
 
     debugSay(4,"DEBUG-AVATAR","poseBufferedList = " + llDumpList2String(poseBufferedList,","));
     debugSay(4,"DEBUG-AVATAR","poseCount = " + (string)poseCount);
 
     // Create the poseBufferedList and poseDialogButtons...
-    if (poseBufferedList == []) {
+    if (poseBufferedList == []) bufferPoses();
 
-        poseCount = getAnimationCount();
+    // remove the current pose if any to create poseDialogButtons
+    if (currentlyPosed(poseAnimation)) {
 
-        if (arePosesPresent() == FALSE) {
-            llSay(DEBUG_CHANNEL,"No animations! (must have collapse animation and one pose minimum)");
-            return;
-        }
+        // If this was false, it would mean we have a poseAnimation that is
+        // not in the Key's inventory...
+        if (~(i = llListFindList(poseBufferedList, [ poseAnimation ]))) {
 
-        i = poseCount; // loopIndex
+            poseDialogButtons = llDeleteSubList(poseBufferedList, i, i);
 
-        while (i--) {
-            // Build list of poses
-            poseEntry = getAnimationName(i);
-
-            if (poseEntry != ANIMATION_COLLAPSED) {
-                poseBufferedList += poseEntry;
-                if (notCurrentAnimation(poseEntry)) poseDialogButtons += poseEntry;
-            }
-            else {
-                foundCollapse = TRUE;
-            }
-        }
-
-        if (foundCollapse == FALSE) {
-            llSay(DEBUG_CHANNEL,"No collapse animation (\"" + (string)(ANIMATION_COLLAPSED) + "\") found!");
-            return;
         }
     }
     else {
-        // since we dont have to build the poseBufferedList, remove the current
-        // pose if any to create poseDialogButtons
-        if (currentlyPosed(poseAnimation)) {
-            if (~(i = llListFindList(poseBufferedList, [ poseAnimation ]))) {
-                poseDialogButtons = llDeleteSubList(poseBufferedList, i, i);
-            }
-        }
-        else {
-            poseDialogButtons = poseBufferedList;
-        }
+        poseDialogButtons = poseBufferedList;
     }
 
 #define MAX_DIALOG_BUTTONS 9
@@ -382,43 +383,26 @@ default {
     // CHANGED
     //----------------------------------------
     changed(integer change) {
-        if (change & (CHANGED_REGION | CHANGED_TELEPORT)) {
-            llStopMoveToTarget();
-            llTargetRemove(targetHandle);
-
+        if (change & CHANGED_INVENTORY) {
+            poseBufferedList = [];
+            bufferPoses();
+        }
 #ifdef DEVELOPER_MODE
+        else if (change & (CHANGED_REGION | CHANGED_TELEPORT)) {
+            // related to follow
+            //llStopMoveToTarget();
+            //llTargetRemove(targetHandle);
+
             msg = "Region ";
             if (llGetParcelFlags(llGetPos()) & PARCEL_FLAG_ALLOW_SCRIPTS) msg += "allows scripts";
             else msg += "does not allow scripts";
 
             debugSay(3,"DEBUG-AVATAR",msg);
             debugSay(3,"DEBUG-AVATAR","Region FPS: " + formatFloat(llGetRegionFPS(),1) + "; Region Time Dilation: " + formatFloat(llGetRegionTimeDilation(),3));
-            debugSay(5,"DEBUG-AVATAR","ifPermissions (changed)");
-#endif
+            //debugSay(5,"DEBUG-AVATAR","ifPermissions (changed)");
             //llRequestPermissions(dollID, PERMISSION_MASK);
         }
-        else if (change & CHANGED_INVENTORY) {
-            // Doing this whenever inventory changes is ok: the update process stops this script;
-            // otherwise, the only cost is time.
-            string poseEntry;
-            poseBufferedList = [];
-            poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
-
-            i = poseCount;
-            debugSay(4,"DEBUG-AVATAR","Refreshing list of poses on inventory change");
-
-            while (i--) {
-                // This takes time:
-                poseEntry = llGetInventoryName(INVENTORY_ANIMATION, i);
-                //debugSay(6,"DEBUG-AVATAR","Pose #" + (string)(i+1) + " found: " + poseEntry);
-
-                // Collect all viable poses: skip the collapse animation
-                if (poseEntry != ANIMATION_COLLAPSED)
-                    poseBufferedList += poseEntry;
-            }
-
-            poseBufferedList = llListSort(poseBufferedList, 1, 1);
-        }
+#endif
     }
 
     //----------------------------------------
@@ -456,25 +440,8 @@ default {
 
         debugSay(4,"DEBUG-AVATAR","Checking poses on attach");
 
-        string poseEntry;
         poseBufferedList = [];
-        poseCount = llGetInventoryNumber(INVENTORY_ANIMATION);
-
-        i = poseCount;
-
-        while (i--) {
-
-            poseEntry = llGetInventoryName(INVENTORY_ANIMATION, i + 1);
-            debugSay(6,"DEBUG-AVATAR","Adding pose #" + (string)i + ": " + poseEntry);
-
-            // Collect all viable poses: skip the collapse animation
-            if (poseEntry != ANIMATION_COLLAPSED)
-                poseBufferedList += poseEntry;
-        }
-        poseBufferedList = llListSort(poseBufferedList, 1, 1);
-
-        // Note: this is initial, before receiving any new config events
-        //lmInternalCommand("setWindRate","",NULL_KEY);
+        bufferPoses();
     }
 
     //----------------------------------------
@@ -658,7 +625,7 @@ default {
                 lmSendConfig("poseAnimation", (string)(poseAnimation = choice));
                 lmSendConfig("poserID", (string)(poserID = id));
 
-                debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 300/poseAnimation)");
+                //debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 300/poseAnimation)");
                 setPoseAnimation(poseAnimation); 
 
                 if (dollType == "Display" || hardcore) expire = "0";
@@ -673,7 +640,7 @@ default {
         }
         else if (code < 200) {
             if (code == INIT_STAGE5) {
-                debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 110)");
+                //debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 110)");
 
                 poseAnimation = ANIMATION_NONE;
                 poseAnimationID = NULL_KEY;
