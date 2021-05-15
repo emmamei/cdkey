@@ -69,7 +69,7 @@ default {
     state_entry() {
         dollID = llGetOwner();
         keyID = llGetKey();
-        dollName = lmMyDisplayName(dollID);
+        dollName = dollyName();
         isDoll = cdIsDoll(dollID);
         cdInitializeSeq();
     }

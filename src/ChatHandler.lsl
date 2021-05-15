@@ -37,7 +37,7 @@ default {
     state_entry() {
         dollID = llGetOwner();
         keyID = llGetKey();
-        dollName = lmMyDisplayName(dollID);
+        dollName = dollyName();
 
         // Beware listener is now available to users other than the doll
         // make sure to take this into account within all handlers.

@@ -570,7 +570,7 @@ default {
 
         dollID = llGetOwner();
         keyID = llGetKey();
-        dollName = lmMyDisplayName(dollID);
+        dollName = dollyName();
 
         //rlvWait = 1;
         cdInitializeSeq();
@@ -598,7 +598,7 @@ default {
     on_rez(integer start) {
         llResetTime();
         dollID = llGetOwner();
-        dollName = lmMyDisplayName(dollID);
+        dollName = dollyName();
 
         isAttached = cdAttached();
         if (isAttached) {

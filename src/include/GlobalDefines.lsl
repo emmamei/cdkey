@@ -274,8 +274,7 @@ float GlobalDefines_version=1.0;
 
 #define uncarry() lmInternalCommand("uncarry", "", NULL_KEY)
 //#define uncollapse(old) lmInternalCommand("uncollapse", "0", NULL_KEY)
-#define lmMyDisplayName(dollID) llGetDisplayName(dollID)
-#define lmNearbyDisplayName(id) llGetDisplayName(id)
+#define dollyName() llGetDisplayName(dollID)
 
 #define NORMAL_TIMER_RATE 0.5 * mainTimerEnable
 #define REDUCED_TIMER_RATE 5.0 * mainTimerEnable

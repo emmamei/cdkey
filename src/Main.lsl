@@ -248,7 +248,7 @@ default {
         RLVok = UNSET;
         dollID = llGetOwner();
         keyID = llGetKey();
-        dollName = lmMyDisplayName(dollID);
+        dollName = dollyName();
 
         isAttached = cdAttached();
         if (isAttached) requestPermToCollapse();
@@ -892,7 +892,7 @@ default {
 
             else if (code == INIT_STAGE3) {
                 dollID = llGetOwner();
-                dollName = lmMyDisplayName(dollID);
+                dollName = dollyName();
 
                 lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
                 setWindRate();

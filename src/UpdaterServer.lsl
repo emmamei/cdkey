@@ -50,8 +50,8 @@ key owner;
 key toucherID;
 integer publicMode = 0;
 
-#define lmSetHovertext(a)  llSetText((a), <1,1,1>, 1)
-#define lmClearHovertext() llSetText("", ZERO_VECTOR, 0)
+#define setHovertext(a)  llSetText((a), <1,1,1>, 1)
+#define clearHovertext() llSetText("", ZERO_VECTOR, 0)
 #define RUNNING 1
 #define NOT_RUNNING 0
 
@@ -76,25 +76,25 @@ sendUpdate() {
         // bypass this script, and the Start script...
         if (name != myName && name != "Start" && name != "UpdaterClient") {
 
-            lmSetHovertext("Updating script: " + name + "...");
+            setHovertext("Updating script: " + name + "...");
             llRegionSayTo(targetID, PUBLIC_CHANNEL, "Sending script " + name);
             llRemoteLoadScriptPin(targetID, name, pin, NOT_RUNNING, START_PARAMETER);
         }
     }
 
     // Updating UpdaterClient
-    lmSetHovertext("Updating script: UpdaterClient");
+    setHovertext("Updating script: UpdaterClient");
     llRemoteLoadScriptPin(targetID, "UpdaterClient", pin, NOT_RUNNING, START_PARAMETER);
 
     // Updating Start, and starting after should reset key cleanly
-    lmSetHovertext("Updating script: Start (and Resetting Key)");
+    setHovertext("Updating script: Start (and Resetting Key)");
     llRemoteLoadScriptPin(targetID, "Start", pin, RUNNING, START_PARAMETER);
 
-    lmSetHovertext("Update complete!");
+    setHovertext("Update complete!");
     llRegionSayTo(targetID, PUBLIC_CHANNEL, "Update complete!");
 
     llSleep(15.0);
-    lmSetHovertext("Click for update");
+    setHovertext("Click for update");
 }
 
 //========================================
@@ -109,7 +109,7 @@ default {
 
     state_entry() {
         owner = llGetOwner();
-        lmSetHovertext("Click for update");
+        setHovertext("Click for update");
     }
 
     //----------------------------------------
@@ -118,7 +118,7 @@ default {
 
     on_rez(integer start) {
         owner = llGetOwner();
-        lmSetHovertext("Click for update");
+        setHovertext("Click for update");
 
         llSay(PUBLIC_CHANNEL,"This is an Updater for the Community Dolls Key: click on this object, then select Update from the Key Menu.\n");
     }
@@ -136,7 +136,7 @@ default {
         // guaranteed to be on comChannel...
         if (owner != toucherID) return;
 
-        lmSetHovertext("Updating...");
+        setHovertext("Updating...");
         llSay(PUBLIC_CHANNEL,"Beginning update with nearby key...");
         targetID = (key)params[0];
         pin = (integer)params[1];
@@ -159,7 +159,7 @@ default {
         llSay(PUBLIC_CHANNEL,"Update has expired...");
         llListenRemove(comHandle);
         llSetTimerEvent(0.0);
-        lmSetHovertext("Click for update");
+        setHovertext("Click for update");
     }
 
     // This is for when the user clicks the updater: this should start the process
@@ -178,7 +178,7 @@ default {
             return;
         }
 
-        lmSetHovertext("Awaiting update client...");
+        setHovertext("Awaiting update client...");
         llSay(PUBLIC_CHANNEL,"Ready to begin update...");
         llOwnerSay("*** KEY WILL RESET AFTER UPDATE ***");
 
