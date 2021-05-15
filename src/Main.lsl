@@ -20,6 +20,9 @@
 
 #define UNSET -1
 
+// Limit: 3 hours for default
+#define KEYLIMIT_DEFAULT 10800
+
 // Note that some doll types are special....
 //    - Regular: used for standard Dolls, including non-transformable
 //    - Slut: can be stripped (like Pleasure Dolls)
@@ -36,14 +39,17 @@ float windRateFactor = 1.0;
 integer timerMark;
 integer lastTimerMark;
 integer timeSpan;
-integer lowScriptModeSpan;
 integer isAttached;
 integer permMask;
 
 key lastWinderID;
 
+#define LOWSCRIPT_TIMEOUT 600
 integer lowScriptTimer;
+integer lowScriptModeSpan;
 integer lastLowScriptTime;
+integer lowScriptExpire;
+
 integer wearLockExpire;
 integer carryExpire;
 integer poseExpire;
@@ -361,26 +367,22 @@ default {
         //----------------------------------------
         // LOW SCRIPT MODE
 
-        // Note that this is NOT the only place where lowScriptMode
-        // is set. lowScriptMode is set via Start.lsl at startup (to 0);
-        // and is set by Avatar.lsl after TP or Region change and on Attach.
         if (lowScriptMode) {
 
+            // cdLowScriptTrigger = (llGetRegionFPS() < LOW_FPS || llGetRegionTimeDilation() < LOW_DILATION)
             if (cdLowScriptTrigger) {
                 // lowScriptMode continues...
                 debugSay(2,"DEBUG-MAIN", "Low Script Mode active and bumped");
-                lastLowScriptTime = llGetUnixTime();
+                lowScriptExpire = llGetUnixTime() + LOWSCRIPT_TIMEOUT;
             }
             else {
-                lowScriptModeSpan = llGetUnixTime() - lastLowScriptTime;
 
                 // if environment has past test long enough - then go out of powersave mode
-                if (lowScriptModeSpan > 600) {
+                if (lowScriptExpire <= timerMark) {
                     debugSay(2,"DEBUG-MAIN", "Low Script Mode active but environment good - disabling");
-                    lastLowScriptTime = 0;
                     llOwnerSay("Restoring Key to normal operation.");
 
-                    lmSendConfig("lowScriptMode",(string)(lowScriptMode = 0));
+                    lmSendConfig("lowScriptMode",(string)(lowScriptMode = FALSE));
                     llSetTimerEvent(STD_RATE);
                 }
 #ifdef DEVELOPER_MODE
@@ -395,7 +397,7 @@ default {
                 // We're not in lowScriptMode, but have been triggered...
                 // Go into "power saving mode", say so, and mark the time
 
-                lastLowScriptTime = llGetUnixTime();
+                lowScriptExpire = llGetUnixTime() + LOWSCRIPT_TIMEOUT;
                 llOwnerSay("Time congestion detected: Power-saving mode activated.");
 
                 lmSendConfig("lowScriptMode",(string)(lowScriptMode = 1));
@@ -499,7 +501,7 @@ default {
 
                     // Dolly is DONE! Go down... and yell for help.
                     if (!collapsed) {
-                        llSay(PUBLIC_CHANNEL, "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on Dolly's key.)");
+                        cdSay( "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on Dolly's key.)");
                         docollapse();
                     }
                 }
@@ -521,6 +523,8 @@ default {
         code              =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
 
+        //----------------------------------------
+        // SEND_CONFIG
         if (code == SEND_CONFIG) {
             string name = (string)split[0];
             string value = (string)split[1];
@@ -572,6 +576,9 @@ default {
             else if (name == "timeReporting")           timeReporting = (integer)value;
 #endif
         }
+
+        //----------------------------------------
+        // SET_CONFIG
         else if (code == SET_CONFIG) {
             string name = (string)split[0];
             string value = (string)split[1];
@@ -581,7 +588,7 @@ default {
                 keyLimit = (integer)value;
 
                 // if limit is negative clip it at a default
-                if (keyLimit < 0) keyLimit = 10800; // 3 hours
+                if (keyLimit < 0) keyLimit = KEYLIMIT_DEFAULT;
 
                 // if limit is less than time left on key, clip time remaining
                 if (timeLeftOnKey > keyLimit) {
@@ -621,13 +628,16 @@ default {
                 // Send our setting out to everyone else
                 lmSendConfig("lowScriptMode",(string)(lowScriptMode = (integer)value));
 
-                if (lowScriptMode) lastLowScriptTime = llGetUnixTime();
-                else lastLowScriptTime = 0;
+                if (lowScriptMode) lowScriptExpire = llGetUnixTime() + LOWSCRIPT_TIMEOUT;
+                llSetTimerEvent(LOW_RATE);
             }
 
             else if (name == "poseExpire")         poseExpire = (integer)value;
             else if (name == "wearLockExpire") wearLockExpire = (integer)value;
         }
+
+        //----------------------------------------
+        // INTERNAL_CMD
         else if (code == INTERNAL_CMD) {
             string cmd = (string)split[0];
             split = llDeleteSubList(split, 0, 0);
@@ -701,20 +711,23 @@ default {
                         }
                         else {
                             // Holler so people know and to give props to winder
-                            llSay(PUBLIC_CHANNEL,dollDisplayName + " has been fully wound by " + name + "! Thank you!");
+                            cdSay(dollDisplayName + " has been fully wound by " + name + "! Thank you!");
                         }
                     }
                 }
                 else {
                     // This should not happen - but if it does...
 #ifdef DEVELOPER_MODE
-                    llSay(DEBUG_CHANNEL,"No name received in Internal Command windMsg!");
+                    cdDebugMsg("No name received in Internal Command windMsg!");
 #endif
                     if (hardcore) llOwnerSay("Your key turns automatically, giving you additional minutes of life.");
                     else llOwnerSay("Your key turns automatically, giving you an additional " + mins + " minutes of life (" + percent + "% capacity).");
                 }
             }
         }
+
+        //----------------------------------------
+        // RLV_RESET
         else if (code == RLV_RESET) {
             RLVok = (integer)split[0];
 
@@ -731,6 +744,9 @@ default {
             simRating = "";
             simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
         }
+
+        //----------------------------------------
+        // MENU_SELECTION
         else if (code == MENU_SELECTION) {
             string choice = (string)split[0];
             string name = (string)split[1];

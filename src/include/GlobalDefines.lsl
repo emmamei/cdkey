@@ -197,6 +197,8 @@ float GlobalDefines_version=1.0;
 #define cdListenAll(a) llListen(a, NO_FILTER, NO_FILTER, NO_FILTER)
 #define cdListenMine(a)   llListen(a, NO_FILTER, dollID, NO_FILTER)
 #define cdSayTo(m,i) llRegionSayTo(i, 0, m)
+#define cdSay(a) llSay(PUBLIC_CHANNEL,(a))
+#define cdDebugMsg(a) llSay(DEBUG_CHANNEL,(a))
 #define cdSetKeyName(a) llSetObjectName(a)
 
 // Can't define cdResetKey here because it is different in Start.lsl than it is in others
