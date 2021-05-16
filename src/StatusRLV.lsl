@@ -284,11 +284,6 @@ default {
                 // it means normally: we have a base RLV set
 
                 debugSay(2,"DEBUG-STATUSRLV","RLV clear command issued from " + script);
-#ifdef LOCKON
-                llOwnerSay("@detach=n"); // detach
-#else
-                llOwnerSay("@detach=y"); // detach
-#endif
 
 #ifdef COMPLETE_CLEAR
                 llOwnerSay("@clear"); // clear

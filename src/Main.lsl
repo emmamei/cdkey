@@ -18,6 +18,8 @@
 #define disableMovementControl() llTakeControls(ALL_CONTROLS, TRUE, FALSE)
 #define enableMovementControl() llTakeControls(ALL_CONTROLS, FALSE, TRUE)
 #define keyDetached(id) (id == NULL_KEY)
+#define rlvLockKey()    lmRunRLV("detach=n")
+#define rlvUnlockKey()  lmRunRLV("detach=y")
 
 #define UNSET -1
 
@@ -800,6 +802,16 @@ default {
                     }
                     llOwnerSay(s);
                 }
+            }
+
+            else if (choice == "Lock") {
+                rlvLockKey();
+                lmSendConfig("keyLocked",(string)TRUE);
+            }
+
+            else if (choice == "Unlock") {
+                rlvUnlockKey();
+                lmSendConfig("keyLocked",(string)FALSE);
             }
 
             // Winding - pure and simple

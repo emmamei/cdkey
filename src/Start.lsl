@@ -477,6 +477,8 @@ default {
                 // with their appropriate defaults as necessary
                 lmSetConfig("outfitFolder", outfitFolderExpected);
                 lmSetConfig("dollType", dollTypeExpected);
+
+                // FIXME: Lock Key on here if preferences demand it
             }
             else if (code == INIT_STAGE4) {
                 // Stage 4 is triggered by Transform completing its search for an outfit folder...

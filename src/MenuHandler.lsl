@@ -64,6 +64,7 @@ integer isController;
 integer isDoll;
 integer numControllers;
 integer transformLockExpire;
+integer keyLocked;
 
 integer blacklistChannel;
 integer blacklistHandle;
@@ -214,6 +215,7 @@ default {
             else if (name == "backMenu")                       backMenu = value;
             else if (name == "hardcore")                       hardcore = (integer)value;
             else if (name == "keyLimit")                       keyLimit = (integer)value;
+            else if (name == "keyLocked")                     keyLocked = (integer)value;
             else if (name == "lowScriptMode")             lowScriptMode = (integer)value;
             else if (name == "winderRechargeTime")   winderRechargeTime = (integer)value;
 #ifdef SINGLE_SELF_WIND
@@ -485,6 +487,8 @@ default {
                     // Visible Button
                     if (isDoll) {
                         menu += "Visible";
+                        if (keyLocked) menu += "Unlock";
+                        else menu += "Lock";
                     }
 
                     //--------------------

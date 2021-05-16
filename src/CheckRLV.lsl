@@ -37,6 +37,7 @@ integer rlvCheck = MAX_RLVCHECK_TRIES;
 integer rlvStarted;
 integer initializing = TRUE;
 integer isOutfitLocked = FALSE;
+integer keyLocked;
 
 list rlvExceptions;
 
@@ -117,16 +118,13 @@ rlvCheckTry() {
 rlvActivateBase() {
     if (RLVok != TRUE) return;
 
-#ifdef DEVELOPER_MODE
     string baseRLV;
-#else
-    string baseRLV = "detach=n,";
-#endif
 
     // This adjusts the default "base" RLV based on Dolly's settings...
     //
     // In this, defaultBaseRLVcmd is much more flexible than the other defaults
     //
+    if (keyLocked)  baseRLV += "detach=n,";         else baseRLV += "detach=y,";
     if (autoTP)     baseRLV += "accepttp=n,";       else baseRLV += "accepttp=y,";
     if (!canSelfTP) baseRLV += "tplm=n,tploc=n,";   else baseRLV += "tplm=y,tploc=y,";
     if (!canFly)    baseRLV += "fly=n,";            else baseRLV += "fly=y,";
@@ -311,6 +309,7 @@ default {
                  if (name == "autoTP")            {       autoTP = (integer)value; rlvSetIf("accepttp", !autoTP); }
             else if (name == "hardcore")          {     hardcore = (integer)value; rlvOutfitLock(); }
             else if (name == "RLVok")             {        RLVok = (integer)value; }
+            else if (name == "keyLocked")         {    keyLocked = (integer)value; }
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")        {   debugLevel = (integer)value; }
 #endif

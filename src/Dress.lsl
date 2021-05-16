@@ -22,6 +22,8 @@
 #define nothingWorn(c,d) ((c) != "0") && ((c) != "1") && ((d) != "0") && ((d) != "1")
 #define dressVia(a) listInventoryOn(a)
 #define clearDresser() dresserID = NULL_KEY
+#define rlvLockKey()    lmRunRLV("detach=n")
+#define rlvUnlockKey()  lmRunRLV("detach=y")
 
 //========================================
 // VARIABLES
@@ -51,6 +53,7 @@ integer outfitChannel;
 integer outfitHandle;
 integer change;
 integer pushRandom;
+integer keyLocked;
 
 // These are the paths of the outfits relative to #RLV
 //string lastFolder;
@@ -374,6 +377,7 @@ default {
             }
             else if (name == "isAFK")                              isAFK = (integer)value;
             else if (name == "RLVok")                              RLVok = (integer)value;
+            else if (name == "keyLocked")                      keyLocked = (integer)value;
             else if (name == "hovertextOn")                  hovertextOn = (integer)value;
             else if (name == "dollType")                        dollType = value;
             else if (name == "pronounHerDoll")            pronounHerDoll = value;
@@ -437,43 +441,32 @@ default {
                     return;
                 }
 
-                if (outfitFolder != "") {
-#ifdef DEVELOPER_MODE
-                    // If we are in developer mode we are in danger of the key being ripped
-                    // off here.  We therefore will use a temporary @detach=n restriction.
-                    llOwnerSay("Developer key locked in place to prevent accidental detachment during dressing.");
-                    //lmRunRLV("attachthis=y,detachthis=n,detach=n,touchall=n,showinv=n");
-                    lmRunRLV("detach=n");
+                // Key could be ripped off here, so lock it on no matter
+                // whether it is generally locked or not
+                rlvLockKey();
+                tempDressingLock = TRUE;
 
-#else
-                    // This locks down a (Normal) Dolly's touch and inventory - but
-                    // there is no restore from this setting
-//                  lmRunRLV("touchall=n,showinv=n");
-#endif
-                    tempDressingLock = TRUE;
+                dressingFailures = 0;
+                change = 1;
 
-                    dressingFailures = 0;
-                    change = 1;
+                // Send a message to ourself, generate an event, and save the
+                // previous values of newOutfit* into oldOutfit* - can we do
+                // this without using a link message?
+                //
+                // *OutfitName       newOutfitName    - name of outfit
+                // *OutfitFolder     outfitFolder    - name of main outfits folder
+                // *OutfitPath       clothingFolder   - name of folder with outfit, relative to outfitFolder
+                // *Outfit           -new-            - full path of outfit (outfitFolder + "/" + clothingFolder + "/" + newOutfitName)
 
-                    // Send a message to ourself, generate an event, and save the
-                    // previous values of newOutfit* into oldOutfit* - can we do
-                    // this without using a link message?
-                    //
-                    // *OutfitName       newOutfitName    - name of outfit
-                    // *OutfitFolder     outfitFolder    - name of main outfits folder
-                    // *OutfitPath       clothingFolder   - name of folder with outfit, relative to outfitFolder
-                    // *Outfit           -new-            - full path of outfit (outfitFolder + "/" + clothingFolder + "/" + newOutfitName)
+                // Build the newOutfit* variables - but do they get used?
 
-                    // Build the newOutfit* variables - but do they get used?
+                newOutfitFolder = outfitFolder;
+                  newOutfitPath = clothingFolder;
 
-                    newOutfitFolder = outfitFolder;
-                      newOutfitPath = clothingFolder;
-
-                    newOutfit = newOutfitFolder + "/";
-                    if (clothingFolder != "")
-                        newOutfit += clothingFolder + "/";
-                    newOutfit += newOutfitName;
-                }
+                newOutfit = newOutfitFolder + "/";
+                if (clothingFolder != "")
+                    newOutfit += clothingFolder + "/";
+                newOutfit += newOutfitName;
 
                 //debugSay(5,"DEBUG-DRESS","newOutfit is: " + newOutfit);
                 //debugSay(5,"DEBUG-DRESS","newOutfitName is: " + newOutfitName);
@@ -639,6 +632,7 @@ default {
 
                 llListenRemove(menuDressHandle);
 
+                if (keyLocked == FALSE) rlvUnlockKey();
                 changeComplete(TRUE);
                 clearDresser();
             }
@@ -653,18 +647,14 @@ default {
                 oldOutfit = "";
                 newOutfit = "";
 
-#define rlvLockKey()    ("detach=n")
-#define rlvUnlockKey()  ("detach=y")
-
 #define rlvLockFolderRecursive(a)   ("detachallthis:" + (a) + "=n")
 #define rlvUnlockFolderRecursive(a) ("detachallthis:" + (a) + "=y")
 #define rlvAttachFolderRecursive(a) (    "attachall:" + (a) + "=force")
 #define rlvDetachAllRecursive(a)    (    "detachall:" + (a) + "=force")
 
-#ifndef LOCKON
                 // LOCK the key in place
-                lmRunRLV(rlvLockKey());
-#endif
+                rlvLockKey();
+
                 // Force attach nude elements
                 if (nudeFolder)         lmRunRLV(rlvUnlockFolderRecursive(nudeFolder)         + "," + rlvAttachFolderRecursive(nudeFolder));
                 if (normalselfFolder)   lmRunRLV(rlvUnlockFolderRecursive(normalselfFolder)   + "," + rlvAttachFolderRecursive(normalselfFolder));
@@ -688,10 +678,8 @@ default {
                 if (normalselfFolder)   lmRunRLV(rlvUnlockFolderRecursive(normalselfFolder));
                 if (normaloutfitFolder) lmRunRLV(rlvUnlockFolderRecursive(normaloutfitFolder));
 
-#ifndef LOCKON
                 // Clear Key lockon
-                lmRunRLV(rlvUnlockKey());
-#endif
+                if (keyLocked == FALSE) rlvUnlockKey();
             }
 #ifdef ADULT_MODE
             else if (cmd == "stripAll") {
