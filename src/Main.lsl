@@ -17,6 +17,7 @@
 #define ALL_CONTROLS (CONTROL_FWD|CONTROL_BACK|CONTROL_LEFT|CONTROL_RIGHT|CONTROL_ROT_LEFT|CONTROL_ROT_RIGHT|CONTROL_UP|CONTROL_DOWN|CONTROL_LBUTTON|CONTROL_ML_LBUTTON)
 #define disableMovementControl() llTakeControls(ALL_CONTROLS, TRUE, FALSE)
 #define enableMovementControl() llTakeControls(ALL_CONTROLS, FALSE, TRUE)
+#define keyDetached(id) (id == NULL_KEY)
 
 #define UNSET -1
 
@@ -279,7 +280,7 @@ default {
     // ATTACH
     //----------------------------------------
     attach(key id) {
-        requestPermToCollapse();
+        if (!(keyDetached(id))) requestPermToCollapse();
     }
 
     //----------------------------------------

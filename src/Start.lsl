@@ -35,6 +35,8 @@
 #define workInNoScriptLand(d) if (permUnset) llRequestPermissions((d), PERMISSION_MASK)
 #define makeWorkInNoScriptLand(d) llRequestPermissions((d), PERMISSION_MASK)
 
+#define keyDetached(id) (id == NULL_KEY)
+
 //=======================================
 // VARIABLES
 //=======================================
@@ -607,18 +609,16 @@ default {
     // ATTACH
     //----------------------------------------
     attach(key id) {
+
         lmInternalCommand("setWindRate","",NULL_KEY);
-        if (id == NULL_KEY) {
 
-            //if(!llGetAttached()) cdResetKeyName();
-
-            // At this point, we know that we have a REAL detach:
-            // key id is NULL_KEY and llGetAttached() == 0
+        if (keyDetached(id)) {
 
             llMessageLinked(LINK_SET, 106,  "Start|detached|" + (string)lastAttachPoint, lastAttachAvatar);
             llOwnerSay("The key is wrenched from your back, and you double over at the unexpected pain as the tendrils are ripped out. You feel an emptiness, as if some beautiful presence has been removed.");
 
-        } else {
+        }
+        else {
 
             isAttached = 1;
             llMessageLinked(LINK_SET, 106, "Start|attached|" + (string)isAttached, id);
@@ -626,16 +626,16 @@ default {
             makeWorkInNoScriptLand(dollID);
 
             if (lastAttachAvatar == NULL_KEY) newAttach = 1;
+
+            // when attaching key, user is NOT AFK...
+            lmSetConfig("isAFK", "0");
+
+            // reset collapse environment
+            lmInternalCommand("collapse", (string)collapsed, keyID);
+
+            lastAttachPoint = cdAttached();
+            lastAttachAvatar = id;
         }
-
-        // when attaching key, user is NOT AFK...
-        lmSetConfig("isAFK", "0");
-
-        // reset collapse environment
-        lmInternalCommand("collapse", (string)collapsed, keyID);
-
-        lastAttachPoint = cdAttached();
-        lastAttachAvatar = id;
     }
 
     //----------------------------------------

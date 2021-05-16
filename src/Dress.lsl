@@ -721,7 +721,6 @@ default {
 
                 if (cdIsDoll(id)) {
                     msg = "You are being carried by " + carrierName + ". ";
-                    if (collapsed) msg += "You need winding, too. ";
                 }
                 else msg = dollName + " is currently being carried by " + carrierName + ". They have full control over this doll. ";
 

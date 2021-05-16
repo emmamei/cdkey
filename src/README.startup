@@ -18,6 +18,7 @@ THUS:
 * Dolly Updates Key: state_entry
 * Dolly Resets Key: state_entry
 * Dolly Rezzes Key on Ground: on_rez
+* Dolly Detaches Key: attach
 
 The only time that attach and on_rez are different is if the Key is rezzed but *NOT* attached...
 

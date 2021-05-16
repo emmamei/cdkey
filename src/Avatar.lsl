@@ -35,6 +35,7 @@
 #define currentlyPosed(p) ((p) != ANIMATION_NONE)
 #define notCurrentlyPosed(p) ((p) == ANIMATION_NONE)
 #define poseChanged (currentAnimation != poseAnimation)
+#define keyDetached(id) (id == NULL_KEY)
 
 key rlvTPrequest;
 #ifdef LOCKON
@@ -409,20 +410,10 @@ default {
     // ATTACH
     //----------------------------------------
     attach(key id) {
+
+        if (keyDetached(id)) return;
+
         RLVok = UNSET;
-
-#ifdef NOT_USED // Warn controller if any that Dolly has detached key
-        if (id == NULL_KEY && (!detachable || hardcore) && !locked) {
-            // Detaching key somehow...
-
-            // As the id is NULL_KEY, this is a detach: and an illegal
-            // one at that (not detachable, hardcore, and not locked).
-            lmSendToController(dollName + " has bypassed the Key's bio-lock and detached the Key.");
-            llOwnerSay("You have bypassed your Key's bio-lock systems and your controllers have been notified.");
-        }
-#endif
-
-        locked = 0;
 
         debugSay(2,"DEBUG-FOLLOW","dropCarrier(): from attach");
         dropCarrier(carrierID);

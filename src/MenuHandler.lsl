@@ -25,6 +25,7 @@
 #define cdMenuInject(a) lmMenuReply((a),name,id);
 #define cdResetKey() llResetOtherScript("Start")
 //#define lmCollapse(a) lmInternalCommand("collapse",(string)(a),NULL_KEY)
+#define keyDetached(id) (id == NULL_KEY)
 
 // Wait for the user for 5 minutes - but for a program, only
 // wait 60s. The request for a dialog menu should happen before then -
@@ -177,8 +178,12 @@ default {
     // ATTACH
     //----------------------------------------
     attach(key id) {
-        RLVok = UNSET;
-        chooseDialogChannel();
+
+        if (!(keyDetached(id))) {
+
+            RLVok = UNSET;
+            chooseDialogChannel();
+        }
     }
 
     //----------------------------------------
@@ -329,7 +334,7 @@ default {
                 //----------------------------------------
                 // Prepare listeners: this allows for lag time by doing this up front
 
-                cdListenerActivate(dialogHandle); // is this redundant?
+                //cdListenerActivate(dialogHandle); // is this redundant? YES!
                 cdDialogListen();
 
                 //----------------------------------------
@@ -388,17 +393,27 @@ default {
                 // * Options
                 // * Help
 
-                // if this is Dolly and Dolly is collapsed: show Dolly other menu
-                if (collapsed && isDoll) {
-                    lmInternalCommand("collapsedMenu", timeLeft, NULL_KEY);
-                    return;
+                // if this is Dolly... show dolly other menu as appropriate
+                if (isDoll) {
+
+                    // Collapse has precedence over having a carrier...
+                    if (collapsed) {
+                        lmInternalCommand("collapsedMenu", timeLeft, NULL_KEY);
+                        return;
+
+                    } else if (hasCarrier) {
+                        lmInternalCommand("carriedMenu", timeLeft, NULL_KEY);
+                        return;
+                    }
                 }
 
                 // After this point, we can assume one of two things:
-                // 1. Menu is for Dolly, and Dolly is not collapsed
+                // 1. Menu is for Dolly, and Dolly is not collapsed or carried
                 // 2. Menu is for others
 
                 // When the doll is carried the carrier has exclusive control
+                // This section will not be used for Dolly
+                //
                 if (hasCarrier) {
                     // Doll has carrier - but who clicked her key?
 
@@ -412,24 +427,28 @@ default {
 
                     //--------------------
                     // ...Controller (NOT Dolly)
-                    else if (cdIsController(id) && !isDoll) {
+                    else if (cdIsController(id)) {
                         msg = dollName + " is being carried by " + carrierName + ". ";
                         menu = ["Uncarry"];
                     }
 
                     //--------------------
-                    // ...Dolly or member of public
+                    // ...public
                     else {
                         lmInternalCommand("carriedMenu", carrierName, NULL_KEY);
                         return;
                     }
                 }
 
-                // We can assume here (if Dolly is being carried) that:
+                // IF Dolly is being carried, we can assume:
                 // 1. The carrier is looking at the key
                 // 2. A controller is looking at the key
                 //
-                // If Dolly is not being carried, then no more assumptions can be made.
+                // IF Dolly is collapsed, then we can assume:
+                // 1. Someone (NOT Dolly) is looking at the menu
+                //
+                // Those are the only assumptions we can make, if
+                // Dolly is neither collapsed nor carried.
 
                 //--------------------
                 // Options Button
@@ -508,16 +527,22 @@ default {
 
                         if (transformLockExpire == 0) {
                             // Members of the public are allowed if allowed
-                            if (!isDoll && !isController) menu += "Types...";
+                            //if (!isDoll && !isController) menu += "Types...";
 
                             // Dolly or Controllers always can use Types
-                            else menu += "Types...";
+                            //else menu += "Types...";
+
+                            // No difference?!
+                            menu += "Types...";
                         }
                     }
 
+#define isDollySitting (llGetAgentInfo(llGetOwner()) & AGENT_SITTING)
+#define isDollSelfPosed (poserID == dollID)
+
                     //--------------------
                     // Poses and Unpose Buttons
-                    if (!(llGetAgentInfo(llGetOwner()) & AGENT_SITTING)) { // Agent not sitting
+                    if (isDollySitting == FALSE) { // Agent not sitting
                         // if dolly is sitting, dont allow poses
 
                         if (arePosesPresent()) {
@@ -528,7 +553,7 @@ default {
                                 // but NOT when posed by someone else.
 
                                 if (isDoll) {
-                                    if (poserID == dollID) menu += [ "Poses...", "Unpose" ];
+                                    if (isDollSelfPosed) menu += [ "Poses...", "Unpose" ];
                                 }
 
                                 // If accessor is NOT Dolly... allow the public access if
@@ -539,7 +564,7 @@ default {
                                 else {
                                     if (isController || allowPose || hardcore)
                                         menu += [ "Poses...", "Unpose" ];
-                                    else if (poserID == dollID)
+                                    else if (isDollSelfPosed)
                                         menu += [ "Unpose" ];
                                 }
                             }
@@ -608,6 +633,7 @@ default {
                     }
                 }
                 else {
+                    // Anyone can wind Dolly :)
                     if (keyLimit - timeLeftOnKey > 30) menu += [ "Wind" ];
                     else menu += [ "-" ];
                 }
