@@ -29,9 +29,7 @@ integer mySeqNum;
 //    return ret;
 //}
 
-cdLinkMessage(integer target, integer opt, integer code, string data, key id) {
-    llMessageLinked(target, (((++mySeqNum) << 16) | (opt << 10) | code), cdMyScriptName() + "|" + data, id);
-}
+#define cdLinkMessage(a,b,c,d,e) llMessageLinked((a), (((++mySeqNum) << 16) | (b << 10) | c), cdMyScriptName() + "|" + d, e)
 
 // #define cdLinkMessage(target,opt,code,data,id) llMessageLinked(target, (((mySeqNum++) << 16) | (opt << 10) | code), cdMyScriptName() + "|" + data, id)
 
@@ -70,9 +68,9 @@ cdLinkMessage(integer target, integer opt, integer code, string data, key id) {
 #define lmPluginSend(msg)                               cdLinkMessage(LINK_THIS,0,307,msg,NULL_KEY)
 
 // Virtual function style new link commands
-#define cdCarry(id)             lmInternalCommand("carry", (carrierName = llGetDisplayName(id)), (carrierID = id))
-#define cdUncarry()             lmInternalCommand("uncarry", carrierName, carrierID)
-#define cdDialogListen()        lmInternalCommand("dialogListen", "", NULL_KEY)
+#define lmCarry(id)             lmInternalCommand("carry", (carrierName = llGetDisplayName(id)), (carrierID = id))
+#define lmUncarry()             lmInternalCommand("uncarry", carrierName, carrierID)
+#define lmDialogListen()        lmInternalCommand("dialogListen", "", NULL_KEY)
 
 
 #endif

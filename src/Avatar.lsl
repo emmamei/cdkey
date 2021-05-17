@@ -581,7 +581,7 @@ default {
                         llOwnerSay(cdUserProfile(id) + " is looking at your poses menu.");
 
                 posePage = 1;
-                cdDialogListen();
+                lmDialogListen();
                 lmInternalCommand("posePageN",choice, id);
             }
         }
@@ -590,7 +590,7 @@ default {
 
             // it could be Poses Next or Poses Prev instead of an Anim
             if (choice == "Poses Next" || choice == "Poses Prev") {
-                cdDialogListen();
+                lmDialogListen();
                 llSleep(0.5);
                 lmInternalCommand("posePageN",choice, id);
             }

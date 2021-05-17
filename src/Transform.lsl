@@ -618,7 +618,7 @@ default {
                 else return;
 
                 debugSay(6,"DEBUG-OPTIONS","Options menu built; presenting to " + (string)id);
-                cdDialogListen();
+                lmDialogListen();
                 llDialog(id, msg, dialogSort(pluslist + "Back..."), dialogChannel);
             }
         }
@@ -655,7 +655,7 @@ default {
 
                 lmSendConfig("backMenu",(backMenu = "Options..."));
                 backMenu = MAIN;
-                cdDialogListen();
+                lmDialogListen();
                 llDialog(id, "Options", dialogSort(choices + "Back..."), dialogChannel);
             }
 
@@ -711,7 +711,7 @@ default {
                     }
 
                     lmSendConfig("backMenu",(backMenu = MAIN));
-                    cdDialogListen();
+                    lmDialogListen();
                     llDialog(id, msg, dialogSort(llListSort(typeMenuChoices, 1, 1) + "Back..."), typeDialogChannel);
                 }
             }
@@ -753,7 +753,7 @@ default {
                 list choices = ["Transform", "Dont Transform", MAIN ];
                 string msg = "Do you wish to be transformed to a " + choice + " Doll?";
 
-                cdDialogListen();
+                lmDialogListen();
                 llDialog(dollID, msg, choices, dialogChannel); // this starts a new choice on this channel
             }
         }

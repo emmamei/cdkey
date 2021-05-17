@@ -705,14 +705,20 @@ default {
                 else                  { cdSetHovertext("",                       ( WHITE  )); }
             }
             else if (cmd == "carriedMenu") {
-                string carrierName = (string)split[0];
+                key id = (string)split[0];
+                string carrierName = (string)split[1];
 
+                lmDialogListen();
+                llSleep(0.5);
+
+                debugSay(2, "DEBUG-CARRIED", "Menu activated...");
                 if (cdIsDoll(id)) {
                     msg = "You are being carried by " + carrierName + ". ";
                 }
                 else msg = dollName + " is currently being carried by " + carrierName + ". They have full control over this doll. ";
 
-                cdDialogListen();
+                debugSay(2, "DEBUG-CARRIED", "id = " + (string)id + "; dialogChannel = " + (string)dialogChannel);
+                debugSay(2, "DEBUG-CARRIED", "msg = " + msg);
                 llDialog(id, msg, [ "OK" ], dialogChannel);
             }
         }
@@ -741,7 +747,7 @@ default {
                 // Check to see if clothing has been worn long enough before changing (wearLock)
                 if (wearLock) {
                     clearDresser();
-                    cdDialogListen();
+                    lmDialogListen();
                     llDialog(dresserID, "Clothing was just changed; cannot change right now.", ["OK"], dialogChannel);
                     return;
                 }
@@ -890,7 +896,7 @@ default {
                 //dialogItems += "Back...";
 
                 // We only get here if we are wandering about in the same directory...
-                cdDialogListen();
+                lmDialogListen();
                 outfitHandle = cdListenAll(outfitChannel);
                 // outfitMessage was built by the initial call to listener2666
                 llDialog(dresserID, outfitMessage, dialogSort(outfitPageN(outfitList) + dialogItems), outfitChannel);
@@ -952,7 +958,7 @@ default {
 
             // Did we get anything at all?
             if (choice == "") {
-                cdDialogListen();
+                lmDialogListen();
                 //outfitHandle = cdListenAll(outfitChannel);
                 cdListenAll(outfitChannel);
 
@@ -1001,7 +1007,7 @@ default {
             // we've gone through and cleaned up the list - but is anything left?
             if (outfitList == []) {
                 outfitList = []; // free memory
-                cdDialogListen();
+                lmDialogListen();
                 cdListenAll(outfitChannel);
 
                 backMenu = UPMENU;
@@ -1030,7 +1036,7 @@ default {
             outfitMessage += "\n\n" + folderStatus();
 
             // Provide a dialog to user to choose new outfit
-            cdDialogListen();
+            lmDialogListen();
             //outfitHandle = cdListenAll(outfitChannel);
             cdListenAll(outfitChannel);
 

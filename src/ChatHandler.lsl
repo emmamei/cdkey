@@ -98,6 +98,7 @@ default {
                 else if (name == "canStand")                 canStand = (integer)value;
                 else if (name == "canSelfTP")               canSelfTP = (integer)value;
                 else if (name == "carrierID")               carrierID = (key)value;
+                else if (name == "carrierName")           carrierName = value;
                 else if (name == "configured")             configured = (integer)value;
                 else if (name == "collapseTime")         collapseTime = (integer)value;
                 else if (name == "controllers") {
@@ -863,8 +864,24 @@ default {
                     return;
                 }
                 else if (choice == "menu") {
-                    cdMenuInject(MAIN, name, id);
-                    return;
+
+                    // if this is Dolly... show dolly other menu as appropriate
+                    if (isDoll) {
+
+                        // Collapse has precedence over having a carrier...
+                        if (collapsed) {
+                            lmInternalCommand("collapsedMenu", "", NULL_KEY);
+                            return;
+
+                        } else if (cdCarried()) {
+                            lmInternalCommand("carriedMenu", (string)id + "|" + carrierName, NULL_KEY);
+                            return;
+                        }
+                    }
+                    else {
+                        cdMenuInject(MAIN, name, id);
+                        return;
+                    }
                 }
                 else if (choice == "listposes") {
                     if (arePosesPresent() == FALSE) {

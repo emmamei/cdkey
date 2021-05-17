@@ -164,7 +164,6 @@ default {
 
             if (cmd == "collapsedMenu") {
                 // this is only called for Dolly - so...
-                string timeLeft = (string)split[0];
                 list menu = [ "Ok" ];
 
                 // is it possible to be collapsed but collapseTime be equal to 0.0?
@@ -198,7 +197,7 @@ default {
                         }
                     }
 
-                    cdDialogListen();
+                    lmDialogListen();
                     llDialog(dollID, msg, menu, dialogChannel);
                 }
             }
@@ -266,7 +265,7 @@ default {
                     if (cdIsController(id)) helpMenuList += "Reset Key";
                 }
 
-                cdDialogListen();
+                lmDialogListen();
                 llDialog(id, msg, [ "Back..." ] + dialogSort(helpMenuList), dialogChannel);
             }
             else if (choice == "Reset Body") {
@@ -349,7 +348,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
 #endif
 
                 lmSendConfig("backMenu",(backMenu = "Options..."));
-                cdDialogListen();
+                lmDialogListen();
                 llDialog(id, msg, dialogSort(plusList + "Back..."), dialogChannel);
             }
             else if (choice == "Restrictions...") {
@@ -384,7 +383,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                     plusList = [ "OK" ];
                 }
 
-                cdDialogListen();
+                lmDialogListen();
                 llDialog(id, msg, dialogSort(plusList), dialogChannel);
             }
             else if (choice == "Public...") {
@@ -405,7 +404,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                     }
                 }
                 lmSendConfig("backMenu",(backMenu = "Options..."));
-                cdDialogListen();
+                lmDialogListen();
                 llDialog(id, msg, dialogSort(plusList + "Back..."), dialogChannel);
             }
             else if (choice == "Operation...") {
@@ -428,7 +427,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 }
 
                 lmSendConfig("backMenu",(backMenu = "Options..."));
-                cdDialogListen();
+                lmDialogListen();
                 llDialog(id, msg, dialogSort(plusList + "Back..."), dialogChannel);
             }
             else if (choice == "Back...") {
@@ -441,7 +440,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
 
                 lmSendConfig("backMenu",(backMenu = "Options..."));
                 if (cdIsController(id)) plusList += [ "Max Time...", "Wind Time..." ];
-                cdDialogListen();
+                lmDialogListen();
                 llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(plusList, 1, 1) + "Back..."), dialogChannel);
             }
             else if (llGetSubString(choice,0,6) == "Gender:") {

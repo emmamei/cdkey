@@ -122,6 +122,7 @@ chooseDialogChannel() {
 
 doDialogChannel() {
     debugSay(4,"DEBUG-MENU","doDialogChannel() called");
+    debugSay(4,"DEBUG-MENU","dialogChannel = " + (string)dialogChannel);
 
     // Open dialogChannel and typeChannel, poseChannel, with it
     if (dialogHandle) {
@@ -241,6 +242,7 @@ default {
             // shortcut: c
             else if (c == "c") {
                      if (name == "carrierID")                   carrierID = (key)value;
+                else if (name == "carrierName")               carrierName = value;
                 else if (name == "canAFK")                         canAFK = (integer)value;
                 else if (name == "canDressSelf")             canDressSelf = (integer)value;
                 else if (name == "canSelfTP")                   canSelfTP = (integer)value;
@@ -334,18 +336,29 @@ default {
                 numControllers  = cdControllerCount();
 
                 //----------------------------------------
-                // Prepare listeners: this allows for lag time by doing this up front
+                // If other menus are appropriate, bypass the main menu quickly
 
-                //cdListenerActivate(dialogHandle); // is this redundant? YES!
-                cdDialogListen();
+                // if this is Dolly... show dolly other menu as appropriate
+                if (isDoll) {
+
+                    // Collapse has precedence over having a carrier...
+                    if (collapsed) {
+                        lmInternalCommand("collapsedMenu", (string)id, NULL_KEY);
+                        return;
+
+                    } else if (hasCarrier) {
+                        lmInternalCommand("carriedMenu", (string)id + "|" + carrierName, NULL_KEY);
+                        return;
+                    }
+                }
 
                 //----------------------------------------
                 // Build message for Main Menu display
 
                 // Compute "time remaining" message for mainMenu/windMenu
-                string timeLeft;
+                string timeLeftMsg;
 
-                if (!hardcore) {
+                if (!hardcore && !hasCarrier) {
                     integer minsLeft;
 
                     // timeLeftOnKey is in seconds, and timeLeftOnKey / 60.0 converts
@@ -355,16 +368,22 @@ default {
 
                     if (windRate > 0) {
                         minsLeft = llRound(timeLeftOnKey / (60.0 * windRate));
-                        timeLeft = "Dolly has " + (string)minsLeft + " minutes remaining. ";
+                        timeLeftMsg = "Dolly has " + (string)minsLeft + " minutes remaining. ";
 
-                        timeLeft += "Key is ";
+                        timeLeftMsg += "Key is ";
 
-                             if (windRate == 1) timeLeft += "winding down at a normal rate. ";
-                        else if (windRate > 1)  timeLeft += "winding down at an accelerated rate. ";
-                        else if (windRate < 1)  timeLeft += "winding down at a slowed rate. ";
+                             if (windRate == 1) timeLeftMsg += "winding down at a normal rate. ";
+                        else if (windRate > 1)  timeLeftMsg += "winding down at an accelerated rate. ";
+                        else if (windRate < 1)  timeLeftMsg += "winding down at a slowed rate. ";
                     }
-                    else timeLeft += "not winding down. ";
+                    else timeLeftMsg += "not winding down. ";
                 }
+
+                //----------------------------------------
+                // Prepare listeners: this allows for lag time by doing this up front
+
+                cdListenerActivate(dialogHandle);
+                //lmDialogListen();
 
                 //----------------------------------------
                 // Start building menu
@@ -395,19 +414,6 @@ default {
                 // * Options
                 // * Help
 
-                // if this is Dolly... show dolly other menu as appropriate
-                if (isDoll) {
-
-                    // Collapse has precedence over having a carrier...
-                    if (collapsed) {
-                        lmInternalCommand("collapsedMenu", timeLeft, NULL_KEY);
-                        return;
-
-                    } else if (hasCarrier) {
-                        lmInternalCommand("carriedMenu", timeLeft, NULL_KEY);
-                        return;
-                    }
-                }
 
                 // After this point, we can assume one of two things:
                 // 1. Menu is for Dolly, and Dolly is not collapsed or carried
@@ -674,8 +680,8 @@ default {
 
                 if ((i = llListFindList(menu, ["Visible"])) != NOT_FOUND) menu = llListReplaceList(menu, cdGetButton("Visible", id, visible, 0), i, i);
 
-                msg = timeLeft + msg;
-                timeLeft = "";
+                msg = timeLeftMsg + msg;
+                timeLeftMsg = "";
 
                 if (llGetListLength(menu) > 12)
                     llSay(DEBUG_CHANNEL,"Menu appears to have overfilled with buttons (" + (string)(llGetListLength(menu)));
@@ -784,7 +790,7 @@ default {
             }
         }
 
-        cdDialogListen();
+        lmDialogListen();
         llDialog(dollID, "Select the avatar to be added to the " + type + ".", dialogSort(dialogButtons + "Back..."), channel);
     }
 
@@ -792,7 +798,7 @@ default {
     // NO SENSOR
     //----------------------------------------
     no_sensor() {
-        cdDialogListen();
+        lmDialogListen();
         llDialog(dollID, "No avatars detected within chat range", [ "Back..." ], dialogChannel);
     }
 
@@ -1077,7 +1083,7 @@ default {
                             else msg = "Choose a person to remove from Dolly's " + msg;
                         }
 
-                        cdDialogListen();
+                        lmDialogListen();
                         llDialog(id, msg, dialogSort(llListSort(dialogButtons, 1, 1) + MAIN), activeChannel);
                         llSetTimerEvent(MENU_TIMEOUT);
                     }
@@ -1158,7 +1164,7 @@ default {
 
                 if (llListFindList(controllers, [uuid,name]) == NOT_FOUND) {
                     msg = "Dolly " + dollName + " has presented you with the power to control her Key. With this power comes great responsibility. Do you wish to accept this power?";
-                    cdDialogListen();
+                    lmDialogListen();
                     llDialog((key)uuid, msg, [ "Accept", "Decline" ], dialogChannel);
                 }
                 else if (cdIsController(id)) lmInternalCommand("remMistress", (string)uuid + "|" + name, id);

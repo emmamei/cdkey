@@ -59,6 +59,7 @@ integer poseExpire;
 integer transformLockExpire;
 
 key simRatingQuery;
+integer keyLocked;
 
 //========================================
 // FUNCTIONS
@@ -181,7 +182,9 @@ docollapse() {
         lmInternalCommand("stopFollow", (string)carrierID, keyID);
 
     if (RLVok == TRUE) {
+        rlvLockKey();
         lmRestrictRLV(defaultCollapseRLVcmd);
+        if (keyLocked) rlvUnlockKey();
     }
 
     oldAnimList = llGetAnimationList(dollID);
@@ -830,7 +833,7 @@ default {
                 maxList += MAIN;
 
                 // If the Max Times available are changed, be sure to change the next choice also
-                cdDialogListen();
+                lmDialogListen();
                 llDialog(id, "You can set the maximum available time here.  Dolly cannot be wound beyond this amount of time.\nDolly currently has " + (string)llFloor(timeLeftOnKey / SECS_PER_MIN) + " mins left of " + (string)llFloor(keyLimit / SECS_PER_MIN) + ". If you lower the maximum, Dolly will lose any extra time entirely.",
                     dialogSort(maxList), dialogChannel);
             }
@@ -877,7 +880,7 @@ default {
                 if (keyLimit >= 180) windChoices +=  "90min";
                 if (keyLimit >= 240) windChoices += "120min";
 
-                cdDialogListen();
+                lmDialogListen();
                 llDialog(id, "You can set the amount of time in each wind.\nDolly currently winds " + (string)(windNormal / (integer)SECS_PER_MIN) + " mins.",
                     dialogSort(windChoices + [ MAIN ]), dialogChannel);
             }
