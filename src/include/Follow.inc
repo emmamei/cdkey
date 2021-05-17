@@ -14,6 +14,9 @@
 
 vector carrierPos;
 vector carrierPosNew;
+#ifdef DRUNKARDS_WALK
+vector myPos;
+#endif
 
 #ifdef TURN_TOWARDS
 vector pointTo; // here for speed
@@ -47,6 +50,10 @@ keepFollow(key id) {
 
     if (carrierPosNew) {
 
+#ifdef DRUNKARDS_WALK
+        list myDetails = llGetObjectDetails(llGetOwner(), [OBJECT_POS]);
+#endif
+
         // Bump timer
         lmSendConfig("carryExpire", (string)(carryExpire = llGetUnixTime() + CARRY_TIMEOUT));
 
@@ -75,7 +82,7 @@ keepFollow(key id) {
         // we won't move.
 
 #ifdef DRUNKARDS_WALK
-       if (carrierPos == carrierPosNew) {
+       if (myPos == (vector)myDetails[0]) {
             stuckFollowLimit--;
             if (struckFollowLimit == 0) {
                 // Try to get unstuck
@@ -86,6 +93,8 @@ keepFollow(key id) {
         else {
             stuckFollowLimit = STUCK_LIMIT;
         }
+
+        myPos = (vector)myDetails[0];
 #endif
 
 #ifdef DEVELOPER_MODE
