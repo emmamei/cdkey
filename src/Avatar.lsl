@@ -113,7 +113,7 @@ integer newAttach = 1;
 
 float adjustTimer() {
 
-#define LOW_SPEED_CARRY_RATE 2.0
+#define LOW_SPEED_CARRY_RATE 15.0
 #define HI_SPEED_CARRY_RATE 0.5
 #define LOW_SCRIPT_RATE 60.0
 #define NORMAL_RATE 30.0
