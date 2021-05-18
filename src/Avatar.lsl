@@ -364,6 +364,7 @@ default {
         cdInitializeSeq();
 
         llRequestPermissions(dollID, PERMISSION_MASK);
+        myName = llGetScriptName();
     }
 
     //----------------------------------------

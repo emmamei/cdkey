@@ -271,6 +271,7 @@ default {
         dollID =   llGetOwner();
         keyID =   llGetKey();
         dollName = dollyName();
+        myName = llGetScriptName();
 
         cdInitializeSeq();
         RLVok = UNSET;
@@ -776,7 +777,7 @@ default {
             }
 #ifdef DEVELOPER_MODE
             else if (code == MEM_REPORT) {
-                memReport(cdMyScriptName(),(float)choice);
+                memReport(myName,(float)choice);
             }
 #endif
             else if (code == CONFIG_REPORT) {

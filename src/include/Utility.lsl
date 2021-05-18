@@ -316,7 +316,7 @@ scaleMem() {
       if (newlimit != limit) {
 
 #ifdef DEVELOPER_MODE
-         string s = cdMyScriptName() + " Memory limit has been ";
+         string s = myName + " Memory limit has been ";
 #endif
          // if more memory appears necessary, do it
          // if reducing... stall until 4k can be freed up
@@ -327,9 +327,9 @@ scaleMem() {
 #ifdef DEVELOPER_MODE
             debugSay(5, "DEBUG", (s + "increased " + formatFloat((float)(newlimit - limit) / 1024.0, 2) + "kB to " + formatFloat((float)newlimit / 1024.0, 2) + "kB"));
             if (newlimit == MAX_LIMIT)
-                debugSay(2, "DEBUG", "WARNING! Maximum reached in script " + cdMyScriptName());
+                debugSay(2, "DEBUG", "WARNING! Maximum reached in script " + myName);
             else if (MAX_LIMIT - newlimit <= 6144)
-                debugSay(2, "DEBUG", "WARNING! Low memory (" + formatFloat((float)(MAX_LIMIT - newlimit) / 1024.0, 2) + "kB) reached in script " + cdMyScriptName());
+                debugSay(2, "DEBUG", "WARNING! Low memory (" + formatFloat((float)(MAX_LIMIT - newlimit) / 1024.0, 2) + "kB) reached in script " + myName);
 #endif
          }
          else if (limit - newlimit > 4096) {

@@ -243,7 +243,7 @@ float GlobalDefines_version=1.0;
 #define cdCarried()              (carrierID != NULL_KEY)
 #define cdSelfPosed()            (poserID == dollID)
 //#define cdRunTimer()           (configured && cdAttached() && RLVchecked)
-#define cdMyScriptName()         llGetScriptName()
+//#define cdMyScriptName()         llGetScriptName()
 #define cdMyScriptLine()         (string)__LINE__
 
 #define FALSE 0

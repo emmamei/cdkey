@@ -71,6 +71,7 @@ default {
         keyID = llGetKey();
         dollName = dollyName();
         isDoll = cdIsDoll(dollID);
+        myName = llGetScriptName();
         cdInitializeSeq();
     }
 

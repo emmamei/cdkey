@@ -532,10 +532,10 @@ default {
             }
 #ifdef DEVELOPER_MODE
             else if (code == MEM_REPORT) {
-                if (script == cdMyScriptName()) return;
+                if (script == myName) return;
 
                 float delay = (float)split[0];
-                memReport(cdMyScriptName(),delay);
+                memReport(myName,delay);
             }
 #endif
             else if (code == CONFIG_REPORT) {
@@ -563,6 +563,7 @@ default {
         dollID = llGetOwner();
         keyID = llGetKey();
         dollName = dollyName();
+        myName = llGetScriptName();
 
         //rlvWait = 1;
         cdInitializeSeq();

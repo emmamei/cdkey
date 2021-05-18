@@ -47,7 +47,7 @@ float Config_version=1.0;
 
 #define BUILD_REPORT (OPT_ADULT + OPT_KEY_MODE + OPT_ROLLOVER + OPT_SINGLEWIND + OPT_HOMING + OPT_PRESERVE_DIRECTORY + OPT_WIND )
 
-#define lmConfigReport() llMessageLinked(LINK_THIS, 142, cdMyScriptName(), NULL_KEY)
+#define lmConfigReport() llMessageLinked(LINK_THIS, 142, myName, NULL_KEY)
 
 //#define cdConfigReport() if (code == 142) llOwnerSay(__SHORTFILE__ + ":" + (string)__LINE__ + "\t\t\t\tCompiled  by " + __AGENTNAME__ + "\t" +  __DATE__ + " " + __TIME__ + "\nWith: " + llList2CSV(BUILD_REPORT))
 #define cdConfigureReport() llOwnerSay(__SHORTFILE__ + ": Compiled  by " + __AGENTNAME__ + " on " +  __DATE__ + " at " + __TIME__ + " Options: " + llList2CSV(BUILD_REPORT))

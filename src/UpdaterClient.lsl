@@ -110,6 +110,7 @@ default {
 
     state_entry() {
         owner = llGetOwner();
+        myName = llGetScriptName();
         updating = 0;
 #ifdef DEVELOPER_MODE
         scriptCount = llGetInventoryNumber(INVENTORY_SCRIPT) - 1; // Two scripts are uncounted

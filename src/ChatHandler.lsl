@@ -38,6 +38,7 @@ default {
         dollID = llGetOwner();
         keyID = llGetKey();
         dollName = dollyName();
+        myName = llGetScriptName();
 
         // Beware listener is now available to users other than the doll
         // make sure to take this into account within all handlers.
@@ -348,7 +349,7 @@ default {
             }
 #ifdef DEVELOPER_MODE
             else if (code == MEM_REPORT) {
-                memReport(cdMyScriptName(),(float)split[0]);
+                memReport(myName,(float)split[0]);
             }
 #endif
             else if (code == CONFIG_REPORT) {

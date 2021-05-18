@@ -32,6 +32,7 @@ string pronounHerDoll       = "Her";
 string pronounSheDoll       = "She";
 string script;
 string simRating;
+string myName;
 
 string defaultBaseRLVcmd     = "";
 string defaultCollapseRLVcmd = "fly=n,sendchat=n,tplm=n,tplure=n,tploc=n,showinv=n,edit=n,sit=n,sittp=n,fartouch=n,showworldmap=n,showminimap=n,showloc=n,shownames=n,showhovertextall=n";

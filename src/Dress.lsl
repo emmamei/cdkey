@@ -319,6 +319,7 @@ default {
     state_entry() {
         dollID = llGetOwner();
         keyID = llGetKey();
+        myName = llGetScriptName();
 
         cdInitializeSeq();
     }
@@ -818,7 +819,7 @@ default {
             }
 #ifdef DEVELOPER_MODE
             else if (code == MEM_REPORT) {
-                memReport(cdMyScriptName(),(float)split[0]);
+                memReport(myName,(float)split[0]);
             }
 #endif
         }

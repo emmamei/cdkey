@@ -63,10 +63,8 @@ sendUpdate() {
     integer numScripts = llGetInventoryNumber(INVENTORY_SCRIPT);        // how many  scripts checked in?
     integer index;
     string name;
-    string myName;
 
     index = numScripts;
-    myName = llGetScriptName();
 
     // scan all scripts in our inventory, could be more than one needs updating.
     while (index--) {
@@ -109,6 +107,7 @@ default {
 
     state_entry() {
         owner = llGetOwner();
+        myName = llGetScriptName();
         setHovertext("Click for update");
     }
 

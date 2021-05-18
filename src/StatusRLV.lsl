@@ -56,8 +56,10 @@ default {
     // STATE ENTRY
     //----------------------------------------
     state_entry() {
-        cdInitializeSeq();
+        myName = llGetScriptName();
         keyID = llGetKey();
+
+        cdInitializeSeq();
         //scaleMem();
     }
 
@@ -340,7 +342,7 @@ default {
             else if (code == MEM_REPORT) {
                 float delay = (float)split[0];
 
-                memReport(cdMyScriptName(),delay);
+                memReport(myName,delay);
             }
 #endif
         }

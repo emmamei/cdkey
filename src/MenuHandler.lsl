@@ -161,6 +161,7 @@ default {
         dollID = llGetOwner();
         keyID = llGetKey();
         dollName = dollyName();
+        myName = llGetScriptName();
 
         cdInitializeSeq();
         RLVok = UNSET;
@@ -713,7 +714,7 @@ default {
 #ifdef DEVELOPER_MODE
             else if (code == MEM_REPORT) {
                 float delay = (float)split[0];
-                memReport(cdMyScriptName(),delay);
+                memReport(myName,delay);
             }
 #endif
             else if (code == CONFIG_REPORT) {

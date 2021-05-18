@@ -29,7 +29,7 @@ integer mySeqNum;
 //    return ret;
 //}
 
-#define cdLinkMessage(a,b,c,d,e) llMessageLinked((a), (((++mySeqNum) << 16) | (b << 10) | c), cdMyScriptName() + "|" + d, e)
+#define cdLinkMessage(a,b,c,d,e) llMessageLinked((a), (((++mySeqNum) << 16) | (b << 10) | c), myName + "|" + d, e)
 
 // #define cdLinkMessage(target,opt,code,data,id) llMessageLinked(target, (((mySeqNum++) << 16) | (opt << 10) | code), cdMyScriptName() + "|" + data, id)
 

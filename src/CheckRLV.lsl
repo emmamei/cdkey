@@ -215,6 +215,7 @@ default {
     state_entry() {
         dollName = llGetDisplayName(dollID = llGetOwner());
         keyID = llGetKey();
+        myName = llGetScriptName();
 
 #ifdef DEVELOPER_MODE
         myPath = "";
@@ -439,7 +440,7 @@ default {
 #ifdef DEVELOPER_MODE
             else if (code == MEM_REPORT) {
                 float delay = (float)split[0];
-                memReport(cdMyScriptName(),delay);
+                memReport(myName,delay);
             }
 #endif
         }
