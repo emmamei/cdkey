@@ -41,7 +41,7 @@ key rlvTPrequest;
 #ifdef LOCKON
 key mainCreator;
 #endif
-key lastAttachedID;
+//key lastAttachedID;
 
 // Note that this is not the "speed" nor is it a slowing factor
 // This is a vector of force applied against Dolly: headwind speed
@@ -82,7 +82,7 @@ integer permMask;
 
 integer locked;
 integer targetHandle;
-integer newAttach = 1;
+//integer newAttach = 1;
 
 //========================================
 // FUNCTIONS [CARRY]
@@ -410,6 +410,11 @@ default {
     //----------------------------------------
     // ATTACH
     //----------------------------------------
+    // During attach, we perform:
+    //
+    //     * drop carrier
+    //     * read poses into buffered List
+    //
     attach(key id) {
 
         if (keyDetached(id)) return;
@@ -427,8 +432,8 @@ default {
             llRequestPermissions(dollID, PERMISSION_MASK);
         }
 
-        newAttach = (lastAttachedID != dollID);
-        lastAttachedID = id;
+        //newAttach = (lastAttachedID != dollID);
+        //lastAttachedID = id;
 
         debugSay(4,"DEBUG-AVATAR","Checking poses on attach");
 

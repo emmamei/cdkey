@@ -51,15 +51,15 @@ integer ncLine;
 integer failedReset;
 
 //float ncStart;
-integer lastAttachPoint;
-key lastAttachAvatar;
+//integer lastAttachPoint;
+//key lastAttachAvatar;
 
-integer newAttach = YES;
+//integer newAttach = YES;
 integer dbConfigCount;
 integer i;
 
-string attachName;
-integer isAttached;
+//string attachName;
+//integer isAttached;
 
 string outfitFolderExpected;
 string dollTypeExpected;
@@ -395,19 +395,12 @@ default {
             RLVok = (integer)split[0];
             //rlvWait = 0;
 
-            if (newAttach) {
+            string msg = dollName + " has logged in with";
 
-                newAttach = 0;
+            if (RLVok != TRUE) msg += "out";
+            msg += " RLV at " + wwGetSLUrl();
 
-                if (isAttached) {
-                    string msg = dollName + " has logged in with";
-
-                    if (RLVok != TRUE) msg += "out";
-                    msg += " RLV at " + wwGetSLUrl();
-
-                    lmSendToController(msg);
-                }
-            }
+            lmSendToController(msg);
 
             if (RLVok == TRUE) {
                 // If RLV is ok, then trigger all of the necessary RLV restrictions
@@ -527,8 +520,7 @@ default {
                 llOwnerSay(msg);
 
                 // When starting up, let people know...
-                if (newAttach && isAttached)
-                    llSay(PUBLIC_CHANNEL, llGetDisplayName(llGetOwner()) + " is now a dolly - anyone may play with their Key.");
+                llSay(PUBLIC_CHANNEL, llGetDisplayName(llGetOwner()) + " is now a dolly - anyone may play with their Key.");
             }
 #ifdef DEVELOPER_MODE
             else if (code == MEM_REPORT) {
@@ -569,15 +561,6 @@ default {
         cdInitializeSeq();
         //resetState = RESET_STARTUP;
 
-        isAttached = cdAttached();
-        if (isAttached) {
-            makeWorkInNoScriptLand(dollID);
-        }
-        else {
-            llOwnerSay("Key not attached");
-            //cdResetKeyName();
-        }
-
         // WHen this script (Start.lsl) resets... EVERYONE resets...
         doRestart();
         llSleep(0.5);
@@ -593,11 +576,6 @@ default {
         dollID = llGetOwner();
         dollName = dollyName();
 
-        isAttached = cdAttached();
-        if (isAttached) {
-            makeWorkInNoScriptLand(dollID);
-        }
-
 #ifdef DEVELOPER_MODE
         // Note this should be set by prefs, but the prefs require a lot before
         // they are read
@@ -611,33 +589,41 @@ default {
     //----------------------------------------
     // ATTACH
     //----------------------------------------
+    // During attach we do the following:
+    //
+    //     * set winding rate
+    //     * take controls so we work in no-script land
+    //     * set AFK mode to false
+    //     * restore collapse mode
+    //
+    // During DETACH we give the dolly an RP message.
+    //
     attach(key id) {
-
-        lmInternalCommand("setWindRate","",NULL_KEY);
 
         if (keyDetached(id)) {
 
-            llMessageLinked(LINK_SET, 106,  "Start|detached|" + (string)lastAttachPoint, lastAttachAvatar);
+            //llMessageLinked(LINK_SET, 106,  "Start|detached|" + (string)lastAttachPoint, lastAttachAvatar);
             llOwnerSay("The key is wrenched from your back, and you double over at the unexpected pain as the tendrils are ripped out. You feel an emptiness, as if some beautiful presence has been removed.");
 
         }
         else {
 
-            isAttached = 1;
-            llMessageLinked(LINK_SET, 106, "Start|attached|" + (string)isAttached, id);
+            // A lot of this code is about saving the fact that we are attached...
+            //llMessageLinked(LINK_SET, 106, "Start|attached|" + (string)TRUE, id);
 
             makeWorkInNoScriptLand(dollID);
 
-            if (lastAttachAvatar == NULL_KEY) newAttach = 1;
-
             // when attaching key, user is NOT AFK...
-            lmSetConfig("isAFK", "0");
+            lmSetConfig("isAFK", (string)FALSE);
 
-            // reset collapse environment
+            // restore collapse environment
             lmInternalCommand("collapse", (string)collapsed, keyID);
 
-            lastAttachPoint = cdAttached();
-            lastAttachAvatar = id;
+            // setWindRate depends on accurate AFK and collapse settings...
+            lmInternalCommand("setWindRate","",NULL_KEY);
+
+            //lastAttachPoint = cdAttached();
+            //lastAttachAvatar = id;
         }
     }
 

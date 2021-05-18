@@ -29,15 +29,12 @@ Thus, the best separation of items in the Key is:
 3. Tasks that must be performed, even on keys that are NOT attached: on_rez
 
 Given this, it seems that 90% of what happens in on_rez should be moved to an attach() event.
-Note that the attach() event doesn't have to determine if we are attached: we are. Instead of:
+The attach() event can assume that we are either being attached to or detached from.
+Thus we need to detect if we are being detached from an avatar.
 
-    if (attached()) doSomething;
-
-We can do this:
-
-    attach(key id) {
-        doSomething;
-    }
+During detach, there is a limited amount of time, and if the processing does not complete,
+it will complete AFTER RE-ATTACHING... decidedly unpleasant prospect. There's ways to handle
+that, but best thing is to avoid the situation completely.
 
 A good place to start examining the roles of the three initialization events is the page for
 on_rez:

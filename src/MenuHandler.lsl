@@ -180,6 +180,11 @@ default {
     //----------------------------------------
     // ATTACH
     //----------------------------------------
+    // During attach we perform:
+    //
+    //     * Unset RLVok
+    //     * Set up DialogChannel
+    //
     attach(key id) {
 
         if (!(keyDetached(id))) {

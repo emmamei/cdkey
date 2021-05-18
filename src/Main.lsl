@@ -256,9 +256,6 @@ default {
         dollName = dollyName();
         myName = llGetScriptName();
 
-        isAttached = cdAttached();
-        if (isAttached) requestPermToCollapse();
-
         cdInitializeSeq();
 
         lmSendConfig("windRate", (string)(windRate = 1.0)); // base rate: 100%
@@ -277,9 +274,6 @@ default {
         llResetTime();
         llSetTimerEvent(30.0);
 
-        isAttached = cdAttached();
-        if (isAttached) requestPermToCollapse();
-
         lmSendConfig("windRate", (string)(windRate = RATE_STANDARD));         // current rate
     }
 
@@ -287,6 +281,10 @@ default {
     //----------------------------------------
     // ATTACH
     //----------------------------------------
+    // During attach, we perform:
+    //
+    //     * request permissions to allow collapse to function
+    //
     attach(key id) {
         if (!(keyDetached(id))) requestPermToCollapse();
     }
