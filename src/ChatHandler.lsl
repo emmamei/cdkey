@@ -179,7 +179,7 @@ default {
         else if (code == INTERNAL_CMD) {
             string cmd = (string)split[0];
 
-            if ((cmd == "addMistress") ||
+            if ((cmd == "addController") ||
                 (cmd == "addBlacklist")) {
 
                 string uuid = (string)split[1];
@@ -273,7 +273,7 @@ default {
                 debugSay(5,"DEBUG-ADDMISTRESS",   "blacklist >> " + llDumpList2String(blacklist,   ",") + " (" + (string)llGetListLength(blacklist  ) + ")");
                 debugSay(5,"DEBUG-ADDMISTRESS", "controllers >> " + llDumpList2String(controllers, ",") + " (" + (string)llGetListLength(controllers) + ")");
             }
-            else if ((cmd == "remMistress") ||
+            else if ((cmd == "remController") ||
                      (cmd == "remBlacklist")) {
 
                 string uuid = (string)split[1];
@@ -983,7 +983,7 @@ default {
                         return;
                     }
                     else if (choice == "controller") {
-                        lmInternalCommand("addMistress", param, id);
+                        lmInternalCommand("addController", param, id);
                         return;
                     }
                     else if (choice == "prefix") {

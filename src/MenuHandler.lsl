@@ -849,7 +849,7 @@ default {
 
             if (space == NOT_FOUND) {
                 // no space was found in the Menu button selection
-                     if (choice == "Accept") lmInternalCommand("addMistress", (string)id + "|" + name, id);
+                     if (choice == "Accept") lmInternalCommand("addController", (string)id + "|" + name, id);
                 //else if (choice == "Detach") lmInternalCommand("detach", "", id);
                 else if (choice == "Decline") ; // do nothing
             }
@@ -1174,7 +1174,7 @@ default {
                     lmDialogListen();
                     llDialog((key)uuid, msg, [ "Accept", "Decline" ], dialogChannel);
                 }
-                else if (cdIsController(id)) lmInternalCommand("remMistress", (string)uuid + "|" + name, id);
+                else if (cdIsController(id)) lmInternalCommand("remController", (string)uuid + "|" + name, id);
             }
         }
     }

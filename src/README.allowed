@@ -1,0 +1,17 @@
+ALLOWANCES & RESTRICTIONS
+=========================
+
+There are a large number of ways of determining who can access what in the Key.
+The different classifications are:
+
+    * Dolly
+    * Controller (not including Dolly)
+    * Controller (including Dolly)
+    * Carrier
+    * Public
+    * Poser
+    * Last Winder
+
+The places these classifications are used the most is in allowing access to
+chat commands, and determining which menu buttons to show and allow.
+
