@@ -33,6 +33,9 @@
    fails effectively disable the listener for the check reply */
 // #define DEBUG_BADRLV 1
 
+/* enable optional RLV: dolly can enable and disable it */
+// #define OPTIONAL_RLV
+
 /* enable developer support features such as not using RLV locks which would
    prevent editing the scripts or notecards, collection and reporting of
    performance statistics etc */

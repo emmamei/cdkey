@@ -962,13 +962,14 @@ default {
                             else if (afterSpace == "Homing Beacon") lmSendConfig("homingBeacon",  (string)isX);
 #endif
 //                          else if (afterSpace == "Warnings")      lmSendConfig("doWarnings",    (string)isX);
+#ifdef OPTIONAL_RLV
                             else if (afterSpace == "RLV") {
                                 // we don't deal with RLVsupport here, as if RLVsupport is FALSE,
                                 // this choice is never made.
                                 lmSendConfig("RLVok", (string)isX);
                                 lmRLVreport(RLVok,"",isX);
                             }
-
+#endif
                             // if is not Doll, they can set and unset these options...
                             // if is Doll, these abilities can only be removed (X)
                             else if (afterSpace == "Rpt Wind") {
