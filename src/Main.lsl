@@ -39,9 +39,8 @@
 string msg;
 float windRateFactor = 1.0;
 
-integer timerMark;
-integer lastTimerMark;
-integer timeSpan;
+integer currentTime;
+float timeSpan;
 integer isAttached;
 integer permMask;
 
@@ -69,7 +68,7 @@ doWinding(string name, key id) {
     //   1. Can we wind up at all?
     //   2. Calculate wind time
     //   3. Send out new timeLeftOnKey
-    //   4. React to wind (including uncollapse)
+    //   4. React to wind (including unCollapse)
 
 #ifdef SINGLE_SELF_WIND
     // Test and reject repeat windings from Dolly - no matter who Dolly is or what the settings are
@@ -113,7 +112,7 @@ doWinding(string name, key id) {
 
     lmInternalCommand("windMsg", (string)windAmount + "|" + name, id);
 
-    if (collapsed) uncollapse();
+    if (collapsed) unCollapse();
 }
 
 float setWindRate() {
@@ -155,7 +154,7 @@ float setWindRate() {
     return windRate;
 }
 
-docollapse() {
+doCollapse() {
     list oldAnimList;
     integer i;
 
@@ -208,7 +207,7 @@ docollapse() {
     cdAOoff();
 }
 
-uncollapse() {
+unCollapse() {
     list oldAnimList;
     integer i;
 
@@ -270,9 +269,12 @@ default {
     //----------------------------------------
     on_rez(integer start) {
         RLVok = UNSET;
-        timerStarted = 1;
-        configured = 1;
+        timerStarted = TRUE;
+        configured = TRUE;
+
         lmInternalCommand("setHovertext", "", keyID);
+
+        llResetTime();
         llSetTimerEvent(30.0);
 
         isAttached = cdAttached();
@@ -350,26 +352,18 @@ default {
 
         //----------------------------------------
         // TIMER INTERVAL
-        timerMark = llGetUnixTime();
-        timeSpan = timerMark - lastTimerMark;
+        currentTime = llGetUnixTime();
 
-        // sanity checking of timeSpan
-        //
-        // If we relog, the lastTimerMark will be LONG ago....  leading to a
-        // HUGE timeSpan... so stomp on it and start with a fresh timeSpan
-        //
-        // Same thing happens on startup with lastTimerMark = 0
-
-        if (timeSpan > 120) timeSpan = 0;
+#define isTimePast(a) (a <= currentTime)
+#define bumpExpireTime(a) llGetUnixTime() + (a)
 
 #ifdef DEVELOPER_MODE
+        timeSpan = llGetTime();
         if (timeSpan) {
             if (timeReporting)
                 debugSay(5,"DEBUG-MAIN","Main Timer fired, interval " + formatFloat(timeSpan,2) + "s.");
         }
 #endif
-
-        lastTimerMark = timerMark;
 
         //----------------------------------------
         // LOW SCRIPT MODE
@@ -378,14 +372,15 @@ default {
 
             // cdLowScriptTrigger = (llGetRegionFPS() < LOW_FPS || llGetRegionTimeDilation() < LOW_DILATION)
             if (cdLowScriptTrigger) {
+
                 // lowScriptMode continues...
                 debugSay(2,"DEBUG-MAIN", "Low Script Mode active and bumped");
-                lowScriptExpire = llGetUnixTime() + LOWSCRIPT_TIMEOUT;
+                lowScriptExpire = bumpExpireTime(LOWSCRIPT_TIMEOUT);
             }
             else {
 
                 // if environment has past test long enough - then go out of powersave mode
-                if (lowScriptExpire <= timerMark) {
+                if (isTimePast(lowScriptExpire)) {
                     debugSay(2,"DEBUG-MAIN", "Low Script Mode active but environment good - disabling");
                     llOwnerSay("Restoring Key to normal operation.");
 
@@ -404,10 +399,10 @@ default {
                 // We're not in lowScriptMode, but have been triggered...
                 // Go into "power saving mode", say so, and mark the time
 
-                lowScriptExpire = llGetUnixTime() + LOWSCRIPT_TIMEOUT;
+                lowScriptExpire = bumpExpireTime(LOWSCRIPT_TIMEOUT);
                 llOwnerSay("Time congestion detected: Power-saving mode activated.");
 
-                lmSendConfig("lowScriptMode",(string)(lowScriptMode = 1));
+                lmSendConfig("lowScriptMode",(string)(lowScriptMode = TRUE));
                 llSetTimerEvent(LOW_RATE);
             }
             else {
@@ -419,14 +414,14 @@ default {
         // CHECK COLLAPSE STATE
 
         // False collapse? Collapsed = 1 while timeLeftOnKey is positive is an invalid condition
-        if (collapsed) if (timeLeftOnKey > 0) uncollapse();
+        if (collapsed) if (timeLeftOnKey > 0) unCollapse();
 
         //----------------------------------------
         // POSE TIMED OUT?
 
         // Did the pose expire? If so, unpose Dolly
         if (poseExpire) {
-            if (poseExpire <= timerMark) {
+            if (isTimePast(poseExpire)) {
                 lmMenuReply("Unpose", "", keyID);
                 lmSendConfig("poseExpire", (string)(poseExpire = 0));
             }
@@ -440,7 +435,7 @@ default {
             debugSay(6,"DEBUG-MAIN","checking carrier presence");
 
             // check to see if carrier seen in the last few minutes
-            if (carryExpire <= timerMark) {
+            if (isTimePast(carryExpire)) {
 
                 // carrier vanished: drop dolly
                 cdSayTo("You have not been seen for " + (string)(CARRY_TIMEOUT/60) + " minutes; dropping Dolly.",carrierID);
@@ -456,7 +451,7 @@ default {
                     debugSay(6,"DEBUG-MAIN","carrier seen");
 
                     // No carrier present: bump carry timeout
-                    carryExpire = llGetUnixTime() + CARRY_TIMEOUT;
+                    carryExpire = bumpExpireTime(CARRY_TIMEOUT);
                     lmSendConfig("carryExpire", (string)carryExpire);
                 }
             }
@@ -467,7 +462,7 @@ default {
 
         // Has the clothing lock - wear lock - run its course? If so, reset lock
         if (wearLockExpire) {
-            if (wearLockExpire <= timerMark) {
+            if (isTimePast(wearLockExpire)) {
                 // wearLock has expired...
                 lmSendConfig("wearLock", (string)(wearLock = 0));
                 lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0));
@@ -485,7 +480,7 @@ default {
             lmSetConfig("isAFK", (string)isAFK);
 
             if (isAFK) llOwnerSay("Dolly has gone afk; Key subsystems slowing...");
-            else         llOwnerSay("You hear the Key whir back to full power");
+            else       llOwnerSay("You hear the Key whir back to full power");
 
             lmInternalCommand("setWindRate","",NULL_KEY);
             lmInternalCommand("setHovertext", "", keyID);
@@ -497,10 +492,15 @@ default {
         // The only reason Dolly's time would be zero is if they are collapsed and out of time...
 
         if (windRate > 0) {
+
+            timeSpan = llGetAndResetTime();
+
             if (timeSpan != 0) {
+
                 // Key ticks down just a little further...
                 timeLeftOnKey -= (integer)(timeSpan * windRate);
                 if (timeLeftOnKey < 0) timeLeftOnKey = 0;
+
                 lmSendConfig("timeLeftOnKey",(string)timeLeftOnKey);
 
                 // Now that we've ticked down a few - check for warnings, and check for collapse
@@ -509,7 +509,7 @@ default {
                     // Dolly is DONE! Go down... and yell for help.
                     if (!collapsed) {
                         cdSay( "Oh dear. The pretty Dolly " + dollName + " has run out of energy. Now if someone were to wind them... (Click on Dolly's key.)");
-                        docollapse();
+                        doCollapse();
                     }
                 }
             }
@@ -659,8 +659,8 @@ default {
                 // The collapse internal command...
 
                 if (collapsed != collapseState) { // if equal, no change needed
-                    if (collapseState) docollapse();
-                    else uncollapse();
+                    if (collapseState) doCollapse();
+                    else unCollapse();
                 }
             }
             else if (cmd == "winding") {
@@ -739,7 +739,7 @@ default {
             RLVok = (integer)split[0];
 
             // refresh collapse state... no escape!
-            if (collapsed) docollapse();
+            if (collapsed) doCollapse();
 
             if (RLVok == TRUE) {
                 if (!allowDress && !hardcore) llOwnerSay("The public cannot dress you.");
@@ -785,7 +785,7 @@ default {
 
                         lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = windAmount));
                         lmSendConfig("winderRechargeTime", (string)(winderRechargeTime = (llGetUnixTime() + EMERGENCY_LIMIT_TIME)));
-                        uncollapse();
+                        unCollapse();
 
                         string s = "With an electical sound the motor whirrs into life, ";
                         if (hardcore) llOwnerSay("and you can feel your joints reanimating as time is added.");
@@ -886,7 +886,7 @@ default {
                     dialogSort(windChoices + [ MAIN ]), dialogChannel);
             }
             else if (choice == "Unwind") {
-                docollapse();
+                doCollapse();
                 cdSayTo("Dolly collapses, " + pronounHerDoll + " key unwound",id);
             }
         }
@@ -921,7 +921,7 @@ default {
                 else if (!isAttached)   llSetTimerEvent(UNATTACHED_RATE);
                 else                    llSetTimerEvent(STD_RATE);
 
-                timerStarted = 1;
+                timerStarted = TRUE;
             }
 
 #ifdef DEVELOPER_MODE
