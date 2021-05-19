@@ -357,7 +357,7 @@ default {
             if (collapsed) {
                 if ((timerMark - collapseTime) > TIME_BEFORE_TP)
                     if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK)
-                        lmInternalCommand("teleport", LANDMARK_HOME, id); // runs in Avatar
+                        lmInternalCommand("teleport", LANDMARK_HOME, dollID); // runs in Avatar
             }
         }
 #endif
@@ -526,6 +526,8 @@ default {
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
 #ifdef HOMING_BEACON
             else if (name == "homingBeacon")             homingBeacon = (integer)value;
+
+            // collapseTime only needed for homingBeacon use
             else if (name == "collapseTime")             collapseTime = (integer)value;
 #endif
             else if (name == "showPhrases") {

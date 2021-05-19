@@ -964,6 +964,7 @@ default {
                                  if (afterSpace == "Type Text")     lmSendConfig("hovertextOn",   (string)isX);
                             else if (afterSpace == "Phrases")       lmSendConfig("showPhrases",   (string)(showPhrases = isX));
 #ifdef HOMING_BEACON
+                            // Automatic return home after collapse (once time is up)
                             else if (afterSpace == "Homing Beacon") lmSendConfig("homingBeacon",  (string)isX);
 #endif
 //                          else if (afterSpace == "Warnings")      lmSendConfig("doWarnings",    (string)isX);

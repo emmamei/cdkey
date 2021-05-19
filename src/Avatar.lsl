@@ -515,6 +515,7 @@ default {
             else if (cmd == "teleport") {
                 string lm = (string)split[0];
                 llRegionSayTo(id, 0, "Teleporting dolly " + dollName + " to  landmark " + lm + ".");
+                lmRunRLV("tploc=y");
                 rlvTPrequest = llRequestInventoryData(lm);
             }
             else if (cmd == "posePageN") {
@@ -690,6 +691,7 @@ default {
 
             // Note this will be rejected if @unsit=n or @tploc=n are active
             lmRunRLVas("TP", "tpto:" + locationToString(global) + "=force");
+            lmRunRLV("tploc=n"); // restore restriction
         }
     }
 

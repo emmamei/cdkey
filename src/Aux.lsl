@@ -180,20 +180,23 @@ default {
                     // Only present the TP home option for the doll if they have been collapsed
                     // for at least 900 seconds (15 minutes) - Suggested by Christina
 
-                    if (timeCollapsed > TIME_BEFORE_TP) {
+                    if (RLVok) {
+                        if (timeCollapsed > TIME_BEFORE_TP) {
 #ifdef HOMING_BEACON
-                        if (!homingBeacon)
+                            // if Homing Beacon is activated, then the only TP is automated
+                            if (!homingBeacon)
 #endif
-                            if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK)
-                                menu += ["TP Home"];
+                                if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK)
+                                    menu += ["TP Home"];
 
-                        // If the doll is still down after 1800 seconds (30 minutes) and their
-                        // emergency winder is recharged; add a button for it
+                            // If the doll is still down after 1800 seconds (30 minutes) and their
+                            // emergency winder is recharged; add a button for it
 
-                        if (!hardcore) {
-                            if (timeCollapsed > TIME_BEFORE_EMGWIND) {
-                                if (winderRechargeTime <= llGetUnixTime())
-                                    menu += ["Wind Emg"];
+                            if (!hardcore) {
+                                if (timeCollapsed > TIME_BEFORE_EMGWIND) {
+                                    if (winderRechargeTime <= llGetUnixTime())
+                                        menu += ["Wind Emg"];
+                                }
                             }
                         }
                     }
@@ -281,7 +284,7 @@ default {
             else if (choice == "Visit Dollhouse") {
                 // If is Dolly, whisk Dolly away to Location of Landmark
                 // If is someone else, give Landmark to them
-                if (cdIsDoll(id))
+                if (cdIsDoll(id) && RLVok)
                     lmInternalCommand("teleport", LANDMARK_CDHOME, id);
                 else llGiveInventory(id, LANDMARK_CDHOME);
             }
@@ -416,7 +419,8 @@ Parent - Take care choosing your parents; they have great control over Dolly and
 //              plusList += cdGetButton("Warnings", id, doWarnings, 0);
                 plusList += cdGetButton("Phrases", id, showPhrases, 0);
 #ifdef HOMING_BEACON
-                plusList += cdGetButton("Homing Beacon", id, homingBeacon, 0);
+                if (RLVok)
+                    plusList += cdGetButton("Homing Beacon", id, homingBeacon, 0);
 #endif
 #ifdef OPTIONAL_RLV
                 if (RLVsupport == TRUE) {
