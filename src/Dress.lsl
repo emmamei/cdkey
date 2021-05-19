@@ -53,7 +53,7 @@ integer outfitChannel;
 integer outfitHandle;
 integer change;
 integer pushRandom;
-integer keyLocked;
+integer keyLocked = FALSE;
 
 // These are the paths of the outfits relative to #RLV
 //string lastFolder;

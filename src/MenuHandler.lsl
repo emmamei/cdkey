@@ -64,7 +64,7 @@ integer isController;
 integer isDoll;
 integer numControllers;
 integer transformLockExpire;
-integer keyLocked;
+integer keyLocked = FALSE;
 
 integer blacklistChannel;
 integer blacklistHandle;

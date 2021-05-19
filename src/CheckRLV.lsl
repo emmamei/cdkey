@@ -37,7 +37,7 @@ integer rlvCheck = MAX_RLVCHECK_TRIES;
 integer rlvStarted;
 integer initializing = TRUE;
 integer isOutfitLocked = FALSE;
-integer keyLocked;
+integer keyLocked = FALSE;
 
 list rlvExceptions;
 

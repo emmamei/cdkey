@@ -58,7 +58,7 @@ integer poseExpire;
 integer transformLockExpire;
 
 key simRatingQuery;
-integer keyLocked;
+integer keyLocked = FALSE;
 
 //========================================
 // FUNCTIONS
@@ -221,6 +221,7 @@ unCollapse() {
     if (RLVok == TRUE) {
         lmRunRLVcmd("clearRLVcmd","");
         if (keyLocked == FALSE) rlvUnlockKey();
+        else rlvLockKey();
     }
 
     oldAnimList = llGetAnimationList(dollID);
@@ -260,6 +261,7 @@ default {
 
         lmSendConfig("windRate", (string)(windRate = 1.0)); // base rate: 100%
         lmInternalCommand("setHovertext", "", keyID);
+        if (!(keyDetached(dollID))) requestPermToCollapse();
     }
 
     //----------------------------------------
@@ -617,6 +619,7 @@ default {
                 if (timeLeftOnKey > keyLimit) timeLeftOnKey = keyLimit;
 
                 lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
+                if (collapsed) unCollapse();
             }
             else if (name == "wearLock") {
                 // Internal command: remove?
