@@ -51,10 +51,16 @@ float GlobalDefines_version=1.0;
 
 #define UNIQ 1245 // unique channel for updaters to communicate on
 
-#define cdSetHovertext(x,c) if(primText!=x)llSetText(x,c,1.0)
-#define RED    <1.0,0.0,0.0>
-#define YELLOW <1.0,1.0,0.0>
-#define WHITE  <1.0,1.0,1.0>
+//#define cdSetHovertext(x,c) if(primText!=x)llSetText(x,c,1.0)
+//#define RED    <1.0,0.0,0.0>
+//#define YELLOW <1.0,1.0,0.0>
+//#define WHITE  <1.0,1.0,1.0>
+//
+// llSetText wiki page suggests these values:
+//
+#define RED    <1.0, 0.255, 0.212>
+#define YELLOW <1.0, 0.863, 0.0  >
+#define WHITE  <1.0, 1.0  , 1.0  >
 
 #define CRITICAL RED
 #define WARN YELLOW

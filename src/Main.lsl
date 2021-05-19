@@ -259,6 +259,7 @@ default {
         cdInitializeSeq();
 
         lmSendConfig("windRate", (string)(windRate = 1.0)); // base rate: 100%
+        lmInternalCommand("setHovertext", "", keyID);
     }
 
     //----------------------------------------

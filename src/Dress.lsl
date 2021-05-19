@@ -697,13 +697,21 @@ default {
             }
 #endif
             else if (cmd == "setHovertext") {
-                list paramList = llGetPrimitiveParams([ PRIM_TEXT ]);
-                string primText = (string)paramList[0];
+                //list paramList = llGetPrimitiveParams([ PRIM_TEXT ]);
+                //string primText = (string)paramList[0];
+                debugSay(2, "DEBUG-DRESS", "Hovertext activated");
 
-                     if (collapsed)   { cdSetHovertext("Disabled Dolly!",        ( RED    )); }
-                else if (isAFK)       { cdSetHovertext(dollType + " Doll (AFK)", ( YELLOW )); }
-                else if (hovertextOn) { cdSetHovertext(dollType + " Doll",       ( WHITE  )); }
-                else                  { cdSetHovertext("",                       ( WHITE  )); }
+//#define cdSetHovertext(x,c) if(primText!=x)llSetText(x,c,1.0)
+#define cdSetHovertext(x,c) llSetText(x,c,1.0)
+#define DISABLED_DOLLY_COLOR RED
+#define AFK_DOLLY_COLOR      YELLOW
+#define TYPE_DOLLY_COLOR     WHITE
+#define DEFAULT_DOLLY_COLOR  WHITE
+
+                     if (collapsed)   { cdSetHovertext("Disabled Dolly!\nWind Me!",  ( DISABLED_DOLLY_COLOR )); }
+                else if (isAFK)       { cdSetHovertext(dollType + " Doll (AFK)",     (      AFK_DOLLY_COLOR )); }
+                else if (hovertextOn) { cdSetHovertext(dollType + " Doll",           (     TYPE_DOLLY_COLOR )); }
+                else                  { cdSetHovertext("Wind Me!",                   (  DEFAULT_DOLLY_COLOR )); }
             }
             else if (cmd == "carriedMenu") {
                 key id = (string)split[0];
