@@ -38,10 +38,6 @@
 #define keyDetached(id) (id == NULL_KEY)
 
 key rlvTPrequest;
-#ifdef LOCKON
-key mainCreator;
-#endif
-//key lastAttachedID;
 
 // Note that this is not the "speed" nor is it a slowing factor
 // This is a vector of force applied against Dolly: headwind speed

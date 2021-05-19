@@ -140,8 +140,6 @@ rlvActivateBase() {
 //
 rlvOutfitLock() {
 
-#ifdef LOCKON
-
     // Lock the current outfit if one of these is true:
     //
     //    * Dolly cannot dress themselves
@@ -160,11 +158,6 @@ rlvOutfitLock() {
         if (isOutfitLocked == TRUE) rlvUnlockOutfit();
         isOutfitLocked = FALSE;
     }
-#else
-    // Don't lock on developers
-    //if (isOutfitLocked == TRUE) rlvUnlockOutfit();
-    ;
-#endif
 }
 
 // Activate RLV settings

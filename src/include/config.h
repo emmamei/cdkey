@@ -41,14 +41,6 @@
    performance statistics etc */
 #define DEVELOPER_MODE 1
 
-/* Does the developer key "lock on" ? */
-#ifdef DEVELOPER_MODE
-// #define LOCKON 1
-#else
-// Non-dev key should ALWAYS lock on
-#define LOCKON 1
-#endif
-
 //========================================
 // PACKAGE DATA
 //========================================
