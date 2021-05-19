@@ -366,7 +366,7 @@ default {
         // channel = chat channel to listen on
         //    name = filter by prim name
         //     key = filter by avatar key
-        //  choice = filter by specific message
+        //  chatCommand = filter by specific message
 
         // This makes chat commands work correctly and be properly identified and tracked
         // back to an actual agent even if an intermediary is used. this prevents such as
@@ -383,18 +383,18 @@ default {
         //----------------------------------------
 
         if (channel == chatChannel) {
-            id = llGetOwnerKey(id);
-            name = llGetDisplayName(id); // get name of person sending chat command
-            integer isDoll = cdIsDoll(id);
-            integer isController = cdIsController(id);
+            key accessorID = id;
+            string accessorName = llGetDisplayName(id); // get name of person sending chat command
+            integer accessorIsDoll = cdIsDoll(id);
+            integer accessorIsController = cdIsController(id);
 
             // Deny access to the menus when the command was recieved from blacklisted avatar
-            if (!isDoll && (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND)) {
-                llOwnerSay("SECURITY WARNING! Attempted chat channel access by blacklisted user " + name);
+            if (!accessorIsDoll && (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND)) {
+                llOwnerSay("SECURITY WARNING! Attempted chat channel access by blacklisted user " + accessorName);
                 return;
             }
 
-            debugSay(5,"DEBUG-CHAT",("Got a chat channel message: " + name + "/" + (string)id + "/" + msg));
+            debugSay(5,"DEBUG-CHAT",("Got a chat channel message: " + accessorName + "/" + (string)id + "/" + msg));
             string prefix = cdGetFirstChar(msg);
 
             // Before we proceed first verify that the command is for us.
@@ -406,14 +406,14 @@ default {
             //   * Nothing - assume its ours and complain
 
             if (prefix == "*") {
-                // *prefix is global, strip from choice and continue
+                // *prefix is global, strip from chatCommand and continue
                 msg = llGetSubString(msg,1,-1);
             }
             else if (prefix == "#") {
                 // if Dolly gives a #cmd ignore it...
                 // if someone else gives it - they are being ignored themselves,
                 //    but we act on it.
-                if (isDoll) return;
+                if (accessorIsDoll) return;
                 else {
                     // #prefix is an all others prefix like with OC etc
                     msg = llGetSubString(msg,1,-1);
@@ -449,10 +449,10 @@ default {
 
             // Choice is a command, not a pose
             integer space = llSubStringIndex(msg, " ");
-            string choice = msg;
+            string chatCommand = msg;
 
             if (!PARAMETERS_EXIST) { // Commands without parameters handled first
-                choice = llToLower(choice);
+                chatCommand = llToLower(chatCommand);
 
                 //----------------------------------------
                 // PUBLIC COMMAND (help)
@@ -467,7 +467,7 @@ default {
                 // was a way to combine the help with the functions it would be
                 // much better...
                 //
-                if (choice == "help") {
+                if (chatCommand == "help") {
                     // First: anyone can do these commands
                     string help = "Commands:
     Commands need to be prefixed with the prefix, which is currently " + llToLower(chatPrefix) + "
@@ -477,7 +477,7 @@ default {
     stat ........... concise current status";
                     string help2;
 
-                    if (isDoll || isController) {
+                    if (accessorIsDoll || accessorIsController) {
                         help += "
     build .......... list build configurations
     detach ......... detach key if possible
@@ -498,7 +498,7 @@ default {
 
                         //----------------------------------------
                         // Dolly Help
-                        if (isDoll) {
+                        if (accessorIsDoll) {
                             help2 += "Commands (page2):
 
     blacklist NN ... add to blacklist
@@ -542,11 +542,11 @@ default {
                         }
                     }
 
-                    cdSayTo(help + "\n", id);
-                    if (help2 != "") cdSayTo(help2 + "\n", id);
+                    cdSayTo(help + "\n", accessorID);
+                    if (help2 != "") cdSayTo(help2 + "\n", accessorID);
 
 #ifdef DEVELOPER_MODE
-                    if (isDoll) {
+                    if (accessorIsDoll) {
                         help = "
     Debugging commands:
 
@@ -555,7 +555,7 @@ default {
     inject x#x#x ... inject a link message with \"code#data#key\"
     powersave ...... trigger a powersave event
     collapse ....... perform an immediate collapse (out of time)";
-                        cdSayTo(help + "\n", id);
+                        cdSayTo(help + "\n", accessorID);
                     }
 #endif
                     return;
@@ -575,20 +575,23 @@ default {
                 //   * hardcore (ADULT_MODE)
                 //   * collapse (DEVELOPER_MODE)
                 //   * powersave (DEVELOPER_MODE)
+                //   * hide
+                //   * unhide / show / visible
+                //   * ghost
                 //
-                if (isDoll || isController) {
-                    if (choice == "build") {
+                if (accessorIsDoll || accessorIsController) {
+                    if (chatCommand == "build") {
                         lmConfigReport();
                         return;
                     }
-                    else if (choice == "update") {
+                    else if (chatCommand == "update") {
 
                         //llSay(PUBLIC_CHANNEL,"Update starting...");
                         lmSendConfig("update", "1");
                         return;
                     }
-                    else if (choice == "xstats") {
-                        if (isDoll && hardcore) return;
+                    else if (chatCommand == "xstats") {
+                        if (accessorIsDoll && hardcore) return;
                         string s = "Extended stats:\n\nDoll is a " + dollType + " Doll.\nWind amount: " +
                                    (string)llFloor(windNormal / SECS_PER_MIN) + " (mins)\nKey Limit: " +
                                    (string)(keyLimit / SECS_PER_MIN) + " mins\nEmergency Winder Recharge Time: " +
@@ -645,13 +648,13 @@ default {
                         s += "\nChat channel = " + (string)chatChannel;
                         s += "\nChat prefix = " + chatPrefix;
 
-                        cdSayTo(s, id);
+                        cdSayTo(s, accessorID);
                         return;
                     }
-                    else if (choice == "stats") {
-                        if (isDoll && hardcore) return;
+                    else if (chatCommand == "stats") {
+                        if (accessorIsDoll && hardcore) return;
                         cdSayTo("Time remaining: " + (string)llRound(timeLeftOnKey / (SECS_PER_MIN * windRate)) + " minutes of " +
-                                    (string)llRound(keyLimit / (SECS_PER_MIN * windRate)) + " minutes.", id);
+                                    (string)llRound(keyLimit / (SECS_PER_MIN * windRate)) + " minutes.", accessorID);
 
                         string msg;
 
@@ -669,7 +672,7 @@ default {
 
                         }
 
-                        cdSayTo(msg, id);
+                        cdSayTo(msg, accessorID);
 
                         if (poseAnimation != ANIMATION_NONE) {
                         //    llOwnerSay(dollID, "Current pose: " + currentAnimation);
@@ -677,29 +680,29 @@ default {
                             llOwnerSay("Doll is posed.");
                         }
 
-                        lmMemReport(1.0,id);
+                        lmMemReport(1.0,accessorID);
                         return;
                     }
 #ifdef ADULT_MODE
-                    else if (choice == "hardcore") {
+                    else if (chatCommand == "hardcore") {
 
                         // if hardcore is set, only a controller other than
                         // Dolly can clear it. If hardcore is clear - only
                         // Dolly can set it.
 
                         if (hardcore) {
-                            if (isController && !isDoll) {
+                            if (accessorIsController && !accessorIsDoll) {
                                 lmSendConfig("hardcore",(string)(hardcore = 0));
-                                cdSayTo("Doll's hardcore mode has been disabled. The sound of a lock unlocking is heard.",id);
+                                cdSayTo("Doll's hardcore mode has been disabled. The sound of a lock unlocking is heard.",accessorID);
                             }
                         }
                         else {
-                            if (isDoll) {
+                            if (accessorIsDoll) {
                                 lmSendConfig("hardcore",(string)(hardcore = 1));
-                                cdSayTo("Doll's hardcore mode has been enabled. The sound of a lock closing is heard.",id);
+                                cdSayTo("Doll's hardcore mode has been enabled. The sound of a lock closing is heard.",accessorID);
                             }
                             else {
-                                cdSayTo("You rattle the lock, but it is securely fastened: you cannot disable hardcore mode.",id);
+                                cdSayTo("You rattle the lock, but it is securely fastened: you cannot disable hardcore mode.",accessorID);
                             }
                         }
                         return;
@@ -707,16 +710,16 @@ default {
 
 #endif
 #ifdef DEVELOPER_MODE
-                    else if (choice == "collapse") {
-                        if (isDoll) {
+                    else if (chatCommand == "collapse") {
+                        if (accessorIsDoll) {
                             //lmSetConfig("timeLeftOnKey","10");
                             llOwnerSay("Immediate collapse triggered...");
-                            lmInternalCommand("collapse", (string)TRUE, id);
+                            lmInternalCommand("collapse", (string)TRUE, accessorID);
                         }
                         return;
                     }
-                    else if (choice == "powersave") {
-                        if (isDoll) {
+                    else if (chatCommand == "powersave") {
+                        if (accessorIsDoll) {
                             lmSetConfig("lowScriptMode","1");
                             llOwnerSay("Power-save mode initiated");
                         }
@@ -727,33 +730,33 @@ default {
                     // block but the code to account for the differences
                     // may not be worth it.
                     //
-                    else if (choice == "hide") {
+                    else if (chatCommand == "hide") {
                         visible = FALSE;
 
-                        cdSayTo("The key shimmers, then fades from view.",id);
+                        cdSayTo("The key shimmers, then fades from view.",accessorID);
                         llSetLinkAlpha(LINK_SET, 0.0, ALL_SIDES);
                         lmSendConfig("isVisible", (string)visible);
                         return;
                     }
-                    else if (choice == "unhide" || choice == "show" || choice == "visible") {
+                    else if (chatCommand == "unhide" || chatCommand == "show" || chatCommand == "visible") {
                         visible = TRUE;
 
-                        cdSayTo("A bright light appears where the key should be, then disappears slowly, revealing a spotless key.",id);
+                        cdSayTo("A bright light appears where the key should be, then disappears slowly, revealing a spotless key.",accessorID);
                         llSetLinkAlpha(LINK_SET, (float)visibility, ALL_SIDES);
                         lmSendConfig("isVisible", (string)visible);
                         return;
                     }
-                    else if (choice == "ghost") {
+                    else if (chatCommand == "ghost") {
                         visible = TRUE;
 
                         // This toggles ghostliness
                         if (visibility != 1.0) {
                             visibility = 1.0;
-                            cdSayTo("You see the key sparkle slightly, then fade back into full view.",id);
+                            cdSayTo("You see the key sparkle slightly, then fade back into full view.",accessorID);
                         }
                         else {
                             visibility = GHOST_VISIBILITY;
-                            cdSayTo("A cloud of sparkles forms around the key, and it fades to a ghostly presence.",id);
+                            cdSayTo("A cloud of sparkles forms around the key, and it fades to a ghostly presence.",accessorID);
                         }
 
                         llSetLinkAlpha(LINK_SET, (float)visibility, ALL_SIDES);
@@ -768,6 +771,7 @@ default {
                 //
                 // These are the commands that anyone can give:
                 //   * wind
+                //   * stat
                 //   * listposes
                 //   * carry
                 //   * uncarry
@@ -779,13 +783,13 @@ default {
                 //   * poses
                 //   * menu
                 //
-                if (choice == "wind") {
+                if (chatCommand == "wind") {
                     // A Normal Wind
 
 #ifdef EMERGENCY_WIND
                     // This implements an emergency wind - but should be a different name
                     // than "wind" (see issue #631)
-                    if (isDoll) {
+                    if (accessorIsDoll) {
                         if (hardcore) return;
                         if (collapsed) {
                             if ((llGetUnixTime() - collapseTime) > TIME_BEFORE_EMGWIND) {
@@ -793,31 +797,31 @@ default {
                             }
                             else {
 #ifdef DEVELOPER_MODE
-                                cdSayTo("Emergency detection circuits detect developer access override; safety protocols removed and emergency winder activated",id);
+                                cdSayTo("Emergency detection circuits detect developer access override; safety protocols removed and emergency winder activated",accessorID);
                                 cdMenuInject("Wind Emg", dollName, dollID);
 #else
-                                cdSayTo("Emergency not detected; emergency winder is currently disengaged",id);
+                                cdSayTo("Emergency not detected; emergency winder is currently disengaged",accessorID);
 #endif
                             }
                         }
                         else {
-                            cdSayTo("Dolly is not collapsed; emergency winder is currently disengaged",id);
+                            cdSayTo("Dolly is not collapsed; emergency winder is currently disengaged",accessorID);
                         }
                     }
 #endif
                     if (collapsed) {
-                        if (!isDoll) {
-                            lmInternalCommand("winding", "|" + name, id);
+                        if (!accessorIsDoll) {
+                            lmInternalCommand("winding", "|" + accessorName, accessorID);
                         }
                     }
                     else {
-                        lmInternalCommand("winding", "|" + name, id);
+                        lmInternalCommand("winding", "|" + accessorName, accessorID);
                     }
 
                     return;
                 }
-                else if (choice == "stat") {
-                    if (isDoll && hardcore) return;
+                else if (chatCommand == "stat") {
+                    if (accessorIsDoll && hardcore) return;
                     string msg = "Key is ";
 
                     if (windRate > 0) {
@@ -840,53 +844,49 @@ default {
 
                     } else msg += "currently stopped.";
 
-                    cdSayTo(msg, id);
+                    cdSayTo(msg, accessorID);
                     return;
                 }
-                else if (choice == "outfits") {
-                    cdMenuInject("Outfits...", name, id);
+                else if (chatCommand == "outfits") {
+                    cdMenuInject("Outfits...", accessorName, accessorID);
                     return;
                 }
-                else if (choice == "types") {
-                    cdMenuInject("Types...", name, id);
+                else if (chatCommand == "types") {
+                    cdMenuInject("Types...", accessorName, accessorID);
                     return;
                 }
-                else if (choice == "poses") {
+                else if (chatCommand == "poses") {
                     if (arePosesPresent() == FALSE) {
-                        cdSayTo("No poses present.",id);
+                        cdSayTo("No poses present.",accessorID);
                         return;
                     }
 
-                    cdMenuInject("Poses...", name, id);
+                    cdMenuInject("Poses...", accessorName, accessorID);
                     return;
                 }
-                else if (choice == "options") {
-                    cdMenuInject("Options...", name, id);
+                else if (chatCommand == "options") {
+                    cdMenuInject("Options...", accessorName, accessorID);
                     return;
                 }
-                else if (choice == "menu") {
+                else if (chatCommand == "menu") {
 
                     // if this is Dolly... show dolly other menu as appropriate
-                    if (isDoll) {
+                    if (accessorIsDoll) {
 
                         // Collapse has precedence over having a carrier...
-                        if (collapsed) {
-                            lmInternalCommand("collapsedMenu", "", NULL_KEY);
-                            return;
-
-                        } else if (cdCarried()) {
-                            lmInternalCommand("carriedMenu", (string)id + "|" + carrierName, NULL_KEY);
-                            return;
-                        }
+                        if (collapsed) lmInternalCommand("collapsedMenu", "", NULL_KEY);
+                        else if (cdCarried()) lmInternalCommand("carriedMenu", (string)accessorID + "|" + carrierName, NULL_KEY);
+                        else cdMenuInject(MAIN, accessorName, accessorID);
+                        return;
                     }
                     else {
-                        cdMenuInject(MAIN, name, id);
+                        cdMenuInject(MAIN, accessorName, accessorID);
                         return;
                     }
                 }
-                else if (choice == "listposes") {
+                else if (chatCommand == "listposes") {
                     if (arePosesPresent() == FALSE) {
-                        cdSayTo("No poses present.",id);
+                        cdSayTo("No poses present.",accessorID);
                         return;
                     }
 
@@ -899,19 +899,19 @@ default {
                         // Collapsed animation is special: skip it
                         if (poseCurrent != ANIMATION_COLLAPSED) {
 
-                            if (poseAnimation == poseCurrent) cdSayTo("\t*\t" + poseCurrent, id);
-                            else cdSayTo("\t\t" + poseCurrent, id);
+                            if (poseAnimation == poseCurrent) cdSayTo("\t*\t" + poseCurrent, accessorID);
+                            else cdSayTo("\t\t" + poseCurrent, accessorID);
                         }
                     }
                     return;
                 }
-                else if (choice == "release" || choice == "unpose") {
-                    if (isDoll && hardcore) return;
+                else if (chatCommand == "release" || chatCommand == "unpose") {
+                    if (accessorIsDoll && hardcore) return;
 
                     if (poseAnimation == "")
-                        cdSayTo("Dolly is not posed.",id);
+                        cdSayTo("Dolly is not posed.",accessorID);
 
-                    else if (isDoll) {
+                    else if (accessorIsDoll) {
                         if (poserID != dollID) {
                             llOwnerSay("Dolly tries to wrest control of " + pronounHerDoll +
                                 " body from the pose but " + pronounSheDoll +
@@ -920,26 +920,26 @@ default {
                     }
 
                     else {
-                        cdSayTo("Dolly feels her pose release, and stretches her limbs, so long frozen.",id);
+                        cdSayTo("Dolly feels her pose release, and stretches her limbs, so long frozen.",accessorID);
                         lmMenuReply("Unpose", dollName, dollID);
                     }
 
                     return;
                 }
-                else if (choice == "carry") {
+                else if (chatCommand == "carry") {
                     // Dolly can't carry herself... duh!
-                    if (!isDoll && (allowCarry || hardcore)) cdMenuInject("Carry", name, id);
+                    if (!accessorIsDoll && (allowCarry || hardcore)) cdMenuInject("Carry", accessorName, accessorID);
                     return;
                 }
-                else if (choice == "uncarry") {
-                    if (!isDoll && (isController || cdIsCarrier(id))) cdMenuInject("Uncarry", name, id);
+                else if (chatCommand == "uncarry") {
+                    if (!accessorIsDoll && (accessorIsController || cdIsCarrier(accessorID))) cdMenuInject("Uncarry", accessorName, accessorID);
                     return;
                 }
             }
             else {
                 // Command has secondary parameter
-                string param =           llStringTrim(llGetSubString(choice, space + 1, STRING_END), STRING_TRIM);
-                choice       = llToLower(llStringTrim(llGetSubString(   msg,         0,  space - 1), STRING_TRIM));
+                string param =           llStringTrim(llGetSubString(chatCommand, space + 1, STRING_END), STRING_TRIM);
+                chatCommand       = llToLower(llStringTrim(llGetSubString(   msg,         0,  space - 1), STRING_TRIM));
 
                 //----------------------------------------
                 // DOLL & EMBEDDED CONTROLLER COMMANDS (with parameter)
@@ -951,30 +951,30 @@ default {
                 //   * unblacklist AAA
                 //   * prefix ZZZ
                 //
-                if (isDoll) {
-                    if (choice == "blacklist") {
-                        lmInternalCommand("addBlacklist", param, id);
+                if (accessorIsDoll) {
+                    if (chatCommand == "blacklist") {
+                        lmInternalCommand("addBlacklist", param, accessorID);
                         return;
                     }
-                    else if (choice == "unblacklist") {
-                        lmInternalCommand("remBlacklist", param, id);
+                    else if (chatCommand == "unblacklist") {
+                        lmInternalCommand("remBlacklist", param, accessorID);
                         return;
                     }
                 }
 
-                if (isDoll || isController) {
-                    if (choice == "channel") {
+                if (accessorIsDoll || accessorIsController) {
+                    if (chatCommand == "channel") {
                         string c = param;
 
                         if ((string) ((integer) c) == c) {
                             integer ch = (integer) c;
 
                             if (ch == PUBLIC_CHANNEL || ch == DEBUG_CHANNEL) {
-                                cdSayTo("Invalid channel (" + (string)ch + ") ignored",id);
+                                cdSayTo("Invalid channel (" + (string)ch + ") ignored",accessorID);
                             }
                             else {
                                 lmSetConfig("chatChannel",(string)(ch));
-                                cdSayTo("Dolly communications link reset with new parameters on channel " + (string)ch,id);
+                                cdSayTo("Dolly communications link reset with new parameters on channel " + (string)ch,accessorID);
 #ifdef DEVELOPER_MODE
                                 llSay(DEBUG_CHANNEL,"chat channel changed from cmd line to using channel " + (string)ch);
 #endif
@@ -982,11 +982,11 @@ default {
                         }
                         return;
                     }
-                    else if (choice == "controller") {
-                        lmInternalCommand("addController", param, id);
+                    else if (chatCommand == "controller") {
+                        lmInternalCommand("addController", param, accessorID);
                         return;
                     }
-                    else if (choice == "prefix") {
+                    else if (chatCommand == "prefix") {
                         string newPrefix = param;
                         string c1 = llGetSubString(newPrefix,0,0);
                         string msg = "The prefix you entered is not valid, the prefix must ";
@@ -997,7 +997,7 @@ default {
                         if (n < 2 || n > 10) {
                             // Why? Two character user prefixes are standard and familiar; too much false positives with
                             // just 1 letter (~4%) with letter + letter/digit it's (~0.1%)
-                            cdSayTo(msg + "be between two and ten characters long.", id);
+                            cdSayTo(msg + "be between two and ten characters long.", accessorID);
                         }
 
                         // * contain numbers and letters only
@@ -1005,7 +1005,7 @@ default {
                         else if (newPrefix != llEscapeURL(newPrefix)) {
                             // Why? Stick to simple ascii compatible alphanumerics that are compatible with
                             // all keyboards and with mobile devices with limited input capabilities etc.
-                            cdSayTo(msg + "only contain letters and numbers.", id);
+                            cdSayTo(msg + "only contain letters and numbers.", accessorID);
                         }
 
                         // * start with a letter
@@ -1013,7 +1013,7 @@ default {
                         else if (((integer)c1) || (c1 == "0")) {
                             // Why? This one is needed to prevent the first char of prefix being merged into
                             // the channel # when commands are typed without the use of the optional space.
-                            cdSayTo(msg + "start with a letter.", id);
+                            cdSayTo(msg + "start with a letter.", accessorID);
                         }
 
                         // All is good
@@ -1021,7 +1021,7 @@ default {
                         else {
                             chatPrefix = newPrefix;
                             string s = "Chat prefix has been changed to " + llToLower(chatPrefix) + " the new prefix should now be used for all commands.";
-                            cdSayToAgentPlusDoll(s, id);
+                            cdSayToAgentPlusDoll(s, accessorID);
                             lmSetConfig("chatPrefix",(string)(chatPrefix));
                         }
                         return;
@@ -1038,8 +1038,8 @@ default {
                 //   * timereporting (DEVELOPER_MODE)
                 //   * collapse (DEVELOPER_MODE)
                 //
-                if (isDoll) {
-                    if (choice == "gname") {
+                if (accessorIsDoll) {
+                    if (chatCommand == "gname") {
                         // gname outputs a string with a symbol-based border
                         //
                         // Yes, this is a frivolous command... so what? *grins*
@@ -1089,7 +1089,7 @@ default {
                         return;
                     }
 #ifdef DEVELOPER_MODE
-                    else if (choice == "debug") {
+                    else if (chatCommand == "debug") {
                         lmSendConfig("debugLevel", (string)(debugLevel = (integer)param));
                         if (debugLevel > 0) llOwnerSay("Debug level set to " + (string)debugLevel);
                         else llOwnerSay("Debug messages turned off.");
@@ -1101,7 +1101,7 @@ default {
 
                         return;
                     }
-                    else if (choice == "inject") {
+                    else if (chatCommand == "inject") {
                         list params = llParseString2List(param, ["#"], []);
                         key paramKey = (key)params[2]; // NULL_KEY if not valid
                         string paramData = "ChatHandler|" + (string)params[1];
@@ -1112,7 +1112,7 @@ default {
                         llMessageLinked(LINK_THIS, paramCode, paramData, paramKey);
                         return;
                     }
-                    else if (choice == "timereporting") {
+                    else if (chatCommand == "timereporting") {
                         string s = "Time reporting turned ";
 
                         if (param == "0") s += "off.";
@@ -1141,7 +1141,7 @@ default {
                 if (!(llGetAgentInfo(llGetOwner()) & AGENT_SITTING)) { // Agent not sitting
                     if (llGetInventoryType(msg) == INVENTORY_ANIMATION) {
                         // We don't have to do any testing for poses here: if the specified pose exists, we use it
-                        lmPoseReply(msg, name, id);
+                        lmPoseReply(msg, accessorName, accessorID);
                     }
 #ifdef DEVELOPER_MODE
                     else {
