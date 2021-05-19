@@ -236,13 +236,8 @@ integer isDresser(key id) {
 changeComplete(integer success) {
     // And remove the temp locks we used
 
-#ifdef DEVELOPER_MODE
-    llOwnerSay("Your key is now unlocked again as you are a developer.");
-    if (RLVok == TRUE) lmRunRLV("clear=attach,clear=detach");
-#else
-    // if we used "detach" as the pattern then the Key would be unlocked
+    // If we used "detach" as the pattern then the Key would be unlocked
     lmRunRLV("clear=attach,clear=detachall");
-#endif
 
     if (success) {
         if (change) {
@@ -363,7 +358,7 @@ default {
             string value = (string)split[1];
             string c = cdGetFirstChar(name);
 
-            if (llListFindList([ "a", "R", "h", "p", "c", "d", "n", "t", "w", "o", "u" ], (list)c) == NOT_FOUND) return;
+            //if (llListFindList([ "k", "a", "R", "h", "p", "c", "d", "n", "t", "w", "o", "u" ], (list)c) == NOT_FOUND) return;
             //debugSay(6, "DEBUG-DRESS", "Link message: CONFIG name = " + name);
 
             if (name == "dialogChannel") {
@@ -383,11 +378,8 @@ default {
             else if (name == "dollType")                        dollType = value;
             else if (name == "pronounHerDoll")            pronounHerDoll = value;
             else if (name == "pronounSheDoll")            pronounSheDoll = value;
-            else if (c == "c") {
-                     if (name == "canDressSelf")                canDressSelf = (integer)value;
-                else if (name == "collapsed")                      collapsed = (integer)value;
-//              else if (name == "clothingFolder")            clothingFolder = value;
-            }
+            else if (name == "canDressSelf")                canDressSelf = (integer)value;
+            else if (name == "collapsed")                      collapsed = (integer)value;
 
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                        debugLevel = (integer)value;
@@ -398,18 +390,7 @@ default {
                 else if (name == "nudeFolder")                    nudeFolder = value;
             }
 
-            else if (c == "o") {
-                     if (name == "outfitFolder") {
-                         outfitFolder = value;
-                         //normalselfFolder   = outfitFolder + "/~normalself";
-                         //normaloutfitFolder = outfitFolder + "/~normaloutfit";
-                         //nudeFolder         = outfitFolder + "/~nude";
-                         //lmSendConfig("normalselfFolder", normalselfFolder);
-                         //lmSendConfig("normaloutfitFolder", normaloutfitFolder);
-                         //lmSendConfig("nudeFolder", nudeFolder);
-                }
-            }
-
+            else if (name == "outfitFolder")                outfitFolder = value;
             else if (name == "typeFolder")                    typeFolder = value;
             else if (name == "useTypeFolder")              useTypeFolder = (integer)value;
             else if (name == "wearLock")                        wearLock = (integer)value;
@@ -633,6 +614,7 @@ default {
 
                 llListenRemove(menuDressHandle);
 
+                debugSay(2,"DEBUG-DRESS","keyLocked = " + (string)keyLocked);
                 if (keyLocked == FALSE) rlvUnlockKey();
                 changeComplete(TRUE);
                 clearDresser();

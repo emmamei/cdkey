@@ -183,7 +183,6 @@ doCollapse() {
     if (RLVok == TRUE) {
         rlvLockKey();
         lmRestrictRLV(defaultCollapseRLVcmd);
-        if (keyLocked) rlvUnlockKey();
     }
 
     oldAnimList = llGetAnimationList(dollID);
@@ -221,6 +220,7 @@ unCollapse() {
 
     if (RLVok == TRUE) {
         lmRunRLVcmd("clearRLVcmd","");
+        if (keyLocked == FALSE) rlvUnlockKey();
     }
 
     oldAnimList = llGetAnimationList(dollID);
@@ -809,12 +809,14 @@ default {
 
             else if (choice == "Lock") {
                 rlvLockKey();
-                lmSendConfig("keyLocked",(string)TRUE);
+                lmSendConfig("keyLocked",(string)(keyLocked = TRUE));
+                lmInternalCommand("mainMenu", "|" + name, id);
             }
 
             else if (choice == "Unlock") {
                 rlvUnlockKey();
-                lmSendConfig("keyLocked",(string)FALSE);
+                lmSendConfig("keyLocked",(string)(keyLocked = FALSE));
+                lmInternalCommand("mainMenu", "|" + name, id);
             }
 
             // Winding - pure and simple

@@ -124,7 +124,7 @@ rlvActivateBase() {
     //
     // In this, defaultBaseRLVcmd is much more flexible than the other defaults
     //
-    if (keyLocked)  baseRLV += "detach=n,";         else baseRLV += "detach=y,";
+    //if (keyLocked)  baseRLV += "detach=n,";         else baseRLV += "detach=y,";
     if (autoTP)     baseRLV += "accepttp=n,";       else baseRLV += "accepttp=y,";
     if (!canSelfTP) baseRLV += "tplm=n,tploc=n,";   else baseRLV += "tplm=y,tploc=y,";
     if (!canFly)    baseRLV += "fly=n,";            else baseRLV += "fly=y,";
@@ -179,17 +179,6 @@ rlvActivate() {
 
         llOwnerSay("Enabling RLV mode");
 
-#ifdef LOCKON
-        // We lock the key on here - but in the menu system, it appears
-        // unlocked and detachable: this is because it can be detached
-        // via the menu. To make the key truly "undetachable", we get
-        // rid of the menu item to unlock it
-
-        lmRunRLVas("Base", "detach=n");  //locks key
-#else
-        // if Doll is one of the developers... dont lock:
-        // prevents inadvertent lock-in during development
-#endif
         lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
         lmSendConfig("RLVsupport",(string)RLVsupport);
         lmRunRLVcmd("clearRLVcmd",""); // Run after RLVok and RLVsupport have been propogated
