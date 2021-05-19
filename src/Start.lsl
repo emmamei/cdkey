@@ -565,6 +565,8 @@ default {
         doRestart();
         llSleep(0.5);
 
+        makeWorkInNoScriptLand(dollID);
+
         lmInitState(INIT_STAGE1);
     }
 

@@ -378,32 +378,6 @@ default {
     }
 
     //----------------------------------------
-    // CHANGED
-    //----------------------------------------
-    changed(integer change) {
-        if (change & CHANGED_INVENTORY) {
-            poseBufferedList = [];
-            bufferPoses();
-        }
-#ifdef DEVELOPER_MODE
-        else if (change & (CHANGED_REGION | CHANGED_TELEPORT)) {
-            // related to follow
-            //llStopMoveToTarget();
-            //llTargetRemove(targetHandle);
-
-            msg = "Region ";
-            if (llGetParcelFlags(llGetPos()) & PARCEL_FLAG_ALLOW_SCRIPTS) msg += "allows scripts";
-            else msg += "does not allow scripts";
-
-            debugSay(3,"DEBUG-AVATAR",msg);
-            debugSay(3,"DEBUG-AVATAR","Region FPS: " + formatFloat(llGetRegionFPS(),1) + "; Region Time Dilation: " + formatFloat(llGetRegionTimeDilation(),3));
-            //debugSay(5,"DEBUG-AVATAR","ifPermissions (changed)");
-            //llRequestPermissions(dollID, PERMISSION_MASK);
-        }
-#endif
-    }
-
-    //----------------------------------------
     // ATTACH
     //----------------------------------------
     // During attach, we perform:
@@ -435,6 +409,32 @@ default {
 
         poseBufferedList = [];
         bufferPoses();
+    }
+
+    //----------------------------------------
+    // CHANGED
+    //----------------------------------------
+    changed(integer change) {
+        if (change & CHANGED_INVENTORY) {
+            poseBufferedList = [];
+            bufferPoses();
+        }
+#ifdef DEVELOPER_MODE
+        else if (change & (CHANGED_REGION | CHANGED_TELEPORT)) {
+            // related to follow
+            //llStopMoveToTarget();
+            //llTargetRemove(targetHandle);
+
+            msg = "Region ";
+            if (llGetParcelFlags(llGetPos()) & PARCEL_FLAG_ALLOW_SCRIPTS) msg += "allows scripts";
+            else msg += "does not allow scripts";
+
+            debugSay(3,"DEBUG-AVATAR",msg);
+            debugSay(3,"DEBUG-AVATAR","Region FPS: " + formatFloat(llGetRegionFPS(),1) + "; Region Time Dilation: " + formatFloat(llGetRegionTimeDilation(),3));
+            //debugSay(5,"DEBUG-AVATAR","ifPermissions (changed)");
+            //llRequestPermissions(dollID, PERMISSION_MASK);
+        }
+#endif
     }
 
     //----------------------------------------
