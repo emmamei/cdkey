@@ -7,6 +7,12 @@
 
 float Config_version=1.0;
 
+#ifdef EMERGENCY_TP
+#define OPT_TP ["EmergencyTP"]
+#else
+#define OPT_TP []
+#endif
+
 #ifdef HOMING_BEACON
 #define OPT_HOMING ["HomingBeacon"]
 #else
@@ -45,7 +51,7 @@ float Config_version=1.0;
 #define OPT_KEY_MODE ["Mode=Normal"]
 #endif
 
-#define BUILD_REPORT (OPT_ADULT + OPT_KEY_MODE + OPT_ROLLOVER + OPT_SINGLEWIND + OPT_HOMING + OPT_PRESERVE_DIRECTORY + OPT_WIND )
+#define BUILD_REPORT (OPT_ADULT + OPT_KEY_MODE + OPT_ROLLOVER + OPT_SINGLEWIND + OPT_HOMING + OPT_TP + OPT_PRESERVE_DIRECTORY + OPT_WIND )
 
 #define lmConfigReport() llMessageLinked(LINK_THIS, 142, myName, NULL_KEY)
 

@@ -161,8 +161,9 @@ doCollapse() {
     // Note that this command zaps the amount of time remaining:
     // if dolly is collapsed, she is by definition out of time...
     //
-    collapseTime = llGetUnixTime();
-    lmSendConfig("collapseTime", (string)(collapseTime = llGetUnixTime()));
+    if (collapseTime == 0) collapseTime = llGetUnixTime();
+    lmSendConfig("collapseTime", (string)collapseTime);
+
     lmSendConfig("collapsed", (string)(collapsed = TRUE));
     lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0));
 
@@ -273,6 +274,7 @@ default {
         configured = TRUE;
 
         lmInternalCommand("setHovertext", "", keyID);
+        if (!(keyDetached(dollID))) requestPermToCollapse();
 
         llResetTime();
         llSetTimerEvent(30.0);
@@ -555,7 +557,14 @@ default {
             else if (name == "allowRepeatWind")       allowRepeatWind = (integer)value;
             else if (name == "allowDress")                 allowDress = (integer)value;
             else if (name == "isAFK")                           isAFK = (integer)value;
-            else if (name == "RLVok")                           RLVok = (integer)value;
+            else if (name == "RLVok") {
+                RLVok = (integer)value;
+
+                if (RLVok) {
+                    // When RLV activates for whatever reason, make sure collapse is properly set
+                    if (collapsed) doCollapse();
+                }
+            }
 #ifdef ADULT_MODE
             else if (name == "allowStrip")                 allowStrip = (integer)value;
 #endif
@@ -660,7 +669,7 @@ default {
 
                 // The collapse internal command...
 
-                if (collapsed != collapseState) { // if equal, no change needed
+                if (collapsed != collapseState) {
                     if (collapseState) doCollapse();
                     else unCollapse();
                 }

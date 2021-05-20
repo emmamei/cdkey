@@ -4,9 +4,6 @@
 // COMPILE CONFIGURATION
 //========================================
 
-/* adds a homing beacon: an automatic TP home for collapsed dollies */
-#define HOMING_BEACON 1
-
 /* requires someone to wind dolly before dolly can self-wind a second time */
 // #define SINGLE_SELF_WIND 1
 
@@ -32,6 +29,14 @@
 /* enable a test mode with minimal code changes in which RLV support always
    fails effectively disable the listener for the check reply */
 // #define DEBUG_BADRLV 1
+
+/* enable optional emergency TP after collapse */
+// #define EMERGENCY_TP 1
+
+/* adds a homing beacon: an automatic TP home for collapsed dollies */
+#ifdef EMERGENCY_TP
+#define HOMING_BEACON 1
+#endif
 
 /* enable optional RLV: dolly can enable and disable it */
 // #define OPTIONAL_RLV

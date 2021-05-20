@@ -117,8 +117,9 @@ default {
 #endif
             else if (name == "collapseTime")             collapseTime = (integer)value;
             else if (name == "collapsed")                   collapsed = (integer)value;
+#ifdef EMERGENCY_TP
             else if (name == "autoTP")                         autoTP = (integer)value;
-            else if (name == "autoTP")                         autoTP = (integer)value;
+#endif
             else if (name == "showPhrases")               showPhrases = (integer)value;
             else if (name == "RLVsupport")                 RLVsupport = (integer)value;
             else if (name == "RLVok")                           RLVok = (integer)value;
@@ -172,9 +173,16 @@ default {
                     msg = "You need winding. ";
                     integer timeCollapsed = llGetUnixTime() - collapseTime;
 
+#define minutesCollapsed llFloor(timeCollapsed / SEC_TO_MIN)
+
+                    msg += "You have been collapsed for ";
+                    if (minutesCollapsed < 1) msg += (string)llFloor(timeCollapsed / SEC_TO_MIN) + " minutes. ";
+                    else msg += (string)timeCollapsed + " seconds. ";
 #ifdef DEVELOPER_MODE
-                    msg += "You have been collapsed for " + (string)llFloor(timeCollapsed / SEC_TO_MIN) + " minutes (" + (string)timeCollapsed + " seconds). ";
-                    msg += "\n\nTime before TP: " + (string)TIME_BEFORE_TP + "\nTime before Emg Wind: " + (string)TIME_BEFORE_EMGWIND + "\nTime elapsed: " + (string)timeCollapsed + "\n";
+#ifdef EMERGENCY_TP
+                    msg += "\nTime before TP: " + (string)TIME_BEFORE_TP;
+#endif
+                    msg += "\nTime before Emg Wind: " + (string)TIME_BEFORE_EMGWIND + "\nTime elapsed: " + (string)timeCollapsed + "\n";
 #endif
 
                     // Only present the TP home option for the doll if they have been collapsed
@@ -282,11 +290,14 @@ default {
                 llGiveInventory(id,OBJECT_KEY);
             }
             else if (choice == "Visit Dollhouse") {
+#ifdef EMERGENCY_TP
                 // If is Dolly, whisk Dolly away to Location of Landmark
                 // If is someone else, give Landmark to them
                 if (cdIsDoll(id) && RLVok)
                     lmInternalCommand("teleport", LANDMARK_CDHOME, id);
-                else llGiveInventory(id, LANDMARK_CDHOME);
+                else
+#endif
+                    llGiveInventory(id, LANDMARK_CDHOME);
             }
             else if (choice == "Visit Development")
                 cdSayTo("Here is your link to the Community Doll Key development: " + WEB_DEV, id);
@@ -375,7 +386,9 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                     plusList += cdGetButton("Sitting", id, canSit, 1);
                     plusList += cdGetButton("Standing", id, canStand, 1);
                     plusList += cdGetButton("Self TP", id, canSelfTP, 1);
+#ifdef EMERGENCY_TP
                     plusList += cdGetButton("Force TP", id, autoTP, 1);
+#endif
                     plusList += "Back...";
                 }
                 else {

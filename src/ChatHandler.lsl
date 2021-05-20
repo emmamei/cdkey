@@ -79,11 +79,13 @@ default {
             //----------------------------------------
             // Shortcut: a
             else if (c == "a") {
-                     if (name == "autoTP")                     autoTP = (integer)value;
+                     if (name == "allowRepeatWind")   allowRepeatWind = (integer)value;
+#ifdef EMERGENCY_TP
+                else if (name == "autoTP")                     autoTP = (integer)value;
+#endif
 #ifdef ADULT_MODE
                 else if (name == "allowStrip")             allowStrip = (integer)value;
 #endif
-                else if (name == "allowRepeatWind")   allowRepeatWind = (integer)value;
                 else if (name == "allowCarry")             allowCarry = (integer)value;
                 else if (name == "allowDress")             allowDress = (integer)value;
                 else if (name == "allowPose")               allowPose = (integer)value;
@@ -604,7 +606,9 @@ default {
 
                         s += (string)((integer)(windEmergency / SECS_PER_MIN)) + " mins\n";
 
+#ifdef EMERGENCY_TP
                         cdCapability(autoTP,           "Doll can", "be force teleported");
+#endif
                         cdCapability(canFly,           "Doll can", "fly");
                         cdCapability(canSit,           "Doll can", "sit");
                         cdCapability(canStand,         "Doll can", "stand");

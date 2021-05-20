@@ -855,11 +855,7 @@ default {
             }
             else {
                 // A space WAS found in the Menu button selection
-                if (choice == "TP Home") {
-                    lmInternalCommand("teleport", LANDMARK_HOME, id);
-                    return;
-                }
-                else if (choice == "Drop Control") {
+                if (choice == "Drop Control") {
                     integer index;
 
                     if ((index = llListFindList(controllers, [ (string)id ])) != NOT_FOUND) {
@@ -878,7 +874,12 @@ default {
 #endif
                     return;
                 }
-
+#ifdef EMERGENCY_TP
+                else if (choice == "TP Home") {
+                    lmInternalCommand("teleport", LANDMARK_HOME, id);
+                    return;
+                }
+#endif
                 string beforeSpace = llStringTrim(llGetSubString(choice, 0, space),STRING_TRIM);
                 string afterSpace = llDeleteSubString(choice, 0, space);
 
@@ -939,7 +940,9 @@ default {
                             else if (afterSpace == "Flying")     lmSendConfig("canFly",       (string)isX);
                             else if (afterSpace == "Sitting")    lmSendConfig("canSit",       (string)isX);
                             else if (afterSpace == "Standing")   lmSendConfig("canStand",     (string)isX);
+#ifdef EMERGENCY_TP
                             else if (afterSpace == "Force TP")   lmSendConfig("autoTP",       (string)isX);
+#endif
                             else isRestriction = 0;
                         }
                         else if (isX && isDoll) {

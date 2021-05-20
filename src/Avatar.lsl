@@ -37,7 +37,9 @@
 #define poseChanged (currentAnimation != poseAnimation)
 #define keyDetached(id) (id == NULL_KEY)
 
+#ifdef EMERGENCY_TP
 key rlvTPrequest;
+#endif
 
 // Note that this is not the "speed" nor is it a slowing factor
 // This is a vector of force applied against Dolly: headwind speed
@@ -512,12 +514,19 @@ default {
                 if (RLVok == TRUE) { lmRunRLVcmd("clearRLVcmd","detachme=force"); }
                 else llDetachFromAvatar();
             }
+#ifdef EMERGENCY_TP
             else if (cmd == "teleport") {
                 string lm = (string)split[0];
+
                 llRegionSayTo(id, 0, "Teleporting dolly " + dollName + " to  landmark " + lm + ".");
+
                 lmRunRLV("tploc=y");
+
+                // This should trigger a dataserver event
                 rlvTPrequest = llRequestInventoryData(lm);
+                debugSay(6,"DEBUG-AVATAR","rlvTPrequest = " + (string)rlvTPrequest);
             }
+#endif
             else if (cmd == "posePageN") {
                 string choice = (string)split[0];
                 posePageN(choice,id);
@@ -676,6 +685,7 @@ default {
 #endif
     }
 
+#ifdef EMERGENCY_TP
     //----------------------------------------
     // DATASERVER
     //----------------------------------------
@@ -684,9 +694,15 @@ default {
 #define getRegionLocation(d) (llGetRegionCorner() + ((vector)data))
 #define locationToString(d) ((string)(llFloor(d.x)) + "/" + ((string)(llFloor(d.y))) + "/" + ((string)(llFloor(d.z))))
 
+        debugSay(6,"DEBUG-AVATAR","Data server running!");
+        debugSay(6,"DEBUG-AVATAR","Request = " + (string)request);
+        debugSay(6,"DEBUG-AVATAR","rlvTPrequest = " + (string)rlvTPrequest);
+        llOwnerSay("dataserver fired!");
+
         if (request == rlvTPrequest) {
             vector global = getRegionLocation(data);
 
+            debugSay(6,"DEBUG-AVATAR","Dolly should be teleporting now...");
             llOwnerSay("Dolly is now teleporting.");
 
             // Note this will be rejected if @unsit=n or @tploc=n are active
@@ -694,6 +710,7 @@ default {
             lmRunRLV("tploc=n"); // restore restriction
         }
     }
+#endif
 
     //----------------------------------------
     // RUN TIME PERMISSIONS

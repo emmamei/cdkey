@@ -125,7 +125,9 @@ rlvActivateBase() {
     // In this, defaultBaseRLVcmd is much more flexible than the other defaults
     //
     //if (keyLocked)  baseRLV += "detach=n,";         else baseRLV += "detach=y,";
+#ifdef EMERGENCY_TP
     if (autoTP)     baseRLV += "accepttp=n,";       else baseRLV += "accepttp=y,";
+#endif
     if (!canSelfTP) baseRLV += "tplm=n,tploc=n,";   else baseRLV += "tplm=y,tploc=y,";
     if (!canFly)    baseRLV += "fly=n,";            else baseRLV += "fly=y,";
     if (!canStand)  baseRLV += "unsit=n,";          else baseRLV += "unsit=y,";
@@ -181,6 +183,8 @@ rlvActivate() {
     }
 
     rlvActivateBase();
+    if (collapsed)
+        lmInternalCommand("collapse", (string)collapsed, NULL_KEY);
 
     // If we get here - RLVok is already set
     rlvStarted = TRUE;
@@ -198,6 +202,7 @@ default {
         dollName = llGetDisplayName(dollID = llGetOwner());
         keyID = llGetKey();
         myName = llGetScriptName();
+        initializing = TRUE;
 
 #ifdef DEVELOPER_MODE
         myPath = "";
@@ -213,6 +218,7 @@ default {
 
         // IF RLVok is TRUE, then check to see that RLV is
         // actually available on the viewer
+        initializing = FALSE;
 
 #ifdef DEVELOPER_MODE
         myPath = "";
@@ -287,10 +293,12 @@ default {
             value = (string)split[0];
             string c = llGetSubString(name, 0, 0);
 
-            if (llListFindList([ "a", "c", "d", "w" ],(list)c) == NOT_FOUND) return;
+            //if (llListFindList([ "R", "h", "k", "a", "c", "d", "w" ],(list)c) == NOT_FOUND) return;
 
-                 if (name == "autoTP")            {       autoTP = (integer)value; rlvSetIf("accepttp", !autoTP); }
-            else if (name == "hardcore")          {     hardcore = (integer)value; rlvOutfitLock(); }
+                 if (name == "hardcore")          {     hardcore = (integer)value; rlvOutfitLock(); }
+#ifdef EMERGENCY_TP
+            else if (name == "autoTP")            {       autoTP = (integer)value; rlvSetIf("accepttp", !autoTP); }
+#endif
             else if (name == "RLVok")             {        RLVok = (integer)value; }
             else if (name == "keyLocked")         {    keyLocked = (integer)value; }
 #ifdef DEVELOPER_MODE
@@ -407,7 +415,7 @@ default {
         else if (code < 200) {
                  if (code == INIT_STAGE1) {
 
-                startRlvCheck();  // once RLV is determined, this triggers STAGE3
+                startRlvCheck();  // once RLV is determined, this triggers STAGE2
 
             }
             else if (code == INIT_STAGE5) {

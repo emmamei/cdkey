@@ -113,6 +113,10 @@ processConfiguration(string name, string value) {
                       "strippable",
 #endif
                       "pose silence", "auto tp", "dressable", "outfitable", "can dress",
+#ifdef EMERGENCY_TP
+                      "auto tp",
+#endif
+                      "dressable", "outfitable", "can dress",
                       "show phrases", "carryable", "repeatable wind", "ghost"
                     ];
 
@@ -121,7 +125,11 @@ processConfiguration(string name, string value) {
 #ifdef ADULT_MODE
                          "allowStrip",
 #endif
-                         "poseSilence", "autoTP", "allowDress", "allowDress", "canDressSelf",
+                         "poseSilence",
+#ifdef EMERGENCY_TP
+                         "autoTP",
+#endif
+                         "allowDress", "allowDress", "canDressSelf",
                          "showPhrases", "allowCarry", "allowRepeatWind", "ghost"
                        ];
 
@@ -586,6 +594,7 @@ default {
         // Set the debug level for all scripts early
         lmSendConfig("debugLevel",(string)debugLevel);
 #endif
+        lmInternalCommand("startRlvCheck", "", keyID);
     }
 
     //----------------------------------------
