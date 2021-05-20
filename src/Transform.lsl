@@ -589,7 +589,6 @@ default {
                 debugSay(6,"DEBUG-OPTIONS","Building Options menu...");
                 debugSay(6,"DEBUG-OPTIONS","isDoll = " + (string)cdIsDoll(id));
                 debugSay(6,"DEBUG-OPTIONS","isCarrier = " + (string)cdIsCarrier(id));
-                debugSay(6,"DEBUG-OPTIONS","isUserController = " + (string)cdIsUserController(id));
 
                 if (cdIsDoll(id)) {
                     msg = "See the help file for information on these options.";
@@ -607,7 +606,7 @@ default {
                     pluslist += [ "Type..." ];
                     if (RLVok == TRUE) pluslist += [ "Restrictions..." ];
                 }
-                else if (cdIsUserController(id)) {
+                else if (cdIsController(id)) {
 
                     msg = "See the help file for more information on these options. Choose what you want to happen.";
 

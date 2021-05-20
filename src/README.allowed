@@ -15,3 +15,10 @@ The different classifications are:
 The places these classifications are used the most is in allowing access to
 chat commands, and determining which menu buttons to show and allow.
 
+There are also situational changes that change permissions:
+
+    * Is Dolly Carried?
+    * Has Dolly been Wound?
+    * Has Dolly been Posed?
+    * Does Dolly have Controllers?
+

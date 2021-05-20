@@ -150,16 +150,8 @@ float GlobalDefines_version=1.0;
 #define AGENT_SILKY_MESMERISER_RAW    2fff40f0-ea4a-4b52-abb8-d4bf6b1c98c9
 #define AGENT_SILKY_MESMERISER        "2fff40f0-ea4a-4b52-abb8-d4bf6b1c98c9"
 
-//#define BUILTIN_CONTROLLERS [AGENT_SILKY_MESMERISER,AGENT_MAYSTONE_RESIDENT,AGENT_CHRISTINA_HALPIN,AGENT_ANDROMEDA_LAMPLIGHT]
-// list BuiltinControllers = BUILTIN_CONTROLLERS;
-#define USER_CONTROLLERS controllers
+#define DOLLY_CONTROLLERS controllers
 #include "CommonGlobals.lsl"
-
-// Once CommonGlobals is included redefine BUILTIN_CONTROLLERS to use the BuiltinControllers variable
-// otherwise we end up with many copies of the actual list data itself using more memory.
-//#undef BUILTIN_CONTROLLERS
-//#define BUILTIN_CONTROLLERS BuiltinControllers
-//#define ALL_CONTROLLERS USER_CONTROLLERS + BUILTIN_CONTROLLERS
 
 #define RUNNING 1
 #define NOT_RUNNING 0
@@ -243,7 +235,7 @@ float GlobalDefines_version=1.0;
 #define NO_TIME 1
 #define JAMMED 2
 
-#define cdControllerCount()      llFloor(llGetListLength(USER_CONTROLLERS) / 2)
+#define cdControllerCount()      llFloor(llGetListLength(controllers) / 2)
 #define cdAttached()             llGetAttached()
 #define cdDollAway()             ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0)
 #define cdCarried()              (carrierID != NULL_KEY)
@@ -288,8 +280,9 @@ float GlobalDefines_version=1.0;
 // Tests of id
 #define cdIsDoll(id)                    (id == dollID)
 #define cdIsCarrier(id)                 (id == carrierID)
-//#define cdDollyIsBuiltinController(id)  (id == dollID && (llListFindList(BUILTIN_CONTROLLERS, [ (string)id ]) != -1))
-#define cdIsUserController(id)          (llListFindList(USER_CONTROLLERS, [ (string)id ]) != -1)
+
+// Here's the test: if we want Dolly included or not
+#define cdIsExternalController(id)      (llListFindList(controllers, [ (string)id ]) != -1)
 #define cdIsController(id)              cdGetControllerStatus(id)
 
 #include "KeySharedFuncs.lsl"
@@ -305,9 +298,9 @@ integer cdGetControllerStatus(key id) {
     //   A User is a Controller if they are in the controller list
     //
     if (cdIsDoll(id))
-        return (USER_CONTROLLERS == []);
+        return (controllers == []);
     else {
-        return (llListFindList(USER_CONTROLLERS, [ (string)id ]) != -1);
+        return (llListFindList(controllers, [ (string)id ]) != -1);
     }
 }
 

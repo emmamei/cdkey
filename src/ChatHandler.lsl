@@ -389,6 +389,7 @@ default {
             string accessorName = llGetDisplayName(id); // get name of person sending chat command
             integer accessorIsDoll = cdIsDoll(id);
             integer accessorIsController = cdIsController(id);
+            integer accessorIsCarrier = cdIsCarrier(id);
 
             // Deny access to the menus when the command was recieved from blacklisted avatar
             if (!accessorIsDoll && (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND)) {
@@ -482,6 +483,10 @@ default {
                 // was a way to combine the help with the functions it would be
                 // much better...
                 //
+                // The help functions also provide, in code, a short-hand way to
+                // show who can do what commands... but have to very carefully make
+                // sure that the help matches the commands available...
+                //
                 if (chatCommand == "help") {
                     // First: anyone can do these commands
                     string help = "Commands:
@@ -489,71 +494,57 @@ default {
 
     help ........... this list of commands
     menu ........... show main menu
-    stat ........... concise current status";
+    stat ........... concise current status
+    wind ........... wind key";
                     string help2;
+                    string posingHelp = "
+    release ........ stop the current pose if possible
+    unpose ......... stop the current pose if possible
+    [posename] ..... activate the named pose if possible
+    listposes ...... list all poses";
+                    string carryHelp = "
+    carry .......... carry dolly
+    uncarry ........ put down dolly";
 
-                    if (accessorIsDoll || accessorIsController) {
+                    // Only Dolly or Controller or Carrier can do these commands
+                    if (accessorIsDoll || accessorIsController || accessorIsCarrier) {
                         help += "
-    build .......... list build configurations
-    detach ......... detach key if possible
     stats .......... selected statistics and settings
-    xstats ......... extended statistics and settings
+    xstats ......... extended statistics and settings";
+
+                        // These are here because none of these people are restricted
+                        // by the allow* functions
+                        help += posingHelp;
+                        help += carryHelp;
+
+                        // Only Dolly can do these
+                        if (accessorIsDoll) {
+                            help2 += "Commands (page2):
+
     hide ........... make key invisible
     unhide ......... make key visible
     show ........... make key visible
     visible ........ make key visible
     ghost .......... make key visible and ghostly
-    release ........ stop the current pose if possible
-    unpose ......... stop the current pose if possible
-    [posename] ..... activate the named pose if possible
-    listposes ...... list all poses
-    channel ## ..... change channel
     prefix XX ...... change chat command prefix
-    controller NN .. add controller";
-
-                        //----------------------------------------
-                        // Dolly Help
-                        if (accessorIsDoll) {
-                            help2 += "Commands (page2):
-
+    controller NN .. add controller
+    channel ## ..... change channel
     blacklist NN ... add to blacklist
     unblacklist NN . remove from blacklist";
-
-#ifdef EMERGENCY_WIND
-                            if (!hardcore) help += "
-    wind ........... trigger emergency autowind";
-#endif
-                        }
-
-                        //----------------------------------------
-                        // Controller Help
-                        else {
-                            help2 += "Commands (page2):
-
-    carry .......... carry dolly
-    uncarry ........ put down dolly
-    wind ........... wind key";
                         }
                     }
 
-                    //----------------------------------------
-                    // Public Help
+                    // Anyone other than Controllers / Carriers / Dolly
                     else {
-                        help += "
-    wind ........... wind key";
 
+                        // Only if poses are allowed
                         if (allowPose || hardcore) {
-                            help += "
-    listposes ...... list all poses
-    release ........ stop the current pose if possible
-    unpose ......... stop the current pose if possible
-    [posename] ..... activate the named pose if possible";
+                            help += posingHelp;
                         }
 
+                        // Only if carry is allowed
                         if (allowCarry || hardcore) {
-                            help += "
-    carry .......... carry dolly
-    uncarry ........ put down dolly";
+                            help += carryHelp;
                         }
                     }
 
@@ -561,10 +552,12 @@ default {
                     if (help2 != "") cdSayTo(help2 + "\n", accessorID);
 
 #ifdef DEVELOPER_MODE
+                    // Developer Dolly commands...
                     if (accessorIsDoll) {
                         help = "
     Debugging commands:
 
+    build .......... list build configurations
     debug # ........ set the debugging message verbosity 0-9
     timereporting .. set timereporting \"on\" or \"off\"
     inject x#x#x ... inject a link message with \"code#data#key\"
@@ -581,16 +574,15 @@ default {
                 //
                 // Commands only for Doll or Controllers
                 //   * build
-                //   * detach
-                //   * xstats
                 //   * update
+                //   * xstats
                 //   * stat
                 //   * stats
-                //   * release/unpose
                 //   * hardcore (ADULT_MODE)
                 //   * collapse (DEVELOPER_MODE)
                 //   * powersave (DEVELOPER_MODE)
                 //   * hide
+                //   * release/unpose
                 //   * unhide / show / visible
                 //   * ghost
                 //
@@ -802,30 +794,6 @@ default {
                 //
                 if (chatCommand == "wind") {
                     // A Normal Wind
-
-#ifdef EMERGENCY_WIND
-                    // This implements an emergency wind - but should be a different name
-                    // than "wind" (see issue #631)
-                    if (accessorIsDoll) {
-                        if (hardcore) return;
-                        if (collapsed) {
-                            if ((llGetUnixTime() - collapseTime) > TIME_BEFORE_EMGWIND) {
-                                cdMenuInject("Wind Emg", dollName, dollID);
-                            }
-                            else {
-#ifdef DEVELOPER_MODE
-                                cdSayTo("Emergency detection circuits detect developer access override; safety protocols removed and emergency winder activated",accessorID);
-                                cdMenuInject("Wind Emg", dollName, dollID);
-#else
-                                cdSayTo("Emergency not detected; emergency winder is currently disengaged",accessorID);
-#endif
-                            }
-                        }
-                        else {
-                            cdSayTo("Dolly is not collapsed; emergency winder is currently disengaged",accessorID);
-                        }
-                    }
-#endif
                     if (collapsed) {
                         if (!accessorIsDoll) {
                             lmInternalCommand("winding", "|" + accessorName, accessorID);
@@ -949,7 +917,7 @@ default {
                     return;
                 }
                 else if (chatCommand == "uncarry") {
-                    if (!accessorIsDoll && (accessorIsController || cdIsCarrier(accessorID))) cdMenuInject("Uncarry", accessorName, accessorID);
+                    if (!accessorIsDoll && (accessorIsController || accessorIsCarrier)) cdMenuInject("Uncarry", accessorName, accessorID);
                     return;
                 }
             }
