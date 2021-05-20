@@ -379,12 +379,14 @@ default {
     link_message(integer source, integer i, string data, key id) {
 
         // Parse link message header information
-        split             =     cdSplitArgs(data);
-        script            =     (string)split[0];
-        remoteSeq         =     (i & 0xFFFF0000) >> 16;
-        optHeader         =     (i & 0x00000C00) >> 10;
-        code              =      i & 0x000003FF;
-        split             =     llDeleteSubList(split, 0, 0 + optHeader);
+        split     = cdSplitArgs(data);
+        script    = (string)split[0];
+
+        remoteSeq = (i >> 16) & 0x0000FFFF;
+        optHeader = (i >> 10) & 0x00000003;
+        code      =  i & 0x000003FF;
+
+        split     = llDeleteSubList(split, 0, 0 + optHeader);
 
         //scaleMem();
 
