@@ -9,6 +9,7 @@
 #include "include/GlobalDefines.lsl"
 #define cdMenuInject(a,b,c) lmMenuReply(a,b,c)
 
+#define GNAME 1
 #define RUNNING 1
 #define NOT_RUNNING 0
 #define UNSET -1
@@ -29,6 +30,128 @@ integer chatEnable           = TRUE;
 string rlvAPIversion;
 
 integer chatHandle          = 0;
+key accessorID;
+string accessorName;
+integer accessorIsDoll;
+integer accessorIsController;
+integer accessorIsCarrier;
+integer poseExpire;
+
+#ifdef ADULT_MODE
+doHardcore() {
+
+    // if hardcore is set, only a controller other than
+    // Dolly can clear it. If hardcore is clear - only
+    // Dolly can set it.
+
+    if (hardcore) {
+        if (cdIsExternalController(accessorID)) {
+            lmSendConfig("hardcore",(string)(hardcore = 0));
+            cdSayTo("Doll's hardcore mode has been disabled. The sound of a lock unlocking is heard.",accessorID);
+        }
+        else {
+            cdSayTo("You rattle the lock, but it is securely fastened: you cannot disable hardcore mode.",accessorID);
+        }
+    }
+    else {
+        if (accessorIsDoll) {
+            lmSendConfig("hardcore",(string)(hardcore = 1));
+            cdSayTo("Doll's hardcore mode has been enabled. The sound of a lock closing is heard.",accessorID);
+        }
+    }
+}
+#endif
+
+doPrefix(string param) {
+    string newPrefix = param;
+    string c1 = llGetSubString(newPrefix,0,0);
+    string msg = "The prefix you entered is not valid, the prefix must ";
+    integer n = llStringLength(newPrefix);
+
+    // * must be greater than two characters and less than ten characters
+
+    if (n < 2 || n > 10) {
+        // Why? Two character user prefixes are standard and familiar; too much false positives with
+        // just 1 letter (~4%) with letter + letter/digit it's (~0.1%)
+        cdSayTo(msg + "be between two and ten characters long.", accessorID);
+    }
+
+    // * contain numbers and letters only
+
+    else if (newPrefix != llEscapeURL(newPrefix)) {
+        // Why? Stick to simple ascii compatible alphanumerics that are compatible with
+        // all keyboards and with mobile devices with limited input capabilities etc.
+        cdSayTo(msg + "only contain letters and numbers.", accessorID);
+    }
+
+    // * start with a letter
+
+    else if (((integer)c1) || (c1 == "0")) {
+        // Why? This one is needed to prevent the first char of prefix being merged into
+        // the channel # when commands are typed without the use of the optional space.
+        cdSayTo(msg + "start with a letter.", accessorID);
+    }
+
+    // All is good
+
+    else {
+        chatPrefix = newPrefix;
+        string s = "Chat prefix has been changed to " + llToLower(chatPrefix) + " the new prefix should now be used for all commands.";
+        cdSayToAgentPlusDoll(s, accessorID);
+        lmSetConfig("chatPrefix",(string)(chatPrefix));
+    }
+}
+
+#ifdef GNAME
+doGname(string param) {
+    // gname outputs a string with a symbol-based border
+    //
+    // Yes, this is a frivolous command... so what? *grins*
+    string doubledSymbols = "♬♬♪♪♩♩♭♭♪♪♦♦◊◊☢☢✎✎♂♂♀♀₪₪♋♋☯☯☆☆★★◇◇◆◆✈✈☉☉☊☊☋☋∆∆☀☀✵✵██▓▓▒▒░░❂❂××××⊹⊹××⊙⊙웃웃⚛⚛☠☠░░♡♡♫♫♬♬♀♀❤❤☮☮ﭚﭚ☆☆※※✴✴❇❇ﭕﭕةةثث¨¨ϟϟღღ⁂⁂٩٩۶۶✣✣✱✱✧✧✦✦❦❦⌘⌘ѽѽ☄☄✰✰++₪₪קק¤¤øøღღ°°♫♫✿✿▫▫▪▪♬♬♩♩♪♪♬♬°°ººةة==--++^^**˜˜¤¤øø☊☊☩☩´´⇝⇝⁘⁘⁙⁙⁚⁚⁛⁛↑↑↓↓☆☆★★··❤❤";
+    string pairedSymbols = "☜☞▶◀▷◁⊰⊱«»☾☽<>()[]{}\\/";
+    string allSymbols;
+
+    integer n;
+    string c1;
+    string c2;
+    string cLeft;
+    integer len;
+    integer j;
+    integer lenAllSymbols;
+
+    string oldName = llGetObjectName();
+    
+    // Change name so it will seem to come from us directly
+    cdSetKeyName(dollDisplayName);
+
+    allSymbols = doubledSymbols + pairedSymbols;
+    lenAllSymbols = llStringLength(allSymbols);
+    param = " " + param + " ";
+
+    len = (integer)llFrand(6) + 4;
+
+    while (len--) {
+        // Get a random character
+        n = (integer)(llFrand(lenAllSymbols));
+        c1 = llGetSubString(allSymbols,n,n);
+
+        // Get the chosen character's alternate
+        n = n ^ 1;
+        c2 = llGetSubString(allSymbols,n,n);
+
+        // Use multiple characters %50 of the time
+        if ((integer)(llFrand(2)) == 0) {
+            j = (integer)llFrand(3) + 1;
+            while (j--) param = c1 + param + c2;
+        }
+        else param = c1 + param + c2;
+    }
+    llSay(PUBLIC_CHANNEL,param);
+
+    // Restore to proper key name
+    cdSetKeyName(oldName);
+}
+#endif
 
 default {
     //----------------------------------------
@@ -66,10 +189,9 @@ default {
             split = llDeleteSubList(split,0,0);
 
                  if (name == "timeLeftOnKey")     timeLeftOnKey = (integer)value;
-#ifdef DEVELOPER_MODE
-            else if (name == "timeReporting")     timeReporting = (integer)value;
-#endif
+#ifdef ADULT_MODE
             else if (name == "hardcore")               hardcore = (integer)value;
+#endif
             else if (name == "RLVok")                     RLVok = (integer)value;
             else if (name == "blacklist") {
                 if (split == [""]) blacklist = [];
@@ -130,6 +252,7 @@ default {
                 else if (name == "poseAnimation")       poseAnimation = value;
                 else if (name == "poserID")                   poserID = (key)value;
                 else if (name == "poserName")               poserName = value;
+                else if (name == "poseExpire")             poseExpire = (integer)value;
                 else if (name == "pronounHerDoll")     pronounHerDoll = value;
                 else if (name == "pronounSheDoll")     pronounSheDoll = value;
             }
@@ -385,11 +508,11 @@ default {
         //----------------------------------------
 
         if (channel == chatChannel) {
-            key accessorID = id;
-            string accessorName = llGetDisplayName(id); // get name of person sending chat command
-            integer accessorIsDoll = cdIsDoll(id);
-            integer accessorIsController = cdIsController(id);
-            integer accessorIsCarrier = cdIsCarrier(id);
+            accessorID = id;
+            accessorName = llGetDisplayName(id); // get name of person sending chat command
+            accessorIsDoll = cdIsDoll(id);
+            accessorIsController = cdIsController(id); // This includes Dolly if there are no Controllers
+            accessorIsCarrier = cdIsCarrier(id);
 
             // Deny access to the menus when the command was recieved from blacklisted avatar
             if (!accessorIsDoll && (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND)) {
@@ -593,12 +716,12 @@ default {
                     }
                     else if (chatCommand == "update") {
 
-                        //llSay(PUBLIC_CHANNEL,"Update starting...");
                         lmSendConfig("update", "1");
                         return;
                     }
                     else if (chatCommand == "xstats") {
-                        if (accessorIsDoll && hardcore) return;
+                        if (accessorIsDoll && hardcore) return; // No stats for hardcore dolly!
+
                         string s = "Extended stats:\n\nDoll is a " + dollType + " Doll.\nWind amount: " +
                                    (string)llFloor(windNormal / SECS_PER_MIN) + " (mins)\nKey Limit: " +
                                    (string)(keyLimit / SECS_PER_MIN) + " mins\nEmergency Winder Recharge Time: " +
@@ -684,9 +807,11 @@ default {
                         cdSayTo(msg, accessorID);
 
                         if (poseAnimation != ANIMATION_NONE) {
-                        //    llOwnerSay(dollID, "Current pose: " + currentAnimation);
-                        //    llOwnerSay(dollID, "Pose time remaining: " + (string)(poseTime / SECS_PER_MIN) + " minutes.");
-                            llOwnerSay("Doll is posed.");
+
+                            cdSayTo("Current pose: " + poseAnimation, accessorID);
+
+                            if ((dollType != "Display") && (!hardcore))
+                                cdSayTo("Pose time remaining: " + (string)((poseExpire - llGetUnixTime()) / SECS_PER_MIN) + " minutes.", accessorID);
                         }
 
                         lmMemReport(1.0,accessorID);
@@ -694,26 +819,7 @@ default {
                     }
 #ifdef ADULT_MODE
                     else if (chatCommand == "hardcore") {
-
-                        // if hardcore is set, only a controller other than
-                        // Dolly can clear it. If hardcore is clear - only
-                        // Dolly can set it.
-
-                        if (hardcore) {
-                            if (accessorIsController && !accessorIsDoll) {
-                                lmSendConfig("hardcore",(string)(hardcore = 0));
-                                cdSayTo("Doll's hardcore mode has been disabled. The sound of a lock unlocking is heard.",accessorID);
-                            }
-                        }
-                        else {
-                            if (accessorIsDoll) {
-                                lmSendConfig("hardcore",(string)(hardcore = 1));
-                                cdSayTo("Doll's hardcore mode has been enabled. The sound of a lock closing is heard.",accessorID);
-                            }
-                            else {
-                                cdSayTo("You rattle the lock, but it is securely fastened: you cannot disable hardcore mode.",accessorID);
-                            }
-                        }
+                        doHardcore();
                         return;
                     }
 
@@ -965,6 +1071,9 @@ default {
 #endif
                             }
                         }
+                        else {
+                            llSay(DEBUG_CHANNEL, "Invalid channel number! (" + c + ")");
+                        }
                         return;
                     }
                     else if (chatCommand == "controller") {
@@ -972,43 +1081,7 @@ default {
                         return;
                     }
                     else if (chatCommand == "prefix") {
-                        string newPrefix = param;
-                        string c1 = llGetSubString(newPrefix,0,0);
-                        string msg = "The prefix you entered is not valid, the prefix must ";
-                        integer n = llStringLength(newPrefix);
-
-                        // * must be greater than two characters and less than ten characters
-
-                        if (n < 2 || n > 10) {
-                            // Why? Two character user prefixes are standard and familiar; too much false positives with
-                            // just 1 letter (~4%) with letter + letter/digit it's (~0.1%)
-                            cdSayTo(msg + "be between two and ten characters long.", accessorID);
-                        }
-
-                        // * contain numbers and letters only
-
-                        else if (newPrefix != llEscapeURL(newPrefix)) {
-                            // Why? Stick to simple ascii compatible alphanumerics that are compatible with
-                            // all keyboards and with mobile devices with limited input capabilities etc.
-                            cdSayTo(msg + "only contain letters and numbers.", accessorID);
-                        }
-
-                        // * start with a letter
-
-                        else if (((integer)c1) || (c1 == "0")) {
-                            // Why? This one is needed to prevent the first char of prefix being merged into
-                            // the channel # when commands are typed without the use of the optional space.
-                            cdSayTo(msg + "start with a letter.", accessorID);
-                        }
-
-                        // All is good
-
-                        else {
-                            chatPrefix = newPrefix;
-                            string s = "Chat prefix has been changed to " + llToLower(chatPrefix) + " the new prefix should now be used for all commands.";
-                            cdSayToAgentPlusDoll(s, accessorID);
-                            lmSetConfig("chatPrefix",(string)(chatPrefix));
-                        }
+                        doPrefix(param);
                         return;
                     }
                 }
@@ -1024,97 +1097,39 @@ default {
                 //   * collapse (DEVELOPER_MODE)
                 //
                 if (accessorIsDoll) {
+#ifdef GNAME
                     if (chatCommand == "gname") {
                         // gname outputs a string with a symbol-based border
                         //
                         // Yes, this is a frivolous command... so what? *grins*
-                        string doubledSymbols = "♬♬♪♪♩♩♭♭♪♪♦♦◊◊☢☢✎✎♂♂♀♀₪₪♋♋☯☯☆☆★★◇◇◆◆✈✈☉☉☊☊☋☋∆∆☀☀✵✵██▓▓▒▒░░❂❂××××⊹⊹××⊙⊙웃웃⚛⚛☠☠░░♡♡♫♫♬♬♀♀❤❤☮☮ﭚﭚ☆☆※※✴✴❇❇ﭕﭕةةثث¨¨ϟϟღღ⁂⁂٩٩۶۶✣✣✱✱✧✧✦✦❦❦⌘⌘ѽѽ☄☄✰✰++₪₪קק¤¤øøღღ°°♫♫✿✿▫▫▪▪♬♬♩♩♪♪♬♬°°ººةة==--++^^**˜˜¤¤øø☊☊☩☩´´⇝⇝⁘⁘⁙⁙⁚⁚⁛⁛↑↑↓↓☆☆★★··❤❤";
-                        string pairedSymbols = "☜☞▶◀▷◁⊰⊱«»☾☽<>()[]{}\\/";
-                        string allSymbols;
-
-                        integer n;
-                        string c1;
-                        string c2;
-                        string cLeft;
-                        integer len;
-                        integer j;
-                        integer lenAllSymbols;
-
-                        string oldName = llGetObjectName();
-                        
-                        // Change name so it will seem to come from us directly
-                        cdSetKeyName(dollDisplayName);
-
-                        allSymbols = doubledSymbols + pairedSymbols;
-                        lenAllSymbols = llStringLength(allSymbols);
-                        param = " " + param + " ";
-
-                        len = (integer)llFrand(6) + 4;
-
-                        while (len--) {
-                            // Get a random character
-                            n = (integer)(llFrand(lenAllSymbols));
-                            c1 = llGetSubString(allSymbols,n,n);
-
-                            // Get the chosen character's alternate
-                            n = n ^ 1;
-                            c2 = llGetSubString(allSymbols,n,n);
-
-                            // Use multiple characters %50 of the time
-                            if ((integer)(llFrand(2)) == 0) {
-                                j = (integer)llFrand(3) + 1;
-                                while (j--) param = c1 + param + c2;
-                            }
-                            else param = c1 + param + c2;
-                        }
-                        llSay(PUBLIC_CHANNEL,param);
-
-                        // Restore to proper key name
-                        cdSetKeyName(oldName);
+                        doGname(param);
                         return;
                     }
+#endif
 #ifdef DEVELOPER_MODE
-                    else if (chatCommand == "debug") {
+                    if (chatCommand == "debug") {
+                        if (debugLevel > 9) debugLevel = 9;
                         lmSendConfig("debugLevel", (string)(debugLevel = (integer)param));
+
                         if (debugLevel > 0) llOwnerSay("Debug level set to " + (string)debugLevel);
                         else llOwnerSay("Debug messages turned off.");
-
-                        if (debugLevel == 0) {
-                            lmSendConfig("timeReporting", (string)(timeReporting = 0));
-                            llOwnerSay("Time reporting turned off.");
-                        }
 
                         return;
                     }
                     else if (chatCommand == "inject") {
                         list params = llParseString2List(param, ["#"], []);
                         key paramKey = (key)params[2]; // NULL_KEY if not valid
-                        string paramData = "ChatHandler|" + (string)params[1];
-                        integer paramCode = (integer)params[0];
                         string s;
+
+#define paramData ("ChatHandler|" + (string)params[1])
+#define paramCode ((integer)params[0])
 
                         llOwnerSay("Injected link message code " + (string)paramCode + " with data " + (string)paramData + " and key " + (string)paramKey);
                         llMessageLinked(LINK_THIS, paramCode, paramData, paramKey);
                         return;
                     }
-                    else if (chatCommand == "timereporting") {
-                        string s = "Time reporting turned ";
-
-                        if (param == "0") s += "off.";
-                        else if (param == "off") {
-                            s += "off.";
-                            param = "0";
-                        }
-                        else {
-                            s += "on.";
-                            param = "1";
-                        }
-
-                        llOwnerSay(s);
-                        lmSendConfig("timeReporting", (string)(timeReporting = (integer)param));
-                        return;
-                    }
 #endif
+                    ;
                 }
                 // Poses have "secondary" parameters when the name contains spaces
             }
