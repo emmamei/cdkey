@@ -515,7 +515,7 @@ default {
             accessorIsCarrier = cdIsCarrier(id);
 
             // Deny access to the menus when the command was recieved from blacklisted avatar
-            if (!accessorIsDoll && (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND)) {
+            if (llListFindList(blacklist, [ (string)accessorID ]) != NOT_FOUND) {
                 llOwnerSay("SECURITY WARNING! Attempted chat channel access by blacklisted user " + accessorName);
                 return;
             }
@@ -997,22 +997,35 @@ default {
                     return;
                 }
                 else if (chatCommand == "release" || chatCommand == "unpose") {
-                    if (accessorIsDoll && hardcore) return;
-
                     if (poseAnimation == "")
                         cdSayTo("Dolly is not posed.",accessorID);
 
                     else if (accessorIsDoll) {
+
+                        // If hardcore or Display Dolly, then Doll can't undo a pose
+                        if (hardcore || dollType == "Display") return;
+
                         if (poserID != dollID) {
                             llOwnerSay("Dolly tries to wrest control of " + pronounHerDoll +
                                 " body from the pose but " + pronounSheDoll +
                                 " is no longer in control of " + pronounHerDoll + " form.");
                         }
-                    }
 
-                    else {
-                        cdSayTo("Dolly feels her pose release, and stretches her limbs, so long frozen.",accessorID);
-                        lmMenuReply("Unpose", dollName, dollID);
+                        else {
+                            cdSayTo("Dolly feels her pose release, and stretches her limbs, so long frozen.",accessorID);
+                            lmMenuReply("Unpose", dollName, dollID);
+                        }
+                    }
+                    else if (accessorIsController || accessorIsCarrier) {
+                        if (poserID == dollID) {
+                            llOwnerSay("You release Dolly's body from the pose that " + pronounSheDoll + " activated.");
+                            lmMenuReply("Unpose", accessorName, accessorID);
+                        }
+                        else if (poserID == accessorID) {
+                            cdSayTo("Dolly feels her pose release, and stretches her limbs, so long frozen.",accessorID);
+                            lmMenuReply("Unpose", accessorName, accessorID);
+                        }
+
                     }
 
                     return;
@@ -1108,8 +1121,9 @@ default {
 #endif
 #ifdef DEVELOPER_MODE
                     if (chatCommand == "debug") {
+                        debugLevel = (integer)param;
                         if (debugLevel > 9) debugLevel = 9;
-                        lmSendConfig("debugLevel", (string)(debugLevel = (integer)param));
+                        lmSendConfig("debugLevel", (string)debugLevel);
 
                         if (debugLevel > 0) llOwnerSay("Debug level set to " + (string)debugLevel);
                         else llOwnerSay("Debug messages turned off.");
@@ -1131,7 +1145,21 @@ default {
 #endif
                     ;
                 }
-                // Poses have "secondary" parameters when the name contains spaces
+                if (chatCommand == "pose") {
+                    string requestedAnimation = param;
+
+                    if (requestedAnimation != ANIMATION_COLLAPSED) {
+                        if (!(llGetAgentInfo(llGetOwner()) & AGENT_SITTING)) { // Agent not sitting
+                            if (llGetInventoryType(requestedAnimation) == INVENTORY_ANIMATION) {
+                                // We don't have to do any testing for poses here: if the specified pose exists, we use it
+                                lmPoseReply(requestedAnimation, accessorName, accessorID);
+                            }
+                            else {
+                                llSay(DEBUG_CHANNEL,"No pose by that name: " + requestedAnimation);
+                            }
+                        }
+                    }
+                }
             }
 
             // The chat message is not a known command, so try to find an animation (pose)
