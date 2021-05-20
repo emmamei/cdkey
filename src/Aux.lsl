@@ -46,15 +46,31 @@ string msg;
 // Gender is set in the preferences and the option menu
 setGender(string gender) {
 
-    if (gender == "male") {
-        dollGender     = "male";
-        pronounHerDoll = "his";
-        pronounSheDoll = "he";
-    }
-    else {
-        dollGender     = "female";
-        pronounHerDoll = "her";
-        pronounSheDoll = "she";
+    switch(gender) {
+
+        case "male": {
+
+            dollGender     = "male";
+            pronounHerDoll = "his";
+            pronounSheDoll = "he";
+            break;
+        }
+
+        case "female": {
+
+            dollGender     = "female";
+            pronounHerDoll = "her";
+            pronounSheDoll = "she";
+            break;
+        }
+
+        case "agender": {
+
+            dollGender     = "agender";
+            pronounHerDoll = "their";
+            pronounSheDoll = "they";
+            break;
+        }
     }
 
     lmSendConfig("dollGender",     dollGender);

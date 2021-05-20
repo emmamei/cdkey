@@ -37,6 +37,12 @@
 
 #define keyDetached(id) (id == NULL_KEY)
 
+#define KEYLIMIT_MAX 14400 // 4 hours
+#define KEYLIMIT_MIN 900 // 15 minutes
+
+#define WIND_MAX 5400 // 90 minutes
+#define WIND_MIN 900 // 15 minutes
+
 //=======================================
 // VARIABLES
 //=======================================
@@ -83,7 +89,7 @@ integer startParameter;
 // Configuration Functions
 //---------------------------------------
 
-processConfiguration(string name, string value) {
+processConfiguration(string configSettingName, string configSettingValue) {
 
     //----------------------------------------
     // Assign values to program variables
@@ -112,7 +118,7 @@ processConfiguration(string name, string value) {
 #ifdef ADULT_MODE
                       "strippable",
 #endif
-                      "pose silence", "auto tp", "dressable", "outfitable", "can dress",
+                      "pose silence",
 #ifdef EMERGENCY_TP
                       "auto tp",
 #endif
@@ -136,76 +142,76 @@ processConfiguration(string name, string value) {
     // This processes a single line from the preferences notecard...
     // processing done a single time during the read of the nc belong elsewhere
 
-    name = llToLower(name);
+    configSettingName = llToLower(configSettingName);
 
     // Check for settings - boolean true or false
-    if ((i = cdListElementP(settings,name)) != NOT_FOUND) {
-            value = llToLower(value);
+    if ((i = cdListElementP(settings,configSettingName)) != NOT_FOUND) {
+            configSettingValue = llToLower(configSettingValue);
 
-            if (value == "yes"  ||
-                value == "on"   ||
-                value == "y"    ||
-                value == "t"    ||
-                value == "true" ||
-                value == "1") {
+            if (configSettingValue == "yes"  ||
+                configSettingValue == "on"   ||
+                configSettingValue == "y"    ||
+                configSettingValue == "t"    ||
+                configSettingValue == "true" ||
+                configSettingValue == "1") {
 
-            value = "1";
+            configSettingValue = "1";
 
         }
-        else if (value == "no"    ||
-                 value == "off"   ||
-                 value == "n"     ||
-                 value == "f"     ||
-                 value == "false" ||
-                 value == "0") {
+        else if (configSettingValue == "no"    ||
+                 configSettingValue == "off"   ||
+                 configSettingValue == "n"     ||
+                 configSettingValue == "f"     ||
+                 configSettingValue == "false" ||
+                 configSettingValue == "0") {
                  
-            value = "0";
+            configSettingValue = "0";
         }
         else {
-            llSay(DEBUG_CHANNEL,"Invalid preferences setting! (" + name + " = " + value + ")");
+            llSay(DEBUG_CHANNEL,"Invalid preferences setting! (" + configSettingName + " = " + configSettingValue + ")");
             return;
         }
 
-        string name = (string)settingName[i];
+        //string configSettingName = (string)settingName[i];
 
-        // Special handling for ghost setting: value is a boolean,
+        // Special handling for ghost setting: configSettingValue is a boolean,
         // but result is to change the visibility value...
         //
-        if (name == "ghost") { lmSendConfig("visibility",(string)GHOST_VISIBILITY); }
-        else { lmSendConfig(name, value); }
+        if (configSettingName == "ghost") { lmSendConfig("visibility",(string)GHOST_VISIBILITY); }
+        else { lmSendConfig(configSettingName, configSettingValue); }
     }
     // Check for non-boolean settings
-    else if ((i = cdListElementP(configs,name)) != NOT_FOUND) {
-        if (name == "outfits path") {
+    else if ((i = cdListElementP(configs,configSettingName)) != NOT_FOUND) {
+        if (configSettingName == "outfits path") {
             // Defer actual setting of outfitsFolder until later
             //
-            //lmSetConfig("outfitFolder", value);
-            outfitFolderExpected = value;
+            //lmSetConfig("outfitFolder", configSettingValue);
+            outfitFolderExpected = configSettingValue;
         }
-        else if (name == "doll type") {
+        else if (configSettingName == "doll type") {
             // Defer actual setting of dollType until later
             //
-            //lmSetConfig("dollType", value);
-            dollTypeExpected = value;
+            //lmSetConfig("dollType", configSettingValue);
+            dollTypeExpected = configSettingValue;
         }
-        else if (name == "chat channel") {
+        else if (configSettingName == "chat channel") {
             // cant be 0 or MAXINT (DEBUG_CHANNEL)
-            lmSetConfig("chatChannel", value);
+            lmSetConfig("chatChannel", configSettingValue);
         }
-        else if (name == "dolly name") {
+        else if (configSettingName == "dolly name") {
             // should be printable
-            lmSendConfig("dollDisplayName", (dollDisplayName = value));
+            lmSendConfig("dollDisplayName", (dollDisplayName = configSettingValue));
         }
 #ifndef ADULT_MODE
-        else if (name == "strippable") {
+        else if (configSettingName == "strippable") {
             ; // Nothing to do
         }
 #endif
-        else if (name == "debug level") {
+        else if (configSettingName == "debug level") {
 #ifdef DEVELOPER_MODE
             // has to be between 0 and 9
             llSay(DEBUG_CHANNEL,"INFO: debug Level being overwritten from the builtin default of " + (string)debugLevel);
-            debugLevel = (integer)value;
+            debugLevel = (integer)configSettingValue;
 
             if (debugLevel > 9) debugLevel = 9;
             else if (debugLevel < 0) debugLevel = 0;
@@ -215,20 +221,20 @@ processConfiguration(string name, string value) {
             ; // Nothing to do
 #endif
         }
-        else if (name == "collapse rlv") {
+        else if (configSettingName == "collapse rlv") {
 #ifdef USER_RLV
             // has to be valid rlv
-            defaultCollapseRLVcmd += "," + value;
-            lmSendConfig("defaultCollapseRLVcmd", value);
+            defaultCollapseRLVcmd += "," + configSettingValue;
+            lmSendConfig("defaultCollapseRLVcmd", configSettingValue);
 #else
             ; // Nothing to do
 #endif
         }
-        else if (name == "pose rlv") {
+        else if (configSettingName == "pose rlv") {
 #ifdef USER_RLV
             // has to be valid rlv
-            defaultPoseRLVcmd += "," + value;
-            lmSendConfig("defaultPoseRLVcmd", value);
+            defaultPoseRLVcmd += "," + configSettingValue;
+            lmSendConfig("defaultPoseRLVcmd", configSettingValue);
 #else
             ; // Nothing to do
 #endif
@@ -238,59 +244,80 @@ processConfiguration(string name, string value) {
         // somewhat unique in that they affect each other: so,
         // we don't use the one to validate the other until preferences
         // are completely read, nor do we set these values system-wide
-        else if (name == "max time") {
-            if ((integer)value != 0) {
-                keyLimit = (integer)value * SECS_PER_MIN;
+        else if (configSettingName == "max time") {
+            if ((integer)configSettingValue != 0) {
+                keyLimit = (integer)configSettingValue * SECS_PER_MIN;
 
-                if (keyLimit > 14400) keyLimit = 14400;
-                else if (keyLimit < 900) keyLimit = 900;
+                if (keyLimit > KEYLIMIT_MAX) keyLimit = KEYLIMIT_MAX;
+                else if (keyLimit < KEYLIMIT_MIN) keyLimit = KEYLIMIT_MIN;
             }
         }
-        else if (name == "wind time") {
-            if ((integer)value != 0) {
-                windNormal = (integer)value * SECS_PER_MIN;
+        else if (configSettingName == "wind time") {
+            if ((integer)configSettingValue != 0) {
+                windNormal = (integer)configSettingValue * SECS_PER_MIN;
 
                 // validate value
-                if (windNormal > 5400) windNormal = 5400;
-                else if (windNormal < 900) windNormal = 900;
+                if (windNormal > WIND_MAX) windNormal = WIND_MAX;
+                else if (windNormal < WIND_MIN) windNormal = WIND_MIN;
             }
         }
-        else if (name == "blacklist") {
-            string uuid = (string)value;
-            blacklist = (blacklist = []) + blacklist + [ (string)value, (string)value ];
+        else if (configSettingName == "blacklist") {
+            string blacklistedUUID = (string)configSettingValue;
+
+            blacklist = (blacklist = []) + blacklist + [ (string)blacklistedUUID, (string)blacklistedUUID ];
             lmSetConfig("blacklist", llDumpList2String(blacklist, "|"));
         }
-        else if (name == "controller") {
-            string uuid = (string)value;
-            controllers = (controllers = []) + controllers + [ (string)value, (string)value ];
+        else if (configSettingName == "controller") {
+            string controllerUUID = (string)configSettingValue;
+
+            // Since we don't know and can't get the display name of the Controller, just
+            // put the UUID in place of name
+            controllers = (controllers = []) + controllers + [ (string)controllerUUID, (string)controllerUUID ];
             lmSetConfig("controllers", llDumpList2String(controllers, "|"));
 
             // Controllers get added to the exceptions
-            llOwnerSay("@tplure:"    + uuid + "=add," +
-                        "accepttp:"  + uuid + "=add," +
-                        "sendim:"    + uuid + "=add," +
-                        "recvim:"    + uuid + "=add," +
-                        "recvchat:"  + uuid + "=add," +
-                        "recvemote:" + uuid + "=add");
+            llOwnerSay("@tplure:"    + controllerUUID + "=add," +
+                        "accepttp:"  + controllerUUID + "=add," +
+                        "sendim:"    + controllerUUID + "=add," +
+                        "recvim:"    + controllerUUID + "=add," +
+                        "recvchat:"  + controllerUUID + "=add," +
+                        "recvemote:" + controllerUUID + "=add");
         }
-        else if (name == "helpless dolly") {
+        else if (configSettingName == "helpless dolly") {
             // Note inverted sense of this value: this is intentional
-            if (value == "1") lmSendConfig("canSelfTP", "0");
+            if (configSettingValue == "1") lmSendConfig("canSelfTP", "0");
             else lmSendConfig("canSelfTP", "1");
         }
-        else if (name == "doll gender") {
+        else if (configSettingName == "doll gender") {
             // set gender of dolly
 
-            if (value == "female" || value == "woman" || value == "girl") dollGender = "female";
-            else if (value == "male" || value == "man" || value == "boy") dollGender = "male";
-            else dollGender = "female";
+            if (configSettingValue == "female" ||
+                configSettingValue == "woman" ||
+                configSettingValue == "girl")
+
+                dollGender = "female";
+
+            else if (configSettingValue == "male" ||
+                     configSettingValue == "man" ||
+                     configSettingValue == "boy")
+
+                dollGender = "male";
+
+            else if (configSettingValue == "agender")
+
+                dollGender = "agender";
+
+            else {
+                llSay(DEBUG_CHANNEL, "Unknown value for dolly gender: " + dollGender + " - defaulting to female.");
+                dollGender = "female";
+            }
 
             lmSetConfig("dollGender", dollGender);
         }
     }
 #ifdef DEVELOPER_MODE
     else {
-        llSay(DEBUG_CHANNEL,"Unknown configuration value in preferences: " + name + " on line " + (string)(ncLine + 1));
+        llSay(DEBUG_CHANNEL,"Unknown configuration value in preferences: " + configSettingName + " on line " + (string)(ncLine + 1));
     }
 #endif
     llSleep(0.1);  // approx 5 frames - be nice to sim!

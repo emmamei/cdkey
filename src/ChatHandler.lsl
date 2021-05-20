@@ -407,34 +407,47 @@ default {
             //   * Prefix ('xx') - respond
             //   * Nothing - assume its ours and complain
 
-            if (prefix == "*") {
-                // *prefix is global, strip from chatCommand and continue
-                msg = llGetSubString(msg,1,-1);
-            }
-            else if (prefix == "#") {
-                // if Dolly gives a #cmd ignore it...
-                // if someone else gives it - they are being ignored themselves,
-                //    but we act on it.
-                if (accessorIsDoll) return;
-                else {
-                    // #prefix is an all others prefix like with OC etc
+            switch (prefix) {
+
+                case "*": {
+
+                    // *prefix is global, strip from chatCommand and continue
                     msg = llGetSubString(msg,1,-1);
+                    break;
                 }
-            }
-            else {
-                integer n = llStringLength(chatPrefix);
-                if (llToLower(llGetSubString(msg, 0, n - 1)) == chatPrefix) {
-                    prefix = llGetSubString(msg, 0, n - 1);
-                    msg = llGetSubString(msg, n, -1);
+
+                case "#": {
+
+                    // if Dolly gives a #cmd ignore it...
+                    // if someone else gives it - they are being ignored themselves,
+                    //    but we act on it.
+                    if (accessorIsDoll) return;
+                    else {
+                        // #prefix is an all others prefix like with OC etc
+                        msg = llGetSubString(msg,1,-1);
+                    }
+                    break;
                 }
-                else
-                    // we didn't get a valid prefix - so exit. Either it's
-                    // for another dolly, or it was invalid. If we act on a general
-                    // command - then every dolly in range with this key will respond.
-                    // Can't have that...
 
-                    return;
 
+                default: {
+
+                    integer n = llStringLength(chatPrefix);
+
+                    if (llToLower(llGetSubString(msg, 0, n - 1)) == chatPrefix) {
+                        prefix = llGetSubString(msg, 0, n - 1);
+                        msg = llGetSubString(msg, n, -1);
+                    }
+                    else {
+                        // we didn't get a valid prefix - so exit. Either it's
+                        // for another dolly, or it was invalid. If we act on a general
+                        // command - then every dolly in range with this key will respond.
+                        // Can't have that...
+
+                        return;
+                    }
+                    break;
+                }
             }
 
             // If we get here, we know this:
@@ -447,10 +460,10 @@ default {
             // Trim message in case there are spaces
             msg = llStringTrim(msg,STRING_TRIM);
 
-#define PARAMETERS_EXIST (space != NOT_FOUND)
+#define PARAMETERS_EXIST (spaceInMsg != NOT_FOUND)
 
             // Choice is a command, not a pose
-            integer space = llSubStringIndex(msg, " ");
+            integer spaceInMsg = llSubStringIndex(msg, " ");
             string chatCommand = msg;
 
             if (!PARAMETERS_EXIST) { // Commands without parameters handled first
@@ -942,8 +955,8 @@ default {
             }
             else {
                 // Command has secondary parameter
-                string param =           llStringTrim(llGetSubString(chatCommand, space + 1, STRING_END), STRING_TRIM);
-                chatCommand       = llToLower(llStringTrim(llGetSubString(   msg,         0,  space - 1), STRING_TRIM));
+                string param =           llStringTrim(llGetSubString(chatCommand, spaceInMsg + 1, STRING_END), STRING_TRIM);
+                chatCommand       = llToLower(llStringTrim(llGetSubString(   msg,         0,  spaceInMsg - 1), STRING_TRIM));
 
                 //----------------------------------------
                 // DOLL & EMBEDDED CONTROLLER COMMANDS (with parameter)
