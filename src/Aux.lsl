@@ -35,6 +35,7 @@ integer maxMins;
 integer ncLine;
 integer memReporting;
 integer isDoll;
+integer mustAgreeToType;
 
 integer textboxChannel;
 integer textboxHandle;
@@ -131,6 +132,7 @@ default {
 #ifdef HOMING_BEACON
             else if (name == "homingBeacon")             homingBeacon = (integer)value;
 #endif
+            else if (name == "mustAgreeToType")       mustAgreeToType = (integer)value;
             else if (name == "collapseTime")             collapseTime = (integer)value;
             else if (name == "collapsed")                   collapsed = (integer)value;
 #ifdef EMERGENCY_TP
@@ -175,6 +177,25 @@ default {
                 split = llDeleteSubList(split, 0, 0);
 
                 if (name == "dollGender") setGender(value);
+                else if (name = "hardcore") {
+                    hardcore = (integer)value;
+
+                    lmSendConfig("poseSilence",     (string)(poseSilence = TRUE));
+                    lmSendConfig("canDressSelf",    (string)(canDressSelf = FALSE));
+                    lmSendConfig("allowPose",       (string)(allowPose = FALSE));
+                    lmSendConfig("allowCarry",      (string)(allowCarry = TRUE));
+                    lmSendConfig("allowDress",      (string)(allowDress = TRUE));
+                    lmSendConfig("allowSelfWind",   (string)(allowSelfWind = FALSE));
+                    lmSendConfig("allowRepeatWind", (string)(allowRepeatWind = FALSE));
+                    lmSendConfig("canFly",          (string)(canFly = FALSE));
+                    lmSendConfig("canSelfTP",       (string)(canSelfTP = FALSE));
+                    lmSendConfig("mustAgreeToType", (string)(mustAgreeToType = FALSE));
+#ifdef ADULT_MODE
+                    lmSendConfig("allowStrip",      (string)(allowStrip = TRUE));
+#endif
+
+                    lmSendConfig("hardcore", value);
+                }
         }
         else if (code == INTERNAL_CMD) {
             string cmd = (string)split[0];
@@ -186,15 +207,16 @@ default {
 
                 // is it possible to be collapsed but collapseTime be equal to 0.0?
                 if (collapsed) {
-                    msg = "You need winding. ";
+                    msg = "You need winding. You have been collapsed for";
                     integer timeCollapsed = llGetUnixTime() - collapseTime;
 
 #define minutesCollapsed llFloor(timeCollapsed / SEC_TO_MIN)
 
-                    msg += "You have been collapsed for ";
                     if (minutesCollapsed < 1) msg += (string)llFloor(timeCollapsed / SEC_TO_MIN) + " minutes. ";
                     else msg += (string)timeCollapsed + " seconds. ";
+
 #ifdef DEVELOPER_MODE
+                    // Status messages for developers
 #ifdef EMERGENCY_TP
                     msg += "\nTime before TP: " + (string)TIME_BEFORE_TP;
 #endif
@@ -204,24 +226,24 @@ default {
                     // Only present the TP home option for the doll if they have been collapsed
                     // for at least 900 seconds (15 minutes) - Suggested by Christina
 
-                    if (RLVok) {
-                        if (timeCollapsed > TIME_BEFORE_TP) {
+                    if (!hardcore) {
+                        if (RLVok) {
+                            if (timeCollapsed > TIME_BEFORE_TP) {
 #ifdef HOMING_BEACON
-                            // if Homing Beacon is activated, then the only TP is automated
-                            if (!homingBeacon)
+                                // if Homing Beacon is activated, then the only TP is automated
+                                if (!homingBeacon)
 #endif
-                                if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK)
-                                    menu += ["TP Home"];
-
-                            // If the doll is still down after 1800 seconds (30 minutes) and their
-                            // emergency winder is recharged; add a button for it
-
-                            if (!hardcore) {
-                                if (timeCollapsed > TIME_BEFORE_EMGWIND) {
-                                    if (winderRechargeTime <= llGetUnixTime())
-                                        menu += ["Wind Emg"];
-                                }
+                                    if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK)
+                                        menu += ["TP Home"];
                             }
+                        }
+
+                        // If the doll is still down after 1800 seconds (30 minutes) and their
+                        // emergency winder is recharged; add a button for it
+
+                        if (timeCollapsed > TIME_BEFORE_EMGWIND) {
+                            if (winderRechargeTime <= llGetUnixTime())
+                                menu += ["Wind Emg"];
                         }
                     }
 
@@ -389,29 +411,31 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 // The following options require RLV to work
                 if (RLVok == TRUE) {
                     msg = "See the help file for explanations of these options. ";
+                    lmSendConfig("backMenu",(backMenu = "Options..."));
 
                     // One-way options
                     if (!hardcore) {
                         //plusList += cdGetButton("Detachable", id, detachable, 1);
                         plusList += cdGetButton("Silent Pose", id, poseSilence, 1);
                         plusList += cdGetButton("Self Dress", id, canDressSelf, 1);
-                    }
-                    lmSendConfig("backMenu",(backMenu = "Options..."));
 
-                    plusList += cdGetButton("Flying", id, canFly, 1);
+                        plusList += cdGetButton("Flying", id, canFly, 1);
+                        plusList += cdGetButton("Self TP", id, canSelfTP, 1);
+                    }
+
                     plusList += cdGetButton("Sitting", id, canSit, 1);
                     plusList += cdGetButton("Standing", id, canStand, 1);
-                    plusList += cdGetButton("Self TP", id, canSelfTP, 1);
 #ifdef EMERGENCY_TP
                     plusList += cdGetButton("Force TP", id, autoTP, 1);
 #endif
                     plusList += "Back...";
                 }
                 else {
-                    string p = pronounHerDoll;
-                    string s = pronounSheDoll;
 
-                    msg += "Either Dolly does not have an RLV capable viewer, or " + s + " has RLV turned off in " + p + " viewer settings.  There are no usable options available.";
+#define _Her_ pronounHerDoll
+#define _She_ pronounSheDoll
+
+                    msg += "Either Dolly does not have an RLV capable viewer, or " + _She_ + " has RLV turned off in " + _Her_ + " viewer settings.  There are no usable options available.";
 
                     plusList = [ "OK" ];
                 }
@@ -420,21 +444,20 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 llDialog(id, msg, dialogSort(plusList), dialogChannel);
             }
             else if (choice == "Public...") {
+                // This menu should not activate for hardcore Dollies
                 msg = "These are options for controlling what a member of the public can do with Dolly.";
                 list plusList = [];
 
-                if (dollType != "Display" && !hardcore) {
+                if (dollType != "Display") {
                     plusList += cdGetButton("Poseable", id, allowPose, 0);
                 }
 
-                if (!hardcore) {
-                    plusList += cdGetButton("Carryable", id, allowCarry, 0);
-                    if (RLVok == TRUE) {
-                        plusList += cdGetButton("Outfitable", id, allowDress, 0);
+                plusList += cdGetButton("Carryable", id, allowCarry, 0);
+                if (RLVok == TRUE) {
+                    plusList += cdGetButton("Outfitable", id, allowDress, 0);
 #ifdef ADULT_MODE
-                        plusList += cdGetButton("Strippable", id, allowStrip, 0);
+                    plusList += cdGetButton("Strippable", id, allowStrip, 0);
 #endif
-                    }
                 }
                 lmSendConfig("backMenu",(backMenu = "Options..."));
                 lmDialogListen();
@@ -445,7 +468,6 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 list plusList = [];
 
                 plusList += cdGetButton("Type Text", id, hovertextOn, 0);
-//              plusList += cdGetButton("Warnings", id, doWarnings, 0);
                 plusList += cdGetButton("Phrases", id, showPhrases, 0);
 #ifdef HOMING_BEACON
                 if (RLVok)
@@ -486,8 +508,9 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 // Whatever the current element is - set gender
                 // to the next in a circular loop
 
-                     if (s == "male")   setGender("female");
-                else if (s == "female") setGender("male");
+                     if (s == "male")    setGender("female");
+                else if (s == "female")  setGender("agender");
+                else if (s == "agender") setGender("male");
 
                 llOwnerSay("Gender is now set to " + dollGender);
                 lmMenuReply("Key...", llGetDisplayName(id), id);

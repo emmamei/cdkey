@@ -592,7 +592,9 @@ default {
 
                 if (cdIsDoll(id)) {
                     msg = "See the help file for information on these options.";
-                    pluslist += [ "Operation...", "Public...", "Key..." ];
+
+                    if (hardcore) pluslist += [ "Operation...", "Key..." ];
+                    else pluslist += [ "Operation...", "Public...", "Key..." ];
 
                     if (cdCarried() || cdControllerCount() > 0) {
                         pluslist += [ "Access..." ];
