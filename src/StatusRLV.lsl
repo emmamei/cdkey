@@ -323,7 +323,8 @@ default {
                 if (commandString != "")
                     llOwnerSay("@" + commandString); // restore restrictions if need be
 
-                //lmInternalCommand("reloadExceptions",script,NULL_KEY); // then restore exceptions
+                // Need to activate RLV here
+                lmInternalCommand("reloadExceptions",script,NULL_KEY); // then restore exceptions
                 //lmInternalCommand("clearRLV",script,NULL_KEY);
             }
         }

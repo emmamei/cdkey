@@ -1159,6 +1159,7 @@ default {
                             }
                         }
                     }
+                    return;
                 }
             }
 
