@@ -38,8 +38,8 @@ integer accessorIsCarrier;
 integer poseExpire;
 
 doStats() {
-    if (accessorIsDoll && hardcore) return;
-    cdSayTo("Time remaining: " + (string)llRound(timeLeftOnKey / (SECS_PER_MIN * windRate)) + " minutes of " +
+    if (!hardcore)
+        cdSayTo("Time remaining: " + (string)llRound(timeLeftOnKey / (SECS_PER_MIN * windRate)) + " minutes of " +
                 (string)llRound(keyLimit / (SECS_PER_MIN * windRate)) + " minutes.", accessorID);
 
     string msg;
@@ -72,8 +72,6 @@ doStats() {
 }
 
 doXstats() {
-    if (accessorIsDoll && hardcore) return; // No stats for hardcore dolly!
-
     string s = "Extended stats:\n\nDoll is a " + dollType + " Doll.\nWind amount: " +
                (string)llFloor(windNormal / SECS_PER_MIN) + " (mins)\nKey Limit: " +
                (string)(keyLimit / SECS_PER_MIN) + " mins\nEmergency Winder Recharge Time: " +
@@ -98,13 +96,12 @@ doXstats() {
 
     cdCapability(hardcore,         "Doll is", "currently in hardcore mode");
 
-    // These settings all are affected by hardcore
-    //cdCapability((detachable && !hardcore),    "Doll can", "detach " + pronounHerDoll + " key");
-    cdCapability((allowPose || hardcore),      "Doll can", "be posed by the public");
-    cdCapability((allowDress || hardcore),     "Doll can", "be dressed by the public");
-    cdCapability((allowCarry || hardcore),     "Doll can", "be carried by the public");
-    cdCapability((canDressSelf && !hardcore),  "Doll can", "dress by " + pronounHerDoll + "self");
-    cdCapability((poseSilence || hardcore),    "Doll is",  "silenced while posing");
+    // These settings (and more) all are affected by hardcore
+    cdCapability(allowPose,      "Doll can", "be posed by the public");
+    cdCapability(allowDress,     "Doll can", "be dressed by the public");
+    cdCapability(allowCarry,     "Doll can", "be carried by the public");
+    cdCapability(canDressSelf,  "Doll can", "dress by " + pronounHerDoll + "self");
+    cdCapability(poseSilence,    "Doll is",  "silenced while posing");
 
     if (windRate > 0) s += "\nCurrent wind rate is " + formatFloat(windRate,2) + ".\n";
     else s += "Key is not winding down.\n";
@@ -143,9 +140,10 @@ doHardcore() {
     // Dolly can set it.
 
     if (hardcore) {
-        if (cdIsExternalController(accessorID)) {
+        // Note: if Dolly has no external controllers, let Dolly unlock it
+        if (cdIsController(accessorID)) {
             lmSendConfig("hardcore",(string)(hardcore = 0));
-            cdSayTo("Doll's hardcore mode has been disabled. The sound of a lock unlocking is heard.",accessorID);
+            cdSayTo("Hardcore mode has been disabled. The sound of a lock unlocking is heard.",accessorID);
         }
         else {
             cdSayTo("You rattle the lock, but it is securely fastened: you cannot disable hardcore mode.",accessorID);

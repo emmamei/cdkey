@@ -528,10 +528,10 @@ default {
                         }
                         else {
                             if (isDoll) {
-                                if (canDressSelf && poseAnimation == ANIMATION_NONE && !hardcore) menu += "Outfits...";
+                                if (canDressSelf && poseAnimation == ANIMATION_NONE) menu += "Outfits...";
                             }
                             else {
-                                if (hardcore || allowDress || isController) menu += "Outfits...";
+                                if (allowDress || isController) menu += "Outfits...";
                             }
                         }
                     }
@@ -578,7 +578,7 @@ default {
                                 // Also allow anyone to Unpose Dolly if Dolly self posed.
 
                                 else {
-                                    if (isController || allowPose || hardcore)
+                                    if (isController || allowPose)
                                         menu += [ "Poses...", "Unpose" ];
                                     else if (isDollSelfPosed)
                                         menu += [ "Unpose" ];
@@ -602,7 +602,7 @@ default {
                         if (!hasCarrier) {
 
                             // Dolly can be carried if allowed, and Controller can at any time
-                            if (allowCarry || hardcore || isController) {
+                            if (allowCarry || isController) {
                                 msg += "Carry option picks up " + dollName + " and temporarily makes the Dolly exclusively yours. ";
                                 menu += "Carry";
                             }
@@ -616,7 +616,7 @@ default {
                     if (RLVok == TRUE) {
                         if (simRating == "MATURE" || simRating == "ADULT") {
 
-                            // Only show for Slut Dollies
+                            // Only show for Slut Dollies - or hardcore dollies
                             if (dollType == "Slut" || hardcore) {
                                 menu += "Strip";
                             }
