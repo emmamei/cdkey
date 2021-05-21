@@ -547,7 +547,7 @@ default {
             //    * by members of the Public IF allowed
             //    * by herself
             //    * by Controllers
-            integer dollIsPoseable = ((!cdIsDoll(id) && (allowPose || hardcore)) || cdIsController(id) || cdSelfPosed());
+            integer dollIsPoseable = ((!cdIsDoll(id) && (allowPose)) || cdIsController(id) || cdSelfPosed());
 
             // First: Quick ignores
             if (llGetSubString(choice,0,3) == "Wind") return;
@@ -580,7 +580,7 @@ default {
 
                 clearPoseAnimation();
 
-                if (poseSilence || hardcore) lmRunRLV("sendchat=y");
+                if (poseSilence) lmRunRLV("sendchat=y");
 
                 // if we have carrier, start following them again
                 debugSay(2,"DEBUG-FOLLOW","startFollow(): from Unpose button");
@@ -635,7 +635,7 @@ default {
                 else expire = (string)(llGetUnixTime() + POSE_TIMEOUT);
                 lmSetConfig("poseExpire", expire);
 
-                if (poseSilence || hardcore) lmRunRLV("sendchat=n");
+                if (poseSilence) lmRunRLV("sendchat=n");
             }
         }
         else if (code == RLV_RESET) {

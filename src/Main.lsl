@@ -173,9 +173,6 @@ doCollapse() {
         lmSendConfig("poseAnimation", ANIMATION_NONE);
         lmSendConfig("poserID", NULL_KEY);
         lmSetConfig("poseExpire", "0");
-
-        //if (poseSilence || hardcore) lmRunRLV("sendchat=y");
-        //if (cdCarried()) startFollow(carrierID);
     }
 
     if (cdCarried())
@@ -304,7 +301,7 @@ default {
 
 #ifdef ADULT_MODE
             if (simRating == "PG") {
-                if (allowStrip || (dollType == "Slut") || hardcore)
+                if (allowStrip || (dollType == "Slut"))
                     llOwnerSay("This region is rated G - so stripping is disabled.");
             }
 #endif
@@ -753,7 +750,7 @@ default {
             if (collapsed) doCollapse();
 
             if (RLVok == TRUE) {
-                if (!allowDress && !hardcore) llOwnerSay("The public cannot dress you.");
+                if (!allowDress) llOwnerSay("The public cannot dress you.");
             }
             else {
                 llOwnerSay("Without RLV, you cannot be dressed in new outfits.");
@@ -785,14 +782,18 @@ default {
                     if (collapsed) {
                         lmSendToController(dollName + " has activated the emergency winder.");
 
+#define HARDCORE_MAX_EMG_WIND 120
+#define NORMAL_MAX_EMG_WIND 600
+
                         // default is 20% of max, but no more than 10 minutes
                         //
                         // Doing it this way makes the wind amount independent of the amount
                         // of time in a single wind. It is also a form of hard-coding.
                         //
                         windAmount = (integer)(keyLimit * 0.2);
-                        if (hardcore) { if (windAmount > 120) windAmount = 120; }
-                        else { if (windAmount > 600) windAmount = 600; }
+
+                        if (hardcore) { if (windAmount > HARDCORE_MAX_EMG_WIND) windAmount = HARDCORE_MAX_EMG_WIND; }
+                                 else { if (windAmount >   NORMAL_MAX_EMG_WIND) windAmount =   NORMAL_MAX_EMG_WIND; }
 
                         lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = windAmount));
                         lmSendConfig("winderRechargeTime", (string)(winderRechargeTime = (llGetUnixTime() + EMERGENCY_LIMIT_TIME)));

@@ -740,7 +740,7 @@ default {
             //    * Other when Dolly does not have to agree
             //    * Other when Dolly is hardcore
             //
-            if (cdIsDoll(id) || cdIsController(id) || !mustAgreeToType || hardcore) {
+            if (cdIsDoll(id) || cdIsController(id) || !mustAgreeToType) {
                 transform = "";
 
                 // Doll (or a Controller) chose a Type - or no confirmation needed: just do it

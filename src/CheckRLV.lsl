@@ -151,7 +151,7 @@ rlvOutfitLock() {
     //
     // This means Dolly is forbidden to change the current outfit
     //
-    if (!canDressSelf || hardcore || collapsed || wearLock) {
+    if (!canDressSelf || collapsed || wearLock) {
         // Lock outfit down tight
         if (isOutfitLocked == FALSE) rlvLockOutfit();
         isOutfitLocked = TRUE;
