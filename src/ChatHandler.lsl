@@ -37,6 +37,104 @@ integer accessorIsController;
 integer accessorIsCarrier;
 integer poseExpire;
 
+doStats() {
+    if (accessorIsDoll && hardcore) return;
+    cdSayTo("Time remaining: " + (string)llRound(timeLeftOnKey / (SECS_PER_MIN * windRate)) + " minutes of " +
+                (string)llRound(keyLimit / (SECS_PER_MIN * windRate)) + " minutes.", accessorID);
+
+    string msg;
+
+    if (windRate == 0) msg = "Key is stopped.";
+    else {
+        msg = "Key is unwinding at a ";
+
+        if (windRate == 1.0) msg += "normal rate.";
+        else {
+            if (windRate < 1.0) msg += "slowed rate of ";
+            else if (windRate > 1.0) msg += "accelerated rate of ";
+
+            msg += " of " + formatFloat(windRate, 1) + "x.";
+        }
+
+    }
+
+    cdSayTo(msg, accessorID);
+
+    if (poseAnimation != ANIMATION_NONE) {
+
+        cdSayTo("Current pose: " + poseAnimation, accessorID);
+
+        if ((dollType != "Display") && (!hardcore))
+            cdSayTo("Pose time remaining: " + (string)((poseExpire - llGetUnixTime()) / SECS_PER_MIN) + " minutes.", accessorID);
+    }
+
+    lmMemReport(1.0,accessorID);
+}
+
+doXstats() {
+    if (accessorIsDoll && hardcore) return; // No stats for hardcore dolly!
+
+    string s = "Extended stats:\n\nDoll is a " + dollType + " Doll.\nWind amount: " +
+               (string)llFloor(windNormal / SECS_PER_MIN) + " (mins)\nKey Limit: " +
+               (string)(keyLimit / SECS_PER_MIN) + " mins\nEmergency Winder Recharge Time: " +
+               (string)(EMERGENCY_LIMIT_TIME / 60 / (integer)SECS_PER_MIN) + " hours\nEmergency Winder: ";
+
+    float windEmergency;
+    windEmergency = keyLimit * 0.2;
+    if (hardcore) { if (windEmergency > 120) windEmergency = 120; }
+    else { if (windEmergency > 600) windEmergency = 600; }
+
+    s += (string)((integer)(windEmergency / SECS_PER_MIN)) + " mins\n";
+
+#ifdef EMERGENCY_TP
+    cdCapability(autoTP,           "Doll can", "be force teleported");
+#endif
+    cdCapability(canFly,           "Doll can", "fly");
+    cdCapability(canSit,           "Doll can", "sit");
+    cdCapability(canStand,         "Doll can", "stand");
+    cdCapability(allowRepeatWind,  "Doll can", "be multiply wound");
+    cdCapability(wearLock,         "Doll's clothing is",  "currently locked on");
+    cdCapability(lowScriptMode,    "Doll is",  "currently in powersave mode");
+
+    cdCapability(hardcore,         "Doll is", "currently in hardcore mode");
+
+    // These settings all are affected by hardcore
+    //cdCapability((detachable && !hardcore),    "Doll can", "detach " + pronounHerDoll + " key");
+    cdCapability((allowPose || hardcore),      "Doll can", "be posed by the public");
+    cdCapability((allowDress || hardcore),     "Doll can", "be dressed by the public");
+    cdCapability((allowCarry || hardcore),     "Doll can", "be carried by the public");
+    cdCapability((canDressSelf && !hardcore),  "Doll can", "dress by " + pronounHerDoll + "self");
+    cdCapability((poseSilence || hardcore),    "Doll is",  "silenced while posing");
+
+    if (windRate > 0) s += "\nCurrent wind rate is " + formatFloat(windRate,2) + ".\n";
+    else s += "Key is not winding down.\n";
+
+    if (RLVok == UNSET) s += "RLV status is unknown.\n";
+    else if (RLVok == TRUE) s += "RLV is active.\nRLV version: " + rlvAPIversion;
+    else s += "RLV is not active.\n";
+
+    if (lastWinderID) {
+        s += "\nLast winder was " + cdProfileURL(lastWinderID);
+#ifdef SELF_WIND
+        s += " (someone else will have to wind next)";
+#endif
+    }
+    if (allowCarry) {
+        if (carrierID) {
+            s += "\nDolly is currently being carried by " + cdProfileURL(carrierID);
+        }
+        else {
+            s += "\nDolly is not currently being carried.";
+        }
+    }
+    s += "\n";
+
+    s += "\nChat channel = " + (string)chatChannel;
+    s += "\nChat prefix = " + chatPrefix;
+
+    cdSayTo(s, accessorID);
+}
+
 #ifdef ADULT_MODE
 doHardcore() {
 
@@ -624,6 +722,7 @@ default {
     release ........ stop the current pose if possible
     unpose ......... stop the current pose if possible
     [posename] ..... activate the named pose if possible
+    pose XXX ....... activate the named pose if possible
     listposes ...... list all poses";
                     string carryHelp = "
     carry .......... carry dolly
@@ -710,174 +809,103 @@ default {
                 //   * ghost
                 //
                 if (accessorIsDoll || accessorIsController) {
-                    if (chatCommand == "build") {
-                        lmConfigReport();
-                        return;
-                    }
-                    else if (chatCommand == "update") {
+                    switch (chatCommand) {
 
-                        lmSendConfig("update", "1");
-                        return;
-                    }
-                    else if (chatCommand == "xstats") {
-                        if (accessorIsDoll && hardcore) return; // No stats for hardcore dolly!
-
-                        string s = "Extended stats:\n\nDoll is a " + dollType + " Doll.\nWind amount: " +
-                                   (string)llFloor(windNormal / SECS_PER_MIN) + " (mins)\nKey Limit: " +
-                                   (string)(keyLimit / SECS_PER_MIN) + " mins\nEmergency Winder Recharge Time: " +
-                                   (string)(EMERGENCY_LIMIT_TIME / 60 / (integer)SECS_PER_MIN) + " hours\nEmergency Winder: ";
-
-                        float windEmergency;
-                        windEmergency = keyLimit * 0.2;
-                        if (hardcore) { if (windEmergency > 120) windEmergency = 120; }
-                        else { if (windEmergency > 600) windEmergency = 600; }
-
-                        s += (string)((integer)(windEmergency / SECS_PER_MIN)) + " mins\n";
-
-#ifdef EMERGENCY_TP
-                        cdCapability(autoTP,           "Doll can", "be force teleported");
-#endif
-                        cdCapability(canFly,           "Doll can", "fly");
-                        cdCapability(canSit,           "Doll can", "sit");
-                        cdCapability(canStand,         "Doll can", "stand");
-                        cdCapability(allowRepeatWind,  "Doll can", "be multiply wound");
-                        cdCapability(wearLock,         "Doll's clothing is",  "currently locked on");
-                        cdCapability(lowScriptMode,    "Doll is",  "currently in powersave mode");
-
-                        cdCapability(hardcore,         "Doll is", "currently in hardcore mode");
-
-                        // These settings all are affected by hardcore
-                        //cdCapability((detachable && !hardcore),    "Doll can", "detach " + pronounHerDoll + " key");
-                        cdCapability((allowPose || hardcore),      "Doll can", "be posed by the public");
-                        cdCapability((allowDress || hardcore),     "Doll can", "be dressed by the public");
-                        cdCapability((allowCarry || hardcore),     "Doll can", "be carried by the public");
-                        cdCapability((canDressSelf && !hardcore),  "Doll can", "dress by " + pronounHerDoll + "self");
-                        cdCapability((poseSilence || hardcore),    "Doll is",  "silenced while posing");
-
-                        if (windRate > 0) s += "\nCurrent wind rate is " + formatFloat(windRate,2) + ".\n";
-                        else s += "Key is not winding down.\n";
-
-                        if (RLVok == UNSET) s += "RLV status is unknown.\n";
-                        else if (RLVok == TRUE) s += "RLV is active.\nRLV version: " + rlvAPIversion;
-                        else s += "RLV is not active.\n";
-
-                        if (lastWinderID) {
-                            s += "\nLast winder was " + cdProfileURL(lastWinderID);
-#ifdef SELF_WIND
-                            s += " (someone else will have to wind next)";
-#endif
-                        }
-                        if (allowCarry) {
-                            if (carrierID) {
-                                s += "\nDolly is currently being carried by " + cdProfileURL(carrierID);
-                            }
-                            else {
-                                s += "\nDolly is not currently being carried.";
-                            }
-                        }
-                        s += "\n";
-
-                        s += "\nChat channel = " + (string)chatChannel;
-                        s += "\nChat prefix = " + chatPrefix;
-
-                        cdSayTo(s, accessorID);
-                        return;
-                    }
-                    else if (chatCommand == "stats") {
-                        if (accessorIsDoll && hardcore) return;
-                        cdSayTo("Time remaining: " + (string)llRound(timeLeftOnKey / (SECS_PER_MIN * windRate)) + " minutes of " +
-                                    (string)llRound(keyLimit / (SECS_PER_MIN * windRate)) + " minutes.", accessorID);
-
-                        string msg;
-
-                        if (windRate == 0) msg = "Key is stopped.";
-                        else {
-                            msg = "Key is unwinding at a ";
-
-                            if (windRate == 1.0) msg += "normal rate.";
-                            else {
-                                if (windRate < 1.0) msg += "slowed rate of ";
-                                else if (windRate > 1.0) msg += "accelerated rate of ";
-
-                                msg += " of " + formatFloat(windRate, 1) + "x.";
-                            }
-
+                        case "build": {
+                            lmConfigReport();
+                            return;
                         }
 
-                        cdSayTo(msg, accessorID);
+                        case "update": {
 
-                        if (poseAnimation != ANIMATION_NONE) {
-
-                            cdSayTo("Current pose: " + poseAnimation, accessorID);
-
-                            if ((dollType != "Display") && (!hardcore))
-                                cdSayTo("Pose time remaining: " + (string)((poseExpire - llGetUnixTime()) / SECS_PER_MIN) + " minutes.", accessorID);
+                            lmSendConfig("update", "1");
+                            return;
                         }
 
-                        lmMemReport(1.0,accessorID);
-                        return;
-                    }
+                        case "xstats": {
+
+                            doXstats();
+                            return;
+                        }
+
+                        case "stats": {
+
+                            doStats();
+                            return;
+                        }
 #ifdef ADULT_MODE
-                    else if (chatCommand == "hardcore") {
-                        doHardcore();
-                        return;
-                    }
+                        case "hardcore": {
+
+                            doHardcore();
+                            return;
+                        }
 
 #endif
 #ifdef DEVELOPER_MODE
-                    else if (chatCommand == "collapse") {
-                        if (accessorIsDoll) {
-                            //lmSetConfig("timeLeftOnKey","10");
-                            llOwnerSay("Immediate collapse triggered...");
-                            lmInternalCommand("collapse", (string)TRUE, accessorID);
+                        case "collapse": {
+
+                            if (accessorIsDoll) {
+                                //lmSetConfig("timeLeftOnKey","10");
+                                llOwnerSay("Immediate collapse triggered...");
+                                lmInternalCommand("collapse", (string)TRUE, accessorID);
+                            }
+                            return;
                         }
-                        return;
-                    }
-                    else if (chatCommand == "powersave") {
-                        if (accessorIsDoll) {
-                            lmSetConfig("lowScriptMode","1");
-                            llOwnerSay("Power-save mode initiated");
+
+                        case "powersave": {
+
+                            if (accessorIsDoll) {
+                                lmSetConfig("lowScriptMode","1");
+                                llOwnerSay("Power-save mode initiated");
+                            }
+                            return;
                         }
-                        return;
-                    }
 #endif
-                    // Could potentially combine the next three into one
-                    // block but the code to account for the differences
-                    // may not be worth it.
-                    //
-                    else if (chatCommand == "hide") {
-                        visible = FALSE;
+                        // Could potentially combine the next three into one
+                        // block but the code to account for the differences
+                        // may not be worth it.
+                        //
+                        case "hide": {
 
-                        cdSayTo("The key shimmers, then fades from view.",accessorID);
-                        llSetLinkAlpha(LINK_SET, 0.0, ALL_SIDES);
-                        lmSendConfig("isVisible", (string)visible);
-                        return;
-                    }
-                    else if (chatCommand == "unhide" || chatCommand == "show" || chatCommand == "visible") {
-                        visible = TRUE;
+                            visible = FALSE;
 
-                        cdSayTo("A bright light appears where the key should be, then disappears slowly, revealing a spotless key.",accessorID);
-                        llSetLinkAlpha(LINK_SET, (float)visibility, ALL_SIDES);
-                        lmSendConfig("isVisible", (string)visible);
-                        return;
-                    }
-                    else if (chatCommand == "ghost") {
-                        visible = TRUE;
-
-                        // This toggles ghostliness
-                        if (visibility != 1.0) {
-                            visibility = 1.0;
-                            cdSayTo("You see the key sparkle slightly, then fade back into full view.",accessorID);
-                        }
-                        else {
-                            visibility = GHOST_VISIBILITY;
-                            cdSayTo("A cloud of sparkles forms around the key, and it fades to a ghostly presence.",accessorID);
+                            cdSayTo("The key shimmers, then fades from view.",accessorID);
+                            llSetLinkAlpha(LINK_SET, 0.0, ALL_SIDES);
+                            lmSendConfig("isVisible", (string)visible);
+                            return;
                         }
 
-                        llSetLinkAlpha(LINK_SET, (float)visibility, ALL_SIDES);
-                        lmSendConfig("visibility", (string)visibility);
-                        lmSendConfig("isVisible", (string)visible);
-                        return;
+                        case "unhide":
+                        case "show":
+                        case "visible": {
+
+                            visible = TRUE;
+
+                            cdSayTo("A bright light appears where the key should be, then disappears slowly, revealing a spotless key.",accessorID);
+                            llSetLinkAlpha(LINK_SET, (float)visibility, ALL_SIDES);
+                            lmSendConfig("isVisible", (string)visible);
+                            return;
+                        }
+                        
+                        case "ghost": {
+
+                            visible = TRUE;
+
+                            // This toggles ghostliness
+                            if (visibility != 1.0) {
+                                visibility = 1.0;
+                                cdSayTo("You see the key sparkle slightly, then fade back into full view.",accessorID);
+                            }
+                            else {
+                                visibility = GHOST_VISIBILITY;
+                                cdSayTo("A cloud of sparkles forms around the key, and it fades to a ghostly presence.",accessorID);
+                            }
+
+                            llSetLinkAlpha(LINK_SET, (float)visibility, ALL_SIDES);
+                            lmSendConfig("visibility", (string)visibility);
+                            lmSendConfig("isVisible", (string)visible);
+                            return;
+                        }
                     }
                 }
 
