@@ -172,33 +172,50 @@ default {
             }
         }
         else if (code == SET_CONFIG) {
-                string name = (string)split[0];
-                string value = (string)split[1];
+                string configName = (string)split[0];
+                string configValue = (string)split[1];
 
                 split = llDeleteSubList(split, 0, 0);
 
-                if (name == "dollGender") setGender(value);
-                else if (name = "hardcore") {
-                    hardcore = (integer)value;
+                switch (configName): {
 
-                    // FIXME: do some of these require lmSetConfig?
-                    lmSendConfig("poseSilence",     (string)(poseSilence = TRUE));
-                    lmSendConfig("canDressSelf",    (string)(canDressSelf = FALSE));
-                    lmSendConfig("allowPose",       (string)(allowPose = FALSE));
-                    lmSendConfig("allowCarry",      (string)(allowCarry = TRUE));
-                    lmSendConfig("allowDress",      (string)(allowDress = TRUE));
-                    lmSendConfig("allowSelfWind",   (string)(allowSelfWind = FALSE));
-                    lmSendConfig("allowRepeatWind", (string)(allowRepeatWind = FALSE));
-                    lmSendConfig("canFly",          (string)(canFly = FALSE));
-                    lmSendConfig("canSelfTP",       (string)(canSelfTP = FALSE));
-                    lmSendConfig("keyLocked",       (string)(keyLocked = TRUE));
-                    lmSendConfig("mustAgreeToType", (string)(mustAgreeToType = FALSE));
+                    case "dollGender": {
+                        setGender(configValue);
+                        break;
+                    }
+
+                    case "hardcore": {
+
+                        if ((integer)configValue == TRUE) lmSendConfig("hardcore", (string)(hardcore = TRUE));
+                        else lmSendConfig("hardcore", (string)(hardcore = FALSE));
+
+                        // FIXME: do some of these require lmSetConfig?
+
+                        // This is a hack: this allows us to use the var hardcore to set
+                        // these settings appropriately, no matter what hardcore is set to
+                        lmSendConfig("poseSilence",     (string)(    poseSilence =  hardcore));
+                        lmSendConfig("canDressSelf",    (string)(   canDressSelf = !hardcore));
+                        lmSendConfig("canFly",          (string)(         canFly = !hardcore));
+                        lmSendConfig("canSelfTP",       (string)(      canSelfTP = !hardcore));
+                        lmSetConfig( "keyLocked",       (string)(      keyLocked =  hardcore));
+                        lmSendConfig("mustAgreeToType", (string)(mustAgreeToType = !hardcore));
+                        lmSendConfig("allowSelfWind",   (string)(  allowSelfWind = !hardcore));
+                        lmSendConfig("allowRepeatWind", (string)(allowRepeatWind = !hardcore));
 #ifdef ADULT_MODE
-                    lmSendConfig("allowStrip",      (string)(allowStrip = TRUE));
+                        lmSendConfig("allowStrip",      (string)(     allowStrip =  hardcore));
 #endif
 
-                    lmSendConfig("hardcore", value);
+                        // Rather than locking dolly down, these open her up: thus, the
+                        // setting of these is not set then reset; rather after setting,
+                        // they will not change on reset.
+                        lmSendConfig("allowPose",       (string)(      allowPose = TRUE));
+                        lmSendConfig("allowCarry",      (string)(     allowCarry = TRUE));
+                        lmSendConfig("allowDress",      (string)(     allowDress = TRUE));
+                        llSleep(5.0); // hack to prevent loops...
+                        break;
+
                 }
+            }
         }
         else if (code == INTERNAL_CMD) {
             string cmd = (string)split[0];
@@ -308,7 +325,8 @@ default {
                         //
                         // Note that Dolly cannot be posed and cannot be collapsed to access these
                         //
-                        helpMenuList += [ "Reset Body", "Reset Key", "Update" ];
+                        if (RLVok) helpMenuList += [ "Reset Body" ];
+                        helpMenuList += [ "Reset Key", "Update" ];
                         //if (detachable) menu += [ "Detach" ];
                 }
                 else {

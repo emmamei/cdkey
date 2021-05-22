@@ -500,8 +500,10 @@ default {
                     // Visible Button
                     if (isDoll) {
                         menu += "Visible";
-                        if (keyLocked) menu += "Unlock";
-                        else menu += "Lock";
+                        if (RLVok) {
+                            if (keyLocked) menu += "Unlock";
+                            else menu += "Lock";
+                        }
                     }
 
                     //--------------------

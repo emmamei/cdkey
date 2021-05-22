@@ -64,6 +64,7 @@
 // Define macros to make the process more readable
 
 #define folderSearch(a,b) \
+    if (RLVok == FALSE) return;\
     b = cdListenMine(a);\
     getInv(outfitFolder,a);\
     llSetTimerEvent(RLV_TIMEOUT)
@@ -256,6 +257,16 @@ outfitSearch(integer channel,integer handle) {
     // to another, this will fail: a key reset will be needed
     //
     //if (outfitFolder != "") return;
+    if (RLVok == FALSE) {
+        // Reset the works before we abort
+        lmSendConfig("outfitFolder",(outfitFolder = ""));
+        lmSendConfig("nudeFolder",(nudeFolder = ""));
+        lmSendConfig("normalselfFolder",(normalselfFolder = ""));
+        lmSendConfig("normaloutfitFolder",(normaloutfitFolder = ""));
+        lmInitState(INIT_STAGE4); // Outfits search failed (no RLV): continue
+        return;
+    }
+
     outfitSearching = TRUE;
 
     debugSay(6,"DEBUG-SEARCHING","outfitSearch in progress (RLVok = " + (string)RLVok + ")");
@@ -558,7 +569,7 @@ default {
             string name = (string)split[0];
             string value = (string)split[1];
 
-            debugSay(6,"DEBUG-TRANSFORM","SET_CONFIG[" + name + "] = " + value);
+            //debugSay(6,"DEBUG-TRANSFORM","SET_CONFIG[" + name + "] = " + value);
             if (name == "dollType") {
                 if (value != dollType) {
                     dollTypeExpected = value;

@@ -142,7 +142,7 @@ doHardcore() {
     if (hardcore) {
         // Note: if Dolly has no external controllers, let Dolly unlock it
         if (cdIsController(accessorID)) {
-            lmSetConfig("hardcore",(string)(hardcore = 0));
+            lmSetConfig("hardcore",(string)(hardcore = FALSE));
             cdSayTo("Hardcore mode has been disabled. The sound of a lock unlocking is heard.",accessorID);
         }
         else {
@@ -151,7 +151,7 @@ doHardcore() {
     }
     else {
         if (accessorIsDoll) {
-            lmSetConfig("hardcore",(string)(hardcore = 1));
+            lmSetConfig("hardcore",(string)(hardcore = TRUE));
             cdSayTo("Doll's hardcore mode has been enabled. The sound of a lock closing is heard.",accessorID);
         }
     }
@@ -664,6 +664,7 @@ default {
                         // command - then every dolly in range with this key will respond.
                         // Can't have that...
 
+                        llSay(DEBUG_CHANNEL,"Got wrong prefix from message (" + msg + ") on chat channel " + (string)chatChannel + "; wanted prefix " + chatPrefix);
                         return;
                     }
                     break;
@@ -686,6 +687,8 @@ default {
             integer spaceInMsg = llSubStringIndex(msg, " ");
             string chatCommand = msg;
 
+            debugSay(5,"DEBUG-CHAT","Got a chat message: PARAMETERS_EXIST = " + (string)PARAMETERS_EXIST);
+            debugSay(5,"DEBUG-CHAT","Got a chat message: " + chatCommand);
             if (!PARAMETERS_EXIST) { // Commands without parameters handled first
                 chatCommand = llToLower(chatCommand);
 

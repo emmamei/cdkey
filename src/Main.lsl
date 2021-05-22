@@ -616,6 +616,14 @@ default {
             else if (name == "lastWinderID") {
                 lmSendConfig("lastWinderID", (string)(lastWinderID = (key)value));
             }
+            else if (name == "keyLocked") {
+                keyLocked = (integer)value;
+
+                if (keyLocked) rlvLockKey();
+                else rlvUnlockKey();
+
+                lmSendConfig("keyLocked", (string)keyLocked);
+            }
             else if (name == "isAFK") {
                 lmSendConfig("isAFK", (string)(isAFK = (integer)value));
                 lmInternalCommand("setHovertext", "", keyID);
@@ -822,14 +830,12 @@ default {
             }
 
             else if (choice == "Lock") {
-                rlvLockKey();
-                lmSendConfig("keyLocked",(string)(keyLocked = TRUE));
+                lmSetConfig("keyLocked",(string)(keyLocked = TRUE));
                 lmInternalCommand("mainMenu", "|" + name, id);
             }
 
             else if (choice == "Unlock") {
-                rlvUnlockKey();
-                lmSendConfig("keyLocked",(string)(keyLocked = FALSE));
+                lmSetConfig("keyLocked",(string)(keyLocked = FALSE));
                 lmInternalCommand("mainMenu", "|" + name, id);
             }
 
