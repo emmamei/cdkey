@@ -463,7 +463,7 @@ default {
             RLVok = FALSE;
             RLVsupport = FALSE;
 
-            lmRLVreport(RLVok, "", 0); // report FALSE
+            lmRLVreport(RLVok, "", FALSE); // report FALSE
             lmSendConfig("RLVsupport",(string)RLVsupport);
         }
     }

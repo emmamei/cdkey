@@ -623,6 +623,24 @@ default {
         // Set the debug level for all scripts early
         lmSendConfig("debugLevel",(string)debugLevel);
 #endif
+
+        // LOCK EXPIRE VARIABLES
+        //
+        // * carryExpire
+        //   - Dolly will be dropped on relog, so this variable should be unset through dropCarrier
+        //
+        // * lowScriptExpire
+        //   - Just reset this to zero
+        //
+        // * poseExpire
+        //   - If this is expired, clear pose, else pose Dolly
+        //
+        // * transformLockExpire
+        //   - If this is expired, clear transformation lock, else lock Dolly
+        //
+        // * wearLockExpire
+        //   - If this is expired, clear wear lock, else lock Dolly down
+
         lmInternalCommand("startRlvCheck", "", keyID);
         //lmSetConfig("outfitFolder", outfitFolderExpected);
         //lmSetConfig("dollType", dollTypeExpected);

@@ -41,7 +41,7 @@ integer mySeqNum;
 #define lmSendToAgentPlusDoll(msg,id)                   cdLinkMessage(LINK_THIS,0,12,msg,id)
 #define lmSendToController(msg)                         cdLinkMessage(LINK_THIS,0,15,msg,keyID)
 //#define lmConfigComplete(count)                         cdLinkMessage(LINK_THIS,0,102,(string)(count),keyID)
-#define lmInitState(num)                                cdLinkMessage(LINK_THIS,0,(num),(string)(num),keyID)
+#define lmInitStage(num)                                cdLinkMessage(LINK_THIS,0,(num),(string)(num),keyID)
 #define lmMemReport(delay,id)                           cdLinkMessage(LINK_THIS,0,135,(string)delay,id)
 #define lmMemReply(s)                                   cdLinkMessage(LINK_THIS,0,136,s,keyID)
 #define lmRating(simrating)                             cdLinkMessage(LINK_THIS,0,150,simrating,keyID)
