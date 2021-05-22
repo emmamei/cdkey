@@ -618,7 +618,7 @@ default {
                         if (simRating == "MATURE" || simRating == "ADULT") {
 
                             // Only show for Slut Dollies - or hardcore dollies
-                            if (dollType == "Slut" || hardcore) {
+                            if ((dollType == "Slut") || (isDoll && canDressSelf)) {
                                 menu += "Strip";
                             }
 

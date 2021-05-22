@@ -1171,7 +1171,7 @@ default {
 #endif
                     ;
                 }
-                if (chatCommand == "pose") {
+                else if (chatCommand == "pose") {
                     string requestedAnimation = param;
 
                     if (requestedAnimation != ANIMATION_COLLAPSED) {
@@ -1189,22 +1189,11 @@ default {
                 }
             }
 
-            // The chat message is not a known command, so try to find an animation (pose)
-            // Commands with secondary parameters bypass this sequence
+            // The chat message is not a known command... so ignore
 
-            if (msg != ANIMATION_COLLAPSED) {
-                if (!(llGetAgentInfo(llGetOwner()) & AGENT_SITTING)) { // Agent not sitting
-                    if (llGetInventoryType(msg) == INVENTORY_ANIMATION) {
-                        // We don't have to do any testing for poses here: if the specified pose exists, we use it
-                        lmPoseReply(msg, accessorName, accessorID);
-                    }
 #ifdef DEVELOPER_MODE
-                    else {
-                        llSay(DEBUG_CHANNEL,"No pose or command recognized: " + msg);
-                    }
+            llSay(DEBUG_CHANNEL,"Chat command not recognized: " + msg);
 #endif
-                }
-            }
         }
     }
 }
