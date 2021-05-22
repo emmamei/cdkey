@@ -142,7 +142,7 @@ doHardcore() {
     if (hardcore) {
         // Note: if Dolly has no external controllers, let Dolly unlock it
         if (cdIsController(accessorID)) {
-            lmSendConfig("hardcore",(string)(hardcore = 0));
+            lmSetConfig("hardcore",(string)(hardcore = 0));
             cdSayTo("Hardcore mode has been disabled. The sound of a lock unlocking is heard.",accessorID);
         }
         else {
@@ -151,7 +151,7 @@ doHardcore() {
     }
     else {
         if (accessorIsDoll) {
-            lmSendConfig("hardcore",(string)(hardcore = 1));
+            lmSetConfig("hardcore",(string)(hardcore = 1));
             cdSayTo("Doll's hardcore mode has been enabled. The sound of a lock closing is heard.",accessorID);
         }
     }

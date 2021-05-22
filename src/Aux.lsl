@@ -36,6 +36,7 @@ integer ncLine;
 integer memReporting;
 integer isDoll;
 integer mustAgreeToType;
+integer keyLocked;
 
 integer textboxChannel;
 integer textboxHandle;
@@ -180,6 +181,7 @@ default {
                 else if (name = "hardcore") {
                     hardcore = (integer)value;
 
+                    // FIXME: do some of these require lmSetConfig?
                     lmSendConfig("poseSilence",     (string)(poseSilence = TRUE));
                     lmSendConfig("canDressSelf",    (string)(canDressSelf = FALSE));
                     lmSendConfig("allowPose",       (string)(allowPose = FALSE));
@@ -189,6 +191,7 @@ default {
                     lmSendConfig("allowRepeatWind", (string)(allowRepeatWind = FALSE));
                     lmSendConfig("canFly",          (string)(canFly = FALSE));
                     lmSendConfig("canSelfTP",       (string)(canSelfTP = FALSE));
+                    lmSendConfig("keyLocked",       (string)(keyLocked = TRUE));
                     lmSendConfig("mustAgreeToType", (string)(mustAgreeToType = FALSE));
 #ifdef ADULT_MODE
                     lmSendConfig("allowStrip",      (string)(allowStrip = TRUE));
@@ -481,7 +484,8 @@ Parent - Take care choosing your parents; they have great control over Dolly and
 
                 // One-way options
                 if (cdIsController(id)) {
-                    plusList = llListInsertList(plusList, cdGetButton("Rpt Wind", id, allowRepeatWind, 1), 6);
+                    if (!hardcore)
+                        plusList = llListInsertList(plusList, cdGetButton("Rpt Wind", id, allowRepeatWind, 1), 6);
                 }
 
                 lmSendConfig("backMenu",(backMenu = "Options..."));

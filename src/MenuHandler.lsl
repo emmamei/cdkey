@@ -242,6 +242,7 @@ default {
                 else if (name == "allowStrip")                 allowStrip = (integer)value;
 #endif
                 else if (name == "allowDress")                 allowDress = (integer)value;
+                else if (name == "allowSelfWind")           allowSelfWind = (integer)value;
                 else if (name == "allowPose")                   allowPose = (integer)value;
             }
 
