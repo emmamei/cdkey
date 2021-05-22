@@ -340,7 +340,7 @@ readPreferences() {
         llOwnerSay("No preferences file was found (\"" + NOTECARD_PREFERENCES + "\")");
 
         //prefsRead = PREFS_NOT_READ;
-        lmInitState(INIT_STAGE3);
+        lmInitStage(INIT_STAGE3);
     }
 }
 
@@ -532,7 +532,7 @@ default {
                 lmSendConfig("dollDisplayName", dollDisplayName);
                 cdSetKeyName(dollDisplayName + "'s Key");
 
-                lmInitState(INIT_STAGE5);
+                lmInitStage(INIT_STAGE5);
             }
             else if (code == INIT_STAGE5) {
                 debugSay(3,"DEBUG-START","Stage 5 begun.");
@@ -604,7 +604,7 @@ default {
 
         makeWorkInNoScriptLand(dollID);
 
-        lmInitState(INIT_STAGE1);
+        lmInitStage(INIT_STAGE1);
     }
 
     //----------------------------------------
@@ -694,7 +694,7 @@ default {
                 lmSetConfig("keyLimit",(string)keyLimit);
 
                 //prefsRead = PREFS_READ;
-                lmInitState(INIT_STAGE3);
+                lmInitStage(INIT_STAGE3);
             }
             else {
                 // Strip comments (prefs)

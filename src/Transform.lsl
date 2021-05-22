@@ -263,7 +263,7 @@ outfitSearch(integer channel,integer handle) {
         lmSendConfig("nudeFolder",(nudeFolder = ""));
         lmSendConfig("normalselfFolder",(normalselfFolder = ""));
         lmSendConfig("normaloutfitFolder",(normaloutfitFolder = ""));
-        lmInitState(INIT_STAGE4); // Outfits search failed (no RLV): continue
+        lmInitStage(INIT_STAGE4); // Outfits search failed (no RLV): continue
         return;
     }
 
@@ -395,7 +395,7 @@ default {
 
                     llSay(DEBUG_CHANNEL,"Outfit search FAILED. No outfits or types are available.");
                     adjustTimer();
-                    lmInitState(INIT_STAGE4); // Outfits search failed: continue
+                    lmInitStage(INIT_STAGE4); // Outfits search failed: continue
                 }
             }
             else if (typeSearchHandle) {
@@ -433,7 +433,7 @@ default {
 
                     llSay(DEBUG_CHANNEL,"Outfit search FAILED. No system folders were found.");
                     adjustTimer();
-                    lmInitState(INIT_STAGE4); // System folder search failed: continue
+                    lmInitStage(INIT_STAGE4); // System folder search failed: continue
                 }
             }
         }
@@ -994,7 +994,7 @@ default {
             lmSendConfig("normalselfFolder",normalselfFolder);
             lmSendConfig("normaloutfitFolder",normaloutfitFolder);
             llSleep(1.0);
-            lmInitState(INIT_STAGE4); // Outfits and System folder search succeeded: continue
+            lmInitStage(INIT_STAGE4); // Outfits and System folder search succeeded: continue
         }
     }
 

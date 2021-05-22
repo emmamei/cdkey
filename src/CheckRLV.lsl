@@ -10,7 +10,7 @@
 
 #define NOT_IN_REGION ZERO_VECTOR
 #define MAX_RLVCHECK_TRIES 5
-#define RLV_TIMEOUT 5.0
+#define RLV_TIMEOUT 10.0
 #define UNSET -1
 
 #define cdListenerDeactivate(a) llListenControl(a, 0)
@@ -67,6 +67,7 @@ list rlvExceptions;
 startRlvCheck() {
     // Checking for RLV
     llOwnerSay("Checking for RLV support");
+    llResetTime();
 
     // Set up listener to receive RLV command output
     if (rlvChannel == NO_CHANNEL) {
@@ -88,7 +89,7 @@ startRlvCheck() {
     myPath = "";
 #endif
 
-    debugSay(2,"DEBUG-RLV","starting a check for RLV");
+    debugSay(2,"DEBUG-CHECKRLV","starting a check for RLV");
     rlvCheckTry();
 }
 
@@ -102,7 +103,7 @@ startRlvCheck() {
 
 rlvCheckTry() {
     // Check RLV: this could be called multiple times (retries)
-    debugSay(2,"DEBUG-RLV","checking for RLV - try " + (string)(MAX_RLVCHECK_TRIES - rlvCheck) + " of " + (string)MAX_RLVCHECK_TRIES);
+    debugSay(2,"DEBUG-CHECKRLV","checking for RLV - try " + (string)(MAX_RLVCHECK_TRIES - rlvCheck) + " of " + (string)MAX_RLVCHECK_TRIES);
 
     // Decrease number of retries - rlvCheck is check counter
     rlvCheck -= 1;
@@ -244,23 +245,29 @@ default {
     //----------------------------------------
     listen(integer channel, string name, key id, string msg) {
 
-        debugSay(2, "DEBUG-AVATAR", "Listener tripped on channel " + (string)channel);
-        debugSay(2, "DEBUG-AVATAR", "Listener data = " + (string)msg);
+        debugSay(4, "DEBUG-CHECKRLV", "Listener tripped on channel " + (string)channel);
+        debugSay(4, "DEBUG-CHECKRLV", "Listener data = " + (string)msg);
 
         // Initial RLV Check results are being processed here
         //
         if (channel == rlvChannel) {
-            debugSay(2, "DEBUG-RLV", "RLV Message received: " + msg);
+
+            // FIXME: We could deactivate, but RLV channel may be used for other things
+            //cdListenerDeactivate(rlvChannel); // This prevents a secondary response
+            if (RLVok == TRUE) return;
+
+            debugSay(2, "DEBUG-CHECKRLV", "RLV Message received: " + msg);
+            llOwnerSay("RLV Check completed in " + formatFloat(llGetTime(), 1) + " seconds");
 
             // Could be RestrainedLove or RestrainedLife - just
             // check enough letters to account for both
             if (llGetSubString(msg, 0, 10) == "RestrainedL") {
                 rlvAPIversion = msg;
-                debugSay(2, "DEBUG-RLV", "RLV Version: " + rlvAPIversion);
+                debugSay(2, "DEBUG-CHECKRLV", "RLV Version: " + rlvAPIversion);
             }
 #ifdef DEVELOPER_MODE
             else {
-                debugSay(2, "DEBUG-RLV", "Unknown RLV response message: " + msg);
+                debugSay(2, "DEBUG-CHECKRLV", "Unknown RLV response message: " + msg);
             }
 #endif
 
@@ -333,11 +340,11 @@ default {
         else if (code == RLV_RESET) {
             RLVok = (integer)split[0];
 
-            debugSay(4,"DEBUG-MENU","RLV Reset: Updating exceptions");
             if (RLVok == TRUE)
+                debugSay(4,"DEBUG-CHECKRLV","RLV Reset: Updating exceptions");
                 lmInternalCommand("reloadExceptions", script, NULL_KEY);
 
-            if (initializing) lmInitState(INIT_STAGE2);
+            if (initializing) lmInitStage(INIT_STAGE2);
         }
         else if (code == INTERNAL_CMD) {
             string cmd = (string)split[0];
@@ -444,13 +451,14 @@ default {
 
     timer() {
         // RLVok shouldn't be TRUE here: timer would be shut off
-        debugSay(2,"DEBUG-RLV","RLV check failed...");
+        debugSay(2,"DEBUG-CHECKRLV","RLV check #" + (string)rlvCheck + " failed; retry...");
 
         if (rlvCheck > 0) {
             rlvCheckTry(); // try again
         }
         else {
             llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
+            llOwnerSay("RLV Check took " + (string)(llGetTime()) + " seconds");
             cdHaltTimer();
             RLVok = FALSE;
             RLVsupport = FALSE;
