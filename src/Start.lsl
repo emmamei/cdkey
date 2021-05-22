@@ -624,6 +624,9 @@ default {
         lmSendConfig("debugLevel",(string)debugLevel);
 #endif
         lmInternalCommand("startRlvCheck", "", keyID);
+        //lmSetConfig("outfitFolder", outfitFolderExpected);
+        //lmSetConfig("dollType", dollTypeExpected);
+
     }
 
     //----------------------------------------

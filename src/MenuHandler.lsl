@@ -501,7 +501,9 @@ default {
                     if (isDoll) {
                         menu += "Visible";
                         if (RLVok) {
-                            if (keyLocked) menu += "Unlock";
+                            if (keyLocked) {
+                                if (!hardcore) menu += "Unlock";
+                            }
                             else menu += "Lock";
                         }
                     }
@@ -620,7 +622,7 @@ default {
                         if (simRating == "MATURE" || simRating == "ADULT") {
 
                             // Only show for Slut Dollies - or hardcore dollies
-                            if ((dollType == "Slut") || (isDoll && canDressSelf)) {
+                            if ((dollType == "Slut") || (isDoll && canDressSelf) || (allowDress && allowStrip)) {
                                 menu += "Strip";
                             }
 

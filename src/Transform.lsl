@@ -612,7 +612,7 @@ default {
                     }
                     else {
                         pluslist += [ "Type...", "Access..." ];
-                        if (RLVok == TRUE) pluslist += [ "Restrictions..." ];
+                        if (RLVok == TRUE) if (!hardcore) pluslist += [ "Restrictions..." ];
                     }
                 }
                 else if (cdIsCarrier(id)) {
