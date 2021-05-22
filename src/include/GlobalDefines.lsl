@@ -122,6 +122,8 @@ float GlobalDefines_version=1.0;
 #define SKIP_EXPEDITE [ "poseExpire", "timeLeftOnKey", "timeToJamRepair", "wearLockExpire", "winderRechargeTime" ]
 // Timeouts
 #define WEAR_LOCK_TIMEOUT 600
+#define TRANSFORM_LOCK_TIME 300
+
 #define DEMO_LIMIT 300
 #define POSE_TIMEOUT 300
 #define CARRY_TIMEOUT 300

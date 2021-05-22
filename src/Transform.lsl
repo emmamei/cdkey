@@ -18,9 +18,6 @@
 // Channel to use to discard dialog output
 #define DISCARD_CHANNEL 9999
 
-// Transformation (locked) time in seconds
-#define TRANSFORM_LOCK_TIME 300
-
 // Script Control
 #define RUNNING 1
 #define NOT_RUNNING 0

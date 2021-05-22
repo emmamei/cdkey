@@ -464,8 +464,8 @@ default {
         if (wearLockExpire) {
             if (isTimePast(wearLockExpire)) {
                 // wearLock has expired...
-                lmSendConfig("wearLock", (string)(wearLock = 0));
-                lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0));
+                lmSetConfig("wearLock", (string)(wearLock = 0));
+                //lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0));
             }
         }
 
@@ -656,8 +656,18 @@ default {
                 llSetTimerEvent(LOW_RATE);
             }
 
-            else if (name == "poseExpire")         poseExpire = (integer)value;
-            else if (name == "wearLockExpire") wearLockExpire = (integer)value;
+            else if (name == "poseExpire") {
+                poseExpire = (integer)value;
+                lmSendConfig("poseExpire",(string)(poseExpire));
+            }
+            else if (name == "wearLockExpire") {
+                wearLockExpire = (integer)value;
+
+                wearLock = (wearLockExpire != 0);
+                lmSendConfig("wearLock", (string)wearLock);
+
+                lmSendConfig("wearLockExpire",(string)(wearLockExpire));
+            }
         }
 
         //----------------------------------------

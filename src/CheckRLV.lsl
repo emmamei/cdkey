@@ -340,9 +340,13 @@ default {
         else if (code == RLV_RESET) {
             RLVok = (integer)split[0];
 
-            if (RLVok == TRUE)
+            if (RLVok == TRUE) {
                 debugSay(4,"DEBUG-CHECKRLV","RLV Reset: Updating exceptions");
                 lmInternalCommand("reloadExceptions", script, NULL_KEY);
+
+                lmSetConfig("wearLock",(string)wearLock);
+                lmSetConfig("keyLocked",(string)keyLocked);
+            }
 
             if (initializing) lmInitStage(INIT_STAGE2);
         }

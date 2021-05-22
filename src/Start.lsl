@@ -27,6 +27,7 @@
 
 #define PREFS_READ 1
 #define PREFS_NOT_READ 0
+#define TRANSFORM_LOCK_TIME 300
 
 #define cdResetKeyName() llSetObjectName(PACKAGE_NAME + " " + __DATE__)
 
@@ -640,10 +641,23 @@ default {
         //
         // * wearLockExpire
         //   - If this is expired, clear wear lock, else lock Dolly down
+        //   THIS VARIABLE USES RLV. Thus, don't do anything here, but tie
+        //   it to a successful RLV check.
 
         lmInternalCommand("startRlvCheck", "", keyID);
         //lmSetConfig("outfitFolder", outfitFolderExpected);
         //lmSetConfig("dollType", dollTypeExpected);
+
+        /*
+        if (carryExpire) dropCarrier();
+        lmSendConfig("lowScriptExpire",(lowScriptExpire = 0));
+        if (poseExpire >= llGetUnixTime()) clearPose();
+        else setPose();
+        if (transformLockExpire >= llGetUnixTime()) 
+            lmSendConfig("transformLockExpire",(transformLockExpire = 0));
+        else
+            lmSendConfig("transformLockExpire",(transformLockExpire = llGetUnixTime() + TRANSFORM_LOCK_TIME));
+        */
 
     }
 
