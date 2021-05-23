@@ -895,6 +895,11 @@ default {
                     return;
                 }
 #endif
+                else if (choice == "RLV") {
+                    lmInternalCommand("startRlvCheck","",id);
+                    return;
+                }
+
                 string beforeSpace = llStringTrim(llGetSubString(choice, 0, space),STRING_TRIM);
                 string afterSpace = llDeleteSubString(choice, 0, space);
 

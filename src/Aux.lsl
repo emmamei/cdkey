@@ -319,6 +319,10 @@ default {
                 //
 
                 if (cdIsDoll(id)) {
+                    if (RLVok == FALSE) {
+                        helpMenuList += "RLV"; // To be able to enable RLV when checker fails: one-way button
+                    }
+
                     if (!collapsed) if (notPosed())
 
                         // This is to totally reset Dolly's worn body,
