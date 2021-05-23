@@ -640,6 +640,15 @@ default {
         }
         else if (code == RLV_RESET) {
             RLVok = (integer)split[0];
+
+            if (RLVok == TRUE) {
+                // This should only happen when the RLVcheck is
+                // done during login or attach
+                if (poseAnimation != ANIMATION_NONE) {
+                    setPoseAnimation(poseAnimation); 
+                    if (poseSilence) lmRunRLV("sendchat=n");
+                }
+            }
         }
         else if (code < 200) {
             if (code == INIT_STAGE5) {

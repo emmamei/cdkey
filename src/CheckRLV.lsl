@@ -344,6 +344,8 @@ default {
                 debugSay(4,"DEBUG-CHECKRLV","RLV Reset: Updating exceptions");
                 lmInternalCommand("reloadExceptions", script, NULL_KEY);
 
+                // We have to do this in order to set the wearLock (and keyLocked) properly
+                // with their RLV components
                 lmSetConfig("wearLock",(string)wearLock);
                 lmSetConfig("keyLocked",(string)keyLocked);
             }

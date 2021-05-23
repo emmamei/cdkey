@@ -71,6 +71,10 @@ integer i;
 string outfitFolderExpected;
 string dollTypeExpected;
 
+integer transformLockExpire;
+integer poseExpire;
+integer carryExpire;
+
 //integer introLine;
 //integer introLines;
 
@@ -396,12 +400,15 @@ default {
             string value = (string)split[1];
             split = llDeleteSubList(split,0,0);
 
-                 if (name == "keyLimit")                      keyLimit = (integer)value;
+                 if (name == "keyLimit")                       keyLimit = (integer)value;
 #ifdef DEVELOPER_MODE
-            else if (name == "debugLevel")                  debugLevel = (integer)value;
+            else if (name == "debugLevel")                   debugLevel = (integer)value;
 #endif
-            else if (name == "collapsed")                    collapsed = (integer)value;
-            else if (name == "dollType")                      dollType = value;
+            else if (name == "collapsed")                     collapsed = (integer)value;
+            else if (name == "transformLockExpire") transformLockExpire = (integer)value;
+            else if (name == "poseExpire")                   poseExpire = (integer)value;
+            else if (name == "carryExpire")                 carryExpire = (integer)value;
+            else if (name == "dollType")                       dollType = value;
             else if (name == "blacklist") {
                 if (split == [""]) blacklist = [];
                 else blacklist = split;
@@ -625,40 +632,15 @@ default {
         lmSendConfig("debugLevel",(string)debugLevel);
 #endif
 
-        // LOCK EXPIRE VARIABLES
-        //
-        // * carryExpire
-        //   - Dolly will be dropped on relog, so this variable should be unset through dropCarrier
-        //
-        // * lowScriptExpire
-        //   - Just reset this to zero
-        //
-        // * poseExpire
-        //   - If this is expired, clear pose, else pose Dolly
-        //
-        // * transformLockExpire
-        //   - If this is expired, clear transformation lock, else lock Dolly
-        //
-        // * wearLockExpire
-        //   - If this is expired, clear wear lock, else lock Dolly down
-        //   THIS VARIABLE USES RLV. Thus, don't do anything here, but tie
-        //   it to a successful RLV check.
-
         lmInternalCommand("startRlvCheck", "", keyID);
-        //lmSetConfig("outfitFolder", outfitFolderExpected);
-        //lmSetConfig("dollType", dollTypeExpected);
 
-        /*
-        if (carryExpire) dropCarrier();
-        lmSendConfig("lowScriptExpire",(lowScriptExpire = 0));
-        if (poseExpire >= llGetUnixTime()) clearPose();
-        else setPose();
-        if (transformLockExpire >= llGetUnixTime()) 
-            lmSendConfig("transformLockExpire",(transformLockExpire = 0));
-        else
-            lmSendConfig("transformLockExpire",(transformLockExpire = llGetUnixTime() + TRANSFORM_LOCK_TIME));
-        */
+        // Clear the lowScript mode and start from beginning
+        lmSendConfig("lowScriptExpire",(string)0);
 
+        // This is probably overkill - but pass these on to everybody
+        lmSendConfig("transformLockExpire",(string)transformLockExpire);
+        lmSendConfig("poseExpire",(string)poseExpire);
+        lmSendConfig("carryExpire",(string)carryExpire);
     }
 
     //----------------------------------------
