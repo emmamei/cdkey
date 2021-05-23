@@ -57,6 +57,7 @@ key controllerQueryID;
 
 integer ncLine;
 integer failedReset;
+integer rlvPreviously;
 
 //float ncStart;
 //integer lastAttachPoint;
@@ -450,25 +451,11 @@ default {
         }
         else if (code == RLV_RESET) {
             RLVok = (integer)split[0];
-            //rlvWait = 0;
 
-            if (RLVok == TRUE) {
-
-                // If RLV is ok, then trigger all of the necessary RLV restrictions
-                // (collapse is managed by Main)
-                //if (!collapsed) {
-                    // Not collapsed: clear any user collapse RLV restrictions
-                    //debugSay(2, "DEBUG-START", "Clearing on RLV_RESET");
-                    //lmRunRLVcmd("clearRLVcmd",""); // On RLV_RESET: not collapsed
-
-                    // Are we posed? Trigger RLV restrictions for being posed
-                    //if (poseAnimation != ANIMATION_NONE) {
-                        //lmRestrictRLV(defaultPoseRLVcmd);
-                    //}
-                //}
-            }
-            else {
-                lmSendToController(dollName + " has logged in without RLV at " + wwGetSLUrl());
+            if (RLVok == FALSE) {
+                if (rlvPreviously == TRUE) {
+                    lmSendToController(dollName + " has logged in without RLV at " + wwGetSLUrl());
+                }
             }
         }
         else if (code == MENU_SELECTION) {
@@ -641,6 +628,7 @@ default {
         lmSendConfig("debugLevel",(string)debugLevel);
 #endif
 
+        rlvPreviously = RLVok;
         lmInternalCommand("startRlvCheck", "", keyID);
 
         // Clear the lowScript mode and start from beginning
