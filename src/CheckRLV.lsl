@@ -109,11 +109,19 @@ rlvCheckTry() {
     rlvCheck -= 1;
 
     // Timeout: if no listener reply received, time out
-    llSetTimerEvent(RLV_TIMEOUT);
+    //
+    // Doing it this way means if a quick reply, then we are good to
+    // go; if not, we keep upping the timer until we get to the end
+         if (rlvCheck == MAX_RLVCHECK_TRIES)      llSetTimerEvent(2);
+    else if (rlvCheck == MAX_RLVCHECK_TRIES - 1)  llSetTimerEvent(4);
+    else if (rlvCheck == MAX_RLVCHECK_TRIES - 2)  llSetTimerEvent(8);
+    else if (rlvCheck == MAX_RLVCHECK_TRIES - 3)  llSetTimerEvent(10);
+    else if (rlvCheck == MAX_RLVCHECK_TRIES - 4)  llSetTimerEvent(15);
+    else                                          llSetTimerEvent(15);
 
     // Switch to older command if newer one fails
     if (rlvCheck > 2) llOwnerSay("@versionnew=" + (string)rlvChannel);
-    else           llOwnerSay("@version="    + (string)rlvChannel);
+    else              llOwnerSay("@version="    + (string)rlvChannel);
 }
 
 rlvActivateBase() {
