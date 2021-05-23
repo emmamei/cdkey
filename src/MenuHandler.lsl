@@ -396,6 +396,7 @@ default {
                 // Prepare listeners: this allows for lag time by doing this up front
 
                 cdListenerActivate(dialogHandle);
+                llSleep(0.5); // Let messages settle in to update menu...
                 //lmDialogListen();
 
                 //----------------------------------------
@@ -503,7 +504,7 @@ default {
                     // Buttons:
 
                     //--------------------
-                    // Visible Button
+                    // Visible & Lock/Unlock Button
                     if (isDoll) {
                         menu += "Visible";
                         if (RLVok) {
