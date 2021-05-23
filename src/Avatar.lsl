@@ -510,32 +510,38 @@ default {
             string cmd = (string)split[0];
             split = llDeleteSubList(split, 0, 0);
 
-            if (cmd == "detach") {
-                if (RLVok == TRUE) { lmRunRLVcmd("clearRLVcmd","detachme=force"); }
-                else llDetachFromAvatar();
-            }
+            switch (cmd) {
+
+                case "posePageN": {
+
+                    string choice = (string)split[0];
+                    posePageN(choice,id);
+                    break;
+                }
+
 #ifdef EMERGENCY_TP
-            else if (cmd == "teleport") {
-                string lm = (string)split[0];
+                case "teleport": {
+                    string lm = (string)split[0];
 
-                llRegionSayTo(id, 0, "Teleporting dolly " + dollName + " to  landmark " + lm + ".");
+                    llRegionSayTo(id, 0, "Teleporting dolly " + dollName + " to  landmark " + lm + ".");
 
-                lmRunRLV("tploc=y");
+                    lmRunRLV("tploc=y");
 
-                // This should trigger a dataserver event
-                rlvTPrequest = llRequestInventoryData(lm);
-                debugSay(6,"DEBUG-AVATAR","rlvTPrequest = " + (string)rlvTPrequest);
-            }
+                    // This should trigger a dataserver event
+                    rlvTPrequest = llRequestInventoryData(lm);
+                    debugSay(6,"DEBUG-AVATAR","rlvTPrequest = " + (string)rlvTPrequest);
+                    break;
+                }
 #endif
-            else if (cmd == "posePageN") {
-                string choice = (string)split[0];
-                posePageN(choice,id);
-            }
-            else if (cmd == "startFollow") {
-                startFollow(carrierID);
-            }
-            else if (cmd == "stopFollow") {
-                stopFollow(carrierID);
+                case "startFollow": {
+                    startFollow(carrierID);
+                    break;
+                }
+
+                case "stopFollow": {
+                    stopFollow(carrierID);
+                    break;
+                }
             }
         }
         else if (code == MENU_SELECTION) {

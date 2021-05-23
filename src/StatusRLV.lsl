@@ -252,7 +252,7 @@ default {
 #endif
             else if (cmd == "runRLVcmd") {
                 if (commandString == "clear") {
-                    llSay(DEBUG_CHANNEL,"Clear command run from " + script + " using lmRunRLVcmd");
+                    llSay(DEBUG_CHANNEL,"Clear command run from " + script + " using lmRunRLVcmd - use clearRLVcmd instead");
                     lmRunRLVcmd("clearRLVcmd",commandString);
                     return;
                 }
@@ -286,6 +286,7 @@ default {
                 // it means normally: we have a base RLV set
 
                 debugSay(2,"DEBUG-STATUSRLV","RLV clear command issued from " + script);
+                llSay(DEBUG_CHANNEL,"clearRLVcmd run from " + script);
 
 #ifdef COMPLETE_CLEAR
                 llOwnerSay("@clear"); // clear

@@ -426,7 +426,7 @@ default {
 
                     if (poseAnimation == "" && !collapsed) {
                         // Not collapsed or posed - so clear to base RLV
-                        lmRunRLVcmd("clearRLVcmd",defaultBaseRLVcmd);
+                        lmRunRLVcmd("clearRLVcmd",defaultBaseRLVcmd); // received a null poseAnimation, and not collapsed: reset
                     }
                     else {
                         // Posed: activate RLV restrictions
@@ -440,26 +440,23 @@ default {
             RLVok = (integer)split[0];
             //rlvWait = 0;
 
-            string msg = dollName + " has logged in with";
-
-            if (RLVok != TRUE) msg += "out";
-            msg += " RLV at " + wwGetSLUrl();
-
-            lmSendToController(msg);
-
             if (RLVok == TRUE) {
+
                 // If RLV is ok, then trigger all of the necessary RLV restrictions
                 // (collapse is managed by Main)
-                if (!collapsed) {
+                //if (!collapsed) {
                     // Not collapsed: clear any user collapse RLV restrictions
-                    debugSay(2, "DEBUG-START", "Clearing on RLV_RESET");
-                    lmRunRLVcmd("clearRLVcmd","");
+                    //debugSay(2, "DEBUG-START", "Clearing on RLV_RESET");
+                    //lmRunRLVcmd("clearRLVcmd",""); // On RLV_RESET: not collapsed
 
                     // Are we posed? Trigger RLV restrictions for being posed
-                    if (poseAnimation != ANIMATION_NONE) {
-                        lmRestrictRLV(defaultPoseRLVcmd);
-                    }
-                }
+                    //if (poseAnimation != ANIMATION_NONE) {
+                        //lmRestrictRLV(defaultPoseRLVcmd);
+                    //}
+                //}
+            }
+            else {
+                lmSendToController(dollName + " has logged in without RLV at " + wwGetSLUrl());
             }
         }
         else if (code == MENU_SELECTION) {
