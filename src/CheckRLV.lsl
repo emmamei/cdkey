@@ -35,7 +35,7 @@ integer rlvChannel;
 integer rlvHandle;
 integer rlvCheck = MAX_RLVCHECK_TRIES;
 integer rlvStarted;
-integer initializing = TRUE;
+integer keyInit;
 integer isOutfitLocked = FALSE;
 integer keyLocked = FALSE;
 
@@ -212,7 +212,7 @@ default {
         dollName = llGetDisplayName(dollID = llGetOwner());
         keyID = llGetKey();
         myName = llGetScriptName();
-        initializing = TRUE;
+        keyInit = TRUE;
 
 #ifdef DEVELOPER_MODE
         myPath = "";
@@ -225,19 +225,11 @@ default {
     // ON REZ
     //----------------------------------------
     on_rez(integer start) {
+        keyInit = FALSE; // we're not activating the full Init Stage sequence here
 
-        // IF RLVok is TRUE, then check to see that RLV is
-        // actually available on the viewer
-        initializing = FALSE;
-
-#ifdef DEVELOPER_MODE
-        myPath = "";
-#endif
+        // remove rlvHandle in order to set new one later
         llListenRemove(rlvHandle);
         rlvChannel == 0;
-
-        // Note this happens only at the very beginning
-        //startRlvCheck();
     }
 
     //----------------------------------------
@@ -246,7 +238,7 @@ default {
     attach(key id) {
 
         // Let INIT_STAGE1 activate the RLV check..
-        //if (initializing == TRUE) if (id) startRlvCheck();
+        //if (keyInit == TRUE) if (id) startRlvCheck();
     }
 
     //----------------------------------------
@@ -361,7 +353,7 @@ default {
                 lmSetConfig("keyLocked",(string)keyLocked);
             }
 
-            if (initializing) lmInitStage(INIT_STAGE2);
+            if (keyInit) lmInitStage(INIT_STAGE2);
         }
         else if (code == INTERNAL_CMD) {
             string cmd = (string)split[0];
@@ -444,7 +436,7 @@ default {
             }
             else if (code == INIT_STAGE5) {
 
-                initializing = FALSE;
+                keyInit = FALSE;
 
             }
             else if (code == CONFIG_REPORT) {
