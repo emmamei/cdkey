@@ -51,8 +51,9 @@ string msg;
 float delayTime = 15.0; // in seconds
 float initTimer;
 
-key ncPrefsKey;
-//integer prefsRead;
+key notecardQueryID;
+key blacklistQueryID;
+key controllerQueryID;
 
 integer ncLine;
 integer failedReset;
@@ -265,9 +266,16 @@ processConfiguration(string configSettingName, string configSettingValue) {
             }
         }
         else if (configSettingName == "blacklist") {
-            string blacklistedUUID = (string)configSettingValue;
+            string blacklistUUID = (string)configSettingValue;
 
-            blacklist = (blacklist = []) + blacklist + [ (string)blacklistedUUID, (string)blacklistedUUID ];
+            blacklist += blacklistUUID;
+
+            blacklistQueryID = llRequestUsername((key)blacklistUUID);
+
+            // This is a hack: it lets us match the UUID with the
+            // name we get back
+            blacklist += "++" + (string)blacklistQueryID;
+
             lmSetConfig("blacklist", llDumpList2String(blacklist, "|"));
         }
         else if (configSettingName == "controller") {
@@ -275,7 +283,14 @@ processConfiguration(string configSettingName, string configSettingValue) {
 
             // Since we don't know and can't get the display name of the Controller, just
             // put the UUID in place of name
-            controllers = (controllers = []) + controllers + [ (string)controllerUUID, (string)controllerUUID ];
+            controllers += controllerUUID;
+
+            controllerQueryID = llRequestUsername((key)controllerUUID);
+
+            // This is a hack: it lets us match the UUID with the
+            // name we get back
+            controllers += "++" + (string)controllerQueryID;
+
             lmSetConfig("controllers", llDumpList2String(controllers, "|"));
 
             // Controllers get added to the exceptions
@@ -337,12 +352,11 @@ readPreferences() {
 
         // Start reading from first line (which is 0)
         ncLine = 0;
-        ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ncLine);
+        notecardQueryID = llGetNotecardLine(NOTECARD_PREFERENCES, ncLine);
     }
     else {
         llOwnerSay("No preferences file was found (\"" + NOTECARD_PREFERENCES + "\")");
 
-        //prefsRead = PREFS_NOT_READ;
         lmInitStage(INIT_STAGE3);
     }
 }
@@ -682,49 +696,76 @@ default {
     //----------------------------------------
     // DATASERVER
     //----------------------------------------
-    dataserver(key query_id, string data) {
+    dataserver(key queryID, string queryData) {
+        integer index;
 
-        if (query_id == ncPrefsKey) {
+        switch (queryID): {
 
-            // Read notecard: Preferences
+            case notecardQueryID: {
 
-            if (data == EOF) {
+                // Read notecard: Preferences
 
-                // Make sure the wind is a reasonable value. If not:
-                // windNormal is set to force six winds - but rounded to a
-                // value divided by 5. (The latter step is merely for user
-                // comfort, rather than a strange and odd number coming out.)
-                if (windNormal > keyLimit) {
-                    windNormal = (keyLimit / 6) % 5;
-                    llSay(DEBUG_CHANNEL,"Wind setting exceeds max time on key! (changed to " + (string)(windNormal) + ")");
+                if (queryData == EOF) {
+
+                    // Make sure the wind is a reasonable value. If not:
+                    // windNormal is set to force six winds - but rounded to a
+                    // value divided by 5. (The latter step is merely for user
+                    // comfort, rather than a strange and odd number coming out.)
+                    if (windNormal > keyLimit) {
+                        windNormal = (keyLimit / 6) % 5;
+                        llSay(DEBUG_CHANNEL,"Wind setting exceeds max time on key! (changed to " + (string)(windNormal) + ")");
+                    }
+
+                    lmSendConfig("windNormal",(string)windNormal);
+                    lmSetConfig("keyLimit",(string)keyLimit);
+
+                    lmInitStage(INIT_STAGE3);
                 }
+                else {
 
-                lmSendConfig("windNormal",(string)windNormal);
-                lmSetConfig("keyLimit",(string)keyLimit);
+                    // copy data so we can use it, and properly named
+                    string notecardLine = queryData;
 
-                //prefsRead = PREFS_READ;
-                lmInitStage(INIT_STAGE3);
+                    // Strip comments (prefs)
+                    index = llSubStringIndex(notecardLine, "#");
+
+                    if (index != NOT_FOUND) notecardLine = llDeleteSubString(notecardLine, index, -1);
+
+#define isNotBlank(a) ((a) != "")
+
+                    if (isNotBlank(notecardLine)) {
+                        index = llSubStringIndex(notecardLine, "=");
+
+                        // name is "lval" and value is "rval" split by equals
+                        string configName = llToLower(llStringTrim(llGetSubString(notecardLine,  0, index - 1),STRING_TRIM));
+                        string configValue =          llStringTrim(llGetSubString(notecardLine, index + 1, -1),STRING_TRIM) ;
+
+                        // this is the heart of preferences processing
+                        debugSay(6, "DEBUG-START", "Processing configuration: configName = " + configName + "; configValue = " + configValue);
+                        processConfiguration(configName, configValue);
+                    }
+
+                    // get next Notecard Line
+                    //llSleep(0.1);
+                    notecardQueryID = llGetNotecardLine(NOTECARD_PREFERENCES, ++ncLine);
+                }
+                break;
             }
-            else {
-                // Strip comments (prefs)
-                integer index = llSubStringIndex(data, "#");
-                if (index != NOT_FOUND) data = llDeleteSubString(data, index, -1);
 
-                if (data != "") {
-                    index = llSubStringIndex(data, "=");
+            case blacklistQueryID: {
 
-                    // name is "lval" and value is "rval" split by equals
-                    string name = llToLower(llStringTrim(llGetSubString(data,  0, index - 1),STRING_TRIM));
-                    string value =          llStringTrim(llGetSubString(data, index + 1, -1),STRING_TRIM) ;
-
-                    // this is the heart of preferences processing
-                    debugSay(6, "DEBUG-START", "Processing configuration: name = " + name + "; value = " + value);
-                    processConfiguration(name, value);
+                if ((index = llListFindList(blacklist, [ "++" + (string)blacklistQueryID ])) != NOT_FOUND) {
+                    blacklist[ index ] = queryData;
                 }
+                break;
+            }
 
-                // get next Notecard Line
-                llSleep(0.1);
-                ncPrefsKey = llGetNotecardLine(NOTECARD_PREFERENCES, ++ncLine);
+            case controllerQueryID: {
+
+                if ((index = llListFindList(controllers, [ "++" + (string)controllerQueryID ])) != NOT_FOUND) {
+                    controllers[ index ] = queryData;
+                }
+                break;
             }
         }
     }
