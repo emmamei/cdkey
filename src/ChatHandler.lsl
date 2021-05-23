@@ -38,7 +38,9 @@ integer accessorIsCarrier;
 integer poseExpire;
 
 doStats() {
+#ifdef ADULT_MODE
     if (!hardcore)
+#endif
         cdSayTo("Time remaining: " + (string)llRound(timeLeftOnKey / (SECS_PER_MIN * windRate)) + " minutes of " +
                 (string)llRound(keyLimit / (SECS_PER_MIN * windRate)) + " minutes.", accessorID);
 
@@ -64,7 +66,13 @@ doStats() {
 
         cdSayTo("Current pose: " + poseAnimation, accessorID);
 
-        if ((dollType != "Display") && (!hardcore))
+#ifdef ADULT_MODE
+#define poseDoesExpire (dollType != "Display" && !hardcore)
+#else
+#define poseDoesExpire (dollType != "Display")
+#endif
+
+        if (poseDoesExpire)
             cdSayTo("Pose time remaining: " + (string)((poseExpire - llGetUnixTime()) / SECS_PER_MIN) + " minutes.", accessorID);
     }
 
@@ -72,15 +80,27 @@ doStats() {
 }
 
 doXstats() {
-    string s = "Extended stats:\n\nDoll is a " + dollType + " Doll.\nWind amount: " +
+    string s = "Extended stats:\n\nDoll is " +
+#ifdef ADULT_MODE
+    "an Adult " +
+#else
+    "a Child " +
+#endif
+#ifdef DEVELOPER_MODE
+    "Developer " +
+#endif
+    " Doll (" + dollType + " type).\nWind amount: " +
                (string)llFloor(windNormal / SECS_PER_MIN) + " (mins)\nKey Limit: " +
                (string)(keyLimit / SECS_PER_MIN) + " mins\nEmergency Winder Recharge Time: " +
                (string)(EMERGENCY_LIMIT_TIME / 60 / (integer)SECS_PER_MIN) + " hours\nEmergency Winder: ";
 
     float windEmergency;
     windEmergency = keyLimit * 0.2;
+#ifdef ADULT_MODE
     if (hardcore) { if (windEmergency > 120) windEmergency = 120; }
-    else { if (windEmergency > 600) windEmergency = 600; }
+    else
+#endif
+        if (windEmergency > 600) windEmergency = 600;
 
     s += (string)((integer)(windEmergency / SECS_PER_MIN)) + " mins\n";
 
@@ -93,8 +113,10 @@ doXstats() {
     cdCapability(allowRepeatWind,  "Doll can", "be multiply wound");
     cdCapability(wearLock,         "Doll's clothing is",  "currently locked on");
     cdCapability(lowScriptMode,    "Doll is",  "currently in powersave mode");
-
+#ifdef ADULT_MODE
     cdCapability(hardcore,         "Doll is", "currently in hardcore mode");
+    cdCapability(allowStrip,       "Doll is", "strippable");
+#endif
 
     // These settings (and more) all are affected by hardcore
     cdCapability(allowPose,      "Doll can", "be posed by the public");
@@ -761,12 +783,12 @@ default {
                     else {
 
                         // Only if poses are allowed
-                        if (allowPose || hardcore) {
+                        if (allowPose) {
                             help += posingHelp;
                         }
 
                         // Only if carry is allowed
-                        if (allowCarry || hardcore) {
+                        if (allowCarry) {
                             help += carryHelp;
                         }
                     }
@@ -941,7 +963,9 @@ default {
                     return;
                 }
                 else if (chatCommand == "stat") {
+#ifdef ADULT_MODE
                     if (accessorIsDoll && hardcore) return;
+#endif
                     string msg = "Key is ";
 
                     if (windRate > 0) {
@@ -1030,9 +1054,13 @@ default {
                         cdSayTo("Dolly is not posed.",accessorID);
 
                     else if (accessorIsDoll) {
-
+#ifdef ADULT_MODE
+#define poseDoesNotExpire (hardcore || dollType == "Display")
+#else
+#define poseDoesNotExpire (dollType == "Display")
+#endif
                         // If hardcore or Display Dolly, then Doll can't undo a pose
-                        if (hardcore || dollType == "Display") return;
+                        if (poseDoesNotExpire) return;
 
                         if (poserID != dollID) {
                             llOwnerSay("Dolly tries to wrest control of " + pronounHerDoll +
@@ -1061,7 +1089,7 @@ default {
                 }
                 else if (chatCommand == "carry") {
                     // Dolly can't carry herself... duh!
-                    if (!accessorIsDoll && (allowCarry || hardcore)) cdMenuInject("Carry", accessorName, accessorID);
+                    if (!accessorIsDoll && allowCarry) cdMenuInject("Carry", accessorName, accessorID);
                     return;
                 }
                 else if (chatCommand == "uncarry") {

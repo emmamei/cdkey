@@ -303,12 +303,14 @@ default {
 
             //if (llListFindList([ "R", "h", "k", "a", "c", "d", "w" ],(list)c) == NOT_FOUND) return;
 
-                 if (name == "hardcore")          {     hardcore = (integer)value; rlvOutfitLock(); }
+                 if (name == "keyLocked")         {    keyLocked = (integer)value; }
+#ifdef ADULT_MODE
+            else if (name == "hardcore")          {     hardcore = (integer)value; rlvOutfitLock(); }
+#endif
 #ifdef EMERGENCY_TP
             else if (name == "autoTP")            {       autoTP = (integer)value; rlvSetIf("accepttp", !autoTP); }
 #endif
             else if (name == "RLVok")             {        RLVok = (integer)value; }
-            else if (name == "keyLocked")         {    keyLocked = (integer)value; }
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")        {   debugLevel = (integer)value; }
 #endif

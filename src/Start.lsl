@@ -118,10 +118,9 @@ processConfiguration(string configSettingName, string configSettingValue) {
 
     // The settings list and the settingName list much match up
     // with entries
-    list settings = [ "hardcore", "busy is away",
-                      "can fly", "poseable", "can sit", "can stand", "can dress self",
+    list settings = [ "busy is away", "can fly", "poseable", "can sit", "can stand", "can dress self",
 #ifdef ADULT_MODE
-                      "strippable",
+                      "strippable", "hardcore",
 #endif
                       "pose silence",
 #ifdef EMERGENCY_TP
@@ -131,10 +130,9 @@ processConfiguration(string configSettingName, string configSettingValue) {
                       "show phrases", "carryable", "repeatable wind", "ghost"
                     ];
 
-    list settingName = [ "hardcore", "busyIsAway",
-                         "canFly", "allowPose", "canSit", "canStand", "canDressSelf",
+    list settingName = [ "busyIsAway", "canFly", "allowPose", "canSit", "canStand", "canDressSelf",
 #ifdef ADULT_MODE
-                         "allowStrip",
+                         "allowStrip", "hardcore",
 #endif
                          "poseSilence",
 #ifdef EMERGENCY_TP

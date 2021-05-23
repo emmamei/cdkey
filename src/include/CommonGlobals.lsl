@@ -53,6 +53,7 @@ integer allowRepeatWind     = 1;
 integer allowSelfWind       = 1;
 #ifdef ADULT_MODE
 integer allowStrip          = 1;
+integer hardcore;
 #endif
 integer isAFK               = 0; // current AFK state
 integer autoTP;
@@ -71,7 +72,6 @@ integer collapseTime;
 integer configured;
 integer detachable          = 1;
 integer doWarnings;
-integer hardcore;
 integer homingBeacon;
 integer hovertextOn;
 integer isTransformingKey   = 1;

@@ -222,12 +222,12 @@ reloadTypeNames(key id) {
                 // The Slut model is allowed (in a normal fashion)
                 // if this is an ADULT key
                 //
-    #ifdef ADULT_MODE
+#ifdef ADULT_MODE
                 typeBufferedList += typeName;
-    #else
+#else
                 // Don't allow Slut notecard to define Slut type (not an Adult Key)
                 if (typeName != "Slut") typeBufferedList += typeName;
-    #endif
+#endif
             }
         }
 
@@ -520,7 +520,9 @@ default {
 #endif
             else if (name == "lowScriptMode")           lowScriptMode = (integer)value;
             else if (name == "simRating")                   simRating = value;
+#ifdef ADULT_MODE
             else if (name == "hardcore")                     hardcore = (integer)value;
+#endif
             else if (name == "backMenu")                     backMenu = value;
             else if (name == "hovertextOn")               hovertextOn = (integer)value;
             else if (name == "collapsed")                   collapsed = (integer)value;
@@ -601,15 +603,22 @@ default {
                 if (cdIsDoll(id)) {
                     msg = "See the help file for information on these options.";
 
+#ifdef ADULT_MODE
                     if (hardcore) pluslist += [ "Operation...", "Key..." ];
-                    else pluslist += [ "Operation...", "Public...", "Key..." ];
+                    else
+#endif
+                        pluslist += [ "Operation...", "Public...", "Key..." ];
 
                     if (cdCarried() || cdControllerCount() > 0) {
                         pluslist += [ "Access..." ];
                     }
                     else {
                         pluslist += [ "Type...", "Access..." ];
-                        if (RLVok == TRUE) if (!hardcore) pluslist += [ "Restrictions..." ];
+                        if (RLVok == TRUE)
+#ifdef ADULT_MODE
+                            if (!hardcore)
+#endif
+                                pluslist += [ "Restrictions..." ];
                     }
                 }
                 else if (cdIsCarrier(id)) {
@@ -660,7 +669,9 @@ default {
                 }
                 list choices;
 
+#ifdef ADULT_MODE
                 if (!hardcore)
+#endif
                     choices += cdGetButton("Verify Type", id, mustAgreeToType, 0);
 
                 choices += cdGetButton("Show Phrases", id, showPhrases, 0);
@@ -718,7 +729,9 @@ default {
                     else {
                         msg += "What type of doll do you want the Doll to be?";
 
+#ifdef ADULT_MODE
                         if (!hardcore)
+#endif
                             llOwnerSay(cdProfileURL(id) + " is looking at your doll types.");
                     }
 

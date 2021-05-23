@@ -565,6 +565,7 @@ default {
             }
 #ifdef ADULT_MODE
             else if (name == "allowStrip")                 allowStrip = (integer)value;
+            else if (name == "hardcore")                     hardcore = (integer)value;
 #endif
             else if (name == "blacklist") {
                 if (split == [""]) blacklist = [];
@@ -579,7 +580,6 @@ default {
                 else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
             }
-            else if (name == "hardcore")                     hardcore = (integer)value;
             else if (name == "hovertextOn")               hovertextOn = (integer)value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
@@ -727,9 +727,12 @@ default {
                             mins + " of life (" + percent + "% capacity).");
                     }
                     else {
+#ifdef ADULT_MODE
                         if (hardcore) llOwnerSay("Your key has been cranked by " + name + ".");
-                        else llOwnerSay("Your key has been turned by " + name + " giving you " +
-                            mins + " of life (" + percent + "% capacity).");
+                        else
+#endif
+                            llOwnerSay("Your key has been turned by " + name + " giving you " +
+                                mins + " of life (" + percent + "% capacity).");
 
                         cdSayTo("You turn " + dollDisplayName + "'s Key, and " + pronounSheDoll + " receives " +
                             mins + " of life (" + percent + "% capacity).", id);
@@ -754,8 +757,11 @@ default {
 #ifdef DEVELOPER_MODE
                     cdDebugMsg("No name received in Internal Command windMsg!");
 #endif
+#ifdef ADULT_MODE
                     if (hardcore) llOwnerSay("Your key turns automatically, giving you additional minutes of life.");
-                    else llOwnerSay("Your key turns automatically, giving you an additional " + mins + " minutes of life (" + percent + "% capacity).");
+                    else
+#endif
+                        llOwnerSay("Your key turns automatically, giving you an additional " + mins + " minutes of life (" + percent + "% capacity).");
                 }
             }
         }
@@ -811,8 +817,11 @@ default {
                         //
                         windAmount = (integer)(keyLimit * 0.2);
 
+#ifdef ADULT_MDOE
                         if (hardcore) { if (windAmount > HARDCORE_MAX_EMG_WIND) windAmount = HARDCORE_MAX_EMG_WIND; }
-                                 else { if (windAmount >   NORMAL_MAX_EMG_WIND) windAmount =   NORMAL_MAX_EMG_WIND; }
+                                 else
+#endif
+                                 if (windAmount > NORMAL_MAX_EMG_WIND) windAmount = NORMAL_MAX_EMG_WIND;
 
                         lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = windAmount));
                         lmSendConfig("winderRechargeTime", (string)(winderRechargeTime = (llGetUnixTime() + EMERGENCY_LIMIT_TIME)));
@@ -860,8 +869,12 @@ default {
             // Note that Max Times are "m" and Wind Times are "min" - this is on purpose to
             // keep the two separate
             else if (choice == "Max Time...") {
+#ifdef ADULT_MODE
                 list maxList = [ "45m", "60m", "75m", "90m", "120m" ];
                 if (!hardcore) maxList += [ "150m", "180m", "240m" ];
+#else
+                list maxList = [ "45m", "60m", "75m", "90m", "120m", "150m", "180m", "240m" ];
+#endif
                 maxList += MAIN;
 
                 // If the Max Times available are changed, be sure to change the next choice also

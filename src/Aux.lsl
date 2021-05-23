@@ -153,13 +153,11 @@ default {
             else if (name == "allowSelfWind")           allowSelfWind = (integer)value;
             else if (name == "dollDisplayName")       dollDisplayName = value;
             else if (name == "poseAnimation")           poseAnimation = value;
-//          else if (name == "doWarnings")                 doWarnings = (integer)value;
-            else if (name == "hardcore")                     hardcore = (integer)value;
             else if (name == "poseSilence")               poseSilence = (integer)value;
-            //else if (name == "detachable")                 detachable = (integer)value;
             else if (name == "canSelfTP")                   canSelfTP = (integer)value;
 #ifdef ADULT_MODE
-            else if (name == "allowStrip")             allowStrip = (integer)value;
+            else if (name == "allowStrip")                 allowStrip = (integer)value;
+            else if (name == "hardcore")                     hardcore = (integer)value;
 #endif
             else if (name == "wearLock")                     wearLock = (integer)value;
             else if (name == "blacklist") {
@@ -183,7 +181,7 @@ default {
                         setGender(configValue);
                         break;
                     }
-
+#ifdef ADULT_MODE
                     case "hardcore": {
 
                         if ((integer)configValue == TRUE) lmSendConfig("hardcore", (string)(hardcore = TRUE));
@@ -201,9 +199,7 @@ default {
                         lmSendConfig("mustAgreeToType", (string)(mustAgreeToType = !hardcore));
                         lmSendConfig("allowSelfWind",   (string)(  allowSelfWind = !hardcore));
                         lmSendConfig("allowRepeatWind", (string)(allowRepeatWind = !hardcore));
-#ifdef ADULT_MODE
                         lmSendConfig("allowStrip",      (string)(     allowStrip =  hardcore));
-#endif
 
                         // Rather than locking dolly down, these open her up: thus, the
                         // setting of these is not set then reset; rather after setting,
@@ -215,6 +211,7 @@ default {
                         break;
 
                 }
+#endif
             }
         }
         else if (code == INTERNAL_CMD) {
@@ -246,7 +243,9 @@ default {
                     // Only present the TP home option for the doll if they have been collapsed
                     // for at least 900 seconds (15 minutes) - Suggested by Christina
 
+#ifdef ADULT_MODE
                     if (!hardcore) {
+#endif
                         if (RLVok) {
                             if (timeCollapsed > TIME_BEFORE_TP) {
 #ifdef HOMING_BEACON
@@ -265,7 +264,9 @@ default {
                             if (winderRechargeTime <= llGetUnixTime())
                                 menu += ["Wind Emg"];
                         }
+#ifdef ADULT_MODE
                     }
+#endif
 
                     lmDialogListen();
                     llDialog(dollID, msg, menu, dialogChannel);
@@ -435,14 +436,17 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                     lmSendConfig("backMenu",(backMenu = "Options..."));
 
                     // One-way options
+#ifdef ADULT_MODE
                     if (!hardcore) {
-                        //plusList += cdGetButton("Detachable", id, detachable, 1);
+#endif
                         plusList += cdGetButton("Silent Pose", id, poseSilence, 1);
                         plusList += cdGetButton("Self Dress", id, canDressSelf, 1);
 
                         plusList += cdGetButton("Flying", id, canFly, 1);
                         plusList += cdGetButton("Self TP", id, canSelfTP, 1);
+#ifdef ADULT_MODE
                     }
+#endif
 
                     plusList += cdGetButton("Sitting", id, canSit, 1);
                     plusList += cdGetButton("Standing", id, canStand, 1);
@@ -496,13 +500,18 @@ Parent - Take care choosing your parents; they have great control over Dolly and
 #endif
 #ifdef OPTIONAL_RLV
                 if (RLVsupport == TRUE) {
-                    if (!hardcore) plusList += cdGetButton("RLV", id, RLVok, 0);
+#ifdef ADULT_MODE
+                    if (!hardcore)
+#endif
+                        plusList += cdGetButton("RLV", id, RLVok, 0);
                 }
 #endif
 
                 // One-way options
                 if (cdIsController(id)) {
+#ifdef ADULT_MODE
                     if (!hardcore)
+#endif
                         plusList = llListInsertList(plusList, cdGetButton("Rpt Wind", id, allowRepeatWind, 1), 6);
                 }
 

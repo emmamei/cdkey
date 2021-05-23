@@ -394,7 +394,9 @@ default {
             else if (name == "typeFolder")                    typeFolder = value;
             else if (name == "useTypeFolder")              useTypeFolder = (integer)value;
             else if (name == "wearLock")                        wearLock = (integer)value;
+#ifdef ADULT_MODE
             else if (name == "hardcore")                        hardcore = (integer)value;
+#endif
         }
         else if (code == INTERNAL_CMD) {
 

@@ -220,7 +220,9 @@ default {
             else if (name == "outfitFolder")               outfitFolder = value;
             else if (name == "RLVok")                             RLVok = (integer)value;
             else if (name == "backMenu")                       backMenu = value;
+#ifdef ADULT_MODE
             else if (name == "hardcore")                       hardcore = (integer)value;
+#endif
             else if (name == "keyLimit")                       keyLimit = (integer)value;
             else if (name == "keyLocked")                     keyLocked = (integer)value;
             else if (name == "lowScriptMode")             lowScriptMode = (integer)value;
@@ -365,7 +367,9 @@ default {
                 // Compute "time remaining" message for mainMenu/windMenu
                 string timeLeftMsg;
 
-                if (!hardcore && !hasCarrier) {
+#ifdef ADULT_MODE
+                if (!hardcore) {
+#endif
                     integer minsLeft;
 
                     // timeLeftOnKey is in seconds, and timeLeftOnKey / 60.0 converts
@@ -384,7 +388,9 @@ default {
                         else if (windRate < 1)  timeLeftMsg += "winding down at a slowed rate. ";
                     }
                     else timeLeftMsg += "not winding down. ";
+#ifdef ADULT_MODE
                 }
+#endif
 
                 //----------------------------------------
                 // Prepare listeners: this allows for lag time by doing this up front
@@ -502,7 +508,10 @@ default {
                         menu += "Visible";
                         if (RLVok) {
                             if (keyLocked) {
-                                if (!hardcore) menu += "Unlock";
+#ifdef ADULT_MODE
+                                if (!hardcore)
+#endif
+                                    menu += "Unlock";
                             }
                             else menu += "Lock";
                         }

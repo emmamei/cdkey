@@ -472,7 +472,9 @@ default {
             else if (name == "carrierID")             carrierID = value;
             else if (name == "RLVok")                     RLVok = (integer)value;
             else if (name == "carrierName")         carrierName = value;
+#ifdef ADULT_MODE
             else if (name == "hardcore")               hardcore = (integer)value;
+#endif
 #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")     timeReporting = (integer)value;
 #endif
@@ -595,7 +597,9 @@ default {
 
             else if (choice == "Poses...") {
                 if (!cdIsDoll(id))
+#ifdef ADULT_MODE
                     if (!hardcore)
+#endif
                         llOwnerSay(cdUserProfile(id) + " is looking at your poses menu.");
 
                 posePage = 1;
@@ -637,7 +641,12 @@ default {
                 //debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 300/poseAnimation)");
                 setPoseAnimation(poseAnimation); 
 
-                if (dollType == "Display" || hardcore) expire = "0";
+#ifdef ADULT_MODE
+#define dollPoseDoesNotExpire (dollType == "Display" || hardcore)
+#else
+#define dollPoseDoesNotExpire (dollType == "Display")
+#endif
+                if (dollPoseDoesNotExpire) expire = "0";
                 else expire = (string)(llGetUnixTime() + POSE_TIMEOUT);
                 lmSetConfig("poseExpire", expire);
 
