@@ -705,10 +705,24 @@ default {
             integer spaceInMsg = llSubStringIndex(msg, " ");
             string chatCommand = msg;
 
-            debugSay(5,"DEBUG-CHAT","Got a chat message: PARAMETERS_EXIST = " + (string)PARAMETERS_EXIST);
             debugSay(5,"DEBUG-CHAT","Got a chat message: " + chatCommand);
+
+            // Separate commands into those With and Without Parameters...
+
             if (!PARAMETERS_EXIST) { // Commands without parameters handled first
                 chatCommand = llToLower(chatCommand);
+
+                // Now we separate the commands into different categories,
+                // based on who is allowed...
+                //
+                // * Public command (help)
+                // * Doll or Controller
+                // * More Public commands
+                //
+                // These need to be more concretely divided
+                //
+                // Each command may further restrict what
+                // can be done; these need to be documented.
 
                 //----------------------------------------
                 // PUBLIC COMMAND (help)
@@ -814,16 +828,16 @@ default {
                 // DOLL & CONTROLLER COMMANDS
                 //
                 // Commands only for Doll or Controllers
+                //
                 //   * build
                 //   * update
                 //   * xstats
-                //   * stat
                 //   * stats
                 //   * hardcore (ADULT_MODE)
                 //   * collapse (DEVELOPER_MODE)
                 //   * powersave (DEVELOPER_MODE)
                 //   * hide
-                //   * release/unpose
+                //   * release / unpose
                 //   * unhide / show / visible
                 //   * ghost
                 //
@@ -934,16 +948,19 @@ default {
                 // These are the commands that anyone can give:
                 //   * wind
                 //   * stat
-                //   * listposes
-                //   * carry
-                //   * uncarry
                 //
                 // And menu shortcuts:
                 //   * outfits
                 //   * types
-                //   * options
                 //   * poses
+                //   * options
                 //   * menu
+                //
+                // And more commands:
+                //   * listposes
+                //   * release / unpose
+                //   * carry
+                //   * uncarry
                 //
                 if (chatCommand == "wind") {
                     // A Normal Wind
@@ -1098,14 +1115,29 @@ default {
                 string param =           llStringTrim(llGetSubString(chatCommand, spaceInMsg + 1, STRING_END), STRING_TRIM);
                 chatCommand       = llToLower(llStringTrim(llGetSubString(   msg,         0,  spaceInMsg - 1), STRING_TRIM));
 
+                // This section is only for commands with parameters:
+                //
+                // Access to these commands for Doll and embedded controllers only:
+                //   * blacklist AAA
+                //   * unblacklist AAA
+                //   * channel 999
+                //   * controller AAA
+                //   * prefix ZZZ
+                //
+                // These commands are for dolly ONLY
+                //   * gname
+                //   * debug (DEVELOPER_MODE)
+                //   * inject (DEVELOPER_MODE)
+                //   * pose
+
                 //----------------------------------------
                 // DOLL & EMBEDDED CONTROLLER COMMANDS (with parameter)
                 //
                 // Access to these commands for Doll and embedded controllers only:
-                //   * channel 999
-                //   * controller AAA
                 //   * blacklist AAA
                 //   * unblacklist AAA
+                //   * channel 999
+                //   * controller AAA
                 //   * prefix ZZZ
                 //
                 if (accessorIsDoll) {
@@ -1159,8 +1191,7 @@ default {
                 //   * gname
                 //   * debug (DEVELOPER_MODE)
                 //   * inject (DEVELOPER_MODE)
-                //   * timereporting (DEVELOPER_MODE)
-                //   * collapse (DEVELOPER_MODE)
+                //   * pose
                 //
                 if (accessorIsDoll) {
 #ifdef GNAME
@@ -1173,7 +1204,7 @@ default {
                     }
 #endif
 #ifdef DEVELOPER_MODE
-                    if (chatCommand == "debug") {
+                    else if (chatCommand == "debug") {
                         debugLevel = (integer)param;
                         if (debugLevel > 9) debugLevel = 9;
                         lmSendConfig("debugLevel", (string)debugLevel);
