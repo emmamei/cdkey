@@ -268,7 +268,8 @@ processConfiguration(string configSettingName, string configSettingValue) {
         }
         else if (configSettingName == "blacklist") {
             string blacklistUUID = (string)configSettingValue;
-
+            lmSetConfig("addBlacklist",blacklistUUID);
+#ifdef NOT_USED
             blacklist += blacklistUUID;
 
             blacklistQueryID = llRequestUsername((key)blacklistUUID);
@@ -278,10 +279,13 @@ processConfiguration(string configSettingName, string configSettingValue) {
             blacklist += "++" + (string)blacklistQueryID;
 
             lmSetConfig("blacklist", llDumpList2String(blacklist, "|"));
+#endif
         }
         else if (configSettingName == "controller") {
             string controllerUUID = (string)configSettingValue;
+            lmSetConfig("addController",controllerUUID);
 
+#ifdef NOT_USED
             // Since we don't know and can't get the display name of the Controller, just
             // put the UUID in place of name
             controllers += controllerUUID;
@@ -301,6 +305,7 @@ processConfiguration(string configSettingName, string configSettingValue) {
                         "recvim:"    + controllerUUID + "=add," +
                         "recvchat:"  + controllerUUID + "=add," +
                         "recvemote:" + controllerUUID + "=add");
+#endif
         }
         else if (configSettingName == "helpless dolly") {
             // Note inverted sense of this value: this is intentional
@@ -687,6 +692,7 @@ default {
     dataserver(key queryID, string queryData) {
         integer index;
 
+        // FIXME: Using a switch may be overkill - but we could add more selections later
         switch (queryID): {
 
             case notecardQueryID: {
@@ -736,22 +742,6 @@ default {
                     // get next Notecard Line
                     //llSleep(0.1);
                     notecardQueryID = llGetNotecardLine(NOTECARD_PREFERENCES, ++ncLine);
-                }
-                break;
-            }
-
-            case blacklistQueryID: {
-
-                if ((index = llListFindList(blacklist, [ "++" + (string)blacklistQueryID ])) != NOT_FOUND) {
-                    blacklist[ index ] = queryData;
-                }
-                break;
-            }
-
-            case controllerQueryID: {
-
-                if ((index = llListFindList(controllers, [ "++" + (string)controllerQueryID ])) != NOT_FOUND) {
-                    controllers[ index ] = queryData;
                 }
                 break;
             }

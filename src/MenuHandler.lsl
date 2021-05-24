@@ -1129,7 +1129,7 @@ default {
                             string idX;
                             while (i--) {
                                 idX = (string)dialogKeys[n - i - 2];
-                                msg += "\n" + (string)(n - i) + "." +
+                                msg += "\n" + (string)(n - i) + ". " +
                                        "secondlife:///app/agent/" + idX + "/about";
                             }
                         }

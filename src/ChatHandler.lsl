@@ -13,6 +13,7 @@
 #define RUNNING 1
 #define NOT_RUNNING 0
 #define UNSET -1
+#define USER_NAME_QUERY_TIMEOUT 15
 #define cdStopScript(a) llSetScriptState(a, NOT_RUNNING)
 #define cdRunScript(a) llSetScriptState(a, RUNNING)
 #define cdResetKey() llResetOtherScript("Start")
@@ -36,6 +37,11 @@ integer accessorIsDoll;
 integer accessorIsController;
 integer accessorIsCarrier;
 integer poseExpire;
+
+key blacklistQueryID;
+key controllerQueryID;
+key blacklistQueryUUID;
+key controllerQueryUUID;
 
 doStats() {
 #ifdef ADULT_MODE
@@ -426,10 +432,6 @@ default {
                 string nameURI = "secondlife:///app/agent/" + uuid + "/displayname";
 
                 debugSay(5,"DEBUG-ADDMISTRESS","Blacklist = " + llDumpList2String(blacklist,"|") + " (" + (string)llGetListLength(blacklist) + ")");
-                if (name == "") {
-                    llSay(DEBUG_CHANNEL,"No name alloted with this user.");
-                    name == (string)(uuid);
-                }
 
                 integer type;
                 string typeString;
@@ -483,7 +485,7 @@ default {
                 if (llListFindList(tmpList, [ uuid ]) == NOT_FOUND) {
                     s = "Adding " + nameURI + " as " + typeString;
                     cdSayToAgentPlusDoll(s, id);
-                    tmpList += [ uuid, name ];
+                    tmpList += [ uuid ]; // We will add the associated name in a few steps
 
                     if (cmd == "addBlacklist") {
                         blacklist = tmpList;
@@ -498,6 +500,29 @@ default {
                                     "recvchat:"  + uuid + "=add," +
                                     "recvemote:" + uuid + "=add");
                     }
+
+                    if (name == "") {
+                        llSay(DEBUG_CHANNEL,"No name alloted with this user.");
+
+                        // This is a hack: it lets us match the UUID with the
+                        // name we get back
+                        //
+                        // Hopefully with the command in a single statement like this,
+                        // we can avoid condition where the query is resolved before
+                        // the query id is added to the list
+                        if (cmd == "addBlacklist")
+                            blacklist += "++" + (string)(blacklistQueryID = llRequestUsername((key)uuid));
+                        else
+                            controllers += "++" + (string)(controllerQueryID = llRequestUsername((key)uuid));
+
+                        //llSetTimerEvent(USER_NAME_QUERY_TIMEOUT);
+                    }
+                    else {
+                        // This is normal add of selected name
+                        if (cmd == "addBlacklist") blacklist += name;
+                        else controllers += name;
+                    }
+
                 }
                 // Report already found
                 else {
@@ -1252,6 +1277,40 @@ default {
 #ifdef DEVELOPER_MODE
             llSay(DEBUG_CHANNEL,"Chat command not recognized: " + msg);
 #endif
+        }
+    }
+
+    //----------------------------------------
+    // DATASERVER
+    //----------------------------------------
+    dataserver(key queryID, string queryData) {
+        integer index;
+
+        switch (queryID): {
+
+            case blacklistQueryID: {
+
+                if ((index = llListFindList(blacklist, [ "++" + (string)blacklistQueryID ])) != NOT_FOUND) {
+                    blacklist[ index ] = queryData;
+                    debugSay(5,"DEBUG-ADDMISTRESS",   "blacklist >> " + llDumpList2String(blacklist,   ",") + " (" + (string)llGetListLength(blacklist  ) + ")");
+                }
+#ifdef DEVELOPER_MODE
+                else llSay(DEBUG_CHANNEL,"Couldnt find blacklist query ID: ++" + (string)blacklistQueryID);
+#endif
+                break;
+            }
+
+            case controllerQueryID: {
+
+                if ((index = llListFindList(controllers, [ "++" + (string)controllerQueryID ])) != NOT_FOUND) {
+                    controllers[ index ] = queryData;
+                    debugSay(5,"DEBUG-ADDMISTRESS", "controllers >> " + llDumpList2String(controllers, ",") + " (" + (string)llGetListLength(controllers) + ")");
+                }
+#ifdef DEVELOPER_MODE
+                else llSay(DEBUG_CHANNEL,"Couldnt find controller query ID: ++" + (string)controllerQueryID);
+#endif
+                break;
+            }
         }
     }
 }
