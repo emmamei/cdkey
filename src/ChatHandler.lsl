@@ -511,9 +511,9 @@ default {
                         // we can avoid condition where the query is resolved before
                         // the query id is added to the list
                         if (cmd == "addBlacklist")
-                            blacklist += "++" + (string)(blacklistQueryID = llRequestUsername((key)uuid));
+                            blacklist += "++" + (string)(blacklistQueryID = llRequestDisplayName((key)uuid));
                         else
-                            controllers += "++" + (string)(controllerQueryID = llRequestUsername((key)uuid));
+                            controllers += "++" + (string)(controllerQueryID = llRequestDisplayName((key)uuid));
 
                         //llSetTimerEvent(USER_NAME_QUERY_TIMEOUT);
                     }
