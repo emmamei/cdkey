@@ -124,7 +124,7 @@ rlvCheckTry() {
     else              llOwnerSay("@version="    + (string)rlvChannel);
 }
 
-rlvActivateBase() {
+rlvRestoreRestritions() {
     if (RLVok != TRUE) return;
 
     string baseRLV;
@@ -133,7 +133,6 @@ rlvActivateBase() {
     //
     // In this, defaultBaseRLVcmd is much more flexible than the other defaults
     //
-    //if (keyLocked)  baseRLV += "detach=n,";         else baseRLV += "detach=y,";
 #ifdef EMERGENCY_TP
     if (autoTP)     baseRLV += "accepttp=n,";       else baseRLV += "accepttp=y,";
 #endif
@@ -142,6 +141,10 @@ rlvActivateBase() {
 
     lmRunRLVas("Base", baseRLV);
     lmSendConfig("defaultBaseRLVcmd",(string)baseRLV); // save the defaults
+
+    if (keyLocked) lmRunRLVas("Base","detach=n");
+    else lmRunRLVas("Base","detach=n");
+
     rlvOutfitLock();
 }
 
@@ -190,7 +193,7 @@ rlvActivate() {
         lmRLVreport(RLVok, rlvAPIversion, 0);
     }
 
-    rlvActivateBase();
+    rlvRestoreRestritions();
     if (collapsed)
         lmInternalCommand("collapse", (string)collapsed, NULL_KEY);
 
@@ -360,6 +363,9 @@ default {
             if (cmd == "startRlvCheck") {
                 startRlvCheck();
             }
+            else if (cmd == "restoreRestrictions") {
+                rlvRestoreRestritions();
+            }
             else if (cmd == "addExceptions") {
                 string exceptionKey = (string)split[0];
 
@@ -406,7 +412,12 @@ default {
                 debugSay(5,"DEBUG-CHECKRLV","Reloading RLV exceptions");
 
                 // SELECTIVE clear: exceptions-related restrictions
-                llOwnerSay("@clear=tplure:,clear=accepttp:,clear=sendim:,clear=recvim:,clear=recvchat:,clear=recvemote:");
+                llOwnerSay("@clear=tplure:," +  // Clear exceptions only: and directly
+                            "clear=accepttp:," +
+                            "clear=sendim:," +
+                            "clear=recvim:," +
+                            "clear=recvchat:," +
+                            "clear=recvemote:");
 
                 string exceptionKey;
                 i = llGetListLength(exceptions);
@@ -415,7 +426,7 @@ default {
 
                     // This assumes that exceptions are a block...
                     // for now they are
-                    llOwnerSay("@tplure:"    + (string)(exceptionKey) + "=add," +
+                    llOwnerSay("@tplure:"    + (string)(exceptionKey) + "=add," + // Readd exceptions
                                 "accepttp:"  + (string)(exceptionKey) + "=add," +
                                 "sendim:"    + (string)(exceptionKey) + "=add," +
                                 "recvim:"    + (string)(exceptionKey) + "=add," +

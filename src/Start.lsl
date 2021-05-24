@@ -443,7 +443,7 @@ default {
                     }
                     else {
                         // Posed: activate RLV restrictions
-                        lmRestrictRLV(defaultPoseRLVcmd);
+                        lmRunRLVcmd(defaultPoseRLVcmd,"");
                     }
                 }
             }

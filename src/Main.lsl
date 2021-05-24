@@ -180,7 +180,7 @@ doCollapse() {
 
     if (RLVok == TRUE) {
         rlvLockKey();
-        lmRestrictRLV(defaultCollapseRLVcmd);
+        lmRunRLVcmd(defaultCollapseRLVcmd, "");
     }
 
     oldAnimList = llGetAnimationList(dollID);

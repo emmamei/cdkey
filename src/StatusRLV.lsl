@@ -139,118 +139,7 @@ default {
                 return;
             }
 
-            if (cmd == "restrictRLVcmd") {
-                // The goal of the restrictRLVcmd command is to implement the
-                // requested restriction (cmd) and then store it in a variable
-                // to be restored later
-                //
-                // Once this command is widely used, storeRLV will be unneeded.
-
-                script = (string)split[0];
-                list tmpList;
-
-                // This could thereotically happen...
-                if (commandString == "" || commandString == "0") {
-                    llSay(DEBUG_CHANNEL,"requested RLV command from " + script + " is empty!");
-                    return;
-                }
-
-                if (llStringLength(commandString) > CHATMSG_MAXLEN) {
-                    llSay(DEBUG_CHANNEL,"requested RLV command from " + script + " is too long!");
-                    return;
-                }
-
-#ifdef COMPLETE_CLEAR
-                llOwnerSay("@" + commandString);
-#else
-                // Split command string into multiple commands
-                list commandList;
-                commandList = llParseString2List(commandString,[","],[""]);
-
-                // iterate over list
-                integer index = ~llGetListLength(commandList);
-                string ending;
-                string command;
-
-                while(index++) {
-                    // Either find "=n" or "=y" and handle it
-                    command = (string)commandList[index];
-                    ending = llGetSubString(command,-2,-1);
-
-                    llOwnerSay("@" + command);
-                }
-
-
-                rlvRestrict = (rlvRestrict=[]) + rlvRestrict + commandString;
-#endif
-            }
-#ifndef COMPLETE_CLEAR
-            else if (cmd == "restoreRLV") {
-                // The goal of the restoreRLV command is to take saved RLV
-                // restrictions and restore them after logon or RLV activation
-                debugSay(4,"DEBUG-STATUSRLV","Restoring recorded restrictions...");
-
-                if (rlvRestrict == []) return; // no restrictions
-
-                string cmd;
-                i = ~llGetListLength(rlvRestrict);
-                while (i++) {
-                    cmd = (string)rlvRestrict[i];
-                    llOwnerSay("@" + cmd);
-                }
-            }
-            else if (cmd == "storeRLV") {
-                // The goal of the storeRLV command is to take current RLV
-                // restrictions and save them into a variable, and thus
-                // preserve the restrictions for later logon
-
-                script = (string)split[0];
-                string commandString = (string)split[1];
-                list tmpList;
-
-                // *** We don't need to do this, if we implement an internal
-                //     command that is used only for restrictions - which is
-                //     a better idea anyway. Such a command "rlvRestrictCmd"
-                //     would be the one to call storeRLV
-                //
-                // if rlvCmdIssued is 0, that means that
-                // no command has gone out since we ran last....
-                // so ignore it.
-                // if (rlvCmdIssued) rlvCmdIssued = 0;
-                // else return;
-
-                // Here we're just getting current RLV restrictions
-                statusHandle = cdListenMine(statusChannel);
-                rlvRestrict = [];
-
-                // Default restrictions used by the key:
-                //     * alwaysrun
-                //     * edit
-                //     * fartouch
-                //     * sendchat
-                //     * showhovertextall
-                //     * showinv
-                //     * showloc
-                //     * showminimap
-                //     * shownames
-                //     * showworldmap
-                //     * sit
-                //     * sittp
-                //     * tplm
-                //     * tploc
-                //     * tplure
-
-                // The following sequence should get all restrictions,
-                // one by one - and maybe a few more, but that is ok
-                llOwnerSay("@getstatus:tp="        + (string)statusChannel);
-                llOwnerSay("@getstatus:sit="       + (string)statusChannel);
-                llOwnerSay("@getstatus:show="      + (string)statusChannel);
-                llOwnerSay("@getstatus:alwaysrun=" + (string)statusChannel);
-                llOwnerSay("@getstatus:edit="      + (string)statusChannel);
-                llOwnerSay("@getstatus:fartouch="  + (string)statusChannel);
-            }
-#endif
-            else if (cmd == "runRLVcmd") {
+            if (cmd == "runRLVcmd") {
                 if (commandString == "clear") {
                     llSay(DEBUG_CHANNEL,"Clear command run from " + script + " using lmRunRLVcmd - use clearRLVcmd instead");
                     lmRunRLVcmd("clearRLVcmd",commandString);
@@ -271,15 +160,11 @@ default {
                 debugSay(6,"DEBUG-STATUSRLV","RLV received: @" + commandString);
 
                 llOwnerSay("@" + commandString);
-                //lmInternalCommand("storeRLV",script + "|" + commandString,NULL_KEY);
             }
             else if (cmd == "escapeRLVcmd") {
-                // complete zap of all RLV - such as from SafeWord
-                llOwnerSay("@clear");
+                // complete cancel of all RLV - such as from SafeWord
+                llOwnerSay("@clear"); // Total RLV zap: such as from SafeWord
                 RLVok = FALSE;
-#ifndef COMPLETE_CLEAR
-                rlvRestrict = [];
-#endif
             }
             else if (cmd == "clearRLVcmd") {
                 // this is a blanket clear, but it doesn't mean to us what
@@ -288,52 +173,19 @@ default {
                 debugSay(2,"DEBUG-STATUSRLV","RLV clear command issued from " + script);
                 llSay(DEBUG_CHANNEL,"clearRLVcmd run from " + script);
 
-#ifdef COMPLETE_CLEAR
-                llOwnerSay("@clear"); // clear
-#else
-                rlvRestrict = [];
-
-                // Default restrictions used by the key:
-                //     * alwaysrun
-                //     * edit
-                //     * fartouch
-                //     * sendchat
-                //     * showhovertextall
-                //     * showinv
-                //     * showloc
-                //     * showminimap
-                //     * shownames
-                //     * showworldmap
-                //     * sit
-                //     * sittp
-                //     * tplm
-                //     * tploc
-                //     * tplure
-
-                // The following sequence should get all restrictions,
-                // one by one - and maybe a few more, but that is ok
-                llOwnerSay("@clear=tp");
-                llOwnerSay("@clear=sit");
-                llOwnerSay("@clear=show");
-                llOwnerSay("@clear=alwaysrun");
-                llOwnerSay("@clear=edit");
-                llOwnerSay("@clear=fartouch");
-                llOwnerSay("@clear=send");
-                llOwnerSay("@clear=recv");
-#endif
+                llOwnerSay("@clear"); // clear command
                 if (commandString != "")
                     llOwnerSay("@" + commandString); // restore restrictions if need be
 
-                // Need to activate RLV here
+                lmInternalCommand("restoreRestrictions",script,NULL_KEY); // restore RLV restrictions
                 lmInternalCommand("reloadExceptions",script,NULL_KEY); // then restore exceptions
-                //lmInternalCommand("clearRLV",script,NULL_KEY);
             }
         }
         else if (code == RLV_RESET) {
             RLVok = (integer)split[0];
 
             if (RLVok == TRUE)
-                lmRunRLVcmd("restoreRLV","");
+                lmInternalCommand("restoreRestrictions",script,NULL_KEY); // restore RLV restrictions
         }
         else if (code < 200) {
             if (code == CONFIG_REPORT) {
