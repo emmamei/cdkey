@@ -958,8 +958,6 @@ default {
                             else if (afterSpace == "Self Dress") lmSendConfig("canDressSelf", (string)(canDressSelf = isX));
                             //else if (afterSpace == "Detachable") lmSendConfig("detachable",   (string)(detachable = isX));
                             else if (afterSpace == "Flying")     lmSendConfig("canFly",       (string)isX);
-                            else if (afterSpace == "Sitting")    lmSendConfig("canSit",       (string)isX);
-                            else if (afterSpace == "Standing")   lmSendConfig("canStand",     (string)isX);
 #ifdef EMERGENCY_TP
                             else if (afterSpace == "Force TP")   lmSendConfig("autoTP",       (string)isX);
 #endif
@@ -969,10 +967,7 @@ default {
                             // Dolly (accessor) is trying to enable: reject
                                  if (afterSpace == "Self TP")    llOwnerSay("The Self TP option cannot be re-enabled by you.");
                             else if (afterSpace == "Self Dress") llOwnerSay("The Self Dress option cannot be re-enabled by you.");
-                            //else if (afterSpace == "Detachable") llOwnerSay("The Detachable option cannot be re-enabled by you.");
                             else if (afterSpace == "Flying")     llOwnerSay("The Flying option cannot be re-enabled by you.");
-                            else if (afterSpace == "Sitting")    llOwnerSay("The Sitting option cannot be re-enabled by you.");
-                            else if (afterSpace == "Standing")   llOwnerSay("The Standing option cannot be re-enabled by you.");
                             else if (afterSpace == "Force TP")   llOwnerSay("The Force TP option cannot be re-enabled by you.");
                             else isRestriction = 0;
                         }
@@ -990,7 +985,6 @@ default {
                             // Automatic return home after collapse (once time is up)
                             else if (afterSpace == "Homing Beacon") lmSendConfig("homingBeacon",  (string)isX);
 #endif
-//                          else if (afterSpace == "Warnings")      lmSendConfig("doWarnings",    (string)isX);
 #ifdef OPTIONAL_RLV
                             else if (afterSpace == "RLV") {
                                 // we don't deal with RLVsupport here, as if RLVsupport is FALSE,

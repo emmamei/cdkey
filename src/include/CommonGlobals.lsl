@@ -62,8 +62,6 @@ integer canAFK              = 1;
 integer canDressSelf        = 1;
 integer canFly              = 1;
 integer canSelfTP           = 1;
-integer canSit              = 1;
-integer canStand            = 1;
 integer chatChannel         = 75;
 integer code;
 integer collapsed;

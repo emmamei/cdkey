@@ -139,8 +139,6 @@ rlvActivateBase() {
 #endif
     if (!canSelfTP) baseRLV += "tplm=n,tploc=n,";   else baseRLV += "tplm=y,tploc=y,";
     if (!canFly)    baseRLV += "fly=n,";            else baseRLV += "fly=y,";
-    if (!canStand)  baseRLV += "unsit=n,";          else baseRLV += "unsit=y,";
-    if (!canSit)    baseRLV += "sit=n";             else baseRLV += "sit=y";
 
     lmRunRLVas("Base", baseRLV);
     lmSendConfig("defaultBaseRLVcmd",(string)baseRLV); // save the defaults
@@ -318,8 +316,6 @@ default {
                      if (name == "canSelfTP")     {    canSelfTP = (integer)value; rlvSetIf("tplm", canSelfTP); rlvSetIf("tploc", canSelfTP); }
                 else if (name == "canDressSelf")  { canDressSelf = (integer)value; rlvOutfitLock(); }
                 else if (name == "canFly")        {       canFly = (integer)value; rlvSetIf("fly", canFly); }
-                else if (name == "canStand")      {     canStand = (integer)value; rlvSetIf("unsit", canStand); }
-                else if (name == "canSit")        {       canSit = (integer)value; rlvSetIf("sit", canSit); }
                 else if (name == "collapsed")     {    collapsed = (integer)value; rlvOutfitLock(); }
                 else if (name == "controllers") {
                     if (split == [""]) controllers = [];

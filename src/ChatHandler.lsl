@@ -108,8 +108,6 @@ doXstats() {
     cdCapability(autoTP,           "Doll can", "be force teleported");
 #endif
     cdCapability(canFly,           "Doll can", "fly");
-    cdCapability(canSit,           "Doll can", "sit");
-    cdCapability(canStand,         "Doll can", "stand");
     cdCapability(allowRepeatWind,  "Doll can", "be multiply wound");
     cdCapability(wearLock,         "Doll's clothing is",  "currently locked on");
     cdCapability(lowScriptMode,    "Doll is",  "currently in powersave mode");
@@ -337,8 +335,6 @@ default {
                      if (name == "collapsed")               collapsed = (integer)value;
                 else if (name == "canDressSelf")         canDressSelf = (integer)value;
                 else if (name == "canFly")                     canFly = (integer)value;
-                else if (name == "canSit")                     canSit = (integer)value;
-                else if (name == "canStand")                 canStand = (integer)value;
                 else if (name == "canSelfTP")               canSelfTP = (integer)value;
                 else if (name == "carrierID")               carrierID = (key)value;
                 else if (name == "carrierName")           carrierName = value;

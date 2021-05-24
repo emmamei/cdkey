@@ -147,8 +147,6 @@ default {
             else if (name == "allowPose")                   allowPose = (integer)value;
             else if (name == "canDressSelf")             canDressSelf = (integer)value;
             else if (name == "canFly")                         canFly = (integer)value;
-            else if (name == "canSit")                         canSit = (integer)value;
-            else if (name == "canStand")                     canStand = (integer)value;
             else if (name == "allowRepeatWind")       allowRepeatWind = (integer)value;
             else if (name == "allowSelfWind")           allowSelfWind = (integer)value;
             else if (name == "dollDisplayName")       dollDisplayName = value;
@@ -452,8 +450,6 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                     }
 #endif
 
-                    plusList += cdGetButton("Sitting", id, canSit, 1);
-                    plusList += cdGetButton("Standing", id, canStand, 1);
 #ifdef EMERGENCY_TP
                     plusList += cdGetButton("Force TP", id, autoTP, 1);
 #endif
@@ -620,10 +616,6 @@ Parent - Take care choosing your parents; they have great control over Dolly and
             }
             else if (code == CONFIG_REPORT) {
                 cdConfigureReport();
-            }
-
-            else if (code == SIM_RATING_CHG) {
-                simRating = (string)split[0];
             }
         }
     }
