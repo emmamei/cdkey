@@ -305,9 +305,9 @@ default {
                     lmSendConfig("blacklist",llDumpList2String(blacklist,"|"));
             }
             else if (name == "controllers") {
-                    if (split == [""]) controllers = [];
-                    else controllers = split;
-                    lmSendConfig("controllers",llDumpList2String(controllers,"|"));
+                    if (split == [""]) controllerList = [];
+                    else controllerList = split;
+                    lmSendConfig("controllers",llDumpList2String(controllerList,"|"));
             }
         }
         else if (code == INTERNAL_CMD) {
@@ -791,7 +791,7 @@ default {
 #else
             type = "parent list";
 #endif
-            current = controllers;
+            current = controllerList;
         }
         else {
             channel = blacklistChannel;
@@ -873,9 +873,9 @@ default {
                 if (choice == "Drop Control") {
                     integer index;
 
-                    if ((index = llListFindList(controllers, [ (string)id ])) != NOT_FOUND) {
-                        controllers = llDeleteSubList(controllers, index, index + 1);
-                        lmSendConfig("controllers", llDumpList2String(controllers, "|"));
+                    if ((index = llListFindList(controllerList, [ (string)id ])) != NOT_FOUND) {
+                        controllerList = llDeleteSubList(controllerList, index, index + 1);
+                        lmSendConfig("controllers", llDumpList2String(controllerList, "|"));
 
                         cdSayTo("You are no longer a controller of this Dolly.", id);
                         llOwnerSay("Your controller " + name + " has relinquished control.");
@@ -883,8 +883,8 @@ default {
                     }
 #ifdef DEVELOPER_MODE
                     else {
-                        llSay(DEBUG_CHANNEL,"id " + (string)id + " not found in Controllers List: " + llDumpList2String(controllers,",") +
-                            " - index= = " + (string)index + " - search = " + (string)llListFindList(controllers, [ id ]));
+                        llSay(DEBUG_CHANNEL,"id " + (string)id + " not found in Controllers List: " + llDumpList2String(controllerList,",") +
+                            " - index= = " + (string)index + " - search = " + (string)llListFindList(controllerList, [ id ]));
                     }
 #endif
                     return;
@@ -1066,14 +1066,14 @@ default {
 #else
                         msg = "parent list";
 #endif
-                        if (controllers != []) {
-                            dialogKeys  = cdList2ListStrided(controllers, 0, -1, 2);
-                            dialogNames = cdList2ListStrided(controllers, 1, -1, 2);
+                        if (controllerList != []) {
+                            dialogKeys  = cdList2ListStrided(controllerList, 0, -1, 2);
+                            dialogNames = cdList2ListStrided(controllerList, 1, -1, 2);
                         }
                         else {
                             dialogKeys  = [];
                             dialogNames = [];
-                            controllers = []; // an attempt to free memory
+                            controllerList = []; // an attempt to free memory
                         }
                         controlHandle = cdListenUser(controlChannel, id);
                     }
@@ -1119,7 +1119,7 @@ default {
                             else msg = "Doll's " + msg + " is empty.";
                         }
                         else {
-                            debugSay(4,"DEBUG-MENU","Controller list: " + llDumpList2String(controllers,"|"));
+                            debugSay(4,"DEBUG-MENU","Controller list: " + llDumpList2String(controllerList,"|"));
                             debugSay(4,"DEBUG-MENU","DialogKeys: " + llDumpList2String(dialogKeys,"|"));
                             debugSay(4,"DEBUG-MENU","DialogNames: " + llDumpList2String(dialogNames,"|"));
                             if (cdIsDoll(id)) msg = "Current " + msg + ":";
@@ -1187,7 +1187,7 @@ default {
                 llListenRemove(controlHandle);
                 controlHandle = 0;
 
-                if (llListFindList(controllers, [uuid,name]) == NOT_FOUND) {
+                if (llListFindList(controllerList, [uuid,name]) == NOT_FOUND) {
                     msg = "Dolly " + dollName + " has presented you with the power to control her Key. With this power comes great responsibility. Do you wish to accept this power?";
                     lmDialogListen();
                     llDialog((key)uuid, msg, [ "Accept", "Decline" ], dialogChannel);

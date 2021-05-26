@@ -14,7 +14,7 @@ key poserID                 = NULL_KEY;
 
 list blacklist              = [];
 //list BuiltinControllers     = BUILTIN_CONTROLLERS;
-list controllers            = [];
+list controllerList         = [];
 list split                  = [];
 
 string backMenu             = MAIN;

@@ -348,8 +348,8 @@ default {
                 else if (name == "configured")             configured = (integer)value;
                 else if (name == "collapseTime")         collapseTime = (integer)value;
                 else if (name == "controllers") {
-                    if (split == [""]) controllers = [];
-                    else controllers = split;
+                    if (split == [""]) controllerList = [];
+                    else controllerList = split;
                 }
             }
 
@@ -458,13 +458,13 @@ default {
                 // Initial settings
                 if (cmd != "addBlacklist") {
                     typeString = "controller";
-                    tmpList = controllers;
+                    tmpList = controllerList;
                     rejectList = blacklist;
                 }
                 else {
                     typeString = "blacklist";
                     tmpList = blacklist;
-                    rejectList = controllers;
+                    rejectList = controllerList;
                 }
 
                 //----------------------------------------
@@ -499,7 +499,7 @@ default {
                     blacklist = tmpList + [ uuid ];
                 }
                 else {
-                    controllers = tmpList + [ uuid ];
+                    controllerList = tmpList + [ uuid ];
 
                     // Controllers get added to the exceptions
                     llOwnerSay("@tplure:"    + uuid + "=add," +
@@ -531,7 +531,7 @@ default {
                         blacklistQueryID = llRequestDisplayName((key)uuid);
                     }
                     else {
-                        controllers += queryMarker + queryUUID;
+                        controllerList += queryMarker + queryUUID;
                         controllerQueryID = llRequestDisplayName((key)uuid);
                     }
 
@@ -541,16 +541,16 @@ default {
                 else {
                     // This is normal add of selected name
                     if (cmd == "addBlacklist") blacklist += name;
-                    else controllers += name;
+                    else controllerList += name;
                 }
 
                 // we may or may not have changed either of these - but this code
                 // forces a refresh in any case
                 lmSetConfig("blacklist",   cdList2String(blacklist)  );
-                lmSetConfig("controllers", cdList2String(controllers));
+                lmSetConfig("controllers", cdList2String(controllerList));
 
                 debugSay(5,"DEBUG-ADDMISTRESS",   "blacklist >> " + llDumpList2String(blacklist,   ",") + " (" + (string)llGetListLength(blacklist  ) + ")");
-                debugSay(5,"DEBUG-ADDMISTRESS", "controllers >> " + llDumpList2String(controllers, ",") + " (" + (string)llGetListLength(controllers) + ")");
+                debugSay(5,"DEBUG-ADDMISTRESS", "controllers >> " + llDumpList2String(controllerList, ",") + " (" + (string)llGetListLength(controllerList) + ")");
             }
             else if ((cmd == "remController") ||
                      (cmd == "remBlacklist")) {
@@ -570,7 +570,7 @@ default {
                 // Initial settings
                 if (cmd != "remBlacklist") {
                     typeString = "controller";
-                    tmpList = controllers;
+                    tmpList = controllerList;
                 }
                 else {
                     typeString = "blacklist";
@@ -594,7 +594,7 @@ default {
                     blacklist = tmpList;
                 }
                 else {
-                    controllers = tmpList;
+                    controllerList = tmpList;
                     // because we cant remove by UUID, a complete redo of
                     // exceptions is necessary
                     lmInternalCommand("reloadExceptions",script,NULL_KEY);
@@ -603,7 +603,7 @@ default {
                 // we may or may not have changed either of these - but this code
                 // forces a refresh in any case
                 lmSetConfig("blacklist",   cdList2String(blacklist)  );
-                lmSetConfig("controllers", cdList2String(controllers));
+                lmSetConfig("controllers", cdList2String(controllerList));
             }
         }
         else if (code == RLV_RESET) {
@@ -1314,11 +1314,11 @@ default {
         else if (controllerQueryID != NULL_KEY) {
 
             queryUUID = "";
-            removeLastListTerm(controllers);
+            removeLastListTerm(controllerList);
 
-            lmSetConfig("controllers", cdList2String(controllers));
+            lmSetConfig("controllers", cdList2String(controllerList));
 
-            debugSay(5,"DEBUG-ADDMISTRESS", "controllers >> " + llDumpList2String(controllers, ",") + " (" + (string)llGetListLength(controllers) + ")");
+            debugSay(5,"DEBUG-ADDMISTRESS", "controllers >> " + llDumpList2String(controllerList, ",") + " (" + (string)llGetListLength(controllerList) + ")");
         }
 
         stopTimer();
@@ -1352,12 +1352,12 @@ default {
 
             case controllerQueryID: {
 
-                if ((index = isUserUUIDInList(controllers)) != NOT_FOUND) {
+                if ((index = isUserUUIDInList(controllerList)) != NOT_FOUND) {
                     queryUUID = "";
-                    controllers[ index ] = userName;
+                    controllerList[ index ] = userName;
                     controllerQueryID = NULL_KEY;
-                    debugSay(5,"DEBUG-ADDMISTRESS", "controllers >> " + llDumpList2String(controllers, ",") + " (" + (string)llGetListLength(controllers) + ")");
-                    lmSetConfig("controllers", cdList2String(controllers));
+                    debugSay(5,"DEBUG-ADDMISTRESS", "controllers >> " + llDumpList2String(controllerList, ",") + " (" + (string)llGetListLength(controllerList) + ")");
+                    lmSetConfig("controllers", cdList2String(controllerList));
                 }
 #ifdef DEVELOPER_MODE
                 else llSay(DEBUG_CHANNEL,"Couldnt find controller UUID: " + queryUUID);

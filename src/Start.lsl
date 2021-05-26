@@ -288,15 +288,15 @@ processConfiguration(string configSettingName, string configSettingValue) {
 #ifdef NOT_USED
             // Since we don't know and can't get the display name of the Controller, just
             // put the UUID in place of name
-            controllers += controllerUUID;
+            controllerList += controllerUUID;
 
             controllerQueryID = llRequestUsername((key)controllerUUID);
 
             // This is a hack: it lets us match the UUID with the
             // name we get back
-            controllers += "++" + (string)controllerQueryID;
+            controllerList += "++" + (string)controllerQueryID;
 
-            lmSetConfig("controllers", llDumpList2String(controllers, "|"));
+            lmSetConfig("controllers", llDumpList2String(controllerList, "|"));
 
             // Controllers get added to the exceptions
             llOwnerSay("@tplure:"    + controllerUUID + "=add," +

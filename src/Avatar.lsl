@@ -492,8 +492,8 @@ default {
                 else if (name == "allowPose")                 allowPose = (integer)value;
                 else if (name == "dollType")                   dollType = value;
                 else if (name == "controllers") {
-                    if (split == [""]) controllers = [];
-                    else controllers = split;
+                    if (split == [""]) controllerList = [];
+                    else controllerList = split;
                 }
                 else if (name == "pronounHerDoll")       pronounHerDoll = value;
                 else if (name == "pronounSheDoll")       pronounSheDoll = value;

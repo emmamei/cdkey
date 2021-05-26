@@ -528,8 +528,8 @@ default {
             else if (name == "collapsed")                   collapsed = (integer)value;
             else if (name == "busyIsAway")                 busyIsAway = (integer)value;
             else if (name == "controllers") {
-                if (split == [""]) controllers = [];
-                else controllers = split;
+                if (split == [""]) controllerList = [];
+                else controllerList = split;
             }
             else if (name == "RLVok")                           RLVok = (integer)value;
             else if (name == "mustAgreeToType")       mustAgreeToType = (integer)value;

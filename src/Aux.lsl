@@ -120,8 +120,8 @@ default {
             split = llDeleteSubList(split, 0, 0);
 
                  if (name == "controllers") {
-                    if (split == [""]) controllers = [];
-                    else controllers = split;
+                    if (split == [""]) controllerList = [];
+                    else controllerList = split;
             }
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                 debugLevel = (integer)value;
@@ -570,10 +570,10 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 // lmSendToController
                 msg = (string)split[0];
                 key targetKey;
-                integer n = llGetListLength(cdList2ListStrided(controllers, 0, -1, 2));
+                integer n = llGetListLength(cdList2ListStrided(controllerList, 0, -1, 2));
 
                 while (n--) {
-                    targetKey = (key)controllers[(n << 1]);
+                    targetKey = (key)controllerList[(n << 1]);
 
                     lmInternalCommand("instantMessage", msg, targetKey);
                 }

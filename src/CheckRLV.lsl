@@ -321,8 +321,8 @@ default {
                 else if (name == "canFly")        {       canFly = (integer)value; rlvSetIf("fly", canFly); }
                 else if (name == "collapsed")     {    collapsed = (integer)value; rlvOutfitLock(); }
                 else if (name == "controllers") {
-                    if (split == [""]) controllers = [];
-                    else controllers = split;
+                    if (split == [""]) controllerList = [];
+                    else controllerList = split;
                 }
                 else if (name == "chatChannel") { chatChannel = (integer)value; }
             }
@@ -383,7 +383,7 @@ default {
                 // Exempt builtin or user specified controllers from TP restictions
                 if (RLVok == FALSE) return;
 
-                list exceptions = cdList2ListStrided(controllers, 0, -1, 2);
+                list exceptions = cdList2ListStrided(controllerList, 0, -1, 2);
                 if (exceptions == []) return;
 
                 integer i;

@@ -152,7 +152,7 @@ float GlobalDefines_version=1.0;
 #define AGENT_SILKY_MESMERISER_RAW    2fff40f0-ea4a-4b52-abb8-d4bf6b1c98c9
 #define AGENT_SILKY_MESMERISER        "2fff40f0-ea4a-4b52-abb8-d4bf6b1c98c9"
 
-#define DOLLY_CONTROLLERS controllers
+#define DOLLY_CONTROLLERS controllerList
 #include "CommonGlobals.lsl"
 
 #define RUNNING 1
@@ -237,7 +237,7 @@ float GlobalDefines_version=1.0;
 #define NO_TIME 1
 #define JAMMED 2
 
-#define cdControllerCount()      llFloor(llGetListLength(controllers) / 2)
+#define cdControllerCount()      llFloor(llGetListLength(controllerList) / 2)
 #define cdAttached()             llGetAttached()
 #define cdDollAway()             ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0)
 #define cdCarried()              (carrierID != NULL_KEY)
@@ -284,7 +284,7 @@ float GlobalDefines_version=1.0;
 #define cdIsCarrier(id)                 (id == carrierID)
 
 // Here's the test: if we want Dolly included or not
-#define cdIsExternalController(id)      (llListFindList(controllers, [ (string)id ]) != -1)
+#define cdIsExternalController(id)      (llListFindList(controllerList, [ (string)id ]) != -1)
 #define cdIsController(id)              cdGetControllerStatus(id)
 
 #include "KeySharedFuncs.lsl"
@@ -300,9 +300,9 @@ integer cdGetControllerStatus(key id) {
     //   A User is a Controller if they are in the controller list
     //
     if (cdIsDoll(id))
-        return (controllers == []);
+        return (controllerList == []);
     else {
-        return (llListFindList(controllers, [ (string)id ]) != -1);
+        return (llListFindList(controllerList, [ (string)id ]) != -1);
     }
 }
 
