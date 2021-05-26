@@ -126,12 +126,17 @@ float setWindRate() {
 
     agentInfo = llGetAgentInfo(llGetOwner());
 
-    // if AFK then unwinding slows; if collapsed it stops
-         if (isAFK)     newWindRate = 0.5; // 50% speed
-    else if (collapsed) newWindRate = 0.0; // 0% speed
-    else if (isFlying)  newWindRate = 1.5; // 150% speed
-    else if (isSitting) newWindRate = 0.7; // 70% speed
-    else                newWindRate = 1.0; // 100% speed
+    // Adjust winding down rate. Note that this affects the spin rate,
+    // and that the AFK state is based on the CURRENT rate... so if Dolly
+    // is flying, then the key will be running faster in AFK than it
+    // would be if Dolly was standing, and when Sitting AFK mode would
+    // be half that rate as well...
+    //
+         if (isAFK)     newWindRate = 0.5 * windRate; // 50% speed of CURRENT rate
+    else if (collapsed) newWindRate = 0.0;            // 0% speed
+    else if (isFlying)  newWindRate = 1.5;            // 150% speed
+    else if (isSitting) newWindRate = 0.7;            // 70% speed
+    else                newWindRate = 1.0;            // 100% speed
 
     if (newWindRate != windRate) {
         lmSendConfig("windRate", (string)(windRate = newWindRate));         // current rate
