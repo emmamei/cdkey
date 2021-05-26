@@ -115,14 +115,22 @@ doWinding(string name, key id) {
     if (collapsed) unCollapse();
 }
 
+#define isFlying  (agentInfo & AGENT_FLYING)
+#define isSitting (agentInfo & AGENT_SITTING)
+
 float setWindRate() {
     float newWindRate;
+    integer agentInfo;
 
     debugSay(4,"DEBUG-MAIN","setWindRate() running");
+
+    agentInfo = llGetAgentInfo(llGetOwner());
 
     // if AFK then unwinding slows; if collapsed it stops
          if (isAFK)     newWindRate = 0.5; // 50% speed
     else if (collapsed) newWindRate = 0.0; // 0% speed
+    else if (isFlying)  newWindRate = 1.5; // 150% speed
+    else if (isSitting) newWindRate = 0.7; // 70% speed
     else                newWindRate = 1.0; // 100% speed
 
     if (newWindRate != windRate) {
@@ -198,7 +206,7 @@ doCollapse() {
     lmSendConfig("lastWinderID", (string)(lastWinderID = NULL_KEY));
 
     // Among other things, this will set the Key's turn rate
-    setWindRate();
+    windRate = setWindRate();
 
     lmInternalCommand("setHovertext", "", keyID);
     cdAOoff();
@@ -229,7 +237,7 @@ unCollapse() {
     while (i--)
         llStopAnimation((key)oldAnimList[i]);
 
-    setWindRate();
+    windRate = setWindRate();
     cdAOon();
 
     // This will trigger animation
@@ -498,7 +506,7 @@ default {
             if (timeSpan != 0) {
 
                 // Key ticks down just a little further...
-                timeLeftOnKey -= (integer)(timeSpan * windRate);
+                timeLeftOnKey -= (integer)(timeSpan * (windRate = setWindRate()));
                 if (timeLeftOnKey < 0) timeLeftOnKey = 0;
 
                 lmSendConfig("timeLeftOnKey",(string)timeLeftOnKey);
