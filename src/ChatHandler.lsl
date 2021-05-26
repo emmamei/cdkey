@@ -317,8 +317,8 @@ default {
 #endif
             else if (name == "RLVok")                     RLVok = (integer)value;
             else if (name == "blacklist") {
-                if (split == [""]) blacklist = [];
-                else blacklist = split;
+                if (split == [""]) blacklistList = [];
+                else blacklistList = split;
             }
 
             //----------------------------------------
@@ -438,7 +438,7 @@ default {
                     return;
                 }
 
-                debugSay(5,"DEBUG-ADDMISTRESS","Blacklist = " + cdList2String(blacklist) + " (" + (string)llGetListLength(blacklist) + ")");
+                debugSay(5,"DEBUG-ADDMISTRESS","Blacklist = " + cdList2String(blacklistList) + " (" + (string)llGetListLength(blacklistList) + ")");
 
                 string typeString; // used to construct messages
                 list tmpList; // used as working area for whatever list
@@ -459,11 +459,11 @@ default {
                 if (cmd != "addBlacklist") {
                     typeString = "controller";
                     tmpList = controllerList;
-                    rejectList = blacklist;
+                    rejectList = blacklistList;
                 }
                 else {
                     typeString = "blacklist";
-                    tmpList = blacklist;
+                    tmpList = blacklistList;
                     rejectList = controllerList;
                 }
 
@@ -496,7 +496,7 @@ default {
                 cdSayToAgentPlusDoll("Adding " + nameURI + " as " + typeString, id);
 
                 if (cmd == "addBlacklist") {
-                    blacklist = tmpList + [ uuid ];
+                    blacklistList = tmpList + [ uuid ];
                 }
                 else {
                     controllerList = tmpList + [ uuid ];
@@ -527,7 +527,7 @@ default {
                     //
                     if (cmd == "addBlacklist") {
 
-                        blacklist += queryMarker + queryUUID;
+                        blacklistList += queryMarker + queryUUID;
                         blacklistQueryID = llRequestDisplayName((key)uuid);
                     }
                     else {
@@ -540,16 +540,16 @@ default {
                 }
                 else {
                     // This is normal add of selected name
-                    if (cmd == "addBlacklist") blacklist += name;
+                    if (cmd == "addBlacklist") blacklistList += name;
                     else controllerList += name;
                 }
 
                 // we may or may not have changed either of these - but this code
                 // forces a refresh in any case
-                lmSetConfig("blacklist",   cdList2String(blacklist)  );
+                lmSetConfig("blacklist",   cdList2String(blacklistList)  );
                 lmSetConfig("controllers", cdList2String(controllerList));
 
-                debugSay(5,"DEBUG-ADDMISTRESS",   "blacklist >> " + llDumpList2String(blacklist,   ",") + " (" + (string)llGetListLength(blacklist  ) + ")");
+                debugSay(5,"DEBUG-ADDMISTRESS",   "blacklist >> " + llDumpList2String(blacklistList,   ",") + " (" + (string)llGetListLength(blacklistList  ) + ")");
                 debugSay(5,"DEBUG-ADDMISTRESS", "controllers >> " + llDumpList2String(controllerList, ",") + " (" + (string)llGetListLength(controllerList) + ")");
             }
             else if ((cmd == "remController") ||
@@ -574,7 +574,7 @@ default {
                 }
                 else {
                     typeString = "blacklist";
-                    tmpList = blacklist;
+                    tmpList = blacklistList;
                 }
 
                 // Test for presence of uuid in list: if it's not there, we can't remove it
@@ -591,7 +591,7 @@ default {
                 }
 
                 if (cmd == "remBlacklist") {
-                    blacklist = tmpList;
+                    blacklistList = tmpList;
                 }
                 else {
                     controllerList = tmpList;
@@ -602,7 +602,7 @@ default {
 
                 // we may or may not have changed either of these - but this code
                 // forces a refresh in any case
-                lmSetConfig("blacklist",   cdList2String(blacklist)  );
+                lmSetConfig("blacklist",   cdList2String(blacklistList)  );
                 lmSetConfig("controllers", cdList2String(controllerList));
             }
         }
@@ -667,7 +667,7 @@ default {
             accessorIsCarrier = cdIsCarrier(id);
 
             // Deny access to the menus when the command was recieved from blacklisted avatar
-            if (llListFindList(blacklist, [ (string)accessorID ]) != NOT_FOUND) {
+            if (llListFindList(blacklistList, [ (string)accessorID ]) != NOT_FOUND) {
                 llOwnerSay("SECURITY WARNING! Attempted chat channel access by blacklisted user " + accessorName);
                 return;
             }
@@ -1305,11 +1305,11 @@ default {
         if (blacklistQueryID != NULL_KEY) {
 
             queryUUID = "";
-            removeLastListTerm(blacklist);
+            removeLastListTerm(blacklistList);
 
-            lmSetConfig("blacklist", cdList2String(blacklist));
+            lmSetConfig("blacklist", cdList2String(blacklistList));
 
-            debugSay(5,"DEBUG-ADDMISTRESS",   "blacklist >> " + llDumpList2String(blacklist,   ",") + " (" + (string)llGetListLength(blacklist  ) + ")");
+            debugSay(5,"DEBUG-ADDMISTRESS",   "blacklist >> " + llDumpList2String(blacklistList,   ",") + " (" + (string)llGetListLength(blacklistList  ) + ")");
         }
         else if (controllerQueryID != NULL_KEY) {
 
@@ -1337,12 +1337,12 @@ default {
 
             case blacklistQueryID: {
 
-                if ((index = isUserUUIDInList(blacklist)) != NOT_FOUND) {
+                if ((index = isUserUUIDInList(blacklistList)) != NOT_FOUND) {
                     queryUUID = "";
-                    blacklist[ index ] = userName;
+                    blacklistList[ index ] = userName;
                     blacklistQueryID = NULL_KEY;
-                    debugSay(5,"DEBUG-ADDMISTRESS",   "blacklist >> " + llDumpList2String(blacklist,   ",") + " (" + (string)llGetListLength(blacklist  ) + ")");
-                    lmSetConfig("blacklist", cdList2String(blacklist));
+                    debugSay(5,"DEBUG-ADDMISTRESS",   "blacklist >> " + llDumpList2String(blacklistList,   ",") + " (" + (string)llGetListLength(blacklistList  ) + ")");
+                    lmSetConfig("blacklist", cdList2String(blacklistList));
                 }
 #ifdef DEVELOPER_MODE
                 else llSay(DEBUG_CHANNEL,"Couldnt find blacklist UUID:" + queryUUID);

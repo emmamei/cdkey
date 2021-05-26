@@ -159,8 +159,8 @@ default {
 #endif
             else if (name == "wearLock")                     wearLock = (integer)value;
             else if (name == "blacklist") {
-                if (split == [""]) blacklist = [];
-                else blacklist = split;
+                if (split == [""]) blacklistList = [];
+                else blacklistList = split;
             }
             else if (name == "dialogChannel") {
                 dialogChannel = (integer)value;
@@ -410,7 +410,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 if (cdIsDoll(id)) {
                     plusList += [ "⊕ Blacklist", "List Blacklist" ];
 
-                    if (llGetListLength(blacklist)) plusList += [ "⊖ Blacklist" ];
+                    if (llGetListLength(blacklistList)) plusList += [ "⊖ Blacklist" ];
 #ifdef ADULT_MODE
                     plusList += [ "⊕ Controller" ];
 #else

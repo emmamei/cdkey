@@ -300,9 +300,9 @@ default {
 
                  if (name == "blacklist") {
 
-                    if (split == [""]) blacklist = [];
-                    else blacklist = split;
-                    lmSendConfig("blacklist",llDumpList2String(blacklist,"|"));
+                    if (split == [""]) blacklistList = [];
+                    else blacklistList = split;
+                    lmSendConfig("blacklist",llDumpList2String(blacklistList,"|"));
             }
             else if (name == "controllers") {
                     if (split == [""]) controllerList = [];
@@ -796,7 +796,7 @@ default {
         else {
             channel = blacklistChannel;
             type = "blacklist";
-            current = blacklist;
+            current = blacklistList;
         }
 
         i = num;
@@ -1043,14 +1043,14 @@ default {
 
                         activeChannel = blacklistChannel;
                         msg = "blacklist";
-                        if (blacklist != []) {
-                            dialogKeys  = cdList2ListStrided(blacklist, 0, -1, 2);
-                            dialogNames = cdList2ListStrided(blacklist, 1, -1, 2);
+                        if (blacklistList != []) {
+                            dialogKeys  = cdList2ListStrided(blacklistList, 0, -1, 2);
+                            dialogNames = cdList2ListStrided(blacklistList, 1, -1, 2);
                         }
                         else {
                             dialogKeys  = [];
                             dialogNames = [];
-                            blacklist   = []; // an attempt to free memory
+                            blacklistList   = []; // an attempt to free memory
                         }
                         blacklistHandle = cdListenUser(blacklistChannel, id);
                     }
@@ -1178,7 +1178,7 @@ default {
                 llListenRemove(blacklistHandle);
                 blacklistHandle = 0;
 
-                if (llListFindList(blacklist, [uuid,name]) != NOT_FOUND) lmInternalCommand("remBlacklist", (string)uuid + "|" + name, id);
+                if (llListFindList(blacklistList, [uuid,name]) != NOT_FOUND) lmInternalCommand("remBlacklist", (string)uuid + "|" + name, id);
                 else                                                     lmInternalCommand("addBlacklist", (string)uuid + "|" + name, id);
             }
             else {

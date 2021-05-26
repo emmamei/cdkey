@@ -324,7 +324,7 @@ default {
         string agentName = llGetDisplayName(id);
 
         // Deny access to the key when the command was recieved from blacklisted avatar
-        if (llListFindList(blacklist, [ (string)id ]) != NOT_FOUND) {
+        if (llListFindList(blacklistList, [ (string)id ]) != NOT_FOUND) {
             llOwnerSay("SECURITY WARNING! Attempted Key access from blacklisted user " + agentName);
             return;
         }
@@ -568,8 +568,8 @@ default {
             else if (name == "hardcore")                     hardcore = (integer)value;
 #endif
             else if (name == "blacklist") {
-                if (split == [""]) blacklist = [];
-                else blacklist = split;
+                if (split == [""]) blacklistList = [];
+                else blacklistList = split;
             }
             else if (c == "d") {
                      if (name == "dollDisplayName")             dollDisplayName = value;

@@ -270,15 +270,15 @@ processConfiguration(string configSettingName, string configSettingValue) {
             string blacklistUUID = (string)configSettingValue;
             lmSetConfig("addBlacklist",blacklistUUID);
 #ifdef NOT_USED
-            blacklist += blacklistUUID;
+            blacklistList += blacklistUUID;
 
             blacklistQueryID = llRequestUsername((key)blacklistUUID);
 
             // This is a hack: it lets us match the UUID with the
             // name we get back
-            blacklist += "++" + (string)blacklistQueryID;
+            blacklistList += "++" + (string)blacklistQueryID;
 
-            lmSetConfig("blacklist", llDumpList2String(blacklist, "|"));
+            lmSetConfig("blacklist", llDumpList2String(blacklistList, "|"));
 #endif
         }
         else if (configSettingName == "controller") {
@@ -428,8 +428,8 @@ default {
             else if (name == "carryExpire")                 carryExpire = (integer)value;
             else if (name == "dollType")                       dollType = value;
             else if (name == "blacklist") {
-                if (split == [""]) blacklist = [];
-                else blacklist = split;
+                if (split == [""]) blacklistList = [];
+                else blacklistList = split;
             }
 
             else if (name == "poseAnimation") {

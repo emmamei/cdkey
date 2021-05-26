@@ -12,7 +12,7 @@ key dresserID               = NULL_KEY;
 key poseAnimationID         = NULL_KEY;
 key poserID                 = NULL_KEY;
 
-list blacklist              = [];
+list blacklistList          = [];
 //list BuiltinControllers     = BUILTIN_CONTROLLERS;
 list controllerList         = [];
 list split                  = [];
