@@ -114,7 +114,9 @@ list outfitPageN(list outfitList) {
     string outfitName;
     list tmpList;
 
+    // Take a slice related to the current page
     tmpList = (list)outfitList[currentIndex, currentIndex + 8];
+
     n = llGetListLength(tmpList);
     tmpEnd = n - 1;
 
@@ -127,9 +129,13 @@ list outfitPageN(list outfitList) {
         // x ................ current list index (0 - max)
         // +1 ............... convert to 1-index
         // +currentIndex .... offset by currentPage index
-        outfitName = (string)(currentIndex + x + 1) + ". " + (string)tmpList[x];
+        //
+        outfitName = (string)tmpList[x];
 
-        chat += "\n" + outfitName;
+        // Prepend a number to the chat entry...
+        chat += "\n" + (string)(currentIndex + x + 1) + ". " + outfitName;
+
+        // Cut the button name to the shortest allowable...
         output += (list)llGetSubString(outfitName, 0, 23);
     }
 
@@ -800,11 +806,7 @@ default {
         else if (code < 200) {
             if (code == SIM_RATING_CHG) {
                 simRating = (string)split[0];
-                integer outfitRating = cdOutfitRating(newOutfitName);
                 integer regionRating = cdRating2Integer(simRating);
-
-                debugSay(3, "DEBUG-DRESS", "Region rating " + simRating + " outfit " + newOutfitName + " outfitRating: " + (string)outfitRating +
-                            " regionRating: " + (string)regionRating);
             }
             else if (code == CONFIG_REPORT) {
                 cdConfigureReport();
@@ -980,14 +982,7 @@ default {
                 if (itemName != newOutfitName) {
                     if (!isHiddenItem(prefix) && !isGroupItem(prefix)) {
                         if (!isTransformingItem(prefix) || dollType == "Regular") {
-                            if (isRated(prefix)) {
-                                if (cdOutfitRating(itemName) <= cdRating2Integer(simRating)) {
-                                    tmpList += itemName;
-                                }
-                            }
-                            else {
-                                tmpList += itemName;
-                            }
+                            tmpList += itemName;
                         }
                     }
                 }
