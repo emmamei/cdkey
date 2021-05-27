@@ -173,7 +173,8 @@ default {
 
         // This prevents anyone but the owner from using this updater
         if (toucherID != owner) {
-            llSay(PUBLIC_CHANNEL,"You are not allowed access to this updater.");
+            llSay(PUBLIC_CHANNEL,"You are not allowed to use this updater; please accept this key instead.");
+            llGiveInventory(toucherID,OBJECT_KEY);
             return;
         }
 
