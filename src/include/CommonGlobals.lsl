@@ -75,6 +75,7 @@ integer hovertextOn;
 integer isTransformingKey   = 1;
 integer keyLimit            = 10800;
 integer lowScriptMode;
+integer safeMode;
 integer offlineMode         = TRUE;
 integer optHeader;
 integer pleasureDoll;
