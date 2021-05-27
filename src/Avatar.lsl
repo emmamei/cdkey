@@ -743,7 +743,7 @@ default {
         debugSay(2,"DEBUG-AVATAR","ifPermissions (run_time_permissions)");
 
         // Don't do anything unless attached
-        if (!llGetAttached()) return;
+        //if (!llGetAttached()) return;
 
         permMask = perm;
 
