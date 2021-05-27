@@ -215,7 +215,7 @@ processConfiguration(string configSettingName, string configSettingValue) {
         else if (configSettingName == "debug level") {
 #ifdef DEVELOPER_MODE
             // has to be between 0 and 9
-            llSay(DEBUG_CHANNEL,"INFO: debug Level being overwritten from the builtin default of " + (string)debugLevel);
+            //llSay(DEBUG_CHANNEL,"INFO: debug Level being overwritten from the builtin default of " + (string)debugLevel);
             debugLevel = (integer)configSettingValue;
 
             if (debugLevel > 9) debugLevel = 9;

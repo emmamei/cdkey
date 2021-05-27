@@ -171,7 +171,7 @@ default {
                 // it means normally: we have a base RLV set
 
                 debugSay(2,"DEBUG-STATUSRLV","RLV clear command issued from " + script);
-                llSay(DEBUG_CHANNEL,"clearRLVcmd run from " + script);
+                //llSay(DEBUG_CHANNEL,"clearRLVcmd run from " + script);
 
                 llOwnerSay("@clear"); // clear command
                 if (commandString != "")
