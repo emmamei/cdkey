@@ -119,9 +119,10 @@ doXstats() {
     cdCapability(wearLock,         "Doll's clothing is",  "currently locked on");
     cdCapability(lowScriptMode,    "Doll is",  "currently in powersave mode");
 #ifdef ADULT_MODE
-    cdCapability(hardcore,         "Doll is", "currently in hardcore mode");
     cdCapability(allowStrip,       "Doll is", "strippable");
+    cdCapability(hardcore,         "Doll is", "currently in hardcore mode");
 #endif
+    cdCapability(safeMode,         "Doll is", "currently in safe mode");
 
     // These settings (and more) all are affected by hardcore
     cdCapability(allowPose,      "Doll can", "be posed by the public");
@@ -671,8 +672,10 @@ default {
             accessorIsController = cdIsController(id); // This includes Dolly if there are no Controllers
             accessorIsCarrier = cdIsCarrier(id);
 
+#define blacklistedUser(a) (llListFindList(blacklistList, [ (string)(a) ]) != NOT_FOUND)
+
             // Deny access to the menus when the command was recieved from blacklisted avatar
-            if (llListFindList(blacklistList, [ (string)accessorID ]) != NOT_FOUND) {
+            if (blacklistedUser(accessorID)) {
                 llOwnerSay("SECURITY WARNING! Attempted chat channel access by blacklisted user " + accessorName);
                 return;
             }
@@ -910,7 +913,10 @@ default {
                             return;
                         }
                         case "safeMode": {
-                            lmSetConfig("safemode", (string)(safeMode = !safeMode));
+#ifdef ADULT_MODE
+                            if (!hardcore)
+#endif
+                                lmSetConfig("safemode", (string)(safeMode = !safeMode));
                             return;
                         }
 #ifdef ADULT_MODE
