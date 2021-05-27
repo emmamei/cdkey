@@ -438,9 +438,18 @@ default {
                 string name = (string)split[2];
                 string nameURI = "secondlife:///app/agent/" + uuid + "/displayname";
 
-                // Dolly can NOT be added to either list
                 if (cdIsDoll((key)uuid)) {
+
+                    // Dolly can NOT be added to either list
                     cdSayTo("You can't select Dolly for this list.",(key)uuid);
+                    return;
+                }
+
+                if (carrierID == uuid) {
+
+                    // We potentially could select a carrier for the controller list;
+                    // however, how much complexity would that introduce?
+                    cdSayTo("You can't select a carrier for this list.",(key)dollID);
                     return;
                 }
 
