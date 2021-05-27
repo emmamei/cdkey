@@ -162,6 +162,11 @@ doXstats() {
 #ifdef ADULT_MODE
 doHardcore() {
 
+    if (safeMode) {
+        llOwnerSay("You must disable safe mode first.");
+        return;
+    }
+
     // if hardcore is set, only a controller other than
     // Dolly can clear it. If hardcore is clear - only
     // Dolly can set it.
@@ -902,6 +907,10 @@ default {
                         case "stats": {
 
                             doStats();
+                            return;
+                        }
+                        case "safeMode": {
+                            lmSetConfig("safemode", (string)(safeMode = !safeMode));
                             return;
                         }
 #ifdef ADULT_MODE

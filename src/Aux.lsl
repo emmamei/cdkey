@@ -168,48 +168,72 @@ default {
             }
         }
         else if (code == SET_CONFIG) {
-                string configName = (string)split[0];
-                string configValue = (string)split[1];
+            string configName = (string)split[0];
+            string configValue = (string)split[1];
 
-                split = llDeleteSubList(split, 0, 0);
+            split = llDeleteSubList(split, 0, 0);
 
-                switch (configName): {
+            switch (configName): {
 
-                    case "dollGender": {
-                        setGender(configValue);
-                        break;
-                    }
+                case "dollGender": {
+                    setGender(configValue);
+                    break;
+                }
 #ifdef ADULT_MODE
-                    case "hardcore": {
+                case "hardcore": {
+                    hardcore = (integer)configValue;
 
-                        if ((integer)configValue == TRUE) lmSendConfig("hardcore", (string)(hardcore = TRUE));
-                        else lmSendConfig("hardcore", (string)(hardcore = FALSE));
+                    lmSendConfig("hardcore", (string)hardcore);
 
-                        // FIXME: do some of these require lmSetConfig?
+                    // FIXME: do some of these require lmSetConfig?
 
-                        // This is a hack: this allows us to use the var hardcore to set
-                        // these settings appropriately, no matter what hardcore is set to
-                        lmSendConfig("poseSilence",     (string)(    poseSilence =  hardcore));
-                        lmSendConfig("canDressSelf",    (string)(   canDressSelf = !hardcore));
-                        lmSendConfig("canFly",          (string)(         canFly = !hardcore));
-                        lmSendConfig("canSelfTP",       (string)(      canSelfTP = !hardcore));
-                        lmSetConfig( "keyLocked",       (string)(      keyLocked =  hardcore));
-                        lmSendConfig("mustAgreeToType", (string)(mustAgreeToType = !hardcore));
-                        lmSendConfig("allowSelfWind",   (string)(  allowSelfWind = !hardcore));
-                        lmSendConfig("allowRepeatWind", (string)(allowRepeatWind = !hardcore));
-                        lmSendConfig("allowStrip",      (string)(     allowStrip =  hardcore));
+                    // This is a hack: this allows us to use the var hardcore to set
+                    // these settings appropriately, no matter what hardcore is set to
+                    lmSendConfig("poseSilence",     (string)(    poseSilence =  hardcore));
+                    lmSendConfig("canDressSelf",    (string)(   canDressSelf = !hardcore));
+                    lmSendConfig("canFly",          (string)(         canFly = !hardcore));
+                    lmSendConfig("canSelfTP",       (string)(      canSelfTP = !hardcore));
+                    lmSetConfig( "keyLocked",       (string)(      keyLocked =  hardcore));
+                    lmSendConfig("mustAgreeToType", (string)(mustAgreeToType = !hardcore));
+                    lmSendConfig("allowSelfWind",   (string)(  allowSelfWind = !hardcore));
+                    lmSendConfig("allowRepeatWind", (string)(allowRepeatWind = !hardcore));
+                    lmSendConfig("allowStrip",      (string)(     allowStrip =  hardcore));
 
-                        // Rather than locking dolly down, these open her up: thus, the
-                        // setting of these is not set then reset; rather after setting,
-                        // they will not change on reset.
-                        lmSendConfig("allowPose",       (string)(      allowPose = TRUE));
-                        lmSendConfig("allowCarry",      (string)(     allowCarry = TRUE));
-                        lmSendConfig("allowDress",      (string)(     allowDress = TRUE));
-                        llSleep(5.0); // hack to prevent loops...
-                        break;
+                    // Rather than locking dolly down, these open her up: thus, the
+                    // setting of these is not set then reset; rather after setting,
+                    // they will not change on reset.
+                    lmSendConfig("allowPose",       (string)(      allowPose = TRUE));
+                    lmSendConfig("allowCarry",      (string)(     allowCarry = TRUE));
+                    lmSendConfig("allowDress",      (string)(     allowDress = TRUE));
 
+                    break;
                 }
 #endif
+                case "safemode": {
+                    safeMode = (integer)configValue;
+
+
+                    // If we turn on safe mode, we close to public access, and open up our
+                    // own. If we disable safeMode, then nothing changes.
+                    //
+                    if (safeMode) {
+                        lmSendConfig("hardcore",        (string)(       hardcore = FALSE));
+                        lmSendConfig("poseSilence",     (string)(    poseSilence = FALSE));
+                        lmSendConfig("canDressSelf",    (string)(   canDressSelf = TRUE));
+                        lmSendConfig("canFly",          (string)(         canFly = TRUE));
+                        lmSendConfig("canSelfTP",       (string)(      canSelfTP = TRUE));
+                        lmSetConfig( "keyLocked",       (string)(      keyLocked = FALSE));
+                        lmSendConfig("mustAgreeToType", (string)(mustAgreeToType = TRUE));
+                        lmSendConfig("allowSelfWind",   (string)(  allowSelfWind = TRUE));
+                        lmSendConfig("allowRepeatWind", (string)(allowRepeatWind = TRUE));
+                        lmSendConfig("allowStrip",      (string)(     allowStrip = FALSE));
+                        lmSendConfig("allowPose",       (string)(      allowPose = FALSE));
+                        lmSendConfig("allowCarry",      (string)(     allowCarry = FALSE));
+                        lmSendConfig("allowDress",      (string)(     allowDress = FALSE));
+                    }
+
+                    break;
+                }
             }
         }
         else if (code == INTERNAL_CMD) {
