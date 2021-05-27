@@ -912,7 +912,8 @@ default {
                             doStats();
                             return;
                         }
-                        case "safeMode": {
+
+                        case "safemode": {
 #ifdef ADULT_MODE
                             if (!hardcore)
 #endif

@@ -122,8 +122,6 @@ float setWindRate() {
     float newWindRate;
     integer agentInfo;
 
-    debugSay(4,"DEBUG-MAIN","setWindRate() running");
-
     agentInfo = llGetAgentInfo(llGetOwner());
 
     // Adjust winding down rate. Note that this affects the spin rate,
@@ -141,8 +139,8 @@ float setWindRate() {
     if (newWindRate != windRate) {
         lmSendConfig("windRate", (string)(windRate = newWindRate));         // current rate
 
-        debugSay(2,"DEBUG-MAIN","windRate now set to " + (string)windRate);
-        debugSay(6,"DEBUG-MAIN","collapsed is currently " + (string)collapsed);
+        debugSay(2,"DEBUG-MAIN","windRate changed to " + (string)windRate);
+        //debugSay(6,"DEBUG-MAIN","collapsed is currently " + (string)collapsed);
 
         // llTargetOmega: With a normalized vector (first parameter), the spin rate
         // is in radians per second - 2𝜋 radians equals 1 full rotation.
