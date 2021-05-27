@@ -246,20 +246,20 @@ default {
 
                 // is it possible to be collapsed but collapseTime be equal to 0.0?
                 if (collapsed) {
-                    msg = "You need winding. You have been collapsed for";
+                    msg = "You need winding. You have been collapsed for ";
                     integer timeCollapsed = llGetUnixTime() - collapseTime;
 
-#define minutesCollapsed llFloor(timeCollapsed / SEC_TO_MIN)
+                    integer minutesCollapsed = llFloor(timeCollapsed / SEC_TO_MIN);
 
-                    if (minutesCollapsed < 1) msg += (string)llFloor(timeCollapsed / SEC_TO_MIN) + " minutes. ";
-                    else msg += (string)timeCollapsed + " seconds. ";
+                    if (minutesCollapsed > 1) msg += (string)minutesCollapsed + " minutes. ";
+                    else msg += (string)timeCollapsed + " seconds.";
 
 #ifdef DEVELOPER_MODE
                     // Status messages for developers
+                    msg += "\n\nTime before Emg Wind: " + (string)TIME_BEFORE_EMGWIND + "\nTime elapsed: " + (string)timeCollapsed + "\n";
 #ifdef EMERGENCY_TP
                     msg += "\nTime before TP: " + (string)TIME_BEFORE_TP;
 #endif
-                    msg += "\nTime before Emg Wind: " + (string)TIME_BEFORE_EMGWIND + "\nTime elapsed: " + (string)timeCollapsed + "\n";
 #endif
 
                     // Only present the TP home option for the doll if they have been collapsed
