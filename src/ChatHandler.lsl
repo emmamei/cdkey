@@ -1292,7 +1292,8 @@ default {
 #endif
                     ;
                 }
-                else if (chatCommand == "pose") {
+
+                if (chatCommand == "pose") {
                     string requestedAnimation = param;
 
                     if (requestedAnimation != ANIMATION_COLLAPSED) {

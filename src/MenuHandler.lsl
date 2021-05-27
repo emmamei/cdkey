@@ -543,7 +543,7 @@ default {
                         }
                         else {
                             if (isDoll) {
-                                if (canDressSelf && poseAnimation == ANIMATION_NONE) menu += "Outfits...";
+                                if (canDressSelf) menu += "Outfits...";
                             }
                             else {
                                 if (allowDress || isController) menu += "Outfits...";
