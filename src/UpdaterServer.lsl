@@ -167,14 +167,22 @@ default {
     // TOUCH START
     //----------------------------------------
 
+#define isObjectPresent(o) (llGetInventoryType(o) == INVENTORY_OBJECT)
+
     touch_start(integer what) {
 
         toucherID = llDetectedKey(0);
 
         // This prevents anyone but the owner from using this updater
         if (toucherID != owner) {
-            llSay(PUBLIC_CHANNEL,"You are not allowed to use this updater; please accept this key instead.");
-            llGiveInventory(toucherID,OBJECT_KEY);
+            string msg = "You are not allowed to use this updater.";
+
+            if (isObjectPresent(OBJECT_KEY)) {
+                msg += " Please accept this key instead.";
+                llGiveInventory(toucherID,OBJECT_KEY);
+            }
+
+            llSay(PUBLIC_CHANNEL,msg);
             return;
         }
 
