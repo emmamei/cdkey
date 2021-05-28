@@ -231,6 +231,29 @@ doPrefix(string param) {
     }
 }
 
+list remList(list workingList, string uuid, key id) {
+    list workingList;
+
+    string nameURI = "secondlife:///app/agent/" + uuid + "/displayname";
+
+    // Test for presence of uuid in list: if it's not there, we can't remove it
+    string s;
+    integer i;
+
+    if ((i = llListFindList(workingList, [ uuid ])) != NOT_FOUND) {
+
+        s = "Removing key " + nameURI + " from the list";
+        cdSayToAgentPlusDoll(s, id);
+
+        workingList = llDeleteSubList(workingList, i, i + 1);
+    }
+    else {
+        cdSayTo("Key " + uuid + " is not in the list",id);
+    }
+
+    return workingList;
+}
+
 #ifdef GNAME
 doGname(string param) {
     // gname outputs a string with a symbol-based border
@@ -322,6 +345,7 @@ default {
             else if (name == "hardcore")               hardcore = (integer)value;
 #endif
             else if (name == "RLVok")                     RLVok = (integer)value;
+            else if (name == "keyLimit")               keyLimit = (integer)value;
             else if (name == "blacklist") {
                 if (split == [""]) blacklistList = [];
                 else blacklistList = split;
@@ -362,7 +386,6 @@ default {
             //----------------------------------------
             // Shortcut: d
             else if (c == "d") {
-                     //if (name == "detachable")             detachable = (integer)value;
                      if (name == "dollType")                 dollType = value;
                 else if (name == "dollGender")             dollGender = value;
                 else if (name == "dollDisplayName")   dollDisplayName = value;
@@ -370,7 +393,6 @@ default {
                 else if (name == "debugLevel")             debugLevel = (integer)value;
 #endif
             }
-            else if (name == "lastWinderID")         lastWinderID = (key)value;
 
             //----------------------------------------
             // Shortcut: p
@@ -383,8 +405,6 @@ default {
                 else if (name == "pronounHerDoll")     pronounHerDoll = value;
                 else if (name == "pronounSheDoll")     pronounSheDoll = value;
             }
-
-            else if (name == "keyLimit")             keyLimit = (integer)value;
 
             //----------------------------------------
             // Shortcut: w
@@ -449,7 +469,7 @@ default {
 
                     // We potentially could select a carrier for the controller list;
                     // however, how much complexity would that introduce?
-                    cdSayTo("You can't select a carrier for this list.",(key)dollID);
+                    cdSayTo("You can't select your carrier for this list.",(key)dollID);
                     return;
                 }
 
@@ -571,45 +591,12 @@ default {
                      (cmd == "remBlacklist")) {
 
                 string uuid = (string)split[1];
-                string name = (string)split[2];
 
-                if (name == "") {
-                    llSay(DEBUG_CHANNEL,"No name alloted with this user.");
-                    name == (string)(uuid);
-                }
-
-                string typeString;
-                list tmpList;
-                string nameURI = "secondlife:///app/agent/" + uuid + "/displayname";
-
-                // Initial settings
-                if (cmd != "remBlacklist") {
-                    typeString = "controller";
-                    tmpList = controllerList;
-                }
+                if (cmd == "remBlacklistList")
+                    blacklistList = remList(blacklistList,uuid,id);
                 else {
-                    typeString = "blacklist";
-                    tmpList = blacklistList;
-                }
+                    controllerList = remList(controllerList,uuid,id);
 
-                // Test for presence of uuid in list: if it's not there, we can't remove it
-                string s;
-                if ((i = llListFindList(tmpList, [ uuid ])) != NOT_FOUND) {
-
-                    s = "Removing key " + nameURI + " from list as " + typeString + ".";
-                    cdSayToAgentPlusDoll(s, id);
-
-                    tmpList = llDeleteSubList(tmpList, i, i + 1);
-                }
-                else {
-                    cdSayTo("Key " + uuid + " is not listed as " + typeString, id);
-                }
-
-                if (cmd == "remBlacklist") {
-                    blacklistList = tmpList;
-                }
-                else {
-                    controllerList = tmpList;
                     // because we cant remove by UUID, a complete redo of
                     // exceptions is necessary
                     lmInternalCommand("reloadExceptions",script,NULL_KEY);
