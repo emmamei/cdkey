@@ -231,6 +231,9 @@ doPrefix(string param) {
     }
 }
 
+//list addList(list workingList, string uuid, key id) {
+//}
+
 list remList(list workingList, string uuid, key id) {
     list workingList;
 
@@ -451,161 +454,172 @@ default {
         else if (code == INTERNAL_CMD) {
             string cmd = (string)split[0];
 
-            if ((cmd == "addController") ||
-                (cmd == "addBlacklist")) {
+            switch (cmd): {
 
-                string uuid = (string)split[1];
-                string name = (string)split[2];
-                string nameURI = "secondlife:///app/agent/" + uuid + "/displayname";
+                case "addController":
+                case "addBlacklist": {
 
-                if (cdIsDoll((key)uuid)) {
+                    string uuid = (string)split[1];
+                    string name = (string)split[2];
+                    string nameURI = "secondlife:///app/agent/" + uuid + "/displayname";
 
-                    // Dolly can NOT be added to either list
-                    cdSayTo("You can't select Dolly for this list.",(key)uuid);
-                    return;
-                }
+                    //----------------------------------------
+                    // VALIDATION
+                    //
+                    // Can't add if trying to add Dolly
+                    //
+                    if (cdIsDoll((key)uuid)) {
 
-                if (carrierID == uuid) {
-
-                    // We potentially could select a carrier for the controller list;
-                    // however, how much complexity would that introduce?
-                    cdSayTo("You can't select your carrier for this list.",(key)dollID);
-                    return;
-                }
-
-                debugSay(5,"DEBUG-ADDMISTRESS","Blacklist = " + cdList2String(blacklistList) + " (" + (string)llGetListLength(blacklistList) + ")");
-
-                string typeString; // used to construct messages
-                list tmpList; // used as working area for whatever list
-
-#define inRejectList(a) (llListFindList(rejectList, [ a ]) != NOT_FOUND)
-#define inWorkingList(a) (llListFindList(tmpList, [ a ]) != NOT_FOUND)
-#define noUserName (name == "")
-#define queryMarker "++"
-
-                // we don't want controllers to be added to the blacklist;
-                // likewise, we don't want to allow those on the blacklist to
-                // be controllers. barlist represents the "contra" list
-                // opposing the added-to list.
-                //
-                list rejectList;
-
-                // Initial settings
-                if (cmd != "addBlacklist") {
-                    typeString = "controller";
-                    tmpList = controllerList;
-                    rejectList = blacklistList;
-                }
-                else {
-                    typeString = "blacklist";
-                    tmpList = blacklistList;
-                    rejectList = controllerList;
-                }
-
-                //----------------------------------------
-                // VALIDATION
-                //
-                // #1a: Cannot add UUID as controller if found in blacklist
-                // #1b: Cannot blacklist UUID if found in controllers list
-                //
-                if (inRejectList(uuid)) {
-
-                    if (cmd != "addBlacklist") msg = nameURI + " is blacklisted; you must first remove them from the blacklist before adding them as a controller.";
-                    else msg = nameURI + " is one of your controllers; until they remove themselves from being your controller, you cannot add them to the blacklist.";
-
-                    cdSayTo(msg, id);
-                    return;
-                }
-
-                // #2: Check if UUID exists already in the list
-                //
-                if (inWorkingList(uuid)) {
-
-                    // Report already found
-                    cdSayTo(nameURI + " is already found listed as " + typeString, id);
-                    return;
-                }
-
-                // Perform actual add
-
-                cdSayToAgentPlusDoll("Adding " + nameURI + " as " + typeString, id);
-
-                if (cmd == "addBlacklist") {
-                    blacklistList = tmpList + [ uuid ];
-                }
-                else {
-                    controllerList = tmpList + [ uuid ];
-
-                    // Controllers get added to the exceptions
-                    llOwnerSay("@tplure:"    + uuid + "=add," +
-                                "accepttp:"  + uuid + "=add," +
-                                "sendim:"    + uuid + "=add," +
-                                "recvim:"    + uuid + "=add," +
-                                "recvchat:"  + uuid + "=add," +
-                                "recvemote:" + uuid + "=add");
-                }
-
-                // Add user name - find it if need be
-                //
-                if (noUserName) {
-                    llSay(DEBUG_CHANNEL,"No name alloted with this user.");
-
-                    if (queryUUID != "") {
-                        llSay(DEBUG_CHANNEL,"Query conflict detected!");
+                        // Dolly can NOT be added to either list
+                        cdSayTo("You can't select Dolly for this list.",(key)uuid);
                         return;
                     }
 
-                    queryUUID = uuid;
-
-                    // This is a hack: it lets us match the UUID with the
-                    // name we get back
+                    // Can't add carrier
                     //
-                    if (cmd == "addBlacklist") {
+                    if (carrierID == uuid) {
 
-                        blacklistList += queryMarker + queryUUID;
-                        blacklistQueryID = llRequestDisplayName((key)uuid);
+                        // We potentially could select a carrier for the controller list;
+                        // however, how much complexity would that introduce?
+                        cdSayTo("You can't select your carrier for this list.",(key)dollID);
+                        return;
+                    }
+
+                    debugSay(5,"DEBUG-ADDMISTRESS","Blacklist = " + cdList2String(blacklistList) + " (" + (string)llGetListLength(blacklistList) + ")");
+
+                    string typeString; // used to construct messages
+                    list tmpList; // used as working area for whatever list
+
+    #define inRejectList(a) (llListFindList(rejectList, [ a ]) != NOT_FOUND)
+    #define inWorkingList(a) (llListFindList(tmpList, [ a ]) != NOT_FOUND)
+    #define noUserName (name == "")
+    #define queryMarker "++"
+
+                    // we don't want controllers to be added to the blacklist;
+                    // likewise, we don't want to allow those on the blacklist to
+                    // be controllers. barlist represents the "contra" list
+                    // opposing the added-to list.
+                    //
+                    list rejectList;
+
+                    // Initial settings
+                    if (cmd != "addBlacklist") {
+                        typeString = "controller";
+                        tmpList = controllerList;
+                        rejectList = blacklistList;
                     }
                     else {
-                        controllerList += queryMarker + queryUUID;
-                        controllerQueryID = llRequestDisplayName((key)uuid);
+                        typeString = "blacklist";
+                        tmpList = blacklistList;
+                        rejectList = controllerList;
                     }
 
-                    llSetTimerEvent(USER_NAME_QUERY_TIMEOUT);
-                    return;
+                    // #1a: Cannot add UUID as controller if found in blacklist
+                    // #1b: Cannot blacklist UUID if found in controllers list
+                    //
+                    if (inRejectList(uuid)) {
+
+                        if (cmd != "addBlacklist") msg = nameURI + " is blacklisted; you must first remove them from the blacklist before adding them as a controller.";
+                        else msg = nameURI + " is one of your controllers; until they remove themselves from being your controller, you cannot add them to the blacklist.";
+
+                        cdSayTo(msg, id);
+                        return;
+                    }
+
+                    // #2: Check if UUID exists already in the list
+                    //
+                    if (inWorkingList(uuid)) {
+
+                        // Report already found
+                        cdSayTo(nameURI + " is already found listed as " + typeString, id);
+                        return;
+                    }
+
+                    //----------------------------------------
+                    // ADD
+                    //
+                    // Actual add
+                    //
+                    cdSayToAgentPlusDoll("Adding " + nameURI + " as " + typeString, id);
+
+                    if (cmd == "addBlacklist") {
+                        blacklistList = tmpList + [ uuid ];
+                    }
+                    else {
+                        controllerList = tmpList + [ uuid ];
+
+                        // Controllers get added to the exceptions
+                        llOwnerSay("@tplure:"    + uuid + "=add," +
+                                    "accepttp:"  + uuid + "=add," +
+                                    "sendim:"    + uuid + "=add," +
+                                    "recvim:"    + uuid + "=add," +
+                                    "recvchat:"  + uuid + "=add," +
+                                    "recvemote:" + uuid + "=add");
+                    }
+
+                    // Add user name - find it if need be
+                    //
+                    if (noUserName) {
+                        llSay(DEBUG_CHANNEL,"No name alloted with this user.");
+
+                        if (queryUUID != "") {
+                            llSay(DEBUG_CHANNEL,"Query conflict detected!");
+                            return;
+                        }
+
+                        queryUUID = uuid;
+
+                        // This is a hack: it lets us match the UUID with the
+                        // name we get back
+                        //
+                        if (cmd == "addBlacklist") {
+
+                            blacklistList += queryMarker + queryUUID;
+                            blacklistQueryID = llRequestDisplayName((key)uuid);
+                        }
+                        else {
+                            controllerList += queryMarker + queryUUID;
+                            controllerQueryID = llRequestDisplayName((key)uuid);
+                        }
+
+                        llSetTimerEvent(USER_NAME_QUERY_TIMEOUT);
+                        return;
+                    }
+                    else {
+                        // This is normal add of selected name
+                        if (cmd == "addBlacklist") blacklistList += name;
+                        else controllerList += name;
+                    }
+
+                    // we may or may not have changed either of these - but this code
+                    // forces a refresh in any case
+                    lmSetConfig("blacklist",   cdList2String(blacklistList)  );
+                    lmSetConfig("controllers", cdList2String(controllerList));
+
+                    debugSay(5,"DEBUG-ADDMISTRESS",   "blacklist >> " + llDumpList2String(blacklistList,   ",") + " (" + (string)llGetListLength(blacklistList  ) + ")");
+                    debugSay(5,"DEBUG-ADDMISTRESS", "controllers >> " + llDumpList2String(controllerList, ",") + " (" + (string)llGetListLength(controllerList) + ")");
                 }
-                else {
-                    // This is normal add of selected name
-                    if (cmd == "addBlacklist") blacklistList += name;
-                    else controllerList += name;
+
+                case "remController":
+                case "remBlacklist": {
+
+                    string uuid = (string)split[1];
+
+                    if (cmd == "remBlacklistList")
+                        blacklistList = remList(blacklistList,uuid,id);
+                    else {
+                        controllerList = remList(controllerList,uuid,id);
+
+                        // because we cant remove by UUID, a complete redo of
+                        // exceptions is necessary
+                        lmInternalCommand("reloadExceptions",script,NULL_KEY);
+                    }
+
+                    // we may or may not have changed either of these - but this code
+                    // forces a refresh in any case
+                    lmSetConfig("blacklist",   cdList2String(blacklistList)  );
+                    lmSetConfig("controllers", cdList2String(controllerList));
                 }
-
-                // we may or may not have changed either of these - but this code
-                // forces a refresh in any case
-                lmSetConfig("blacklist",   cdList2String(blacklistList)  );
-                lmSetConfig("controllers", cdList2String(controllerList));
-
-                debugSay(5,"DEBUG-ADDMISTRESS",   "blacklist >> " + llDumpList2String(blacklistList,   ",") + " (" + (string)llGetListLength(blacklistList  ) + ")");
-                debugSay(5,"DEBUG-ADDMISTRESS", "controllers >> " + llDumpList2String(controllerList, ",") + " (" + (string)llGetListLength(controllerList) + ")");
-            }
-            else if ((cmd == "remController") ||
-                     (cmd == "remBlacklist")) {
-
-                string uuid = (string)split[1];
-
-                if (cmd == "remBlacklistList")
-                    blacklistList = remList(blacklistList,uuid,id);
-                else {
-                    controllerList = remList(controllerList,uuid,id);
-
-                    // because we cant remove by UUID, a complete redo of
-                    // exceptions is necessary
-                    lmInternalCommand("reloadExceptions",script,NULL_KEY);
-                }
-
-                // we may or may not have changed either of these - but this code
-                // forces a refresh in any case
-                lmSetConfig("blacklist",   cdList2String(blacklistList)  );
-                lmSetConfig("controllers", cdList2String(controllerList));
             }
         }
         else if (code == RLV_RESET) {
