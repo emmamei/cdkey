@@ -121,8 +121,9 @@ float adjustTimer() {
         else return HI_SPEED_CARRY_RATE;
     }
     else {
-        if (lowScriptMode) return LOW_SCRIPT_RATE;
-        else return NORMAL_RATE;
+        //if (lowScriptMode) return LOW_SCRIPT_RATE;
+        //else return NORMAL_RATE;
+        return 0.0;
     }
 }
 
@@ -688,13 +689,12 @@ default {
     // TIMER
     //----------------------------------------
 
-    // Timer is used solely to check for animations and to
-    // compute the animation refresh time
+    // Timer is used solely to follow the carrier
 
     timer() {
 
         if (hasCarrier) keepFollow(carrierID);
-        //llRequestPermissions(dollID, PERMISSION_MASK); // animates
+        else llSetTimerEvent(0.0);
 
 #ifdef DEVELOPER_MODE
         if (timeReporting) {
