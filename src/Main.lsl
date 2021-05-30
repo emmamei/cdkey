@@ -838,22 +838,29 @@ default {
                         unCollapse();
 
                         string s = "With an electical sound the motor whirrs into life, ";
-                        if (hardcore) llOwnerSay("and you can feel your joints reanimating as time is added.");
-                        else llOwnerSay("and gives you " + (string)llRound(windAmount / SECS_PER_MIN) + " minutes of life. The emergency winder requires " + (string)llRound(EMERGENCY_LIMIT_TIME / 3600) + " hours to recharge.");
+#ifdef ADULT_MODE
+                        if (hardcore) llOwnerSay(s + "and you can feel your joints reanimating as time is added.");
+                        else
+#endif
+                        llOwnerSay(s + "and gives you " + (string)llRound(windAmount / SECS_PER_MIN) + " minutes of life. The emergency winder requires " + (string)llRound(EMERGENCY_LIMIT_TIME / 3600) + " hours to recharge.");
                     }
                 }
                 else {
                     integer rechargeMins = ((winderRechargeTime - llGetUnixTime()) / SECS_PER_MIN);
                     string s = "Emergency self-winder is not yet recharged.";
 
+#ifdef ADULT_MODE
                     if (!hardcore) {
+#endif
                         s += "  There remains ";
 
                         if (rechargeMins < 60) s += (string)rechargeMins + " minutes ";
                         else s += "over " + (string)(rechargeMins / 60) + " hours ";
 
                         s += "before it will be ready again.";
+#ifdef ADULT_MODE
                     }
+#endif
                     llOwnerSay(s);
                 }
             }

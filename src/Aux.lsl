@@ -217,7 +217,10 @@ default {
                     // own. If we disable safeMode, then nothing changes.
                     //
                     if (safeMode) {
+#ifdef ADULT_MODE
                         lmSendConfig("hardcore",        (string)(       hardcore = FALSE));
+                        lmSendConfig("allowStrip",      (string)(     allowStrip = FALSE));
+#endif
                         lmSendConfig("poseSilence",     (string)(    poseSilence = FALSE));
                         lmSendConfig("canDressSelf",    (string)(   canDressSelf = TRUE));
                         lmSendConfig("canFly",          (string)(         canFly = TRUE));
@@ -226,7 +229,6 @@ default {
                         lmSendConfig("mustAgreeToType", (string)(mustAgreeToType = TRUE));
                         lmSendConfig("allowSelfWind",   (string)(  allowSelfWind = TRUE));
                         lmSendConfig("allowRepeatWind", (string)(allowRepeatWind = TRUE));
-                        lmSendConfig("allowStrip",      (string)(     allowStrip = FALSE));
                         lmSendConfig("allowPose",       (string)(      allowPose = FALSE));
                         lmSendConfig("allowCarry",      (string)(     allowCarry = FALSE));
                         lmSendConfig("allowDress",      (string)(     allowDress = FALSE));
