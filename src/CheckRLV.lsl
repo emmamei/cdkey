@@ -119,6 +119,8 @@ rlvCheckTry() {
     else if (rlvCheck == MAX_RLVCHECK_TRIES - 4)  llSetTimerEvent(15);
     else                                          llSetTimerEvent(15);
 
+    debugSay(4, "DEBUG-CHECKRLV", "Testing for RLV...");
+
     // Switch to older command if newer one fails
     if (rlvCheck > 2) llOwnerSay("@versionnew=" + (string)rlvChannel);
     else              llOwnerSay("@version="    + (string)rlvChannel);
@@ -273,7 +275,7 @@ default {
             }
 #endif
 
-            cdHaltTimer();
+            cdHaltTimer(); // we succeeded; no more retries
             RLVok = TRUE;
             RLVsupport = TRUE;
 
@@ -475,7 +477,7 @@ default {
         else {
             llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
             llOwnerSay("RLV Check took " + (string)(llGetTime()) + " seconds");
-            cdHaltTimer();
+            cdHaltTimer(); // Failed too many times
             RLVok = FALSE;
             RLVsupport = FALSE;
 
