@@ -87,6 +87,7 @@ integer startParameter;
 #define RESET_STARTUP 2
 
 //integer rlvWait;
+list keySpecificConfigs;
 
 //=======================================
 // FUNCTIONS
@@ -132,7 +133,7 @@ processBooleanSetting(string settingName, string settingValue) {
 
         default: {
             llSay(DEBUG_CHANNEL,"Invalid preferences setting! (" + settingName + " = " + settingValue + ")");
-            return;
+            break;
         }
     }
 }
@@ -144,8 +145,10 @@ processConfiguration(string configSettingName, string configSettingValue) {
 
     integer i;
 
-    // Configuration entries: these are the actual configuration
-    // commands; they must match with a sendName below
+    //----------------------------------------
+    // Configs has all entries that are not boolean, and require
+    // special handling.
+    //
     list configs = [
 #ifdef DEVELOPER_MODE
                      "debug level",
@@ -166,8 +169,14 @@ processConfiguration(string configSettingName, string configSettingValue) {
                      "blacklist"
                    ];
 
-    // The settings list and the settingName list much match up
-    // with entries
+    //----------------------------------------
+    // Every entry in settings must match up with a corresponding
+    // entry in settingName. The first are the words used to set the config
+    // value in preferences; the latter are the names of the actual
+    // variable that relates to that setting.
+    //
+    // These are all boolean settings.
+    //
     list settings = [
 #ifdef ADULT_MODE
                       "strippable",
@@ -214,8 +223,6 @@ processConfiguration(string configSettingName, string configSettingValue) {
 
     // This processes a single line from the preferences notecard...
     // processing done a single time during the read of the nc belong elsewhere
-
-    configSettingName = llToLower(configSettingName);
 
     // Check for settings - boolean true or false
     if ((i = cdListElementP(settings,configSettingName)) != NOT_FOUND) {
@@ -316,7 +323,7 @@ processConfiguration(string configSettingName, string configSettingValue) {
         else if (configSettingName == "doll gender") {
             // set gender of dolly
 
-            switch(configSettingValue): {
+            switch(llToLower(configSettingValue)): {
 
                 case "female":
                 case "woman":
@@ -349,6 +356,10 @@ processConfiguration(string configSettingName, string configSettingValue) {
 
             lmSetConfig("dollGender", dollGender);
         }
+    }
+    else if ((i = cdListElementP(keySpecificConfigs,configSettingName)) != NOT_FOUND) {
+        // Let the Key-Specific file validate the value
+        lmSendConfig(configSettingName,configSettingValue);
     }
     else {
         llSay(DEBUG_CHANNEL,"Unknown configuration value in preferences: " + configSettingName + " on line " + (string)(ncLine + 1));
@@ -437,6 +448,7 @@ default {
             else if (name == "poseExpire")                   poseExpire = (integer)value;
             else if (name == "carryExpire")                 carryExpire = (integer)value;
             else if (name == "dollType")                       dollType = value;
+            else if (name == "keySpecificConfigs")  keySpecificConfigs += [ value ];
             else if (name == "blacklist") {
                 if (split == [""]) blacklistList = [];
                 else blacklistList = split;
@@ -612,6 +624,7 @@ default {
         keyID = llGetKey();
         dollName = dollyName();
         myName = llGetScriptName();
+        keySpecificConfigs = [];
 
         //rlvWait = 1;
         cdInitializeSeq();
@@ -625,6 +638,7 @@ default {
 
         // Start with key visible
         lmSendConfig("visibility",(string)1.0);
+        lmSendConfig("isVisible",(string)TRUE);
 
         lmInitStage(INIT_STAGE1);
     }
@@ -651,6 +665,7 @@ default {
 
         // Reset visibility so we don't forget or get confused
         lmSendConfig("visibility",(string)1.0);
+        lmSendConfig("isVisible",(string)TRUE);
 
         // Clear the lowScript mode and start from beginning
         lmSendConfig("lowScriptExpire",(string)0);
@@ -747,8 +762,8 @@ default {
                         index = llSubStringIndex(notecardLine, "=");
 
                         // name is "lval" and value is "rval" split by equals
-                        string configName = llToLower(llStringTrim(llGetSubString(notecardLine,  0, index - 1),STRING_TRIM));
-                        string configValue =          llStringTrim(llGetSubString(notecardLine, index + 1, -1),STRING_TRIM) ;
+                        string configName  = llToLower(llStringTrim(llGetSubString(notecardLine,  0, index - 1),STRING_TRIM));
+                        string configValue =           llStringTrim(llGetSubString(notecardLine, index + 1, -1),STRING_TRIM) ;
 
                         // this is the heart of preferences processing
                         debugSay(6, "DEBUG-START", "Processing configuration: configName = " + configName + "; configValue = " + configValue);

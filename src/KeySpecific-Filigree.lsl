@@ -10,19 +10,12 @@
 #define RUNNING 1
 #define NOT_RUNNING 0
 #define UNSET -1
-#define USER_NAME_QUERY_TIMEOUT 15
 #define cdStopScript(a) llSetScriptState(a, NOT_RUNNING)
 #define cdRunScript(a) llSetScriptState(a, RUNNING)
 #define cdResetKey() llResetOtherScript("Start")
 
-#define cdCapability(c,p,u) { s += p; if (!(c)) { s += " not"; }; s += " " + u + ".\n"; }
-#define cdListenerActivate(a) llListenControl(a, 1)
-#define cdListenerDeactivate(a) llListenControl(a, 0)
 #define cdProfileURL(i) "secondlife:///app/agent/"+(string)(i)+"/about"
 #define cdList2String(a) llDumpList2String(a,"|")
-
-#define COLOR_NAMES [ "Purple", "Pink", "Red", "Green", "Blue", "Cyan", "Yellow", "Orange", "White", "CUSTOM" ]
-#define COLOR_VALUE [ <0.3, 0.1, 0.6>, <0.9, 0.1, 0.8>, <0.8, 0.1, 0.1>, <0.1, 0.8, 0.1>, <0.1, 0.1, 0.8>, <0.1, 0.8, 0.8>, <0.8, 0.8, 0.1>, <0.8, 0.4, 0.1>, <0.9, 0.9, 0.9>, <0,0,0> ]
 
 #define COLOR_PURPLE <0.3, 0.1, 0.6>
 #define COLOR_PINK   <0.9, 0.1, 0.8>
@@ -33,15 +26,29 @@
 #define COLOR_YELLOW <0.8, 0.8, 0.1>
 #define COLOR_ORANGE <0.8, 0.4, 0.1>
 #define COLOR_WHITE  <0.9, 0.9, 0.9>
+#define COLOR_BLACK  <0.0, 0.0, 0.0>
+#define COLOR_GREY   <0.1, 0.1, 0.1>
 
 #define KEY_SPECIFIC_PRODUCT "Community Dolls Filigree Key"
+
+#define cdListenAll(a)    llListen(a, NO_FILTER, NO_FILTER, NO_FILTER)
+#define cdListenUser(a,b) llListen(a, NO_FILTER,         b, NO_FILTER)
+#define cdListenMine(a)   llListen(a, NO_FILTER,    dollID, NO_FILTER)
+#define cdListenerDeactivate(a) llListenControl(a, 0)
+#define cdListenerActivate(a) llListenControl(a, 1)
 
 //=======================================
 // VARIABLES
 //=======================================
 
-integer gemGlow = TRUE;
-integer gemLight = TRUE;
+list colorNames = [ "Purple", "Pink", "Red", "Green", "Blue", "Cyan", "Yellow", "Orange", "White" ];
+list colorValues = [ <0.3, 0.1, 0.6>, <0.9, 0.1, 0.8>, <0.8, 0.1, 0.1>, <0.1, 0.8, 0.1>, <0.1, 0.1, 0.8>, <0.1, 0.8, 0.8>, <0.8, 0.8, 0.1>, <0.8, 0.4, 0.1>, <0.9, 0.9, 0.9> ];
+
+integer keySpecificChannel = -32111;
+integer keySpecificHandle;
+string keySpecificMenu = "Gem...";
+
+integer isVisible;
 vector gemColor;
 vector normalGemColor = COLOR_PINK;
 
@@ -50,23 +57,24 @@ vector normalGemColor = COLOR_PINK;
 //=======================================
 
 doLuminosity() {
-    // The two options below do the same thing - but when not visible or collapsed,
-    // it bypasses all the scanning and testing and goes straight to work.
-    // Note that it sets the color on every prim to the gemColor - but the
-    // textured Key items don't change color (texture overrides color?).
 
-    if ((visibility == 0) ||
-        !gemGlow ||
-        collapsed) {
+    // If the Key is invisible, the glow may still be visible:
+    // so shut it off.
+    //
+    if (!isVisible || collapsed) {
+
+        vector newGemColor;
+
+        if (collapsed) newGemColor = COLOR_GREY;
+        else newGemColor = gemColor;
 
         // Turn off glow et al when not visible or collapsed
-        llSetLinkPrimitiveParamsFast(LINK_SET, [ PRIM_POINT_LIGHT, FALSE, gemColor, 0.5, 2.5, 2.0 ]);
-        llSetLinkPrimitiveParamsFast(LINK_SET, [ PRIM_GLOW, ALL_SIDES, 0.0 ]);
+        llSetLinkPrimitiveParamsFast(LINK_SET, [
+            PRIM_POINT_LIGHT, FALSE, newGemColor, 0.5, 2.5, 2.0,
+            PRIM_GLOW, ALL_SIDES, 0.0
+            ]);
     }
     else {
-        // Set gem light and glow parameters using llSetLinkPrimitiveParamsFast
-        //
-        // Note that this sets light and glow - even IF the Key light is off
 
         list params;
 
@@ -81,24 +89,24 @@ doLuminosity() {
         // * Dolly Lady's Key (1)
 
         // Set Mount1 (7)
-        params += [ PRIM_LINK_TARGET, 7 ];
-        params += [ PRIM_GLOW, ALL_SIDES, 0.1 ];
+        params += [ PRIM_LINK_TARGET, 7,
+                    PRIM_GLOW, ALL_SIDES, 0.1 ];
 
         // Set Mount2 (6)
-        params += [ PRIM_LINK_TARGET, 6 ];
-        params += [ PRIM_GLOW, ALL_SIDES, 0.1 ];
+        params += [ PRIM_LINK_TARGET, 6,
+                    PRIM_GLOW, ALL_SIDES, 0.1 ];
 
         // Set Heart1 (5)
-        params += [ PRIM_LINK_TARGET, 5 ];
-        params += [ PRIM_POINT_LIGHT, (gemLight & !collapsed), gemColor, 0.5, 2.5, 2.0 ];
-        if (gemLight) params += [ PRIM_GLOW, ALL_SIDES, 0.08 ];
+        params += [ PRIM_LINK_TARGET, 5,
+                    PRIM_POINT_LIGHT, TRUE, gemColor, 0.5, 2.5, 2.0,
+                    PRIM_GLOW, ALL_SIDES, 0.08 ];
 
         // Set Heart2 (4)
-        params += [ PRIM_LINK_TARGET, 4 ];
-        params += [ PRIM_POINT_LIGHT, (gemLight & !collapsed), gemColor, 0.5, 2.5, 2.0 ];
-        if (gemLight) params += [ PRIM_GLOW, ALL_SIDES, 0.08 ];
+        params += [ PRIM_LINK_TARGET, 4,
+                    PRIM_POINT_LIGHT, TRUE, gemColor, 0.5, 2.5, 2.0,
+                    PRIM_GLOW, ALL_SIDES, 0.08 ];
 
-        debugSay(4, "DEBUG-FILIGREE", "Set Params list: " + llDumpList2String(params, ","));
+        debugSay(4, "DEBUG-FILIGREE", "doLuminosity params list: " + llDumpList2String(params, ","));
         llSetLinkPrimitiveParamsFast(0, params);
     }
 }
@@ -133,11 +141,11 @@ setGemColor(vector color) {
     list params;
 
     debugSay(4,"DEBUG-FILIGREE","Setting gem color to " + (string)color);
-    debugSay(4,"DEBUG-FILIGREE","Visibility = " + (string)visibility);
+    debugSay(4,"DEBUG-FILIGREE","Visibility = " + (string)isVisible);
 
-    if (visibility == 0) return;
+    if (!isVisible) return;
 
-    if (color == <0.0,0.0,0.0>) {
+    if (color == COLOR_BLACK) {
         llSay(DEBUG_CHANNEL,"Script " + script + " tried to set gem color to Black!");
         return;
     }
@@ -145,14 +153,14 @@ setGemColor(vector color) {
     gemColor = color;
 
     // Set Heart1 (5)
-    params += [ PRIM_LINK_TARGET, 5 ];
-    params += [ PRIM_COLOR, ALL_SIDES, color, 1.0 ];
+    params += [ PRIM_LINK_TARGET, 5,
+                PRIM_COLOR, ALL_SIDES, color, 1.0 ];
 
     // Set Heart2 (4)
-    params += [ PRIM_LINK_TARGET, 4 ];
-    params += [ PRIM_COLOR, ALL_SIDES, color, 1.0 ];
+    params += [ PRIM_LINK_TARGET, 4,
+                PRIM_COLOR, ALL_SIDES, color, 1.0 ];
 
-    debugSay(4, "DEBUG-FILIGREE", "Set Params list: " + llDumpList2String(params, ","));
+    debugSay(4, "DEBUG-FILIGREE", "setGemColor params list: " + llDumpList2String(params, ","));
     llSetLinkPrimitiveParamsFast(0, params);
 }
 
@@ -220,6 +228,69 @@ default {
                     doLuminosity();
                     break;
                 }
+
+                case "isVisible": {
+                    isVisible = (integer)value;
+
+                    doLuminosity();
+                    break;
+                }
+                
+                case "gem color": {
+                    switch (llToLower(value)): {
+                        case "purple": {
+                            normalGemColor = COLOR_PURPLE;
+                            break;
+                        }
+                        case "pink": {
+                            normalGemColor = COLOR_PINK;
+                            break;
+                        }
+                        case "red": {
+                            normalGemColor = COLOR_RED;
+                            break;
+                        }
+                        case "green": {
+                            normalGemColor = COLOR_GREEN;
+                            break;
+                        }
+                        case "blue": {
+                            normalGemColor = COLOR_BLUE;
+                            break;
+                        }
+                        case "cyan": {
+                            normalGemColor = COLOR_CYAN;
+                            break;
+                        }
+                        case "yellow": {
+                            normalGemColor = COLOR_YELLOW;
+                            break;
+                        }
+                        case "orange": {
+                            normalGemColor = COLOR_ORANGE;
+                            break;
+                        }
+                        case "white": {
+                            normalGemColor = COLOR_WHITE;
+                            break;
+                        }
+                        default: {
+                            llSay(DEBUG_CHANNEL,"Invalid color (" + value + ") in the preferences file!");
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        else if (code == MENU_SELECTION) {
+            string choice = (string)split[0];
+            string avatar = (string)split[1];
+
+            if (choice == keySpecificMenu) {
+                string msg = "Here you can choose your own gem color.";
+
+                keySpecificHandle = cdListenMine(keySpecificChannel);
+                llDialog(id, msg, dialogSort(colorNames + "Options..."), keySpecificChannel);
             }
         }
 #ifdef NOT_USED
@@ -229,6 +300,7 @@ default {
         }
         else if (code == INTERNAL_CMD) {
             string cmd = (string)split[0];
+
         }
         else if (code == RLV_RESET) {
             RLVok = (integer)split[0];
@@ -238,10 +310,12 @@ default {
         else if (code < 200) {
             if (code == INIT_STAGE1) {
                 llOwnerSay("Key-specific extensions loaded for " + KEY_SPECIFIC_PRODUCT);
+                lmSendConfig("keySpecificConfigs","gem color");
             }
             else if (code == INIT_STAGE5) {
 
-                setNormalGemColor(COLOR_RED);
+                lmSendConfig("keySpecificMenu","Gem...");
+                setNormalGemColor(normalGemColor);
                 doLuminosity();
             }
 #ifdef DEVELOPER_MODE
@@ -255,11 +329,10 @@ default {
         }
     }
 
-#ifdef NOT_USED
     //----------------------------------------
     // LISTEN
     //----------------------------------------
-    listen(integer channel, string name, key id, string msg) {
+    listen(integer channel, string name, key id, string choice) {
         // channel = chat channel to listen on
         //    name = filter by prim name
         //     key = filter by avatar key
@@ -269,13 +342,22 @@ default {
         // CHAT COMMAND CHANNEL
         //----------------------------------------
 
-        if (channel == chatChannel) {
+        if (channel == keySpecificChannel) {
+            integer index;
+
+            if ((index = llListFindList(colorNames, [ choice ])) != NOT_FOUND) {
+                vector colorValue = (vector)colorValues[ index ];
+
+                setNormalGemColor(colorValue);
+                lmMenuReply("Options...","",dollID);
+            }
         }
     }
 
 #define removeLastListTerm(a) llDeleteSubList(a,-2,-1);
 #define stopTimer() llSetTimerEvent(0.0)
 
+#ifdef NOT_USED
     //----------------------------------------
     // TIMER
     //----------------------------------------
@@ -284,4 +366,4 @@ default {
 #endif
 }
 
-//========== KEYSPECIFIC ==========
+//========== KEYSPECIFIC-FILIGREE ==========
