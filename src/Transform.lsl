@@ -131,6 +131,7 @@ integer transformLockExpire;
 
 integer dbConfig;
 integer mustAgreeToType;
+string keySpecificMenu;
 
 key kQuery;
 
@@ -513,7 +514,6 @@ default {
             split = llDeleteSubList(split,0,0);
 
                  if (name == "collapsed")                   collapsed = (integer)value;
-            //else if (name == "isAFK")                       isAFK = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "timeReporting")           timeReporting = (integer)value;
             else if (name == "debugLevel")                 debugLevel = (integer)value;
@@ -534,6 +534,7 @@ default {
             else if (name == "RLVok")                           RLVok = (integer)value;
             else if (name == "mustAgreeToType")       mustAgreeToType = (integer)value;
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
+            else if (name == "keySpecificMenu")       keySpecificMenu = value;
 #ifdef HOMING_BEACON
             else if (name == "homingBeacon")             homingBeacon = (integer)value;
 
@@ -594,7 +595,8 @@ default {
             split = llDeleteSubList(split, 0, 0);
 
             if (cmd == "optionsMenu") {
-                list pluslist;
+                list optionsMenuButtons;
+
                 lmSendConfig("backMenu",(backMenu = MAIN));
                 debugSay(6,"DEBUG-OPTIONS","Building Options menu...");
                 debugSay(6,"DEBUG-OPTIONS","isDoll = " + (string)cdIsDoll(id));
@@ -603,35 +605,38 @@ default {
                 if (cdIsDoll(id)) {
                     msg = "See the help file for information on these options.";
 
+                    optionsMenuButtons += [ "Operation...", "Key...", "Access..." ];
 #ifdef ADULT_MODE
-                    if (hardcore) pluslist += [ "Operation...", "Key..." ];
-                    else
+                    if (!hardcore)
 #endif
-                        pluslist += [ "Operation...", "Public...", "Key..." ];
+                        optionsMenuButtons += [ "Public..." ];
 
-                    if (cdCarried() || cdControllerCount() > 0) {
-                        pluslist += [ "Access..." ];
-                    }
-                    else {
-                        pluslist += [ "Type...", "Access..." ];
+                    if (keySpecificMenu != "")
+                        optionsMenuButtons += [ keySpecificMenu ];
+
+                    // No supervisors here
+                    if (!cdCarried() && cdControllerCount() == 0) {
+
+                        optionsMenuButtons += [ "Type..." ];
+
                         if (RLVok == TRUE)
 #ifdef ADULT_MODE
                             if (!hardcore)
 #endif
-                                pluslist += [ "Restrictions..." ];
+                                optionsMenuButtons += [ "Restrictions..." ];
                     }
                 }
                 else if (cdIsCarrier(id)) {
-                    pluslist += [ "Type..." ];
-                    if (RLVok == TRUE) pluslist += [ "Restrictions..." ];
+                    optionsMenuButtons += [ "Type..." ];
+                    if (RLVok == TRUE) optionsMenuButtons += [ "Restrictions..." ];
                 }
                 else if (cdIsController(id)) {
 
                     msg = "See the help file for more information on these options. Choose what you want to happen.";
 
-                    pluslist += [ "Type...", "Access..." ];
-                    if (RLVok == TRUE) pluslist += [ "Restrictions..." ];
-                    pluslist += [ "Drop Control" ];
+                    optionsMenuButtons += [ "Type...", "Access..." ];
+                    if (RLVok == TRUE) optionsMenuButtons += [ "Restrictions..." ];
+                    optionsMenuButtons += [ "Drop Control" ];
 
                 }
                 // This section should never be triggered: it means that
@@ -640,7 +645,7 @@ default {
 
                 debugSay(6,"DEBUG-OPTIONS","Options menu built; presenting to " + (string)id);
                 lmDialogListen();
-                llDialog(id, msg, dialogSort(pluslist + "Back..."), dialogChannel);
+                llDialog(id, msg, dialogSort(optionsMenuButtons + "Back..."), dialogChannel);
             }
         }
 

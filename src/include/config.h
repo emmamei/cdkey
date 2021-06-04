@@ -4,6 +4,32 @@
 // COMPILE CONFIGURATION
 //========================================
 
+//----------------------------------------
+// KEY TYPE & MODE
+//----------------------------------------
+
+/* enable developer support features such as not using RLV locks which would
+   prevent editing the scripts or notecards, collection and reporting of
+   performance statistics etc */
+#define DEVELOPER_MODE 1
+
+/* enable the inclusion of adult features such as stripping and slut doll in the key */
+#define ADULT_MODE 1
+
+/* enable adding user RLV commands to base collapse and pose RLV commands */
+#define USER_RLV 1
+
+//----------------------------------------
+// DEFAULTS
+//----------------------------------------
+
+/* Defines the Default wind amount */
+#define WIND_DEFAULT 1800.0
+
+//----------------------------------------
+// SETTINGS
+//----------------------------------------
+
 /* requires someone to wind dolly before dolly can self-wind a second time */
 // #define SINGLE_SELF_WIND 1
 
@@ -12,15 +38,6 @@
 
 /* make the outfits paging rollover from end to beginning and vice versa - or stop */
 #define ROLLOVER 1
-
-/* Defines the Default wind amount */
-#define WIND_DEFAULT 1800.0
-
-/* enable the inclusion of adult features such as stripping and slut doll in the key */
-#define ADULT_MODE 1
-
-/* enable adding user RLV commands to base collapse and pose RLV commands */
-#define USER_RLV 1
 
 /* enable the start up introduction/hypno text provided that the required
    "Intro Text" notecard is also present */
@@ -40,11 +57,6 @@
 
 /* enable optional RLV: dolly can enable and disable it */
 // #define OPTIONAL_RLV
-
-/* enable developer support features such as not using RLV locks which would
-   prevent editing the scripts or notecards, collection and reporting of
-   performance statistics etc */
-#define DEVELOPER_MODE 1
 
 //========================================
 // PACKAGE DATA

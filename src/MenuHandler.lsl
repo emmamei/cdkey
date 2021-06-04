@@ -220,13 +220,13 @@ default {
             else if (name == "outfitFolder")               outfitFolder = value;
             else if (name == "RLVok")                             RLVok = (integer)value;
             else if (name == "backMenu")                       backMenu = value;
-#ifdef ADULT_MODE
-            else if (name == "hardcore")                       hardcore = (integer)value;
-#endif
             else if (name == "keyLimit")                       keyLimit = (integer)value;
             else if (name == "keyLocked")                     keyLocked = (integer)value;
             else if (name == "lowScriptMode")             lowScriptMode = (integer)value;
             else if (name == "winderRechargeTime")   winderRechargeTime = (integer)value;
+#ifdef ADULT_MODE
+            else if (name == "hardcore")                       hardcore = (integer)value;
+#endif
 #ifdef SINGLE_SELF_WIND
             else if (name == "lastWinderID")               lastWinderID = (key)value;
 #endif
@@ -263,11 +263,7 @@ default {
 
             // shortcut: d
             else if (c == "d") {
-                if (name == "dialogChannel") {
-                    dialogChannel = (integer)value;
-                    //debugSay(4,"DEBUG-MENU","dialogChannel recieved and set to " + (string)dialogChannel);
-                }
-                //else if (name == "detachable")                 detachable = (integer)value;
+                     if (name == "dialogChannel")           dialogChannel = (integer)value;
 #ifdef ADULT_MODE
                 // if not Adult Mode we don't need this...
                 else if (name == "dollType")                     dollType = value;

@@ -308,6 +308,10 @@ doGname(string param) {
 }
 #endif
 
+//========================================
+// STATES
+//========================================
+
 default {
     //----------------------------------------
     // STATE ENTRY
@@ -490,10 +494,10 @@ default {
                     string typeString; // used to construct messages
                     list tmpList; // used as working area for whatever list
 
-    #define inRejectList(a) (llListFindList(rejectList, [ a ]) != NOT_FOUND)
-    #define inWorkingList(a) (llListFindList(tmpList, [ a ]) != NOT_FOUND)
-    #define noUserName (name == "")
-    #define queryMarker "++"
+#define inRejectList(a) (llListFindList(rejectList, [ a ]) != NOT_FOUND)
+#define inWorkingList(a) (llListFindList(tmpList, [ a ]) != NOT_FOUND)
+#define noUserName (name == "")
+#define queryMarker "++"
 
                     // we don't want controllers to be added to the blacklist;
                     // likewise, we don't want to allow those on the blacklist to

@@ -96,6 +96,47 @@ integer startParameter;
 // Configuration Functions
 //---------------------------------------
 
+processBooleanSetting(string settingName, string settingValue) {
+
+    settingValue = llToLower(settingValue);
+
+    switch(settingValue): {
+
+        case "yes":
+        case "on":
+        case "y":
+        case "t":
+        case "true":
+        case "1": {
+
+            // Special handling for ghost setting: configSettingValue is a boolean,
+            // but result is to change the visibility value...
+            //
+            if (settingName == "ghost") lmSendConfig("visibility",(string)GHOST_VISIBILITY);
+            else lmSendConfig(settingName, "1");
+            break;
+
+        }
+
+        case "no":
+        case "off":
+        case "n":
+        case "f":
+        case "false":
+        case "0": {
+
+            lmSendConfig(settingName, "0");
+            break;
+
+        }
+
+        default: {
+            llSay(DEBUG_CHANNEL,"Invalid preferences setting! (" + settingName + " = " + settingValue + ")");
+            return;
+        }
+    }
+}
+
 processConfiguration(string configSettingName, string configSettingValue) {
 
     //----------------------------------------
@@ -105,43 +146,70 @@ processConfiguration(string configSettingName, string configSettingValue) {
 
     // Configuration entries: these are the actual configuration
     // commands; they must match with a sendName below
-    list configs = [ "outfits path", "doll type", "max time", "chat channel", "dolly name", "wind time",
+    list configs = [
 #ifdef DEVELOPER_MODE
                      "debug level",
 #endif
 #ifdef USER_RLV
-                     "collapse rlv", "pose rlv",
+                     "collapse rlv",
+                     "pose rlv",
 #endif
-#ifndef ADULT_MODE
-                     "strippable",
-#endif
-                     "doll gender", "helpless dolly", "controller", "blacklist"
+                     "outfits path",
+                     "doll type",
+                     "max time",
+                     "chat channel",
+                     "dolly name",
+                     "wind time",
+                     "doll gender",
+                     "helpless dolly",
+                     "controller",
+                     "blacklist"
                    ];
 
     // The settings list and the settingName list much match up
     // with entries
-    list settings = [ "busy is away", "can fly", "poseable", "can dress self",
+    list settings = [
 #ifdef ADULT_MODE
-                      "strippable", "hardcore",
+                      "strippable",
+                      "hardcore",
 #endif
-                      "pose silence",
 #ifdef EMERGENCY_TP
                       "auto tp",
 #endif
-                      "dressable", "outfitable", "can dress",
-                      "show phrases", "carryable", "repeatable wind", "ghost"
+                      "pose silence",
+                      "busy is away",
+                      "can fly",
+                      "poseable",
+                      "can dress self",
+                      "dressable",
+                      "outfitable",
+                      "can dress",
+                      "show phrases",
+                      "carryable",
+                      "repeatable wind",
+                      "ghost"
                     ];
 
-    list settingName = [ "busyIsAway", "canFly", "allowPose", "canDressSelf",
+    list settingName = [
 #ifdef ADULT_MODE
-                         "allowStrip", "hardcore",
+                         "allowStrip",
+                         "hardcore",
 #endif
-                         "poseSilence",
 #ifdef EMERGENCY_TP
                          "autoTP",
 #endif
-                         "allowDress", "allowDress", "canDressSelf",
-                         "showPhrases", "allowCarry", "allowRepeatWind", "ghost"
+                         "poseSilence",
+                         "busyIsAway",
+                         "canFly",
+                         "allowPose",
+                         "canDressSelf",
+                         "allowDress",
+                         "allowDress",
+                         "canDressSelf",
+                         "showPhrases",
+                         "allowCarry",
+                         "allowRepeatWind",
+                         "ghost"
                        ];
 
     // This processes a single line from the preferences notecard...
@@ -151,40 +219,9 @@ processConfiguration(string configSettingName, string configSettingValue) {
 
     // Check for settings - boolean true or false
     if ((i = cdListElementP(settings,configSettingName)) != NOT_FOUND) {
-            configSettingValue = llToLower(configSettingValue);
-
-            if (configSettingValue == "yes"  ||
-                configSettingValue == "on"   ||
-                configSettingValue == "y"    ||
-                configSettingValue == "t"    ||
-                configSettingValue == "true" ||
-                configSettingValue == "1") {
-
-            configSettingValue = "1";
-
-        }
-        else if (configSettingValue == "no"    ||
-                 configSettingValue == "off"   ||
-                 configSettingValue == "n"     ||
-                 configSettingValue == "f"     ||
-                 configSettingValue == "false" ||
-                 configSettingValue == "0") {
-                 
-            configSettingValue = "0";
-        }
-        else {
-            llSay(DEBUG_CHANNEL,"Invalid preferences setting! (" + configSettingName + " = " + configSettingValue + ")");
-            return;
-        }
-
-        //string configSettingName = (string)settingName[i];
-
-        // Special handling for ghost setting: configSettingValue is a boolean,
-        // but result is to change the visibility value...
-        //
-        if (configSettingName == "ghost") { lmSendConfig("visibility",(string)GHOST_VISIBILITY); }
-        else { lmSendConfig(configSettingName, configSettingValue); }
+        processBooleanSetting(configSettingName,configSettingValue);
     }
+
     // Check for non-boolean settings
     else if ((i = cdListElementP(configs,configSettingName)) != NOT_FOUND) {
         if (configSettingName == "outfits path") {
@@ -207,13 +244,10 @@ processConfiguration(string configSettingName, string configSettingValue) {
             // should be printable
             lmSendConfig("dollDisplayName", (dollDisplayName = configSettingValue));
         }
-#ifndef ADULT_MODE
-        else if (configSettingName == "strippable") {
-            ; // Nothing to do
-        }
-#endif
+        // This allows the debug level setting to be present, but ignored in non-developer keys...
         else if (configSettingName == "debug level") {
 #ifdef DEVELOPER_MODE
+
             // has to be between 0 and 9
             //llSay(DEBUG_CHANNEL,"INFO: debug Level being overwritten from the builtin default of " + (string)debugLevel);
             debugLevel = (integer)configSettingValue;
@@ -269,43 +303,10 @@ processConfiguration(string configSettingName, string configSettingValue) {
         else if (configSettingName == "blacklist") {
             string blacklistUUID = (string)configSettingValue;
             lmSetConfig("addBlacklist",blacklistUUID);
-#ifdef NOT_USED
-            blacklistList += blacklistUUID;
-
-            blacklistQueryID = llRequestUsername((key)blacklistUUID);
-
-            // This is a hack: it lets us match the UUID with the
-            // name we get back
-            blacklistList += "++" + (string)blacklistQueryID;
-
-            lmSetConfig("blacklist", llDumpList2String(blacklistList, "|"));
-#endif
         }
         else if (configSettingName == "controller") {
             string controllerUUID = (string)configSettingValue;
             lmSetConfig("addController",controllerUUID);
-
-#ifdef NOT_USED
-            // Since we don't know and can't get the display name of the Controller, just
-            // put the UUID in place of name
-            controllerList += controllerUUID;
-
-            controllerQueryID = llRequestUsername((key)controllerUUID);
-
-            // This is a hack: it lets us match the UUID with the
-            // name we get back
-            controllerList += "++" + (string)controllerQueryID;
-
-            lmSetConfig("controllers", llDumpList2String(controllerList, "|"));
-
-            // Controllers get added to the exceptions
-            llOwnerSay("@tplure:"    + controllerUUID + "=add," +
-                        "accepttp:"  + controllerUUID + "=add," +
-                        "sendim:"    + controllerUUID + "=add," +
-                        "recvim:"    + controllerUUID + "=add," +
-                        "recvchat:"  + controllerUUID + "=add," +
-                        "recvemote:" + controllerUUID + "=add");
-#endif
         }
         else if (configSettingName == "helpless dolly") {
             // Note inverted sense of this value: this is intentional
@@ -315,35 +316,44 @@ processConfiguration(string configSettingName, string configSettingValue) {
         else if (configSettingName == "doll gender") {
             // set gender of dolly
 
-            if (configSettingValue == "female" ||
-                configSettingValue == "woman" ||
-                configSettingValue == "girl")
+            switch(configSettingValue): {
 
-                dollGender = "female";
+                case "female":
+                case "woman":
+                case "girl": {
 
-            else if (configSettingValue == "male" ||
-                     configSettingValue == "man" ||
-                     configSettingValue == "boy")
+                    dollGender = "female";
+                    break;
+                }
 
-                dollGender = "male";
+                case "male":
+                case "man":
+                case "boy": {
 
-            else if (configSettingValue == "agender")
+                    dollGender = "male";
+                    break;
+                }
 
-                dollGender = "agender";
+                case "agender": {
 
-            else {
-                llSay(DEBUG_CHANNEL, "Unknown value for dolly gender: " + dollGender + " - defaulting to female.");
-                dollGender = "female";
+                    dollGender = "agender";
+                    break;
+                }
+
+                default: {
+                    llSay(DEBUG_CHANNEL, "Unknown value for dolly gender: " + dollGender + " - defaulting to female.");
+                    dollGender = "female";
+                    break;
+                }
             }
 
             lmSetConfig("dollGender", dollGender);
         }
     }
-#ifdef DEVELOPER_MODE
     else {
         llSay(DEBUG_CHANNEL,"Unknown configuration value in preferences: " + configSettingName + " on line " + (string)(ncLine + 1));
     }
-#endif
+
     llSleep(0.1);  // approx 5 frames - be nice to sim!
 }
 
@@ -613,6 +623,9 @@ default {
 
         makeWorkInNoScriptLand(dollID);
 
+        // Start with key visible
+        lmSendConfig("visibility",(string)1.0);
+
         lmInitStage(INIT_STAGE1);
     }
 
@@ -635,6 +648,9 @@ default {
 
         rlvPreviously = RLVok;
         lmInternalCommand("startRlvCheck", "", keyID);
+
+        // Reset visibility so we don't forget or get confused
+        lmSendConfig("visibility",(string)1.0);
 
         // Clear the lowScript mode and start from beginning
         lmSendConfig("lowScriptExpire",(string)0);
