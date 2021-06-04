@@ -908,8 +908,12 @@ default {
                     string s;
 
                     if (afterSpace == "Visible") {
+
+                        // Note there is no interaction with ghost Keys here:
+                        // either the Key is visible, or it isnt. The messages are
+                        // also suitably generic.
                         if (visible) s = "You watch as the Key fades away...";
-                        else s = "The Key magically reappears";
+                        else s = "The Key magically reappears, and takes on the expected form.";
 
                         lmSendConfig("isVisible", (string)(visible = (beforeSpace == CROSS)));
                         cdSayToAgentPlusDoll(s,id);

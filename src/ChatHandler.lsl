@@ -9,7 +9,7 @@
 #include "include/GlobalDefines.lsl"
 #define cdMenuInject(a,b,c) lmMenuReply(a,b,c)
 
-#define GNAME 1
+//#define GNAME 1
 #define RUNNING 1
 #define NOT_RUNNING 0
 #define UNSET -1
@@ -23,6 +23,8 @@
 #define cdListenerDeactivate(a) llListenControl(a, 0)
 #define cdProfileURL(i) "secondlife:///app/agent/"+(string)(i)+"/about"
 #define cdList2String(a) llDumpList2String(a,"|")
+
+#define setKeyVisibility(a) llSetLinkAlpha(LINK_SET, (a), ALL_SIDES);
 
 key lastWinderID;
 
@@ -83,7 +85,7 @@ doStats() {
             cdSayTo("Pose time remaining: " + (string)((poseExpire - llGetUnixTime()) / SECS_PER_MIN) + " minutes.", accessorID);
     }
 
-    lmMemReport(1.0,accessorID);
+    //lmMemReport(1.0,accessorID);
 }
 
 doXstats() {
@@ -307,6 +309,57 @@ doGname(string param) {
     cdSetKeyName(oldName);
 }
 #endif
+
+// Change key visibility - from ghostly to solid and back,
+// but in a gradual way instead of *snap*
+//
+// Note that this code *requires* that vStart and vEnd be
+// no more decimal places than the increment listed below
+// Otherwise, this will fail.
+//
+#define FADE_INCREMENT 0.05
+
+float keyFade(float vStart, float vEnd) {
+
+    integer vCurrent = (integer)(vStart * 100.0);
+    integer vCurrentEnd = (integer)(vEnd * 100.0);
+    integer vIncrement = (integer)(FADE_INCREMENT * 100.0);
+
+    debugSay(5,"DEBUG-CHATHANDLER","Key fade: From " + (string)vStart + " to " + (string)vEnd);
+
+    //if (vEnd > vStart) vIncrement = (integer)(FADE_INCREMENT * 100.0);
+    //else vIncrement = (integer)(-FADE_INCREMENT * 100);
+
+    debugSay(5,"DEBUG-CHATHANDLER","Key fade: Adjusted: From " + (string)vCurrent + " to " + (string)vCurrentEnd + " by " + (string)vIncrement);
+
+#ifdef NOT_USED
+    if (vEnd > vStart) {
+        llOwnerSay("vIncrement > 0 = " + (string)vIncrement);
+
+        // Counting up
+        while (vCurrent <= vCurrentEnd) {
+
+            vCurrent += vIncrement; // hidden decrement
+            setKeyVisibility((float)vCurrent / 100.0);
+            llSleep(0.7);
+        }
+    }
+    else {
+        llOwnerSay("vIncrement = " + (string)vIncrement);
+
+        // Counting down
+        while (vCurrent >= vCurrentEnd) {
+
+            vCurrent += vIncrement; // hidden decrement
+            setKeyVisibility((float)vCurrent / 100.0);
+            llSleep(0.7);
+        }
+    }
+#endif
+
+    setKeyVisibility(vEnd);
+    return vEnd;
+}
 
 //========================================
 // STATES
@@ -695,69 +748,20 @@ default {
             }
 
             debugSay(5,"DEBUG-CHAT",("Got a chat channel message: " + accessorName + "/" + (string)id + "/" + msg));
-            string prefix = cdGetFirstChar(msg);
 
-            // Before we proceed first verify that the command is for us.
-            //
-            // Check prefix:
-            //   * All dollies ('*') - respond
-            //   * All dollies except us ('#') - respond if we didn't send it
-            //   * Prefix ('xx') - respond
-            //   * Nothing - assume its ours and complain
+            integer n = llStringLength(chatPrefix);
+            //string prefix;
 
-            switch (prefix) {
-
-                case "*": {
-
-                    // *prefix is global, strip from chatCommand and continue
-                    msg = llGetSubString(msg,1,-1);
-                    break;
-                }
-
-                case "#": {
-
-                    // if Dolly gives a #cmd ignore it...
-                    // if someone else gives it - they are being ignored themselves,
-                    //    but we act on it.
-                    if (accessorIsDoll) return;
-                    else {
-                        // #prefix is an all others prefix like with OC etc
-                        msg = llGetSubString(msg,1,-1);
-                    }
-                    break;
-                }
-
-
-                default: {
-
-                    integer n = llStringLength(chatPrefix);
-
-                    if (llToLower(llGetSubString(msg, 0, n - 1)) == chatPrefix) {
-                        prefix = llGetSubString(msg, 0, n - 1);
-                        msg = llGetSubString(msg, n, -1);
-                    }
-                    else {
-                        // we didn't get a valid prefix - so exit. Either it's
-                        // for another dolly, or it was invalid. If we act on a general
-                        // command - then every dolly in range with this key will respond.
-                        // Can't have that...
-
-                        llSay(DEBUG_CHANNEL,"Got wrong prefix from message (" + msg + ") on chat channel " + (string)chatChannel + "; wanted prefix " + chatPrefix);
-                        return;
-                    }
-                    break;
-                }
+            if (llToLower(llGetSubString(msg, 0, n - 1)) == chatPrefix) {
+                //prefix = llGetSubString(msg, 0, n - 1);
+                msg = llStringTrim(llGetSubString(msg, n, -1),STRING_TRIM);
             }
+            else {
+                // We didn't get a valid prefix - so exit.
 
-            // If we get here, we know this:
-            //
-            //   * If Doll, they've been warned about the Prefix if needed
-            //   * If not Doll, they used the prefix
-            //   * If the prefix is '#' someone else used it, not Dolly
-            //   * If the prefix is '*' could have been used by anyone
-
-            // Trim message in case there are spaces
-            msg = llStringTrim(msg,STRING_TRIM);
+                llSay(DEBUG_CHANNEL,"Got wrong prefix from message (" + msg + ") on chat channel " + (string)chatChannel + "; wanted prefix " + chatPrefix);
+                return;
+            }
 
 #define PARAMETERS_EXIST (spaceInMsg != NOT_FOUND)
 
@@ -876,7 +880,6 @@ default {
     debug # ........ set the debugging message verbosity 0-9
     timereporting .. set timereporting \"on\" or \"off\"
     inject x#x#x ... inject a link message with \"code#data#key\"
-    powersave ...... trigger a powersave event
     collapse ....... perform an immediate collapse (out of time)";
                         cdSayTo(help + "\n", accessorID);
                     }
@@ -895,7 +898,6 @@ default {
                 //   * stats
                 //   * hardcore (ADULT_MODE)
                 //   * collapse (DEVELOPER_MODE)
-                //   * powersave (DEVELOPER_MODE)
                 //   * hide
                 //   * release / unpose
                 //   * unhide / show / visible
@@ -953,14 +955,6 @@ default {
                             return;
                         }
 
-                        case "powersave": {
-
-                            if (accessorIsDoll) {
-                                lmSetConfig("lowScriptMode","1");
-                                llOwnerSay("Power-save mode initiated");
-                            }
-                            return;
-                        }
 #endif
                         // Could potentially combine the next three into one
                         // block but the code to account for the differences
@@ -968,10 +962,10 @@ default {
                         //
                         case "hide": {
 
-                            visible = FALSE;
-
                             cdSayTo("The key shimmers, then fades from view.",accessorID);
-                            llSetLinkAlpha(LINK_SET, 0.0, ALL_SIDES);
+                            visible = FALSE;
+                            visibility = keyFade(visibility, 0.0);
+
                             lmSendConfig("isVisible", (string)visible);
                             return;
                         }
@@ -980,29 +974,44 @@ default {
                         case "show":
                         case "visible": {
 
+                            if (visible == TRUE) return; // Already visible
+
                             visible = TRUE;
 
-                            cdSayTo("A bright light appears where the key should be, then disappears slowly, revealing a spotless key.",accessorID);
-                            llSetLinkAlpha(LINK_SET, (float)visibility, ALL_SIDES);
+                            if (visibility == GHOST_VISIBILITY) cdSayTo("The key shimmers, and slowly seems to solidify into a physical form.",accessorID);
+                            else cdSayTo("A bright light appears where the key should be, then disappears slowly, revealing a spotless key.",accessorID);
+
+                            visibility = keyFade(0.0, visibility);
+
                             lmSendConfig("isVisible", (string)visible);
                             return;
                         }
                         
                         case "ghost": {
 
+                            // This toggles ghostliness
+                            switch (visibility): {
+                                case 1.0: {
+                                    cdSayTo("A cloud of sparkles forms around the key, and it fades to a ghostly presence.",accessorID);
+                                    visibility = keyFade(1.0, GHOST_VISIBILITY);
+                                    break;
+                                }
+
+                                case GHOST_VISIBILITY: {
+                                    cdSayTo("You see the key sparkle slightly, then slowly take on solid form again.",accessorID);
+                                    visibility = keyFade(GHOST_VISIBILITY, 1.0);
+                                    break;
+                                }
+
+                                case 0.0: {
+                                    cdSayTo("A smoky cloud appears, and the ghostly key materializes where it should be.",accessorID);
+                                    visibility = keyFade(0.0, GHOST_VISIBILITY);
+                                    break;
+                                }
+                            }
+
                             visible = TRUE;
 
-                            // This toggles ghostliness
-                            if (visibility != 1.0) {
-                                visibility = 1.0;
-                                cdSayTo("You see the key sparkle slightly, then fade back into full view.",accessorID);
-                            }
-                            else {
-                                visibility = GHOST_VISIBILITY;
-                                cdSayTo("A cloud of sparkles forms around the key, and it fades to a ghostly presence.",accessorID);
-                            }
-
-                            llSetLinkAlpha(LINK_SET, (float)visibility, ALL_SIDES);
                             lmSendConfig("visibility", (string)visibility);
                             lmSendConfig("isVisible", (string)visible);
                             return;
@@ -1270,9 +1279,10 @@ default {
                         doGname(param);
                         return;
                     }
+                    else
 #endif
 #ifdef DEVELOPER_MODE
-                    else if (chatCommand == "debug") {
+                    if (chatCommand == "debug") {
                         debugLevel = (integer)param;
                         if (debugLevel > 9) debugLevel = 9;
                         lmSendConfig("debugLevel", (string)debugLevel);

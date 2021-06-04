@@ -621,7 +621,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
             }
             else if (code == MEM_REPLY) {
                 memReporting = 1;
-                llSetTimerEvent(5.0); // when timer goes off, we assume completion
+                llSetTimerEvent(0.5); // when timer goes off, we assume completion
                 float usedMemory  = (float)split[0];
                 float memoryLimit = (float)split[1];
                 float freeMemory  = (float)split[2];
