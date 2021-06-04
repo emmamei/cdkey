@@ -80,6 +80,8 @@ integer dressingFailures;
 
 integer outfitPage; // zero-indexed
 
+integer isVisible;
+
 #define OUTFIT_PAGE_SIZE 9
 
 //========================================
@@ -398,6 +400,10 @@ default {
 
             else if (name == "outfitFolder")                outfitFolder = value;
             else if (name == "typeFolder")                    typeFolder = value;
+            else if (name == "isVisible")                      {
+                isVisible = (integer)value;
+                lmInternalCommand("setHovertext", "", NULL_KEY);
+            }
             else if (name == "useTypeFolder")              useTypeFolder = (integer)value;
             else if (name == "wearLock")                        wearLock = (integer)value;
 #ifdef ADULT_MODE
@@ -701,6 +707,7 @@ default {
                      if (collapsed)   { cdSetHovertext("Disabled Dolly!\nWind Me!",  ( DISABLED_DOLLY_COLOR )); }
                 else if (isAFK)       { cdSetHovertext(dollType + " Doll (AFK)",     (      AFK_DOLLY_COLOR )); }
                 else if (hovertextOn) { cdSetHovertext(dollType + " Doll",           (     TYPE_DOLLY_COLOR )); }
+                else if (!isVisible)  { cdSetHovertext("",                           (  DEFAULT_DOLLY_COLOR )); }
                 else                  { cdSetHovertext("Wind Me!",                   (  DEFAULT_DOLLY_COLOR )); }
             }
             else if (cmd == "carriedMenu") {
