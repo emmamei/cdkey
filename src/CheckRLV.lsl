@@ -145,7 +145,7 @@ rlvRestoreRestritions() {
     lmSendConfig("defaultBaseRLVcmd",(string)baseRLV); // save the defaults
 
     if (keyLocked) lmRunRLVas("Base","detach=n");
-    else lmRunRLVas("Base","detach=n");
+    else lmRunRLVas("Base","detach=y");
 
     rlvOutfitLock();
 }
@@ -296,8 +296,6 @@ default {
         code      =  i & 0x000003FF;
         split     = llDeleteSubList(split, 0, 0 + optHeader);
 
-        //scaleMem();
-
         if (code == SEND_CONFIG) {
             name = (string)split[0];
             split = llDeleteSubList(split, 0, 0);
@@ -307,13 +305,13 @@ default {
             //if (llListFindList([ "R", "h", "k", "a", "c", "d", "w" ],(list)c) == NOT_FOUND) return;
 
                  if (name == "keyLocked")         {    keyLocked = (integer)value; }
+            else if (name == "RLVok")             {        RLVok = (integer)value; }
 #ifdef ADULT_MODE
             else if (name == "hardcore")          {     hardcore = (integer)value; rlvOutfitLock(); }
 #endif
 #ifdef EMERGENCY_TP
             else if (name == "autoTP")            {       autoTP = (integer)value; rlvSetIf("accepttp", !autoTP); }
 #endif
-            else if (name == "RLVok")             {        RLVok = (integer)value; }
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")        {   debugLevel = (integer)value; }
 #endif
