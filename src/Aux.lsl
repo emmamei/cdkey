@@ -296,6 +296,88 @@ default {
                     llDialog(dollID, msg, menu, dialogChannel);
                 }
             }
+            else if (cmd == "chatHelp") {
+
+#define accessorID           (key)split[0]
+
+#define accessorIsDoll       (cdIsDoll(accessorID))
+#define accessorIsController (cdIsController(accessorID))
+#define accessorIsCarrier    (cdIsCarrier(accessorID))
+
+                // First: anyone can do these commands
+                string help = "Commands:
+    Commands need to be prefixed with the prefix, which is currently " + llToLower(chatPrefix) + "
+
+    help ........... this list of commands
+    menu ........... show main menu
+    stat ........... concise current status
+    wind ........... wind key";
+
+                string help2;
+
+                string posingHelp = "
+    release ........ stop the current pose if possible
+    unpose ......... stop the current pose if possible
+    [posename] ..... activate the named pose if possible
+    pose XXX ....... activate the named pose if possible
+    listposes ...... list all poses";
+
+                string carryHelp = "
+    carry .......... carry dolly
+    uncarry ........ put down dolly";
+
+                // Only Dolly or Controller or Carrier can do these commands
+                if (accessorIsDoll || accessorIsController || accessorIsCarrier) {
+                    help += "
+    stats .......... selected statistics and settings
+    xstats ......... extended statistics and settings" +
+                    posingHelp +
+                    carryHelp;
+
+                    // Only Dolly can do these
+                    if (accessorIsDoll) {
+                        help2 += "Commands (page2):
+
+    hide ........... make key invisible
+    unhide ......... make key visible
+    show ........... make key visible
+    visible ........ make key visible
+    ghost .......... make key visible and ghostly
+    prefix XX ...... change chat command prefix
+    controller NN .. add controller
+    channel ## ..... change channel
+    blacklist NN ... add to blacklist
+    unblacklist NN . remove from blacklist";
+                    }
+                }
+
+                // Anyone other than Controllers / Carriers / Dolly
+                else {
+
+                    // Only if poses are allowed
+                    if (allowPose) help += posingHelp;
+
+                    // Only if carry is allowed
+                    if (allowCarry) help += carryHelp;
+                }
+
+                cdSayTo(help + "\n", accessorID);
+                if (help2 != "") cdSayTo(help2 + "\n", accessorID);
+
+#ifdef DEVELOPER_MODE
+                // Developer Dolly commands...
+                if (accessorIsDoll) {
+                    help = "
+    Debugging commands:
+
+    build .......... list build configurations
+    debug # ........ set the debugging message verbosity 0-9
+    inject x#x#x ... inject a link message with \"code#data#key\"
+    collapse ....... perform an immediate collapse (out of time)";
+                    cdSayTo(help + "\n", accessorID);
+                }
+#endif
+            }
 #ifdef ADULT_MODE
             else if (cmd == "strip") {
                 // llToLower() may be superfluous here

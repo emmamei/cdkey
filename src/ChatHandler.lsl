@@ -321,41 +321,33 @@ doGname(string param) {
 
 float keyFade(float vStart, float vEnd) {
 
+    // This take the start and end and convert them to
+    // integers; this avoides float comparisons and loops
+    //
     integer vCurrent = (integer)(vStart * 100.0);
     integer vCurrentEnd = (integer)(vEnd * 100.0);
     integer vIncrement = (integer)(FADE_INCREMENT * 100.0);
 
     debugSay(5,"DEBUG-CHATHANDLER","Key fade: From " + (string)vStart + " to " + (string)vEnd);
 
-    //if (vEnd > vStart) vIncrement = (integer)(FADE_INCREMENT * 100.0);
-    //else vIncrement = (integer)(-FADE_INCREMENT * 100);
+    if (vEnd > vStart)  vIncrement = (integer)(FADE_INCREMENT *  100.0);
+    else                vIncrement = (integer)(FADE_INCREMENT * -100.0);
+
+    if (vStart == vEnd) {
+        llSay(DEBUG_CHANNEL,"Error: improper parameters to keyFade: " + (string)vStart + " / " + (string)vEnd);
+        return;
+    }
 
     debugSay(5,"DEBUG-CHATHANDLER","Key fade: Adjusted: From " + (string)vCurrent + " to " + (string)vCurrentEnd + " by " + (string)vIncrement);
 
-#ifdef NOT_USED
-    if (vEnd > vStart) {
-        llOwnerSay("vIncrement > 0 = " + (string)vIncrement);
+    // Counting down
+    do {
 
-        // Counting up
-        while (vCurrent <= vCurrentEnd) {
-
-            vCurrent += vIncrement; // hidden decrement
-            setKeyVisibility((float)vCurrent / 100.0);
-            llSleep(0.7);
-        }
+        setKeyVisibility((float)vCurrent / 100.0);
+        vCurrent += vIncrement; // could be incr or decr
+        llSleep(0.7);
     }
-    else {
-        llOwnerSay("vIncrement = " + (string)vIncrement);
-
-        // Counting down
-        while (vCurrent >= vCurrentEnd) {
-
-            vCurrent += vIncrement; // hidden decrement
-            setKeyVisibility((float)vCurrent / 100.0);
-            llSleep(0.7);
-        }
-    }
-#endif
+    while (vCurrent != vCurrentEnd); // this assumes that at some point, these two WILL be equal
 
     setKeyVisibility(vEnd);
     return vEnd;
@@ -483,16 +475,12 @@ default {
 
                 // if the current chatChannel is zero it cannot be changed
                 if (chatChannel == 0) return;
+                if (chatChannel == (integer)value) return;
 
-                integer newChatChannel = (integer)value;
-
-                // Time saver
-                if (newChatChannel == chatChannel) return;
-
-                if (newChatChannel != DEBUG_CHANNEL) {
+                if ((integer)value != DEBUG_CHANNEL) {
                     // Note that setting the chat channel to 0 (PUBLIC) is valid:
                     // it isn't used as a channel, but as a flag for a disabled channel
-                    chatChannel = newChatChannel;
+                    chatChannel = (integer)value;
 
 #ifdef DEVELOPER_MODE
                     debugSay(5,"DEBUG-CHATHANDLER","Changed chat channel to " + (string)(chatChannel));
@@ -511,6 +499,12 @@ default {
         else if (code == INTERNAL_CMD) {
             string cmd = (string)split[0];
 
+            // Commands:
+            //   * addController
+            //   * addBlacklist
+            //   * remController
+            //   * remBlacklist
+            //
             switch (cmd): {
 
                 case "addController":
@@ -750,10 +744,8 @@ default {
             debugSay(5,"DEBUG-CHAT",("Got a chat channel message: " + accessorName + "/" + (string)id + "/" + msg));
 
             integer n = llStringLength(chatPrefix);
-            //string prefix;
 
             if (llToLower(llGetSubString(msg, 0, n - 1)) == chatPrefix) {
-                //prefix = llGetSubString(msg, 0, n - 1);
                 msg = llStringTrim(llGetSubString(msg, n, -1),STRING_TRIM);
             }
             else {
@@ -806,84 +798,7 @@ default {
                 // sure that the help matches the commands available...
                 //
                 if (chatCommand == "help") {
-                    // First: anyone can do these commands
-                    string help = "Commands:
-    Commands need to be prefixed with the prefix, which is currently " + llToLower(chatPrefix) + "
-
-    help ........... this list of commands
-    menu ........... show main menu
-    stat ........... concise current status
-    wind ........... wind key";
-                    string help2;
-                    string posingHelp = "
-    release ........ stop the current pose if possible
-    unpose ......... stop the current pose if possible
-    [posename] ..... activate the named pose if possible
-    pose XXX ....... activate the named pose if possible
-    listposes ...... list all poses";
-                    string carryHelp = "
-    carry .......... carry dolly
-    uncarry ........ put down dolly";
-
-                    // Only Dolly or Controller or Carrier can do these commands
-                    if (accessorIsDoll || accessorIsController || accessorIsCarrier) {
-                        help += "
-    stats .......... selected statistics and settings
-    xstats ......... extended statistics and settings";
-
-                        // These are here because none of these people are restricted
-                        // by the allow* functions
-                        help += posingHelp;
-                        help += carryHelp;
-
-                        // Only Dolly can do these
-                        if (accessorIsDoll) {
-                            help2 += "Commands (page2):
-
-    hide ........... make key invisible
-    unhide ......... make key visible
-    show ........... make key visible
-    visible ........ make key visible
-    ghost .......... make key visible and ghostly
-    prefix XX ...... change chat command prefix
-    controller NN .. add controller
-    channel ## ..... change channel
-    blacklist NN ... add to blacklist
-    unblacklist NN . remove from blacklist";
-                        }
-                    }
-
-                    // Anyone other than Controllers / Carriers / Dolly
-                    else {
-
-                        // Only if poses are allowed
-                        if (allowPose) {
-                            help += posingHelp;
-                        }
-
-                        // Only if carry is allowed
-                        if (allowCarry) {
-                            help += carryHelp;
-                        }
-                    }
-
-                    cdSayTo(help + "\n", accessorID);
-                    if (help2 != "") cdSayTo(help2 + "\n", accessorID);
-
-#ifdef DEVELOPER_MODE
-                    // Developer Dolly commands...
-                    if (accessorIsDoll) {
-                        help = "
-    Debugging commands:
-
-    build .......... list build configurations
-    debug # ........ set the debugging message verbosity 0-9
-    timereporting .. set timereporting \"on\" or \"off\"
-    inject x#x#x ... inject a link message with \"code#data#key\"
-    collapse ....... perform an immediate collapse (out of time)";
-                        cdSayTo(help + "\n", accessorID);
-                    }
-#endif
+                    lmInternalCommand("chatHelp", (string)accessorID, accessorID);
                     return;
                 }
 
@@ -964,7 +879,8 @@ default {
 
                             cdSayTo("The key shimmers, then fades from view.",accessorID);
                             visible = FALSE;
-                            visibility = keyFade(visibility, 0.0);
+
+                            keyFade(visibility, 0.0);
 
                             lmSendConfig("isVisible", (string)visible);
                             return;
@@ -981,7 +897,7 @@ default {
                             if (visibility == GHOST_VISIBILITY) cdSayTo("The key shimmers, and slowly seems to solidify into a physical form.",accessorID);
                             else cdSayTo("A bright light appears where the key should be, then disappears slowly, revealing a spotless key.",accessorID);
 
-                            visibility = keyFade(0.0, visibility);
+                            keyFade(0.0, visibility);
 
                             lmSendConfig("isVisible", (string)visible);
                             return;

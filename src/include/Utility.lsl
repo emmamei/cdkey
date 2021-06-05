@@ -228,12 +228,15 @@ list unix2DateTime(integer unixtime) {
     return [ year, month, day, hour, minute, second ];
 }
 
+#ifdef NOT_USED
+// This doesn't compile, either...
 string monthName(integer month, integer long) {
     if (month >= 0 && month < 12 && long == 2) return (string)MONTHS_FULL[month]);
     else if (month >= 0 && month < 12 && long == 1) return (string)MONTHS_SHORT[month]);
     else if (month >= 0 && month < 12 && long == 0) return (string)month;
     else return "";
 }
+#endif
 
 string dateString(list timelist, string seperator, integer long) {
     if (seperator == "") seperator = "-";
