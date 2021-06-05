@@ -5,7 +5,7 @@
 // vim:sw=4 et nowrap filetype=lsl
 
 #include "include/GlobalDefines.lsl"
-#define cdMenuInject(a,b,c) lmMenuReply(a,b,c)
+#define cdMenuInject(a) lmMenuReply(a,"",dollID)
 
 #define RUNNING 1
 #define NOT_RUNNING 0
@@ -279,6 +279,12 @@ default {
                             break;
                         }
                     }
+                    break;
+                }
+
+                case "backMenu": {
+                    backMenu = value;
+                    break;
                 }
             }
         }
@@ -289,8 +295,9 @@ default {
             if (choice == keySpecificMenu) {
                 string msg = "Here you can choose your own gem color.";
 
+                lmSendConfig("backMenu",(backMenu = "Options..."));
                 keySpecificHandle = cdListenMine(keySpecificChannel);
-                llDialog(id, msg, dialogSort(colorNames + "Options..."), keySpecificChannel);
+                llDialog(id, msg, dialogSort(colorNames + "Back..."), keySpecificChannel);
             }
         }
 #ifdef NOT_USED
@@ -349,7 +356,11 @@ default {
                 vector colorValue = (vector)colorValues[ index ];
 
                 setNormalGemColor(colorValue);
-                lmMenuReply("Options...","",dollID);
+                //lmMenuReply("Options...","",dollID);
+                cdMenuInject("Gem...");
+            }
+            else if (choice == "Back...") {
+                cdMenuInject(backMenu);
             }
         }
     }
