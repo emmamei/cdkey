@@ -31,7 +31,6 @@ list memList;
 float listenTime;
 float memTime;
 string memOutput = "Script Memory Status:";
-integer maxMins;
 integer ncLine;
 integer memReporting;
 integer isDoll;
@@ -127,7 +126,8 @@ default {
             else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
             else if (name == "poserID")                       poserID = (key)value;
-            else if (name == "keyLimit")                      maxMins = llRound((float)value / 60.0);
+            else if (name == "keyLimit")                     keyLimit = (integer)value;
+            else if (name == "windNormal")                 windNormal = (integer)value;
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
             else if (name == "backMenu")                     backMenu = value;
 #ifdef HOMING_BEACON
@@ -634,11 +634,16 @@ Parent - Take care choosing your parents; they have great control over Dolly and
             else if (choice == "Key...") {
 
                 list plusList = ["Dolly Name...","Gender:" + dollGender];
+                string msg = "Here you can set various general key settings.\n\n" +
+                             "Dolly Name: " + dollDisplayName + "\n" +
+                             "Doll Gender: " + dollGender + "\n" +
+                             "Wind Time: " + (string)((integer)(windNormal / SECS_PER_MIN)) + "\n" +
+                             "Max Time: " + (string)((integer)(keyLimit / SECS_PER_MIN));
 
                 lmSendConfig("backMenu",(backMenu = "Options..."));
                 if (cdIsController(id)) plusList += [ "Max Time...", "Wind Time..." ];
                 lmDialogListen();
-                llDialog(id, "Here you can set various general key settings.", dialogSort(llListSort(plusList, 1, 1) + "Back..."), dialogChannel);
+                llDialog(id, msg, dialogSort(llListSort(plusList, 1, 1) + "Back..."), dialogChannel);
             }
             else if (llGetSubString(choice,0,6) == "Gender:") {
                 string s = llGetSubString(choice,7,-1);

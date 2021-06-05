@@ -335,7 +335,7 @@ float keyFade(float vStart, float vEnd) {
 
     if (vStart == vEnd) {
         llSay(DEBUG_CHANNEL,"Error: improper parameters to keyFade: " + (string)vStart + " / " + (string)vEnd);
-        return;
+        return vEnd;
     }
 
     debugSay(5,"DEBUG-CHATHANDLER","Key fade: Adjusted: From " + (string)vCurrent + " to " + (string)vCurrentEnd + " by " + (string)vIncrement);
