@@ -277,7 +277,7 @@ doGname(string param) {
     integer lenAllSymbols;
 
     string oldName = llGetObjectName();
-    
+
     // Change name so it will seem to come from us directly
     cdSetKeyName(dollDisplayName);
 
@@ -351,6 +351,127 @@ float keyFade(float vStart, float vEnd) {
 
     setKeyVisibility(vEnd);
     return vEnd;
+}
+
+integer commandsDollyOnly(string chatCommand) {
+    switch (chatCommand) {
+        case "build": {
+            lmConfigReport();
+            return TRUE;
+        }
+
+        case "update": {
+
+            lmSendConfig("update", "1");
+            return TRUE;
+        }
+
+        case "safemode": {
+#ifdef ADULT_MODE
+            if (!hardcore)
+#endif
+                lmSetConfig("safemode", (string)(safeMode = !safeMode));
+            return TRUE;
+        }
+#ifdef DEVELOPER_MODE
+        case "collapse": {
+
+            //lmSetConfig("timeLeftOnKey","10");
+            llOwnerSay("Immediate collapse triggered...");
+            lmInternalCommand("collapse", (string)TRUE, accessorID);
+
+            return TRUE;
+        }
+#endif
+        // Could potentially combine the next three into one
+        // block but the code to account for the differences
+        // may not be worth it.
+        //
+        case "hide": {
+
+            cdSayTo("The key shimmers, then fades from view.",accessorID);
+            visible = FALSE;
+
+            keyFade(visibility, 0.0);
+
+            lmSendConfig("isVisible", (string)visible);
+            return TRUE;
+        }
+
+        case "unhide":
+        case "show":
+        case "visible": {
+
+            if (visible == TRUE) return TRUE; // Already visible
+
+            visible = TRUE;
+
+            if (visibility == GHOST_VISIBILITY) cdSayTo("The key shimmers, and slowly seems to solidify into a physical form.",accessorID);
+            else cdSayTo("A bright light appears where the key should be, then disappears slowly, revealing a spotless key.",accessorID);
+
+            keyFade(0.0, visibility);
+
+            lmSendConfig("isVisible", (string)visible);
+            return TRUE;
+        }
+
+        case "ghost": {
+
+            // This toggles ghostliness
+            switch (visibility): {
+                case 1.0: {
+                    cdSayTo("A cloud of sparkles forms around the key, and it fades to a ghostly presence.",accessorID);
+                    visibility = keyFade(1.0, GHOST_VISIBILITY);
+                    break;
+                }
+
+                case GHOST_VISIBILITY: {
+                    cdSayTo("You see the key sparkle slightly, then slowly take on solid form again.",accessorID);
+                    visibility = keyFade(GHOST_VISIBILITY, 1.0);
+                    break;
+                }
+
+                case 0.0: {
+                    cdSayTo("A smoky cloud appears, and the ghostly key materializes where it should be.",accessorID);
+                    visibility = keyFade(0.0, GHOST_VISIBILITY);
+                    break;
+                }
+            }
+
+            visible = TRUE;
+
+            lmSendConfig("visibility", (string)visibility);
+            lmSendConfig("isVisible", (string)visible);
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+integer commandsDollyAndController(string chatCommand) {
+    switch (chatCommand) {
+
+        case "xstats": {
+
+            doXstats();
+            return TRUE;
+        }
+
+        case "stats": {
+
+            doStats();
+            return TRUE;
+        }
+
+#ifdef ADULT_MODE
+        case "hardcore": {
+
+            doHardcore();
+            return TRUE;
+        }
+#endif
+    }
+    return FALSE;
 }
 
 //========================================
@@ -803,140 +924,44 @@ default {
                 }
 
                 //----------------------------------------
+                // DOLLY ONLY COMMANDS
+                //
+                //   * build
+                //   * update
+                //   * safemode
+                //   * collapse (DEVELOPER_MODE)
+                //   * hide
+                //   * unhide / show / visible
+                //   * ghost
+                //
+                if (accessorIsDoll) {
+                    if (commandsDollyOnly(chatCommand) == TRUE) return;
+                }
+
+                //----------------------------------------
                 // DOLL & CONTROLLER COMMANDS
                 //
                 // Commands only for Doll or Controllers
                 //
-                //   * build
-                //   * update
                 //   * xstats
                 //   * stats
                 //   * hardcore (ADULT_MODE)
-                //   * collapse (DEVELOPER_MODE)
-                //   * hide
                 //   * release / unpose
-                //   * unhide / show / visible
-                //   * ghost
+                //
+                // Note that this is Dolly OR a Controller - and NOT
+                // a Controller including Dolly...
                 //
                 if (accessorIsDoll || accessorIsController) {
-                    switch (chatCommand) {
-
-                        case "build": {
-                            lmConfigReport();
-                            return;
-                        }
-
-                        case "update": {
-
-                            lmSendConfig("update", "1");
-                            return;
-                        }
-
-                        case "xstats": {
-
-                            doXstats();
-                            return;
-                        }
-
-                        case "stats": {
-
-                            doStats();
-                            return;
-                        }
-
-                        case "safemode": {
-#ifdef ADULT_MODE
-                            if (!hardcore)
-#endif
-                                lmSetConfig("safemode", (string)(safeMode = !safeMode));
-                            return;
-                        }
-#ifdef ADULT_MODE
-                        case "hardcore": {
-
-                            doHardcore();
-                            return;
-                        }
-
-#endif
-#ifdef DEVELOPER_MODE
-                        case "collapse": {
-
-                            if (accessorIsDoll) {
-                                //lmSetConfig("timeLeftOnKey","10");
-                                llOwnerSay("Immediate collapse triggered...");
-                                lmInternalCommand("collapse", (string)TRUE, accessorID);
-                            }
-                            return;
-                        }
-
-#endif
-                        // Could potentially combine the next three into one
-                        // block but the code to account for the differences
-                        // may not be worth it.
-                        //
-                        case "hide": {
-
-                            cdSayTo("The key shimmers, then fades from view.",accessorID);
-                            visible = FALSE;
-
-                            keyFade(visibility, 0.0);
-
-                            lmSendConfig("isVisible", (string)visible);
-                            return;
-                        }
-
-                        case "unhide":
-                        case "show":
-                        case "visible": {
-
-                            if (visible == TRUE) return; // Already visible
-
-                            visible = TRUE;
-
-                            if (visibility == GHOST_VISIBILITY) cdSayTo("The key shimmers, and slowly seems to solidify into a physical form.",accessorID);
-                            else cdSayTo("A bright light appears where the key should be, then disappears slowly, revealing a spotless key.",accessorID);
-
-                            keyFade(0.0, visibility);
-
-                            lmSendConfig("isVisible", (string)visible);
-                            return;
-                        }
-                        
-                        case "ghost": {
-
-                            // This toggles ghostliness
-                            switch (visibility): {
-                                case 1.0: {
-                                    cdSayTo("A cloud of sparkles forms around the key, and it fades to a ghostly presence.",accessorID);
-                                    visibility = keyFade(1.0, GHOST_VISIBILITY);
-                                    break;
-                                }
-
-                                case GHOST_VISIBILITY: {
-                                    cdSayTo("You see the key sparkle slightly, then slowly take on solid form again.",accessorID);
-                                    visibility = keyFade(GHOST_VISIBILITY, 1.0);
-                                    break;
-                                }
-
-                                case 0.0: {
-                                    cdSayTo("A smoky cloud appears, and the ghostly key materializes where it should be.",accessorID);
-                                    visibility = keyFade(0.0, GHOST_VISIBILITY);
-                                    break;
-                                }
-                            }
-
-                            visible = TRUE;
-
-                            lmSendConfig("visibility", (string)visibility);
-                            lmSendConfig("isVisible", (string)visible);
-                            return;
-                        }
-                    }
+                    if (commandsDollyAndController(chatCommand) == TRUE) return;
                 }
 
                 //----------------------------------------
                 // PUBLIC COMMANDS
+                //
+                // Actually, these are "mostly" public commands,
+                // but also include several commands that can be used
+                // by everyone under different circumstances or with
+                // differing results.
                 //
                 // These are the commands that anyone can give:
                 //   * wind
@@ -1184,7 +1209,6 @@ default {
                 //   * gname
                 //   * debug (DEVELOPER_MODE)
                 //   * inject (DEVELOPER_MODE)
-                //   * pose
                 //
                 if (accessorIsDoll) {
 #ifdef GNAME
@@ -1199,11 +1223,9 @@ default {
 #endif
 #ifdef DEVELOPER_MODE
                     if (chatCommand == "debug") {
-                        debugLevel = (integer)param;
-                        if (debugLevel > 9) debugLevel = 9;
-                        lmSendConfig("debugLevel", (string)debugLevel);
+                        lmSetConfig("debugLevel", (string)(debugLevel = (integer)param));
 
-                        if (debugLevel > 0) llOwnerSay("Debug level set to " + (string)debugLevel);
+                        if (debugLevel > 0) llOwnerSay("Debug level set.");
                         else llOwnerSay("Debug messages turned off.");
 
                         return;
@@ -1224,6 +1246,12 @@ default {
                     ;
                 }
 
+                //----------------------------------------
+                // PUBLIC COMMANDS (with parameter)
+                //
+                // These commands are for the public at large
+                //   * pose
+                //
                 if (chatCommand == "pose") {
                     string requestedAnimation = param;
 

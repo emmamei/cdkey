@@ -150,9 +150,7 @@ processConfiguration(string configSettingName, string configSettingValue) {
     // special handling.
     //
     list configs = [
-#ifdef DEVELOPER_MODE
                      "debug level",
-#endif
 #ifdef USER_RLV
                      "collapse rlv",
                      "pose rlv",
@@ -254,15 +252,9 @@ processConfiguration(string configSettingName, string configSettingValue) {
         // This allows the debug level setting to be present, but ignored in non-developer keys...
         else if (configSettingName == "debug level") {
 #ifdef DEVELOPER_MODE
-
-            // has to be between 0 and 9
-            //llSay(DEBUG_CHANNEL,"INFO: debug Level being overwritten from the builtin default of " + (string)debugLevel);
             debugLevel = (integer)configSettingValue;
 
-            if (debugLevel > 9) debugLevel = 9;
-            else if (debugLevel < 0) debugLevel = 0;
-
-            lmSendConfig("debugLevel", (string)debugLevel);
+            lmSetConfig("debugLevel", (string)debugLevel);
 #else
             ; // Nothing to do
 #endif
@@ -476,6 +468,23 @@ default {
             }
             else if (name == "defaultBaseRLVcmd")    defaultBaseRLVcmd = value;
         }
+        if (code == SET_CONFIG) {
+#ifdef DEVELOPER_MODE
+            string configName = (string)split[0];
+            string configValue = (string)split[1];
+
+            split = llDeleteSubList(split, 0, 0);
+
+            if (configName == "debugLevel") {
+                debugLevel = (integer)configValue;
+
+                if (debugLevel > 9) debugLevel = 9;
+                else if (debugLevel < 0) debugLevel = 0;
+
+                lmSendConfig("debugLevel", (string)debugLevel);
+            }
+#endif
+        }
         else if (code == RLV_RESET) {
             RLVok = (integer)split[0];
 
@@ -501,6 +510,11 @@ default {
                 debugSay(3,"DEBUG-START","Stage 2 begun.");
 
                 readPreferences();
+
+                // Send out defaults
+                lmSendConfig("defaultCollapseRLVcmd", defaultCollapseRLVcmd);
+                lmSendConfig("defaultPoseRLVcmd", defaultPoseRLVcmd);
+                lmSendConfig("defaultBaseRLVcmd", defaultBaseRLVcmd);
 
                 // Check for items necessary for proper operation
                 // and give error messages or warnings

@@ -169,7 +169,59 @@ setNormalGemColor(vector color) {
     setGemColor(normalGemColor);
 }
 
+setNormalGemColorText(string color) {
+
+    switch (llToLower(color)): {
+        case "purple": {
+            normalGemColor = COLOR_PURPLE;
+            break;
+        }
+        case "pink": {
+            normalGemColor = COLOR_PINK;
+            break;
+        }
+        case "red": {
+            normalGemColor = COLOR_RED;
+            break;
+        }
+        case "green": {
+            normalGemColor = COLOR_GREEN;
+            break;
+        }
+        case "blue": {
+            normalGemColor = COLOR_BLUE;
+            break;
+        }
+        case "cyan": {
+            normalGemColor = COLOR_CYAN;
+            break;
+        }
+        case "yellow": {
+            normalGemColor = COLOR_YELLOW;
+            break;
+        }
+        case "orange": {
+            normalGemColor = COLOR_ORANGE;
+            break;
+        }
+        case "white": {
+            normalGemColor = COLOR_WHITE;
+            break;
+        }
+        default: {
+            if ((vector)color != ZERO_VECTOR) normalGemColor = (vector)color;
+            else {
+                llSay(DEBUG_CHANNEL,"Invalid color (" + color + ")!");
+                return;
+            }
+            break;
+        }
+    }
+    setGemColor(normalGemColor);
+}
+
 resetGemColor() {
+    normalGemColor = color;
     setGemColor(normalGemColor);
 }
 
@@ -186,6 +238,12 @@ default {
         keyID = llGetKey();
         dollName = dollyName();
         myName = llGetScriptName();
+
+        // Set up Key-specific links
+        lmSendConfig("keySpecificConfigs","gem color");
+        lmSendConfig("keySpecificConfigs","gem colour");
+        lmSendConfig("keySpecificMenu","Gem...");
+        llOwnerSay("Key-specific extensions loaded for " + KEY_SPECIFIC_PRODUCT);
 
         // Beware listener is now available to users other than the doll
         // make sure to take this into account within all handlers.
@@ -236,49 +294,10 @@ default {
                     break;
                 }
                 
+                case "gem colour":
                 case "gem color": {
-                    switch (llToLower(value)): {
-                        case "purple": {
-                            normalGemColor = COLOR_PURPLE;
-                            break;
-                        }
-                        case "pink": {
-                            normalGemColor = COLOR_PINK;
-                            break;
-                        }
-                        case "red": {
-                            normalGemColor = COLOR_RED;
-                            break;
-                        }
-                        case "green": {
-                            normalGemColor = COLOR_GREEN;
-                            break;
-                        }
-                        case "blue": {
-                            normalGemColor = COLOR_BLUE;
-                            break;
-                        }
-                        case "cyan": {
-                            normalGemColor = COLOR_CYAN;
-                            break;
-                        }
-                        case "yellow": {
-                            normalGemColor = COLOR_YELLOW;
-                            break;
-                        }
-                        case "orange": {
-                            normalGemColor = COLOR_ORANGE;
-                            break;
-                        }
-                        case "white": {
-                            normalGemColor = COLOR_WHITE;
-                            break;
-                        }
-                        default: {
-                            llSay(DEBUG_CHANNEL,"Invalid color (" + value + ") in the preferences file!");
-                            break;
-                        }
-                    }
+                    setNormalGemColorText(value);
+                    doLuminosity();
                     break;
                 }
 
@@ -315,15 +334,9 @@ default {
         }
 #endif
         else if (code < 200) {
-            if (code == INIT_STAGE1) {
-                llOwnerSay("Key-specific extensions loaded for " + KEY_SPECIFIC_PRODUCT);
-                lmSendConfig("keySpecificConfigs","gem color");
-            }
-            else if (code == INIT_STAGE5) {
+            if (code == INIT_STAGE3) {
 
-                lmSendConfig("keySpecificMenu","Gem...");
-                setNormalGemColor(normalGemColor);
-                doLuminosity();
+                // After configuration is set
             }
 #ifdef DEVELOPER_MODE
             else if (code == MEM_REPORT) {
@@ -352,7 +365,7 @@ default {
         if (channel == keySpecificChannel) {
             integer index;
 
-            if ((index = llListFindList(colorNames, [ choice ])) != NOT_FOUND) {
+            if ((index = llListFindList(colorNames, (list)choice)) != NOT_FOUND) {
                 vector colorValue = (vector)colorValues[ index ];
 
                 setNormalGemColor(colorValue);
