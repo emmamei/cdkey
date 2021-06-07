@@ -104,13 +104,7 @@ default {
     //----------------------------------------
     link_message(integer source, integer i, string data, key id) {
 
-        // Parse link message header information
-        split     = cdSplitArgs(data);
-        script    = (string)split[0];
-        remoteSeq = (i & 0xFFFF0000) >> 16;
-        optHeader = (i & 0x00000C00) >> 10;
-        code      =  i & 0x000003FF;
-        split     = llDeleteSubList(split, 0, 0 + optHeader);
+        parseLinkHeader();
 
         if (code == SEND_CONFIG) {
             string name = (string)split[0];

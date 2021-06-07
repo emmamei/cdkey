@@ -443,17 +443,7 @@ default {
     //----------------------------------------
     link_message(integer source, integer i, string data, key id) {
 
-        // Parse link message header information
-        split     = cdSplitArgs(data);
-        script    = (string)split[0];
-
-        remoteSeq = (i >> 16) & 0x0000FFFF;
-        optHeader = (i >> 10) & 0x00000003;
-        code      =  i & 0x000003FF;
-
-        split     = llDeleteSubList(split, 0, 0 + optHeader);
-
-        //scaleMem();
+        parseLinkHeader();
 
         if (code == SEND_CONFIG) {
             string name = (string)split[0];
