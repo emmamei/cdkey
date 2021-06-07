@@ -537,6 +537,177 @@ integer commandsDollyAndController(string chatCommand) {
     return TRUE;
 }
 
+integer commandsPublic(string chatCommand, string param) {
+
+    switch (chatCommand): {
+
+        case "wind": {
+
+            // A Normal Wind
+            if (accessorIsDoll && collapsed) break;
+            lmInternalCommand("winding", "|" + accessorName, accessorID);
+
+            break;
+        }
+
+        case "stat": {
+#ifdef ADULT_MODE
+            if (accessorIsDoll && hardcore) break;
+#endif
+            string msg = "Key is ";
+
+            if (windRate > 0) {
+                msg += "unwinding at a ";
+
+                if (windRate == 1.0) msg += "normal rate.";
+                else {
+                    if (windRate < 1.0) msg += "slowed rate of ";
+                    else if (windRate > 1.0) msg += "accelerated rate of ";
+
+                    msg += " of " + formatFloat1(windRate) + "x.";
+                }
+
+                float t1 = timeLeftOnKey / (SECS_PER_MIN * windRate);
+                float t2 = keyLimit / (SECS_PER_MIN * windRate);
+                float p = t1 * 100.0 / t2;
+
+                msg += " Time remaining: " + (string)llRound(t1) + "/" +
+                    (string)llRound(t2) + " min (" + formatFloat2(p) + "% capacity).";
+
+            } else msg += "currently stopped.";
+
+            cdSayTo(msg, accessorID);
+            break;
+        }
+
+        case "outfits": {
+            cdMenuInject("Outfits...", accessorName, accessorID);
+            break;
+        }
+        case "types": {
+            cdMenuInject("Types...", accessorName, accessorID);
+            break;
+        }
+        case "poses": {
+            if (arePosesPresent() == FALSE) {
+                cdSayTo("No poses present.",accessorID);
+                break;
+            }
+
+            cdMenuInject("Poses...", accessorName, accessorID);
+            break;
+        }
+        case "options": {
+            cdMenuInject("Options...", accessorName, accessorID);
+            break;
+        }
+        case "menu": {
+
+            // if this is Dolly... show dolly other menu as appropriate
+            if (accessorIsDoll) {
+
+                // Collapse has precedence over having a carrier...
+                if (collapsed) lmInternalCommand("collapsedMenu", "", NULL_KEY);
+                else if (cdCarried()) lmInternalCommand("carriedMenu", (string)accessorID + "|" + carrierName, NULL_KEY);
+                else cdMenuInject(MAIN, accessorName, accessorID);
+            }
+            else {
+                cdMenuInject(MAIN, accessorName, accessorID);
+            }
+            break;
+        }
+        case "listposes": {
+            if (arePosesPresent() == FALSE) {
+                cdSayTo("No poses present.",accessorID);
+                break;
+            }
+
+            integer n = llGetInventoryNumber(INVENTORY_ANIMATION);
+            string poseCurrent;
+
+            while(n) {
+                poseCurrent = llGetInventoryName(INVENTORY_ANIMATION, --n);
+
+                // Collapsed animation is special: skip it
+                if (poseCurrent != ANIMATION_COLLAPSED) {
+
+                    if (poseAnimation == poseCurrent) cdSayTo("\t*\t" + poseCurrent, accessorID);
+                    else cdSayTo("\t\t" + poseCurrent, accessorID);
+                }
+            }
+            break;
+        }
+        case "release":
+        case "unpose": {
+            if (poseAnimation == "")
+                cdSayTo("Dolly is not posed.",accessorID);
+
+            else if (accessorIsDoll) {
+#ifdef ADULT_MODE
+#define poseDoesNotExpire (hardcore || dollType == "Display")
+#else
+#define poseDoesNotExpire (dollType == "Display")
+#endif
+                // If hardcore or Display Dolly, then Doll can't undo a pose
+                if (poseDoesNotExpire) break;
+
+                if (poserID != dollID) {
+                    llOwnerSay("Dolly tries to wrest control of " + pronounHerDoll +
+                        " body from the pose but " + pronounSheDoll +
+                        " is no longer in control of " + pronounHerDoll + " form.");
+                }
+                else {
+                    cdSayTo("Dolly feels her pose release, and stretches her limbs, so long frozen.",accessorID);
+                    lmMenuReply("Unpose", dollName, dollID);
+                }
+            }
+            else if (accessorIsController || accessorIsCarrier) {
+                if (poserID == dollID) {
+                    llOwnerSay("You release Dolly's body from the pose that " + pronounSheDoll + " activated.");
+                    lmMenuReply("Unpose", accessorName, accessorID);
+                }
+                else if (poserID == accessorID) {
+                    cdSayTo("Dolly feels her pose release, and stretches her limbs, so long frozen.",accessorID);
+                    lmMenuReply("Unpose", accessorName, accessorID);
+                }
+
+            }
+
+            break;
+        }
+        case "carry": {
+            // Dolly can't carry herself... duh!
+            if (!accessorIsDoll && allowCarry) cdMenuInject("Carry", accessorName, accessorID);
+            break;
+        }
+        case "uncarry": {
+            if (!accessorIsDoll && (accessorIsController || accessorIsCarrier)) cdMenuInject("Uncarry", accessorName, accessorID);
+            break;
+        }
+        case "pose": {
+
+#define requestedAnimation param
+
+            if (requestedAnimation != ANIMATION_COLLAPSED) {
+                if (!(llGetAgentInfo(llGetOwner()) & AGENT_SITTING)) { // Agent not sitting
+                    if (llGetInventoryType(requestedAnimation) == INVENTORY_ANIMATION) {
+                        // We don't have to do any testing for poses here: if the specified pose exists, we use it
+                        lmPoseReply(requestedAnimation, accessorName, accessorID);
+                    }
+                    else {
+                        llSay(DEBUG_CHANNEL,"No pose by that name: " + requestedAnimation);
+                    }
+                }
+            }
+            break;
+        }
+        default: {
+            return FALSE;
+        }
+    }
+    return TRUE;
+}
+
 //========================================
 // STATES
 //========================================
@@ -809,308 +980,104 @@ default {
             // At this point, we can test the chat command against a list,
             // and we no longer need to separate commands with and without parameters
 
-            {
-                // Now we separate the commands into different categories,
-                // based on who is allowed...
-                //
-                // * Public command (help)
-                // * Doll or Controller
-                // * More Public commands
-                //
-                // These need to be more concretely divided
-                //
-                // Each command may further restrict what
-                // can be done; these need to be documented.
+            // Now we separate the commands into different categories,
+            // based on who is allowed...
+            //
+            // * Public command (help)
+            // * Doll or Controller
+            // * More Public commands
+            //
+            // These need to be more concretely divided
+            //
+            // Each command may further restrict what
+            // can be done; these need to be documented.
 
-                //----------------------------------------
-                // PUBLIC COMMAND (help)
-                //
-                // The help commands should be handled here, as
-                // they are adjusted differently for each kind of user
-                //   * help
-                //
-                // Biggest problem in the help commands is that the
-                // validation of the user's status has to be replicated in
-                // both the help function and in the function itself; if there
-                // was a way to combine the help with the functions it would be
-                // much better...
-                //
-                // The help functions also provide, in code, a short-hand way to
-                // show who can do what commands... but have to very carefully make
-                // sure that the help matches the commands available...
-                //
-                if (chatCommand == "help") {
-                    lmInternalCommand("chatHelp", (string)accessorID, accessorID);
-                    return;
-                }
-
-                //----------------------------------------
-                // DOLLY ONLY COMMANDS
-                //
-                //   * build
-                //   * update
-                //   * safemode
-                //   * collapse (DEVELOPER_MODE)
-                //   * hide
-                //   * unhide / show / visible
-                //   * ghost
-                //
-                if (accessorIsDoll) {
-                    if (commandsDollyOnly(chatCommand,param) == TRUE) return;
-                }
-
-                //----------------------------------------
-                // DOLL & CONTROLLER COMMANDS
-                //
-                // Commands only for Doll or Controllers
-                //
-                //   * xstats
-                //   * stats
-                //   * hardcore (ADULT_MODE)
-                //   * release / unpose
-                //
-                // Note that this is Dolly OR a Controller - and NOT
-                // a Controller including Dolly...
-                //
-                if (accessorIsDoll || accessorIsController) {
-                    if (commandsDollyAndController(chatCommand) == TRUE) return;
-                }
-
-                //----------------------------------------
-                // PUBLIC COMMANDS
-                //
-                // Actually, these are "mostly" public commands,
-                // but also include several commands that can be used
-                // by everyone under different circumstances or with
-                // differing results.
-                //
-                // These are the commands that anyone can give:
-                //   * wind
-                //   * stat
-                //
-                // And menu shortcuts:
-                //   * outfits
-                //   * types
-                //   * poses
-                //   * options
-                //   * menu
-                //
-                // And more commands:
-                //   * listposes
-                //   * release / unpose
-                //   * carry
-                //   * uncarry
-                //
-                switch (chatCommand): {
-                    case "wind": {
-
-                        // A Normal Wind
-                        if (accessorIsDoll && collapsed) return;
-                        lmInternalCommand("winding", "|" + accessorName, accessorID);
-
-                        return;
-                    }
-
-                    case "stat": {
-#ifdef ADULT_MODE
-                        if (accessorIsDoll && hardcore) return;
-#endif
-                        string msg = "Key is ";
-
-                        if (windRate > 0) {
-                            msg += "unwinding at a ";
-
-                            if (windRate == 1.0) msg += "normal rate.";
-                            else {
-                                if (windRate < 1.0) msg += "slowed rate of ";
-                                else if (windRate > 1.0) msg += "accelerated rate of ";
-
-                                msg += " of " + formatFloat1(windRate) + "x.";
-                            }
-
-                            float t1 = timeLeftOnKey / (SECS_PER_MIN * windRate);
-                            float t2 = keyLimit / (SECS_PER_MIN * windRate);
-                            float p = t1 * 100.0 / t2;
-
-                            msg += " Time remaining: " + (string)llRound(t1) + "/" +
-                                (string)llRound(t2) + " min (" + formatFloat2(p) + "% capacity).";
-
-                        } else msg += "currently stopped.";
-
-                        cdSayTo(msg, accessorID);
-                        return;
-                    }
-
-                    case "outfits": {
-                        cdMenuInject("Outfits...", accessorName, accessorID);
-                        return;
-                    }
-                    case "types": {
-                        cdMenuInject("Types...", accessorName, accessorID);
-                        return;
-                    }
-                    case "poses": {
-                        if (arePosesPresent() == FALSE) {
-                            cdSayTo("No poses present.",accessorID);
-                            return;
-                        }
-
-                        cdMenuInject("Poses...", accessorName, accessorID);
-                        return;
-                    }
-                    case "options": {
-                        cdMenuInject("Options...", accessorName, accessorID);
-                        return;
-                    }
-                    case "menu": {
-
-                        // if this is Dolly... show dolly other menu as appropriate
-                        if (accessorIsDoll) {
-
-                            // Collapse has precedence over having a carrier...
-                            if (collapsed) lmInternalCommand("collapsedMenu", "", NULL_KEY);
-                            else if (cdCarried()) lmInternalCommand("carriedMenu", (string)accessorID + "|" + carrierName, NULL_KEY);
-                            else cdMenuInject(MAIN, accessorName, accessorID);
-                        }
-                        else {
-                            cdMenuInject(MAIN, accessorName, accessorID);
-                        }
-                        return;
-                    }
-                    case "listposes": {
-                        if (arePosesPresent() == FALSE) {
-                            cdSayTo("No poses present.",accessorID);
-                            return;
-                        }
-
-                        integer n = llGetInventoryNumber(INVENTORY_ANIMATION);
-                        string poseCurrent;
-
-                        while(n) {
-                            poseCurrent = llGetInventoryName(INVENTORY_ANIMATION, --n);
-
-                            // Collapsed animation is special: skip it
-                            if (poseCurrent != ANIMATION_COLLAPSED) {
-
-                                if (poseAnimation == poseCurrent) cdSayTo("\t*\t" + poseCurrent, accessorID);
-                                else cdSayTo("\t\t" + poseCurrent, accessorID);
-                            }
-                        }
-                        return;
-                    }
-                    case "release":
-                    case "unpose": {
-                        if (poseAnimation == "")
-                            cdSayTo("Dolly is not posed.",accessorID);
-
-                        else if (accessorIsDoll) {
-#ifdef ADULT_MODE
-#define poseDoesNotExpire (hardcore || dollType == "Display")
-#else
-#define poseDoesNotExpire (dollType == "Display")
-#endif
-                            // If hardcore or Display Dolly, then Doll can't undo a pose
-                            if (poseDoesNotExpire) return;
-
-                            if (poserID != dollID) {
-                                llOwnerSay("Dolly tries to wrest control of " + pronounHerDoll +
-                                    " body from the pose but " + pronounSheDoll +
-                                    " is no longer in control of " + pronounHerDoll + " form.");
-                            }
-                            else {
-                                cdSayTo("Dolly feels her pose release, and stretches her limbs, so long frozen.",accessorID);
-                                lmMenuReply("Unpose", dollName, dollID);
-                            }
-                        }
-                        else if (accessorIsController || accessorIsCarrier) {
-                            if (poserID == dollID) {
-                                llOwnerSay("You release Dolly's body from the pose that " + pronounSheDoll + " activated.");
-                                lmMenuReply("Unpose", accessorName, accessorID);
-                            }
-                            else if (poserID == accessorID) {
-                                cdSayTo("Dolly feels her pose release, and stretches her limbs, so long frozen.",accessorID);
-                                lmMenuReply("Unpose", accessorName, accessorID);
-                            }
-
-                        }
-
-                        return;
-                    }
-                    case "carry": {
-                        // Dolly can't carry herself... duh!
-                        if (!accessorIsDoll && allowCarry) cdMenuInject("Carry", accessorName, accessorID);
-                        return;
-                    }
-                    case "uncarry": {
-                        if (!accessorIsDoll && (accessorIsController || accessorIsCarrier)) cdMenuInject("Uncarry", accessorName, accessorID);
-                        return;
-                    }
-                    case "pose": {
-
-#define requestedAnimation param
-
-                        if (requestedAnimation != ANIMATION_COLLAPSED) {
-                            if (!(llGetAgentInfo(llGetOwner()) & AGENT_SITTING)) { // Agent not sitting
-                                if (llGetInventoryType(requestedAnimation) == INVENTORY_ANIMATION) {
-                                    // We don't have to do any testing for poses here: if the specified pose exists, we use it
-                                    lmPoseReply(requestedAnimation, accessorName, accessorID);
-                                }
-                                else {
-                                    llSay(DEBUG_CHANNEL,"No pose by that name: " + requestedAnimation);
-                                }
-                            }
-                        }
-                        return;
-                    }
-                }
-
-                // This section is only for commands with parameters:
-                //
-                // Access to these commands for Doll and embedded controllers only:
-                //   * blacklist AAA
-                //   * unblacklist AAA
-                //   * channel 999
-                //   * controller AAA
-                //   * prefix ZZZ
-                //
-                // These commands are for dolly ONLY
-                //   * gname
-                //   * debug (DEVELOPER_MODE)
-                //   * inject (DEVELOPER_MODE)
-                //   * pose
-
-                //----------------------------------------
-                // DOLL & EMBEDDED CONTROLLER COMMANDS (with parameter)
-                //
-                // Access to these commands for Doll and embedded controllers only:
-                //   * blacklist AAA
-                //   * unblacklist AAA
-                //   * channel 999
-                //   * controller AAA
-                //   * prefix ZZZ
-
-                //----------------------------------------
-                // DOLL COMMANDS (with parameter)
-                //
-                // These commands are for dolly ONLY
-                //   * gname
-                //   * debug (DEVELOPER_MODE)
-                //   * inject (DEVELOPER_MODE)
-                //
-
-                //----------------------------------------
-                // PUBLIC COMMANDS (with parameter)
-                //
-                // These commands are for the public at large
-                //   * pose
-                //
+            //----------------------------------------
+            // PUBLIC COMMAND (help)
+            //
+            // The help commands should be handled here, as
+            // they are adjusted differently for each kind of user
+            //   * help
+            //
+            // Biggest problem in the help commands is that the
+            // validation of the user's status has to be replicated in
+            // both the help function and in the function itself; if there
+            // was a way to combine the help with the functions it would be
+            // much better...
+            //
+            // The help functions also provide, in code, a short-hand way to
+            // show who can do what commands... but have to very carefully make
+            // sure that the help matches the commands available...
+            //
+            if (chatCommand == "help") {
+                lmInternalCommand("chatHelp", (string)accessorID, accessorID);
+                return;
             }
 
-            // The chat message is not a known command... so ignore
+            //----------------------------------------
+            // DOLLY ONLY COMMANDS
+            //
+            //   * build
+            //   * update
+            //   * safemode
+            //   * collapse (DEVELOPER_MODE)
+            //   * hide
+            //   * unhide / show / visible
+            //   * ghost
+            //
+            if (accessorIsDoll) {
+                if (commandsDollyOnly(chatCommand,param) == TRUE) return;
+            }
 
+            //----------------------------------------
+            // DOLL & CONTROLLER COMMANDS
+            //
+            // Commands only for Doll or Controllers
+            //
+            //   * xstats
+            //   * stats
+            //   * hardcore (ADULT_MODE)
+            //   * release / unpose
+            //
+            // Note that this is Dolly OR a Controller - and NOT
+            // a Controller including Dolly...
+            //
+            if (accessorIsDoll || accessorIsController) {
+                if (commandsDollyAndController(chatCommand) == TRUE) return;
+            }
+
+            //----------------------------------------
+            // PUBLIC COMMANDS
+            //
+            // Actually, these are "mostly" public commands,
+            // but also include several commands that can be used
+            // by everyone under different circumstances or with
+            // differing results.
+            //
+            // These are the commands that anyone can give:
+            //   * wind
+            //   * stat
+            //
+            // And menu shortcuts:
+            //   * outfits
+            //   * types
+            //   * poses
+            //   * options
+            //   * menu
+            //
+            // And more commands:
+            //   * listposes
+            //   * release / unpose
+            //   * carry
+            //   * uncarry
+            //
+            if (!commandsPublic(chatCommand, param)) {
 #ifdef DEVELOPER_MODE
-            llSay(DEBUG_CHANNEL,"Chat command not recognized: " + msg);
+                llOwnerSay("Command not recognized: \"" + chatCommand + "\"");
+#else
+                ;
 #endif
+            }
         }
     }
 
