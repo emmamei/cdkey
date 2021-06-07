@@ -192,6 +192,11 @@ default {
         else if (code == CONFIG_REPORT) {
             cdConfigureReport();
         }
+#ifdef DEVELOPER_MODE
+        else if (code == MEM_REPORT) {
+            memReport(myName,(float)split[0]);
+        }
+#endif
     }
 
     //----------------------------------------
