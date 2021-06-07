@@ -116,6 +116,9 @@ default {
         scriptCount = llGetInventoryNumber(INVENTORY_SCRIPT) - 1; // Two scripts are uncounted
         scriptIndex = scriptCount; // Update should add one new file (New.lsl)
 #endif
+        // If the scripts are not currently loaded, then start update
+        if (scriptCount < 3)
+            startUpdate();
     }
 
     //----------------------------------------
