@@ -110,8 +110,7 @@ memReport(string script, float delay) {
 }
 
 #ifdef DEVELOPER_MODE
-#define debugSay(level,prefix,msg) if (debugLevel >= level) llOwnerSay("[" + \
-    (string)(llGetUnixTime() % 10000) + "] " + \
+#define debugSay(level,prefix,msg) if (debugLevel >= level) llOwnerSay( \
     prefix+"("+((string)level)+"):"+((string)__LINE__)+": "+(msg))
 #define debugPrint(prefix,msg) llOwnerSay(prefix+":"+((string)__LINE__)+": "+(msg))
 #else
