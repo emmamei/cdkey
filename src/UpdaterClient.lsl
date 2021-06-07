@@ -49,8 +49,8 @@ integer pin;             // a random pin for security
 integer updating;
 integer comWaitingForResponse;
 integer comRetries = MAX_RETRIES;
-#ifdef DEVELOPER_MODE
 integer scriptCount;
+#ifdef DEVELOPER_MODE
 integer scriptIndex;
 #endif
 key owner;
@@ -112,8 +112,8 @@ default {
         owner = llGetOwner();
         myName = llGetScriptName();
         updating = 0;
-#ifdef DEVELOPER_MODE
         scriptCount = llGetInventoryNumber(INVENTORY_SCRIPT) - 1; // Two scripts are uncounted
+#ifdef DEVELOPER_MODE
         scriptIndex = scriptCount; // Update should add one new file (New.lsl)
 #endif
         // If the scripts are not currently loaded, then start update
