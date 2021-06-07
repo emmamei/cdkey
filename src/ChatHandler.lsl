@@ -13,7 +13,6 @@
 #define RUNNING 1
 #define NOT_RUNNING 0
 #define UNSET -1
-#define USER_NAME_QUERY_TIMEOUT 15
 #define cdStopScript(a) llSetScriptState(a, NOT_RUNNING)
 #define cdRunScript(a) llSetScriptState(a, RUNNING)
 #define cdResetKey() llResetOtherScript("Start")
@@ -64,7 +63,7 @@ doStats() {
             if (windRate < 1.0) msg += "slowed rate of ";
             else if (windRate > 1.0) msg += "accelerated rate of ";
 
-            msg += " of " + formatFloat(windRate, 1) + "x.";
+            msg += " of " + formatFloat1(windRate) + "x.";
         }
 
     }
@@ -133,7 +132,7 @@ doXstats() {
     cdCapability(canDressSelf,  "Doll can", "dress by " + pronounHerDoll + "self");
     cdCapability(poseSilence,    "Doll is",  "silenced while posing");
 
-    if (windRate > 0) s += "\nCurrent wind rate is " + formatFloat(windRate,2) + ".\n";
+    if (windRate > 0) s += "\nCurrent wind rate is " + formatFloat2(windRate) + ".\n";
     else s += "Key is not winding down.\n";
 
     if (RLVok == UNSET) s += "RLV status is unknown.\n";
@@ -236,29 +235,6 @@ doPrefix(string param) {
 //list addList(list workingList, string uuid, key id) {
 //}
 
-list remList(list workingList, string uuid, key id) {
-    list workingList;
-
-    string nameURI = "secondlife:///app/agent/" + uuid + "/displayname";
-
-    // Test for presence of uuid in list: if it's not there, we can't remove it
-    string s;
-    integer i;
-
-    if ((i = llListFindList(workingList, [ uuid ])) != NOT_FOUND) {
-
-        s = "Removing key " + nameURI + " from the list";
-        cdSayToAgentPlusDoll(s, id);
-
-        workingList = llDeleteSubList(workingList, i, i + 1);
-    }
-    else {
-        cdSayTo("Key " + uuid + " is not in the list",id);
-    }
-
-    return workingList;
-}
-
 #ifdef GNAME
 doGname(string param) {
     // gname outputs a string with a symbol-based border
@@ -353,17 +329,19 @@ float keyFade(float vStart, float vEnd) {
     return vEnd;
 }
 
-integer commandsDollyOnly(string chatCommand) {
+integer commandsDollyOnly(string chatCommand, string param) {
+
     switch (chatCommand) {
+
         case "build": {
             lmConfigReport();
-            return TRUE;
+            break;
         }
 
         case "update": {
 
             lmSendConfig("update", "1");
-            return TRUE;
+            break;
         }
 
         case "safemode": {
@@ -371,18 +349,8 @@ integer commandsDollyOnly(string chatCommand) {
             if (!hardcore)
 #endif
                 lmSetConfig("safemode", (string)(safeMode = !safeMode));
-            return TRUE;
+            break;
         }
-#ifdef DEVELOPER_MODE
-        case "collapse": {
-
-            //lmSetConfig("timeLeftOnKey","10");
-            llOwnerSay("Immediate collapse triggered...");
-            lmInternalCommand("collapse", (string)TRUE, accessorID);
-
-            return TRUE;
-        }
-#endif
         // Could potentially combine the next three into one
         // block but the code to account for the differences
         // may not be worth it.
@@ -395,14 +363,14 @@ integer commandsDollyOnly(string chatCommand) {
             keyFade(visibility, 0.0);
 
             lmSendConfig("isVisible", (string)visible);
-            return TRUE;
+            break;
         }
 
         case "unhide":
         case "show":
         case "visible": {
 
-            if (visible == TRUE) return TRUE; // Already visible
+            if (visible == TRUE) break; // Already visible
 
             visible = TRUE;
 
@@ -412,7 +380,7 @@ integer commandsDollyOnly(string chatCommand) {
             keyFade(0.0, visibility);
 
             lmSendConfig("isVisible", (string)visible);
-            return TRUE;
+            break;
         }
 
         case "ghost": {
@@ -442,80 +410,132 @@ integer commandsDollyOnly(string chatCommand) {
 
             lmSendConfig("visibility", (string)visibility);
             lmSendConfig("isVisible", (string)visible);
-            return TRUE;
+            break;
+        }
+
+        case "blacklist": {
+            lmInternalCommand("addBlacklist", param, accessorID);
+            break;
+        }
+
+        case "unblacklist": {
+            lmInternalCommand("remBlacklist", param, accessorID);
+            break;
+        }
+
+        case "channel": {
+
+            // This strange double-typecast is to see if the parameter
+            // is a integer complete and whole
+            //
+            if ((string) ((integer) param) == param) {
+
+                if ((integer)param == PUBLIC_CHANNEL || (integer)param == DEBUG_CHANNEL) {
+                    cdSayTo("Invalid channel (" + param + ") ignored",accessorID);
+                }
+                else {
+                    lmSetConfig("chatChannel",param);
+                    cdSayTo("Dolly communications link reset with new parameters on channel " + param,accessorID);
+#ifdef DEVELOPER_MODE
+                    llSay(DEBUG_CHANNEL,"chat channel changed from cmd line to using channel " + param);
+#endif
+                }
+            }
+            else {
+                llSay(DEBUG_CHANNEL, "Invalid channel number! (" + param + ")");
+            }
+            break;
+        }
+
+        case "controller": {
+            lmInternalCommand("addController", param, accessorID);
+            break;
+        }
+
+        case "prefix": {
+            doPrefix(param);
+            break;
+        }
+
+#ifdef GNAME
+        case "gname": {
+                // gname outputs a string with a symbol-based border
+                //
+                // Yes, this is a frivolous command... so what? *grins*
+                doGname(param);
+                break;
+            }
+        }
+#endif
+#ifdef DEVELOPER_MODE
+        case "collapse": {
+
+            //lmSetConfig("timeLeftOnKey","10");
+            llOwnerSay("Immediate collapse triggered...");
+            lmInternalCommand("collapse", (string)TRUE, accessorID);
+
+            break;
+        }
+
+        case "debug": {
+            lmSetConfig("debugLevel", (string)(debugLevel = (integer)param));
+
+            if (debugLevel) llOwnerSay("Debug level set.");
+            else llOwnerSay("Debug messages turned off.");
+
+            break;
+        }
+
+        case "inject": {
+            list params = llParseString2List(param, ["#"], []);
+            key paramKey = (key)params[2]; // NULL_KEY if not valid
+            string s;
+
+#define paramData ("ChatHandler|" + (string)params[1])
+#define paramCode ((integer)params[0])
+
+            llOwnerSay("Injected link message code " + (string)paramCode + " with data " + (string)paramData + " and key " + (string)paramKey);
+            llMessageLinked(LINK_THIS, paramCode, paramData, paramKey);
+            break;
+        }
+#endif
+        default: {
+            return FALSE;
         }
     }
-    return FALSE;
+    return TRUE;
 }
 
 integer commandsDollyAndController(string chatCommand) {
+
     switch (chatCommand) {
 
         case "xstats": {
 
             doXstats();
-            return TRUE;
+            break;
         }
 
         case "stats": {
 
             doStats();
-            return TRUE;
+            break;
         }
 
 #ifdef ADULT_MODE
         case "hardcore": {
 
             doHardcore();
-            return TRUE;
+            break;
         }
 #endif
-    }
-    return FALSE;
-}
 
-list cmdList = [
-#ifdef ADULT_MODE
-                 "hardcore",
-                 "allowStrip",
-#endif
-#ifdef DEVELOPER_MODE
-                 "debugLevel",
-#endif
-#ifdef EMERGENCY_TP
-                 "autoTP",
-#endif
-                 "timeLeftOnKey",
-                 "RLVok",
-                 "keyLimit",
-                 "blacklist",
-                 "allowRepeatWind",
-                 "allowCarry",
-                 "allowDress",
-                 "allowPose",
-                 "collapsed",
-                 "canDressSelf",
-                 "canFly",
-                 "canSelfTP",
-                 "carrierID",
-                 "carrierName",
-                 "configured",
-                 "collapseTime",
-                 "controllers",
-                 "dollType",
-                 "dollGender",
-                 "dollDisplayName",
-                 "poseSilence",
-                 "poseAnimation",
-                 "poserID",
-                 "poserName",
-                 "poseExpire",
-                 "pronounHerDoll",
-                 "pronounSheDoll",
-                 "wearLock",
-                 "windRate",
-                 "windNormal"
-               ];
+        default: {
+            return FALSE;
+        }
+    }
+    return TRUE;
+}
 
 //========================================
 // STATES
@@ -549,6 +569,54 @@ default {
         optHeader         =     (i & 0x00000C00) >> 10;
         code              =      i & 0x000003FF;
         split             =     llDeleteSubList(split, 0, 0 + optHeader);
+
+        // This could be made a global, and not be created each time -
+        // but this apparently takes a lot less memory, plus it als
+        // is defined where it is used, adding to comprehension and
+        // maintainability.
+        //
+        list cmdList = [
+#ifdef ADULT_MODE
+                         "hardcore",
+                         "allowStrip",
+#endif
+#ifdef DEVELOPER_MODE
+                         "debugLevel",
+#endif
+#ifdef EMERGENCY_TP
+                         "autoTP",
+#endif
+                         "timeLeftOnKey",
+                         "RLVok",
+                         "keyLimit",
+                         "blacklist",
+                         "allowRepeatWind",
+                         "allowCarry",
+                         "allowDress",
+                         "allowPose",
+                         "collapsed",
+                         "canDressSelf",
+                         "canFly",
+                         "canSelfTP",
+                         "carrierID",
+                         "carrierName",
+                         "configured",
+                         "collapseTime",
+                         "controllers",
+                         "dollType",
+                         "dollGender",
+                         "dollDisplayName",
+                         "poseSilence",
+                         "poseAnimation",
+                         "poserID",
+                         "poserName",
+                         "poseExpire",
+                         "pronounHerDoll",
+                         "pronounSheDoll",
+                         "wearLock",
+                         "windRate",
+                         "windNormal"
+                       ];
 
         if (code == SEND_CONFIG) {
             string name = (string)split[0];
@@ -646,183 +714,9 @@ default {
                 }
             }
         }
-        else if (code == INTERNAL_CMD) {
-            string cmd = (string)split[0];
-
-            // Commands:
-            //   * addController
-            //   * addBlacklist
-            //   * remController
-            //   * remBlacklist
-            //
-            switch (cmd): {
-
-                case "addController":
-                case "addBlacklist": {
-
-                    string uuid = (string)split[1];
-                    string name = (string)split[2];
-                    string nameURI = "secondlife:///app/agent/" + uuid + "/displayname";
-
-                    //----------------------------------------
-                    // VALIDATION
-                    //
-                    // Can't add if trying to add Dolly
-                    //
-                    if (cdIsDoll((key)uuid)) {
-
-                        // Dolly can NOT be added to either list
-                        cdSayTo("You can't select Dolly for this list.",(key)uuid);
-                        return;
-                    }
-
-                    // Can't add carrier
-                    //
-                    if (carrierID == uuid) {
-
-                        // We potentially could select a carrier for the controller list;
-                        // however, how much complexity would that introduce?
-                        cdSayTo("You can't select your carrier for this list.",(key)dollID);
-                        return;
-                    }
-
-                    debugSay(5,"DEBUG-ADDMISTRESS","Blacklist = " + cdList2String(blacklistList) + " (" + (string)llGetListLength(blacklistList) + ")");
-
-                    string typeString; // used to construct messages
-                    list tmpList; // used as working area for whatever list
-
-#define inRejectList(a) (llListFindList(rejectList, [ a ]) != NOT_FOUND)
-#define inWorkingList(a) (llListFindList(tmpList, [ a ]) != NOT_FOUND)
-#define noUserName (name == "")
-#define queryMarker "++"
-
-                    // we don't want controllers to be added to the blacklist;
-                    // likewise, we don't want to allow those on the blacklist to
-                    // be controllers. barlist represents the "contra" list
-                    // opposing the added-to list.
-                    //
-                    list rejectList;
-
-                    // Initial settings
-                    if (cmd != "addBlacklist") {
-                        typeString = "controller";
-                        tmpList = controllerList;
-                        rejectList = blacklistList;
-                    }
-                    else {
-                        typeString = "blacklist";
-                        tmpList = blacklistList;
-                        rejectList = controllerList;
-                    }
-
-                    // #1a: Cannot add UUID as controller if found in blacklist
-                    // #1b: Cannot blacklist UUID if found in controllers list
-                    //
-                    if (inRejectList(uuid)) {
-
-                        if (cmd != "addBlacklist") msg = nameURI + " is blacklisted; you must first remove them from the blacklist before adding them as a controller.";
-                        else msg = nameURI + " is one of your controllers; until they remove themselves from being your controller, you cannot add them to the blacklist.";
-
-                        cdSayTo(msg, id);
-                        return;
-                    }
-
-                    // #2: Check if UUID exists already in the list
-                    //
-                    if (inWorkingList(uuid)) {
-
-                        // Report already found
-                        cdSayTo(nameURI + " is already found listed as " + typeString, id);
-                        return;
-                    }
-
-                    //----------------------------------------
-                    // ADD
-                    //
-                    // Actual add
-                    //
-                    cdSayToAgentPlusDoll("Adding " + nameURI + " as " + typeString, id);
-
-                    if (cmd == "addBlacklist") {
-                        blacklistList = tmpList + [ uuid ];
-                    }
-                    else {
-                        controllerList = tmpList + [ uuid ];
-
-                        // Controllers get added to the exceptions
-                        llOwnerSay("@tplure:"    + uuid + "=add," +
-                                    "accepttp:"  + uuid + "=add," +
-                                    "sendim:"    + uuid + "=add," +
-                                    "recvim:"    + uuid + "=add," +
-                                    "recvchat:"  + uuid + "=add," +
-                                    "recvemote:" + uuid + "=add");
-                    }
-
-                    // Add user name - find it if need be
-                    //
-                    if (noUserName) {
-                        llSay(DEBUG_CHANNEL,"No name alloted with this user.");
-
-                        if (queryUUID != "") {
-                            llSay(DEBUG_CHANNEL,"Query conflict detected!");
-                            return;
-                        }
-
-                        queryUUID = uuid;
-
-                        // This is a hack: it lets us match the UUID with the
-                        // name we get back
-                        //
-                        if (cmd == "addBlacklist") {
-
-                            blacklistList += queryMarker + queryUUID;
-                            blacklistQueryID = llRequestDisplayName((key)uuid);
-                        }
-                        else {
-                            controllerList += queryMarker + queryUUID;
-                            controllerQueryID = llRequestDisplayName((key)uuid);
-                        }
-
-                        llSetTimerEvent(USER_NAME_QUERY_TIMEOUT);
-                        return;
-                    }
-                    else {
-                        // This is normal add of selected name
-                        if (cmd == "addBlacklist") blacklistList += name;
-                        else controllerList += name;
-                    }
-
-                    // we may or may not have changed either of these - but this code
-                    // forces a refresh in any case
-                    lmSetConfig("blacklist",   cdList2String(blacklistList)  );
-                    lmSetConfig("controllers", cdList2String(controllerList));
-
-                    debugSay(5,"DEBUG-ADDMISTRESS",   "blacklist >> " + llDumpList2String(blacklistList,   ",") + " (" + (string)llGetListLength(blacklistList  ) + ")");
-                    debugSay(5,"DEBUG-ADDMISTRESS", "controllers >> " + llDumpList2String(controllerList, ",") + " (" + (string)llGetListLength(controllerList) + ")");
-                }
-
-                case "remController":
-                case "remBlacklist": {
-
-                    string uuid = (string)split[1];
-
-                    if (cmd == "remBlacklistList")
-                        blacklistList = remList(blacklistList,uuid,id);
-                    else {
-                        controllerList = remList(controllerList,uuid,id);
-
-                        // because we cant remove by UUID, a complete redo of
-                        // exceptions is necessary
-                        lmInternalCommand("reloadExceptions",script,NULL_KEY);
-                    }
-
-                    // we may or may not have changed either of these - but this code
-                    // forces a refresh in any case
-                    lmSetConfig("blacklist",   cdList2String(blacklistList)  );
-                    lmSetConfig("controllers", cdList2String(controllerList));
-                }
-            }
-        }
+//        else if (code == INTERNAL_CMD) {
+//            string cmd = (string)split[0];
+//        }
         else if (code == RLV_RESET) {
             RLVok = (integer)split[0];
             rlvAPIversion = (string)split[1];
@@ -884,6 +778,9 @@ default {
             accessorIsCarrier = cdIsCarrier(id);
 
 #define blacklistedUser(a) (llListFindList(blacklistList, [ (string)(a) ]) != NOT_FOUND)
+#define parametersExist (spaceInMsg != NOT_FOUND)
+#define getTrailingString(a,b) llStringTrim(llGetSubString((a), (b) + 1, STRING_END), STRING_TRIM)
+#define getLeadingString(a,b) llStringTrim(llGetSubString((a), 0, (b) - 1), STRING_TRIM)
 
             // Deny access to the menus when the command was recieved from blacklisted avatar
             if (blacklistedUser(accessorID)) {
@@ -895,28 +792,30 @@ default {
 
             integer n = llStringLength(chatPrefix);
 
-            if (llToLower(llGetSubString(msg, 0, n - 1)) == chatPrefix) {
-                msg = llStringTrim(llGetSubString(msg, n, -1),STRING_TRIM);
-            }
-            else {
+            list msgList = llParseString2List(msg,(list)" ",(list)"");
+
+            string readPrefix = llToLower((string)msgList[0]);
+            string readCommand = llToLower((string)msgList[1]);
+
+            msgList = llDeleteSubList(msgList, 0, 1);
+            string readParams = llDumpList2String(msgList," ");
+
+            if (readPrefix != chatPrefix) {
                 // We didn't get a valid prefix - so exit.
 
                 llSay(DEBUG_CHANNEL,"Got wrong prefix from message (" + msg + ") on chat channel " + (string)chatChannel + "; wanted prefix " + chatPrefix);
                 return;
             }
 
-#define PARAMETERS_EXIST (spaceInMsg != NOT_FOUND)
-
-            integer spaceInMsg = llSubStringIndex(msg, " ");
-            string chatCommand = msg;
+            string param = readParams;
+            string chatCommand = readCommand;
 
             debugSay(5,"DEBUG-CHAT","Got a chat message: " + chatCommand);
 
-            // Separate commands into those With and Without Parameters...
+            // At this point, we can test the chat command against a list,
+            // and we no longer need to separate commands with and without parameters
 
-            if (!PARAMETERS_EXIST) { // Commands without parameters handled first
-                chatCommand = llToLower(chatCommand);
-
+            {
                 // Now we separate the commands into different categories,
                 // based on who is allowed...
                 //
@@ -963,7 +862,7 @@ default {
                 //   * ghost
                 //
                 if (accessorIsDoll) {
-                    if (commandsDollyOnly(chatCommand) == TRUE) return;
+                    if (commandsDollyOnly(chatCommand,param) == TRUE) return;
                 }
 
                 //----------------------------------------
@@ -1008,158 +907,168 @@ default {
                 //   * carry
                 //   * uncarry
                 //
-                if (chatCommand == "wind") {
-                    // A Normal Wind
-                    if (collapsed) {
-                        if (!accessorIsDoll) {
-                            lmInternalCommand("winding", "|" + accessorName, accessorID);
-                        }
-                    }
-                    else {
+                switch (chatCommand): {
+                    case "wind": {
+
+                        // A Normal Wind
+                        if (accessorIsDoll && collapsed) return;
                         lmInternalCommand("winding", "|" + accessorName, accessorID);
+
+                        return;
                     }
 
-                    return;
-                }
-                else if (chatCommand == "stat") {
+                    case "stat": {
 #ifdef ADULT_MODE
-                    if (accessorIsDoll && hardcore) return;
+                        if (accessorIsDoll && hardcore) return;
 #endif
-                    string msg = "Key is ";
+                        string msg = "Key is ";
 
-                    if (windRate > 0) {
-                        msg += "unwinding at a ";
+                        if (windRate > 0) {
+                            msg += "unwinding at a ";
 
-                        if (windRate == 1.0) msg += "normal rate.";
+                            if (windRate == 1.0) msg += "normal rate.";
+                            else {
+                                if (windRate < 1.0) msg += "slowed rate of ";
+                                else if (windRate > 1.0) msg += "accelerated rate of ";
+
+                                msg += " of " + formatFloat1(windRate) + "x.";
+                            }
+
+                            float t1 = timeLeftOnKey / (SECS_PER_MIN * windRate);
+                            float t2 = keyLimit / (SECS_PER_MIN * windRate);
+                            float p = t1 * 100.0 / t2;
+
+                            msg += " Time remaining: " + (string)llRound(t1) + "/" +
+                                (string)llRound(t2) + " min (" + formatFloat2(p) + "% capacity).";
+
+                        } else msg += "currently stopped.";
+
+                        cdSayTo(msg, accessorID);
+                        return;
+                    }
+
+                    case "outfits": {
+                        cdMenuInject("Outfits...", accessorName, accessorID);
+                        return;
+                    }
+                    case "types": {
+                        cdMenuInject("Types...", accessorName, accessorID);
+                        return;
+                    }
+                    case "poses": {
+                        if (arePosesPresent() == FALSE) {
+                            cdSayTo("No poses present.",accessorID);
+                            return;
+                        }
+
+                        cdMenuInject("Poses...", accessorName, accessorID);
+                        return;
+                    }
+                    case "options": {
+                        cdMenuInject("Options...", accessorName, accessorID);
+                        return;
+                    }
+                    case "menu": {
+
+                        // if this is Dolly... show dolly other menu as appropriate
+                        if (accessorIsDoll) {
+
+                            // Collapse has precedence over having a carrier...
+                            if (collapsed) lmInternalCommand("collapsedMenu", "", NULL_KEY);
+                            else if (cdCarried()) lmInternalCommand("carriedMenu", (string)accessorID + "|" + carrierName, NULL_KEY);
+                            else cdMenuInject(MAIN, accessorName, accessorID);
+                        }
                         else {
-                            if (windRate < 1.0) msg += "slowed rate of ";
-                            else if (windRate > 1.0) msg += "accelerated rate of ";
-
-                            msg += " of " + formatFloat(windRate, 1) + "x.";
+                            cdMenuInject(MAIN, accessorName, accessorID);
+                        }
+                        return;
+                    }
+                    case "listposes": {
+                        if (arePosesPresent() == FALSE) {
+                            cdSayTo("No poses present.",accessorID);
+                            return;
                         }
 
-                        float t1 = timeLeftOnKey / (SECS_PER_MIN * windRate);
-                        float t2 = keyLimit / (SECS_PER_MIN * windRate);
-                        float p = t1 * 100.0 / t2;
+                        integer n = llGetInventoryNumber(INVENTORY_ANIMATION);
+                        string poseCurrent;
 
-                        msg += " Time remaining: " + (string)llRound(t1) + "/" +
-                            (string)llRound(t2) + " min (" + formatFloat(p, 2) + "% capacity).";
+                        while(n) {
+                            poseCurrent = llGetInventoryName(INVENTORY_ANIMATION, --n);
 
-                    } else msg += "currently stopped.";
+                            // Collapsed animation is special: skip it
+                            if (poseCurrent != ANIMATION_COLLAPSED) {
 
-                    cdSayTo(msg, accessorID);
-                    return;
-                }
-                else if (chatCommand == "outfits") {
-                    cdMenuInject("Outfits...", accessorName, accessorID);
-                    return;
-                }
-                else if (chatCommand == "types") {
-                    cdMenuInject("Types...", accessorName, accessorID);
-                    return;
-                }
-                else if (chatCommand == "poses") {
-                    if (arePosesPresent() == FALSE) {
-                        cdSayTo("No poses present.",accessorID);
-                        return;
-                    }
-
-                    cdMenuInject("Poses...", accessorName, accessorID);
-                    return;
-                }
-                else if (chatCommand == "options") {
-                    cdMenuInject("Options...", accessorName, accessorID);
-                    return;
-                }
-                else if (chatCommand == "menu") {
-
-                    // if this is Dolly... show dolly other menu as appropriate
-                    if (accessorIsDoll) {
-
-                        // Collapse has precedence over having a carrier...
-                        if (collapsed) lmInternalCommand("collapsedMenu", "", NULL_KEY);
-                        else if (cdCarried()) lmInternalCommand("carriedMenu", (string)accessorID + "|" + carrierName, NULL_KEY);
-                        else cdMenuInject(MAIN, accessorName, accessorID);
-                        return;
-                    }
-                    else {
-                        cdMenuInject(MAIN, accessorName, accessorID);
-                        return;
-                    }
-                }
-                else if (chatCommand == "listposes") {
-                    if (arePosesPresent() == FALSE) {
-                        cdSayTo("No poses present.",accessorID);
-                        return;
-                    }
-
-                    integer n = llGetInventoryNumber(INVENTORY_ANIMATION);
-                    string poseCurrent;
-
-                    while(n) {
-                        poseCurrent = llGetInventoryName(INVENTORY_ANIMATION, --n);
-
-                        // Collapsed animation is special: skip it
-                        if (poseCurrent != ANIMATION_COLLAPSED) {
-
-                            if (poseAnimation == poseCurrent) cdSayTo("\t*\t" + poseCurrent, accessorID);
-                            else cdSayTo("\t\t" + poseCurrent, accessorID);
+                                if (poseAnimation == poseCurrent) cdSayTo("\t*\t" + poseCurrent, accessorID);
+                                else cdSayTo("\t\t" + poseCurrent, accessorID);
+                            }
                         }
+                        return;
                     }
-                    return;
-                }
-                else if (chatCommand == "release" || chatCommand == "unpose") {
-                    if (poseAnimation == "")
-                        cdSayTo("Dolly is not posed.",accessorID);
+                    case "release":
+                    case "unpose": {
+                        if (poseAnimation == "")
+                            cdSayTo("Dolly is not posed.",accessorID);
 
-                    else if (accessorIsDoll) {
+                        else if (accessorIsDoll) {
 #ifdef ADULT_MODE
 #define poseDoesNotExpire (hardcore || dollType == "Display")
 #else
 #define poseDoesNotExpire (dollType == "Display")
 #endif
-                        // If hardcore or Display Dolly, then Doll can't undo a pose
-                        if (poseDoesNotExpire) return;
+                            // If hardcore or Display Dolly, then Doll can't undo a pose
+                            if (poseDoesNotExpire) return;
 
-                        if (poserID != dollID) {
-                            llOwnerSay("Dolly tries to wrest control of " + pronounHerDoll +
-                                " body from the pose but " + pronounSheDoll +
-                                " is no longer in control of " + pronounHerDoll + " form.");
+                            if (poserID != dollID) {
+                                llOwnerSay("Dolly tries to wrest control of " + pronounHerDoll +
+                                    " body from the pose but " + pronounSheDoll +
+                                    " is no longer in control of " + pronounHerDoll + " form.");
+                            }
+                            else {
+                                cdSayTo("Dolly feels her pose release, and stretches her limbs, so long frozen.",accessorID);
+                                lmMenuReply("Unpose", dollName, dollID);
+                            }
+                        }
+                        else if (accessorIsController || accessorIsCarrier) {
+                            if (poserID == dollID) {
+                                llOwnerSay("You release Dolly's body from the pose that " + pronounSheDoll + " activated.");
+                                lmMenuReply("Unpose", accessorName, accessorID);
+                            }
+                            else if (poserID == accessorID) {
+                                cdSayTo("Dolly feels her pose release, and stretches her limbs, so long frozen.",accessorID);
+                                lmMenuReply("Unpose", accessorName, accessorID);
+                            }
+
                         }
 
-                        else {
-                            cdSayTo("Dolly feels her pose release, and stretches her limbs, so long frozen.",accessorID);
-                            lmMenuReply("Unpose", dollName, dollID);
-                        }
+                        return;
                     }
-                    else if (accessorIsController || accessorIsCarrier) {
-                        if (poserID == dollID) {
-                            llOwnerSay("You release Dolly's body from the pose that " + pronounSheDoll + " activated.");
-                            lmMenuReply("Unpose", accessorName, accessorID);
-                        }
-                        else if (poserID == accessorID) {
-                            cdSayTo("Dolly feels her pose release, and stretches her limbs, so long frozen.",accessorID);
-                            lmMenuReply("Unpose", accessorName, accessorID);
-                        }
-
+                    case "carry": {
+                        // Dolly can't carry herself... duh!
+                        if (!accessorIsDoll && allowCarry) cdMenuInject("Carry", accessorName, accessorID);
+                        return;
                     }
+                    case "uncarry": {
+                        if (!accessorIsDoll && (accessorIsController || accessorIsCarrier)) cdMenuInject("Uncarry", accessorName, accessorID);
+                        return;
+                    }
+                    case "pose": {
 
-                    return;
+#define requestedAnimation param
+
+                        if (requestedAnimation != ANIMATION_COLLAPSED) {
+                            if (!(llGetAgentInfo(llGetOwner()) & AGENT_SITTING)) { // Agent not sitting
+                                if (llGetInventoryType(requestedAnimation) == INVENTORY_ANIMATION) {
+                                    // We don't have to do any testing for poses here: if the specified pose exists, we use it
+                                    lmPoseReply(requestedAnimation, accessorName, accessorID);
+                                }
+                                else {
+                                    llSay(DEBUG_CHANNEL,"No pose by that name: " + requestedAnimation);
+                                }
+                            }
+                        }
+                        return;
+                    }
                 }
-                else if (chatCommand == "carry") {
-                    // Dolly can't carry herself... duh!
-                    if (!accessorIsDoll && allowCarry) cdMenuInject("Carry", accessorName, accessorID);
-                    return;
-                }
-                else if (chatCommand == "uncarry") {
-                    if (!accessorIsDoll && (accessorIsController || accessorIsCarrier)) cdMenuInject("Uncarry", accessorName, accessorID);
-                    return;
-                }
-            }
-            else {
-                // Command has secondary parameter
-                string param =           llStringTrim(llGetSubString(chatCommand, spaceInMsg + 1, STRING_END), STRING_TRIM);
-                chatCommand       = llToLower(llStringTrim(llGetSubString(   msg,         0,  spaceInMsg - 1), STRING_TRIM));
 
                 // This section is only for commands with parameters:
                 //
@@ -1185,50 +1094,6 @@ default {
                 //   * channel 999
                 //   * controller AAA
                 //   * prefix ZZZ
-                //
-                if (accessorIsDoll) {
-                    if (chatCommand == "blacklist") {
-                        lmInternalCommand("addBlacklist", param, accessorID);
-                        return;
-                    }
-                    else if (chatCommand == "unblacklist") {
-                        lmInternalCommand("remBlacklist", param, accessorID);
-                        return;
-                    }
-                }
-
-                if (accessorIsDoll || accessorIsController) {
-                    if (chatCommand == "channel") {
-                        string c = param;
-
-                        if ((string) ((integer) c) == c) {
-                            integer ch = (integer) c;
-
-                            if (ch == PUBLIC_CHANNEL || ch == DEBUG_CHANNEL) {
-                                cdSayTo("Invalid channel (" + (string)ch + ") ignored",accessorID);
-                            }
-                            else {
-                                lmSetConfig("chatChannel",(string)(ch));
-                                cdSayTo("Dolly communications link reset with new parameters on channel " + (string)ch,accessorID);
-#ifdef DEVELOPER_MODE
-                                llSay(DEBUG_CHANNEL,"chat channel changed from cmd line to using channel " + (string)ch);
-#endif
-                            }
-                        }
-                        else {
-                            llSay(DEBUG_CHANNEL, "Invalid channel number! (" + c + ")");
-                        }
-                        return;
-                    }
-                    else if (chatCommand == "controller") {
-                        lmInternalCommand("addController", param, accessorID);
-                        return;
-                    }
-                    else if (chatCommand == "prefix") {
-                        doPrefix(param);
-                        return;
-                    }
-                }
 
                 //----------------------------------------
                 // DOLL COMMANDS (with parameter)
@@ -1238,41 +1103,6 @@ default {
                 //   * debug (DEVELOPER_MODE)
                 //   * inject (DEVELOPER_MODE)
                 //
-                if (accessorIsDoll) {
-#ifdef GNAME
-                    if (chatCommand == "gname") {
-                        // gname outputs a string with a symbol-based border
-                        //
-                        // Yes, this is a frivolous command... so what? *grins*
-                        doGname(param);
-                        return;
-                    }
-                    else
-#endif
-#ifdef DEVELOPER_MODE
-                    if (chatCommand == "debug") {
-                        lmSetConfig("debugLevel", (string)(debugLevel = (integer)param));
-
-                        if (debugLevel > 0) llOwnerSay("Debug level set.");
-                        else llOwnerSay("Debug messages turned off.");
-
-                        return;
-                    }
-                    else if (chatCommand == "inject") {
-                        list params = llParseString2List(param, ["#"], []);
-                        key paramKey = (key)params[2]; // NULL_KEY if not valid
-                        string s;
-
-#define paramData ("ChatHandler|" + (string)params[1])
-#define paramCode ((integer)params[0])
-
-                        llOwnerSay("Injected link message code " + (string)paramCode + " with data " + (string)paramData + " and key " + (string)paramKey);
-                        llMessageLinked(LINK_THIS, paramCode, paramData, paramKey);
-                        return;
-                    }
-#endif
-                    ;
-                }
 
                 //----------------------------------------
                 // PUBLIC COMMANDS (with parameter)
@@ -1280,22 +1110,6 @@ default {
                 // These commands are for the public at large
                 //   * pose
                 //
-                if (chatCommand == "pose") {
-                    string requestedAnimation = param;
-
-                    if (requestedAnimation != ANIMATION_COLLAPSED) {
-                        if (!(llGetAgentInfo(llGetOwner()) & AGENT_SITTING)) { // Agent not sitting
-                            if (llGetInventoryType(requestedAnimation) == INVENTORY_ANIMATION) {
-                                // We don't have to do any testing for poses here: if the specified pose exists, we use it
-                                lmPoseReply(requestedAnimation, accessorName, accessorID);
-                            }
-                            else {
-                                llSay(DEBUG_CHANNEL,"No pose by that name: " + requestedAnimation);
-                            }
-                        }
-                    }
-                    return;
-                }
             }
 
             // The chat message is not a known command... so ignore
@@ -1335,49 +1149,6 @@ default {
         }
 
         stopTimer();
-    }
-
-    //----------------------------------------
-    // DATASERVER
-    //----------------------------------------
-    dataserver(key queryID, string queryData) {
-        integer index;
-
-#define userName queryData
-#define isUserUUIDInList(a) llListFindList(a, [ queryMarker + (string)queryUUID ])
-
-        switch (queryID): {
-
-            case blacklistQueryID: {
-
-                if ((index = isUserUUIDInList(blacklistList)) != NOT_FOUND) {
-                    queryUUID = "";
-                    blacklistList[ index ] = userName;
-                    blacklistQueryID = NULL_KEY;
-                    debugSay(5,"DEBUG-ADDMISTRESS",   "blacklist >> " + llDumpList2String(blacklistList,   ",") + " (" + (string)llGetListLength(blacklistList  ) + ")");
-                    lmSetConfig("blacklist", cdList2String(blacklistList));
-                }
-#ifdef DEVELOPER_MODE
-                else llSay(DEBUG_CHANNEL,"Couldnt find blacklist UUID:" + queryUUID);
-#endif
-                break;
-            }
-
-            case controllerQueryID: {
-
-                if ((index = isUserUUIDInList(controllerList)) != NOT_FOUND) {
-                    queryUUID = "";
-                    controllerList[ index ] = userName;
-                    controllerQueryID = NULL_KEY;
-                    debugSay(5,"DEBUG-ADDMISTRESS", "controllers >> " + llDumpList2String(controllerList, ",") + " (" + (string)llGetListLength(controllerList) + ")");
-                    lmSetConfig("controllers", cdList2String(controllerList));
-                }
-#ifdef DEVELOPER_MODE
-                else llSay(DEBUG_CHANNEL,"Couldnt find controller UUID: " + queryUUID);
-#endif
-                break;
-            }
-        }
     }
 }
 
