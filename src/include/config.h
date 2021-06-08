@@ -8,12 +8,10 @@
 // KEY TYPE & MODE
 //----------------------------------------
 
-/* enable developer support features such as not using RLV locks which would
-   prevent editing the scripts or notecards, collection and reporting of
-   performance statistics etc */
+/* enable developer support features */
 #define DEVELOPER_MODE 1
 
-/* enable the inclusion of adult features such as stripping and slut doll in the key */
+/* enable the inclusion of adult features such as stripping and slut doll */
 #define ADULT_MODE 1
 
 /* enable adding user RLV commands to base collapse and pose RLV commands */
