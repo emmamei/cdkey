@@ -735,56 +735,56 @@ default {
 
         parseLinkHeader();
 
-        // This could be made a global, and not be created each time -
-        // but this apparently takes a lot less memory, plus it als
-        // is defined where it is used, adding to comprehension and
-        // maintainability.
-        //
-        list cmdList = [
-#ifdef ADULT_MODE
-                         "hardcore",
-                         "allowStrip",
-#endif
-#ifdef DEVELOPER_MODE
-                         "debugLevel",
-#endif
-#ifdef EMERGENCY_TP
-                         "autoTP",
-#endif
-                         "timeLeftOnKey",
-                         "RLVok",
-                         "keyLimit",
-                         "blacklist",
-                         "allowRepeatWind",
-                         "allowCarry",
-                         "allowDress",
-                         "allowPose",
-                         "collapsed",
-                         "canDressSelf",
-                         "canFly",
-                         "canSelfTP",
-                         "carrierID",
-                         "carrierName",
-                         "configured",
-                         "collapseTime",
-                         "controllers",
-                         "dollType",
-                         "dollGender",
-                         "dollDisplayName",
-                         "poseSilence",
-                         "poseAnimation",
-                         "poserID",
-                         "poserName",
-                         "poseExpire",
-                         "pronounHerDoll",
-                         "pronounSheDoll",
-                         "wearLock",
-                         "windRate",
-                         "windNormal"
-                       ];
-
         if (code == SEND_CONFIG) {
             string name = (string)split[0];
+
+            // This could be made a global, and not be created each time -
+            // but this apparently takes a lot less memory, plus it als
+            // is defined where it is used, adding to comprehension and
+            // maintainability.
+            //
+            list cmdList = [
+#ifdef ADULT_MODE
+                             "hardcore",
+                             "allowStrip",
+#endif
+#ifdef DEVELOPER_MODE
+                             "debugLevel",
+#endif
+#ifdef EMERGENCY_TP
+                             "autoTP",
+#endif
+                             "timeLeftOnKey",
+                             "RLVok",
+                             "keyLimit",
+                             "blacklist",
+                             "allowRepeatWind",
+                             "allowCarry",
+                             "allowDress",
+                             "allowPose",
+                             "collapsed",
+                             "canDressSelf",
+                             "canFly",
+                             "canSelfTP",
+                             "carrierID",
+                             "carrierName",
+                             "configured",
+                             "collapseTime",
+                             "controllers",
+                             "dollType",
+                             "dollGender",
+                             "dollDisplayName",
+                             "poseSilence",
+                             "poseAnimation",
+                             "poserID",
+                             "poserName",
+                             "poseExpire",
+                             "pronounHerDoll",
+                             "pronounSheDoll",
+                             "wearLock",
+                             "windRate",
+                             "windNormal"
+                           ];
 
             // Commands need to be in the list cmdList in order to be
             // recognized, before testing down below

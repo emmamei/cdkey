@@ -203,9 +203,72 @@ default {
 
         if (code == SEND_CONFIG) {
             string name = (string)split[0];
+
+            list cmdList = [
+
+                             "timeLeftOnKey",
+                             "windRate",
+                             "outfitFolder",
+                             "RLVok",
+                             "backMenu",
+                             "keyLimit",
+                             "keyLocked",
+                             "lowScriptMode",
+                             "winderRechargeTime",
+#ifdef ADULT_MODE
+                             "hardcore",
+#endif
+#ifdef SINGLE_SELF_WIND
+                             "lastWinderID",
+#endif
+                             "poseAnimation",
+
+                             "showPhrases",
+                             "transformLockExpire",
+
+                             "allowCarry",
+#ifdef ADULT_MODE
+                             "allowStrip",
+#endif
+                             "allowDress",
+                             "allowSelfWind",
+                             "allowPose",
+
+                             "carrierID",
+                             "carrierName",
+                             "canAFK",
+                             "canDressSelf",
+                             "canSelfTP",
+                             "collapsed",
+                             "configured",
+                             "chatChannel",
+                             "chatPrefix",
+
+                             "dialogChannel",
+#ifdef ADULT_MODE
+                             // if not Adult Mode we don't need this...
+                             "dollType",
+#endif
+#ifdef DEVELOPER_MODE
+                             "debugLevel",
+#endif
+                             "poserID",
+                             "poseSilence",
+                             "pronounHerDoll",
+                             "pronounSheDoll",
+                             "hovertextOn",
+                             "visibility",
+                             "isVisible"
+            ];
+
+            // Commands need to be in the list cmdList in order to be
+            // recognized, before testing down below
+            //
+            if (llListFindList(cmdList, (list)name) == NOT_FOUND)
+                return;
+
             string value = (string)split[1];
             split = llDeleteSubList(split, 0, 0);
-            string c = cdGetFirstChar(name);
 
                  if (name == "timeLeftOnKey")             timeLeftOnKey = (integer)value;
             else if (name == "windRate")                       windRate = (float)value;
@@ -229,49 +292,36 @@ default {
             else if (name == "showPhrases")                 showPhrases = (integer)value;
             else if (name == "transformLockExpire") transformLockExpire = (integer)value;
 
-            // shortcut: a
-            else if (c == "a") {
-                     if (name == "allowCarry")                 allowCarry = (integer)value;
+            else if (name == "allowCarry")                 allowCarry = (integer)value;
 #ifdef ADULT_MODE
-                else if (name == "allowStrip")                 allowStrip = (integer)value;
+            else if (name == "allowStrip")                 allowStrip = (integer)value;
 #endif
-                else if (name == "allowDress")                 allowDress = (integer)value;
-                else if (name == "allowSelfWind")           allowSelfWind = (integer)value;
-                else if (name == "allowPose")                   allowPose = (integer)value;
-            }
+            else if (name == "allowDress")                 allowDress = (integer)value;
+            else if (name == "allowSelfWind")           allowSelfWind = (integer)value;
+            else if (name == "allowPose")                   allowPose = (integer)value;
 
-            // shortcut: c
-            else if (c == "c") {
-                     if (name == "carrierID")                   carrierID = (key)value;
-                else if (name == "carrierName")               carrierName = value;
-                else if (name == "canAFK")                         canAFK = (integer)value;
-                else if (name == "canDressSelf")             canDressSelf = (integer)value;
-                else if (name == "canSelfTP")                   canSelfTP = (integer)value;
-                else if (name == "collapsed")                   collapsed = (integer)value;
-                else if (name == "configured")                 configured = (integer)value;
-                else if (name == "chatChannel")               chatChannel = (integer)value;
-                else if (name == "chatPrefix")                 chatPrefix = value;
-            }
+            else if (name == "carrierID")                   carrierID = (key)value;
+            else if (name == "carrierName")               carrierName = value;
+            else if (name == "canAFK")                         canAFK = (integer)value;
+            else if (name == "canDressSelf")             canDressSelf = (integer)value;
+            else if (name == "canSelfTP")                   canSelfTP = (integer)value;
+            else if (name == "collapsed")                   collapsed = (integer)value;
+            else if (name == "configured")                 configured = (integer)value;
+            else if (name == "chatChannel")               chatChannel = (integer)value;
+            else if (name == "chatPrefix")                 chatPrefix = value;
 
-            // shortcut: d
-            else if (c == "d") {
-                     if (name == "dialogChannel")           dialogChannel = (integer)value;
+            else if (name == "dialogChannel")           dialogChannel = (integer)value;
 #ifdef ADULT_MODE
-                // if not Adult Mode we don't need this...
-                else if (name == "dollType")                     dollType = value;
+            // if not Adult Mode we don't need this...
+            else if (name == "dollType")                     dollType = value;
 #endif
 #ifdef DEVELOPER_MODE
-                else if (name == "debugLevel")                 debugLevel = (integer)value;
+            else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
-            }
-
-            // shortcut: p
-            else if (c == "p") {
-                     if (name == "poserID")                   poserID = (key)value;
-                else if (name == "poseSilence")           poseSilence = (integer)value;
-                else if (name == "pronounHerDoll")     pronounHerDoll = value;
-                else if (name == "pronounSheDoll")     pronounSheDoll = value;
-            }
+            else if (name == "poserID")                   poserID = (key)value;
+            else if (name == "poseSilence")           poseSilence = (integer)value;
+            else if (name == "pronounHerDoll")     pronounHerDoll = value;
+            else if (name == "pronounSheDoll")     pronounSheDoll = value;
             else if (name == "hovertextOn")               hovertextOn = (integer)value;
             else if (name == "visibility")                 visibility = (float)value;
             else if (name == "isVisible") {

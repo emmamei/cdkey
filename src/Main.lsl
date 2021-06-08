@@ -369,10 +369,11 @@ default {
 #define bumpExpireTime(a) llGetUnixTime() + (a)
 
 #ifdef DEVELOPER_MODE
-        timeSpan = llGetTime();
-        if (timeSpan) {
-            if (timeReporting)
-                debugSay(5,"DEBUG-MAIN","Main Timer fired, interval " + formatFloat(timeSpan,2) + "s.");
+        if (debugLevel > 0) {
+            timeSpan = llGetTime();
+            if (timeSpan) {
+                debugSay(5,"DEBUG-MAIN","Main Timer fired, interval " + formatFloat2(timeSpan) + "s.");
+            }
         }
 #endif
 
@@ -539,23 +540,58 @@ default {
         // SEND_CONFIG
         if (code == SEND_CONFIG) {
             string name = (string)split[0];
+
+            list cmdList = [
+                            "carrierID",
+                            "carrierName",
+                            "canAFK",
+                            "configured",
+                            "collapsed",
+                            "allowRepeatWind",
+                            "allowDress",
+                            "allowSelfWind",
+                            "isAFK",
+                            "RLVok",
+#ifdef ADULT_MODE
+                            "allowStrip",
+                            "hardcore",
+#endif
+                            "blacklist",
+                            "dollDisplayName",
+                            "dialogChannel",
+                            "dollType",
+                            "defaultCollapseRLVcmd",
+#ifdef DEVELOPER_MODE
+                            "debugLevel",
+#endif
+                            "hovertextOn",
+                            "pronounHerDoll",
+                            "pronounSheDoll",
+                            "transformLockExpire",
+                            "windAmount",
+                            "windNormal"
+            ];
+
+            // Commands need to be in the list cmdList in order to be
+            // recognized, before testing down below
+            //
+            if (llListFindList(cmdList, (list)name) == NOT_FOUND)
+                return;
+
             string value = (string)split[1];
             split = llDeleteSubList(split, 0, 0);
-            string c = cdGetFirstChar(name);
 
-            if (c == "c") {
-                if (name == "carrierID") {
-                    carrierID = (key)value;
+            if (name == "carrierID") {
+                carrierID = (key)value;
 
-                    if (cdCarried()) carryExpire = llGetUnixTime() + CARRY_TIMEOUT;
-                    else carryExpire = 0;
-                    //lmSendConfig("carryExpire", (string)carryExpire);
-                }
-                else if (name == "carrierName")               carrierName = value;
-                else if (name == "canAFK")                         canAFK = (integer)value;
-                else if (name == "configured")                 configured = (integer)value;
-                else if (name == "collapsed")                   collapsed = (integer)value;
+                if (cdCarried()) carryExpire = llGetUnixTime() + CARRY_TIMEOUT;
+                else carryExpire = 0;
+                //lmSendConfig("carryExpire", (string)carryExpire);
             }
+            else if (name == "carrierName")               carrierName = value;
+            else if (name == "canAFK")                         canAFK = (integer)value;
+            else if (name == "configured")                 configured = (integer)value;
+            else if (name == "collapsed")                   collapsed = (integer)value;
             else if (name == "allowRepeatWind")       allowRepeatWind = (integer)value;
             else if (name == "allowDress")                 allowDress = (integer)value;
             else if (name == "allowSelfWind")           allowSelfWind = (integer)value;
@@ -576,25 +612,19 @@ default {
                 if (split == [""]) blacklistList = [];
                 else blacklistList = split;
             }
-            else if (c == "d") {
-                     if (name == "dollDisplayName")             dollDisplayName = value;
-                else if (name == "dialogChannel")                 dialogChannel = (integer)value;
-                else if (name == "dollType")                           dollType = value;
-                else if (name == "defaultCollapseRLVcmd") defaultCollapseRLVcmd = value;
+            else if (name == "dollDisplayName")             dollDisplayName = value;
+            else if (name == "dialogChannel")                 dialogChannel = (integer)value;
+            else if (name == "dollType")                           dollType = value;
+            else if (name == "defaultCollapseRLVcmd") defaultCollapseRLVcmd = value;
 #ifdef DEVELOPER_MODE
-                else if (name == "debugLevel")                 debugLevel = (integer)value;
+            else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
-            }
             else if (name == "hovertextOn")               hovertextOn = (integer)value;
             else if (name == "pronounHerDoll")         pronounHerDoll = value;
             else if (name == "pronounSheDoll")         pronounSheDoll = value;
             else if (name == "transformLockExpire") transformLockExpire = (integer)value;
-
             else if (name == "windAmount")                 windAmount = (integer)value;
             else if (name == "windNormal")                 windNormal = (integer)value;
-#ifdef DEVELOPER_MODE
-            else if (name == "timeReporting")           timeReporting = (integer)value;
-#endif
         }
 
         //----------------------------------------
@@ -706,7 +736,7 @@ default {
                 integer windAmount = (integer)split[0];
                 string name = (string)split[1];
                 string mins = (string)llFloor(windAmount / SECS_PER_MIN);
-                string percent = formatFloat((float)timeLeftOnKey * 100.0 / (float)keyLimit, 1);
+                string percent = formatFloat1((float)timeLeftOnKey * 100.0 / (float)keyLimit);
 
                 // Eliminate zero minutes, and correct grammar
                 if (windAmount < 120) mins = "about a minute";
