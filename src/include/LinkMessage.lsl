@@ -33,8 +33,8 @@ integer mySeqNum;
 
 // #define cdLinkMessage(target,opt,code,data,id) llMessageLinked(target, (((mySeqNum++) << 16) | (opt << 10) | code), cdMyScriptName() + "|" + data, id)
 
-#define parseLinkHeader() \
-        split     = cdSplitArgs(data); \
+#define parseLinkHeader(a,i) \
+        split     = cdSplitArgs(a); \
         script    = (string)split[0]; \
         remoteSeq = (i & 0xFFFF0000) >> 16; \
         optHeader = (i & 0x00000C00) >> 10; \

@@ -443,7 +443,7 @@ default {
     //----------------------------------------
     link_message(integer source, integer i, string data, key id) {
 
-        parseLinkHeader();
+        parseLinkHeader(data,i);
 
         if (code == SEND_CONFIG) {
             string name = (string)split[0];

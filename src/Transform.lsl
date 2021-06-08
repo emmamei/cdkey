@@ -482,7 +482,7 @@ default {
     //----------------------------------------
     link_message(integer source, integer i, string data, key id) {
 
-        parseLinkHeader();
+        parseLinkHeader(data,i);
 
         transformerID = id;
 

@@ -534,7 +534,7 @@ default {
     // For Transforming Key operations
     link_message(integer source, integer i, string data, key id) {
 
-        parseLinkHeader();
+        parseLinkHeader(data,i);
 
         //----------------------------------------
         // SEND_CONFIG

@@ -145,7 +145,7 @@ default {
     //----------------------------------------
     link_message(integer source, integer i, string data, key id) {
 
-        parseLinkHeader();
+        parseLinkHeader(data,i);
 
         string name = (string)split[0];
         string value = (string)split[1];
