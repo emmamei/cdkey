@@ -437,6 +437,120 @@ doRestart() {
 // STATES
 //========================================
 default {
+    //----------------------------------------
+    // STATE ENTRY
+    //----------------------------------------
+    state_entry() {
+        startParameter = llGetStartParameter();
+
+        // This helps during debugging to set off the reset sequence in logs
+        llOwnerSay("******** KEY RESET ********");
+
+        // start parameter can ONLY be set via llRemoteLoadScriptPin()
+        if (startParameter == 100) {
+            llOwnerSay("Key has been updated.");
+        }
+
+        initTimer = llGetTime();
+
+        dollID = llGetOwner();
+        keyID = llGetKey();
+        dollName = dollyName();
+        myName = llGetScriptName();
+        keySpecificConfigs = [];
+
+        //rlvWait = 1;
+        cdInitializeSeq();
+        //resetState = RESET_STARTUP;
+
+        // WHen this script (Start.lsl) resets... EVERYONE resets...
+        doRestart();
+        llSleep(0.5);
+
+        makeWorkInNoScriptLand(dollID);
+
+        // Start with key visible
+        lmSendConfig("visibility",(string)1.0);
+        lmSendConfig("isVisible",(string)TRUE);
+
+        lmInitStage(INIT_STAGE1);
+    }
+
+    //----------------------------------------
+    // ON REZ
+    //----------------------------------------
+    on_rez(integer start) {
+        llResetTime();
+        dollID = llGetOwner();
+        dollName = dollyName();
+
+#ifdef DEVELOPER_MODE
+        // Note this should be set by prefs, but the prefs require a lot before
+        // they are read
+        debugLevel = 8;
+
+        // Set the debug level for all scripts early
+        lmSendConfig("debugLevel",(string)debugLevel);
+#endif
+
+        rlvPreviously = RLVok;
+        lmInternalCommand("startRlvCheck", "", keyID);
+
+        // Reset visibility so we don't forget or get confused
+        lmSendConfig("visibility",(string)1.0);
+        lmSendConfig("isVisible",(string)TRUE);
+
+        // Clear the lowScript mode and start from beginning
+        lmSendConfig("lowScriptExpire",(string)0);
+
+        // This is probably overkill - but pass these on to everybody
+        lmSendConfig("transformLockExpire",(string)transformLockExpire);
+        lmSendConfig("poseExpire",(string)poseExpire);
+        lmSendConfig("carryExpire",(string)carryExpire);
+
+        llOwnerSay("The Key is now fully ready; you hear the gears whir and spin up.");
+    }
+
+    //----------------------------------------
+    // ATTACH
+    //----------------------------------------
+    // During attach we do the following:
+    //
+    //     * set winding rate
+    //     * take controls so we work in no-script land
+    //     * set AFK mode to false
+    //     * restore collapse mode
+    //
+    // During DETACH we give the dolly an RP message.
+    //
+    attach(key id) {
+
+        if (keyDetached(id)) {
+
+            //llMessageLinked(LINK_SET, 106,  "Start|detached|" + (string)lastAttachPoint, lastAttachAvatar);
+            llOwnerSay("The key is wrenched from your back, and you double over at the unexpected pain as the tendrils are ripped out. You feel an emptiness, as if some beautiful presence has been removed.");
+
+        }
+        else {
+
+            // A lot of this code is about saving the fact that we are attached...
+            //llMessageLinked(LINK_SET, 106, "Start|attached|" + (string)TRUE, id);
+
+            makeWorkInNoScriptLand(dollID);
+
+            // when attaching key, user is NOT AFK...
+            lmSetConfig("isAFK", (string)FALSE);
+
+            // restore collapse environment
+            lmInternalCommand("collapse", (string)collapsed, keyID);
+
+            // setWindRate depends on accurate AFK and collapse settings...
+            lmInternalCommand("setWindRate","",NULL_KEY);
+
+            //lastAttachPoint = cdAttached();
+            //lastAttachAvatar = id;
+        }
+    }
 
     //----------------------------------------
     // LINK MESSAGE
@@ -777,7 +891,7 @@ default {
             }
             else if (code == INIT_STAGE5) {
                 debugSay(3,"DEBUG-START","Stage 5 begun.");
-                
+
                 msg = "Initialization completed in " +
                       formatFloat((llGetTime() - initTimer), 1) + "s" +
                       "; key ready";
@@ -811,119 +925,6 @@ default {
             else if (code == CONFIG_REPORT) {
                 cdConfigureReport();
             }
-        }
-    }
-
-    //----------------------------------------
-    // STATE ENTRY
-    //----------------------------------------
-    state_entry() {
-        startParameter = llGetStartParameter();
-
-        // This helps during debugging to set off the reset sequence in logs
-        llOwnerSay("******** KEY RESET ********");
-
-        // start parameter can ONLY be set via llRemoteLoadScriptPin()
-        if (startParameter == 100) {
-            llOwnerSay("Key has been updated.");
-        }
-
-        initTimer = llGetTime();
-
-        dollID = llGetOwner();
-        keyID = llGetKey();
-        dollName = dollyName();
-        myName = llGetScriptName();
-        keySpecificConfigs = [];
-
-        //rlvWait = 1;
-        cdInitializeSeq();
-        //resetState = RESET_STARTUP;
-
-        // WHen this script (Start.lsl) resets... EVERYONE resets...
-        doRestart();
-        llSleep(0.5);
-
-        makeWorkInNoScriptLand(dollID);
-
-        // Start with key visible
-        lmSendConfig("visibility",(string)1.0);
-        lmSendConfig("isVisible",(string)TRUE);
-
-        lmInitStage(INIT_STAGE1);
-    }
-
-    //----------------------------------------
-    // ON REZ
-    //----------------------------------------
-    on_rez(integer start) {
-        llResetTime();
-        dollID = llGetOwner();
-        dollName = dollyName();
-
-#ifdef DEVELOPER_MODE
-        // Note this should be set by prefs, but the prefs require a lot before
-        // they are read
-        debugLevel = 8;
-
-        // Set the debug level for all scripts early
-        lmSendConfig("debugLevel",(string)debugLevel);
-#endif
-
-        rlvPreviously = RLVok;
-        lmInternalCommand("startRlvCheck", "", keyID);
-
-        // Reset visibility so we don't forget or get confused
-        lmSendConfig("visibility",(string)1.0);
-        lmSendConfig("isVisible",(string)TRUE);
-
-        // Clear the lowScript mode and start from beginning
-        lmSendConfig("lowScriptExpire",(string)0);
-
-        // This is probably overkill - but pass these on to everybody
-        lmSendConfig("transformLockExpire",(string)transformLockExpire);
-        lmSendConfig("poseExpire",(string)poseExpire);
-        lmSendConfig("carryExpire",(string)carryExpire);
-    }
-
-    //----------------------------------------
-    // ATTACH
-    //----------------------------------------
-    // During attach we do the following:
-    //
-    //     * set winding rate
-    //     * take controls so we work in no-script land
-    //     * set AFK mode to false
-    //     * restore collapse mode
-    //
-    // During DETACH we give the dolly an RP message.
-    //
-    attach(key id) {
-
-        if (keyDetached(id)) {
-
-            //llMessageLinked(LINK_SET, 106,  "Start|detached|" + (string)lastAttachPoint, lastAttachAvatar);
-            llOwnerSay("The key is wrenched from your back, and you double over at the unexpected pain as the tendrils are ripped out. You feel an emptiness, as if some beautiful presence has been removed.");
-
-        }
-        else {
-
-            // A lot of this code is about saving the fact that we are attached...
-            //llMessageLinked(LINK_SET, 106, "Start|attached|" + (string)TRUE, id);
-
-            makeWorkInNoScriptLand(dollID);
-
-            // when attaching key, user is NOT AFK...
-            lmSetConfig("isAFK", (string)FALSE);
-
-            // restore collapse environment
-            lmInternalCommand("collapse", (string)collapsed, keyID);
-
-            // setWindRate depends on accurate AFK and collapse settings...
-            lmInternalCommand("setWindRate","",NULL_KEY);
-
-            //lastAttachPoint = cdAttached();
-            //lastAttachAvatar = id;
         }
     }
 

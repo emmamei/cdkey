@@ -12,7 +12,7 @@ STARTUP EVENTS
 
 THUS:
 
-* Brand New Key Worn: state_entry, on_rez, attach
+* Brand New Key Worn: state_entry
 * Dolly Attaches Her Key: on_rez, attach
 * Dolly Logs In: on_rez, attach
 * Dolly Updates Key: state_entry
