@@ -63,7 +63,7 @@ integer keyLocked = FALSE;
 //========================================
 // FUNCTIONS
 //========================================
-doWinding(string name, key id) {
+doWinding(string winderName, key winderID) {
     // Four steps:
     //   1. Can we wind up at all?
     //   2. Calculate wind time
@@ -73,8 +73,8 @@ doWinding(string name, key id) {
 #ifdef SINGLE_SELF_WIND
     // Test and reject repeat windings from Dolly - no matter who Dolly is or what the settings are
     if (allowSelfWind) { // is self-wind allowed?
-        if (id == dollID) { // is winder Dolly?
-            if (id == lastWinderID) { // is last winder also Dolly?
+        if (winderID == dollID) { // is winder Dolly?
+            if (winderID == lastWinderID) { // is last winder also Dolly?
                 llOwnerSay("You have wound yourself once already; you must be wound by someone else before being able to wind again.");
                             return;
             }
@@ -84,10 +84,10 @@ doWinding(string name, key id) {
     // Test and reject repeat winding as appropriate - Controllers and Carriers are not limited
     // (odd sequence helps with short-circuiting and speed)
     if (!allowRepeatWind) {
-        if (!cdIsController(id)) {
-            if (!cdIsCarrier(id)) {
-                if (id == lastWinderID) {
-                    cdSayTo("Dolly needs to be wound by someone else before you can wind " + pronounHerDoll + " again.", id);
+        if (!cdIsController(winderID)) {
+            if (!cdIsCarrier(winderID)) {
+                if (winderID == lastWinderID) {
+                    cdSayTo("Dolly needs to be wound by someone else before you can wind " + pronounHerDoll + " again.", winderID);
                     return;
                 }
             }
@@ -108,9 +108,9 @@ doWinding(string name, key id) {
     // be set - collapse is set a short time later - thus, timeLeftOnKey is greater
     // than zero, but collapse is still true.
     lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey += windAmount));
-    if (lastWinderID != id) lmSendConfig("lastWinderID", (string)(lastWinderID = id));
+    if (lastWinderID != winderID) lmSendConfig("lastWinderID", (string)(lastWinderID = winderID));
 
-    lmInternalCommand("windMsg", (string)windAmount + "|" + name, id);
+    lmInternalCommand("windMsg", (string)windAmount + "|" + winderName, winderID);
 
     if (collapsed) unCollapse();
 }
@@ -331,25 +331,25 @@ default {
     // TOUCH START
     //----------------------------------------
     touch_start(integer num) {
-        key id = llDetectedKey(0);
-        string agentName = llGetDisplayName(id);
+        key toucherID = llDetectedKey(0);
+        string toucherName = llGetDisplayName(toucherID);
 
         // Deny access to the key when the command was recieved from blacklisted avatar
-        if (llListFindList(blacklistList, [ (string)id ]) != NOT_FOUND) {
-            llOwnerSay("SECURITY WARNING! Attempted Key access from blacklisted user " + agentName);
+        if (llListFindList(blacklistList, [ (string)toucherID ]) != NOT_FOUND) {
+            llOwnerSay("SECURITY WARNING! Attempted Key access from blacklisted user " + toucherName);
             return;
         }
 
         if (RLVok == UNSET) {
-            if (dollID != id) {
-                cdSayTo(dollName + "'s key clanks and clinks.... it doesn't seem to be ready yet.",id);
-                llOwnerSay(agentName + " is fiddling with your Key but the state of RLV is not yet determined.");
+            if (dollID != toucherID) {
+                cdSayTo(dollName + "'s key clanks and clinks.... it doesn't seem to be ready yet.",toucherID);
+                llOwnerSay(toucherName + " is fiddling with your Key but the state of RLV is not yet determined.");
                 return;
             }
         }
 
-        debugSay(2,"DEBUG-MAIN","Key accessed by " + agentName + " (" + (string)id + ")");
-        lmMenuReply(MAIN,agentName,id);
+        debugSay(2,"DEBUG-MAIN","Key accessed by " + toucherName + " (" + (string)toucherID + ")");
+        lmMenuReply(MAIN,toucherName,toucherID);
     }
 
     //----------------------------------------
@@ -734,7 +734,7 @@ default {
             else if (cmd == "windMsg") {
                 // this overlaps a global windAmount... bad!
                 integer windAmount = (integer)split[0];
-                string name = (string)split[1];
+                string winderName = (string)split[1];
                 string mins = (string)llFloor(windAmount / SECS_PER_MIN);
                 string percent = formatFloat1((float)timeLeftOnKey * 100.0 / (float)keyLimit);
 
@@ -749,7 +749,7 @@ default {
                 //
                 // We're assuming that every winder has a non-null name, and every
                 // auto-wind has a null name... is that really true?
-                if (name != "") {
+                if (winderName != "") {
 
                     // We're trying to avoid having name obliterated by RLV viewers
                     // Note this makes no difference to waiting events, just other scripts
@@ -762,10 +762,10 @@ default {
                     }
                     else {
 #ifdef ADULT_MODE
-                        if (hardcore) llOwnerSay("Your key has been cranked by " + name + ".");
+                        if (hardcore) llOwnerSay("Your key has been cranked by " + winderName + ".");
                         else
 #endif
-                            llOwnerSay("Your key has been turned by " + name + " giving you " +
+                            llOwnerSay("Your key has been turned by " + winderName + " giving you " +
                                 mins + " of life (" + percent + "% capacity).");
 
                         cdSayTo("You turn " + dollDisplayName + "'s Key, and " + pronounSheDoll + " receives " +
@@ -782,7 +782,7 @@ default {
                         }
                         else {
                             // Holler so people know and to give props to winder
-                            cdSay(dollDisplayName + " has been fully wound by " + name + "! Thank you!");
+                            cdSay(dollDisplayName + " has been fully wound by " + winderName + "! Thank you!");
                         }
                     }
                 }
@@ -822,14 +822,17 @@ default {
         //----------------------------------------
         // MENU_SELECTION
         else if (code == MENU_SELECTION) {
-            string choice = (string)split[0];
+            string menuChoice = (string)split[0];
             string name = (string)split[1];
 
-            if (choice == MAIN) {
+            // if this message is a MENU_SELECTION, then the link message parameter "id"
+            // is the key of the person who activated the menu
+
+            if (menuChoice == MAIN) {
                 // call actual Menu code
                 lmInternalCommand("mainMenu", "|" + name, id);
             }
-            else if (choice == "Wind Emg") {
+            else if (menuChoice == "Wind Emg") {
                 // Give this a time limit: can only be done once
                 // in - say - 6 hours... at least maxwindtime *2 or *3.
 
@@ -889,7 +892,7 @@ default {
                 }
             }
 
-            else if (choice == "Lock") {
+            else if (menuChoice == "Lock") {
                 lmSendConfig("keyLocked", (string)(keyLocked = TRUE));
 
                 if (keyLocked) rlvLockKey();
@@ -898,7 +901,7 @@ default {
                 lmInternalCommand("mainMenu", "|" + name, id);
             }
 
-            else if (choice == "Unlock") {
+            else if (menuChoice == "Unlock") {
                 lmSendConfig("keyLocked", (string)(keyLocked = FALSE));
 
                 if (keyLocked) rlvLockKey();
@@ -908,7 +911,7 @@ default {
             }
 
             // Winding - pure and simple
-            else if (choice == "Wind") {
+            else if (menuChoice == "Wind") {
 
                 // The winding process also handles messages directly
                 doWinding(name,id);
@@ -917,7 +920,7 @@ default {
 
             // Note that Max Times are "m" and Wind Times are "min" - this is on purpose to
             // keep the two separate
-            else if (choice == "Max Time...") {
+            else if (menuChoice == "Max Time...") {
 #ifdef ADULT_MODE
                 list maxList = [ "45m", "60m", "75m", "90m", "120m" ];
                 if (!hardcore) maxList += [ "150m", "180m", "240m" ];
@@ -932,38 +935,51 @@ default {
                     dialogSort(maxList), dialogChannel);
             }
 
-            else if ((choice ==  "15min") ||
-                     (choice ==  "30min") ||
-                     (choice ==  "45min") ||
-                     (choice ==  "60min") ||
-                     (choice ==  "90min") ||
-                     (choice == "120min")) {
+            // This is setting the windNormal; we don't have to check to see if
+            // it is too large: this is done during the menu creation phase
+            //
+            else if ((menuChoice ==  "15min") ||
+                     (menuChoice ==  "30min") ||
+                     (menuChoice ==  "45min") ||
+                     (menuChoice ==  "60min") ||
+                     (menuChoice ==  "90min") ||
+                     (menuChoice == "120min")) {
 
-                windNormal = (integer)choice * (integer)SECS_PER_MIN;
-
-                if (windNormal > keyLimit) windNormal = llFloor(keyLimit / 6);
+                windNormal = (integer)menuChoice * (integer)SECS_PER_MIN;
                 lmSendConfig("windNormal", (string)windNormal);
 
                 cdSayTo("Winding now set to " + (string)(windNormal / (integer)SECS_PER_MIN) + " minutes",id);
                 lmMenuReply("Key...","",id);
             }
 
-            else if ((choice ==  "45m") ||
-                     (choice ==  "60m") ||
-                     (choice ==  "75m") ||
-                     (choice ==  "90m") ||
-                     (choice == "120m") ||
-                     (choice == "150m") ||
-                     (choice == "180m") ||
-                     (choice == "240m")) {
+            // This is setting the keyLimit; windNormal is adjusted if necessary
+            //
+            else if ((menuChoice ==  "45m") ||
+                     (menuChoice ==  "60m") ||
+                     (menuChoice ==  "75m") ||
+                     (menuChoice ==  "90m") ||
+                     (menuChoice == "120m") ||
+                     (menuChoice == "150m") ||
+                     (menuChoice == "180m") ||
+                     (menuChoice == "240m")) {
 
-                keyLimit = (integer)choice * SECS_PER_MIN;
+                keyLimit = (integer)menuChoice * SECS_PER_MIN;
+
+                // Adjust windNormal if needed
+                if (windNormal > keyLimit) {
+                    integer oldWindTime = windNormal;
+
+                    windNormal = keyLimit / 6;
+                    lmSendConfig("windNormal", (string)windNormal);
+                    cdSayTo("Winding time was too large; changed from " + (string)oldWindTime + " to " + (string)windNormal,id);
+                }
+
                 cdSayTo("Key limit now set to " + (string)llFloor(keyLimit / SECS_PER_MIN) + " minutes",id);
 
                 lmSendConfig("keyLimit", (string)keyLimit);
                 lmMenuReply("Key...","",id);
             }
-            else if (choice == "Wind Time...") {
+            else if (menuChoice == "Wind Time...") {
                 list windChoices;
 
                 // Build up the allowed winding times based on the KeyLimit
@@ -978,7 +994,7 @@ default {
                 llDialog(id, "You can set the amount of time in each wind.\nDolly currently winds " + (string)(windNormal / (integer)SECS_PER_MIN) + " mins.",
                     dialogSort(windChoices + [ MAIN ]), dialogChannel);
             }
-            else if (choice == "Unwind") {
+            else if (menuChoice == "Unwind") {
                 doCollapse();
                 cdSayTo("Dolly collapses, " + pronounHerDoll + " key unwound",id);
             }

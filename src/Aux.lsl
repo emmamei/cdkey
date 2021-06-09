@@ -108,6 +108,55 @@ default {
 
         if (code == SEND_CONFIG) {
             string name = (string)split[0];
+            list cmdList = [
+
+                            "controllers",
+#ifdef DEVELOPER_MODE
+                            "debugLevel",
+#endif
+                            "poserID",
+                            "keyLimit",
+                            "windNormal",
+                            "winderRechargeTime",
+                            "backMenu",
+#ifdef HOMING_BEACON
+                            "homingBeacon",
+#endif
+                            "mustAgreeToType",
+                            "collapseTime",
+                            "collapsed",
+#ifdef EMERGENCY_TP
+                            "autoTP",
+#endif
+                            "showPhrases",
+                            "RLVsupport",
+                            "RLVok",
+                            "allowCarry",
+                            "allowDress",
+                            "allowPose",
+                            "canDressSelf",
+                            "canFly",
+                            "allowRepeatWind",
+                            "allowSelfWind",
+                            "dollDisplayName",
+                            "poseAnimation",
+                            "poseSilence",
+                            "canSelfTP",
+#ifdef ADULT_MODE
+                            "allowStrip",
+                            "hardcore",
+#endif
+                            "wearLock",
+                            "blacklist",
+                            "dialogChannel"
+            ];
+
+            // Commands need to be in the list cmdList in order to be
+            // recognized, before testing down below
+            //
+            if (llListFindList(cmdList, (list)name) == NOT_FOUND)
+                return;
+
             string value = (string)split[1];
 
             split = llDeleteSubList(split, 0, 0);
