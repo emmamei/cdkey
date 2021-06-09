@@ -57,16 +57,8 @@ integer ncLine;
 integer failedReset;
 integer rlvPreviously;
 
-//float ncStart;
-//integer lastAttachPoint;
-//key lastAttachAvatar;
-
-//integer newAttach = YES;
 integer dbConfigCount;
 integer i;
-
-//string attachName;
-//integer isAttached;
 
 string outfitFolderExpected;
 string dollTypeExpected;
@@ -527,7 +519,6 @@ default {
 
         if (keyDetached(id)) {
 
-            //llMessageLinked(LINK_SET, 106,  "Start|detached|" + (string)lastAttachPoint, lastAttachAvatar);
             llOwnerSay("The key is wrenched from your back, and you double over at the unexpected pain as the tendrils are ripped out. You feel an emptiness, as if some beautiful presence has been removed.");
 
         }
@@ -546,9 +537,6 @@ default {
 
             // setWindRate depends on accurate AFK and collapse settings...
             lmInternalCommand("setWindRate","",NULL_KEY);
-
-            //lastAttachPoint = cdAttached();
-            //lastAttachAvatar = id;
         }
     }
 

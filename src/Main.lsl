@@ -41,7 +41,6 @@ float windRateFactor = 1.0;
 
 integer currentTime;
 float timeSpan;
-//integer isAttached;
 integer permMask;
 
 key lastWinderID;
@@ -1006,13 +1005,6 @@ default {
 #define UNATTACHED_RATE 60.0
 
             if (code == INIT_STAGE2) {
-//              configured = 1;
-//
-//                   if (lowScriptMode) llSetTimerEvent(LOW_RATE);
-//              else if (!isAttached)   llSetTimerEvent(UNATTACHED_RATE);
-//              else                    llSetTimerEvent(STD_RATE);
-//
-//              timerStarted = 1;
                 ;
             }
 
@@ -1027,7 +1019,6 @@ default {
             else if (code == INIT_STAGE4) {
 
                      if (lowScriptMode) llSetTimerEvent(LOW_RATE);
-//              else if (!isAttached)   llSetTimerEvent(UNATTACHED_RATE);
                 else                    llSetTimerEvent(STD_RATE);
 
                 timerStarted = TRUE;
@@ -1052,9 +1043,6 @@ default {
         permMask = perm;
 
         debugSay(2,"DEBUG-AVATAR","ifPermissions (run_time_permissions)");
-
-        // Don't do anything unless attached
-        //if (!llGetAttached()) return;
 
         //----------------------------------------
         // PERMISSION_TRIGGER_ANIMATION

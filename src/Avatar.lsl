@@ -80,7 +80,6 @@ integer permMask;
 
 integer locked;
 integer targetHandle;
-//integer newAttach = 1;
 
 //========================================
 // FUNCTIONS [CARRY]
@@ -404,9 +403,6 @@ default {
 #endif
             llRequestPermissions(dollID, PERMISSION_MASK);
         }
-
-        //newAttach = (lastAttachedID != dollID);
-        //lastAttachedID = id;
 
         debugSay(4,"DEBUG-AVATAR","Checking poses on attach");
 
@@ -733,9 +729,6 @@ default {
     //----------------------------------------
     run_time_permissions(integer perm) {
         debugSay(2,"DEBUG-AVATAR","ifPermissions (run_time_permissions)");
-
-        // Don't do anything unless attached
-        //if (!llGetAttached()) return;
 
         permMask = perm;
 
