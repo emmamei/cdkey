@@ -346,9 +346,13 @@ integer commandsDollyOnly(string chatCommand, string param) {
 
         case "safemode": {
 #ifdef ADULT_MODE
-            if (!hardcore)
+            if (!hardcore) {
 #endif
-                lmSetConfig("safemode", (string)(safeMode = !safeMode));
+                lmSetConfig("safemode", (string)(safeMode = TRUE));
+                llOwnerSay("Safe settings have been activated.");
+#ifdef ADULT_MODE
+            }
+#endif
             break;
         }
         // Could potentially combine the next three into one

@@ -52,7 +52,7 @@ integer allowPose           = 1;
 integer allowRepeatWind     = 1;
 integer allowSelfWind       = 1;
 #ifdef ADULT_MODE
-integer allowStrip          = 1;
+integer allowStrip          = 0;
 integer hardcore;
 #endif
 integer isAFK               = 0; // current AFK state
