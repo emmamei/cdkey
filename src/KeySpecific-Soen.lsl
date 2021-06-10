@@ -31,7 +31,7 @@
 // FUNCTIONS
 //=======================================
 
-keyParticles(float rate) {
+keyParticlesStart(float rate) {
 
     list coreParameters = [
 
@@ -73,6 +73,18 @@ keyParticles(float rate) {
     llParticleSystem(coreParameters);
 }
 
+keyParticlesToggle(integer booleanTest) {
+
+    if (booleanTest == TRUE) {
+        debugSay(4,"DEBUG-SOEN","Particles turned on.");
+        keyParticlesStart(1.0);
+    }
+    else {
+        debugSay(4,"DEBUG-SOEN","Particles turned off.");
+        llParticleSystem([]);
+    }
+}
+
 //========================================
 // STATES
 //========================================
@@ -109,30 +121,20 @@ default {
             switch (name): {
 
                 case "isVisible": {
-                    debugSay(4,"DEBUG-SOEN","Visibility read at " + value);
-
-                    if (value == (string)TRUE) {
-                        debugSay(4,"DEBUG-SOEN","Particles turned on.");
-                        keyParticles(1.0);
-                    }
-                    else {
-                        debugSay(4,"DEBUG-SOEN","Particles turned off.");
-                        llParticleSystem([]);
-                    }
+                    debugSay(4,"DEBUG-SOEN","isVisible read at " + value);
+                    visible = (integer)value;
+                    keyParticlesToggle(visible);
                 }
 
                 case "visibility": {
-
                     debugSay(4,"DEBUG-SOEN","Visibility read at " + value);
+                    if (visible == TRUE)
+                        keyParticlesToggle((float)value != 0.0);
+                }
 
-                    if ((float)value != 0.0) {
-                        debugSay(4,"DEBUG-SOEN","Particles turned on.");
-                        keyParticles(1.0);
-                    }
-                    else {
-                        debugSay(4,"DEBUG-SOEN","Particles turned off.");
-                        llParticleSystem([]);
-                    }
+                case "collapsed": {
+                    debugSay(4,"DEBUG-SOEN","Collapse read at " + value);
+                    keyParticlesToggle(value == (string)FALSE);
                 }
             }
         }
