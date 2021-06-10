@@ -135,6 +135,9 @@ doXstats() {
     if (windRate > 0) s += "\nCurrent wind rate is " + formatFloat2(windRate) + ".\n";
     else s += "Key is not winding down.\n";
 
+    if (timeLeftOnKey > 0) s += "Time remaining is " + formatFloat2((float)timeLeftOnKey / (float)SECS_PER_MIN) + ".\n\n";
+    else s += "Key is out of time.\n\n";
+
     if (RLVok == UNSET) s += "RLV status is unknown.\n";
     else if (RLVok == TRUE) s += "RLV is active.\nRLV version: " + rlvAPIversion;
     else s += "RLV is not active.\n";

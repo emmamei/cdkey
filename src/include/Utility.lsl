@@ -139,12 +139,12 @@ string formatFloat(float val, integer dp) {
 // result in memory savings and speed increase.
 //
 string formatFloat1(float val) {
-    val = llRound(val * 10) / 10;
+    val = llRound(val * 10.0) / 10.0;
     return llGetSubString((string)val, 0, -6);
 }
 
 string formatFloat2(float val) {
-    val = llRound(val * 100) / 100;
+    val = llRound(val * 100.0) / 100.0;
     return llGetSubString((string)val, 0, -5);
 }
 
