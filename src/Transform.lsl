@@ -713,7 +713,9 @@ default {
                     reloadTypeNames(id);
                     debugSay(5,"DEBUG-TYPES","Type names reloaded");
 
-                    msg = "These change the personality of " + dollName + "; Dolly is currently a " + dollType + " Doll. ";
+                    msg = "These change the personality of " + dollName + "; Dolly is currently a " + dollType + " Doll. " +
+                          "Dolly's clothes will be limited to those for " + pronounHerDoll + " type, and hypnotic " +
+                          "phrases may be used on Dolly if permitted.";
 
                     // We need a new list var to be able to change the display, not the
                     // available types
