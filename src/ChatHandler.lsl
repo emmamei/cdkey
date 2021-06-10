@@ -169,6 +169,8 @@ doHardcore() {
         return;
     }
 
+    string msg;
+
     // if hardcore is set, only a controller other than
     // Dolly can clear it. If hardcore is clear - only
     // Dolly can set it.
@@ -176,8 +178,13 @@ doHardcore() {
     if (hardcore) {
         // Note: if Dolly has no external controllers, let Dolly unlock it
         if (cdIsController(accessorID)) {
+
             lmSetConfig("hardcore",(string)(hardcore = FALSE));
-            cdSayTo("Hardcore mode has been disabled. The sound of a lock unlocking is heard.",accessorID);
+
+            msg = "Hardcore mode has been disabled. The sound of a lock unlocking is heard.";
+
+            if (accessorID != dollID) cdSayTo(msg,accessorID);
+            cdSayTo(msg,dollID);
         }
         else {
             cdSayTo("You rattle the lock, but it is securely fastened: you cannot disable hardcore mode.",accessorID);
@@ -185,8 +192,12 @@ doHardcore() {
     }
     else {
         if (accessorIsDoll) {
+
             lmSetConfig("hardcore",(string)(hardcore = TRUE));
-            cdSayTo("Doll's hardcore mode has been enabled. The sound of a lock closing is heard.",accessorID);
+
+            msg = "Hardcore mode has been enabled. The sound of a lock closing is heard.";
+
+            cdSayTo(msg,dollID);
         }
     }
 }
@@ -348,8 +359,10 @@ integer commandsDollyOnly(string chatCommand, string param) {
 #ifdef ADULT_MODE
             if (!hardcore) {
 #endif
-                lmSetConfig("safemode", (string)(safeMode = TRUE));
-                llOwnerSay("Safe settings have been activated.");
+                lmSetConfig("safemode", (string)(safeMode = !safeMode));
+
+                if (safeMode) llOwnerSay("Safe mode has been activated.");
+                else llOwnerSay("Safe mode has been deactivated.");
 #ifdef ADULT_MODE
             }
 #endif

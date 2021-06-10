@@ -632,7 +632,9 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 if (RLVok == TRUE) {
                     plusList += cdGetButton("Outfitable", id, allowDress, 0);
 #ifdef ADULT_MODE
-                    plusList += cdGetButton("Strippable", id, allowStrip, 0);
+                    if (!safeMode) {
+                        plusList += cdGetButton("Strippable", id, allowStrip, 0);
+                    }
 #endif
                 }
                 lmSendConfig("backMenu",(backMenu = "Options..."));
