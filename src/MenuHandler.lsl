@@ -72,7 +72,7 @@ integer controlChannel;
 integer controlHandle;
 integer poseChannel;
 integer poseHandle;
-integer typeChannel;
+//integer typeDialogChannel;
 integer typeHandle;
 string isDollName;
 
@@ -107,7 +107,7 @@ chooseDialogChannel() {
 
     dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGenerateKey(), -7, -1));
     poseChannel = dialogChannel - POSE_CHANNEL_OFFSET;
-    typeChannel = dialogChannel - TYPE_CHANNEL_OFFSET;
+    //typeDialogChannel = dialogChannel - TYPE_CHANNEL_OFFSET;
 
     // NOTE: blacklistChannel and controlChannel are not opened here
     blacklistChannel = dialogChannel - BLACKLIST_CHANNEL_OFFSET;
@@ -124,7 +124,7 @@ doDialogChannel() {
     debugSay(4,"DEBUG-MENU","doDialogChannel() called");
     debugSay(4,"DEBUG-MENU","dialogChannel = " + (string)dialogChannel);
 
-    // Open dialogChannel and typeChannel, poseChannel, with it
+    // Open dialogChannel and typeDialogChannel, poseChannel, with it
     if (dialogHandle) {
 
         // Uses llListenControl(a, 1)
@@ -136,7 +136,7 @@ doDialogChannel() {
         // Uses llListen(a, NO_FILTER, NO_FILTER, NO_FILTER)
         dialogHandle = cdListenAll(dialogChannel);
           poseHandle = cdListenAll(poseChannel);
-          typeHandle = cdListenAll(typeChannel);
+          //typeHandle = cdListenAll(typeDialogChannel);
     }
     lmSendConfig("dialogChannel", (string)(dialogChannel));
 }
@@ -893,7 +893,7 @@ default {
         //    * blacklistChannel
         //    * controlChannel
         //    * poseChannel
-        //    * typeChannel
+        //    * typeDialogChannel
         if (channel == dialogChannel) {
             // This is what starts the Menu process: a reply sent out
             // via Link Message to be responded to by the appropriate script
@@ -1187,15 +1187,6 @@ default {
             }
             else {
                 lmPoseReply(choice, name, id);
-            }
-        }
-        else if (channel == typeChannel) {
-            if (choice == "Back...") {
-                cdMenuInject(backMenu);
-            }
-            else {
-                cdSayTo("Dolly's internal mechanisms engage, and a transformation comes over Dolly, making " + pronounHerDoll + " into a " + choice + " Dolly",id);
-                lmTypeReply(choice, name, id);
             }
         }
         else if ((channel == blacklistChannel) || (channel == controlChannel)) {

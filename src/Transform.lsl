@@ -23,6 +23,7 @@
 #define NOT_RUNNING 0
 #define cdRunScript(a) llSetScriptState(a, RUNNING);
 #define cdStopScript(a) llSetScriptState(a, NOT_RUNNING);
+#define cdMenuInject(a) lmMenuReply((a),name,id);
 #define getInv(a,b) \
     if (a == "") lmRunRLV("getinv=" + (string)(b)); \
     else lmRunRLV("getinv:" + a + "=" + (string)(b))
@@ -1006,6 +1007,15 @@ default {
             lmSendConfig("normaloutfitFolder",normaloutfitFolder);
             llSleep(1.0);
             lmInitStage(INIT_STAGE4); // Outfits and System folder search succeeded: continue
+        }
+        else if (channel == typeDialogChannel) {
+            if (choice == "Back...") {
+                cdMenuInject(backMenu = MAIN);
+            }
+            else {
+                cdSayTo("Dolly's internal mechanisms engage, and a transformation comes over Dolly, making " + pronounHerDoll + " into a " + choice + " Dolly",id);
+                lmTypeReply(choice, name, id);
+            }
         }
     }
 
