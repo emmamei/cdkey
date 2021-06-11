@@ -122,13 +122,13 @@ default {
 
                 case "isVisible": {
                     debugSay(4,"DEBUG-SOEN","isVisible read at " + value);
-                    visible = (integer)value;
-                    keyParticlesToggle(visible);
+                    isVisible = (integer)value;
+                    keyParticlesToggle(isVisible);
                 }
 
                 case "visibility": {
                     debugSay(4,"DEBUG-SOEN","Visibility read at " + value);
-                    if (visible == TRUE)
+                    if (isVisible == TRUE)
                         keyParticlesToggle((float)value != 0.0);
                 }
 

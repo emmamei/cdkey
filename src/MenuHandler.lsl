@@ -325,9 +325,9 @@ default {
             else if (name == "hovertextOn")               hovertextOn = (integer)value;
             else if (name == "visibility")                 visibility = (float)value;
             else if (name == "isVisible") {
-                visible = (integer)value;
-                if (visible) llSetLinkAlpha(LINK_SET, (float)visibility, ALL_SIDES);
-                else         llSetLinkAlpha(LINK_SET,               0.0, ALL_SIDES);
+                isVisible = (integer)value;
+                if (isVisible) llSetLinkAlpha(LINK_SET, (float)visibility, ALL_SIDES);
+                else           llSetLinkAlpha(LINK_SET,               0.0, ALL_SIDES);
             }
         }
         else if (code == SET_CONFIG) {
@@ -737,7 +737,7 @@ default {
                 // keys by replacing them within the list - and thus
                 // not disturbing the alphabetic order
 
-                if ((i = llListFindList(menu, ["Visible"])) != NOT_FOUND) menu = llListReplaceList(menu, cdGetButton("Visible", id, visible, 0), i, i);
+                if ((i = llListFindList(menu, ["Visible"])) != NOT_FOUND) menu = llListReplaceList(menu, cdGetButton("Visible", id, isVisible, 0), i, i);
 
                 msg = timeLeftMsg + msg;
                 timeLeftMsg = "";
@@ -954,10 +954,10 @@ default {
                         // Note there is no interaction with ghost Keys here:
                         // either the Key is visible, or it isnt. The messages are
                         // also suitably generic.
-                        if (visible) s = "You watch as the Key fades away...";
+                        if (isVisible) s = "You watch as the Key fades away...";
                         else s = "The Key magically reappears, and takes on the expected form.";
 
-                        lmSendConfig("isVisible", (string)(visible = (beforeSpace == CROSS)));
+                        lmSendConfig("isVisible", (string)(isVisible = (beforeSpace == CROSS)));
                         cdSayToAgentPlusDoll(s,id);
 
                         lmMenuReply(MAIN, name, id);

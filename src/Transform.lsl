@@ -113,6 +113,9 @@ string typeFolderExpected; // typeFolder being searched for
 string outfitFolder;
 string outfitFolderExpected;
 
+// Folder that contains full avatars, not outfits
+string avatarFolder;
+
 // And dual variables for dollType too, just like type - except these only
 // get used if the preferences file has an entry in it
 //string dollType;
@@ -392,6 +395,7 @@ default {
                     outfitFolderExpected = "";
                     typeFolderExpected = "";
 
+                    // This is functional error...
                     llSay(DEBUG_CHANNEL,"Outfit search FAILED. No outfits or types are available.");
                     adjustTimer();
                     lmInitStage(INIT_STAGE4); // Outfits search failed: continue
@@ -411,7 +415,8 @@ default {
                     typeFolder = "";
                     typeFolderExpected = "";
 
-                    llSay(DEBUG_CHANNEL,"Type search FAILED. No types are available.");
+                    // This is not a functional error, though it detracts functionality.
+                    llOwnerSay("No type folder was found for " + dollType + " Dolls.");
                     adjustTimer();
                 }
             }
@@ -430,6 +435,7 @@ default {
                     normalselfFolder = "";
                     normaloutfitFolder = "";
 
+                    // This is functional error...
                     llSay(DEBUG_CHANNEL,"Outfit search FAILED. No system folders were found.");
                     adjustTimer();
                     lmInitStage(INIT_STAGE4); // System folder search failed: continue
@@ -875,6 +881,15 @@ default {
                          if (~llListFindList(folderList, (list)"> Dressup"))  outfitFolder = "> Dressup";
                     else if (~llListFindList(folderList, (list)"Dressup"))    outfitFolder = "Dressup";
                 }
+
+#ifdef PRELIMINARY
+                if (llSubStringIndex(choice,"Avatars") >= 0) {
+                     if (~llListFindList(folderList, (list)"> Avatars"))  avatarFolder = "> Avatars";
+                }
+                else if (llSubStringIndex(choice,"Avis") >= 0) {
+                     if (~llListFindList(folderList, (list)"> Avis"))  avatarFolder = "> Avis";
+                }
+#endif
             }
 
             // At this point, either the outfit folder has been set to a default, to a user-specified folder that

@@ -378,11 +378,11 @@ integer commandsDollyOnly(string chatCommand, string param) {
         case "hide": {
 
             cdSayTo("The key shimmers, then fades from view.",accessorID);
-            visible = FALSE;
+            isVisible = FALSE;
 
             keyFade(visibility, 0.0);
 
-            lmSendConfig("isVisible", (string)visible);
+            lmSendConfig("isVisible", (string)isVisible);
             break;
         }
 
@@ -390,16 +390,16 @@ integer commandsDollyOnly(string chatCommand, string param) {
         case "show":
         case "visible": {
 
-            if (visible == TRUE) break; // Already visible
+            if (isVisible == TRUE) break; // Already visible
 
-            visible = TRUE;
+            isVisible = TRUE;
 
             if (visibility == GHOST_VISIBILITY) cdSayTo("The key shimmers, and slowly seems to solidify into a physical form.",accessorID);
             else cdSayTo("A bright light appears where the key should be, then disappears slowly, revealing a spotless key.",accessorID);
 
             keyFade(0.0, visibility);
 
-            lmSendConfig("isVisible", (string)visible);
+            lmSendConfig("isVisible", (string)isVisible);
             break;
         }
 
@@ -426,10 +426,10 @@ integer commandsDollyOnly(string chatCommand, string param) {
                 }
             }
 
-            visible = TRUE;
+            isVisible = TRUE;
 
             lmSendConfig("visibility", (string)visibility);
-            lmSendConfig("isVisible", (string)visible);
+            lmSendConfig("isVisible", (string)isVisible);
             break;
         }
 

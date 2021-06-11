@@ -80,8 +80,6 @@ integer dressingFailures;
 
 integer outfitPage; // zero-indexed
 
-integer isVisible;
-
 #define OUTFIT_PAGE_SIZE 9
 
 //========================================
