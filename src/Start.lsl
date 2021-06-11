@@ -102,13 +102,13 @@ list remList(list workingList, string uuid, key id) {
 
     if ((i = llListFindList(workingList, [ uuid ])) != NOT_FOUND) {
 
-        s = "Removing key " + nameURI + " from the list";
+        s = "Removing user " + nameURI + " from the list";
         cdSayToAgentPlusDoll(s, id);
 
         workingList = llDeleteSubList(workingList, i, i + 1);
     }
     else {
-        cdSayTo("Key " + uuid + " is not in the list",id);
+        cdSayTo("User " + nameURI + " is not in the list",id);
     }
 
     return workingList;
@@ -709,13 +709,15 @@ default {
                     else {
                         controllerList = tmpList + [ uuid ];
 
-                        // Controllers get added to the exceptions
-                        llOwnerSay("@tplure:"    + uuid + "=add," +
-                                    "accepttp:"  + uuid + "=add," +
-                                    "sendim:"    + uuid + "=add," +
-                                    "recvim:"    + uuid + "=add," +
-                                    "recvchat:"  + uuid + "=add," +
-                                    "recvemote:" + uuid + "=add");
+                        if (RLVok) {
+                            // Controllers get added to the exceptions
+                            llOwnerSay("@tplure:"    + uuid + "=add," +
+                                        "accepttp:"  + uuid + "=add," +
+                                        "sendim:"    + uuid + "=add," +
+                                        "recvim:"    + uuid + "=add," +
+                                        "recvchat:"  + uuid + "=add," +
+                                        "recvemote:" + uuid + "=add");
+                        }
                     }
 
                     // Add user name - find it if need be
@@ -759,6 +761,8 @@ default {
 
                     debugSay(5,"DEBUG-ADDMISTRESS",   "blacklist >> " + llDumpList2String(blacklistList,   ",") + " (" + (string)llGetListLength(blacklistList  ) + ")");
                     debugSay(5,"DEBUG-ADDMISTRESS", "controllers >> " + llDumpList2String(controllerList, ",") + " (" + (string)llGetListLength(controllerList) + ")");
+
+                    break;
                 }
 
                 case "remController":
@@ -780,6 +784,8 @@ default {
                     // forces a refresh in any case
                     lmSetConfig("blacklist",   cdList2String(blacklistList)  );
                     lmSetConfig("controllers", cdList2String(controllerList));
+
+                    break;
                 }
             }
         }
