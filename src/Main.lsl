@@ -611,6 +611,10 @@ default {
                 if (split == [""]) blacklistList = [];
                 else blacklistList = split;
             }
+            else if (name == "controllers") {
+                if (split == [""]) controllerList = [];
+                else controllerList = split;
+            }
             else if (name == "dollDisplayName")             dollDisplayName = value;
             else if (name == "dialogChannel")                 dialogChannel = (integer)value;
             else if (name == "dollType")                           dollType = value;

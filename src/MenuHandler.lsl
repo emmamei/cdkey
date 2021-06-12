@@ -340,12 +340,12 @@ default {
 
                     if (split == [""]) blacklistList = [];
                     else blacklistList = split;
-                    lmSendConfig("blacklist",llDumpList2String(blacklistList,"|"));
+                    //lmSendConfig("blacklist",llDumpList2String(blacklistList,"|"));
             }
             else if (name == "controllers") {
                     if (split == [""]) controllerList = [];
                     else controllerList = split;
-                    lmSendConfig("controllers",llDumpList2String(controllerList,"|"));
+                    //lmSendConfig("controllers",llDumpList2String(controllerList,"|"));
             }
         }
         else if (code == INTERNAL_CMD) {
