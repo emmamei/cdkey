@@ -25,7 +25,7 @@
 
 #define setKeyVisibility(a) llSetLinkAlpha(LINK_SET, (a), ALL_SIDES);
 
-key lastWinderID;
+key lastWinderID = NULL_KEY;
 
 string msg;
 integer chatEnable           = TRUE;
@@ -142,12 +142,16 @@ doXstats() {
     else if (RLVok == TRUE) s += "RLV is active.\nRLV version: " + rlvAPIversion;
     else s += "RLV is not active.\n";
 
-    if (lastWinderID) {
+    if (lastWinderID != NULL_KEY) {
         s += "\nLast winder was " + cdProfileURL(lastWinderID);
 #ifdef SELF_WIND
-        s += " (someone else will have to wind next)";
+        s += " (someone else will have to wind Dolly next)";
 #endif
     }
+    else {
+        s += "\nLast winder is unknown.";
+    }
+
     if (allowCarry) {
         if (carrierID) {
             s += "\nDolly is currently being carried by " + cdProfileURL(carrierID);
@@ -803,7 +807,8 @@ default {
                              "pronounSheDoll",
                              "wearLock",
                              "windRate",
-                             "windNormal"
+                             "windNormal",
+                             "lastWinderID"
                            ];
 
             // Commands need to be in the list cmdList in order to be
@@ -850,6 +855,7 @@ default {
 
             else if (name == "carrierID")               carrierID = keyValue;
             else if (name == "poserID")                   poserID = keyValue;
+            else if (name == "lastWinderID")         lastWinderID = keyValue;
 
             else if (name == "carrierName")           carrierName = value;
             else if (name == "dollType")                 dollType = value;

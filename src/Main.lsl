@@ -43,7 +43,7 @@ integer currentTime;
 float timeSpan;
 integer permMask;
 
-key lastWinderID;
+key lastWinderID = NULL_KEY;
 
 #define LOWSCRIPT_TIMEOUT 600
 integer lowScriptTimer;

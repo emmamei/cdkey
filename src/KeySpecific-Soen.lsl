@@ -77,12 +77,10 @@ keyParticlesToggle(integer turnOnParticles) {
 
     if (turnOnParticles == TRUE) {
         debugSay(4,"DEBUG-SOEN","Particles turned on.");
-        llOwnerSay("Particles on.");
         keyParticlesStart(1.0);
     }
     else {
         debugSay(4,"DEBUG-SOEN","Particles turned off.");
-        llOwnerSay("Particles off.");
         llParticleSystem([]);
     }
 }

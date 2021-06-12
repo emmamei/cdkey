@@ -83,8 +83,9 @@ string outfitFolder;
 list dialogKeys;
 list dialogNames;
 list dialogButtons;
+
 #ifdef SINGLE_SELF_WIND
-key lastWinderID;
+key lastWinderID = NULL_KEY;
 #endif
 
 //========================================
