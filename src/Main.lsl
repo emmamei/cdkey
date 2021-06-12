@@ -839,12 +839,12 @@ default {
                 // Give this a time limit: can only be done once
                 // in - say - 6 hours... at least maxwindtime *2 or *3.
 
-
                 if (winderRechargeTime <= llGetUnixTime()) {
                     // Winder is recharged and usable.
                     windAmount = 0;
 
                     if (collapsed) {
+
                         lmSendToController(dollName + " has activated the emergency winder.");
 
 #define HARDCORE_MAX_EMG_WIND 120
@@ -857,14 +857,17 @@ default {
                         //
                         windAmount = (integer)(keyLimit * 0.2);
 
+                        // Cap the windAmount at 5 minutes normal and 2 minutes for hardcore
 #ifdef ADULT_MDOE
                         if (hardcore) { if (windAmount > HARDCORE_MAX_EMG_WIND) windAmount = HARDCORE_MAX_EMG_WIND; }
                                  else
 #endif
                                  if (windAmount > NORMAL_MAX_EMG_WIND) windAmount = NORMAL_MAX_EMG_WIND;
 
-                        lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = windAmount));
                         lmSendConfig("winderRechargeTime", (string)(winderRechargeTime = (llGetUnixTime() + EMERGENCY_LIMIT_TIME)));
+
+                        lmSendConfig("lastWinderID", (string)(lastWinderID = dollID));
+                        timeLeftOnKey = windAmount;
                         unCollapse();
 
                         string s = "With an electical sound the motor whirrs into life, ";
