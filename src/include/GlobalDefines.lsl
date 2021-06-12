@@ -136,13 +136,13 @@ float GlobalDefines_version=1.0;
 //
 //     * 0x0004 - PERMISSION_TAKE_CONTROLS
 //     * 0x0010 - PERMISSION_TRIGGER_ANIMATION
-//     * 0x0020 - PERMISSION_ATTACH
+//     X 0x0020 - PERMISSION_ATTACH
 //     * 0x0400 - PERMISSION_TRACK_CAMERA
 //     * 0x8000 - PERMISSION_OVERRIDE_ANIMATIONS
 //
 // Starred items are automatically given to attached objects on request
 //
-#define PERMISSION_MASK 0x8434
+#define PERMISSION_MASK 0x8414
 
 // Keys of important people in life of the Key:
 #define AGENT_CHRISTINA_HALPIN        "42c7aaec-38bc-4b0c-94dd-ae562eb67e6d"

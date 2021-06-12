@@ -59,24 +59,27 @@ setGender(string gender) {
 
         case "female": {
 
-            dollGender     = "female";
-            pronounHerDoll = "her";
-            pronounSheDoll = "she";
+            dollGender      = "female";
+            pronounHerDoll  = "her";
+            pronounHersDoll = "hers";
+            pronounSheDoll  = "she";
             break;
         }
 
         case "agender": {
 
-            dollGender     = "agender";
-            pronounHerDoll = "their";
-            pronounSheDoll = "they";
+            dollGender      = "agender";
+            pronounHerDoll  = "their";
+            pronounHersDoll = "theirs";
+            pronounSheDoll  = "they";
             break;
         }
     }
 
-    lmSendConfig("dollGender",     dollGender);
-    lmSendConfig("pronounHerDoll", pronounHerDoll);
-    lmSendConfig("pronounSheDoll", pronounSheDoll);
+    lmSendConfig("dollGender",      dollGender);
+    lmSendConfig("pronounHerDoll",  pronounHerDoll);
+    lmSendConfig("pronounHersDoll", pronounHersDoll);
+    lmSendConfig("pronounSheDoll",  pronounSheDoll);
 }
 
 default {
