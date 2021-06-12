@@ -73,14 +73,16 @@ keyParticlesStart(float rate) {
     llParticleSystem(coreParameters);
 }
 
-keyParticlesToggle(integer booleanTest) {
+keyParticlesToggle(integer turnOnParticles) {
 
-    if (booleanTest == TRUE) {
+    if (turnOnParticles == TRUE) {
         debugSay(4,"DEBUG-SOEN","Particles turned on.");
+        llOwnerSay("Particles on.");
         keyParticlesStart(1.0);
     }
     else {
         debugSay(4,"DEBUG-SOEN","Particles turned off.");
+        llOwnerSay("Particles off.");
         llParticleSystem([]);
     }
 }
@@ -122,19 +124,29 @@ default {
 
                 case "isVisible": {
                     debugSay(4,"DEBUG-SOEN","isVisible read at " + value);
-                    isVisible = (integer)value;
-                    keyParticlesToggle(isVisible);
+
+                    // If isVisible is already set - we don't have to change it,
+                    // nor do we have to set the particles again
+                    if (isVisible != (integer)value) {
+
+                        isVisible = (integer)value;
+                        keyParticlesToggle(isVisible);
+                    }
+                    break;
                 }
 
+#ifdef NOT_USED
                 case "visibility": {
                     debugSay(4,"DEBUG-SOEN","Visibility read at " + value);
-                    if (isVisible == TRUE)
-                        keyParticlesToggle((float)value != 0.0);
+                    keyParticlesToggle(isVisible);
+                    break;
                 }
+#endif
 
                 case "collapsed": {
                     debugSay(4,"DEBUG-SOEN","Collapse read at " + value);
                     keyParticlesToggle(value == (string)FALSE);
+                    break;
                 }
             }
         }
