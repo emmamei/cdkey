@@ -431,6 +431,7 @@ default {
             }
 #ifdef ADULT_MODE
             else if (cmd == "stripAll") {
+                stripCore();
             }
 #endif
             else if (cmd == "setHovertext") {

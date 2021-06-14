@@ -455,6 +455,11 @@ default {
         cdInitializeSeq();
         //resetState = RESET_STARTUP;
 
+#ifdef DEVELOPER_MODE
+        // Set the debug level for all scripts early
+        lmSendConfig("debugLevel",(string)debugLevel);
+#endif
+
         // WHen this script (Start.lsl) resets... EVERYONE resets...
         doRestart();
         llSleep(0.5);
@@ -475,15 +480,6 @@ default {
         llResetTime();
         dollID = llGetOwner();
         dollName = dollyName();
-
-#ifdef DEVELOPER_MODE
-        // Note this should be set by prefs, but the prefs require a lot before
-        // they are read
-        debugLevel = 8;
-
-        // Set the debug level for all scripts early
-        lmSendConfig("debugLevel",(string)debugLevel);
-#endif
 
         rlvPreviously = RLVok;
         lmInternalCommand("startRlvCheck", "", keyID);
@@ -856,8 +852,6 @@ default {
                 // with their appropriate defaults as necessary
                 lmSetConfig("outfitFolder", outfitFolderExpected);
                 lmSetConfig("dollType", dollTypeExpected);
-
-                // FIXME: Lock Key on here if preferences demand it
             }
             else if (code == INIT_STAGE4) {
                 // Stage 4 is triggered by Transform completing its search for an outfit folder...

@@ -4,6 +4,9 @@
 //
 // vim:sw=4 et nowrap filetype=lsl
 
+#define rlvLockKey()    lmRunRLV("detach=n")
+#define rlvUnlockKey()  lmRunRLV("detach=y")
+
 wearOutfitCore(string newOutfitName) {
 
     string newOutfitFolder;
@@ -251,8 +254,7 @@ resetBodyCore() {
 
 #ifdef ADULT_MODE
 stripCore() {
-    oldOutfit = "";
-    newOutfit = "";
+    if (!keyLocked) rlvLockKey(); // Lock key if not already locked
 
     if (nudeFolder)       lmRunRLV("detachthis:" + nudeFolder       + "=n");
     if (normalselfFolder) lmRunRLV("detachthis:" + normalselfFolder + "=n");
@@ -261,6 +263,8 @@ stripCore() {
 
     if (nudeFolder)       lmRunRLV("detachthis:" + nudeFolder       + "=y,attachall:" + nudeFolder       + "=force");
     if (normalselfFolder) lmRunRLV("detachthis:" + normalselfFolder + "=y,attachall:" + normalselfFolder + "=force");
+
+    if (!keyLocked) rlvUnlockKey(); // Unlock key if it's not supposed to be locked
 }
 #endif
 
