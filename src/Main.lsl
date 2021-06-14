@@ -393,7 +393,7 @@ default {
                 // if environment has past test long enough - then go out of powersave mode
                 if (isTimePast(lowScriptExpire)) {
                     debugSay(2,"DEBUG-MAIN", "Low Script Mode active but environment good - disabling");
-                    llOwnerSay("Restoring Key to normal operation.");
+                    llOwnerSay("You hear the key's inner workings gear up to full power.");
 
                     lmSendConfig("lowScriptMode",(string)(lowScriptMode = FALSE));
                     llSetTimerEvent(STD_RATE);
@@ -411,7 +411,7 @@ default {
                 // Go into "power saving mode", say so, and mark the time
 
                 lowScriptExpire = bumpExpireTime(LOWSCRIPT_TIMEOUT);
-                llOwnerSay("Time congestion detected: Power-saving mode activated.");
+                llOwnerSay("You hear your Key entering powersave mode, in order to be kind to the sim.");
 
                 lmSendConfig("lowScriptMode",(string)(lowScriptMode = TRUE));
                 llSetTimerEvent(LOW_RATE);

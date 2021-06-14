@@ -558,6 +558,7 @@ default {
 
                 rlvChannel = ~dialogChannel + 1;
                 typeDialogChannel = dialogChannel - TYPE_CHANNEL_OFFSET;
+                llListen(typeDialogChannel, NO_FILTER, dollID, NO_FILTER);
 
                 typeSearchChannel = rlvChannel + 1;
                 outfitSearchChannel = rlvChannel + 2;

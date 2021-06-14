@@ -415,7 +415,7 @@ default {
 
             if (cmd == "wearOutfit") {
 
-                wearOutfitCore(newOutfitName);
+                wearOutfitCore((string)split[0]);
 
                 debugSay(2,"DEBUG-DRESS","keyLocked = " + (string)keyLocked);
                 if (keyLocked == FALSE) rlvUnlockKey();

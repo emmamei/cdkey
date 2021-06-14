@@ -435,8 +435,8 @@ default {
                 // Prepare listeners: this allows for lag time by doing this up front
 
                 cdListenerActivate(dialogHandle);
+                lmDialogListen();
                 llSleep(0.5); // Let messages settle in to update menu...
-                //lmDialogListen();
 
                 //----------------------------------------
                 // Start building menu
