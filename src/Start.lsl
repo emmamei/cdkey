@@ -303,21 +303,18 @@ processConfiguration(string configSettingName, string configSettingValue) {
         // somewhat unique in that they affect each other: so,
         // we don't use the one to validate the other until preferences
         // are completely read, nor do we set these values system-wide
+        //
+        // We might set the wind time to something invalid, UNTIL the
+        // configured max time is read, for instance.
+        //
         else if (configSettingName == "max time") {
             if ((integer)configSettingValue != 0) {
                 keyLimit = (integer)configSettingValue * SECS_PER_MIN;
-
-                if (keyLimit > KEYLIMIT_MAX) keyLimit = KEYLIMIT_MAX;
-                else if (keyLimit < KEYLIMIT_MIN) keyLimit = KEYLIMIT_MIN;
             }
         }
         else if (configSettingName == "wind time") {
             if ((integer)configSettingValue != 0) {
                 windNormal = (integer)configSettingValue * SECS_PER_MIN;
-
-                // validate value
-                if (windNormal > WIND_MAX) windNormal = WIND_MAX;
-                else if (windNormal < WIND_MIN) windNormal = WIND_MIN;
             }
         }
         else if (configSettingName == "blacklist") {
@@ -938,17 +935,15 @@ default {
 
                 if (queryData == EOF) {
 
-                    // Make sure the wind is a reasonable value. If not:
-                    // windNormal is set to force six winds - but rounded to a
-                    // value divided by 5. (The latter step is merely for user
-                    // comfort, rather than a strange and odd number coming out.)
-                    if (windNormal > keyLimit) {
-                        windNormal = (keyLimit / 6) % 5;
-                        llSay(DEBUG_CHANNEL,"Wind setting exceeds max time on key! (changed to " + (string)(windNormal) + ")");
-                    }
-
-                    lmSendConfig("windNormal",(string)windNormal);
+                    // Make sure the wind is a reasonable value.
+                    //
+                    // This happens after the prefs file is read because we don't
+                    // know whether the normal wind will be set first or the maximum
+                    // wind time of the key. This makes sure that the normal wind has
+                    // a reasonable value given the current wind max.
+                    //
                     lmSetConfig("keyLimit",(string)keyLimit);
+                    lmSetConfig("windNormal",(string)windNormal);
 
                     lmInitStage(INIT_STAGE3);
                 }

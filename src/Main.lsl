@@ -69,6 +69,8 @@ doWinding(string winderName, key winderID) {
     //   3. Send out new timeLeftOnKey
     //   4. React to wind (including unCollapse)
 
+    integer windAmount;
+
 #ifdef SINGLE_SELF_WIND
     // Test and reject repeat windings from Dolly - no matter who Dolly is or what the settings are
     if (allowSelfWind) { // is self-wind allowed?
@@ -567,7 +569,7 @@ default {
                             "pronounHerDoll",
                             "pronounSheDoll",
                             "transformLockExpire",
-                            "windAmount",
+                            "windEmergency",
                             "windNormal"
             ];
 
@@ -620,14 +622,14 @@ default {
             else if (name == "dollType")                           dollType = value;
             else if (name == "defaultCollapseRLVcmd") defaultCollapseRLVcmd = value;
 #ifdef DEVELOPER_MODE
-            else if (name == "debugLevel")                 debugLevel = (integer)value;
+            else if (name == "debugLevel")                   debugLevel = (integer)value;
 #endif
-            else if (name == "hovertextOn")               hovertextOn = (integer)value;
-            else if (name == "pronounHerDoll")         pronounHerDoll = value;
-            else if (name == "pronounSheDoll")         pronounSheDoll = value;
+            else if (name == "hovertextOn")                 hovertextOn = (integer)value;
+            else if (name == "pronounHerDoll")           pronounHerDoll = value;
+            else if (name == "pronounSheDoll")           pronounSheDoll = value;
             else if (name == "transformLockExpire") transformLockExpire = (integer)value;
-            else if (name == "windAmount")                 windAmount = (integer)value;
-            else if (name == "windNormal")                 windNormal = (integer)value;
+            else if (name == "windEmergency")             windEmergency = (integer)value;
+            else if (name == "windNormal")                   windNormal = (integer)value;
         }
 
         //----------------------------------------
@@ -649,7 +651,26 @@ default {
                     lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
                 }
 
+                // Adjust windNormal if needed
+                if (windNormal > keyLimit) {
+
+                    windNormal = keyLimit / 6;
+                    lmSendConfig("windNormal", (string)windNormal);
+
+                    cdSayTo("Winding time was too large; changed to " + (string)windNormal,id);
+                }
+
                 lmSendConfig("keyLimit", (string)keyLimit);
+            }
+            else if (name == "windNormal") {
+                windNormal = (integer)value;
+
+                if (windNormal > (keyLimit / 2)) {
+                    windNormal = keyLimit / 6;
+                    cdSayTo("Winding time was too large; changed to " + (string)windNormal,id);
+                }
+
+                lmSendConfig("windNormal", (string)windNormal);
             }
             else if (name == "lastWinderID") {
                 lmSendConfig("lastWinderID", (string)(lastWinderID = (key)value));
@@ -735,9 +756,9 @@ default {
                 doWinding((string)split[1],id);
             }
             else if (cmd == "windMsg") {
-                // this overlaps a global windAmount... bad!
                 integer windAmount = (integer)split[0];
                 string winderName = (string)split[1];
+
                 string mins = (string)llFloor(windAmount / SECS_PER_MIN);
                 string percent = formatFloat1((float)timeLeftOnKey * 100.0 / (float)keyLimit);
 
@@ -841,33 +862,15 @@ default {
 
                 if (winderRechargeTime <= llGetUnixTime()) {
                     // Winder is recharged and usable.
-                    windAmount = 0;
 
                     if (collapsed) {
 
                         lmSendToController(dollName + " has activated the emergency winder.");
 
-#define HARDCORE_MAX_EMG_WIND 120
-#define NORMAL_MAX_EMG_WIND 600
-
-                        // default is 20% of max, but no more than 10 minutes
-                        //
-                        // Doing it this way makes the wind amount independent of the amount
-                        // of time in a single wind. It is also a form of hard-coding.
-                        //
-                        windAmount = (integer)(keyLimit * 0.2);
-
-                        // Cap the windAmount at 5 minutes normal and 2 minutes for hardcore
-#ifdef ADULT_MDOE
-                        if (hardcore) { if (windAmount > HARDCORE_MAX_EMG_WIND) windAmount = HARDCORE_MAX_EMG_WIND; }
-                                 else
-#endif
-                                 if (windAmount > NORMAL_MAX_EMG_WIND) windAmount = NORMAL_MAX_EMG_WIND;
-
                         lmSendConfig("winderRechargeTime", (string)(winderRechargeTime = (llGetUnixTime() + EMERGENCY_LIMIT_TIME)));
-
                         lmSendConfig("lastWinderID", (string)(lastWinderID = dollID));
-                        timeLeftOnKey = windAmount;
+
+                        timeLeftOnKey = windEmergency;
                         unCollapse();
 
                         string s = "With an electical sound the motor whirrs into life, ";
@@ -875,7 +878,7 @@ default {
                         if (hardcore) llOwnerSay(s + "and you can feel your joints reanimating as time is added.");
                         else
 #endif
-                        llOwnerSay(s + "and gives you " + (string)llRound(windAmount / SECS_PER_MIN) + " minutes of life. The emergency winder requires " + (string)llRound(EMERGENCY_LIMIT_TIME / 3600) + " hours to recharge.");
+                        llOwnerSay(s + "and gives you " + (string)llRound(windEmergency / SECS_PER_MIN) + " minutes of life. The emergency winder requires " + (string)llRound(EMERGENCY_LIMIT_TIME / 3600) + " hours to recharge.");
                     }
                 }
                 else {
@@ -952,7 +955,7 @@ default {
                      (menuChoice == "120min")) {
 
                 windNormal = (integer)menuChoice * (integer)SECS_PER_MIN;
-                lmSendConfig("windNormal", (string)windNormal);
+                lmSetConfig("windNormal", (string)windNormal);
 
                 cdSayTo("Winding now set to " + (string)(windNormal / (integer)SECS_PER_MIN) + " minutes",id);
                 lmMenuReply("Key...","",id);
@@ -971,18 +974,9 @@ default {
 
                 keyLimit = (integer)menuChoice * SECS_PER_MIN;
 
-                // Adjust windNormal if needed
-                if (windNormal > keyLimit) {
-                    integer oldWindTime = windNormal;
-
-                    windNormal = keyLimit / 6;
-                    lmSendConfig("windNormal", (string)windNormal);
-                    cdSayTo("Winding time was too large; changed from " + (string)oldWindTime + " to " + (string)windNormal,id);
-                }
-
                 cdSayTo("Key limit now set to " + (string)llFloor(keyLimit / SECS_PER_MIN) + " minutes",id);
 
-                lmSendConfig("keyLimit", (string)keyLimit);
+                lmSetConfig("keyLimit", (string)keyLimit);
                 lmMenuReply("Key...","",id);
             }
             else if (menuChoice == "Wind Time...") {

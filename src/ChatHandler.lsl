@@ -98,19 +98,11 @@ doXstats() {
     "Developer " +
 #endif
     "Doll (" + dollType + " type).\nWind amount: " +
-               (string)llFloor(windNormal / SECS_PER_MIN) + " mins\nKey Limit: " +
+               (string)(windNormal / SECS_PER_MIN) + " mins\nKey Limit: " +
                (string)(keyLimit / SECS_PER_MIN) + " mins\nEmergency Winder Recharge Time: " +
-               (string)(EMERGENCY_LIMIT_TIME / 60 / (integer)SECS_PER_MIN) + " hours\nEmergency Winder: ";
+               (string)(EMERGENCY_LIMIT_TIME / 60 / (integer)SECS_PER_MIN) + " hours\nEmergency Winder: " +
+               (string)(windEmergency / SECS_PER_MIN) + " mins\n";
 
-    float windEmergency;
-    windEmergency = keyLimit * 0.2;
-#ifdef ADULT_MODE
-    if (hardcore) { if (windEmergency > 120) windEmergency = 120; }
-    else
-#endif
-        if (windEmergency > 600) windEmergency = 600;
-
-    s += (string)((integer)(windEmergency / SECS_PER_MIN)) + " mins\n";
 #ifdef DEVELOPER_MODE
     s += "Debug level: " + (string)debugLevel + "\n";
 #endif
@@ -812,6 +804,7 @@ default {
                              "wearLock",
                              "windRate",
                              "windNormal",
+                             "windEmergency",
                              "lastWinderID"
                            ];
 
@@ -856,6 +849,7 @@ default {
             else if (name == "poseExpire")             poseExpire = integerValue;
             else if (name == "wearLock")                 wearLock = integerValue;
             else if (name == "windNormal")             windNormal = integerValue;
+            else if (name == "windEmergency")       windEmergency = integerValue;
 
             else if (name == "carrierID")               carrierID = keyValue;
             else if (name == "poserID")                   poserID = keyValue;

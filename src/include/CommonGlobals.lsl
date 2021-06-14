@@ -91,11 +91,11 @@ integer timeLeftOnKey       = 1800;
 integer timeReporting       = 1;
 integer isVisible           = 1;
 integer wearLock;
-integer windAmount          = 1800;
 integer winderRechargeTime;
 //integer windingDown         = 1;
 integer windMins            = 30;
 integer windNormal          = 1800;
+integer windEmergency       = 600;
 
 // List of managed and stored restrictions
 
