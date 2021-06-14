@@ -127,7 +127,7 @@ default {
 
     // in case we rez, our UUID changed, so we check in
     on_rez(integer p) {
-        llResetScript();
+        //llResetScript();
     }
 
 #ifdef LISTENER
@@ -150,32 +150,6 @@ default {
         string name = (string)split[0];
         string value = (string)split[1];
 
-#ifdef DEVELOPER_MODE
-        string mode;
-
-             if (code == 15)  mode = "SEND_TO_CONTROLLER";
-        else if (code == 101) mode = "INIT_STAGE1";
-        else if (code == 102) mode = "INIT_STAGE2";
-        else if (code == 104) mode = "INIT_STAGE3";
-        else if (code == 105) mode = "INIT_STAGE4";
-        else if (code == 110) mode = "INIT_STAGE5";
-        else if (code == 135) mode = "MEM_REPORT";
-        else if (code == 136) mode = "MEM_REPLY";
-        else if (code == 142) mode = "CONFIG_REPORT";
-        else if (code == 150) mode = "SIM_RATING_CHG";
-        else if (code == 300) mode = "SEND_CONFIG";
-        else if (code == 301) mode = "SET_CONFIG";
-        else if (code == 305) mode = "INTERNAL_CMD";
-        else if (code == 315) mode = "RLV_CMD";
-        else if (code == 350) mode = "RLV_RESET";
-        else if (code == 500) mode = "MENU_SELECTION";
-        else if (code == 502) mode = "POSE_SELECTION";
-        else if (code == 503) mode = "TYPE_SELECTION";
-        else                  mode = (string)code;
-
-        if (mode != "") { debugSay(8,"DEBUG-LINKMONITOR","Link message #" + mode + " cmd: " + name + " [" + script + "] = " + value); }
-#endif
-
         if (code == SEND_CONFIG) {
 
             if (name == "update") {
@@ -196,7 +170,37 @@ default {
         else if (code == MEM_REPORT) {
             memReport(myName,(float)split[0]);
         }
+
+        // Testing here speeds things up
+        if (debugLevel >= 8) {
+            string mode;
+
+                 if (code == 15)  mode = "SEND_TO_CONTROLLER";
+            else if (code == 101) mode = "INIT_STAGE1";
+            else if (code == 102) mode = "INIT_STAGE2";
+            else if (code == 104) mode = "INIT_STAGE3";
+            else if (code == 105) mode = "INIT_STAGE4";
+            else if (code == 110) mode = "INIT_STAGE5";
+            else if (code == 135) mode = "MEM_REPORT";
+            else if (code == 136) mode = "MEM_REPLY";
+            else if (code == 142) mode = "CONFIG_REPORT";
+            else if (code == 150) mode = "SIM_RATING_CHG";
+            else if (code == 300) mode = "SEND_CONFIG";
+            else if (code == 301) mode = "SET_CONFIG";
+            else if (code == 305) mode = "INTERNAL_CMD";
+            else if (code == 315) mode = "RLV_CMD";
+            else if (code == 350) mode = "RLV_RESET";
+            else if (code == 500) mode = "MENU_SELECTION";
+            else if (code == 502) mode = "POSE_SELECTION";
+            else if (code == 503) mode = "TYPE_SELECTION";
+            else                  mode = (string)code;
+
+            if (mode != "") {
+                debugSay(8,"DEBUG-LINKMONITOR","Link message #" + mode + " cmd: " + name + " [" + script + "] = " + value);
+            }
+        }
 #endif
+
     }
 
     //----------------------------------------
