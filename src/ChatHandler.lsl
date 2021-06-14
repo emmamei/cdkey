@@ -98,7 +98,7 @@ doXstats() {
     "Developer " +
 #endif
     "Doll (" + dollType + " type).\nWind amount: " +
-               (string)llFloor(windNormal / SECS_PER_MIN) + " (mins)\nKey Limit: " +
+               (string)llFloor(windNormal / SECS_PER_MIN) + " mins\nKey Limit: " +
                (string)(keyLimit / SECS_PER_MIN) + " mins\nEmergency Winder Recharge Time: " +
                (string)(EMERGENCY_LIMIT_TIME / 60 / (integer)SECS_PER_MIN) + " hours\nEmergency Winder: ";
 
@@ -111,6 +111,10 @@ doXstats() {
         if (windEmergency > 600) windEmergency = 600;
 
     s += (string)((integer)(windEmergency / SECS_PER_MIN)) + " mins\n";
+#ifdef DEVELOPER_MODE
+    s += "Debug level: " + (string)debugLevel + "\n";
+#endif
+    s += "\n";
 
 #ifdef EMERGENCY_TP
     cdCapability(autoTP,           "Doll can", "be force teleported");
