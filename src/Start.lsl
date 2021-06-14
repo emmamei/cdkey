@@ -585,8 +585,9 @@ default {
             }
             else if (name == "defaultBaseRLVcmd")    defaultBaseRLVcmd = value;
         }
-        if (code == SET_CONFIG) {
+
 #ifdef DEVELOPER_MODE
+        else if (code == SET_CONFIG) {
             string configName = (string)split[0];
             string configValue = (string)split[1];
 
@@ -595,13 +596,19 @@ default {
             if (configName == "debugLevel") {
                 debugLevel = (integer)configValue;
 
-                if (debugLevel > 9) debugLevel = 9;
-                else if (debugLevel < 0) debugLevel = 0;
+                if (debugLevel > 9) {
+                    debugLevel = 9;
+                    llSay(DEBUG_CHANNEL,"Clipped debug level to 9.");
+                }
+                else if (debugLevel < 0) {
+                    debugLevel = 0;
+                    llSay(DEBUG_CHANNEL,"Clipped debug level to 0.");
+                }
 
                 lmSendConfig("debugLevel", (string)debugLevel);
             }
-#endif
         }
+#endif
         else if (code == INTERNAL_CMD) {
             string cmd = (string)split[0];
 
