@@ -265,9 +265,15 @@ posePageN(string choice, key id) {
     llDialog(id, msg, dialogSort(poseDialogButtons), poseChannel);
 }
 
+#define isFlying  (agentInfo & AGENT_FLYING)
+#define isSitting (agentInfo & AGENT_SITTING)
+
 clearPoseAnimation() {
     list animList;
     key animKey;
+    integer agentInfo;
+
+    agentInfo = llGetAgentInfo(llGetOwner());
 
     // Clear all animations
 
@@ -286,9 +292,11 @@ clearPoseAnimation() {
     // Note that this will stop current system animations, but they
     // will not "stay down" and will return, although will not be playing
     //
-    while (i--) {
-        animKey = (key)animList[i];
-        if (animKey) llStopAnimation(animKey);
+    if (!isSitting) {
+        while (i--) {
+            animKey = (key)animList[i];
+            if (animKey) llStopAnimation(animKey);
+        }
     }
 
     llSay(99,"stop"); // Turns off dances: customarily on channel 99

@@ -203,6 +203,9 @@ float setWindRate() {
 doCollapse() {
     list oldAnimList;
     integer i;
+    integer agentInfo;
+
+    agentInfo = llGetAgentInfo(llGetOwner());
 
     // Note that this command zaps the amount of time remaining:
     // if dolly is collapsed, she is by definition out of time...
@@ -212,6 +215,7 @@ doCollapse() {
 
     lmSendConfig("collapsed", (string)(collapsed = TRUE));
     lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey = 0));
+    llOwnerSay("You have run out of time and collapsed.");
 
 #define notPosed (poseAnimation == ANIMATION_NONE)
 
@@ -229,15 +233,20 @@ doCollapse() {
         lmRunRLVcmd(defaultCollapseRLVcmd, "");
     }
 
-    oldAnimList = llGetAnimationList(dollID);
-    i = llGetListLength(oldAnimList);
+    if (!isSitting) {
+        oldAnimList = llGetAnimationList(dollID);
+        i = llGetListLength(oldAnimList);
 
-    // Stop all animations
-    while (i--)
-        llStopAnimation((key)oldAnimList[i]);
+        // Stop all animations
+        while (i--)
+            llStopAnimation((key)oldAnimList[i]);
 
-    // This will trigger animation
-    llStartAnimation(ANIMATION_COLLAPSED);
+        cdAOoff();
+
+        // This will trigger animation
+        llStartAnimation(ANIMATION_COLLAPSED);
+    }
+
     disableMovementControl();
 
     // when dolly collapses, anyone can rescue
@@ -247,12 +256,14 @@ doCollapse() {
     windRate = setWindRate();
 
     lmInternalCommand("setHovertext", "", keyID);
-    cdAOoff();
 }
 
 unCollapse() {
     list oldAnimList;
     integer i;
+    integer agentInfo;
+
+    agentInfo = llGetAgentInfo(llGetOwner());
 
     // Revive dolly back from being collapsed
 
@@ -271,9 +282,11 @@ unCollapse() {
     oldAnimList = llGetAnimationList(dollID);
     i = llGetListLength(oldAnimList);
 
-    // Stop all animations
-    while (i--)
-        llStopAnimation((key)oldAnimList[i]);
+    if (!isSitting) {
+        // Stop all animations
+        while (i--)
+            llStopAnimation((key)oldAnimList[i]);
+    }
 
     windRate = setWindRate();
     cdAOon();
