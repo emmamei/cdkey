@@ -40,12 +40,6 @@
 
 #define keyDetached(id) (id == NULL_KEY)
 
-#define KEYLIMIT_MAX 14400 // 4 hours
-#define KEYLIMIT_MIN 900 // 15 minutes
-
-#define WIND_MAX 5400 // 90 minutes
-#define WIND_MIN 900 // 15 minutes
-
 //=======================================
 // VARIABLES
 //=======================================

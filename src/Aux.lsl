@@ -685,8 +685,8 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 string msg = "Here you can set various general key settings.\n\n" +
                              "Dolly Name: " + dollDisplayName + "\n" +
                              "Doll Gender: " + dollGender + "\n" +
-                             "Wind Time: " + (string)((integer)(windNormal / SECS_PER_MIN)) + "\n" +
-                             "Max Time: " + (string)((integer)(keyLimit / SECS_PER_MIN));
+                             "Wind Time: " + (string)(windNormal / SECS_PER_MIN) + "\n" +
+                             "Max Time: " + (string)(keyLimit / SECS_PER_MIN);
 
                 lmSendConfig("backMenu",(backMenu = "Options..."));
                 if (cdIsController(id)) plusList += [ "Max Time...", "Wind Time..." ];
