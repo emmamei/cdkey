@@ -61,12 +61,13 @@ string wearFolder;
 string unwearFolder;
 
 list outfitList;
-integer useTypeFolder;
 
 string clothingFolder; // This contains clothing to be worn
 string outfitFolder;  // This contains folders of clothing to be worn
 string activeFolder; // This is the lookup folder to search
 string typeFolder; // This is the folder we want for our doll type
+string topFolder; // This is the top folder, usually same as outfitFolder
+
 string normalselfFolder; // This is the ~normalself we are using
 string normaloutfitFolder; // This is the ~normaloutfit we are using
 string nudeFolder; // This is the ~nude we are using
@@ -201,12 +202,16 @@ listInventoryOn(integer channel) {
     //     ~normalself, ~normaloutfit, ~nude, and all the type folders
     // clothingFolder is the current folder for clothing, relative
     //     to the outfitFolder
+    // topFolder is the current top level for all outfits, not including system
+    //     folders: it incorporates the type folder
 
-    activeFolder = outfitFolder;
+    activeFolder = topFolder;
     if (clothingFolder != "") activeFolder += "/" + clothingFolder;
 
 #ifdef DEVELOPER_MODE
     //llSay(DEBUG_CHANNEL,"listing inventory on " + (string)channel + " with active folder " + activeFolder);
+    debugSay(4, "DEBUG-DRESS", "clothingFolder is " + clothingFolder);
+    debugSay(4, "DEBUG-DRESS", "typeFolder is " + typeFolder);
     debugSay(4, "DEBUG-DRESS", "Setting activeFolder (in listInventory) to " + activeFolder);
 #endif
     lmSendConfig("activeFolder", activeFolder);
@@ -282,16 +287,10 @@ changeComplete(integer success) {
 
 #ifdef DEVELOPER_MODE
 string folderStatus() {
-    string typeFolderExists;
-
-    if (useTypeFolder) typeFolderExists = typeFolder + " (being used)";
-    else typeFolderExists = typeFolder + " (not being used)";
-
-    if (typeFolder == "") typeFolderExists = "";
 
     return "Outfits Folder: " + outfitFolder +
            "\nCurrent Folder: " + activeFolder +
-           "\nType Folder: " + typeFolderExists +
+           "\nType Folder: " + typeFolder +
            "\nUse ~normalself: " + normalselfFolder +
            "\nUse ~normaloutfit: " + normaloutfitFolder +
            "\nUse ~nude: " + nudeFolder;
@@ -299,9 +298,6 @@ string folderStatus() {
 #else
 string folderStatus() {
     string typeFolderExists;
-
-    if (useTypeFolder) typeFolderExists = typeFolder;
-    else typeFolderExists = typeFolder + " (not found)";
 
     if (typeFolder == "") typeFolderExists = "n/a";
 
@@ -354,11 +350,40 @@ default {
             // Configuration settings
 
             string name = (string)split[0];
-            string value = (string)split[1];
-            string c = cdGetFirstChar(name);
+            list cmdList = [
+                            "dialogChannel",
+                            "isAFK",
+                            "RLVok",
+                            "keyLocked",
+                            "hovertextOn",
+                            "dollType",
+                            "pronounHerDoll",
+                            "pronounSheDoll",
+                            "canDressSelf",
+                            "collapsed",
+#ifdef DEVELOPER_MODE
+                            "debugLevel",
+#endif
+                            "normalselfFolder",
+                            "normaloutfitFolder",
+                            "nudeFolder",
 
-            //if (llListFindList([ "k", "a", "R", "h", "p", "c", "d", "n", "t", "w", "o", "u" ], (list)c) == NOT_FOUND) return;
-            //debugSay(6, "DEBUG-DRESS", "Link message: CONFIG name = " + name);
+                            "outfitFolder",
+                            "typeFolder",
+                            "isVisible",
+#ifdef ADULT_MODE
+                            "hardcore",
+#endif
+                            "wearLock"
+            ];
+
+            // Commands need to be in the list cmdList in order to be
+            // recognized, before testing down below
+            //
+            if (llListFindList(cmdList, (list)name) == NOT_FOUND)
+                return;
+
+            string value = (string)split[1];
 
             if (name == "dialogChannel") {
                 dialogChannel = (integer)value;
@@ -383,19 +408,24 @@ default {
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                        debugLevel = (integer)value;
 #endif
-            else if (c == "n") {
-                     if (name == "normalselfFolder")        normalselfFolder = value;
-                else if (name == "normaloutfitFolder")    normaloutfitFolder = value;
-                else if (name == "nudeFolder")                    nudeFolder = value;
-            }
+            else if (name == "normalselfFolder")        normalselfFolder = value;
+            else if (name == "normaloutfitFolder")    normaloutfitFolder = value;
+            else if (name == "nudeFolder")                    nudeFolder = value;
 
-            else if (name == "outfitFolder")                outfitFolder = value;
-            else if (name == "typeFolder")                    typeFolder = value;
-            else if (name == "isVisible")                      {
+            else if (name == "outfitFolder") {
+                outfitFolder = value;
+
+                if (typeFolder != "") topFolder = outfitFolder + "/" + typeFolder;
+                else topFolder = outfitFolder;
+            }
+            else if (name == "typeFolder") {
+                typeFolder = value;
+                topFolder = outfitFolder + "/" + typeFolder;
+            }
+            else if (name == "isVisible") {
                 isVisible = (integer)value;
                 lmInternalCommand("setHovertext", "", NULL_KEY);
             }
-            else if (name == "useTypeFolder")              useTypeFolder = (integer)value;
             else if (name == "wearLock")                        wearLock = (integer)value;
 #ifdef ADULT_MODE
             else if (name == "hardcore")                        hardcore = (integer)value;
@@ -504,12 +534,11 @@ default {
                     debugSay(2, "DEBUG-DRESS", "Outfit menu; outfit Folder is not empty");
 
 #ifndef PRESERVE_DIRECTORY
-                    // These reset the current directory location for the menu
-                    if (useTypeFolder) clothingFolder = typeFolder;
-                    else clothingFolder = "";
+                    // This resets the current directory location for the menu
+                    //
+                    // Note if typeFolder is unset, then clothingFolder will be too
+                    clothingFolder = typeFolder;
 #endif
-
-                    //lmSendConfig("clothingFolder", clothingFolder);
                     dressVia(menuDressChannel);
                 }
                 else {
@@ -774,12 +803,11 @@ default {
 
             // Provide a dialog to user to choose new outfit
             lmDialogListen();
-            //outfitHandle = cdListenAll(outfitChannel);
             cdListenAll(outfitChannel);
 
             // if clothingFolder is at the top, then go to MAIN... but typeFolder
             // might be active...
-            if ((useTypeFolder && clothingFolder == typeFolder) || (clothingFolder == ""))
+            if (clothingFolder == typeFolder)
                 backMenu = MAIN;
             else
                 backMenu = UPMENU;

@@ -100,7 +100,6 @@ integer systemSearchTries;
 
 integer findTypeFolder;
 
-integer useTypeFolder;
 string transform;
 
 // These dual variables allow us to separate the actual valid typeFolder
@@ -280,6 +279,10 @@ outfitSearch(integer channel,integer handle) {
 // STATES
 //========================================
 default {
+
+    //----------------------------------------
+    // STATE ENTRY
+    //----------------------------------------
     state_entry() {
         dollID =   llGetOwner();
         keyID =   llGetKey();
@@ -505,7 +508,7 @@ default {
         // internal commands. Ignoring SEND_CONFIG is probably wise, but the
         // rest is likely overkill, though not problematic in practice.
         //
-        if (script == "Transform" && code != SET_CONFIG) return;
+        if (script == "Transform" && code == SEND_CONFIG) return;
 
         if (code == SEND_CONFIG) {
 
@@ -935,13 +938,9 @@ default {
             // if there is no outfits folder we mark the type folder search
             // as "failed" and don't use a type folder...
             if (outfitFolder == "") {
-                useTypeFolder = NO;
                 typeFolder = "";
                 typeFolderExpected = "";
 
-                //lmSendConfig("outfitsFolder", outfitFolder);
-                //lmSendConfig("outfitFolder", outfitFolder);
-                lmSendConfig("useTypeFolder", "0");
                 lmSendConfig("typeFolder", "");
                 return;
             }
@@ -960,12 +959,10 @@ default {
 
                     // This is the exact check:
                     if (~llListFindList(folderList, (list)typeFolderExpected)) {
-                        useTypeFolder = YES;
                         typeFolder = typeFolderExpected;
                         typeFolderExpected = "";
                     }
                     else {
-                        useTypeFolder = NO;
                         typeFolder = "";
                         typeFolderExpected = "";
                     }
@@ -973,14 +970,10 @@ default {
                 }
                 // typeFolderExpected not found at all
                 else {
-                    useTypeFolder = NO;
                     typeFolder = "";
                     typeFolderExpected = "";
                 }
 
-                //lmSendConfig("outfitsFolder", outfitFolder);
-                //lmSendConfig("outfitFolder", outfitFolder);
-                lmSendConfig("useTypeFolder", (string)useTypeFolder);
                 lmSendConfig("typeFolder", typeFolder);
             }
         }

@@ -23,8 +23,8 @@
 
 #define UNSET -1
 
-// Limit: 3 hours for default
-#define KEYLIMIT_DEFAULT 10800
+#define KEYLIMIT_MAX 14400 // 4 hours
+#define KEYLIMIT_MIN 900 // 15 minutes
 
 // Note that some doll types are special....
 //    - Regular: used for standard Dolls, including non-transformable
@@ -642,8 +642,9 @@ default {
             if (name == "keyLimit") {
                 keyLimit = (integer)value;
 
-                // if limit is negative clip it at a default
-                if (keyLimit < 0) keyLimit = KEYLIMIT_DEFAULT;
+                // Clip keyLimit to sane value
+                if (keyLimit < KEYLIMIT_MIN) keyLimit = KEYLIMIT_MIN;
+                else if (keyLimit > KEYLIMIT_MAX) keyLimit = KEYLIMIT_MAX;
 
                 // if limit is less than time left on key, clip time remaining
                 if (timeLeftOnKey > keyLimit) {
@@ -667,7 +668,7 @@ default {
 
                 if (windNormal > (keyLimit / 2)) {
                     windNormal = keyLimit / 6;
-                    cdSayTo("Winding time was too large; changed to " + (string)windNormal,id);
+                    cdSayTo("Winding time was too large; changed to " + (string)windNormal,(key)split[1]);
                 }
 
                 lmSendConfig("windNormal", (string)windNormal);
