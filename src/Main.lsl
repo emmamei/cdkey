@@ -62,6 +62,40 @@ integer keyLocked = FALSE;
 //========================================
 // FUNCTIONS
 //========================================
+integer validateWindNormal(integer windNormal) {
+    if (windNormal > (keyLimit / 2)) {
+        windNormal = keyLimit / 6;
+        //cdSayTo("Winding time was too large; changed to " + (string)windNormal,(key)split[1]);
+    }
+
+    lmSendConfig("windNormal", (string)windNormal);
+    return windNormal;
+}
+
+integer validateKeyLimit(integer keyLimit) {
+    // Clip keyLimit to sane value
+    if (keyLimit < KEYLIMIT_MIN) keyLimit = KEYLIMIT_MIN;
+    else if (keyLimit > KEYLIMIT_MAX) keyLimit = KEYLIMIT_MAX;
+
+    // if limit is less than time left on key, clip time remaining
+    if (timeLeftOnKey > keyLimit) {
+        timeLeftOnKey = keyLimit;
+        lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
+    }
+
+    // Adjust windNormal if needed
+    if (windNormal > keyLimit) {
+
+        windNormal = keyLimit / 6;
+        lmSendConfig("windNormal", (string)windNormal);
+
+        //cdSayTo("Winding time was too large; changed to " + (string)windNormal,id);
+    }
+
+    lmSendConfig("keyLimit", (string)keyLimit);
+    return keyLimit;
+}
+
 doWinding(string winderName, key winderID) {
     // Four steps:
     //   1. Can we wind up at all?
@@ -640,38 +674,10 @@ default {
             split = llDeleteSubList(split, 0, 0);
 
             if (name == "keyLimit") {
-                keyLimit = (integer)value;
-
-                // Clip keyLimit to sane value
-                if (keyLimit < KEYLIMIT_MIN) keyLimit = KEYLIMIT_MIN;
-                else if (keyLimit > KEYLIMIT_MAX) keyLimit = KEYLIMIT_MAX;
-
-                // if limit is less than time left on key, clip time remaining
-                if (timeLeftOnKey > keyLimit) {
-                    timeLeftOnKey = keyLimit;
-                    lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
-                }
-
-                // Adjust windNormal if needed
-                if (windNormal > keyLimit) {
-
-                    windNormal = keyLimit / 6;
-                    lmSendConfig("windNormal", (string)windNormal);
-
-                    cdSayTo("Winding time was too large; changed to " + (string)windNormal,id);
-                }
-
-                lmSendConfig("keyLimit", (string)keyLimit);
+                keyLimit = validateKeyLimit((integer)value);
             }
             else if (name == "windNormal") {
-                windNormal = (integer)value;
-
-                if (windNormal > (keyLimit / 2)) {
-                    windNormal = keyLimit / 6;
-                    cdSayTo("Winding time was too large; changed to " + (string)windNormal,(key)split[1]);
-                }
-
-                lmSendConfig("windNormal", (string)windNormal);
+                windNormal = validateWindNormal((integer)value);
             }
             else if (name == "lastWinderID") {
                 lmSendConfig("lastWinderID", (string)(lastWinderID = (key)value));
@@ -928,73 +934,6 @@ default {
                 lmInternalCommand("mainMenu", "|" + name, id);
             }
 
-            // Note that Max Times are "m" and Wind Times are "min" - this is on purpose to
-            // keep the two separate
-            else if (menuChoice == "Max Time...") {
-#ifdef ADULT_MODE
-                list maxList = [ "45m", "60m", "75m", "90m", "120m" ];
-                if (!hardcore) maxList += [ "150m", "180m", "240m" ];
-#else
-                list maxList = [ "45m", "60m", "75m", "90m", "120m", "150m", "180m", "240m" ];
-#endif
-                maxList += MAIN;
-
-                // If the Max Times available are changed, be sure to change the next choice also
-                lmDialogListen();
-                llDialog(id, "You can set the maximum available time here.  Dolly cannot be wound beyond this amount of time.\nDolly currently has " + (string)llFloor(timeLeftOnKey / SECS_PER_MIN) + " mins left of " + (string)llFloor(keyLimit / SECS_PER_MIN) + ". If you lower the maximum, Dolly will lose any extra time entirely.",
-                    dialogSort(maxList), dialogChannel);
-            }
-
-            // This is setting the windNormal; we don't have to check to see if
-            // it is too large: this is done during the menu creation phase
-            //
-            else if ((menuChoice ==  "15min") ||
-                     (menuChoice ==  "30min") ||
-                     (menuChoice ==  "45min") ||
-                     (menuChoice ==  "60min") ||
-                     (menuChoice ==  "90min") ||
-                     (menuChoice == "120min")) {
-
-                windNormal = (integer)menuChoice * (integer)SECS_PER_MIN;
-                lmSetConfig("windNormal", (string)windNormal);
-
-                cdSayTo("Winding now set to " + (string)(windNormal / (integer)SECS_PER_MIN) + " minutes",id);
-                lmMenuReply("Key...","",id);
-            }
-
-            // This is setting the keyLimit; windNormal is adjusted if necessary
-            //
-            else if ((menuChoice ==  "45m") ||
-                     (menuChoice ==  "60m") ||
-                     (menuChoice ==  "75m") ||
-                     (menuChoice ==  "90m") ||
-                     (menuChoice == "120m") ||
-                     (menuChoice == "150m") ||
-                     (menuChoice == "180m") ||
-                     (menuChoice == "240m")) {
-
-                keyLimit = (integer)menuChoice * SECS_PER_MIN;
-
-                cdSayTo("Key limit now set to " + (string)llFloor(keyLimit / SECS_PER_MIN) + " minutes",id);
-
-                lmSetConfig("keyLimit", (string)keyLimit);
-                lmMenuReply("Key...","",id);
-            }
-            else if (menuChoice == "Wind Time...") {
-                list windChoices;
-
-                // Build up the allowed winding times based on the KeyLimit
-                if (keyLimit >=  30) windChoices +=  "15min";
-                if (keyLimit >=  60) windChoices +=  "30min";
-                if (keyLimit >=  90) windChoices +=  "45min";
-                if (keyLimit >= 120) windChoices +=  "60min";
-                if (keyLimit >= 180) windChoices +=  "90min";
-                if (keyLimit >= 240) windChoices += "120min";
-
-                lmDialogListen();
-                llDialog(id, "You can set the amount of time in each wind.\nDolly currently winds " + (string)(windNormal / (integer)SECS_PER_MIN) + " mins.",
-                    dialogSort(windChoices + [ MAIN ]), dialogChannel);
-            }
             else if (menuChoice == "Unwind") {
                 doCollapse();
                 cdSayTo("Dolly collapses, " + pronounHerDoll + " key unwound",id);

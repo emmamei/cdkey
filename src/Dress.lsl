@@ -683,34 +683,41 @@ default {
                 // Reset to Main Menu
                 //lmSendConfig("backMenu",(backMenu = MAIN));
             }
-            else if (cdListElementP(outfitList, choice) != NOT_FOUND) {
-                // This is the actual processing of an Outfit Menu entry -
-                // either a folder or a single outfit item.
-                //
-                // This could be entered via a menu injection by a random dress choice
-                // No standard user should be entering this way anyway
-                //if (!isDresser(id)) return;
+            else {
+                if (cdListElementP(outfitList, choice) != NOT_FOUND) {
+                    // This is the actual processing of an Outfit Menu entry -
+                    // either a folder or a single outfit item.
+                    //
+                    // This could be entered via a menu injection by a random dress choice
+                    // No standard user should be entering this way anyway
+                    //if (!isDresser(id)) return;
 
-                outfitList = [];
-                if ((cdGetFirstChar(choice) == ">") || (cdGetFirstChar(choice) == "*")) {
+                    outfitList = [];
+                    if ((cdGetFirstChar(choice) == ">") || (cdGetFirstChar(choice) == "*")) {
 
-                    // if a Folder was chosen, we have to descend into it by
-                    // adding the choice to the currently active folder
+                        // if a Folder was chosen, we have to descend into it by
+                        // adding the choice to the currently active folder
 
-                    if (clothingFolder == "") clothingFolder = choice;
-                    else clothingFolder += ("/" + choice);
+                        if (clothingFolder == "") clothingFolder = choice;
+                        else clothingFolder += ("/" + choice);
 
-                    debugSay(6, "DEBUG-DRESS", "Generating new list of outfits...");
-                    //lmSendConfig("clothingFolder", clothingFolder); // this is current folder relative to outfitFolder
-                    lmSendConfig("backMenu",(backMenu = UPMENU));
-                    dressVia(menuDressChannel); // recursion: put up a new Primary menu
+                        debugSay(6, "DEBUG-DRESS", "Generating new list of outfits...");
+                        //lmSendConfig("clothingFolder", clothingFolder); // this is current folder relative to outfitFolder
+                        lmSendConfig("backMenu",(backMenu = UPMENU));
+                        dressVia(menuDressChannel); // recursion: put up a new Primary menu
 
-                    llSetTimerEvent(60.0);
+                        llSetTimerEvent(60.0);
+                    }
+                    else {
+                        debugSay(3, "DEBUG-DRESS", "Calling wearOutfit with " + choice + " in the active folder " + activeFolder);
+                        lmInternalCommand("wearOutfit", choice, NULL_KEY);
+                    }
                 }
+#ifdef DEVELOPER_MODE
                 else {
-                    debugSay(3, "DEBUG-DRESS", "Calling wearOutfit with " + choice + " in the active folder " + activeFolder);
-                    lmInternalCommand("wearOutfit", choice, NULL_KEY);
+                    llSay(DEBUG_CHANNEL,"Received unknown outfit! (" + choice + ")");
                 }
+#endif
             }
         }
 

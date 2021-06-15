@@ -448,14 +448,14 @@ default {
             debugSay(4,"DEBUG-AUX","RLVok set to " + (string)RLVok);
         }
         else if (code == MENU_SELECTION) {
-            string choice = (string)split[0];
+            string menuChoice = (string)split[0];
             string avatar = (string)split[1];
 
 #define isObjectPresent(o) (llGetInventoryType(o) == INVENTORY_OBJECT)
 #define isLandmarkPresent(a) (llGetInventoryType(a) == INVENTORY_LANDMARK)
 #define notPosed() (poseAnimation == ANIMATION_NONE)
 
-            if (choice == "Help...") {
+            if (menuChoice == "Help...") {
                 msg = "Here you can find various options to get help with your key and to connect with the community.";
                 list helpMenuList = [ "Join Group", "Visit Website", "Visit Blog", "Visit Development" ];
 
@@ -496,16 +496,16 @@ default {
                 lmDialogListen();
                 llDialog(id, msg, [ "Back..." ] + dialogSort(helpMenuList), dialogChannel);
             }
-            else if (choice == "Reset Body") {
+            else if (menuChoice == "Reset Body") {
                 lmInternalCommand("resetBody","",id);
             }
-            else if (choice == "Help Notecard") {
+            else if (menuChoice == "Help Notecard") {
                 llGiveInventory(id,NOTECARD_HELP);
             }
-            else if (choice == "Get Key") {
+            else if (menuChoice == "Get Key") {
                 llGiveInventory(id,OBJECT_KEY);
             }
-            else if (choice == "Visit Dollhouse") {
+            else if (menuChoice == "Visit Dollhouse") {
 #ifdef EMERGENCY_TP
                 // If is Dolly, whisk Dolly away to Location of Landmark
                 // If is someone else, give Landmark to them
@@ -515,20 +515,20 @@ default {
 #endif
                     llGiveInventory(id, LANDMARK_CDHOME);
             }
-            else if (choice == "Visit Development")
+            else if (menuChoice == "Visit Development")
                 cdSayTo("Here is your link to the Community Doll Key development: " + WEB_DEV, id);
-            else if (choice == "Visit Website")
+            else if (menuChoice == "Visit Website")
                 cdSayTo("Here is your link to the Community Dolls blog: " + WEB_BLOG, id);
-            else if (choice == "Visit Blog")
+            else if (menuChoice == "Visit Blog")
                 cdSayTo("Here is your link to the Community Dolls website: " + WEB_DOMAIN, id);
-            else if (choice == "Join Group")
+            else if (menuChoice == "Join Group")
                 cdSayTo("Here is your link to the Community Dolls group profile: " + WEB_GROUP, id);
-            else if (choice == "Update") {
+            else if (menuChoice == "Update") {
                 //llSay(PUBLIC_CHANNEL,"Update starting....");
                 lmSendConfig("update","1");
             }
 
-            else if (choice == "Access...") {
+            else if (menuChoice == "Access...") {
                 msg =
 #ifdef ADULT_MODE
                       "Key Access Menu.\n\nThese are powerful options allowing you to give someone total control of your key or to block someone from touching or even winding your key. Good dollies should read their key help before adjusting these options.
@@ -582,7 +582,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 lmDialogListen();
                 llDialog(id, msg, dialogSort(plusList + "Back..."), dialogChannel);
             }
-            else if (choice == "Restrictions...") {
+            else if (menuChoice == "Restrictions...") {
                 msg = "";
                 list plusList;
 
@@ -622,7 +622,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 lmDialogListen();
                 llDialog(id, msg, dialogSort(plusList), dialogChannel);
             }
-            else if (choice == "Public...") {
+            else if (menuChoice == "Public...") {
                 // This menu should not activate for hardcore Dollies
                 msg = "These are options for controlling what a member of the public can do with Dolly.";
                 list plusList = [];
@@ -644,7 +644,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 lmDialogListen();
                 llDialog(id, msg, dialogSort(plusList + "Back..."), dialogChannel);
             }
-            else if (choice == "Operation...") {
+            else if (menuChoice == "Operation...") {
                 msg = "See the helpfile for explanations.";
                 list plusList = [];
 
@@ -675,11 +675,11 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 lmDialogListen();
                 llDialog(id, msg, dialogSort(plusList + "Back..."), dialogChannel);
             }
-            else if (choice == "Back...") {
+            else if (menuChoice == "Back...") {
                 lmMenuReply(backMenu, llGetDisplayName(id), id);
                 lmSendConfig("backMenu",(backMenu = MAIN));
             }
-            else if (choice == "Key...") {
+            else if (menuChoice == "Key...") {
 
                 list plusList = ["Dolly Name...","Gender:" + dollGender];
                 string msg = "Here you can set various general key settings.\n\n" +
@@ -693,8 +693,8 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 lmDialogListen();
                 llDialog(id, msg, dialogSort(llListSort(plusList, 1, 1) + "Back..."), dialogChannel);
             }
-            else if (llGetSubString(choice,0,6) == "Gender:") {
-                string s = llGetSubString(choice,7,-1);
+            else if (llGetSubString(menuChoice,0,6) == "Gender:") {
+                string s = llGetSubString(menuChoice,7,-1);
                 debugSay(4,"DEBUG-AUX","Gender selected: " + s);
 
                 // Whatever the current element is - set gender
@@ -709,8 +709,8 @@ Parent - Take care choosing your parents; they have great control over Dolly and
             }
 
             // Textbox generating menus
-            else if (choice == "Dolly Name...") {
-                if (choice == "Dolly Name...") {
+            else if (menuChoice == "Dolly Name...") {
+                if (menuChoice == "Dolly Name...") {
                     textboxType = DOLL_NAME_TEXTBOX;
                     llTextBox(id, "Here you can change your dolly name from " + dollDisplayName + " to a name of your choice.", textboxChannel);
                 }
@@ -719,6 +719,74 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 textboxHandle = cdListenUser(textboxChannel, id);
                 listenTime = llGetTime() + 60.0;
                 llSetTimerEvent(60.0);
+            }
+
+            // Note that Max Times are "m" and Wind Times are "min" - this is on purpose to
+            // keep the two separate
+            else if (menuChoice == "Max Time...") {
+#ifdef ADULT_MODE
+                list maxList = [ "45m", "60m", "75m", "90m", "120m" ];
+                if (!hardcore) maxList += [ "150m", "180m", "240m" ];
+#else
+                list maxList = [ "45m", "60m", "75m", "90m", "120m", "150m", "180m", "240m" ];
+#endif
+                maxList += MAIN;
+
+                // If the Max Times available are changed, be sure to change the next choice also
+                lmDialogListen();
+                llDialog(id, "You can set the maximum available time here.  Dolly cannot be wound beyond this amount of time.\nDolly currently has " + (string)llFloor(timeLeftOnKey / SECS_PER_MIN) + " mins left of " + (string)llFloor(keyLimit / SECS_PER_MIN) + ". If you lower the maximum, Dolly will lose any extra time entirely.",
+                    dialogSort(maxList), dialogChannel);
+            }
+
+            // This is setting the windNormal; we don't have to check to see if
+            // it is too large: this is done during the menu creation phase
+            //
+            else if ((menuChoice ==  "15min") ||
+                     (menuChoice ==  "30min") ||
+                     (menuChoice ==  "45min") ||
+                     (menuChoice ==  "60min") ||
+                     (menuChoice ==  "90min") ||
+                     (menuChoice == "120min")) {
+
+                windNormal = (integer)menuChoice * (integer)SECS_PER_MIN;
+                lmSetConfig("windNormal", (string)windNormal);
+
+                cdSayTo("Winding now set to " + (string)(windNormal / (integer)SECS_PER_MIN) + " minutes",id);
+                lmMenuReply("Key...","",id);
+            }
+
+            // This is setting the keyLimit; windNormal is adjusted if necessary
+            //
+            else if ((menuChoice ==  "45m") ||
+                     (menuChoice ==  "60m") ||
+                     (menuChoice ==  "75m") ||
+                     (menuChoice ==  "90m") ||
+                     (menuChoice == "120m") ||
+                     (menuChoice == "150m") ||
+                     (menuChoice == "180m") ||
+                     (menuChoice == "240m")) {
+
+                keyLimit = (integer)menuChoice * SECS_PER_MIN;
+                lmSetConfig("keyLimit", (string)keyLimit);
+
+                cdSayTo("Key limit now set to " + (string)llFloor(keyLimit / SECS_PER_MIN) + " minutes",id);
+
+                lmMenuReply("Key...","",id);
+            }
+            else if (menuChoice == "Wind Time...") {
+                list windChoices;
+
+                // Build up the allowed winding times based on the KeyLimit
+                if (keyLimit >=  30) windChoices +=  "15min";
+                if (keyLimit >=  60) windChoices +=  "30min";
+                if (keyLimit >=  90) windChoices +=  "45min";
+                if (keyLimit >= 120) windChoices +=  "60min";
+                if (keyLimit >= 180) windChoices +=  "90min";
+                if (keyLimit >= 240) windChoices += "120min";
+
+                lmDialogListen();
+                llDialog(id, "You can set the amount of time in each wind.\nDolly currently winds " + (string)(windNormal / (integer)SECS_PER_MIN) + " mins.",
+                    dialogSort(windChoices + [ MAIN ]), dialogChannel);
             }
         }
 
