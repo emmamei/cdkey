@@ -29,7 +29,6 @@
 
 #define PREFS_READ 1
 #define PREFS_NOT_READ 0
-#define TRANSFORM_LOCK_TIME 300
 
 #define cdResetKeyName() llSetObjectName(PACKAGE_NAME + " " + __DATE__)
 
@@ -57,7 +56,6 @@ integer i;
 string outfitFolderExpected;
 string dollTypeExpected;
 
-integer transformLockExpire;
 integer poseExpire;
 integer carryExpire;
 
@@ -483,7 +481,7 @@ default {
         lmSendConfig("lowScriptExpire",(string)0);
 
         // This is probably overkill - but pass these on to everybody
-        lmSendConfig("transformLockExpire",(string)transformLockExpire);
+        lmSendConfig("typeLockExpire",(string)typeLockExpire);
         lmSendConfig("poseExpire",(string)poseExpire);
         lmSendConfig("carryExpire",(string)carryExpire);
 
@@ -544,7 +542,7 @@ default {
             else if (name == "debugLevel")                   debugLevel = (integer)value;
 #endif
             else if (name == "collapsed")                     collapsed = (integer)value;
-            else if (name == "transformLockExpire") transformLockExpire = (integer)value;
+            else if (name == "typeLockExpire")           typeLockExpire = (integer)value;
             else if (name == "poseExpire")                   poseExpire = (integer)value;
             else if (name == "carryExpire")                 carryExpire = (integer)value;
             else if (name == "dollType")                       dollType = value;

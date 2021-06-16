@@ -63,7 +63,6 @@ integer isCarrier;
 integer isController;
 integer isDoll;
 integer numControllers;
-integer transformLockExpire;
 integer keyLocked = FALSE;
 
 integer blacklistChannel;
@@ -225,7 +224,7 @@ default {
                              "poseAnimation",
 
                              "showPhrases",
-                             "transformLockExpire",
+                             "typeLockExpire",
 
                              "allowCarry",
 #ifdef ADULT_MODE
@@ -291,7 +290,7 @@ default {
             else if (name == "poseAnimation")             poseAnimation = value;
 
             else if (name == "showPhrases")                 showPhrases = (integer)value;
-            else if (name == "transformLockExpire") transformLockExpire = (integer)value;
+            else if (name == "typeLockExpire")           typeLockExpire = (integer)value;
 
             else if (name == "allowCarry")                 allowCarry = (integer)value;
 #ifdef ADULT_MODE
@@ -593,7 +592,7 @@ default {
                     if (poseAnimation == ANIMATION_NONE) {
                         // Only present the Types button if Dolly is not posed
 
-                        if (transformLockExpire == 0) {
+                        if (typeLockExpire == 0) {
                             // Members of the public are allowed if allowed
                             //if (!isDoll && !isController) menu += "Types...";
 

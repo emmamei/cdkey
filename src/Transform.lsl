@@ -130,8 +130,6 @@ integer systemSearchChannel;
 
 integer typeDialogChannel;
 
-integer transformLockExpire;
-
 integer dbConfig;
 integer mustAgreeToType;
 string keySpecificMenu;
@@ -354,11 +352,11 @@ default {
         }
 #endif
         //----------------------------------------
-        // TRANSFORM LOCK
+        // TYPE LOCK
         //
-        if (transformLockExpire) {
-            if (transformLockExpire  <= timerMark) {
-                lmSetConfig("transformLockExpire",(string)(transformLockExpire = 0));
+        if (typeLockExpire) {
+            if (typeLockExpire  <= timerMark) {
+                lmSetConfig("typeLockExpire",(string)(typeLockExpire = 0));
             }
         }
 
@@ -574,7 +572,6 @@ default {
             string name = (string)split[0];
             string value = (string)split[1];
 
-            //debugSay(6,"DEBUG-TRANSFORM","SET_CONFIG[" + name + "] = " + value);
             if (name == "dollType") {
                 if (value != dollType) {
                     dollTypeExpected = value;
@@ -584,10 +581,10 @@ default {
                     if (outfitSearchComplete) setDollType(value);
                 }
             }
-            else if (name == "transformLockExpire") {
-                if (value == "0") transformLockExpire = 0;
-                else transformLockExpire = llGetUnixTime() + TRANSFORM_LOCK_TIME;
-                lmSendConfig("transformLockExpire",(string)(transformLockExpire));
+            else if (name == "typeLockExpire") {
+                if (value == "0") typeLockExpire = 0;
+                else typeLockExpire = llGetUnixTime() + TYPE_LOCK_TIME;
+                lmSendConfig("typeLockExpire",(string)(typeLockExpire));
             }
             else if (name == "outfitFolder") {
                 // Search for and validate user-specified outfit folder
@@ -700,19 +697,19 @@ default {
                 integer i;
 
                 // Doll must remain in a type for a period of time
-                if (transformLockExpire) {
+                if (typeLockExpire) {
                     debugSay(5,"DEBUG-TYPES","Transform is currently locked");
 
                     if (cdIsDoll(id)) msg = "You " + msg3 + " you were " + msg4;
                     else msg = dollName + msg3 + " Dolly was " + msg4;
 
-                    if (transformLockExpire - llGetUnixTime() > 0) {
+                    if (typeLockExpire - llGetUnixTime() > 0) {
                         if (cdIsDoll(id)) msg += "You ";
                         else msg += "Dolly ";
 
                         msg += " can be transformed in ";
 
-                        i = llFloor((transformLockExpire - llGetUnixTime()) / SEC_TO_MIN);
+                        i = llFloor((typeLockExpire - llGetUnixTime()) / SEC_TO_MIN);
                         if (i > 0) msg += (string)i + " minutes. ";
                         else msg += "less than a minute. ";
                     }
@@ -758,7 +755,7 @@ default {
                 // We get here because dolly had to confirm the change
                 // of type - and chose "Transform" from the menu
                 lmSetConfig("dollType", transform);
-                lmSetConfig("transformLockExpire","1");
+                lmSetConfig("typeLockExpire","1");
                 transform = "";
             }
         }
@@ -778,7 +775,7 @@ default {
 
                 // Doll (or a Controller) chose a Type - or no confirmation needed: just do it
                 lmSetConfig("dollType", choice);
-                lmSetConfig("transformLockExpire","1");
+                lmSetConfig("typeLockExpire","1");
             }
             else {
                 // This part is when Dolly needs to agree
@@ -809,7 +806,7 @@ default {
                 lmSetConfig("dollType", dollTypeExpected);
 
                 // This clears the transformation lock
-                lmSetConfig("transformLockExpire","0");
+                lmSetConfig("typeLockExpire","0");
             }
 #ifdef DEVELOPER_MODE
             else if (code == MEM_REPORT) {

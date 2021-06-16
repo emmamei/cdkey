@@ -91,6 +91,7 @@ integer timeLeftOnKey       = 1800;
 integer timeReporting       = 1;
 integer isVisible           = 1;
 integer wearLock;
+integer typeLockExpire;
 integer winderRechargeTime;
 //integer windingDown         = 1;
 integer windMins            = 30;

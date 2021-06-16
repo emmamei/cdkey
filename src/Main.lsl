@@ -54,7 +54,6 @@ integer lowScriptExpire;
 integer wearLockExpire;
 integer carryExpire;
 integer poseExpire;
-integer transformLockExpire;
 
 key simRatingQuery;
 integer keyLocked = FALSE;
@@ -616,7 +615,7 @@ default {
                             "hovertextOn",
                             "pronounHerDoll",
                             "pronounSheDoll",
-                            "transformLockExpire",
+                            "typeLockExpire",
                             "windEmergency",
                             "windNormal"
             ];
@@ -675,7 +674,7 @@ default {
             else if (name == "hovertextOn")                 hovertextOn = (integer)value;
             else if (name == "pronounHerDoll")           pronounHerDoll = value;
             else if (name == "pronounSheDoll")           pronounSheDoll = value;
-            else if (name == "transformLockExpire") transformLockExpire = (integer)value;
+            else if (name == "typeLockExpire")           typeLockExpire = (integer)value;
             else if (name == "windEmergency")             windEmergency = (integer)value;
             else if (name == "windNormal")                   windNormal = (integer)value;
         }
