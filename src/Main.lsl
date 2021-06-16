@@ -51,7 +51,6 @@ integer lowScriptModeSpan;
 integer lastLowScriptTime;
 integer lowScriptExpire;
 
-integer wearLockExpire;
 integer carryExpire;
 integer poseExpire;
 
@@ -524,7 +523,8 @@ default {
         if (wearLockExpire) {
             if (isTimePast(wearLockExpire)) {
                 // wearLock has expired...
-                lmSetConfig("wearLock", (string)(wearLock = 0));
+                //lmSetConfig("wearLock", (string)(wearLock = 0));
+                lmInternalCommand("wearLock",(string)FALSE,NULL_KEY);
                 //lmSendConfig("wearLockExpire", (string)(wearLockExpire = 0));
             }
         }
@@ -714,15 +714,6 @@ default {
                 lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
                 if (collapsed) unCollapse();
             }
-            else if (name == "wearLock") {
-                // Internal command: remove?
-                lmSendConfig("wearLock", (string)(wearLock = (integer)value));
-
-                if (wearLock) wearLockExpire = llGetUnixTime() + WEAR_LOCK_TIMEOUT;
-                else wearLockExpire = 0;
-
-                lmSendConfig("wearLockExpire",(string)(wearLockExpire));
-            }
             // We do not trigger this: this code only gets triggered from outside
             // using SET_CONFIG (code 301).
             else if (name == "lowScriptMode") {
@@ -737,14 +728,6 @@ default {
             else if (name == "poseExpire") {
                 poseExpire = (integer)value;
                 lmSendConfig("poseExpire",(string)(poseExpire));
-            }
-            else if (name == "wearLockExpire") {
-                wearLockExpire = (integer)value;
-
-                wearLock = (wearLockExpire != 0);
-                lmSendConfig("wearLock", (string)wearLock);
-
-                lmSendConfig("wearLockExpire",(string)(wearLockExpire));
             }
         }
 
@@ -774,6 +757,12 @@ default {
                 // have to be changed.
                 debugSay(6,"DEBUG-MAIN","received winding cmd");
                 doWinding((string)split[1],id);
+            }
+            else if (cmd == "wearLock") {
+                if ((integer)split[0]) wearLockExpire = llGetUnixTime() + WEAR_LOCK_TIMEOUT;
+                else wearLockExpire = 0;
+
+                lmSendConfig("wearLockExpire",(string)(wearLockExpire));
             }
             else if (cmd == "windMsg") {
                 integer windAmount = (integer)split[0];

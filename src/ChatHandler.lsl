@@ -801,7 +801,6 @@ default {
                              "poseExpire",
                              "pronounHerDoll",
                              "pronounSheDoll",
-                             "wearLock",
                              "windRate",
                              "windNormal",
                              "windEmergency",
@@ -847,7 +846,6 @@ default {
             else if (name == "configured")             configured = integerValue;
             else if (name == "collapseTime")         collapseTime = integerValue;
             else if (name == "poseExpire")             poseExpire = integerValue;
-            else if (name == "wearLock")                 wearLock = integerValue;
             else if (name == "windNormal")             windNormal = integerValue;
             else if (name == "windEmergency")       windEmergency = integerValue;
 

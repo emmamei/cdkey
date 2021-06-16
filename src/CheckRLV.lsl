@@ -147,12 +147,12 @@ rlvRestoreRestritions() {
     if (keyLocked) lmRunRLVas("Base","detach=n");
     else lmRunRLVas("Base","detach=y");
 
-    rlvOutfitLock();
+    manageOutfitLock();
 }
 
 // Lock the outfit on the wearer
 //
-rlvOutfitLock() {
+manageOutfitLock() {
 
     // Lock the current outfit if one of these is true:
     //
@@ -163,7 +163,7 @@ rlvOutfitLock() {
     //
     // This means Dolly is forbidden to change the current outfit
     //
-    if (!canDressSelf || collapsed || wearLock) {
+    if (!canDressSelf || collapsed || (wearLockExpire > 0)) {
         // Lock outfit down tight
         if (isOutfitLocked == FALSE) rlvLockOutfit();
         isOutfitLocked = TRUE;
@@ -296,12 +296,10 @@ default {
             value = (string)split[0];
             string c = llGetSubString(name, 0, 0);
 
-            //if (llListFindList([ "R", "h", "k", "a", "c", "d", "w" ],(list)c) == NOT_FOUND) return;
-
                  if (name == "keyLocked")         {    keyLocked = (integer)value; }
             else if (name == "RLVok")             {        RLVok = (integer)value; }
 #ifdef ADULT_MODE
-            else if (name == "hardcore")          {     hardcore = (integer)value; rlvOutfitLock(); }
+            else if (name == "hardcore")          {     hardcore = (integer)value; manageOutfitLock(); }
 #endif
 #ifdef EMERGENCY_TP
             else if (name == "autoTP")            {       autoTP = (integer)value; rlvSetIf("accepttp", !autoTP); }
@@ -311,9 +309,9 @@ default {
 #endif
             else if (c == "c") {
                      if (name == "canSelfTP")     {    canSelfTP = (integer)value; rlvSetIf("tplm", canSelfTP); rlvSetIf("tploc", canSelfTP); }
-                else if (name == "canDressSelf")  { canDressSelf = (integer)value; rlvOutfitLock(); }
+                else if (name == "canDressSelf")  { canDressSelf = (integer)value; manageOutfitLock(); }
                 else if (name == "canFly")        {       canFly = (integer)value; rlvSetIf("fly", canFly); }
-                else if (name == "collapsed")     {    collapsed = (integer)value; rlvOutfitLock(); }
+                else if (name == "collapsed")     {    collapsed = (integer)value; manageOutfitLock(); }
                 else if (name == "controllers") {
                     if (split == [""]) controllerList = [];
                     else controllerList = split;
@@ -331,7 +329,10 @@ default {
                 rlvHandle = cdListenMine(rlvChannel);
                 cdListenerActivate(rlvHandle);
             }
-            else if (name == "wearLock") { wearLock = (integer)value; rlvOutfitLock(); }
+            else if (name == "wearLockExpire") {
+                wearLockExpire = (integer)value;
+                manageOutfitLock();
+            }
         }
         else if (code == RLV_RESET) {
             RLVok = (integer)split[0];
@@ -342,7 +343,7 @@ default {
 
                 // We have to do this in order to set the wearLock (and keyLocked) properly
                 // with their RLV components
-                lmSetConfig("wearLock",(string)wearLock);
+                lmInternalCommand("wearLock",(string)(wearLockExpire > 0), id);
                 lmSetConfig("keyLocked",(string)keyLocked);
             }
 

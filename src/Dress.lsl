@@ -246,6 +246,8 @@ integer isDresser(key id) {
 }
 
 changeComplete(integer success) {
+    integer wearLock;
+
     // And remove the temp locks we used
 
     // If we used "detach" as the pattern then the Key would be unlocked
@@ -264,7 +266,7 @@ changeComplete(integer success) {
         //
         // This setting is thus: if dresser is anyone except Dolly, wearLock is set.
         // If wearLock is already set, it stays set..
-        wearLock = (wearLock || ((dresserID != NULL_KEY) && (dresserID != dollID)));
+        wearLock = ((wearLockExpire > 0) || ((dresserID != NULL_KEY) && (dresserID != dollID)));
     }
     else {
         if (dressingFailures > MAX_DRESS_FAILURES)
@@ -277,7 +279,8 @@ changeComplete(integer success) {
         wearLock = 0;
     }
 
-    lmSetConfig("wearLock", (string)wearLock);
+    // Note that if wearLock is already in place, this will bump the time up
+    lmInternalCommand("wearLock", (string)wearLock, dollID);
 
     change = 0;
 
@@ -370,11 +373,11 @@ default {
 
                             "outfitFolder",
                             "typeFolder",
-                            "isVisible",
 #ifdef ADULT_MODE
                             "hardcore",
 #endif
-                            "wearLock"
+                            "isVisible",
+                            "wearLockExpire"
             ];
 
             // Commands need to be in the list cmdList in order to be
@@ -426,7 +429,7 @@ default {
                 isVisible = (integer)value;
                 lmInternalCommand("setHovertext", "", NULL_KEY);
             }
-            else if (name == "wearLock")                        wearLock = (integer)value;
+            else if (name == "wearLockExpire")            wearLockExpire = (integer)value;
 #ifdef ADULT_MODE
             else if (name == "hardcore")                        hardcore = (integer)value;
 #endif
@@ -523,7 +526,7 @@ default {
                 debugSay(2, "DEBUG-DRESS", "Outfit menu; outfit Folder = " + outfitFolder);
 
                 // Check to see if clothing has been worn long enough before changing (wearLock)
-                if (wearLock) {
+                if (wearLockExpire > 0) {
                     clearDresser();
                     lmDialogListen();
                     llDialog(dresserID, "Clothing was just changed; cannot change right now.", ["OK"], dialogChannel);

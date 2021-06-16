@@ -90,7 +90,7 @@ integer takeoverAllowed;
 integer timeLeftOnKey       = 1800;
 integer timeReporting       = 1;
 integer isVisible           = 1;
-integer wearLock;
+integer wearLockExpire;
 integer typeLockExpire;
 integer winderRechargeTime;
 //integer windingDown         = 1;

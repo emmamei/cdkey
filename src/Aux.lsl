@@ -149,7 +149,6 @@ default {
                             "allowStrip",
                             "hardcore",
 #endif
-                            "wearLock",
                             "blacklist",
                             "dialogChannel"
             ];
@@ -203,7 +202,6 @@ default {
             else if (name == "allowStrip")                 allowStrip = (integer)value;
             else if (name == "hardcore")                     hardcore = (integer)value;
 #endif
-            else if (name == "wearLock")                     wearLock = (integer)value;
             else if (name == "blacklist") {
                 if (split == [""]) blacklistList = [];
                 else blacklistList = split;
@@ -434,7 +432,7 @@ default {
                     // if Dolly is stripped by someone else, Dolly cannot
                     // dress for a time: wearLock is activated
 
-                    lmSetConfig("wearLock", "1");
+                    lmInternalCommand("wearLock", (string)TRUE, NULL_KEY);
 
                     llOwnerSay("You have been stripped and may not redress for " + (string)llRound(WEAR_LOCK_TIMEOUT / 60.0) + " minutes.");
                 }
