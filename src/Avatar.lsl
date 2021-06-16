@@ -580,8 +580,8 @@ default {
                 lmSendConfig("poseAnimation", (string)(poseAnimation = ANIMATION_NONE));
                 lmSendConfig("poserID", (string)(poserID = NULL_KEY));
 
-                // poseExpire is being set elsewhere
-                lmSetConfig("poseExpire", "0");
+                // poseLockExpire is being set elsewhere
+                lmSetConfig("poseLockExpire", "0");
 
                 clearPoseAnimation();
 
@@ -645,7 +645,7 @@ default {
 #endif
                 if (dollPoseDoesNotExpire) expire = "0";
                 else expire = (string)(llGetUnixTime() + POSE_TIMEOUT);
-                lmSetConfig("poseExpire", expire);
+                lmSetConfig("poseLockExpire", expire);
 
                 if (poseSilence) lmRunRLV("sendchat=n");
             }

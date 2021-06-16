@@ -37,7 +37,6 @@ string accessorName;
 integer accessorIsDoll;
 integer accessorIsController;
 integer accessorIsCarrier;
-integer poseExpire;
 
 key blacklistQueryID;
 key controllerQueryID;
@@ -81,7 +80,7 @@ doStats() {
 #endif
 
         if (poseDoesExpire)
-            cdSayTo("Pose time remaining: " + (string)((poseExpire - llGetUnixTime()) / SECS_PER_MIN) + " minutes.", accessorID);
+            cdSayTo("Pose time remaining: " + (string)((poseLockExpire - llGetUnixTime()) / SECS_PER_MIN) + " minutes.", accessorID);
     }
 
     //lmMemReport(1.0,accessorID);
@@ -109,24 +108,26 @@ doXstats() {
     s += "\n";
 
 #ifdef EMERGENCY_TP
-    cdCapability(autoTP,           "Doll can", "be force teleported");
+    cdCapability(autoTP,               "Doll can", "be force teleported");
 #endif
-    cdCapability(canFly,           "Doll can", "fly");
-    cdCapability(allowRepeatWind,  "Doll can", "be multiply wound");
-    cdCapability(wearLock,         "Doll's clothing is",  "currently locked on");
-    cdCapability(lowScriptMode,    "Doll is",  "currently in powersave mode");
+    cdCapability(canFly,               "Doll can", "fly");
+    cdCapability(allowRepeatWind,      "Doll can", "be multiply wound");
+    cdCapability((wearLockExpire > 0), "Doll's clothing is",  "currently locked on");
+    cdCapability((typeLockExpire > 0), "Doll type is",  "currently locked");
+    cdCapability((poseLockExpire > 0), "Doll pose is",  "currently locked");
+    cdCapability(lowScriptMode,        "Doll is",  "currently in powersave mode");
 #ifdef ADULT_MODE
-    cdCapability(allowStrip,       "Doll is", "strippable");
-    cdCapability(hardcore,         "Doll is", "currently in hardcore mode");
+    cdCapability(allowStrip,           "Doll is", "strippable");
+    cdCapability(hardcore,             "Doll is", "currently in hardcore mode");
 #endif
-    cdCapability(safeMode,         "Doll is", "currently in safe mode");
+    cdCapability(safeMode,             "Doll is", "currently in safe mode");
 
     // These settings (and more) all are affected by hardcore
-    cdCapability(allowPose,      "Doll can", "be posed by the public");
-    cdCapability(allowDress,     "Doll can", "be dressed by the public");
-    cdCapability(allowCarry,     "Doll can", "be carried by the public");
-    cdCapability(canDressSelf,  "Doll can", "dress by " + pronounHerDoll + "self");
-    cdCapability(poseSilence,    "Doll is",  "silenced while posing");
+    cdCapability(allowPose,            "Doll can", "be posed by the public");
+    cdCapability(allowDress,           "Doll can", "be dressed by the public");
+    cdCapability(allowCarry,           "Doll can", "be carried by the public");
+    cdCapability(canDressSelf,         "Doll can", "dress by " + pronounHerDoll + "self");
+    cdCapability(poseSilence,          "Doll is",  "silenced while posing");
 
     if (windRate > 0) s += "\nCurrent wind rate is " + formatFloat2(windRate) + ".\n";
     else s += "Key is not winding down.\n";
@@ -798,7 +799,7 @@ default {
                              "poseAnimation",
                              "poserID",
                              "poserName",
-                             "poseExpire",
+                             "poseLockExpire",
                              "pronounHerDoll",
                              "pronounSheDoll",
                              "windRate",
@@ -845,7 +846,7 @@ default {
             else if (name == "canSelfTP")               canSelfTP = integerValue;
             else if (name == "configured")             configured = integerValue;
             else if (name == "collapseTime")         collapseTime = integerValue;
-            else if (name == "poseExpire")             poseExpire = integerValue;
+            else if (name == "poseLockExpire")     poseLockExpire = integerValue;
             else if (name == "windNormal")             windNormal = integerValue;
             else if (name == "windEmergency")       windEmergency = integerValue;
 

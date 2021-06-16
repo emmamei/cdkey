@@ -52,7 +52,6 @@ integer lastLowScriptTime;
 integer lowScriptExpire;
 
 integer carryExpire;
-integer poseExpire;
 
 key simRatingQuery;
 integer keyLocked = FALSE;
@@ -220,7 +219,7 @@ doCollapse() {
     if (notPosed) {
         lmSendConfig("poseAnimation", ANIMATION_NONE);
         lmSendConfig("poserID", NULL_KEY);
-        lmSetConfig("poseExpire", "0");
+        lmSetConfig("poseLockExpire", "0");
     }
 
     if (cdCarried())
@@ -479,12 +478,12 @@ default {
         // POSE TIMED OUT?
 
         // Did the pose expire? If so, unpose Dolly
-        if (poseExpire) {
-            if (isTimePast(poseExpire)) {
+        if (poseLockExpire) {
+            if (isTimePast(poseLockExpire)) {
                 lmMenuReply("Unpose", "", keyID);
-                lmSendConfig("poseExpire", (string)(poseExpire = 0));
+                lmSendConfig("poseLockExpire", (string)(poseLockExpire = 0));
             }
-            lmSendConfig("poseExpire", (string)poseExpire);
+            lmSendConfig("poseLockExpire", (string)poseLockExpire);
         }
 
         //----------------------------------------
@@ -725,9 +724,9 @@ default {
                 llSetTimerEvent(LOW_RATE);
             }
 
-            else if (name == "poseExpire") {
-                poseExpire = (integer)value;
-                lmSendConfig("poseExpire",(string)(poseExpire));
+            else if (name == "poseLockExpire") {
+                poseLockExpire = (integer)value;
+                lmSendConfig("poseLockExpire",(string)(poseLockExpire));
             }
         }
 

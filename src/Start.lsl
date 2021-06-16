@@ -56,7 +56,6 @@ integer i;
 string outfitFolderExpected;
 string dollTypeExpected;
 
-integer poseExpire;
 integer carryExpire;
 
 //integer introLine;
@@ -482,7 +481,7 @@ default {
 
         // This is probably overkill - but pass these on to everybody
         lmSendConfig("typeLockExpire",(string)typeLockExpire);
-        lmSendConfig("poseExpire",(string)poseExpire);
+        lmSendConfig("poseLockExpire",(string)poseLockExpire);
         lmSendConfig("carryExpire",(string)carryExpire);
 
         llOwnerSay("The Key is now fully ready; you hear the gears whir and spin up.");
@@ -540,7 +539,7 @@ default {
 #endif
             else if (name == "collapsed")                     collapsed = (integer)value;
             else if (name == "typeLockExpire")           typeLockExpire = (integer)value;
-            else if (name == "poseExpire")                   poseExpire = (integer)value;
+            else if (name == "poseLockExpire")           poseLockExpire = (integer)value;
             else if (name == "carryExpire")                 carryExpire = (integer)value;
             else if (name == "dollType")                       dollType = value;
             else if (name == "keySpecificConfigs")  keySpecificConfigs += [ value ];
