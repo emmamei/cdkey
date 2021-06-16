@@ -279,21 +279,22 @@ unCollapse() {
         else rlvLockKey();
     }
 
-    oldAnimList = llGetAnimationList(dollID);
-    i = llGetListLength(oldAnimList);
-
     if (!isSitting) {
+        oldAnimList = llGetAnimationList(dollID);
+        i = llGetListLength(oldAnimList);
+
         // Stop all animations
         while (i--)
             llStopAnimation((key)oldAnimList[i]);
+
+        cdAOon();
+
+        // This will trigger animation
+        llStartAnimation("Stand");
     }
 
-    windRate = setWindRate();
-    cdAOon();
-
-    // This will trigger animation
-    llStartAnimation("Stand");
     enableMovementControl();
+    windRate = setWindRate();
 
     if (cdCarried())
         lmInternalCommand("startFollow", (string)carrierID, keyID);
@@ -881,8 +882,10 @@ default {
                 // in - say - 6 hours... at least maxwindtime *2 or *3.
 
                 if (winderRechargeTime <= llGetUnixTime()) {
+
                     // Winder is recharged and usable.
 
+                    // This menu option should not activate UNLESS collapsed...
                     if (collapsed) {
 
                         lmSendToController(dollName + " has activated the emergency winder.");
