@@ -509,9 +509,6 @@ default {
         }
         else {
 
-            // A lot of this code is about saving the fact that we are attached...
-            //llMessageLinked(LINK_SET, 106, "Start|attached|" + (string)TRUE, id);
-
             makeWorkInNoScriptLand(dollID);
 
             // when attaching key, user is NOT AFK...
