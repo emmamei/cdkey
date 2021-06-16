@@ -696,7 +696,9 @@ default {
                     //if (!isDresser(id)) return;
 
                     outfitList = [];
-                    if ((cdGetFirstChar(choice) == ">") || (cdGetFirstChar(choice) == "*")) {
+                    string c = cdGetFirstChar(choice);
+
+                    if (isTypeFolder(c) || isParentFolder(c)) {
 
                         // if a Folder was chosen, we have to descend into it by
                         // adding the choice to the currently active folder
@@ -705,7 +707,6 @@ default {
                         else clothingFolder += ("/" + choice);
 
                         debugSay(6, "DEBUG-DRESS", "Generating new list of outfits...");
-                        //lmSendConfig("clothingFolder", clothingFolder); // this is current folder relative to outfitFolder
                         lmSendConfig("backMenu",(backMenu = UPMENU));
                         dressVia(menuDressChannel); // recursion: put up a new Primary menu
 
@@ -739,10 +740,10 @@ default {
 
             llListenRemove(menuDressHandle);
 
-            // Did we get anything at all?
             if (choice == "") {
+
+                // No outfits available in this directory
                 lmDialogListen();
-                //outfitHandle = cdListenAll(outfitChannel);
                 cdListenAll(outfitChannel);
 
                 backMenu = UPMENU;
@@ -752,7 +753,6 @@ default {
                 return;
             }
 
-            //fallbackFolder = 0;
             outfitList = llParseString2List(choice, [","], []);
 
             integer n;
@@ -761,6 +761,7 @@ default {
             list tmpList;
 
             debugSay(6, "DEBUG-DRESS", "Filtering outfit data");
+
             // Filter list of outfits (directories) to choose
             n = llGetListLength(outfitList);
             while (n--) {
@@ -768,8 +769,8 @@ default {
                 prefix = cdGetFirstChar(itemName);
 
                 if (itemName != newOutfitName) {
-                    if (!isHiddenItem(prefix) && !isGroupItem(prefix)) {
-                        if (!isTransformingItem(prefix) || dollType == "Regular") {
+                    if (!isHiddenFolder(prefix)) {
+                        if (!isTypeFolder(prefix) || dollType == "Regular") {
                             tmpList += itemName;
                         }
                     }
@@ -780,6 +781,7 @@ default {
             tmpList = [];
 
             debugSay(6, "DEBUG-DRESS", "Filtered list = " + llDumpList2String(outfitList,","));
+
             // we've gone through and cleaned up the list - but is anything left?
             if (outfitList == []) {
                 outfitList = []; // free memory
@@ -828,8 +830,6 @@ default {
             llSetTimerEvent(60.0);
             newOutfitList = [];
         }
-
-        //scaleMem();
     }
 }
 

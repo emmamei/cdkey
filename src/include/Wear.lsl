@@ -89,6 +89,27 @@ wearOutfitCore(string newOutfitName) {
     //
     // 8) Attach everything in the newOutfitFolder a third time
     //       (using @attachallover:=force followed by @detachallthis:=n )
+    //
+    // FOR A NEW AVI...
+    //
+    // Load new outfit:
+    //
+    // 1) Attach and lock everything in the newOutfitFolder
+    //       (using @attachall)
+    //
+    // Strip all previous items except the key:
+    //
+    // 2) Remove everything from nudeFolder
+    //       (using @detachall:=force)
+    // 3) Remove everything from normalSelfFolder
+    //       (using @detachall:=force)
+    // 4) Remove everything from >Outfits
+    //       (using @detachall:=force)
+    // 5) Unlock all
+    //
+    // Hide key, since random avi might not be suitable for key:
+    //
+    // 6) Hide key: using internal commands
 
     // COMMENTS:
     //
@@ -99,6 +120,15 @@ wearOutfitCore(string newOutfitName) {
     // to be overkill, as does Step #8.
 
     llOwnerSay("New outfit chosen: " + newOutfitName);
+
+    /*
+    if (isStandaloneFolder(cdGetFirstChar(newOutfitName))) {
+        wearNewAvi(newOutfitName);
+    }
+    else {
+        wearStandardOutfit(newOutfitName);
+    }
+    */
 
     //----------------------------------------
     // STEP #1

@@ -214,14 +214,14 @@ float GlobalDefines_version=1.0;
 #define CIRCLE_MINUS "⊖"
 
 // Dress module prefix test defines
-#define isGroupItem(c)        ((c) == "#")
-#define isHiddenItem(c)       ((c) == "~")
-#define isPlusItem(c)         ((c) == "+")
-#define isStandAloneItem(c)   ((c) == "=")
-#define isTransformingItem(c) ((c) == "*")
-#define isParentFolder(c)     ((c) == ">")
-#define isRated(c)            ((c) == "{")
-#define isChrootFolder(f)     (llGetSubString(f,0,1) == "!>")
+#define isGroupFolder(c)        ((c) == "#")
+#define isHiddenFolder(c)       ((c) == "~")
+#define isPlusFolder(c)         ((c) == "+")
+#define isStandAloneFolder(c)   ((c) == "=")
+#define isTypeFolder(c)         ((c) == "*")
+#define isParentFolder(c)       ((c) == ">")
+#define isRated(c)              ((c) == "{")
+#define isChrootFolder(f)       (llGetSubString(f,0,1) == "!>")
 
 #define CORE_SCRIPTS [ "Aux", "Avatar", "ChatHandler", "Dress", "Main", "MenuHandler", "ServiceRequester", "ServiceReceiver", "Start", "StatusRLV", "Transform" ]
 // #define COLOR_NAMES [ "Purple", "Pink", "Red", "Green", "Blue", "Cyan", "Yellow", "Orange", "White", "Black", "CUSTOM" ]
