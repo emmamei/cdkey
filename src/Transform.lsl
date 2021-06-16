@@ -494,9 +494,6 @@ default {
 
         transformerID = id;
 
-        string choice = (string)split[0];
-        string name = (string)split[1];
-
         // This means that ANY link message sent by Transform is ignored by these
         // items, except for the SET_CONFIG section...
         //
@@ -511,6 +508,43 @@ default {
         if (code == SEND_CONFIG) {
 
             string name = (string)split[0];
+
+            list cmdList = [
+                             "collapsed",
+#ifdef DEVELOPER_MODE
+                             "timeReporting",
+                             "debugLevel",
+#endif
+                             "lowScriptMode",
+                             "simRating",
+#ifdef ADULT_MODE
+                             "hardcore",
+#endif
+                             "backMenu",
+                             "hovertextOn",
+                             "collapsed",
+                             "busyIsAway",
+                             "controllers",
+                             "RLVok",
+                             "mustAgreeToType",
+                             "winderRechargeTime",
+                             "keySpecificMenu",
+#ifdef HOMING_BEACON
+                             "homingBeacon",
+
+                             // collapseTime only needed for homingBeacon use
+                             "collapseTime",
+#endif
+                             "showPhrases",
+                             "dialogChannel"
+            ];
+
+            // Commands need to be in the list cmdList in order to be
+            // recognized, before testing down below
+            //
+            if (llListFindList(cmdList, (list)name) == NOT_FOUND)
+                return;
+
             string value = (string)split[1];
 
             split = llDeleteSubList(split,0,0);
@@ -592,6 +626,7 @@ default {
                 outfitSearch(outfitSearchChannel,outfitSearchHandle);
             }
         }
+
         else if (code == INTERNAL_CMD) {
             string cmd = (string)split[0];
             split = llDeleteSubList(split, 0, 0);
@@ -652,9 +687,11 @@ default {
         }
 
         else if (code == RLV_RESET) {
-            RLVok = (integer)choice;
+            RLVok = (integer)split[0];
         }
         else if (code == MENU_SELECTION) {
+            string choice = (string)split[0];
+
             string optName = llGetSubString(choice, 2, STRING_END);
             string curState = cdGetFirstChar(choice);
 
@@ -760,6 +797,8 @@ default {
             }
         }
         else if (code == TYPE_SELECTION) {
+            string choice = (string)split[0];
+
             debugSay(2,"DEBUG-DOLLTYPE","Changing doll type to " + choice);
 
             // A Doll Type was chosen: change to it as is appropriate
@@ -792,6 +831,8 @@ default {
             }
         }
         else if (code < 200) {
+            string choice = (string)split[0];
+
             if (code == INIT_STAGE2) {
                 configured = 1;
             }
