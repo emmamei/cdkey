@@ -136,6 +136,7 @@ default {
                             "RLVok",
                             "allowCarry",
                             "allowDress",
+                            "allowTypes",
                             "allowPose",
                             "canDressSelf",
                             "canFly",
@@ -189,6 +190,7 @@ default {
             else if (name == "RLVok")                           RLVok = (integer)value;
             else if (name == "allowCarry")                 allowCarry = (integer)value;
             else if (name == "allowDress")                 allowDress = (integer)value;
+            else if (name == "allowTypes")                 allowTypes = (integer)value;
             else if (name == "allowPose")                   allowPose = (integer)value;
             else if (name == "canDressSelf")             canDressSelf = (integer)value;
             else if (name == "canFly")                         canFly = (integer)value;
@@ -249,6 +251,7 @@ default {
                     lmSendConfig("allowPose",       (string)(      allowPose = TRUE));
                     lmSendConfig("allowCarry",      (string)(     allowCarry = TRUE));
                     lmSendConfig("allowDress",      (string)(     allowDress = TRUE));
+                    lmSendConfig("allowTypes",      (string)(     allowTypes = TRUE));
 
                     break;
                 }
@@ -258,7 +261,11 @@ default {
 
 
                     // If we turn on safe mode, we close to public access, and open up our
-                    // own. If we disable safeMode, then nothing changes.
+                    // own. If we disable safeMode, then nothing changes except stripping and
+                    // hardcore are allowed.
+                    //
+                    // Most of these are just a collection of settings; the user can change them
+                    // after safemode is enabled.
                     //
                     if (safeMode) {
 #ifdef ADULT_MODE
@@ -276,6 +283,7 @@ default {
                         lmSendConfig("allowPose",       (string)(      allowPose = FALSE));
                         lmSendConfig("allowCarry",      (string)(     allowCarry = FALSE));
                         lmSendConfig("allowDress",      (string)(     allowDress = FALSE));
+                        lmSendConfig("allowTypes",      (string)(     allowTypes = FALSE));
                     }
 
                     break;
@@ -632,6 +640,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 plusList += cdGetButton("Carryable", id, allowCarry, 0);
                 if (RLVok == TRUE) {
                     plusList += cdGetButton("Outfitable", id, allowDress, 0);
+                    plusList += cdGetButton("Types",      id, allowTypes, 0);
 #ifdef ADULT_MODE
                     if (!safeMode) {
                         plusList += cdGetButton("Strippable", id, allowStrip, 0);

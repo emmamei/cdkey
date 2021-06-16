@@ -231,6 +231,7 @@ default {
                              "allowStrip",
 #endif
                              "allowDress",
+                             "allowTypes",
                              "allowSelfWind",
                              "allowPose",
 
@@ -297,6 +298,7 @@ default {
             else if (name == "allowStrip")                 allowStrip = (integer)value;
 #endif
             else if (name == "allowDress")                 allowDress = (integer)value;
+            else if (name == "allowTypes")                 allowTypes = (integer)value;
             else if (name == "allowSelfWind")           allowSelfWind = (integer)value;
             else if (name == "allowPose")                   allowPose = (integer)value;
 
@@ -589,18 +591,20 @@ default {
 
                     //--------------------
                     // Types Button
-                    if (poseAnimation == ANIMATION_NONE) {
-                        // Only present the Types button if Dolly is not posed
+                    if (allowTypes) {
+                        if (poseAnimation == ANIMATION_NONE) {
+                            // Only present the Types button if Dolly is not posed
 
-                        if (typeLockExpire == 0) {
-                            // Members of the public are allowed if allowed
-                            //if (!isDoll && !isController) menu += "Types...";
+                            if (typeLockExpire == 0) {
+                                // Members of the public are allowed if allowed
+                                //if (!isDoll && !isController) menu += "Types...";
 
-                            // Dolly or Controllers always can use Types
-                            //else menu += "Types...";
+                                // Dolly or Controllers always can use Types
+                                //else menu += "Types...";
 
-                            // No difference?!
-                            menu += "Types...";
+                                // No difference?!
+                                menu += "Types...";
+                            }
                         }
                     }
 
@@ -901,7 +905,6 @@ default {
             if (space == NOT_FOUND) {
                 // no space was found in the Menu button selection
                      if (choice == "Accept") lmInternalCommand("addController", (string)id + "|" + name, id);
-                //else if (choice == "Detach") lmInternalCommand("detach", "", id);
                 else if (choice == "Decline") ; // do nothing
             }
             else {
@@ -996,7 +999,6 @@ default {
                             // However! if X is true and isDoll and is NOT Controller - then skip to next...
                                  if (afterSpace == "Self TP")    lmSendConfig("canSelfTP",    (string)(canSelfTP = isX));
                             else if (afterSpace == "Self Dress") lmSendConfig("canDressSelf", (string)(canDressSelf = isX));
-                            //else if (afterSpace == "Detachable") lmSendConfig("detachable",   (string)(detachable = isX));
                             else if (afterSpace == "Flying")     lmSendConfig("canFly",       (string)isX);
 #ifdef EMERGENCY_TP
                             else if (afterSpace == "Force TP")   lmSendConfig("autoTP",       (string)isX);
@@ -1052,6 +1054,7 @@ default {
                                  if (afterSpace == "Carryable")  lmSendConfig("allowCarry",    (string)(allowCarry = isX));
                             else if (afterSpace == "Outfitable") lmSendConfig("allowDress",    (string)(allowDress = isX));
                             else if (afterSpace == "Poseable")   lmSendConfig("allowPose",     (string)(allowPose = isX));
+                            else if (afterSpace == "Types")      lmSendConfig("allowTypes",    (string)(allowTypes = isX));
 #ifdef ADULT_MODE
                             else if (afterSpace == "Strippable") lmSendConfig("allowStrip", (string)(allowStrip = isX));
 #endif

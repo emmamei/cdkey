@@ -52,6 +52,7 @@ integer allowDress          = 1;
 integer allowPose           = 1;
 integer allowRepeatWind     = 1;
 integer allowSelfWind       = 1;
+integer allowTypes          = 1;
 #ifdef ADULT_MODE
 integer allowStrip          = 0;
 integer hardcore;

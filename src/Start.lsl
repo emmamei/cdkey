@@ -206,6 +206,8 @@ processConfiguration(string configSettingName, string configSettingValue) {
                       "show phrases",
                       "carryable",
                       "repeatable wind",
+                      "transforming doll",
+                      "types",
                       "ghost"
                     ];
 
@@ -228,6 +230,8 @@ processConfiguration(string configSettingName, string configSettingValue) {
                          "showPhrases",
                          "allowCarry",
                          "allowRepeatWind",
+                         "allowTypes",
+                         "allowTypes",
                          "ghost"
                        ];
 

@@ -112,9 +112,13 @@ doXstats() {
 #endif
     cdCapability(canFly,               "Doll can", "fly");
     cdCapability(allowRepeatWind,      "Doll can", "be multiply wound");
-    cdCapability((wearLockExpire > 0), "Doll's clothing is",  "currently locked on");
-    cdCapability((typeLockExpire > 0), "Doll type is",  "currently locked");
+    cdCapability(allowTypes,           "Doll is", "a transforming doll");
+
+    if (allowTypes)
+        cdCapability((typeLockExpire > 0), "Doll type is",  "currently locked");
+
     cdCapability((poseLockExpire > 0), "Doll pose is",  "currently locked");
+    cdCapability((wearLockExpire > 0), "Doll's clothing is",  "currently locked on");
     cdCapability(lowScriptMode,        "Doll is",  "currently in powersave mode");
 #ifdef ADULT_MODE
     cdCapability(allowStrip,           "Doll is", "strippable");
@@ -372,6 +376,7 @@ integer commandsDollyOnly(string chatCommand, string param) {
 #endif
             break;
         }
+
         // Could potentially combine the next three into one
         // block but the code to account for the differences
         // may not be worth it.
@@ -606,7 +611,7 @@ integer commandsPublic(string chatCommand, string param) {
             break;
         }
         case "types": {
-            cdMenuInject("Types...", accessorName, accessorID);
+            if (allowTypes) cdMenuInject("Types...", accessorName, accessorID);
             break;
         }
         case "poses": {
@@ -782,6 +787,7 @@ default {
                              "allowRepeatWind",
                              "allowCarry",
                              "allowDress",
+                             "allowTypes",
                              "allowPose",
                              "collapsed",
                              "canDressSelf",
@@ -838,6 +844,7 @@ default {
             else if (name == "allowRepeatWind")   allowRepeatWind = integerValue;
             else if (name == "allowCarry")             allowCarry = integerValue;
             else if (name == "allowDress")             allowDress = integerValue;
+            else if (name == "allowTypes")             allowTypes = integerValue;
             else if (name == "allowPose")               allowPose = integerValue;
             else if (name == "poseSilence")           poseSilence = integerValue;
             else if (name == "collapsed")               collapsed = integerValue;
