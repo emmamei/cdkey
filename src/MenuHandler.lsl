@@ -409,22 +409,20 @@ default {
 #ifdef ADULT_MODE
                 if (!hardcore) {
 #endif
-                    integer minsLeft;
+                    integer minsLeft = llRound(timeLeftOnKey / (60.0 * windRate));
 
                     // timeLeftOnKey is in seconds, and timeLeftOnKey / 60.0 converts
                     // the number to minutes. The value windRate is a scaling factor:
                     // a key running fast (windRate = 2.0) has fewer minutes left;
                     // timeLeftOnKey is "real" seconds left.
 
-                    if (windRate > 0) {
-                        minsLeft = llRound(timeLeftOnKey / (60.0 * windRate));
-                        timeLeftMsg = "Dolly has " + (string)minsLeft + " minutes remaining. ";
+                    timeLeftMsg = "Dolly has " + (string)minsLeft + " minutes remaining. Key is ";
 
-                        timeLeftMsg += "Key is ";
+                    if (windRate > 0) {
 
                              if (windRate == 1) timeLeftMsg += "winding down at a normal rate. ";
-                        else if (windRate > 1)  timeLeftMsg += "winding down at an accelerated rate. ";
-                        else if (windRate < 1)  timeLeftMsg += "winding down at a slowed rate. ";
+                        else if (windRate  > 1) timeLeftMsg += "winding down at an accelerated rate. ";
+                        else if (windRate  < 1) timeLeftMsg += "winding down at a slowed rate. ";
                     }
                     else timeLeftMsg += "not winding down. ";
 #ifdef ADULT_MODE
