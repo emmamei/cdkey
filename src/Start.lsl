@@ -56,18 +56,11 @@ integer i;
 string outfitFolderExpected;
 string dollTypeExpected;
 
-integer carryExpire;
-
-//integer introLine;
-//integer introLines;
-
 integer startParameter;
-//integer resetState;
 #define RESET_NONE 0
 #define RESET_NORMAL 1
 #define RESET_STARTUP 2
 
-//integer rlvWait;
 list keySpecificConfigs;
 
 key notecardQueryID;
@@ -480,7 +473,7 @@ default {
         lmSendConfig("visibility",(string)1.0);
         lmSendConfig("isVisible",(string)TRUE);
 
-        // Clear the lowScript mode and start from beginning
+        // Clear the low script mode and start from beginning
         lmSendConfig("lowScriptExpire",(string)0);
 
         // This is probably overkill - but pass these on to everybody

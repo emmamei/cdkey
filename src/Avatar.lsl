@@ -62,7 +62,6 @@ integer i;
 integer posePage;
 integer timerMark;
 integer lastTimerMark;
-integer carryExpire;
 integer timeMark;
 integer reachedTarget = FALSE;
 integer hasCarrier;
@@ -120,8 +119,6 @@ float adjustTimer() {
         else return HI_SPEED_CARRY_RATE;
     }
     else {
-        //if (lowScriptMode) return LOW_SCRIPT_RATE;
-        //else return NORMAL_RATE;
         return 0.0;
     }
 }
@@ -480,30 +477,21 @@ default {
                 poseAnimation = value;
             }
             else if (name == "poserID")                 poserID = (key)value;
-            else {
-                     //if (name == "detachable")               detachable = (integer)value;
-                     if (name == "lowScriptMode")         lowScriptMode = (integer)value;
+            else if (name == "dollType")                   dollType = value;
 #ifdef DEVELOPER_MODE
-                else if (name == "debugLevel")               debugLevel = (integer)value;
+            else if (name == "debugLevel")               debugLevel = (integer)value;
 #endif
-                else if (name == "allowPose")                 allowPose = (integer)value;
-                else if (name == "dollType")                   dollType = value;
-                else if (name == "controllers") {
-                    if (split == [""]) controllerList = [];
-                    else controllerList = split;
-                }
-                else if (name == "pronounHerDoll")       pronounHerDoll = value;
-                else if (name == "pronounSheDoll")       pronounSheDoll = value;
-                else if (name == "dialogChannel") {
-                    dialogChannel = (integer)value;
-                    poseChannel = dialogChannel - POSE_CHANNEL_OFFSET;
-                }
-
-                return;
+            else if (name == "allowPose")                 allowPose = (integer)value;
+            else if (name == "controllers") {
+                if (split == [""]) controllerList = [];
+                else controllerList = split;
             }
-
-            //debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 300)");
-            //llRequestPermissions(dollID, PERMISSION_MASK);
+            else if (name == "pronounHerDoll")       pronounHerDoll = value;
+            else if (name == "pronounSheDoll")       pronounSheDoll = value;
+            else if (name == "dialogChannel") {
+                dialogChannel = (integer)value;
+                poseChannel = dialogChannel - POSE_CHANNEL_OFFSET;
+            }
         }
         else if (code == INTERNAL_CMD) {
             string cmd = (string)split[0];

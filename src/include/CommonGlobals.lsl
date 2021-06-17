@@ -76,13 +76,12 @@ integer homingBeacon;
 integer hovertextOn;
 integer isTransformingKey   = 1;
 integer keyLimit            = 10800;
-integer lowScriptMode;
 integer safeMode;
 integer offlineMode         = TRUE;
 integer optHeader;
 integer pleasureDoll;
 integer poseSilence         = 1;
-//integer quiet               = 1;
+
 integer remoteSeq;
 integer RLVok               = -1; // UNSET
 integer RLVsupport          = -1; // UNSET
@@ -96,8 +95,13 @@ integer wearLockExpire;
 integer typeLockExpire;
 integer poseLockExpire;
 
+// Note that lowScriptExpire *IS NOT A LOCK*
+integer lowScriptExpire;
+
+// Note that carryExpire *IS NOT A LOCK*
+integer carryExpire;
+
 integer winderRechargeTime;
-//integer windingDown         = 1;
 integer windMins            = 30;
 integer windNormal          = 1800;
 integer windEmergency       = 600;

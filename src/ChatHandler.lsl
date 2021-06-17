@@ -111,15 +111,16 @@ doXstats() {
     cdCapability(autoTP,               "Doll can", "be force teleported");
 #endif
     cdCapability(canFly,               "Doll can", "fly");
+    cdCapability(canSelfTP,            "Doll can", "teleport " + pronounHerDoll + " own self");
     cdCapability(allowRepeatWind,      "Doll can", "be multiply wound");
     cdCapability(allowTypes,           "Doll is", "a transforming doll");
 
     if (allowTypes)
         cdCapability((typeLockExpire > 0), "Doll type is",  "currently locked");
 
-    cdCapability((poseLockExpire > 0), "Doll pose is",  "currently locked");
-    cdCapability((wearLockExpire > 0), "Doll's clothing is",  "currently locked on");
-    cdCapability(lowScriptMode,        "Doll is",  "currently in powersave mode");
+    cdCapability(( poseLockExpire > 0), "Doll pose is",  "currently locked");
+    cdCapability(( wearLockExpire > 0), "Doll's clothing is",  "currently locked on");
+    cdCapability((lowScriptExpire > 0), "Doll is",  "currently in powersave mode");
 #ifdef ADULT_MODE
     cdCapability(allowStrip,           "Doll is", "strippable");
     cdCapability(hardcore,             "Doll is", "currently in hardcore mode");
@@ -130,7 +131,7 @@ doXstats() {
     cdCapability(allowPose,            "Doll can", "be posed by the public");
     cdCapability(allowDress,           "Doll can", "be dressed by the public");
     cdCapability(allowCarry,           "Doll can", "be carried by the public");
-    cdCapability(canDressSelf,         "Doll can", "dress by " + pronounHerDoll + "self");
+    cdCapability(canDressSelf,         "Doll can", "dress by " + pronounHerDoll + " own self");
     cdCapability(poseSilence,          "Doll is",  "silenced while posing");
 
     if (windRate > 0) s += "\nCurrent wind rate is " + formatFloat2(windRate) + ".\n";
@@ -806,6 +807,9 @@ default {
                              "poserID",
                              "poserName",
                              "poseLockExpire",
+                             "wearLockExpire",
+                             "typeLockExpire",
+                             "lowScriptExpire",
                              "pronounHerDoll",
                              "pronounSheDoll",
                              "windRate",
@@ -854,6 +858,9 @@ default {
             else if (name == "configured")             configured = integerValue;
             else if (name == "collapseTime")         collapseTime = integerValue;
             else if (name == "poseLockExpire")     poseLockExpire = integerValue;
+            else if (name == "typeLockExpire")     typeLockExpire = integerValue;
+            else if (name == "wearLockExpire")     wearLockExpire = integerValue;
+            else if (name == "lowScriptExpire")   lowScriptExpire = integerValue;
             else if (name == "windNormal")             windNormal = integerValue;
             else if (name == "windEmergency")       windEmergency = integerValue;
 

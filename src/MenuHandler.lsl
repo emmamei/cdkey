@@ -213,7 +213,6 @@ default {
                              "backMenu",
                              "keyLimit",
                              "keyLocked",
-                             "lowScriptMode",
                              "winderRechargeTime",
 #ifdef ADULT_MODE
                              "hardcore",
@@ -278,7 +277,6 @@ default {
             else if (name == "backMenu")                       backMenu = value;
             else if (name == "keyLimit")                       keyLimit = (integer)value;
             else if (name == "keyLocked")                     keyLocked = (integer)value;
-            else if (name == "lowScriptMode")             lowScriptMode = (integer)value;
             else if (name == "winderRechargeTime")   winderRechargeTime = (integer)value;
 #ifdef ADULT_MODE
             else if (name == "hardcore")                       hardcore = (integer)value;
@@ -711,7 +709,6 @@ default {
 
                 //--------------------
                 // END OF BUTTONS
-                if (lowScriptMode) msg += "Key is in power-saving mode. ";
 
 #ifdef DEVELOPER_MODE
                 if (RLVok == UNSET) msg += "Still checking for RLV support some features unavailable. ";

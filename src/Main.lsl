@@ -46,12 +46,7 @@ integer permMask;
 key lastWinderID = NULL_KEY;
 
 #define LOWSCRIPT_TIMEOUT 600
-integer lowScriptTimer;
-integer lowScriptModeSpan;
 integer lastLowScriptTime;
-integer lowScriptExpire;
-
-integer carryExpire;
 
 key simRatingQuery;
 integer keyLocked = FALSE;
@@ -426,41 +421,50 @@ default {
         //----------------------------------------
         // LOW SCRIPT MODE
 
-        if (lowScriptMode) {
+        if (lowScriptExpire) {
+
+            // We're in low script mode - reducing timers to reduce lag.
+            //
+            // Now either the sim is still appearing lagged to us, or not.
+            // If it is, then bump the timer - the length of time things
+            // have to be good to get released.
+            //
+            // If we have been in low script mode, and the timer has expired,
+            // then that means things are good and we can exit low script mode.
 
             // cdLowScriptTrigger = (llGetRegionFPS() < LOW_FPS || llGetRegionTimeDilation() < LOW_DILATION)
             if (cdLowScriptTrigger) {
 
-                // lowScriptMode continues...
+                // low script mode continues
                 debugSay(2,"DEBUG-MAIN", "Low Script Mode active and bumped");
-                lowScriptExpire = bumpExpireTime(LOWSCRIPT_TIMEOUT);
+                lmSendConfig("lowScriptExpire",(string)(lowScriptExpire = bumpExpireTime(LOWSCRIPT_TIMEOUT)));
             }
             else {
 
                 // if environment has past test long enough - then go out of powersave mode
                 if (isTimePast(lowScriptExpire)) {
                     debugSay(2,"DEBUG-MAIN", "Low Script Mode active but environment good - disabling");
-                    llOwnerSay("You hear the key's inner workings gear up to full power.");
+                    //llOwnerSay("You hear the key's inner workings gear up to full power.");
 
-                    lmSendConfig("lowScriptMode",(string)(lowScriptMode = FALSE));
+                    lmSendConfig("lowScriptExpire",(string)(lowScriptExpire = 0));
                     llSetTimerEvent(STD_RATE);
                 }
-#ifdef DEVELOPER_MODE
-                else {
-                    debugSay(2,"DEBUG-MAIN", "Low Script Mode active but environment good - not yet time (time elapsed " + (string)lowScriptModeSpan + "s)");
-                }
-#endif
             }
         }
         else {
+            // We are not in low script mode, and everything is operating normally so far...
+            // Set the timer event to the standard rate.
+            //
+            // However, if we get triggered that the sim may be lagging - then reduce the
+            // timer and start the low script expire timer.
+
             if (cdLowScriptTrigger) {
-                // We're not in lowScriptMode, but have been triggered...
+                // We're not in low script mode, but have been triggered...
                 // Go into "power saving mode", say so, and mark the time
 
-                lowScriptExpire = bumpExpireTime(LOWSCRIPT_TIMEOUT);
-                llOwnerSay("You hear your Key entering powersave mode, in order to be kind to the sim.");
+                //llOwnerSay("You hear your Key entering powersave mode, in order to be kind to the sim.");
 
-                lmSendConfig("lowScriptMode",(string)(lowScriptMode = TRUE));
+                lmSendConfig("lowScriptExpire",(string)(lowScriptExpire = bumpExpireTime(LOWSCRIPT_TIMEOUT)));
                 llSetTimerEvent(LOW_RATE);
             }
             else {
@@ -713,6 +717,7 @@ default {
                 lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
                 if (collapsed) unCollapse();
             }
+#ifdef NOT_USED
             // We do not trigger this: this code only gets triggered from outside
             // using SET_CONFIG (code 301).
             else if (name == "lowScriptMode") {
@@ -721,9 +726,10 @@ default {
                 lmSendConfig("lowScriptMode",(string)(lowScriptMode = (integer)value));
 
                 if (lowScriptMode) lowScriptExpire = llGetUnixTime() + LOWSCRIPT_TIMEOUT;
+                lmSendConfig("lowScriptExpire",(string)lowScriptExpire);
                 llSetTimerEvent(LOW_RATE);
             }
-
+#endif
             else if (name == "poseLockExpire") {
                 poseLockExpire = (integer)value;
                 lmSendConfig("poseLockExpire",(string)(poseLockExpire));
@@ -962,8 +968,8 @@ default {
 
             else if (code == INIT_STAGE4) {
 
-                     if (lowScriptMode) llSetTimerEvent(LOW_RATE);
-                else                    llSetTimerEvent(STD_RATE);
+                     if (lowScriptExpire) llSetTimerEvent(LOW_RATE);
+                else                      llSetTimerEvent(STD_RATE);
 
                 timerStarted = TRUE;
             }

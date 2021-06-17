@@ -36,7 +36,7 @@
 #define RLV_TIMEOUT 15.0
 
 #define adjustTimer() \
-    if (lowScriptMode) llSetTimerEvent(LOW_RATE);\
+    if (lowScriptExpire > 0) llSetTimerEvent(LOW_RATE);\
     else llSetTimerEvent(STD_RATE)
 
 // Folders need to be searched for: the outfits folder, and the
@@ -317,7 +317,7 @@ default {
     //    - Homing device is active
     //    - Phrases are being used
     //
-    // These are all affected by lowScriptMode which reduces
+    // These are all affected by the low script mode which reduces
     // the number of timer calls.
     //
     timer() {
@@ -350,7 +350,7 @@ default {
 
             if (lastTimerMark > 0) {
                 s = "Transform Timer fired, interval " + formatFloat(timerMark - lastTimerMark,2) + "s";
-                if (lowScriptMode) s += " (lowScriptMode enabled)";
+                if (lowScriptExpire) s += " (low script mode enabled)";
                 s += ".";
 
                 debugSay(5,"DEBUG-TRANSFORM",s);
@@ -485,12 +485,6 @@ default {
                 llOwnerSay(msg);
             }
         }
-
-        //----------------------------------------
-        // ADJUST NEXT TIMER INTERVAL
-        //
-        //if (lowScriptMode) llSetTimerEvent(LOW_RATE);
-        //else llSetTimerEvent(STD_RATE);
     }
 
     //----------------------------------------
@@ -523,7 +517,6 @@ default {
                              "timeReporting",
                              "debugLevel",
 #endif
-                             "lowScriptMode",
                              "simRating",
 #ifdef ADULT_MODE
                              "hardcore",
@@ -562,7 +555,6 @@ default {
             else if (name == "timeReporting")           timeReporting = (integer)value;
             else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
-            else if (name == "lowScriptMode")           lowScriptMode = (integer)value;
             else if (name == "simRating")                   simRating = value;
 #ifdef ADULT_MODE
             else if (name == "hardcore")                     hardcore = (integer)value;
