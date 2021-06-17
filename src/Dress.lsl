@@ -740,6 +740,10 @@ default {
 
             llListenRemove(menuDressHandle);
 
+            // Check for an empty (text) list of outfits
+            //
+            // This is check #1 of an empty list of outfits
+
             if (choice == "") {
 
                 // No outfits available in this directory
@@ -782,9 +786,13 @@ default {
 
             debugSay(6, "DEBUG-DRESS", "Filtered list = " + llDumpList2String(outfitList,","));
 
-            // we've gone through and cleaned up the list - but is anything left?
+            // Check for zero outfits in the list after cleaning it up...
+            //
+            // This is check #2 for an empty list of outfits
+
             if (outfitList == []) {
                 outfitList = []; // free memory
+
                 lmDialogListen();
                 cdListenAll(outfitChannel);
 
@@ -792,9 +800,11 @@ default {
                 llDialog(dresserID, "No wearable outfits in this directory.", [ "Back..." ], outfitChannel);
 
                 llSetTimerEvent(60.0);
-
                 return;
             }
+
+            // At this point, outfitList is now completely built:
+            // if we wanted a random outfit, this is the place for it.
 
             // Sort: slow bubble sort
             outfitList = llListSort(outfitList, 1, TRUE);
