@@ -162,17 +162,20 @@ setDollType(string typeName) {
     // though our menus do not currently allow this
     currentPhrases = [];
     readLine = 0;
-    typeNotecard = TYPE_FLAG + typeName;
-    typeFolderExpected = TYPE_FLAG + typeName;
 
-    // Look for Notecard for the Doll Type and start reading it if showPhrases is enabled
-    //
-    if (showPhrases) {
-        if (llGetInventoryType(typeNotecard) == INVENTORY_NOTECARD) {
+    if (typeName != "Regular") {
+        typeNotecard = TYPE_FLAG + typeName;
+        typeFolderExpected = TYPE_FLAG + typeName;
 
-            kQuery = llGetNotecardLine(typeNotecard,readLine++);
+        // Look for Notecard for the Doll Type and start reading it if showPhrases is enabled
+        //
+        if (showPhrases) {
+            if (llGetInventoryType(typeNotecard) == INVENTORY_NOTECARD) {
 
-            debugSay(2,"DEBUG-DOLLTYPE","Found notecard: " + typeNotecard);
+                kQuery = llGetNotecardLine(typeNotecard,readLine++);
+
+                debugSay(2,"DEBUG-DOLLTYPE","Found notecard: " + typeNotecard);
+            }
         }
     }
 
@@ -185,14 +188,18 @@ setDollType(string typeName) {
     outfitSearchTries = 0;
     typeSearchTries = 0;
 
-    // Only search for a type folder - outfit folder - if RLV is active
-    if (RLVok == TRUE) {
-        debugSay(4,"DEBUG-DOLLTYPE","Searching for " + typeFolderExpected);
+    // Only search for a type folder - outfit folder - if RLV is active and Doll is
+    // not a Regular Doll
+    //
+    if (typeName != "Regular") {
+        if (RLVok == TRUE) {
+            debugSay(4,"DEBUG-DOLLTYPE","Searching for " + typeFolderExpected);
 
-        typeSearchHandle = cdListenMine(typeSearchChannel);
+            typeSearchHandle = cdListenMine(typeSearchChannel);
 
-        // Search for type folder
-        typeSearch(typeSearchChannel,typeSearchHandle);
+            // Search for type folder
+            typeSearch(typeSearchChannel,typeSearchHandle);
+        }
     }
 
     lmInternalCommand("setWindRate","",NULL_KEY); // runs in Main
@@ -204,10 +211,10 @@ reloadTypeNames(key id) {
 
     integer n = llGetInventoryNumber(INVENTORY_NOTECARD);
 
-    if (n == 0) {
-        llOwnerSay("No types found.");
-        return;
-    }
+    //if (n == 0) {
+    //    llOwnerSay("No types found.");
+    //    return;
+    //}
 
     if (typeBufferedList == []) {
 
@@ -239,11 +246,12 @@ reloadTypeNames(key id) {
         //   - Display: Notecard is ok but not needed
         //   - Slut: rejects type even if Notecard is present if not ADULT, else Notecard ok but not needed
         //
-        if (llListFindList(typeBufferedList, (list)"Display") == NOT_FOUND) typeBufferedList += [ "Display" ];
+        if (llListFindList(typeBufferedList, (list)"Display") == NOT_FOUND) typeBufferedList += (list)"Display";
+        typeBufferedList += (list)"Regular";
 #ifdef ADULT_MODE
         // This makes the process location-dependent...
         if (simRating == "MATURE" || simRating == "ADULT")
-            if (llListFindList(typeBufferedList, (list)"Slut") == NOT_FOUND) typeBufferedList += [ "Slut" ];
+            if (llListFindList(typeBufferedList, (list)"Slut") == NOT_FOUND) typeBufferedList += (list)"Slut";
 #endif
     }
 }
