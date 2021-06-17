@@ -105,9 +105,9 @@ default {
     //----------------------------------------
     // LINK MESSAGE
     //----------------------------------------
-    link_message(integer source, integer i, string data, key id) {
+    link_message(integer lmSource, integer lmInteger, string lmData, key lmID) {
 
-        parseLinkHeader(data,i);
+        parseLinkHeader(lmData,lmInteger);
 
         if (code == SEND_CONFIG) {
             string name = (string)split[0];
@@ -435,7 +435,7 @@ default {
                 // llToLower() may be superfluous here
                 string part = llToLower((string)split[0]);
 
-                if (id != dollID) {
+                if (lmID != dollID) {
 
                     // if Dolly is stripped by someone else, Dolly cannot
                     // dress for a time: wearLock is activated
@@ -445,7 +445,7 @@ default {
                     llOwnerSay("You have been stripped and may not redress for " + (string)llRound(WEAR_LOCK_TIMEOUT / 60.0) + " minutes.");
                 }
                 else llOwnerSay("You have stripped off your clothes.");
-                lmInternalCommand("stripAll", "", id);
+                lmInternalCommand("stripAll", "", lmID);
             }
 #endif
         }
@@ -476,7 +476,7 @@ default {
                 // Like a never-ending matrushka doll.
                 //
 
-                if (cdIsDoll(id)) {
+                if (cdIsDoll(lmID)) {
                     if (RLVok == FALSE) {
                         helpMenuList += "RLV"; // To be able to enable RLV when checker fails: one-way button
                     }
@@ -496,39 +496,39 @@ default {
                     if (isObjectPresent(OBJECT_KEY))
                         helpMenuList += [ "Get Key" ];
 
-                    if (cdIsController(id)) helpMenuList += "Reset Key";
+                    if (cdIsController(lmID)) helpMenuList += "Reset Key";
                 }
 
                 lmDialogListen();
-                llDialog(id, msg, [ "Back..." ] + dialogSort(helpMenuList), dialogChannel);
+                llDialog(lmID, msg, [ "Back..." ] + dialogSort(helpMenuList), dialogChannel);
             }
             else if (menuChoice == "Reset Body") {
-                lmInternalCommand("resetBody","",id);
+                lmInternalCommand("resetBody","",lmID);
             }
             else if (menuChoice == "Help Notecard") {
-                llGiveInventory(id,NOTECARD_HELP);
+                llGiveInventory(lmID,NOTECARD_HELP);
             }
             else if (menuChoice == "Get Key") {
-                llGiveInventory(id,OBJECT_KEY);
+                llGiveInventory(lmID,OBJECT_KEY);
             }
             else if (menuChoice == "Visit Dollhouse") {
 #ifdef EMERGENCY_TP
                 // If is Dolly, whisk Dolly away to Location of Landmark
                 // If is someone else, give Landmark to them
-                if (cdIsDoll(id) && RLVok)
-                    lmInternalCommand("teleport", LANDMARK_CDHOME, id);
+                if (cdIsDoll(lmID) && RLVok)
+                    lmInternalCommand("teleport", LANDMARK_CDHOME, lmID);
                 else
 #endif
-                    llGiveInventory(id, LANDMARK_CDHOME);
+                    llGiveInventory(lmID, LANDMARK_CDHOME);
             }
             else if (menuChoice == "Visit Development")
-                cdSayTo("Here is your link to the Community Doll Key development: " + WEB_DEV, id);
+                cdSayTo("Here is your link to the Community Doll Key development: " + WEB_DEV, lmID);
             else if (menuChoice == "Visit Website")
-                cdSayTo("Here is your link to the Community Dolls blog: " + WEB_BLOG, id);
+                cdSayTo("Here is your link to the Community Dolls blog: " + WEB_BLOG, lmID);
             else if (menuChoice == "Visit Blog")
-                cdSayTo("Here is your link to the Community Dolls website: " + WEB_DOMAIN, id);
+                cdSayTo("Here is your link to the Community Dolls website: " + WEB_DOMAIN, lmID);
             else if (menuChoice == "Join Group")
-                cdSayTo("Here is your link to the Community Dolls group profile: " + WEB_GROUP, id);
+                cdSayTo("Here is your link to the Community Dolls group profile: " + WEB_GROUP, lmID);
             else if (menuChoice == "Update") {
                 //llSay(PUBLIC_CHANNEL,"Update starting....");
                 lmSendConfig("update","1");
@@ -562,12 +562,12 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 // viewer, with the appropriate message (already provided for)
                 //
 #ifdef ADULT_MODE
-                if ((cdIsController(id)) && (cdControllerCount() > 0)) plusList = [ "⊖ Controller" ];
+                if ((cdIsController(lmID)) && (cdControllerCount() > 0)) plusList = [ "⊖ Controller" ];
 #else
-                if ((cdIsController(id)) && (cdControllerCount() > 0)) plusList = [ "⊖ Parent" ];
+                if ((cdIsController(lmID)) && (cdControllerCount() > 0)) plusList = [ "⊖ Parent" ];
 #endif
 
-                if (cdIsDoll(id)) {
+                if (cdIsDoll(lmID)) {
                     plusList += [ "⊕ Blacklist", "List Blacklist" ];
 
                     if (llGetListLength(blacklistList)) plusList += [ "⊖ Blacklist" ];
@@ -586,7 +586,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
 
                 lmSendConfig("backMenu",(backMenu = "Options..."));
                 lmDialogListen();
-                llDialog(id, msg, dialogSort(plusList + "Back..."), dialogChannel);
+                llDialog(lmID, msg, dialogSort(plusList + "Back..."), dialogChannel);
             }
             else if (menuChoice == "Restrictions...") {
                 msg = "";
@@ -601,17 +601,17 @@ Parent - Take care choosing your parents; they have great control over Dolly and
 #ifdef ADULT_MODE
                     if (!hardcore) {
 #endif
-                        plusList += cdGetButton("Silent Pose", id, poseSilence, 1);
-                        plusList += cdGetButton("Self Dress", id, canDressSelf, 1);
+                        plusList += cdGetButton("Silent Pose", lmID, poseSilence, 1);
+                        plusList += cdGetButton("Self Dress", lmID, canDressSelf, 1);
 
-                        plusList += cdGetButton("Flying", id, canFly, 1);
-                        plusList += cdGetButton("Self TP", id, canSelfTP, 1);
+                        plusList += cdGetButton("Flying", lmID, canFly, 1);
+                        plusList += cdGetButton("Self TP", lmID, canSelfTP, 1);
 #ifdef ADULT_MODE
                     }
 #endif
 
 #ifdef EMERGENCY_TP
-                    plusList += cdGetButton("Force TP", id, autoTP, 1);
+                    plusList += cdGetButton("Force TP", lmID, autoTP, 1);
 #endif
                     plusList += "Back...";
                 }
@@ -626,7 +626,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 }
 
                 lmDialogListen();
-                llDialog(id, msg, dialogSort(plusList), dialogChannel);
+                llDialog(lmID, msg, dialogSort(plusList), dialogChannel);
             }
             else if (menuChoice == "Public...") {
                 // This menu should not activate for hardcore Dollies
@@ -634,56 +634,56 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 list plusList = [];
 
                 if (dollType != "Display") {
-                    plusList += cdGetButton("Poseable", id, allowPose, 0);
+                    plusList += cdGetButton("Poseable", lmID, allowPose, 0);
                 }
 
-                plusList += cdGetButton("Carryable", id, allowCarry, 0);
+                plusList += cdGetButton("Carryable", lmID, allowCarry, 0);
                 if (RLVok == TRUE) {
-                    plusList += cdGetButton("Outfitable", id, allowDress, 0);
-                    plusList += cdGetButton("Types",      id, allowTypes, 0);
+                    plusList += cdGetButton("Outfitable", lmID, allowDress, 0);
+                    plusList += cdGetButton("Types",      lmID, allowTypes, 0);
 #ifdef ADULT_MODE
                     if (!safeMode) {
-                        plusList += cdGetButton("Strippable", id, allowStrip, 0);
+                        plusList += cdGetButton("Strippable", lmID, allowStrip, 0);
                     }
 #endif
                 }
                 lmSendConfig("backMenu",(backMenu = "Options..."));
                 lmDialogListen();
-                llDialog(id, msg, dialogSort(plusList + "Back..."), dialogChannel);
+                llDialog(lmID, msg, dialogSort(plusList + "Back..."), dialogChannel);
             }
             else if (menuChoice == "Operation...") {
                 msg = "See the helpfile for explanations.";
                 list plusList = [];
 
-                plusList += cdGetButton("Type Text", id, hovertextOn, 0);
-                plusList += cdGetButton("Phrases", id, showPhrases, 0);
+                plusList += cdGetButton("Type Text", lmID, hovertextOn, 0);
+                plusList += cdGetButton("Phrases", lmID, showPhrases, 0);
 #ifdef HOMING_BEACON
                 if (RLVok)
-                    plusList += cdGetButton("Homing Beacon", id, homingBeacon, 0);
+                    plusList += cdGetButton("Homing Beacon", lmID, homingBeacon, 0);
 #endif
 #ifdef OPTIONAL_RLV
                 if (RLVsupport == TRUE) {
 #ifdef ADULT_MODE
                     if (!hardcore)
 #endif
-                        plusList += cdGetButton("RLV", id, RLVok, 0);
+                        plusList += cdGetButton("RLV", lmID, RLVok, 0);
                 }
 #endif
 
                 // One-way options
-                if (cdIsController(id)) {
+                if (cdIsController(lmID)) {
 #ifdef ADULT_MODE
                     if (!hardcore)
 #endif
-                        plusList = llListInsertList(plusList, cdGetButton("Rpt Wind", id, allowRepeatWind, 1), 6);
+                        plusList = llListInsertList(plusList, cdGetButton("Rpt Wind", lmID, allowRepeatWind, 1), 6);
                 }
 
                 lmSendConfig("backMenu",(backMenu = "Options..."));
                 lmDialogListen();
-                llDialog(id, msg, dialogSort(plusList + "Back..."), dialogChannel);
+                llDialog(lmID, msg, dialogSort(plusList + "Back..."), dialogChannel);
             }
             else if (menuChoice == "Back...") {
-                lmMenuReply(backMenu, llGetDisplayName(id), id);
+                lmMenuReply(backMenu, llGetDisplayName(lmID), lmID);
                 lmSendConfig("backMenu",(backMenu = MAIN));
             }
             else if (menuChoice == "Key...") {
@@ -696,9 +696,9 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                              "Max Time: " + (string)(keyLimit / SECS_PER_MIN);
 
                 lmSendConfig("backMenu",(backMenu = "Options..."));
-                if (cdIsController(id)) plusList += [ "Max Time...", "Wind Time..." ];
+                if (cdIsController(lmID)) plusList += [ "Max Time...", "Wind Time..." ];
                 lmDialogListen();
-                llDialog(id, msg, dialogSort(llListSort(plusList, 1, 1) + "Back..."), dialogChannel);
+                llDialog(lmID, msg, dialogSort(llListSort(plusList, 1, 1) + "Back..."), dialogChannel);
             }
             else if (llGetSubString(menuChoice,0,6) == "Gender:") {
                 string s = llGetSubString(menuChoice,7,-1);
@@ -712,18 +712,18 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 else if (s == "agender") setGender("male");
 
                 llOwnerSay("Gender is now set to " + dollGender);
-                lmMenuReply("Key...", llGetDisplayName(id), id);
+                lmMenuReply("Key...", llGetDisplayName(lmID), lmID);
             }
 
             // Textbox generating menus
             else if (menuChoice == "Dolly Name...") {
                 if (menuChoice == "Dolly Name...") {
                     textboxType = DOLL_NAME_TEXTBOX;
-                    llTextBox(id, "Here you can change your dolly name from " + dollDisplayName + " to a name of your choice.", textboxChannel);
+                    llTextBox(lmID, "Here you can change your dolly name from " + dollDisplayName + " to a name of your choice.", textboxChannel);
                 }
 
                 if (textboxHandle) llListenRemove(textboxHandle);
-                textboxHandle = cdListenUser(textboxChannel, id);
+                textboxHandle = cdListenUser(textboxChannel, lmID);
                 listenTime = llGetTime() + 60.0;
                 llSetTimerEvent(60.0);
             }
@@ -741,7 +741,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
 
                 // If the Max Times available are changed, be sure to change the next choice also
                 lmDialogListen();
-                llDialog(id, "You can set the maximum available time here.  Dolly cannot be wound beyond this amount of time.\nDolly currently has " + (string)llFloor(timeLeftOnKey / SECS_PER_MIN) + " mins left of " + (string)llFloor(keyLimit / SECS_PER_MIN) + ". If you lower the maximum, Dolly will lose any extra time entirely.",
+                llDialog(lmID, "You can set the maximum available time here.  Dolly cannot be wound beyond this amount of time.\nDolly currently has " + (string)llFloor(timeLeftOnKey / SECS_PER_MIN) + " mins left of " + (string)llFloor(keyLimit / SECS_PER_MIN) + ". If you lower the maximum, Dolly will lose any extra time entirely.",
                     dialogSort(maxList), dialogChannel);
             }
 
@@ -758,8 +758,8 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 windNormal = (integer)menuChoice * (integer)SECS_PER_MIN;
                 lmSetConfig("windNormal", (string)windNormal);
 
-                cdSayTo("Winding now set to " + (string)(windNormal / (integer)SECS_PER_MIN) + " minutes",id);
-                lmMenuReply("Key...","",id);
+                cdSayTo("Winding now set to " + (string)(windNormal / (integer)SECS_PER_MIN) + " minutes",lmID);
+                lmMenuReply("Key...","",lmID);
             }
 
             // This is setting the keyLimit; windNormal is adjusted if necessary
@@ -776,9 +776,9 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 keyLimit = (integer)menuChoice * SECS_PER_MIN;
                 lmSetConfig("keyLimit", (string)keyLimit);
 
-                cdSayTo("Key limit now set to " + (string)llFloor(keyLimit / SECS_PER_MIN) + " minutes",id);
+                cdSayTo("Key limit now set to " + (string)llFloor(keyLimit / SECS_PER_MIN) + " minutes",lmID);
 
-                lmMenuReply("Key...","",id);
+                lmMenuReply("Key...","",lmID);
             }
             else if (menuChoice == "Wind Time...") {
                 list windChoices;
@@ -792,7 +792,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 if (keyLimit >= 240) windChoices += "120min";
 
                 lmDialogListen();
-                llDialog(id, "You can set the amount of time in each wind.\nDolly currently winds " + (string)(windNormal / (integer)SECS_PER_MIN) + " mins.",
+                llDialog(lmID, "You can set the amount of time in each wind.\nDolly currently winds " + (string)(windNormal / (integer)SECS_PER_MIN) + " mins.",
                     dialogSort(windChoices + [ MAIN ]), dialogChannel);
             }
         }
@@ -826,7 +826,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
 #endif
             else if (code == MEM_REPORT) {
                 float delay  = (float)split[0];
-                memReportID = id;
+                memReportID = lmID;
                 memReport("Aux",1.0);
             }
             else if (code == MEM_REPLY) {
@@ -859,15 +859,13 @@ Parent - Take care choosing your parents; they have great control over Dolly and
     //----------------------------------------
     // LISTEN
     //----------------------------------------
-    listen(integer channel, string name, key id, string choice) {
+    listen(integer listenChannel, string listenName, key listenID, string listenChoice) {
 
-        name = llGetDisplayName(id);
-
-        if (channel == textboxChannel) {
+        if (listenChannel == textboxChannel) {
             llListenRemove(textboxHandle);
             textboxHandle = 0;
             listenTime = 0.0;
-            string origChoice = choice;
+            string origChoice = listenChoice;
 
             // Text box input - 1 types
             //   1: Dolly Name
@@ -875,8 +873,8 @@ Parent - Take care choosing your parents; they have great control over Dolly and
             // This test is not really needed - but in the interest of
             // expansion, this allows more text box types to be created later
             if (textboxType == DOLL_NAME_TEXTBOX) {
-                lmSendConfig("dollDisplayName", choice);
-                lmMenuReply("Key...", name, id);
+                lmSendConfig("dollDisplayName", listenChoice);
+                lmMenuReply("Key...", llGetDisplayName(listenID), listenID);
             }
 #ifdef DEVELOPER_MODE
             else llSay(DEBUG_CHANNEL,"Unknown textbox type! (" + (string)textboxType + ")");

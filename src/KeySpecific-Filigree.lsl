@@ -5,7 +5,7 @@
 // vim:sw=4 et nowrap filetype=lsl
 
 #include "include/GlobalDefines.lsl"
-#define cdMenuInject(a) lmMenuReply(a,"",dollID)
+#define cdMenuInject(a,b) lmMenuReply(a,"",b)
 
 #define RUNNING 1
 #define NOT_RUNNING 0
@@ -254,9 +254,9 @@ default {
     //----------------------------------------
     // LINK MESSAGE
     //----------------------------------------
-    link_message(integer source, integer i, string data, key id) {
+    link_message(integer lmSource, integer lmInteger, string lmData, key lmID) {
 
-        parseLinkHeader(data,i);
+        parseLinkHeader(lmData,lmInteger);
 
         if (code == SEND_CONFIG) {
             string name  = (string)split[0];
@@ -310,7 +310,7 @@ default {
 
                 lmSendConfig("backMenu",(backMenu = "Options..."));
                 keySpecificHandle = cdListenMine(keySpecificChannel);
-                llDialog(id, msg, dialogSort(colorNames + "Back..."), keySpecificChannel);
+                llDialog(lmID, msg, dialogSort(colorNames + "Back..."), keySpecificChannel);
             }
         }
 #ifdef NOT_USED
@@ -346,7 +346,7 @@ default {
     //----------------------------------------
     // LISTEN
     //----------------------------------------
-    listen(integer channel, string name, key id, string choice) {
+    listen(integer listenChannel, string listenName, key listenID, string listenChoice) {
         // channel = chat channel to listen on
         //    name = filter by prim name
         //     key = filter by avatar key
@@ -356,18 +356,18 @@ default {
         // CHAT COMMAND CHANNEL
         //----------------------------------------
 
-        if (channel == keySpecificChannel) {
+        if (listenChannel == keySpecificChannel) {
             integer index;
 
-            if ((index = llListFindList(colorNames, (list)choice)) != NOT_FOUND) {
+            if ((index = llListFindList(colorNames, (list)listenChoice)) != NOT_FOUND) {
                 vector colorValue = (vector)colorValues[ index ];
 
                 setNormalGemColor(colorValue);
                 //lmMenuReply("Options...","",dollID);
-                cdMenuInject("Gem...");
+                lmMenuReply("Gem...","",listenID);
             }
             else if (choice == "Back...") {
-                cdMenuInject(backMenu);
+                lmMenuReply(backMenu,"",listenID);
             }
         }
     }

@@ -75,15 +75,15 @@ default {
     //----------------------------------------
     // LISTEN
     //----------------------------------------
-    listen(integer channel, string name, key id, string data) {
+    listen(integer listenChannel, string listenName, key listenID, string listenChoice) {
 
-        if (channel == statusChannel) {
-            if (data == "") return; // fast exit
+        if (listenChannel == statusChannel) {
+            if (listenChoice == "") return; // fast exit
 
             // Note that we are building rlvRestrict here - its value
             // was cleared elsewhere before we got here the first time
-            debugSay(4,"DEBUG-STATUSRLV","RLV status: " + data);
-            rlvRestrict = (rlvRestrict=[]) + rlvRestrict + llParseString2List(data, [ "/" ], []);
+            debugSay(4,"DEBUG-STATUSRLV","RLV status: " + listenChoice);
+            rlvRestrict = (rlvRestrict=[]) + rlvRestrict + llParseString2List(listenChoice, [ "/" ], []);
         }
     }
 #endif
@@ -91,9 +91,9 @@ default {
     //----------------------------------------
     // LINK MESSAGE
     //----------------------------------------
-    link_message(integer source, integer i, string data, key id) {
+    link_message(integer lmSource, integer lmInteger, string lmData, key lmID) {
 
-        parseLinkHeader(data,i);
+        parseLinkHeader(lmData,lmInteger);
 
         if (code == SEND_CONFIG) {
             string name = (string)split[0];
@@ -116,7 +116,7 @@ default {
 
                 // This is segregated for speed: this script (StatusRLV) doesn't have
                 // an overriding need to not have a 2s delay in it
-                llInstantMessage(id,(string)split[0]);
+                llInstantMessage(lmID,(string)split[0]);
             }
         }
         else if (code == RLV_CMD) {

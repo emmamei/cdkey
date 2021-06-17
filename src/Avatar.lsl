@@ -444,9 +444,9 @@ default {
     //----------------------------------------
     // LINK MESSAGE
     //----------------------------------------
-    link_message(integer source, integer i, string data, key id) {
+    link_message(integer lmSource, integer lmInteger, string lmData, key lmID) {
 
-        parseLinkHeader(data,i);
+        parseLinkHeader(lmData,lmInteger);
 
         if (code == SEND_CONFIG) {
             name = (string)split[0];
@@ -502,7 +502,7 @@ default {
                 case "posePageN": {
 
                     string choice = (string)split[0];
-                    posePageN(choice,id);
+                    posePageN(choice,lmID);
                     break;
                 }
 
@@ -510,7 +510,7 @@ default {
                 case "teleport": {
                     string lm = (string)split[0];
 
-                    llRegionSayTo(id, 0, "Teleporting dolly " + dollName + " to  landmark " + lm + ".");
+                    llRegionSayTo(lmID, 0, "Teleporting dolly " + dollName + " to  landmark " + lm + ".");
 
                     lmRunRLV("tploc=y");
 
@@ -540,7 +540,7 @@ default {
             //    * by members of the Public IF allowed
             //    * by herself
             //    * by Controllers
-            integer dollIsPoseable = ((!cdIsDoll(id) && (allowPose)) || cdIsController(id) || cdSelfPosed());
+            integer dollIsPoseable = ((!cdIsDoll(lmID) && (allowPose)) || cdIsController(lmID) || cdSelfPosed());
 
             // First: Quick ignores
             if (llGetSubString(choice,0,3) == "Wind") return;
@@ -548,11 +548,11 @@ default {
 
 #ifdef ADULT_MODE
             else if (choice == "Strip") {
-                lmInternalCommand("strip", "", id);
+                lmInternalCommand("strip", "", lmID);
             }
 #endif
             else if (choice == "Carry") {
-                setCarrier(id);
+                setCarrier(lmID);
                 llSay(PUBLIC_CHANNEL, "Dolly " + dollName + " has been picked up by " + carrierName);
                 startFollow(carrierID);
             }
@@ -581,15 +581,15 @@ default {
             }
 
             else if (choice == "Poses...") {
-                if (!cdIsDoll(id))
+                if (!cdIsDoll(lmID))
 #ifdef ADULT_MODE
                     if (!hardcore)
 #endif
-                        llOwnerSay(cdUserProfile(id) + " is looking at your poses menu.");
+                        llOwnerSay(cdUserProfile(lmID) + " is looking at your poses menu.");
 
                 posePage = 1;
                 lmDialogListen();
-                lmInternalCommand("posePageN",choice, id);
+                lmInternalCommand("posePageN",choice, lmID);
             }
         }
         else if (code == POSE_SELECTION) {
@@ -599,12 +599,12 @@ default {
             if (choice == "Poses Next" || choice == "Poses Prev") {
                 lmDialogListen();
                 llSleep(0.5);
-                lmInternalCommand("posePageN",choice, id);
+                lmInternalCommand("posePageN",choice, lmID);
             }
 
             // could have been "Back..."
             else if (choice == "Back...") {
-                lmMenuReply(backMenu, llGetDisplayName(id), id);
+                lmMenuReply(backMenu, llGetDisplayName(lmID), lmID);
                 lmSendConfig("backMenu",(backMenu = MAIN));
             }
 
@@ -621,7 +621,7 @@ default {
 
                 // The Real Meat: We have an animation (pose) name
                 lmSendConfig("poseAnimation", (string)(poseAnimation = choice));
-                lmSendConfig("poserID", (string)(poserID = id));
+                lmSendConfig("poserID", (string)(poserID = lmID));
 
                 //debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 300/poseAnimation)");
                 setPoseAnimation(poseAnimation); 

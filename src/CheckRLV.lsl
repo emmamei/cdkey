@@ -247,31 +247,31 @@ default {
     //----------------------------------------
     // LISTEN
     //----------------------------------------
-    listen(integer channel, string name, key id, string msg) {
+    listen(integer listenChannel, string listenName, key listenID, string listenChoice) {
 
-        debugSay(4, "DEBUG-CHECKRLV", "Listener tripped on channel " + (string)channel);
-        debugSay(4, "DEBUG-CHECKRLV", "Listener data = " + (string)msg);
+        debugSay(4, "DEBUG-CHECKRLV", "Listener tripped on channel " + (string)listenChannel);
+        debugSay(4, "DEBUG-CHECKRLV", "Listener data = " + (string)listenChoice);
 
         // Initial RLV Check results are being processed here
         //
-        if (channel == rlvChannel) {
+        if (listenChannel == rlvChannel) {
 
             // FIXME: We could deactivate, but RLV channel may be used for other things
             //cdListenerDeactivate(rlvChannel); // This prevents a secondary response
             if (RLVok == TRUE) return;
 
-            debugSay(2, "DEBUG-CHECKRLV", "RLV Message received: " + msg);
+            debugSay(2, "DEBUG-CHECKRLV", "RLV Message received: " + listenChoice);
             llOwnerSay("RLV Check completed in " + formatFloat(llGetTime(), 1) + " seconds");
 
             // Could be RestrainedLove or RestrainedLife - just
             // check enough letters to account for both
-            if (llGetSubString(msg, 0, 10) == "RestrainedL") {
-                rlvAPIversion = msg;
+            if (llGetSubString(listenChoice, 0, 10) == "RestrainedL") {
+                rlvAPIversion = listenChoice;
                 debugSay(2, "DEBUG-CHECKRLV", "RLV Version: " + rlvAPIversion);
             }
 #ifdef DEVELOPER_MODE
             else {
-                debugSay(2, "DEBUG-CHECKRLV", "Unknown RLV response message: " + msg);
+                debugSay(2, "DEBUG-CHECKRLV", "Unknown RLV response message: " + listenChoice);
             }
 #endif
 
@@ -286,9 +286,9 @@ default {
     //----------------------------------------
     // LINK MESSAGE
     //----------------------------------------
-    link_message(integer source, integer i, string data, key id) {
+    link_message(integer lmSource, integer lmInteger, string lmData, key lmID) {
 
-        parseLinkHeader(data,i);
+        parseLinkHeader(lmData,lmInteger);
 
         if (code == SEND_CONFIG) {
             name = (string)split[0];
@@ -343,7 +343,7 @@ default {
 
                 // We have to do this in order to set the wearLock (and keyLocked) properly
                 // with their RLV components
-                lmInternalCommand("wearLock",(string)(wearLockExpire > 0), id);
+                lmInternalCommand("wearLock",(string)(wearLockExpire > 0), lmID);
                 lmSetConfig("keyLocked",(string)keyLocked);
             }
 

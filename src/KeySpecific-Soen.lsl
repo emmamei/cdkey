@@ -108,9 +108,9 @@ default {
     //----------------------------------------
     // LINK MESSAGE
     //----------------------------------------
-    link_message(integer source, integer i, string data, key id) {
+    link_message(integer lmSource, integer lmInteger, string lmData, key lmID) {
 
-        parseLinkHeader(data,i);
+        parseLinkHeader(lmData,lmInteger);
 
         if (code == SEND_CONFIG) {
             string name  = (string)split[0];
@@ -180,7 +180,7 @@ default {
     //----------------------------------------
     // LISTEN
     //----------------------------------------
-    listen(integer channel, string name, key id, string msg) {
+    listen(integer listenChannel, string listenName, key listenID, string listenChoice) {
         // channel = chat channel to listen on
         //    name = filter by prim name
         //     key = filter by avatar key
@@ -190,7 +190,7 @@ default {
         // CHAT COMMAND CHANNEL
         //----------------------------------------
 
-        if (channel == chatChannel) {
+        if (listenChannel == chatChannel) {
         }
     }
 

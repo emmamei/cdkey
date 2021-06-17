@@ -135,7 +135,7 @@ default {
     // LISTEN
     //----------------------------------------
 
-    listen(integer channel, string name, key id, string msg) {
+    listen(integer listenChannel, string listenName, key listenID, string listenChoice) {
         // get update complete message
     }
 #endif
@@ -143,9 +143,9 @@ default {
     //----------------------------------------
     // LINK MESSAGE
     //----------------------------------------
-    link_message(integer source, integer i, string data, key id) {
+    link_message(integer lmSource, integer lmInteger, string lmData, key lmID) {
 
-        parseLinkHeader(data,i);
+        parseLinkHeader(lmData,lmInteger);
 
         string name = (string)split[0];
         string value = (string)split[1];
