@@ -7,6 +7,155 @@
 #define rlvLockKey()    lmRunRLV("detach=n")
 #define rlvUnlockKey()  lmRunRLV("detach=y")
 
+#define cdLock(a)   lmRunRLV("detachallthis:"+(a)+"=n")
+#define cdUnlock(a) lmRunRLV("detachallthis:"+(a)+"=y")
+#define cdAttach(a) lmRunRLV("attachallover:"+(a)+"=force") 
+#define cdWear(a) lmRunRLV("attach:"+(a)+"=force") 
+#define cdForceDetach(a) lmRunRLV("detachall:"+(a)+"=force");
+
+wearStandardOutfit(string newOutfitName) {
+    // Steps to dressing avi:
+    //
+    // Overview: Attach everything we need, and lock them afterwards.
+    // Next, detach the old outfit - then detach the entire outfitFolder
+    // just in case (everything we want should be locked on).
+    //
+    // Attach and Lock (New Outfit):
+    //
+    // 1) Attach everything in the newOutfitFolder
+    //       (using @attachallover:=force followed by @detachallthis:=n )
+    //
+    // Force Detach:
+    //
+    // 2) Detach oldOutfitFolder, or entire outfitFolder
+    //       (using @detachall:=force )
+    //
+    // Attach outfit again:
+    //
+    // 3) Attach everything in the newOutfitFolder a third time
+    //       (using @attachallover:=force followed by @detachallthis:=n )
+    //
+    // 4) Undo all locks...
+
+    //----------------------------------------
+    // STEP #1
+
+    // Attach the new folder
+
+    debugSay(2,"DEBUG-DRESS","*** STEP 1 ***");
+    debugSay(2, "DEBUG-DRESS", "Attaching outfit from " + newOutfit);
+    cdAttach(newOutfit);
+
+    // At this point, all standard equipment should be attached,
+    // and all of the new outfit should be attached. Nothing is locked.
+
+    //----------------------------------------
+    // STEP #2
+
+    // Remove rest of old outfit (using saved folder)
+
+    debugSay(2,"DEBUG-DRESS","*** STEP 2 ***");
+
+    // Lock items so they don't get thrown off
+    if (normalselfFolder != "") { cdLock(normalselfFolder); }
+    if (      nudeFolder != "") { cdLock(      nudeFolder); }
+
+    cdLock(newOutfit);
+
+    debugSay(2,"DEBUG-DRESS","oldOutfit == \"" + oldOutfit + "\"");
+
+    // We don't want anything in these directories to be popped off
+
+    // Step 2: Remove oldOutfit or alternately entire Outfits dir
+    if (oldOutfit != "") {
+        debugSay(2, "DEBUG-DRESS", "Removing old outfit from " + oldOutfit);
+        cdForceDetach(oldOutfit);
+    }
+    else {
+        // If no oldOutfitFolder, then just detach everything
+        // outside of the newFolder and ~normalself and ~nude
+        debugSay(2, "DEBUG-DRESS", "Removing all other outfits from " + outfitFolder);
+        cdForceDetach(outfitFolder);
+    }
+
+    //----------------------------------------
+    // STEP #3
+    //
+    // Thought here is that there could be another outfit with much of the
+    // current one included; thus, this reattaches all that may have "slipped off"
+    //
+    // It may be that this interaction between two outfits needs to be forbidden,
+    // and it may also be that if we lock something elsewhere, we don't have to
+    // worry about this...
+    //
+    debugSay(2,"DEBUG-DRESS","*** STEP 3 ***");
+
+    // Attach new outfit again
+    debugSay(2, "DEBUG-DRESS", "Attaching outfit again from " + newOutfit);
+    cdAttach(newOutfit);
+
+    //----------------------------------------
+    // STEP #4
+
+    debugSay(2,"DEBUG-DRESS","*** STEP 4 ***");
+
+    // Unlock folders previously locked
+
+    debugSay(2, "DEBUG-DRESS", "Unlocking three folders of new outfit...");
+
+    if (normalselfFolder != "") { cdUnlock(normalselfFolder); }
+    if (      nudeFolder != "") { cdUnlock(      nudeFolder); }
+
+    cdUnlock(newOutfit);
+
+}
+
+wearNewAvi(string newAvatarFolder) {
+    // Steps to dressing AS a new Avatar:
+    //
+    // Load new outfit:
+    //
+    // 1) Attach and lock everything in the newOutfitFolder
+    //       (using @attach)
+    //
+    // Strip all previous items except the key:
+    //
+    // 2) Remove everything from >Outfits
+    //       (using @detachall:=force)
+    // 3) Unlock all
+    //
+    // Hide key, since random avi might not be suitable for key:
+    //
+    // 4) Hide key: using internal commands
+
+    //----------------------------------------
+    // STEP #1
+
+    // Attach the new folder
+
+    debugSay(2,"DEBUG-DRESS","*** STEP 1 ***");
+    debugSay(2, "DEBUG-DRESS", "Attaching outfit from " + newOutfit);
+    cdWear(newOutfit);
+
+    // All of the new outfit should be attached - and having replaced
+    // anything that was in the way. Nothing is locked.
+
+    //----------------------------------------
+    // STEP #2
+
+    cdLock(newOutfit);
+
+    debugSay(2,"DEBUG-DRESS","*** STEP 2 ***");
+    // Detach everything other than the locked newOutfit
+    debugSay(2, "DEBUG-DRESS", "Removing all other clothing worn from " + outfitFolder);
+    cdForceDetach(outfitFolder);
+
+    cdUnlock(newOutfit);
+
+    //llOwnerSay("Your key fades from view as your new avatar persona takes shape...");
+    //lmSendConfig("isVisible", (string)isVisible);
+}
+
 wearOutfitCore(string newOutfitName) {
 
     string newOutfitFolder;
@@ -54,181 +203,14 @@ wearOutfitCore(string newOutfitName) {
     // DRESSING
     //----------------------------------------
 
-    // Steps to dressing avi:
-    //
-    // Overview: Attach everything we need, and lock them afterwards.
-    // Next, detach the old outfit - then detach the entire outfitFolder
-    // just in case (everything we want should be locked on). Next,
-    // go through all clothing parts and detach them if possible.
-    // Finally, Attach everything in the outfitFolder just in case.
-    //
-    // Attach and Lock (Base):
-    //
-    // 1) Attach everything in the normalselfFolder
-    //       (using @attachallover:=force followed by @detachallthis:=n )
-    // 2) Attach everything in the nudeFolder
-    //       (using @attachallover:=force followed by @detachallthis:=n )
-    //
-    // Attach and Lock (New Outfit):
-    //
-    // 3) Attach everything in the newOutfitFolder
-    //       (using @attachallover:=force followed by @detachallthis:=n )
-    // 4) Attach everything in the newOutfitFolder a second time
-    //       (using @attachallover:=force followed by @detachallthis:=n )
-    //
-    // Force Detach:
-    //
-    // 5) Detach oldOutfitFolder
-    //       (using @detachall:=force )
-    // 6) Detach entire outfitFolder
-    //       (using @detachall:=force )
-    // 7) Go through clothing parts and detach
-    //       (using @detachallthis:=force on each part)
-    //
-    // Attach outfit again:
-    //
-    // 8) Attach everything in the newOutfitFolder a third time
-    //       (using @attachallover:=force followed by @detachallthis:=n )
-    //
-    // FOR A NEW AVI...
-    //
-    // Load new outfit:
-    //
-    // 1) Attach and lock everything in the newOutfitFolder
-    //       (using @attachall)
-    //
-    // Strip all previous items except the key:
-    //
-    // 2) Remove everything from nudeFolder
-    //       (using @detachall:=force)
-    // 3) Remove everything from normalSelfFolder
-    //       (using @detachall:=force)
-    // 4) Remove everything from >Outfits
-    //       (using @detachall:=force)
-    // 5) Unlock all
-    //
-    // Hide key, since random avi might not be suitable for key:
-    //
-    // 6) Hide key: using internal commands
-
-    // COMMENTS:
-    //
-    // Duplication between Step #3 and Step #4 is probably not
-    // needed, and skipping Step #5 saves having to save the
-    // oldOutfitFolder.  Skipping oldOutfitFolder also makes things
-    // work for when the oldOutfitFolder is unknown.  Step #7 seems
-    // to be overkill, as does Step #8.
-
-    llOwnerSay("New outfit chosen: " + newOutfitName);
-
-    /*
-    if (isStandaloneFolder(cdGetFirstChar(newOutfitName))) {
+    if (isStandAloneFolder(cdGetFirstChar(newOutfitName))) {
         wearNewAvi(newOutfitName);
+        llOwnerSay("New avatar chosen: " + cdButFirstChar(newOutfitName));
     }
     else {
         wearStandardOutfit(newOutfitName);
+        llOwnerSay("New outfit chosen: " + newOutfitName);
     }
-    */
-
-    //----------------------------------------
-    // STEP #1
-
-    // Restore our usual look from the ~normalself folder...
-    //
-    // NOTE that this may not be what is wanted, especially if Dolly has changed
-    // the standard (or current) look outside of the Key's mechanisms. Not all
-    // things in ~normalself and ~nude may necessarily be worn at outfit change time.
-    //
-    // On top of that, this does not attach ~nude as written...
-
-#define cdLock(a)   lmRunRLV("detachallthis:"+(a)+"=n")
-#define cdUnlock(a) lmRunRLV("detachallthis:"+(a)+"=y")
-#define cdAttach(a) lmRunRLV("attachallover:"+(a)+"=force") 
-#define cdForceDetach(a) lmRunRLV("detachall:"+(a)+"=force");
-
-    // This attaches ~normalself
-    //debugSay(2,"DEBUG-DRESS","*** STEP 1 ***");
-    //debugSay(2,"DEBUG-DRESS","attach normalself folder: " + normalselfFolder);
-    //cdAttach(normalselfFolder);
-
-    //----------------------------------------
-    // STEP #3
-
-    // attach the new folder
-
-    debugSay(2,"DEBUG-DRESS","*** STEP 3 ***");
-    debugSay(2, "DEBUG-DRESS", "Attaching outfit from " + newOutfit);
-    cdAttach(newOutfit);
-
-    // At this point, all standard equipment should be attached,
-    // and all of the new outfit should be attached. Nothing is locked.
-
-    //----------------------------------------
-    // STEP #4
-
-    // Remove rest of old outfit (using saved folder)
-
-    debugSay(2,"DEBUG-DRESS","*** STEP 4 ***");
-
-    // We don't want anything in these directories to be popped off
-
-    // Step 4a: Unlock previous locks
-    //if (normalselfFolder != "") { cdUnlock(normalselfFolder); }
-    //if (      nudeFolder != "") { cdUnlock(      nudeFolder); }
-
-    //cdUnlock(newOutfit);
-    //llSleep(1.0);
-
-    // Step 4b: Lock items so they don't get thrown off
-    if (normalselfFolder != "") { cdLock(normalselfFolder); }
-    if (      nudeFolder != "") { cdLock(      nudeFolder); }
-
-    cdLock(newOutfit);
-
-    debugSay(2,"DEBUG-DRESS","*** STEP 4C ***");
-    debugSay(2,"DEBUG-DRESS","oldOutfit == \"" + oldOutfit + "\"");
-
-    // We don't want anything in these directories to be popped off
-
-    // Step 4c: Remove oldOutfit or alternately entire Outfits dir
-    if (oldOutfit != "") {
-        debugSay(2, "DEBUG-DRESS", "Removing old outfit from " + oldOutfit);
-        cdForceDetach(oldOutfit);
-    }
-    else {
-        // If no oldOutfitFolder, then just detach everything
-        // outside of the newFolder and ~normalself and ~nude
-        debugSay(2, "DEBUG-DRESS", "Removing all other outfits from " + outfitFolder);
-        cdForceDetach(outfitFolder);
-    }
-
-    //----------------------------------------
-    // STEP #5
-    //
-    // Thought here is that there could be another outfit with much of the
-    // current one included; thus, this reattaches all that may have "slipped off"
-    //
-    // It may be that this interaction between two outfits needs to be verbotten
-    //
-    debugSay(2,"DEBUG-DRESS","*** STEP 5 ***");
-
-    // Attach new outfit again
-    debugSay(2, "DEBUG-DRESS", "Attaching outfit again from " + newOutfit);
-    cdAttach(newOutfit);
-
-    //----------------------------------------
-    // STEP #6
-
-    debugSay(2,"DEBUG-DRESS","*** STEP 6 ***");
-
-    // Unlock folders previously locked
-
-    debugSay(2, "DEBUG-DRESS", "Unlocking three folders of new outfit...");
-
-    if (normalselfFolder != "") { cdUnlock(normalselfFolder); }
-    if (      nudeFolder != "") { cdUnlock(      nudeFolder); }
-
-    cdUnlock(newOutfit);
 
     llSleep(1.0);
 

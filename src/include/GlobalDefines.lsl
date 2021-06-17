@@ -214,10 +214,15 @@ float GlobalDefines_version=1.0;
 #define CIRCLE_MINUS "⊖"
 
 // Dress module prefix test defines
+//
+// Note that we can't use "=" because it will mess up the RLV
+// commands when used, and this may be true for others like ":"
+// and so forth.
+//
 #define isGroupFolder(c)        ((c) == "#")
 #define isHiddenFolder(c)       ((c) == "~")
 #define isPlusFolder(c)         ((c) == "+")
-#define isStandAloneFolder(c)   ((c) == "=")
+#define isStandAloneFolder(c)   ((c) == "&")
 #define isTypeFolder(c)         ((c) == "*")
 #define isParentFolder(c)       ((c) == ">")
 #define isRated(c)              ((c) == "{")
