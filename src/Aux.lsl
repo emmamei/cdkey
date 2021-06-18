@@ -655,8 +655,14 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 msg = "See the helpfile for explanations.";
                 list plusList = [];
 
-                plusList += cdGetButton("Type Text", lmID, hovertextOn, 0);
-                plusList += cdGetButton("Phrases", lmID, showPhrases, 0);
+                // Only items in Operation menu are:
+                //
+                // * Homing Beacon (optional)
+                // * RLV (optional)
+                // * Rpt Wind
+                //
+                // Perhaps should be in other menu?
+
 #ifdef HOMING_BEACON
                 if (RLVok)
                     plusList += cdGetButton("Homing Beacon", lmID, homingBeacon, 0);

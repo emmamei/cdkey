@@ -73,7 +73,7 @@ integer configured;
 integer detachable          = 1;
 integer doWarnings;
 integer homingBeacon;
-integer hovertextOn;
+integer typeHovertext;
 integer isTransformingKey   = 1;
 integer keyLimit            = 10800;
 integer safeMode;

@@ -521,7 +521,7 @@ default {
                              "hardcore",
 #endif
                              "backMenu",
-                             "hovertextOn",
+                             "typeHovertext",
                              "collapsed",
                              "busyIsAway",
                              "controllers",
@@ -559,7 +559,7 @@ default {
             else if (name == "hardcore")                     hardcore = (integer)value;
 #endif
             else if (name == "backMenu")                     backMenu = value;
-            else if (name == "hovertextOn")               hovertextOn = (integer)value;
+            else if (name == "typeHovertext")           typeHovertext = (integer)value;
             else if (name == "collapsed")                   collapsed = (integer)value;
             else if (name == "busyIsAway")                 busyIsAway = (integer)value;
             else if (name == "controllers") {
@@ -695,21 +695,28 @@ default {
             string curState = cdGetFirstChar(choice);
 
             // Transforming options
-            if ((choice == "Type...")        ||
-                (optName == "Verify Type")   ||
+            if ((choice == "Type...")         ||
+                (optName == "Verify Type")    ||
+                (optName == "Type Hovertext") ||
                 (optName == "Show Phrases")
                 ) {
 
                 if (optName == "Verify Type") {
                     lmSendConfig("mustAgreeToType", (string)(mustAgreeToType = (curState == CROSS)));
-                    if (mustAgreeToType) llOwnerSay("Changes in Doll Types will be verified with you first.");
-                    else llOwnerSay("Changes in Doll Types will not be verified with you first.");
+                    //if (mustAgreeToType) llOwnerSay("Changes in Doll Types will be verified with you first.");
+                    //else llOwnerSay("Changes in Doll Types will not be verified with you first.");
                 }
                 else if (optName == "Show Phrases") {
                     lmSendConfig("showPhrases", (string)(showPhrases = (curState == CROSS)));
-                    if (showPhrases) llOwnerSay("Hypnotic phrases will be displayed.");
-                    else llOwnerSay("No hypnotic phrases will be displayed.");
+                    //if (showPhrases) llOwnerSay("Hypnotic phrases will be displayed.");
+                    //else llOwnerSay("No hypnotic phrases will be displayed.");
                 }
+                else if (optName == "Type Hovertext") {
+                    lmSendConfig("typeHovertext", (string)(typeHovertext = (curState == CROSS)));
+                    //if (typeHovertext) llOwnerSay("Hypnotic phrases will be displayed.");
+                    //else llOwnerSay("No hypnotic phrases will be displayed.");
+                }
+
                 list choices;
 
 #ifdef ADULT_MODE
@@ -718,6 +725,7 @@ default {
                     choices += cdGetButton("Verify Type", lmID, mustAgreeToType, 0);
 
                 choices += cdGetButton("Show Phrases", lmID, showPhrases, 0);
+                choices += cdGetButton("Type Hovertext", lmID, typeHovertext, 0);
 
                 lmSendConfig("backMenu",(backMenu = "Options..."));
                 backMenu = MAIN;

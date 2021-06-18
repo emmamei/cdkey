@@ -615,7 +615,7 @@ default {
 #ifdef DEVELOPER_MODE
                             "debugLevel",
 #endif
-                            "hovertextOn",
+                            "typeHovertext",
                             "pronounHerDoll",
                             "pronounSheDoll",
                             "typeLockExpire",
@@ -674,7 +674,7 @@ default {
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                   debugLevel = (integer)value;
 #endif
-            else if (name == "hovertextOn")                 hovertextOn = (integer)value;
+            else if (name == "typeHovertext")             typeHovertext = (integer)value;
             else if (name == "pronounHerDoll")           pronounHerDoll = value;
             else if (name == "pronounSheDoll")           pronounSheDoll = value;
             else if (name == "typeLockExpire")           typeLockExpire = (integer)value;

@@ -357,7 +357,7 @@ default {
                             "isAFK",
                             "RLVok",
                             "keyLocked",
-                            "hovertextOn",
+                            "typeHovertext",
                             "dollType",
                             "pronounHerDoll",
                             "pronounSheDoll",
@@ -400,7 +400,7 @@ default {
             else if (name == "isAFK")                              isAFK = (integer)value;
             else if (name == "RLVok")                              RLVok = (integer)value;
             else if (name == "keyLocked")                      keyLocked = (integer)value;
-            else if (name == "hovertextOn")                  hovertextOn = (integer)value;
+            else if (name == "typeHovertext")              typeHovertext = (integer)value;
             else if (name == "dollType")                        dollType = value;
             else if (name == "pronounHerDoll")            pronounHerDoll = value;
             else if (name == "pronounSheDoll")            pronounSheDoll = value;
@@ -478,11 +478,11 @@ default {
 #define TYPE_DOLLY_COLOR     WHITE
 #define DEFAULT_DOLLY_COLOR  WHITE
 
-                     if (collapsed)   { cdSetHovertext("Disabled Dolly!\nWind Me!",  ( DISABLED_DOLLY_COLOR )); }
-                else if (isAFK)       { cdSetHovertext(dollType + " Doll (AFK)",     (      AFK_DOLLY_COLOR )); }
-                else if (hovertextOn) { cdSetHovertext(dollType + " Doll",           (     TYPE_DOLLY_COLOR )); }
-                else if (!isVisible)  { cdSetHovertext("",                           (  DEFAULT_DOLLY_COLOR )); }
-                else                  { cdSetHovertext("Wind Me!",                   (  DEFAULT_DOLLY_COLOR )); }
+                     if (collapsed)     { cdSetHovertext("Disabled Dolly!\nWind Me!",  ( DISABLED_DOLLY_COLOR )); }
+                else if (isAFK)         { cdSetHovertext(dollType + " Doll (AFK)",     (      AFK_DOLLY_COLOR )); }
+                else if (typeHovertext) { cdSetHovertext(dollType + " Doll",           (     TYPE_DOLLY_COLOR )); }
+                else if (!isVisible)    { cdSetHovertext("",                           (  DEFAULT_DOLLY_COLOR )); }
+                else                    { cdSetHovertext("Wind Me!",                   (  DEFAULT_DOLLY_COLOR )); }
             }
             else if (cmd == "carriedMenu") {
                 key menuID = (string)split[0];

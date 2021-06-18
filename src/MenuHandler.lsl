@@ -255,7 +255,7 @@ default {
                              "poseSilence",
                              "pronounHerDoll",
                              "pronounSheDoll",
-                             "hovertextOn",
+                             "typeHovertext",
                              "visibility",
                              "isVisible"
             ];
@@ -321,7 +321,7 @@ default {
             else if (name == "poseSilence")           poseSilence = (integer)value;
             else if (name == "pronounHerDoll")     pronounHerDoll = value;
             else if (name == "pronounSheDoll")     pronounSheDoll = value;
-            else if (name == "hovertextOn")               hovertextOn = (integer)value;
+            else if (name == "typeHovertext")               typeHovertext = (integer)value;
             else if (name == "visibility")                 visibility = (float)value;
             else if (name == "isVisible") {
                 isVisible = (integer)value;
@@ -1019,8 +1019,8 @@ default {
                         else {
                             //----------------------------------------
                             // Operations
-                                 if (afterSpace == "Type Text")     lmSendConfig("hovertextOn",   (string)isX);
-                            else if (afterSpace == "Phrases")       lmSendConfig("showPhrases",   (string)(showPhrases = isX));
+                                 if (afterSpace == "Type Hovertext")     lmSendConfig("typeHovertext",   (string)isX);
+                            //else if (afterSpace == "Phrases")       lmSendConfig("showPhrases",   (string)(showPhrases = isX));
 #ifdef HOMING_BEACON
                             // Automatic return home after collapse (once time is up)
                             else if (afterSpace == "Homing Beacon") lmSendConfig("homingBeacon",  (string)isX);
