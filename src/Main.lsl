@@ -717,19 +717,6 @@ default {
                 lmSendConfig("timeLeftOnKey", (string)timeLeftOnKey);
                 if (collapsed) unCollapse();
             }
-#ifdef NOT_USED
-            // We do not trigger this: this code only gets triggered from outside
-            // using SET_CONFIG (code 301).
-            else if (name == "lowScriptMode") {
-
-                // Send our setting out to everyone else
-                lmSendConfig("lowScriptMode",(string)(lowScriptMode = (integer)value));
-
-                if (lowScriptMode) lowScriptExpire = llGetUnixTime() + LOWSCRIPT_TIMEOUT;
-                lmSendConfig("lowScriptExpire",(string)lowScriptExpire);
-                llSetTimerEvent(LOW_RATE);
-            }
-#endif
             else if (name == "poseLockExpire") {
                 poseLockExpire = (integer)value;
                 lmSendConfig("poseLockExpire",(string)(poseLockExpire));
