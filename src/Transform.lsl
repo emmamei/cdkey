@@ -23,7 +23,6 @@
 #define NOT_RUNNING 0
 #define cdRunScript(a) llSetScriptState(a, RUNNING);
 #define cdStopScript(a) llSetScriptState(a, NOT_RUNNING);
-#define cdMenuInject(a) lmMenuReply((a),name,id);
 #define getInv(a,b) \
     if (a == "") lmRunRLV("getinv=" + (string)(b)); \
     else lmRunRLV("getinv:" + a + "=" + (string)(b))
@@ -490,11 +489,11 @@ default {
     //----------------------------------------
     // LINK MESSAGE
     //----------------------------------------
-    link_message(integer source, integer i, string data, key id) {
+    link_message(integer lmSource, integer lmInteger, string lmData, key lmID) {
 
-        parseLinkHeader(data,i);
+        parseLinkHeader(lmData,lmInteger);
 
-        transformerID = id;
+        transformerID = lmID;
 
         // This means that ANY link message sent by Transform is ignored by these
         // items, except for the SET_CONFIG section...
@@ -636,10 +635,10 @@ default {
 
                 lmSendConfig("backMenu",(backMenu = MAIN));
                 debugSay(6,"DEBUG-OPTIONS","Building Options menu...");
-                debugSay(6,"DEBUG-OPTIONS","isDoll = " + (string)cdIsDoll(id));
-                debugSay(6,"DEBUG-OPTIONS","isCarrier = " + (string)cdIsCarrier(id));
+                debugSay(6,"DEBUG-OPTIONS","isDoll = " + (string)cdIsDoll(lmID));
+                debugSay(6,"DEBUG-OPTIONS","isCarrier = " + (string)cdIsCarrier(lmID));
 
-                if (cdIsDoll(id)) {
+                if (cdIsDoll(lmID)) {
                     msg = "See the help file for information on these options.";
 
                     optionsMenuButtons += [ "Operation...", "Key...", "Access..." ];
@@ -663,11 +662,11 @@ default {
                                 optionsMenuButtons += [ "Restrictions..." ];
                     }
                 }
-                else if (cdIsCarrier(id)) {
+                else if (cdIsCarrier(lmID)) {
                     optionsMenuButtons += [ "Type..." ];
                     if (RLVok == TRUE) optionsMenuButtons += [ "Restrictions..." ];
                 }
-                else if (cdIsController(id)) {
+                else if (cdIsController(lmID)) {
 
                     msg = "See the help file for more information on these options. Choose what you want to happen.";
 
@@ -680,9 +679,9 @@ default {
                 // someone who shouldn't see the Options menu did.
                 else return;
 
-                debugSay(6,"DEBUG-OPTIONS","Options menu built; presenting to " + (string)id);
+                debugSay(6,"DEBUG-OPTIONS","Options menu built; presenting to " + (string)lmID);
                 lmDialogListen();
-                llDialog(id, msg, dialogSort(optionsMenuButtons + "Back..."), dialogChannel);
+                llDialog(lmID, msg, dialogSort(optionsMenuButtons + "Back..."), dialogChannel);
             }
         }
 
@@ -716,14 +715,14 @@ default {
 #ifdef ADULT_MODE
                 if (!hardcore)
 #endif
-                    choices += cdGetButton("Verify Type", id, mustAgreeToType, 0);
+                    choices += cdGetButton("Verify Type", lmID, mustAgreeToType, 0);
 
-                choices += cdGetButton("Show Phrases", id, showPhrases, 0);
+                choices += cdGetButton("Show Phrases", lmID, showPhrases, 0);
 
                 lmSendConfig("backMenu",(backMenu = "Options..."));
                 backMenu = MAIN;
                 lmDialogListen();
-                llDialog(id, "Options", dialogSort(choices + "Back..."), dialogChannel);
+                llDialog(lmID, "Options", dialogSort(choices + "Back..."), dialogChannel);
             }
 
             // Choose a Transformation
@@ -737,11 +736,11 @@ default {
                 if (typeLockExpire) {
                     debugSay(5,"DEBUG-TYPES","Transform is currently locked");
 
-                    if (cdIsDoll(id)) msg = "You " + msg3 + " you were " + msg4;
+                    if (cdIsDoll(lmID)) msg = "You " + msg3 + " you were " + msg4;
                     else msg = dollName + msg3 + " Dolly was " + msg4;
 
                     if (typeLockExpire - llGetUnixTime() > 0) {
-                        if (cdIsDoll(id)) msg += "You ";
+                        if (cdIsDoll(lmID)) msg += "You ";
                         else msg += "Dolly ";
 
                         msg += " can be transformed in ";
@@ -751,11 +750,11 @@ default {
                         else msg += "less than a minute. ";
                     }
 
-                    llDialog(id, msg, ["OK"], DISCARD_CHANNEL);
+                    llDialog(lmID, msg, ["OK"], DISCARD_CHANNEL);
                 }
                 else {
                     // Transformation lock time has expired: transformations (type changes) now allowed
-                    reloadTypeNames(id);
+                    reloadTypeNames(lmID);
                     debugSay(5,"DEBUG-TYPES","Type names reloaded");
 
                     msg = "These change the personality of " + dollName + "; Dolly is currently a " + dollType + " Doll. " +
@@ -771,19 +770,19 @@ default {
                         typeMenuChoices = llDeleteSubList(typeMenuChoices, i, i);
                     }
 
-                    if (cdIsDoll(id)) msg += "What type of doll do you want to be?";
+                    if (cdIsDoll(lmID)) msg += "What type of doll do you want to be?";
                     else {
                         msg += "What type of doll do you want the Doll to be?";
 
 #ifdef ADULT_MODE
                         if (!hardcore)
 #endif
-                            llOwnerSay(cdProfileURL(id) + " is looking at your doll types.");
+                            llOwnerSay(cdProfileURL(lmID) + " is looking at your doll types.");
                     }
 
                     lmSendConfig("backMenu",(backMenu = MAIN));
                     lmDialogListen();
-                    llDialog(id, msg, dialogSort(llListSort(typeMenuChoices, 1, 1) + "Back..."), typeDialogChannel);
+                    llDialog(lmID, msg, dialogSort(llListSort(typeMenuChoices, 1, 1) + "Back..."), typeDialogChannel);
                 }
             }
 
@@ -809,7 +808,7 @@ default {
             //    * Other when Dolly does not have to agree
             //    * Other when Dolly is hardcore
             //
-            if (cdIsDoll(id) || cdIsController(id) || !mustAgreeToType) {
+            if (cdIsDoll(lmID) || cdIsController(lmID) || !mustAgreeToType) {
                 transform = "";
 
                 // Doll (or a Controller) chose a Type - or no confirmation needed: just do it
@@ -820,7 +819,7 @@ default {
                 // This part is when Dolly needs to agree
 
                 // A member of the public chose a Type and confirmation is required
-                cdSayTo("Getting confirmation from Doll...",id);
+                cdSayTo("Getting confirmation from Doll...",lmID);
 
                 transform = choice; // save transformation Type
                 list choices = ["Transform", "Dont Transform", MAIN ];
@@ -863,17 +862,17 @@ default {
     //----------------------------------------
     // LISTEN
     //----------------------------------------
-    listen(integer channel, string name, key id, string choice) {
+    listen(integer listenChannel, string listenName, key listenID, string listenChoice) {
 
         // if a @getinv call succeeds, then we are here - looking for the
         // folders we want...
         //
-        if (channel == outfitSearchChannel) {
+        if (listenChannel == outfitSearchChannel) {
             llListenRemove(outfitSearchHandle);
             outfitSearchHandle = 0;
             adjustTimer();
 
-            debugSay(6,"DEBUG-SEARCHING","Search channel received: " + choice);
+            debugSay(6,"DEBUG-SEARCHING","Search channel received: " + listenChoice);
             debugSay(6,"DEBUG-SEARCHING","Search channel - outfitFolder = \"" + outfitFolder + "\"");
             debugSay(6,"DEBUG-SEARCHING","Search channel - outfitFolderExpected = \"" + outfitFolderExpected + "\"");
 #ifdef DEVELOPER_MODE
@@ -890,7 +889,7 @@ default {
             }
 #endif
 
-            list folderList = llCSV2List(choice);
+            list folderList = llCSV2List(listenChoice);
             //integer searchForTypeFolder;
             nudeFolder = "";
             normalselfFolder = "";
@@ -911,24 +910,24 @@ default {
                 debugSay(6,"DEBUG-SEARCHING","Searching for default outfit folders...");
 
                 // vague substring check done here for speed
-                if (llSubStringIndex(choice,"Outfits") >= 0) {
+                if (llSubStringIndex(listenChoice,"Outfits") >= 0) {
 
                     // exact match check
                          if (~llListFindList(folderList, (list)"> Outfits"))  outfitFolder = "> Outfits";
                     else if (~llListFindList(folderList, (list)"Outfits"))    outfitFolder = "Outfits";
 
                 }
-                else if (llSubStringIndex(choice,"Dressup") >= 0) {
+                else if (llSubStringIndex(listenChoice,"Dressup") >= 0) {
 
                          if (~llListFindList(folderList, (list)"> Dressup"))  outfitFolder = "> Dressup";
                     else if (~llListFindList(folderList, (list)"Dressup"))    outfitFolder = "Dressup";
                 }
 
 #ifdef PRELIMINARY
-                if (llSubStringIndex(choice,"Avatars") >= 0) {
+                if (llSubStringIndex(listenChoice,"Avatars") >= 0) {
                      if (~llListFindList(folderList, (list)"> Avatars"))  avatarFolder = "> Avatars";
                 }
-                else if (llSubStringIndex(choice,"Avis") >= 0) {
+                else if (llSubStringIndex(listenChoice,"Avis") >= 0) {
                      if (~llListFindList(folderList, (list)"> Avis"))  avatarFolder = "> Avis";
                 }
 #endif
@@ -960,7 +959,7 @@ default {
             // completely inseparable
             systemSearch(systemSearchChannel,systemSearchHandle);
         }
-        else if (channel == typeSearchChannel) {
+        else if (listenChannel == typeSearchChannel) {
 
             // Note that we may have gotten here *without* having run through
             // the outfits search first - due to having done the outfits search
@@ -983,17 +982,17 @@ default {
                 return;
             }
 
-            debugSay(6,"DEBUG-SEARCHING","typeFolder search: looking for type folder: \"" + typeFolderExpected + "\": " + choice);
+            debugSay(6,"DEBUG-SEARCHING","typeFolder search: looking for type folder: \"" + typeFolderExpected + "\": " + listenChoice);
             debugSay(6,"DEBUG-SEARCHING","typeFolder search: Outfits folder previously found to be \"" + outfitFolder + "\"");
 
             // We should NOT be here if the following statement is false.... RIGHT?
             if (typeFolderExpected != "" && typeFolder != typeFolderExpected) {
-                list folderList = llCSV2List(choice);
+                list folderList = llCSV2List(listenChoice);
 
                 debugSay(6,"DEBUG-SEARCHING","looking for typeFolder(Expected) = " + typeFolderExpected);
                 // This comparison is inexact - but a quick check to see
                 // if the typeFolderExpected is contained in the string
-                if (llSubStringIndex(choice,typeFolderExpected) >= 0) {
+                if (llSubStringIndex(listenChoice,typeFolderExpected) >= 0) {
 
                     // This is the exact check:
                     if (~llListFindList(folderList, (list)typeFolderExpected)) {
@@ -1015,12 +1014,12 @@ default {
                 lmSendConfig("typeFolder", typeFolder);
             }
         }
-        else if (channel == systemSearchChannel) {
+        else if (listenChannel == systemSearchChannel) {
             llListenRemove(systemSearchHandle);
             systemSearchHandle = 0;
             adjustTimer();
 
-            list folderList = llCSV2List(choice);
+            list folderList = llCSV2List(listenChoice);
 
             //outfitSearching = FALSE;
             nudeFolder = "";
@@ -1055,13 +1054,13 @@ default {
             llSleep(1.0);
             lmInitStage(INIT_STAGE4); // Outfits and System folder search succeeded: continue
         }
-        else if (channel == typeDialogChannel) {
-            if (choice == "Back...") {
-                cdMenuInject(backMenu = MAIN);
+        else if (listenChannel == typeDialogChannel) {
+            if (listenChoice == "Back...") {
+                lmMenuReply(backMenu = MAIN,llGetDisplayName(listenID),listenID);
             }
             else {
-                cdSayTo("Dolly's internal mechanisms engage, and a transformation comes over Dolly, making " + pronounHerDoll + " into a " + choice + " Dolly",id);
-                lmTypeReply(choice, name, id);
+                cdSayTo("Dolly's internal mechanisms engage, and a transformation comes over Dolly, making " + pronounHerDoll + " into a " + listenChoice + " Dolly",listenID);
+                lmTypeReply(listenChoice, llGetDisplayName(listenID), listenID);
             }
         }
     }
@@ -1069,10 +1068,10 @@ default {
     //----------------------------------------
     // DATASERVER
     //----------------------------------------
-    dataserver(key query_id, string data)  {
+    dataserver(key queryID, string queryData)  {
 
-        if (query_id == kQuery) {
-            if (data == EOF) {
+        if (queryID == kQuery) {
+            if (queryData == EOF) {
                 phraseCount = llGetListLength(currentPhrases);
                 llOwnerSay("Load of hypnotic device complete: " + (string)phraseCount + " phrases in memory");
                 kQuery = NULL_KEY;
@@ -1080,7 +1079,7 @@ default {
             }
             else {
                 // This is the real meat: currentPhrases is built up
-                if (llStringLength(data) > 1) currentPhrases += data;
+                if (llStringLength(queryData) > 1) currentPhrases += queryData;
 
                 // Read next line
                 kQuery = llGetNotecardLine(typeNotecard,readLine++);

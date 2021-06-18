@@ -31,7 +31,6 @@
 #define ADD_FRAMES 20
 #define cdMinRefresh() ((1.0/llGetRegionFPS()) * MIN_FRAMES)
 #define cdAddRefresh() ((1.0/llGetRegionFPS()) * ADD_FRAMES)
-#define cdMenuInject(a,b,c) lmMenuReply((a),b,c);
 #define currentlyPosed(p) ((p) != ANIMATION_NONE)
 #define notCurrentlyPosed(p) ((p) == ANIMATION_NONE)
 #define poseChanged (currentAnimation != poseAnimation)
@@ -697,18 +696,18 @@ default {
     //----------------------------------------
     // DATASERVER
     //----------------------------------------
-    dataserver(key request, string data) {
+    dataserver(key queryID, string queryData) {
 
 #define getRegionLocation(d) (llGetRegionCorner() + ((vector)data))
 #define locationToString(d) ((string)(llFloor(d.x)) + "/" + ((string)(llFloor(d.y))) + "/" + ((string)(llFloor(d.z))))
 
         debugSay(6,"DEBUG-AVATAR","Data server running!");
-        debugSay(6,"DEBUG-AVATAR","Request = " + (string)request);
+        debugSay(6,"DEBUG-AVATAR","Request = " + (string)queryID);
         debugSay(6,"DEBUG-AVATAR","rlvTPrequest = " + (string)rlvTPrequest);
         llOwnerSay("dataserver fired!");
 
-        if (request == rlvTPrequest) {
-            vector global = getRegionLocation(data);
+        if (queryID == rlvTPrequest) {
+            vector global = getRegionLocation(queryData);
 
             debugSay(6,"DEBUG-AVATAR","Dolly should be teleporting now...");
             llOwnerSay("Dolly is now teleporting.");

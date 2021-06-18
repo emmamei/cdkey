@@ -22,7 +22,6 @@
 #define cdListenMine(a)   llListen(a, NO_FILTER,    dollID, NO_FILTER)
 #define cdListenerDeactivate(a) llListenControl(a, 0)
 #define cdListenerActivate(a) llListenControl(a, 1)
-#define cdMenuInject(a) lmMenuReply((a),name,id);
 #define cdResetKey() llResetOtherScript("Start")
 //#define lmCollapse(a) lmInternalCommand("collapse",(string)(a),NULL_KEY)
 #define keyDetached(id) (id == NULL_KEY)
@@ -197,9 +196,9 @@ default {
     //----------------------------------------
     // LINK MESSAGE
     //----------------------------------------
-    link_message(integer source, integer i, string data, key id) {
+    link_message(integer lmSource, integer lmInteger, string lmData, key lmID) {
 
-        parseLinkHeader(data,i);
+        parseLinkHeader(lmData,lmInteger);
 
         if (code == SEND_CONFIG) {
             string name = (string)split[0];
@@ -377,9 +376,9 @@ default {
 
                 // Cache access test results
                 hasCarrier      = cdCarried();
-                isCarrier       = cdIsCarrier(id);
-                isController    = cdIsController(id);
-                isDoll          = cdIsDoll(id);
+                isCarrier       = cdIsCarrier(lmID);
+                isController    = cdIsController(lmID);
+                isDoll          = cdIsDoll(lmID);
                 numControllers  = cdControllerCount();
 
                 //----------------------------------------
@@ -390,11 +389,11 @@ default {
 
                     // Collapse has precedence over having a carrier...
                     if (collapsed) {
-                        lmInternalCommand("collapsedMenu", (string)id, NULL_KEY);
+                        lmInternalCommand("collapsedMenu", (string)lmID, NULL_KEY);
                         return;
 
                     } else if (hasCarrier) {
-                        lmInternalCommand("carriedMenu", (string)id + "|" + carrierName, NULL_KEY);
+                        lmInternalCommand("carriedMenu", (string)lmID + "|" + carrierName, NULL_KEY);
                         return;
                     }
                 }
@@ -485,7 +484,7 @@ default {
 
                     //--------------------
                     // ...Controller (NOT Dolly)
-                    else if (cdIsController(id)) {
+                    else if (cdIsController(lmID)) {
                         msg = dollName + " is being carried by " + carrierName + ". ";
                         menu = ["Uncarry"];
                     }
@@ -736,14 +735,14 @@ default {
                 // keys by replacing them within the list - and thus
                 // not disturbing the alphabetic order
 
-                if ((i = llListFindList(menu, ["Visible"])) != NOT_FOUND) menu = llListReplaceList(menu, cdGetButton("Visible", id, isVisible, 0), i, i);
+                if ((i = llListFindList(menu, ["Visible"])) != NOT_FOUND) menu = llListReplaceList(menu, cdGetButton("Visible", lmID, isVisible, 0), i, i);
 
                 msg = timeLeftMsg + msg;
                 timeLeftMsg = "";
 
                 if (llGetListLength(menu) > 12)
                     llSay(DEBUG_CHANNEL,"Menu appears to have overfilled with buttons (" + (string)(llGetListLength(menu)));
-                llDialog(id, msg, dialogSort(menu), dialogChannel);
+                llDialog(lmID, msg, dialogSort(menu), dialogChannel);
                 llSetTimerEvent(MENU_TIMEOUT);
             }
         }
@@ -751,7 +750,7 @@ default {
             string name = (string)split[0];
 
             if (name == "Options...") {
-                lmInternalCommand("optionsMenu", llGetDisplayName(id), id);
+                lmInternalCommand("optionsMenu", llGetDisplayName(lmID), lmID);
             }
         }
         else if (code == RLV_RESET) {
@@ -759,7 +758,7 @@ default {
         }
         else if (code < 200) {
             if (code == INIT_STAGE2) {
-                if (data == "Start") configured = 1;
+                if (lmData == "Start") configured = 1;
 
                 doDialogChannel();
                 //scaleMem();
@@ -863,29 +862,31 @@ default {
     //----------------------------------------
     // LISTEN
     //----------------------------------------
-    listen(integer channel, string name, key id, string choice) {
+    listen(integer listenChannel, string listenName, key listenID, string listenChoice) {
         // channel = chat channel to listen on
         //    name = filter by prim name
         //     key = filter by avatar key
         //  choice = filter by specific message
 
+        string name;
+
         // Cache access test results
         integer hasCarrier      = cdCarried();
-        integer isCarrier       = cdIsCarrier(id);
-        integer isController    = cdIsController(id);
-        integer isDoll          = cdIsDoll(id);
+        integer isCarrier       = cdIsCarrier(listenID);
+        integer isController    = cdIsController(listenID);
+        integer isDoll          = cdIsDoll(listenID);
         integer numControllers  = cdControllerCount();
 
-        list split = llParseStringKeepNulls(choice, [ " " ], []);
+        list split = llParseStringKeepNulls(listenChoice, [ " " ], []);
 
-        name = llGetDisplayName(id); // "id" can be assumed present due to them using the menu dialogs...
+        name = llGetDisplayName(listenID); // "listenID" can be assumed present due to them using the menu dialogs...
 
-        integer space = llSubStringIndex(choice, " ");
+        integer space = llSubStringIndex(listenChoice, " ");
 
-        menuID = id;
+        menuID = listenID;
         menuName = name;
 
-        debugSay(4,"DEBUG-MENU","Listener activated on channel " + (string)channel);
+        debugSay(4,"DEBUG-MENU","Listener activated on channel " + (string)listenChannel);
 
         // Answer to one of these channels:
         //    * dialogChannel
@@ -893,51 +894,51 @@ default {
         //    * controlChannel
         //    * poseChannel
         //    * typeDialogChannel
-        if (channel == dialogChannel) {
+        if (listenChannel == dialogChannel) {
             // This is what starts the Menu process: a reply sent out
             // via Link Message to be responded to by the appropriate script
             llSetTimerEvent(0.0);
-            lmMenuReply(choice, name, id);
+            lmMenuReply(listenChoice, name, listenID);
 
             if (space == NOT_FOUND) {
                 // no space was found in the Menu button selection
-                     if (choice == "Accept") lmInternalCommand("addController", (string)id + "|" + name, id);
-                else if (choice == "Decline") ; // do nothing
+                     if (listenChoice == "Accept") lmInternalCommand("addController", (string)listenID + "|" + name, listenID);
+                else if (listenChoice == "Decline") ; // do nothing
             }
             else {
                 // A space WAS found in the Menu button selection
-                if (choice == "Drop Control") {
+                if (listenChoice == "Drop Control") {
                     integer index;
 
-                    if ((index = llListFindList(controllerList, [ (string)id ])) != NOT_FOUND) {
+                    if ((index = llListFindList(controllerList, [ (string)listenID ])) != NOT_FOUND) {
                         controllerList = llDeleteSubList(controllerList, index, index + 1);
                         lmSendConfig("controllers", llDumpList2String(controllerList, "|"));
 
-                        cdSayTo("You are no longer a controller of this Dolly.", id);
+                        cdSayTo("You are no longer a controller of this Dolly.", listenID);
                         llOwnerSay("Your controller " + name + " has relinquished control.");
                         lmInternalCommand("reloadExceptions", script, NULL_KEY);
                     }
 #ifdef DEVELOPER_MODE
                     else {
-                        llSay(DEBUG_CHANNEL,"id " + (string)id + " not found in Controllers List: " + llDumpList2String(controllerList,",") +
-                            " - index= = " + (string)index + " - search = " + (string)llListFindList(controllerList, [ id ]));
+                        llSay(DEBUG_CHANNEL,"listenID " + (string)listenID + " not found in Controllers List: " + llDumpList2String(controllerList,",") +
+                            " - index= = " + (string)index + " - search = " + (string)llListFindList(controllerList, [ listenID ]));
                     }
 #endif
                     return;
                 }
 #ifdef EMERGENCY_TP
-                else if (choice == "TP Home") {
-                    lmInternalCommand("teleport", LANDMARK_HOME, id);
+                else if (listenChoice == "TP Home") {
+                    lmInternalCommand("teleport", LANDMARK_HOME, listenID);
                     return;
                 }
 #endif
-                else if (choice == "RLV") {
-                    lmInternalCommand("startRlvCheck","",id);
+                else if (listenChoice == "RLV") {
+                    lmInternalCommand("startRlvCheck","",listenID);
                     return;
                 }
 
-                string beforeSpace = llStringTrim(llGetSubString(choice, 0, space),STRING_TRIM);
-                string afterSpace = llDeleteSubString(choice, 0, space);
+                string beforeSpace = llStringTrim(llGetSubString(listenChoice, 0, space),STRING_TRIM);
+                string afterSpace = llDeleteSubString(listenChoice, 0, space);
 
                 // Space Found in Menu Selection
                 if (beforeSpace == CROSS || beforeSpace == CHECK) {
@@ -956,9 +957,9 @@ default {
                         else s = "The Key magically reappears, and takes on the expected form.";
 
                         lmSendConfig("isVisible", (string)(isVisible = (beforeSpace == CROSS)));
-                        cdSayToAgentPlusDoll(s,id);
+                        cdSayToAgentPlusDoll(s,listenID);
 
-                        lmMenuReply(MAIN, name, id);
+                        lmMenuReply(MAIN, name, listenID);
                     }
                     // Could be Option or Ability:
                     //     ALL have Checks or Crosses (X) - and all have spaces
@@ -1012,7 +1013,7 @@ default {
                         }
 
                         if (isRestriction) {
-                            cdMenuInject("Restrictions...");
+                            lmMenuReply("Restrictions...",llGetDisplayName(listenID),listenID);
                             return;
                         }
                         else {
@@ -1043,7 +1044,7 @@ default {
                         }
 
                         if (isOperation) {
-                            cdMenuInject("Operation...");
+                            lmMenuReply("Operation...",llGetDisplayName(listenID),listenID);
                             return;
                         }
                         else {
@@ -1059,7 +1060,7 @@ default {
                         }
 
                         if (isPublic) {
-                            cdMenuInject("Public...");
+                            lmMenuReply("Public...",llGetDisplayName(listenID),listenID);
                         }
                     }
                 }
@@ -1092,7 +1093,7 @@ default {
                             dialogNames = [];
                             blacklistList   = []; // an attempt to free memory
                         }
-                        blacklistHandle = cdListenUser(blacklistChannel, id);
+                        blacklistHandle = cdListenUser(blacklistChannel, listenID);
                     }
                     else {
                         if (blacklistHandle) {
@@ -1115,7 +1116,7 @@ default {
                             dialogNames = [];
                             controllerList = []; // an attempt to free memory
                         }
-                        controlHandle = cdListenUser(controlChannel, id);
+                        controlHandle = cdListenUser(controlChannel, listenID);
                     }
 
                     // Only need this once now, make dialogButtons = numbered list of names truncated to 24 char limit
@@ -1134,35 +1135,35 @@ default {
                         }
                         else {
                             msg = "You already have the maximum (11) entries in your " + msg + " please remove one or more entries before attempting to add another.";
-                            llRegionSayTo(id, 0, msg);
+                            llRegionSayTo(listenID, 0, msg);
                         }
                     }
                     else if (beforeSpace == CIRCLE_MINUS) {
                         if (dialogKeys == []) {
                             msg = "Your " + msg + " is empty.";
-                            llRegionSayTo(id, 0, msg);
+                            llRegionSayTo(listenID, 0, msg);
                             return;
                         }
                         else {
-                            if (cdIsDoll(id)) msg = "Choose a person to remove from your " + msg;
+                            if (cdIsDoll(listenID)) msg = "Choose a person to remove from your " + msg;
                             else msg = "Choose a person to remove from Dolly's " + msg;
                         }
 
                         lmDialogListen();
-                        llDialog(id, msg, dialogSort(llListSort(dialogButtons, 1, 1) + MAIN), activeChannel);
+                        llDialog(listenID, msg, dialogSort(llListSort(dialogButtons, 1, 1) + MAIN), activeChannel);
                         llSetTimerEvent(MENU_TIMEOUT);
                     }
                     else if (beforeSpace == "List") {
                         if (dialogNames == []) {
 
-                            if (cdIsDoll(id)) msg = "Your " + msg + " is empty.";
+                            if (cdIsDoll(listenID)) msg = "Your " + msg + " is empty.";
                             else msg = "Doll's " + msg + " is empty.";
                         }
                         else {
                             debugSay(4,"DEBUG-MENU","Controller list: " + llDumpList2String(controllerList,"|"));
                             debugSay(4,"DEBUG-MENU","DialogKeys: " + llDumpList2String(dialogKeys,"|"));
                             debugSay(4,"DEBUG-MENU","DialogNames: " + llDumpList2String(dialogNames,"|"));
-                            if (cdIsDoll(id)) msg = "Current " + msg + ":";
+                            if (cdIsDoll(listenID)) msg = "Current " + msg + ":";
                             else msg = "Doll's current " + msg + ":";
 
                             i = n; 
@@ -1173,44 +1174,44 @@ default {
                                        "secondlife:///app/agent/" + idX + "/about";
                             }
                         }
-                        llRegionSayTo(id, 0, msg);
-                        cdMenuInject("Access...");
+                        llRegionSayTo(listenID, 0, msg);
+                        lmMenuReply("Access...",llGetDisplayName(listenID),listenID);
                     }
                 }
             }
         }
-        else if (channel == poseChannel) {
-            if (choice == "Back...") {
-                cdMenuInject(backMenu);
+        else if (listenChannel == poseChannel) {
+            if (listenChoice == "Back...") {
+                lmMenuReply(backMenu,llGetDisplayName(listenID),listenID);
             }
             else {
-                lmPoseReply(choice, name, id);
+                lmPoseReply(listenChoice, name, listenID);
             }
         }
-        else if ((channel == blacklistChannel) || (channel == controlChannel)) {
+        else if ((listenChannel == blacklistChannel) || (listenChannel == controlChannel)) {
             // This is what starts the Menu process: a reply sent out
             // via Link Message to be responded to by the appropriate script
-            //lmMenuReply(choice, name, id);
+            //lmMenuReply(listenChoice, name, listenID);
 
-            if (choice == MAIN) {
+            if (listenChoice == MAIN) {
                 llSetTimerEvent(MENU_TIMEOUT);
-                lmMenuReply(MAIN, name, id);
+                lmMenuReply(MAIN, name, listenID);
                 return;
             }
 
-            string button = choice;
-            integer i = llListFindList(dialogButtons, [ choice ]);
+            string button = listenChoice;
+            integer i = llListFindList(dialogButtons, [ listenChoice ]);
             string name = (string)dialogNames[i];
             string uuid = (string)dialogKeys[i];
 
-            if (channel == blacklistChannel) {
+            if (listenChannel == blacklistChannel) {
 
                 // shutdown the listener
                 llListenRemove(blacklistHandle);
                 blacklistHandle = 0;
 
-                if (llListFindList(blacklistList, [uuid,name]) != NOT_FOUND) lmInternalCommand("remBlacklist", (string)uuid + "|" + name, id);
-                else                                                     lmInternalCommand("addBlacklist", (string)uuid + "|" + name, id);
+                if (llListFindList(blacklistList, [uuid,name]) != NOT_FOUND) lmInternalCommand("remBlacklist", (string)uuid + "|" + name, listenID);
+                else                                                     lmInternalCommand("addBlacklist", (string)uuid + "|" + name, listenID);
             }
             else {
 
@@ -1223,7 +1224,7 @@ default {
                     lmDialogListen();
                     llDialog((key)uuid, msg, [ "Accept", "Decline" ], dialogChannel);
                 }
-                else if (cdIsController(id)) lmInternalCommand("remController", (string)uuid + "|" + name, id);
+                else if (cdIsController(listenID)) lmInternalCommand("remController", (string)uuid + "|" + name, listenID);
             }
         }
     }

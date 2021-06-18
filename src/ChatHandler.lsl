@@ -7,7 +7,6 @@
 // DATE: 24 November 2020
 
 #include "include/GlobalDefines.lsl"
-#define cdMenuInject(a,b,c) lmMenuReply(a,b,c)
 
 //#define GNAME 1
 #define RUNNING 1
@@ -608,11 +607,11 @@ integer commandsPublic(string chatCommand, string param) {
         }
 
         case "outfits": {
-            cdMenuInject("Outfits...", accessorName, accessorID);
+            lmMenuReply("Outfits...", accessorName, accessorID);
             break;
         }
         case "types": {
-            if (allowTypes) cdMenuInject("Types...", accessorName, accessorID);
+            if (allowTypes) lmMenuReply("Types...", accessorName, accessorID);
             break;
         }
         case "poses": {
@@ -621,11 +620,11 @@ integer commandsPublic(string chatCommand, string param) {
                 break;
             }
 
-            cdMenuInject("Poses...", accessorName, accessorID);
+            lmMenuReply("Poses...", accessorName, accessorID);
             break;
         }
         case "options": {
-            cdMenuInject("Options...", accessorName, accessorID);
+            lmMenuReply("Options...", accessorName, accessorID);
             break;
         }
         case "menu": {
@@ -636,10 +635,10 @@ integer commandsPublic(string chatCommand, string param) {
                 // Collapse has precedence over having a carrier...
                 if (collapsed) lmInternalCommand("collapsedMenu", "", NULL_KEY);
                 else if (cdCarried()) lmInternalCommand("carriedMenu", (string)accessorID + "|" + carrierName, NULL_KEY);
-                else cdMenuInject(MAIN, accessorName, accessorID);
+                else lmMenuReply(MAIN, accessorName, accessorID);
             }
             else {
-                cdMenuInject(MAIN, accessorName, accessorID);
+                lmMenuReply(MAIN, accessorName, accessorID);
             }
             break;
         }
@@ -704,11 +703,11 @@ integer commandsPublic(string chatCommand, string param) {
         }
         case "carry": {
             // Dolly can't carry herself... duh!
-            if (!accessorIsDoll && allowCarry) cdMenuInject("Carry", accessorName, accessorID);
+            if (!accessorIsDoll && allowCarry) lmMenuReply("Carry", accessorName, accessorID);
             break;
         }
         case "uncarry": {
-            if (!accessorIsDoll && (accessorIsController || accessorIsCarrier)) cdMenuInject("Uncarry", accessorName, accessorID);
+            if (!accessorIsDoll && (accessorIsController || accessorIsCarrier)) lmMenuReply("Uncarry", accessorName, accessorID);
             break;
         }
         case "pose": {
@@ -758,9 +757,9 @@ default {
     //----------------------------------------
     // LINK MESSAGE
     //----------------------------------------
-    link_message(integer source, integer i, string data, key id) {
+    link_message(integer lmSource, integer lmInteger, string lmData, key lmID) {
 
-        parseLinkHeader(data,i);
+        parseLinkHeader(lmData,lmInteger);
 
         if (code == SEND_CONFIG) {
             string name = (string)split[0];
@@ -952,7 +951,7 @@ default {
     //----------------------------------------
     // LISTEN
     //----------------------------------------
-    listen(integer channel, string name, key id, string msg) {
+    listen(integer listenChannel, string listenName, key listenID, string listenChoice) {
         // channel = chat channel to listen on
         //    name = filter by prim name
         //     key = filter by avatar key
@@ -972,12 +971,12 @@ default {
         // CHAT COMMAND CHANNEL
         //----------------------------------------
 
-        if (channel == chatChannel) {
-            accessorID = id;
-            accessorName = llGetDisplayName(id); // get name of person sending chat command
-            accessorIsDoll = cdIsDoll(id);
-            accessorIsController = cdIsController(id); // This includes Dolly if there are no Controllers
-            accessorIsCarrier = cdIsCarrier(id);
+        if (listenChannel == chatChannel) {
+            accessorID = listenID;
+            accessorName = llGetDisplayName(listenID); // get name of person sending chat command
+            accessorIsDoll = cdIsDoll(listenID);
+            accessorIsController = cdIsController(listenID); // This includes Dolly if there are no Controllers
+            accessorIsCarrier = cdIsCarrier(listenID);
 
 #define blacklistedUser(a) (llListFindList(blacklistList, [ (string)(a) ]) != NOT_FOUND)
 #define parametersExist (spaceInMsg != NOT_FOUND)
@@ -990,11 +989,11 @@ default {
                 return;
             }
 
-            debugSay(5,"DEBUG-CHAT",("Got a chat channel message: " + accessorName + "/" + (string)id + "/" + msg));
+            debugSay(5,"DEBUG-CHAT",("Got a chat channel message: " + accessorName + "/" + (string)listenID + "/" + listenChoice));
 
             integer n = llStringLength(chatPrefix);
 
-            list msgList = llParseString2List(msg,(list)" ",(list)"");
+            list msgList = llParseString2List(listenChoice,(list)" ",(list)"");
 
             string readPrefix = llToLower((string)msgList[0]);
             string readCommand = llToLower((string)msgList[1]);
@@ -1005,7 +1004,7 @@ default {
             if (readPrefix != chatPrefix) {
                 // We didn't get a valid prefix - so exit.
 
-                llSay(DEBUG_CHANNEL,"Got wrong prefix from message (" + msg + ") on chat channel " + (string)chatChannel + "; wanted prefix " + chatPrefix);
+                llSay(DEBUG_CHANNEL,"Got wrong prefix from message (" + listenChoice + ") on chat channel " + (string)chatChannel + "; wanted prefix " + chatPrefix);
                 return;
             }
 

@@ -32,7 +32,6 @@
 // FIXME: This should be in a notecard so it can be changed without mangling the scripts.
 string outfitURL = "outfits.htm";
 string outfitMessage;
-string msg;
 
 string prefix;
 
@@ -344,9 +343,9 @@ default {
     //----------------------------------------
     // LINK_MESSAGE
     //----------------------------------------
-    link_message(integer source, integer i, string data, key id) {
+    link_message(integer lmSource, integer lmInteger, string lmData, key lmID) {
 
-        parseLinkHeader(data,i);
+        parseLinkHeader(lmData,lmInteger);
 
         if (code == SEND_CONFIG) {
 
@@ -486,21 +485,22 @@ default {
                 else                  { cdSetHovertext("Wind Me!",                   (  DEFAULT_DOLLY_COLOR )); }
             }
             else if (cmd == "carriedMenu") {
-                key id = (string)split[0];
+                key menuID = (string)split[0];
                 string carrierName = (string)split[1];
+                string menuMessage;
 
                 lmDialogListen();
                 llSleep(0.5);
 
                 debugSay(2, "DEBUG-CARRIED", "Menu activated...");
-                if (cdIsDoll(id)) {
-                    msg = "You are being carried by " + carrierName + ". ";
+                if (cdIsDoll(menuID)) {
+                    menuMessage = "You are being carried by " + carrierName + ". ";
                 }
-                else msg = dollName + " is currently being carried by " + carrierName + ". They have full control over this doll. ";
+                else menuMessage = dollName + " is currently being carried by " + carrierName + ". They have full control over this doll. ";
 
-                debugSay(2, "DEBUG-CARRIED", "id = " + (string)id + "; dialogChannel = " + (string)dialogChannel);
-                debugSay(2, "DEBUG-CARRIED", "msg = " + msg);
-                llDialog(id, msg, [ "OK" ], dialogChannel);
+                debugSay(2, "DEBUG-CARRIED", "menuID = " + (string)menuID + "; dialogChannel = " + (string)dialogChannel);
+                debugSay(2, "DEBUG-CARRIED", "menuMessage = " + menuMessage);
+                llDialog(menuID, menuMessage, [ "OK" ], dialogChannel);
             }
         }
         else if (code == RLV_RESET) {
@@ -513,13 +513,13 @@ default {
 
             // Selection from menu
 
-            string choice = (string)split[0];
-            string name = (string)split[1];
+            string menuChoice = (string)split[0];
+            //string name = (string)split[1];
 
-            if (choice == "Outfits..." && !tempDressingLock) {
+            if (menuChoice == "Outfits..." && !tempDressingLock) {
                 // Check for dresser lockout
-                if (!isDresser(id)) {
-                    cdSayTo("You go to look in Dolly's closet for clothes, and find that " + llGetDisplayName(dresserID) + " is already there looking", id);
+                if (!isDresser(lmID)) {
+                    cdSayTo("You go to look in Dolly's closet for clothes, and find that " + llGetDisplayName(dresserID) + " is already there looking", lmID);
                     return;
                 }
 
@@ -551,7 +551,7 @@ default {
                     return;
                 }
             }
-            else if (choice == UPMENU) {
+            else if (menuChoice == UPMENU) {
                 // When we get here, using the Menu Reply to MAIN
                 // makes no sense - it's too late for that.
                 //
@@ -603,18 +603,18 @@ default {
     //----------------------------------------
     // LISTEN
     //----------------------------------------
-    listen(integer channel, string name, key id, string choice) {
+    listen(integer listenChannel, string listenName, key listenID, string listenChoice) {
         // We have our answer so now we can turn the listener off until our next request
 
         // Request max memory to avoid constant having to bump things up and down
         //llSetMemoryLimit(65536);
 
-        debugSay(6, "DEBUG-DRESS", "Listener called[" + (string)channel + "]: " + name + "|" + choice);
+        debugSay(6, "DEBUG-DRESS", "Listener called[" + (string)listenChannel + "]: " + listenName + "|" + listenChoice);
 
         //----------------------------------------
         // CHANNELS
 
-        if (channel == outfitChannel) {
+        if (listenChannel == outfitChannel) {
             // This channel handles the responses from the Outfits menus,
             // including all outfits, Next, Prev, and Back...
             // are done by listener2665); we get here after the first menu
@@ -623,25 +623,25 @@ default {
             // We just got a selected Outfit or new folder to go into
 
             // Build outfit menu: note it is using the number before the period here
-            integer select = (integer)llGetSubString(choice, 0, llSubStringIndex(choice, ".") - 1);
-            if (select != 0) choice = (string)outfitList[select - 1];
+            integer select = (integer)llGetSubString(listenChoice, 0, llSubStringIndex(listenChoice, ".") - 1);
+            if (select != 0) listenChoice = (string)outfitList[select - 1];
             // else we have a normal selection, not a numeric one
 
-            debugSay(6, "DEBUG-DRESS", "Secondary outfits menu: choice = " + choice + "; select = " + (string)select);
+            debugSay(6, "DEBUG-DRESS", "Secondary outfits menu: listenChoice = " + listenChoice + "; select = " + (string)select);
 
-            if (llGetSubString(choice, 0, 6) == "Outfits") {
+            if (llGetSubString(listenChoice, 0, 6) == "Outfits") {
 
                 // Choice was one of:
                 //
                 // - Outfits Next
                 // - Outfits Prev
 
-                if (!isDresser(id)) {
+                if (!isDresser(listenID)) {
                     outfitList = [];
                     return;
                 }
 
-                if (choice == "Outfits Next") {
+                if (listenChoice == "Outfits Next") {
 #ifdef ROLLOVER
                     outfitPage++;
                     if ((outfitPage - 1) * OUTFIT_PAGE_SIZE > llGetListLength(outfitList))
@@ -651,7 +651,7 @@ default {
                         outfitPage++;
 #endif
                 }
-                else if (choice == "Outfits Prev") {
+                else if (listenChoice == "Outfits Prev") {
 #ifdef ROLLOVER
                     outfitPage--;
                     if (outfitPage < 1)
@@ -679,32 +679,32 @@ default {
                 llSetTimerEvent(60.0);
 
             }
-            else if (choice == "Back...") {
+            else if (listenChoice == "Back...") {
                 outfitList = [];
-                lmMenuReply(backMenu, llGetDisplayName(id), id);
+                lmMenuReply(backMenu, llGetDisplayName(listenID), listenID);
 
                 // Reset to Main Menu
                 //lmSendConfig("backMenu",(backMenu = MAIN));
             }
             else {
-                if (cdListElementP(outfitList, choice) != NOT_FOUND) {
+                if (cdListElementP(outfitList, listenChoice) != NOT_FOUND) {
                     // This is the actual processing of an Outfit Menu entry -
                     // either a folder or a single outfit item.
                     //
                     // This could be entered via a menu injection by a random dress choice
                     // No standard user should be entering this way anyway
-                    //if (!isDresser(id)) return;
+                    //if (!isDresser(listenID)) return;
 
                     outfitList = [];
-                    string c = cdGetFirstChar(choice);
+                    string c = cdGetFirstChar(listenChoice);
 
                     if (isTypeFolder(c) || isParentFolder(c)) {
 
                         // if a Folder was chosen, we have to descend into it by
                         // adding the choice to the currently active folder
 
-                        if (clothingFolder == "") clothingFolder = choice;
-                        else clothingFolder += ("/" + choice);
+                        if (clothingFolder == "") clothingFolder = listenChoice;
+                        else clothingFolder += ("/" + listenChoice);
 
                         debugSay(6, "DEBUG-DRESS", "Generating new list of outfits...");
                         lmSendConfig("backMenu",(backMenu = UPMENU));
@@ -713,13 +713,13 @@ default {
                         llSetTimerEvent(60.0);
                     }
                     else {
-                        debugSay(3, "DEBUG-DRESS", "Calling wearOutfit with " + choice + " in the active folder " + activeFolder);
-                        lmInternalCommand("wearOutfit", choice, NULL_KEY);
+                        debugSay(3, "DEBUG-DRESS", "Calling wearOutfit with " + listenChoice + " in the active folder " + activeFolder);
+                        lmInternalCommand("wearOutfit", listenChoice, NULL_KEY);
                     }
                 }
 #ifdef DEVELOPER_MODE
                 else {
-                    llSay(DEBUG_CHANNEL,"Received unknown outfit! (" + choice + ")");
+                    llSay(DEBUG_CHANNEL,"Received unknown outfit! (" + listenChoice + ")");
                 }
 #endif
             }
@@ -731,7 +731,7 @@ default {
         // Choosing a new outfit normally and manually: create a paged dialog with an
         // alphabetical list of available outfits, and let the user choose one
         //
-        else if (channel == menuDressChannel) {
+        else if (listenChannel == menuDressChannel) {
 
             // Choose an outfit
             //
@@ -744,7 +744,7 @@ default {
             //
             // This is check #1 of an empty list of outfits
 
-            if (choice == "") {
+            if (listenChoice == "") {
 
                 // No outfits available in this directory
                 lmDialogListen();
@@ -757,7 +757,7 @@ default {
                 return;
             }
 
-            outfitList = llParseString2List(choice, [","], []);
+            outfitList = llParseString2List(listenChoice, [","], []);
 
             integer n;
             string itemName;

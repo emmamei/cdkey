@@ -521,9 +521,9 @@ default {
     //----------------------------------------
     // LINK MESSAGE
     //----------------------------------------
-    link_message(integer source, integer i, string data, key id) {
+    link_message(integer lmSource, integer lmInteger, string lmData, key lmID) {
 
-        parseLinkHeader(data,i);
+        parseLinkHeader(lmData,lmInteger);
 
         if (code == SEND_CONFIG) {
             string name = (string)split[0];
@@ -668,7 +668,7 @@ default {
                         if (cmd != "addBlacklist") msg = nameURI + " is blacklisted; you must first remove them from the blacklist before adding them as a controller.";
                         else msg = nameURI + " is one of your controllers; until they remove themselves from being your controller, you cannot add them to the blacklist.";
 
-                        cdSayTo(msg, id);
+                        cdSayTo(msg, lmID);
                         return;
                     }
 
@@ -677,7 +677,7 @@ default {
                     if (inWorkingList(uuid)) {
 
                         // Report already found
-                        cdSayTo(nameURI + " is already found listed as " + typeString, id);
+                        cdSayTo(nameURI + " is already found listed as " + typeString, lmID);
                         return;
                     }
 
@@ -686,7 +686,7 @@ default {
                     //
                     // Actual add
                     //
-                    cdSayToAgentPlusDoll("Adding " + nameURI + " as " + typeString, id);
+                    cdSayToAgentPlusDoll("Adding " + nameURI + " as " + typeString, lmID);
 
                     if (cmd == "addBlacklist") {
                         blacklistList = tmpList + [ uuid ];
@@ -756,9 +756,9 @@ default {
                     string uuid = (string)split[1];
 
                     if (cmd == "remBlacklistList")
-                        blacklistList = remList(blacklistList,uuid,id);
+                        blacklistList = remList(blacklistList,uuid,lmID);
                     else {
-                        controllerList = remList(controllerList,uuid,id);
+                        controllerList = remList(controllerList,uuid,lmID);
 
                         // because we cant remove by UUID, a complete redo of
                         // exceptions is necessary

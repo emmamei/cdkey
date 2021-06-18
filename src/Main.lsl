@@ -346,9 +346,9 @@ default {
     //----------------------------------------
     // DATASERVER
     //----------------------------------------
-    dataserver(key query_id, string data) {
-        if (query_id == simRatingQuery) {
-            simRating = data;
+    dataserver(key queryID, string queryData) {
+        if (queryID == simRatingQuery) {
+            simRating = queryData;
             lmRating(simRating);
 
 #ifdef ADULT_MODE
@@ -583,9 +583,9 @@ default {
     // LINK MESSAGE
     //----------------------------------------
     // For Transforming Key operations
-    link_message(integer source, integer i, string data, key id) {
+    link_message(integer lmSource, integer lmInteger, string lmData, key lmID) {
 
-        parseLinkHeader(data,i);
+        parseLinkHeader(lmData,lmInteger);
 
         //----------------------------------------
         // SEND_CONFIG
@@ -741,7 +741,7 @@ default {
         else if (code == INTERNAL_CMD) {
             string cmd = (string)split[0];
             split = llDeleteSubList(split, 0, 0);
-            integer isController = cdIsController(id);
+            integer isController = cdIsController(lmID);
 
             if (cmd == "setWindRate") {
                 setWindRate();
@@ -761,7 +761,7 @@ default {
                 // script in a synchronous fashion: if this function is moved, this will
                 // have to be changed.
                 debugSay(6,"DEBUG-MAIN","received winding cmd");
-                doWinding((string)split[1],id);
+                doWinding((string)split[1],lmID);
             }
             else if (cmd == "wearLock") {
                 if ((integer)split[0]) wearLockExpire = llGetUnixTime() + WEAR_LOCK_TIMEOUT;
@@ -794,7 +794,7 @@ default {
                     if (collapsed == 0) llSleep(0.5);
 
                     // Give informational message depending on who wound us
-                    if (dollID == id) {
+                    if (dollID == lmID) {
                         llOwnerSay("You managed to turn your key giving you " +
                             mins + " of life (" + percent + "% capacity).");
                     }
@@ -807,7 +807,7 @@ default {
                                 mins + " of life (" + percent + "% capacity).");
 
                         cdSayTo("You turn " + dollDisplayName + "'s Key, and " + pronounSheDoll + " receives " +
-                            mins + " of life (" + percent + "% capacity).", id);
+                            mins + " of life (" + percent + "% capacity).", lmID);
                     }
 
                     // If we wound to 100% ... then Dolly has been fully wound.
@@ -815,7 +815,7 @@ default {
 
                         // Fully wound
 
-                        if (dollID == id) {
+                        if (dollID == lmID) {
                             llOwnerSay("You have been fully wound!");
                         }
                         else {
@@ -863,12 +863,12 @@ default {
             string menuChoice = (string)split[0];
             string name = (string)split[1];
 
-            // if this message is a MENU_SELECTION, then the link message parameter "id"
+            // if this message is a MENU_SELECTION, then the link message parameter "lmID"
             // is the key of the person who activated the menu
 
             if (menuChoice == MAIN) {
                 // call actual Menu code
-                lmInternalCommand("mainMenu", "|" + name, id);
+                lmInternalCommand("mainMenu", "|" + name, lmID);
             }
             else if (menuChoice == "Wind Emg") {
                 // Give this a time limit: can only be done once
@@ -923,7 +923,7 @@ default {
                 if (keyLocked) rlvLockKey();
                 else rlvUnlockKey();
 
-                lmInternalCommand("mainMenu", "|" + name, id);
+                lmInternalCommand("mainMenu", "|" + name, lmID);
             }
 
             else if (menuChoice == "Unlock") {
@@ -932,20 +932,20 @@ default {
                 if (keyLocked) rlvLockKey();
                 else rlvUnlockKey();
 
-                lmInternalCommand("mainMenu", "|" + name, id);
+                lmInternalCommand("mainMenu", "|" + name, lmID);
             }
 
             // Winding - pure and simple
             else if (menuChoice == "Wind") {
 
                 // The winding process also handles messages directly
-                doWinding(name,id);
-                lmInternalCommand("mainMenu", "|" + name, id);
+                doWinding(name,lmID);
+                lmInternalCommand("mainMenu", "|" + name, lmID);
             }
 
             else if (menuChoice == "Unwind") {
                 doCollapse();
-                cdSayTo("Dolly collapses, " + pronounHerDoll + " key unwound",id);
+                cdSayTo("Dolly collapses, " + pronounHerDoll + " key unwound",lmID);
             }
         }
 

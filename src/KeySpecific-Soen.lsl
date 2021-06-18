@@ -5,7 +5,6 @@
 // vim:sw=4 et nowrap filetype=lsl
 
 #include "include/GlobalDefines.lsl"
-#define cdMenuInject(a,b,c) lmMenuReply(a,b,c)
 
 #define RUNNING 1
 #define NOT_RUNNING 0
