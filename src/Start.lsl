@@ -561,7 +561,7 @@ default {
                     }
                     else {
                         // Posed: activate RLV restrictions
-                        lmRunRLVcmd(defaultPoseRLVcmd,"");
+                        lmRunRLV(defaultPoseRLVcmd);
                     }
                 }
             }

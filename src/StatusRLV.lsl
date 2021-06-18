@@ -46,7 +46,47 @@ integer rlvCmdIssued;
 // FUNCTIONS
 //========================================
 
+doRlvClear(string commandString) {
+    // this is a blanket clear, but it doesn't mean to us what
+    // it means normally: we have a base RLV set
 
+    debugSay(2,"DEBUG-STATUSRLV","RLV clear command issued from " + script);
+    //llSay(DEBUG_CHANNEL,"clearRLVcmd run from " + script);
+
+    llOwnerSay("@clear"); // clear command
+
+    if (commandString != "")
+        llOwnerSay("@" + commandString); // restore restrictions if need be
+
+    lmInternalCommand("restoreRestrictions",script,NULL_KEY); // restore RLV restrictions
+    lmInternalCommand("reloadExceptions",script,NULL_KEY); // then restore exceptions
+}
+
+doRlvCommand(string commandString) {
+
+#ifdef DEVELOPER_MODE
+    if (commandString == "clear") {
+        llSay(DEBUG_CHANNEL,"Clear command run from " + script + " using lmRunRLVcmd - use clearRLVcmd instead");
+        lmRunRLVcmd("clearRLVcmd",commandString);
+        return;
+    }
+
+    // This could thereotically happen...
+    if (commandString == "" || commandString == "0") {
+        llSay(DEBUG_CHANNEL,"requested RLV command (in runRlvCommand) from " + script + " is empty!");
+        return;
+    }
+
+    if (llStringLength(commandString) > CHATMSG_MAXLEN) {
+        llSay(DEBUG_CHANNEL,"requested RLV command from " + script + " is too long!");
+        return;
+    }
+
+    debugSay(6,"DEBUG-STATUSRLV","RLV received: @" + commandString);
+#endif
+
+    llOwnerSay("@" + commandString);
+}
 //========================================
 // STATES
 //========================================
@@ -120,57 +160,44 @@ default {
             }
         }
         else if (code == RLV_CMD) {
-            string commandString = (string)split[2];
-            string cmd = (string)split[1];
-            //split = llDeleteSubList(split, 0, 0);
+            string rlvScript = (string)split[0];
+            string internalRlvCommand = (string)split[1];
+            string rlvCommand = (string)split[2];
 
-            debugSay(4,"DEBUG-STATUSRLV","RLV_CMD script " + script + ": " + cmd + ": " + commandString);
+#ifdef DEVELOPER_MODE
+            debugSay(4,"DEBUG-STATUSRLV","RLV_CMD script " + rlvScript + ": internalRlvCommand = " + internalRlvCommand + ": rlvCommand = " + rlvCommand);
 
             if (RLVok != TRUE) {
-                if (RLVok == UNSET) llSay(DEBUG_CHANNEL,"RLV command issued with RLV inactive from " + script + "! (" + commandString + ")");
+                if (RLVok == UNSET) llSay(DEBUG_CHANNEL,"RLV command issued with RLV inactive from " + rlvScript + "! (" + rlvCommand + ")");
                 return;
             }
+#endif
 
-            if (cmd == "runRLVcmd") {
-                if (commandString == "clear") {
-                    llSay(DEBUG_CHANNEL,"Clear command run from " + script + " using lmRunRLVcmd - use clearRLVcmd instead");
-                    lmRunRLVcmd("clearRLVcmd",commandString);
-                    return;
+            switch(internalRlvCommand) {
+
+#ifdef NOT_USED
+                case "escapeRLVcmd": {
+                    // complete cancel of all RLV - such as from SafeWord
+                    llOwnerSay("@clear"); // Total RLV zap: such as from SafeWord
+                    RLVok = FALSE;
+                    break;
+                }
+#endif
+
+                case "clearRLVcmd": {
+                    doRlvClear(rlvCommand);
+                    break;
                 }
 
-                // This could thereotically happen...
-                if (commandString == "" || commandString == "0") {
-                    llSay(DEBUG_CHANNEL,"requested RLV command from " + script + " is empty!");
-                    return;
+                case "runRLVcmd": {
+                    doRlvCommand(rlvCommand);
+                    break;
                 }
 
-                if (llStringLength(commandString) > CHATMSG_MAXLEN) {
-                    llSay(DEBUG_CHANNEL,"requested RLV command from " + script + " is too long!");
-                    return;
+                default: {
+                    doRlvCommand(internalRlvCommand);
+                    break;
                 }
-
-                debugSay(6,"DEBUG-STATUSRLV","RLV received: @" + commandString);
-
-                llOwnerSay("@" + commandString);
-            }
-            else if (cmd == "escapeRLVcmd") {
-                // complete cancel of all RLV - such as from SafeWord
-                llOwnerSay("@clear"); // Total RLV zap: such as from SafeWord
-                RLVok = FALSE;
-            }
-            else if (cmd == "clearRLVcmd") {
-                // this is a blanket clear, but it doesn't mean to us what
-                // it means normally: we have a base RLV set
-
-                debugSay(2,"DEBUG-STATUSRLV","RLV clear command issued from " + script);
-                //llSay(DEBUG_CHANNEL,"clearRLVcmd run from " + script);
-
-                llOwnerSay("@clear"); // clear command
-                if (commandString != "")
-                    llOwnerSay("@" + commandString); // restore restrictions if need be
-
-                lmInternalCommand("restoreRestrictions",script,NULL_KEY); // restore RLV restrictions
-                lmInternalCommand("reloadExceptions",script,NULL_KEY); // then restore exceptions
             }
         }
         else if (code == RLV_RESET) {

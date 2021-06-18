@@ -222,7 +222,7 @@ doCollapse() {
 
     if (RLVok == TRUE) {
         rlvLockKey();
-        lmRunRLVcmd(defaultCollapseRLVcmd, "");
+        lmRunRLV(defaultCollapseRLVcmd);
     }
 
     if (!isSitting) {

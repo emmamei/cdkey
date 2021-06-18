@@ -141,7 +141,10 @@ rlvRestoreRestritions() {
     if (!canSelfTP) baseRLV += "tplm=n,tploc=n,";   else baseRLV += "tplm=y,tploc=y,";
     if (!canFly)    baseRLV += "fly=n,";            else baseRLV += "fly=y,";
 
-    lmRunRLVas("Base", baseRLV);
+    // baseRLV could theoretically be nil
+    if (baseRLV != "")
+        lmRunRLVas("Base", baseRLV);
+
     lmSendConfig("defaultBaseRLVcmd",(string)baseRLV); // save the defaults
 
     if (keyLocked) lmRunRLVas("Base","detach=n");
