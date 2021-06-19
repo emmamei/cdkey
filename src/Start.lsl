@@ -557,11 +557,11 @@ default {
 
                     if (poseAnimation == "" && !collapsed) {
                         // Not collapsed or posed - so clear to base RLV
-                        lmRunRLVcmd("clearRLVcmd",defaultBaseRLVcmd); // received a null poseAnimation, and not collapsed: reset
+                        lmRlvInternalCmd("clearRLVcmd",defaultBaseRLVcmd); // received a null poseAnimation, and not collapsed: reset
                     }
                     else {
                         // Posed: activate RLV restrictions
-                        lmRunRLV(defaultPoseRLVcmd);
+                        lmRunRlv(defaultPoseRLVcmd);
                     }
                 }
             }

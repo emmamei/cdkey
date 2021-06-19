@@ -4,14 +4,14 @@
 //
 // vim:sw=4 et nowrap filetype=lsl
 
-#define rlvLockKey()    lmRunRLV("detach=n")
-#define rlvUnlockKey()  lmRunRLV("detach=y")
+#define rlvLockKey()    lmRunRlv("detach=n")
+#define rlvUnlockKey()  lmRunRlv("detach=y")
 
-#define cdLock(a)   lmRunRLV("detachallthis:"+(a)+"=n")
-#define cdUnlock(a) lmRunRLV("detachallthis:"+(a)+"=y")
-#define cdAttach(a) lmRunRLV("attachallover:"+(a)+"=force") 
-#define cdWear(a) lmRunRLV("attach:"+(a)+"=force") 
-#define cdForceDetach(a) lmRunRLV("detachall:"+(a)+"=force");
+#define cdLock(a)   lmRunRlv("detachallthis:"+(a)+"=n")
+#define cdUnlock(a) lmRunRlv("detachallthis:"+(a)+"=y")
+#define cdAttach(a) lmRunRlv("attachallover:"+(a)+"=force") 
+#define cdWear(a) lmRunRlv("attach:"+(a)+"=force") 
+#define cdForceDetach(a) lmRunRlv("detachall:"+(a)+"=force");
 
 wearStandardOutfit(string newOutfitName) {
     // Steps to dressing avi:
@@ -241,40 +241,40 @@ resetBodyCore() {
     rlvLockKey();
 
     // Force attach nude elements
-    if (nudeFolder)         lmRunRLV(rlvUnlockFolderRecursive(nudeFolder)         + "," + rlvAttachFolderRecursive(nudeFolder));
-    if (normalselfFolder)   lmRunRLV(rlvUnlockFolderRecursive(normalselfFolder)   + "," + rlvAttachFolderRecursive(normalselfFolder));
-    if (normaloutfitFolder) lmRunRLV(rlvUnlockFolderRecursive(normaloutfitFolder) + "," + rlvAttachFolderRecursive(normaloutfitFolder));
+    if (nudeFolder)         lmRunRlv(rlvUnlockFolderRecursive(nudeFolder)         + "," + rlvAttachFolderRecursive(nudeFolder));
+    if (normalselfFolder)   lmRunRlv(rlvUnlockFolderRecursive(normalselfFolder)   + "," + rlvAttachFolderRecursive(normalselfFolder));
+    if (normaloutfitFolder) lmRunRlv(rlvUnlockFolderRecursive(normaloutfitFolder) + "," + rlvAttachFolderRecursive(normaloutfitFolder));
 
     // Lock default body
-    if (nudeFolder)         lmRunRLV(rlvLockFolderRecursive(nudeFolder));
-    if (normalselfFolder)   lmRunRLV(rlvLockFolderRecursive(normalselfFolder));
-    if (normaloutfitFolder) lmRunRLV(rlvLockFolderRecursive(normaloutfitFolder));
+    if (nudeFolder)         lmRunRlv(rlvLockFolderRecursive(nudeFolder));
+    if (normalselfFolder)   lmRunRlv(rlvLockFolderRecursive(normalselfFolder));
+    if (normaloutfitFolder) lmRunRlv(rlvLockFolderRecursive(normaloutfitFolder));
 
     // Remove all else from the top, outfits and all the rest
-    lmRunRLV(rlvDetachAllRecursive(outfitFolder));
+    lmRunRlv(rlvDetachAllRecursive(outfitFolder));
 
     // Clear locks and force attach
-    //if (nudeFolder)         lmRunRLV(rlvLockFolderRecursive(nudeFolder) + "attachall:" + nudeFolder         + "=force");
-    //if (normalselfFolder)   lmRunRLV(rlvLockFolderRecursive(nudeFolder) + "attachall:" + normalselfFolder   + "=force");
-    //if (normaloutfitFolder) lmRunRLV(rlvLockFolderRecursive(nudeFolder) + "attachall:" + normaloutfitFolder + "=force");
+    //if (nudeFolder)         lmRunRlv(rlvLockFolderRecursive(nudeFolder) + "attachall:" + nudeFolder         + "=force");
+    //if (normalselfFolder)   lmRunRlv(rlvLockFolderRecursive(nudeFolder) + "attachall:" + normalselfFolder   + "=force");
+    //if (normaloutfitFolder) lmRunRlv(rlvLockFolderRecursive(nudeFolder) + "attachall:" + normaloutfitFolder + "=force");
 
     // Clear locks
-    if (nudeFolder)         lmRunRLV(rlvUnlockFolderRecursive(nudeFolder));
-    if (normalselfFolder)   lmRunRLV(rlvUnlockFolderRecursive(normalselfFolder));
-    if (normaloutfitFolder) lmRunRLV(rlvUnlockFolderRecursive(normaloutfitFolder));
+    if (nudeFolder)         lmRunRlv(rlvUnlockFolderRecursive(nudeFolder));
+    if (normalselfFolder)   lmRunRlv(rlvUnlockFolderRecursive(normalselfFolder));
+    if (normaloutfitFolder) lmRunRlv(rlvUnlockFolderRecursive(normaloutfitFolder));
 }
 
 #ifdef ADULT_MODE
 stripCore() {
     if (!keyLocked) rlvLockKey(); // Lock key if not already locked
 
-    if (nudeFolder)       lmRunRLV("detachthis:" + nudeFolder       + "=n");
-    if (normalselfFolder) lmRunRLV("detachthis:" + normalselfFolder + "=n");
+    if (nudeFolder)       lmRunRlv("detachthis:" + nudeFolder       + "=n");
+    if (normalselfFolder) lmRunRlv("detachthis:" + normalselfFolder + "=n");
 
-    lmRunRLV("detachall:" + outfitFolder + "=force");
+    lmRunRlv("detachall:" + outfitFolder + "=force");
 
-    if (nudeFolder)       lmRunRLV("detachthis:" + nudeFolder       + "=y,attachall:" + nudeFolder       + "=force");
-    if (normalselfFolder) lmRunRLV("detachthis:" + normalselfFolder + "=y,attachall:" + normalselfFolder + "=force");
+    if (nudeFolder)       lmRunRlv("detachthis:" + nudeFolder       + "=y,attachall:" + nudeFolder       + "=force");
+    if (normalselfFolder) lmRunRlv("detachthis:" + normalselfFolder + "=y,attachall:" + normalselfFolder + "=force");
 
     if (!keyLocked) rlvUnlockKey(); // Unlock key if it's not supposed to be locked
 }

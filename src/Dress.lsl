@@ -22,8 +22,8 @@
 #define nothingWorn(c,d) ((c) != "0") && ((c) != "1") && ((d) != "0") && ((d) != "1")
 #define dressVia(a) listInventoryOn(a)
 #define clearDresser() dresserID = NULL_KEY
-#define rlvLockKey()    lmRunRLV("detach=n")
-#define rlvUnlockKey()  lmRunRLV("detach=y")
+#define rlvLockKey()    lmRunRlv("detach=n")
+#define rlvUnlockKey()  lmRunRlv("detach=y")
 
 //========================================
 // VARIABLES
@@ -175,14 +175,14 @@ rlvRequest(string rlv, integer channel) {
         llSay(DEBUG_CHANNEL,"rlvRequest called with old channel numbers");
         if (channel == 2666) menuDressHandle = cdListenAll(menuDressChannel);
 
-        lmRunRLV(rlv + (string)(rlvBaseChannel + channel));
+        lmRunRlv(rlv + (string)(rlvBaseChannel + channel));
     }
     else {
 
         // FIXME: this block should be executed all the time
 
         if (channel == menuDressChannel) menuDressHandle = cdListenAll(menuDressChannel);
-        lmRunRLV(rlv + (string)channel);
+        lmRunRlv(rlv + (string)channel);
     }
 
     llSetTimerEvent(30.0);
@@ -217,7 +217,7 @@ listInventoryOn(integer channel) {
 
     if (channel == menuDressChannel) {
         menuDressHandle =  cdListenAll(menuDressChannel);
-        lmRunRLV("getinv:" + activeFolder + "=" + (string)(channel));
+        lmRunRlv("getinv:" + activeFolder + "=" + (string)(channel));
 
         llSetTimerEvent(30.0);
     }
@@ -250,7 +250,7 @@ changeComplete(integer success) {
     // And remove the temp locks we used
 
     // If we used "detach" as the pattern then the Key would be unlocked
-    lmRunRLV("clear=attach,clear=detachall");
+    lmRunRlv("clear=attach,clear=detachall");
 
     if (success) {
         if (change) {

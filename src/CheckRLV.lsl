@@ -17,9 +17,9 @@
 #define cdListenerActivate(a) llListenControl(a, 1)
 #define cdResetKey() llResetOtherScript("Start")
 #define cdHaltTimer() llSetTimerEvent(0.0);
-#define rlvSetIf(a,b) if ((b) == 1) { lmRunRLV((a)+"=y"); } else { lmRunRLV((a)+"=n"); }
-#define rlvLockOutfit()   lmRunRLVas("Dress", "unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
-#define rlvUnlockOutfit() lmRunRLVas("Dress", "unsharedwear=y,unsharedunwear=y,attachallthis:=y,detachallthis:=y");
+#define rlvSetIf(a,b) if ((b) == 1) { lmRunRlv((a)+"=y"); } else { lmRunRlv((a)+"=n"); }
+#define rlvLockOutfit()   lmRunRlvAs("Dress", "unsharedwear=n,unsharedunwear=n,attachallthis:=n,detachallthis:=n");
+#define rlvUnlockOutfit() lmRunRlvAs("Dress", "unsharedwear=y,unsharedunwear=y,attachallthis:=y,detachallthis:=y");
 
 string name;
 string value;
@@ -143,12 +143,12 @@ rlvRestoreRestritions() {
 
     // baseRLV could theoretically be nil
     if (baseRLV != "")
-        lmRunRLVas("Base", baseRLV);
+        lmRunRlvAs("Base", baseRLV);
 
     lmSendConfig("defaultBaseRLVcmd",(string)baseRLV); // save the defaults
 
-    if (keyLocked) lmRunRLVas("Base","detach=n");
-    else lmRunRLVas("Base","detach=y");
+    if (keyLocked) lmRunRlvAs("Base","detach=n");
+    else lmRunRlvAs("Base","detach=y");
 
     manageOutfitLock();
 }
@@ -192,7 +192,7 @@ rlvActivate() {
         lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
         lmSendConfig("RLVsupport",(string)RLVsupport);
 
-        lmRunRLVcmd("clearRLVcmd",""); // Initial clear after RLV activate
+        lmRlvInternalCmd("clearRLVcmd",""); // Initial clear after RLV activate
 
         // This generates a 350 link message (RLV_RESET)
         lmRLVreport(RLVok, rlvAPIversion, 0);
@@ -375,7 +375,7 @@ default {
                             "recvemote:" + (string)(exceptionKey) + "=add");
             }
             else if (cmd == "reloadExceptions") {
-                // VERY IMPORTANT: DO NOT CALL lmRunRLV OR lmRunRLVas!! THIS WILL SET UP
+                // VERY IMPORTANT: DO NOT CALL lmRunRlv OR lmRunRlvAs!! THIS WILL SET UP
                 // A SCRIPT LOOP THAT WILL BE VERY HARD TO ESCAPE.
 
                 // Exempt builtin or user specified controllers from TP restictions

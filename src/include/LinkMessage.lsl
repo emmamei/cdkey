@@ -34,10 +34,10 @@ integer mySeqNum;
 //#define lmTimePulse()                                   cdLinkMessage(LINK_THIS,0,310,"getTimeUpdates",keyID)
 //#define lmTimeConfig(name,value)                        cdLinkMessage(LINK_THIS,0,310,name+"|"+value,keyID)
 
-#define lmRunRLV(command)                               cdLinkMessage(LINK_THIS,0,315,__SHORTFILE__+"|runRLVcmd|"+command,keyID)
-#define lmRunRLVcmd(cmd,command)                        cdLinkMessage(LINK_THIS,0,315,__SHORTFILE__+"|"+cmd+"|"+command,keyID)
-#define lmRestrictRLV(command)                          cdLinkMessage(LINK_THIS,0,315,__SHORTFILE__+"|restrictRLVcmd|"+command,keyID)
-#define lmRunRLVas(vmodule,command)                     cdLinkMessage(LINK_THIS,0,315,vmodule+"|runRLVcmd|"+command,keyID)
+#define lmRunRlv(command)                               cdLinkMessage(LINK_THIS,0,315,__SHORTFILE__+"|runRLVcmd|"+command,keyID)
+#define lmRlvInternalCmd(cmd,command)                        cdLinkMessage(LINK_THIS,0,315,__SHORTFILE__+"|"+cmd+"|"+command,keyID)
+//#define lmRestrictRLV(command)                          cdLinkMessage(LINK_THIS,0,315,__SHORTFILE__+"|restrictRLVcmd|"+command,keyID)
+#define lmRunRlvAs(vmodule,command)                     cdLinkMessage(LINK_THIS,0,315,vmodule+"|runRLVcmd|"+command,keyID)
 
 //#define lmConfirmRLV(forscript,command)                 cdLinkMessage(LINK_THIS,0,320,forscript+"|"+command,keyID)
 #define lmRLVreport(active,apistring,apiversion)        cdLinkMessage(LINK_THIS,0,350,(string)active+"|"+apistring+"|"+(string)apiversion,keyID)

@@ -511,7 +511,7 @@ default {
 
                     llRegionSayTo(lmID, 0, "Teleporting dolly " + dollName + " to  landmark " + lm + ".");
 
-                    lmRunRLV("tploc=y");
+                    lmRunRlv("tploc=y");
 
                     // This should trigger a dataserver event
                     rlvTPrequest = llRequestInventoryData(lm);
@@ -572,7 +572,7 @@ default {
 
                 clearPoseAnimation();
 
-                if (poseSilence) lmRunRLV("sendchat=y");
+                if (poseSilence) lmRunRlv("sendchat=y");
 
                 // if we have carrier, start following them again
                 debugSay(2,"DEBUG-FOLLOW","startFollow(): from Unpose button");
@@ -634,7 +634,7 @@ default {
                 else expire = (string)(llGetUnixTime() + POSE_TIMEOUT);
                 lmSetConfig("poseLockExpire", expire);
 
-                if (poseSilence) lmRunRLV("sendchat=n");
+                if (poseSilence) lmRunRlv("sendchat=n");
             }
         }
         else if (code == RLV_RESET) {
@@ -645,7 +645,7 @@ default {
                 // done during login or attach
                 if (poseAnimation != ANIMATION_NONE) {
                     setPoseAnimation(poseAnimation); 
-                    if (poseSilence) lmRunRLV("sendchat=n");
+                    if (poseSilence) lmRunRlv("sendchat=n");
                 }
             }
         }
@@ -713,8 +713,8 @@ default {
             llOwnerSay("Dolly is now teleporting.");
 
             // Note this will be rejected if @unsit=n or @tploc=n are active
-            lmRunRLVas("TP", "tpto:" + locationToString(global) + "=force");
-            lmRunRLV("tploc=n"); // restore restriction
+            lmRunRlvAs("TP", "tpto:" + locationToString(global) + "=force");
+            lmRunRlv("tploc=n"); // restore restriction
         }
     }
 #endif

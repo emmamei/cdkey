@@ -18,8 +18,8 @@
 #define disableMovementControl() llTakeControls(ALL_CONTROLS, TRUE, FALSE)
 #define enableMovementControl() llTakeControls(ALL_CONTROLS, FALSE, TRUE)
 #define keyDetached(id) (id == NULL_KEY)
-#define rlvLockKey()    lmRunRLV("detach=n")
-#define rlvUnlockKey()  lmRunRLV("detach=y")
+#define rlvLockKey()    lmRunRlv("detach=n")
+#define rlvUnlockKey()  lmRunRlv("detach=y")
 
 #define UNSET -1
 
@@ -222,7 +222,7 @@ doCollapse() {
 
     if (RLVok == TRUE) {
         rlvLockKey();
-        lmRunRLV(defaultCollapseRLVcmd);
+        lmRunRlv(defaultCollapseRLVcmd);
     }
 
     if (!isSitting) {
@@ -266,7 +266,7 @@ unCollapse() {
     lmInternalCommand("setHovertext", "", keyID);
 
     if (RLVok == TRUE) {
-        lmRunRLVcmd("clearRLVcmd",""); // clear all collapse-related restrictions from defaultCollapseRLVcmd
+        lmRlvInternalCmd("clearRLVcmd",""); // clear all collapse-related restrictions from defaultCollapseRLVcmd
         if (keyLocked == FALSE) rlvUnlockKey();
         else rlvLockKey();
     }

@@ -66,8 +66,8 @@ doRlvCommand(string commandString) {
 
 #ifdef DEVELOPER_MODE
     if (commandString == "clear") {
-        llSay(DEBUG_CHANNEL,"Clear command run from " + script + " using lmRunRLVcmd - use clearRLVcmd instead");
-        lmRunRLVcmd("clearRLVcmd",commandString);
+        llSay(DEBUG_CHANNEL,"Clear command run from " + script + " using lmRlvInternalCmd - use clearRLVcmd instead");
+        lmRlvInternalCmd("clearRLVcmd",commandString);
         return;
     }
 

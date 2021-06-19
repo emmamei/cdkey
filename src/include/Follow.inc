@@ -110,7 +110,7 @@ keepFollow(key id) {
         // This just turns us to face toward the carrier
         // FIXME: Do we want this?
         pointTo = carrierPos - llGetPos();
-        lmRunRLV("setrot:" + (string)(llAtan2(pointTo.x, pointTo.y)) + "=force");
+        lmRunRlv("setrot:" + (string)(llAtan2(pointTo.x, pointTo.y)) + "=force");
 #endif
 
         //debugSay(6,"DEBUG-FOLLOW","Moving toward carrier at " + (string)(carrierPos));

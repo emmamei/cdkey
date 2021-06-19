@@ -24,8 +24,8 @@
 #define cdRunScript(a) llSetScriptState(a, RUNNING);
 #define cdStopScript(a) llSetScriptState(a, NOT_RUNNING);
 #define getInv(a,b) \
-    if (a == "") lmRunRLV("getinv=" + (string)(b)); \
-    else lmRunRLV("getinv:" + a + "=" + (string)(b))
+    if (a == "") lmRunRlv("getinv=" + (string)(b)); \
+    else lmRunRlv("getinv:" + a + "=" + (string)(b))
 
 #define isFound(a) (a!="")
 #define isNotFound(a) (a=="")
