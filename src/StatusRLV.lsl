@@ -51,7 +51,7 @@ doRlvClear(string commandString) {
     // it means normally: we have a base RLV set
 
     debugSay(2,"DEBUG-STATUSRLV","RLV clear command issued from " + script);
-    //llSay(DEBUG_CHANNEL,"clearRLVcmd run from " + script);
+    //llSay(DEBUG_CHANNEL,"rlvClearCmd run from " + script);
 
     llOwnerSay("@clear"); // clear command
 
@@ -66,8 +66,8 @@ doRlvCommand(string commandString) {
 
 #ifdef DEVELOPER_MODE
     if (commandString == "clear") {
-        llSay(DEBUG_CHANNEL,"Clear command run from " + script + " using lmRlvInternalCmd - use clearRLVcmd instead");
-        lmRlvInternalCmd("clearRLVcmd",commandString);
+        llSay(DEBUG_CHANNEL,"Clear command run from " + script + " using lmRlvInternalCmd - use rlvClearCmd instead");
+        lmRlvInternalCmd("rlvClearCmd",commandString);
         return;
     }
 
@@ -176,7 +176,7 @@ default {
             switch(internalRlvCommand) {
 
 #ifdef NOT_USED
-                case "escapeRLVcmd": {
+                case "rlvEscape": {
                     // complete cancel of all RLV - such as from SafeWord
                     llOwnerSay("@clear"); // Total RLV zap: such as from SafeWord
                     rlvOk = FALSE;
@@ -184,12 +184,12 @@ default {
                 }
 #endif
 
-                case "clearRLVcmd": {
+                case "rlvClearCmd": {
                     doRlvClear(rlvCommand);
                     break;
                 }
 
-                case "runRLVcmd": {
+                case "rlvRunCmd": {
                     doRlvCommand(rlvCommand);
                     break;
                 }

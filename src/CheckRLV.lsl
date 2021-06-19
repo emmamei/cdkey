@@ -192,7 +192,7 @@ rlvActivate() {
         lmSendConfig("rlvOk",(string)rlvOk); // is this needed or redundant?
         lmSendConfig("rlvSupport",(string)rlvSupport);
 
-        lmRlvInternalCmd("clearRLVcmd",""); // Initial clear after RLV activate
+        lmRlvInternalCmd("rlvClearCmd",""); // Initial clear after RLV activate
 
         // This generates a 350 link message (RLV_RESET)
         lmRlvReport(rlvOk, rlvAPIversion, 0);

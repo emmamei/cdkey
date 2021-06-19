@@ -266,7 +266,7 @@ unCollapse() {
     lmInternalCommand("setHovertext", "", keyID);
 
     if (rlvOk == TRUE) {
-        lmRlvInternalCmd("clearRLVcmd",""); // clear all collapse-related restrictions from rlvDefaultCollapseCmd
+        lmRlvInternalCmd("rlvClearCmd",""); // clear all collapse-related restrictions from rlvDefaultCollapseCmd
         if (keyLocked == FALSE) rlvUnlockKey();
         else rlvLockKey();
     }
