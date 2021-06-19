@@ -863,7 +863,7 @@ default {
     //----------------------------------------
     // LISTEN
     //----------------------------------------
-    listen(integer listenChannel, string listenName, key listenID, string listenChoice) {
+    listen(integer listenChannel, string listenName, key listenID, string listenMessage) {
         // channel = chat channel to listen on
         //    name = filter by prim name
         //     key = filter by avatar key
@@ -878,11 +878,11 @@ default {
         integer isDoll          = cdIsDoll(listenID);
         integer numControllers  = cdControllerCount();
 
-        list split = llParseStringKeepNulls(listenChoice, [ " " ], []);
+        list split = llParseStringKeepNulls(listenMessage, [ " " ], []);
 
         name = llGetDisplayName(listenID); // "listenID" can be assumed present due to them using the menu dialogs...
 
-        integer space = llSubStringIndex(listenChoice, " ");
+        integer space = llSubStringIndex(listenMessage, " ");
 
         menuID = listenID;
         menuName = name;
@@ -899,16 +899,16 @@ default {
             // This is what starts the Menu process: a reply sent out
             // via Link Message to be responded to by the appropriate script
             llSetTimerEvent(0.0);
-            lmMenuReply(listenChoice, name, listenID);
+            lmMenuReply(listenMessage, name, listenID);
 
             if (space == NOT_FOUND) {
                 // no space was found in the Menu button selection
-                     if (listenChoice == "Accept") lmInternalCommand("addController", (string)listenID + "|" + name, listenID);
-                else if (listenChoice == "Decline") ; // do nothing
+                     if (listenMessage == "Accept") lmInternalCommand("addController", (string)listenID + "|" + name, listenID);
+                else if (listenMessage == "Decline") ; // do nothing
             }
             else {
                 // A space WAS found in the Menu button selection
-                if (listenChoice == "Drop Control") {
+                if (listenMessage == "Drop Control") {
                     integer index;
 
                     if ((index = llListFindList(controllerList, [ (string)listenID ])) != NOT_FOUND) {
@@ -928,18 +928,18 @@ default {
                     return;
                 }
 #ifdef EMERGENCY_TP
-                else if (listenChoice == "TP Home") {
+                else if (listenMessage == "TP Home") {
                     lmInternalCommand("teleport", LANDMARK_HOME, listenID);
                     return;
                 }
 #endif
-                else if (listenChoice == "RLV") {
+                else if (listenMessage == "RLV") {
                     lmInternalCommand("startRlvCheck","",listenID);
                     return;
                 }
 
-                string beforeSpace = llStringTrim(llGetSubString(listenChoice, 0, space),STRING_TRIM);
-                string afterSpace = llDeleteSubString(listenChoice, 0, space);
+                string beforeSpace = llStringTrim(llGetSubString(listenMessage, 0, space),STRING_TRIM);
+                string afterSpace = llDeleteSubString(listenMessage, 0, space);
 
                 // Space Found in Menu Selection
                 if (beforeSpace == CROSS || beforeSpace == CHECK) {
@@ -1182,26 +1182,26 @@ default {
             }
         }
         else if (listenChannel == poseChannel) {
-            if (listenChoice == "Back...") {
+            if (listenMessage == "Back...") {
                 lmMenuReply(backMenu,llGetDisplayName(listenID),listenID);
             }
             else {
-                lmPoseReply(listenChoice, name, listenID);
+                lmPoseReply(listenMessage, name, listenID);
             }
         }
         else if ((listenChannel == blacklistChannel) || (listenChannel == controlChannel)) {
             // This is what starts the Menu process: a reply sent out
             // via Link Message to be responded to by the appropriate script
-            //lmMenuReply(listenChoice, name, listenID);
+            //lmMenuReply(listenMessage, name, listenID);
 
-            if (listenChoice == MAIN) {
+            if (listenMessage == MAIN) {
                 llSetTimerEvent(MENU_TIMEOUT);
                 lmMenuReply(MAIN, name, listenID);
                 return;
             }
 
-            string button = listenChoice;
-            integer i = llListFindList(dialogButtons, [ listenChoice ]);
+            string button = listenMessage;
+            integer i = llListFindList(dialogButtons, [ listenMessage ]);
             string name = (string)dialogNames[i];
             string uuid = (string)dialogKeys[i];
 

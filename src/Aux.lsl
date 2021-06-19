@@ -865,13 +865,13 @@ Parent - Take care choosing your parents; they have great control over Dolly and
     //----------------------------------------
     // LISTEN
     //----------------------------------------
-    listen(integer listenChannel, string listenName, key listenID, string listenChoice) {
+    listen(integer listenChannel, string listenName, key listenID, string listenMessage) {
 
         if (listenChannel == textboxChannel) {
             llListenRemove(textboxHandle);
             textboxHandle = 0;
             listenTime = 0.0;
-            string origChoice = listenChoice;
+            string origChoice = listenMessage;
 
             // Text box input - 1 types
             //   1: Dolly Name
@@ -879,7 +879,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
             // This test is not really needed - but in the interest of
             // expansion, this allows more text box types to be created later
             if (textboxType == DOLL_NAME_TEXTBOX) {
-                lmSendConfig("dollDisplayName", listenChoice);
+                lmSendConfig("dollDisplayName", listenMessage);
                 lmMenuReply("Key...", llGetDisplayName(listenID), listenID);
             }
 #ifdef DEVELOPER_MODE

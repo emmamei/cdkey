@@ -345,7 +345,7 @@ default {
     //----------------------------------------
     // LISTEN
     //----------------------------------------
-    listen(integer listenChannel, string listenName, key listenID, string listenChoice) {
+    listen(integer listenChannel, string listenName, key listenID, string listenMessage) {
         // channel = chat channel to listen on
         //    name = filter by prim name
         //     key = filter by avatar key
@@ -358,7 +358,7 @@ default {
         if (listenChannel == keySpecificChannel) {
             integer index;
 
-            if ((index = llListFindList(colorNames, (list)listenChoice)) != NOT_FOUND) {
+            if ((index = llListFindList(colorNames, (list)listenMessage)) != NOT_FOUND) {
                 vector colorValue = (vector)colorValues[ index ];
 
                 setNormalGemColor(colorValue);

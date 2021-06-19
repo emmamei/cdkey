@@ -250,10 +250,10 @@ default {
     //----------------------------------------
     // LISTEN
     //----------------------------------------
-    listen(integer listenChannel, string listenName, key listenID, string listenChoice) {
+    listen(integer listenChannel, string listenName, key listenID, string listenMessage) {
 
         debugSay(4, "DEBUG-CHECKRLV", "Listener tripped on channel " + (string)listenChannel);
-        debugSay(4, "DEBUG-CHECKRLV", "Listener data = " + (string)listenChoice);
+        debugSay(4, "DEBUG-CHECKRLV", "Listener data = " + (string)listenMessage);
 
         // Initial RLV Check results are being processed here
         //
@@ -263,18 +263,18 @@ default {
             //cdListenerDeactivate(rlvChannel); // This prevents a secondary response
             if (rlvOk == TRUE) return;
 
-            debugSay(2, "DEBUG-CHECKRLV", "RLV Message received: " + listenChoice);
+            debugSay(2, "DEBUG-CHECKRLV", "RLV Message received: " + listenMessage);
             llOwnerSay("RLV Check completed in " + formatFloat(llGetTime(), 1) + " seconds");
 
             // Could be RestrainedLove or RestrainedLife - just
             // check enough letters to account for both
-            if (llGetSubString(listenChoice, 0, 10) == "RestrainedL") {
-                rlvAPIversion = listenChoice;
+            if (llGetSubString(listenMessage, 0, 10) == "RestrainedL") {
+                rlvAPIversion = listenMessage;
                 debugSay(2, "DEBUG-CHECKRLV", "RLV Version: " + rlvAPIversion);
             }
 #ifdef DEVELOPER_MODE
             else {
-                debugSay(2, "DEBUG-CHECKRLV", "Unknown RLV response message: " + listenChoice);
+                debugSay(2, "DEBUG-CHECKRLV", "Unknown RLV response message: " + listenMessage);
             }
 #endif
 

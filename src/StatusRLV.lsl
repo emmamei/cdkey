@@ -115,15 +115,15 @@ default {
     //----------------------------------------
     // LISTEN
     //----------------------------------------
-    listen(integer listenChannel, string listenName, key listenID, string listenChoice) {
+    listen(integer listenChannel, string listenName, key listenID, string listenMessage) {
 
         if (listenChannel == statusChannel) {
-            if (listenChoice == "") return; // fast exit
+            if (listenMessage == "") return; // fast exit
 
             // Note that we are building rlvRestrict here - its value
             // was cleared elsewhere before we got here the first time
-            debugSay(4,"DEBUG-STATUSRLV","RLV status: " + listenChoice);
-            rlvRestrict = (rlvRestrict=[]) + rlvRestrict + llParseString2List(listenChoice, [ "/" ], []);
+            debugSay(4,"DEBUG-STATUSRLV","RLV status: " + listenMessage);
+            rlvRestrict = (rlvRestrict=[]) + rlvRestrict + llParseString2List(listenMessage, [ "/" ], []);
         }
     }
 #endif

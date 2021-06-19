@@ -179,7 +179,7 @@ default {
     //----------------------------------------
     // LISTEN
     //----------------------------------------
-    listen(integer listenChannel, string listenName, key listenID, string listenChoice) {
+    listen(integer listenChannel, string listenName, key listenID, string listenMessage) {
         // channel = chat channel to listen on
         //    name = filter by prim name
         //     key = filter by avatar key

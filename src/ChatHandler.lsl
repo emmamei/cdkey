@@ -951,7 +951,7 @@ default {
     //----------------------------------------
     // LISTEN
     //----------------------------------------
-    listen(integer listenChannel, string listenName, key listenID, string listenChoice) {
+    listen(integer listenChannel, string listenName, key listenID, string listenMessage) {
         // channel = chat channel to listen on
         //    name = filter by prim name
         //     key = filter by avatar key
@@ -989,11 +989,11 @@ default {
                 return;
             }
 
-            debugSay(5,"DEBUG-CHAT",("Got a chat channel message: " + accessorName + "/" + (string)listenID + "/" + listenChoice));
+            debugSay(5,"DEBUG-CHAT",("Got a chat channel message: " + accessorName + "/" + (string)listenID + "/" + listenMessage));
 
             integer n = llStringLength(chatPrefix);
 
-            list msgList = llParseString2List(listenChoice,(list)" ",(list)"");
+            list msgList = llParseString2List(listenMessage,(list)" ",(list)"");
 
             string readPrefix = llToLower((string)msgList[0]);
             string readCommand = llToLower((string)msgList[1]);
@@ -1004,7 +1004,7 @@ default {
             if (readPrefix != chatPrefix) {
                 // We didn't get a valid prefix - so exit.
 
-                llSay(DEBUG_CHANNEL,"Got wrong prefix from message (" + listenChoice + ") on chat channel " + (string)chatChannel + "; wanted prefix " + chatPrefix);
+                llSay(DEBUG_CHANNEL,"Got wrong prefix from message (" + listenMessage + ") on chat channel " + (string)chatChannel + "; wanted prefix " + chatPrefix);
                 return;
             }
 

@@ -870,7 +870,7 @@ default {
     //----------------------------------------
     // LISTEN
     //----------------------------------------
-    listen(integer listenChannel, string listenName, key listenID, string listenChoice) {
+    listen(integer listenChannel, string listenName, key listenID, string listenMessage) {
 
         // if a @getinv call succeeds, then we are here - looking for the
         // folders we want...
@@ -880,7 +880,7 @@ default {
             outfitSearchHandle = 0;
             adjustTimer();
 
-            debugSay(6,"DEBUG-SEARCHING","Search channel received: " + listenChoice);
+            debugSay(6,"DEBUG-SEARCHING","Search channel received: " + listenMessage);
             debugSay(6,"DEBUG-SEARCHING","Search channel - outfitFolder = \"" + outfitFolder + "\"");
             debugSay(6,"DEBUG-SEARCHING","Search channel - outfitFolderExpected = \"" + outfitFolderExpected + "\"");
 #ifdef DEVELOPER_MODE
@@ -897,7 +897,7 @@ default {
             }
 #endif
 
-            list folderList = llCSV2List(listenChoice);
+            list folderList = llCSV2List(listenMessage);
             //integer searchForTypeFolder;
             nudeFolder = "";
             normalselfFolder = "";
@@ -918,24 +918,24 @@ default {
                 debugSay(6,"DEBUG-SEARCHING","Searching for default outfit folders...");
 
                 // vague substring check done here for speed
-                if (llSubStringIndex(listenChoice,"Outfits") >= 0) {
+                if (llSubStringIndex(listenMessage,"Outfits") >= 0) {
 
                     // exact match check
                          if (~llListFindList(folderList, (list)"> Outfits"))  outfitFolder = "> Outfits";
                     else if (~llListFindList(folderList, (list)"Outfits"))    outfitFolder = "Outfits";
 
                 }
-                else if (llSubStringIndex(listenChoice,"Dressup") >= 0) {
+                else if (llSubStringIndex(listenMessage,"Dressup") >= 0) {
 
                          if (~llListFindList(folderList, (list)"> Dressup"))  outfitFolder = "> Dressup";
                     else if (~llListFindList(folderList, (list)"Dressup"))    outfitFolder = "Dressup";
                 }
 
 #ifdef PRELIMINARY
-                if (llSubStringIndex(listenChoice,"Avatars") >= 0) {
+                if (llSubStringIndex(listenMessage,"Avatars") >= 0) {
                      if (~llListFindList(folderList, (list)"> Avatars"))  avatarFolder = "> Avatars";
                 }
-                else if (llSubStringIndex(listenChoice,"Avis") >= 0) {
+                else if (llSubStringIndex(listenMessage,"Avis") >= 0) {
                      if (~llListFindList(folderList, (list)"> Avis"))  avatarFolder = "> Avis";
                 }
 #endif
@@ -990,17 +990,17 @@ default {
                 return;
             }
 
-            debugSay(6,"DEBUG-SEARCHING","typeFolder search: looking for type folder: \"" + typeFolderExpected + "\": " + listenChoice);
+            debugSay(6,"DEBUG-SEARCHING","typeFolder search: looking for type folder: \"" + typeFolderExpected + "\": " + listenMessage);
             debugSay(6,"DEBUG-SEARCHING","typeFolder search: Outfits folder previously found to be \"" + outfitFolder + "\"");
 
             // We should NOT be here if the following statement is false.... RIGHT?
             if (typeFolderExpected != "" && typeFolder != typeFolderExpected) {
-                list folderList = llCSV2List(listenChoice);
+                list folderList = llCSV2List(listenMessage);
 
                 debugSay(6,"DEBUG-SEARCHING","looking for typeFolder(Expected) = " + typeFolderExpected);
                 // This comparison is inexact - but a quick check to see
                 // if the typeFolderExpected is contained in the string
-                if (llSubStringIndex(listenChoice,typeFolderExpected) >= 0) {
+                if (llSubStringIndex(listenMessage,typeFolderExpected) >= 0) {
 
                     // This is the exact check:
                     if (~llListFindList(folderList, (list)typeFolderExpected)) {
@@ -1027,7 +1027,7 @@ default {
             systemSearchHandle = 0;
             adjustTimer();
 
-            list folderList = llCSV2List(listenChoice);
+            list folderList = llCSV2List(listenMessage);
 
             //outfitSearching = FALSE;
             nudeFolder = "";
@@ -1063,12 +1063,12 @@ default {
             lmInitStage(INIT_STAGE4); // Outfits and System folder search succeeded: continue
         }
         else if (listenChannel == typeDialogChannel) {
-            if (listenChoice == "Back...") {
+            if (listenMessage == "Back...") {
                 lmMenuReply(backMenu = MAIN,llGetDisplayName(listenID),listenID);
             }
             else {
-                cdSayTo("Dolly's internal mechanisms engage, and a transformation comes over Dolly, making " + pronounHerDoll + " into a " + listenChoice + " Dolly",listenID);
-                lmTypeReply(listenChoice, llGetDisplayName(listenID), listenID);
+                cdSayTo("Dolly's internal mechanisms engage, and a transformation comes over Dolly, making " + pronounHerDoll + " into a " + listenMessage + " Dolly",listenID);
+                lmTypeReply(listenMessage, llGetDisplayName(listenID), listenID);
             }
         }
     }

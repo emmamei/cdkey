@@ -129,8 +129,8 @@ default {
     // Listener is only being used to track scripts and UUIDs etc.
     // First step from client is contact via listener.
 
-    listen(integer listenChannel, string listenName, key listenID, string listenChoice) {
-        list params = llParseString2List(listenChoice, ["^"], []);
+    listen(integer listenChannel, string listenName, key listenID, string listenMessage) {
+        list params = llParseString2List(listenMessage, ["^"], []);
 
         // guaranteed to be on comChannel...
         if (owner != toucherID) return;

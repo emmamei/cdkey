@@ -135,7 +135,7 @@ default {
     // LISTEN
     //----------------------------------------
 
-    listen(integer listenChannel, string listenName, key listenID, string listenChoice) {
+    listen(integer listenChannel, string listenName, key listenID, string listenMessage) {
         // get update complete message
     }
 #endif

@@ -603,13 +603,13 @@ default {
     //----------------------------------------
     // LISTEN
     //----------------------------------------
-    listen(integer listenChannel, string listenName, key listenID, string listenChoice) {
+    listen(integer listenChannel, string listenName, key listenID, string listenMessage) {
         // We have our answer so now we can turn the listener off until our next request
 
         // Request max memory to avoid constant having to bump things up and down
         //llSetMemoryLimit(65536);
 
-        debugSay(6, "DEBUG-DRESS", "Listener called[" + (string)listenChannel + "]: " + listenName + "|" + listenChoice);
+        debugSay(6, "DEBUG-DRESS", "Listener called[" + (string)listenChannel + "]: " + listenName + "|" + listenMessage);
 
         //----------------------------------------
         // CHANNELS
@@ -623,13 +623,13 @@ default {
             // We just got a selected Outfit or new folder to go into
 
             // Build outfit menu: note it is using the number before the period here
-            integer select = (integer)llGetSubString(listenChoice, 0, llSubStringIndex(listenChoice, ".") - 1);
-            if (select != 0) listenChoice = (string)outfitList[select - 1];
+            integer select = (integer)llGetSubString(listenMessage, 0, llSubStringIndex(listenMessage, ".") - 1);
+            if (select != 0) listenMessage = (string)outfitList[select - 1];
             // else we have a normal selection, not a numeric one
 
-            debugSay(6, "DEBUG-DRESS", "Secondary outfits menu: listenChoice = " + listenChoice + "; select = " + (string)select);
+            debugSay(6, "DEBUG-DRESS", "Secondary outfits menu: listenMessage = " + listenMessage + "; select = " + (string)select);
 
-            if (llGetSubString(listenChoice, 0, 6) == "Outfits") {
+            if (llGetSubString(listenMessage, 0, 6) == "Outfits") {
 
                 // Choice was one of:
                 //
@@ -641,7 +641,7 @@ default {
                     return;
                 }
 
-                if (listenChoice == "Outfits Next") {
+                if (listenMessage == "Outfits Next") {
 #ifdef ROLLOVER
                     outfitPage++;
                     if ((outfitPage - 1) * OUTFIT_PAGE_SIZE > llGetListLength(outfitList))
@@ -651,7 +651,7 @@ default {
                         outfitPage++;
 #endif
                 }
-                else if (listenChoice == "Outfits Prev") {
+                else if (listenMessage == "Outfits Prev") {
 #ifdef ROLLOVER
                     outfitPage--;
                     if (outfitPage < 1)
@@ -679,7 +679,7 @@ default {
                 llSetTimerEvent(60.0);
 
             }
-            else if (listenChoice == "Back...") {
+            else if (listenMessage == "Back...") {
                 outfitList = [];
                 lmMenuReply(backMenu, llGetDisplayName(listenID), listenID);
 
@@ -687,7 +687,7 @@ default {
                 //lmSendConfig("backMenu",(backMenu = MAIN));
             }
             else {
-                if (cdListElementP(outfitList, listenChoice) != NOT_FOUND) {
+                if (cdListElementP(outfitList, listenMessage) != NOT_FOUND) {
                     // This is the actual processing of an Outfit Menu entry -
                     // either a folder or a single outfit item.
                     //
@@ -696,15 +696,15 @@ default {
                     //if (!isDresser(listenID)) return;
 
                     outfitList = [];
-                    string c = cdGetFirstChar(listenChoice);
+                    string c = cdGetFirstChar(listenMessage);
 
                     if (isTypeFolder(c) || isParentFolder(c)) {
 
                         // if a Folder was chosen, we have to descend into it by
                         // adding the choice to the currently active folder
 
-                        if (clothingFolder == "") clothingFolder = listenChoice;
-                        else clothingFolder += ("/" + listenChoice);
+                        if (clothingFolder == "") clothingFolder = listenMessage;
+                        else clothingFolder += ("/" + listenMessage);
 
                         debugSay(6, "DEBUG-DRESS", "Generating new list of outfits...");
                         lmSendConfig("backMenu",(backMenu = UPMENU));
@@ -713,13 +713,13 @@ default {
                         llSetTimerEvent(60.0);
                     }
                     else {
-                        debugSay(3, "DEBUG-DRESS", "Calling wearOutfit with " + listenChoice + " in the active folder " + activeFolder);
-                        lmInternalCommand("wearOutfit", listenChoice, NULL_KEY);
+                        debugSay(3, "DEBUG-DRESS", "Calling wearOutfit with " + listenMessage + " in the active folder " + activeFolder);
+                        lmInternalCommand("wearOutfit", listenMessage, NULL_KEY);
                     }
                 }
 #ifdef DEVELOPER_MODE
                 else {
-                    llSay(DEBUG_CHANNEL,"Received unknown outfit! (" + listenChoice + ")");
+                    llSay(DEBUG_CHANNEL,"Received unknown outfit! (" + listenMessage + ")");
                 }
 #endif
             }
@@ -744,7 +744,7 @@ default {
             //
             // This is check #1 of an empty list of outfits
 
-            if (listenChoice == "") {
+            if (listenMessage == "") {
 
                 // No outfits available in this directory
                 lmDialogListen();
@@ -757,7 +757,7 @@ default {
                 return;
             }
 
-            outfitList = llParseString2List(listenChoice, [","], []);
+            outfitList = llParseString2List(listenMessage, [","], []);
 
             integer n;
             string itemName;
