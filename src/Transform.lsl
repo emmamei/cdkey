@@ -685,7 +685,7 @@ default {
                 else {
                     // This section should never be triggered: it means that
                     // someone who shouldn't see the Options menu did.
-                    llOwnerSay(DEBUG_CHANNEL,"Someone saw the options menu who wasn't supposed to.");
+                    llSay(DEBUG_CHANNEL,"Someone saw the options menu who wasn't supposed to.");
                     return;
                 }
 
