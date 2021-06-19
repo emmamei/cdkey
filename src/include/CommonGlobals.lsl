@@ -35,11 +35,11 @@ string script;
 string simRating;
 string myName;
 
-string defaultBaseRLVcmd     = "";
-string defaultCollapseRLVcmd = "fly=n,sendchat=n,tplm=n,tplure=n,tploc=n,showinv=n,edit=n,sit=n,sittp=n,fartouch=n,showworldmap=n,showminimap=n,showloc=n,shownames=n,showhovertextall=n";
+string rlvDefaultBaseCmd     = "";
+string rlvDefaultCollapseCmd = "fly=n,sendchat=n,tplm=n,tplure=n,tploc=n,showinv=n,edit=n,sit=n,sittp=n,fartouch=n,showworldmap=n,showminimap=n,showloc=n,shownames=n,showhovertextall=n";
 // Default PoseRLV does not include silence: that is optional
 // Also allow touch - for Dolly to access Key
-string defaultPoseRLVcmd     = "fly=n,tplm=n,tplure=n,tploc=n,sittp=n,fartouch=n";
+string rlvDefaultPoseCmd     = "fly=n,tplm=n,tplure=n,tploc=n,sittp=n,fartouch=n";
 
 float baseWindRate          = RATE_STANDARD;
 float dilationMedian        = 1.0;
@@ -83,8 +83,8 @@ integer pleasureDoll;
 integer poseSilence         = 1;
 
 integer remoteSeq;
-integer RLVok               = -1; // UNSET
-integer RLVsupport          = -1; // UNSET
+integer rlvOk               = -1; // UNSET
+integer rlvSupport          = -1; // UNSET
 integer showPhrases;
 integer takeoverAllowed;
 integer timeLeftOnKey       = 1800;

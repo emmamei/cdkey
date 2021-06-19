@@ -139,8 +139,8 @@ doXstats() {
     if (timeLeftOnKey > 0) s += "Time remaining is " + formatFloat2((float)timeLeftOnKey / (float)SECS_PER_MIN) + ".\n\n";
     else s += "Key is out of time.\n\n";
 
-    if (RLVok == UNSET) s += "RLV status is unknown.\n";
-    else if (RLVok == TRUE) s += "RLV is active.\nRLV version: " + rlvAPIversion;
+    if (rlvOk == UNSET) s += "RLV status is unknown.\n";
+    else if (rlvOk == TRUE) s += "RLV is active.\nRLV version: " + rlvAPIversion;
     else s += "RLV is not active.\n";
 
     if (lastWinderID != NULL_KEY) {
@@ -781,7 +781,7 @@ default {
                              "autoTP",
 #endif
                              "timeLeftOnKey",
-                             "RLVok",
+                             "rlvOk",
                              "keyLimit",
                              "blacklist",
                              "allowRepeatWind",
@@ -842,7 +842,7 @@ default {
 #ifdef EMERGENCY_TP
             else if (name == "autoTP")                     autoTP = integerValue;
 #endif
-            else if (name == "RLVok")                       RLVok = integerValue;
+            else if (name == "rlvOk")                       rlvOk = integerValue;
             else if (name == "keyLimit")                 keyLimit = integerValue;
             else if (name == "allowRepeatWind")   allowRepeatWind = integerValue;
             else if (name == "allowCarry")             allowCarry = integerValue;
@@ -919,7 +919,7 @@ default {
 //            string cmd = (string)split[0];
 //        }
         else if (code == RLV_RESET) {
-            RLVok = (integer)split[0];
+            rlvOk = (integer)split[0];
             rlvAPIversion = (string)split[1];
         }
         else if (code < 200) {

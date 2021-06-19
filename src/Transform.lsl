@@ -61,7 +61,7 @@
 // Define macros to make the process more readable
 
 #define folderSearch(a,b) \
-    if (RLVok == FALSE) return;\
+    if (rlvOk == FALSE) return;\
     b = cdListenMine(a);\
     getInv(outfitFolder,a);\
     llSetTimerEvent(RLV_TIMEOUT)
@@ -191,7 +191,7 @@ setDollType(string typeName) {
     // not a Regular Doll
     //
     if (typeName != "Regular") {
-        if (RLVok == TRUE) {
+        if (rlvOk == TRUE) {
             debugSay(4,"DEBUG-DOLLTYPE","Searching for " + typeFolderExpected);
 
             typeSearchHandle = cdListenMine(typeSearchChannel);
@@ -263,7 +263,7 @@ outfitSearch(integer channel,integer handle) {
     // to another, this will fail: a key reset will be needed
     //
     //if (outfitFolder != "") return;
-    if (RLVok == FALSE) {
+    if (rlvOk == FALSE) {
         // Reset the works before we abort
         lmSendConfig("outfitFolder",(outfitFolder = ""));
         lmSendConfig("nudeFolder",(nudeFolder = ""));
@@ -275,7 +275,7 @@ outfitSearch(integer channel,integer handle) {
 
     outfitSearching = TRUE;
 
-    debugSay(6,"DEBUG-SEARCHING","outfitSearch in progress (RLVok = " + (string)RLVok + ")");
+    debugSay(6,"DEBUG-SEARCHING","outfitSearch in progress (rlvOk = " + (string)rlvOk + ")");
 
     folderSearch(channel,handle);
 }
@@ -295,7 +295,7 @@ default {
         myName = llGetScriptName();
 
         cdInitializeSeq();
-        RLVok = UNSET;
+        rlvOk = UNSET;
     }
 
     //----------------------------------------
@@ -329,7 +329,7 @@ default {
         //
         //    1. rlvChannel is good and RLV is ok...
         //    2. Doll Type changes
-        //    3. Link message 350: RLVok and/or Reset
+        //    3. Link message 350: rlvOk and/or Reset
         //
         // Everything related to Outfits Changes happens here (and in the listener)
         // What made the former code complicated is that there are several processes
@@ -385,8 +385,8 @@ default {
         //----------------------------------------
         // OUTFIT SEARCH: RLV TIMEOUTS
         //
-        if (RLVok == TRUE) {
-            // If RLVok is true, then check if outfit searches need to be retried...
+        if (rlvOk == TRUE) {
+            // If rlvOk is true, then check if outfit searches need to be retried...
             if (outfitSearchHandle) {
                 if (outfitSearchTries++ < MAX_SEARCH_RETRIES)
 
@@ -525,7 +525,7 @@ default {
                              "collapsed",
                              "busyIsAway",
                              "controllers",
-                             "RLVok",
+                             "rlvOk",
                              "mustAgreeToType",
                              "winderRechargeTime",
                              "keySpecificMenu",
@@ -566,7 +566,7 @@ default {
                 if (split == [""]) controllerList = [];
                 else controllerList = split;
             }
-            else if (name == "RLVok")                           RLVok = (integer)value;
+            else if (name == "rlvOk")                           rlvOk = (integer)value;
             else if (name == "mustAgreeToType")       mustAgreeToType = (integer)value;
             else if (name == "winderRechargeTime") winderRechargeTime = (integer)value;
             else if (name == "keySpecificMenu")       keySpecificMenu = value;
@@ -655,7 +655,7 @@ default {
 
                         optionsMenuButtons += [ "Type..." ];
 
-                        if (RLVok == TRUE)
+                        if (rlvOk == TRUE)
 #ifdef ADULT_MODE
                             if (!hardcore)
 #endif
@@ -664,14 +664,14 @@ default {
                 }
                 else if (cdIsCarrier(lmID)) {
                     optionsMenuButtons += [ "Type..." ];
-                    if (RLVok == TRUE) optionsMenuButtons += [ "Restrictions..." ];
+                    if (rlvOk == TRUE) optionsMenuButtons += [ "Restrictions..." ];
                 }
                 else if (cdIsController(lmID)) {
 
                     msg = "See the help file for more information on these options. Choose what you want to happen.";
 
                     optionsMenuButtons += [ "Type...", "Access..." ];
-                    if (RLVok == TRUE) optionsMenuButtons += [ "Restrictions..." ];
+                    if (rlvOk == TRUE) optionsMenuButtons += [ "Restrictions..." ];
                     optionsMenuButtons += [ "Drop Control" ];
 
                 }
@@ -686,7 +686,7 @@ default {
         }
 
         else if (code == RLV_RESET) {
-            RLVok = (integer)split[0];
+            rlvOk = (integer)split[0];
         }
         else if (code == MENU_SELECTION) {
             string choice = (string)split[0];

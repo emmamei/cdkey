@@ -5,7 +5,7 @@ float Utility_version=1.0;
 
 // This allows "oneshot" RLV commands without spamming
 // non-RLV users.
-#define cdRlvSay(a) if (RLVok == TRUE) llOwnerSay(a)
+#define cdRlvSay(a) if (rlvOk == TRUE) llOwnerSay(a)
 #define cdUserProfile(id) "secondlife:///app/agent/"+(string)id+"/about"
 
 /*

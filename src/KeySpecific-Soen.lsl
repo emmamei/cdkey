@@ -156,7 +156,7 @@ default {
             string cmd = (string)split[0];
         }
         else if (code == RLV_RESET) {
-            RLVok = (integer)split[0];
+            rlvOk = (integer)split[0];
             rlvAPIversion = (string)split[1];
         }
 #endif

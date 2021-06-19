@@ -355,7 +355,7 @@ default {
             list cmdList = [
                             "dialogChannel",
                             "isAFK",
-                            "RLVok",
+                            "rlvOk",
                             "keyLocked",
                             "typeHovertext",
                             "dollType",
@@ -398,7 +398,7 @@ default {
 
             }
             else if (name == "isAFK")                              isAFK = (integer)value;
-            else if (name == "RLVok")                              RLVok = (integer)value;
+            else if (name == "rlvOk")                              rlvOk = (integer)value;
             else if (name == "keyLocked")                      keyLocked = (integer)value;
             else if (name == "typeHovertext")              typeHovertext = (integer)value;
             else if (name == "dollType")                        dollType = value;
@@ -507,7 +507,7 @@ default {
 
             // RLV check is resetting values
 
-            RLVok = (integer)split[0];
+            rlvOk = (integer)split[0];
         }
         else if (code == MENU_SELECTION)  {
 
@@ -546,7 +546,7 @@ default {
                 }
                 else {
                     clearDresser();
-                    if (RLVok == TRUE) llSay(DEBUG_CHANNEL,"outfitFolder is unset.");
+                    if (rlvOk == TRUE) llSay(DEBUG_CHANNEL,"outfitFolder is unset.");
                     else llSay(DEBUG_CHANNEL,"You cannot be dressed without RLV active.");
                     return;
                 }

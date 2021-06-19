@@ -132,8 +132,8 @@ default {
                             "autoTP",
 #endif
                             "showPhrases",
-                            "RLVsupport",
-                            "RLVok",
+                            "rlvSupport",
+                            "rlvOk",
                             "allowCarry",
                             "allowDress",
                             "allowTypes",
@@ -186,8 +186,8 @@ default {
             else if (name == "autoTP")                         autoTP = (integer)value;
 #endif
             else if (name == "showPhrases")               showPhrases = (integer)value;
-            else if (name == "RLVsupport")                 RLVsupport = (integer)value;
-            else if (name == "RLVok")                           RLVok = (integer)value;
+            else if (name == "rlvSupport")                 rlvSupport = (integer)value;
+            else if (name == "rlvOk")                           rlvOk = (integer)value;
             else if (name == "allowCarry")                 allowCarry = (integer)value;
             else if (name == "allowDress")                 allowDress = (integer)value;
             else if (name == "allowTypes")                 allowTypes = (integer)value;
@@ -322,7 +322,7 @@ default {
 #ifdef ADULT_MODE
                     if (!hardcore) {
 #endif
-                        if (RLVok) {
+                        if (rlvOk) {
                             if (timeCollapsed > TIME_BEFORE_TP) {
 #ifdef HOMING_BEACON
                                 // if Homing Beacon is activated, then the only TP is automated
@@ -450,8 +450,8 @@ default {
 #endif
         }
         else if (code == RLV_RESET) {
-            RLVok = (integer)split[0];
-            debugSay(4,"DEBUG-AUX","RLVok set to " + (string)RLVok);
+            rlvOk = (integer)split[0];
+            debugSay(4,"DEBUG-AUX","rlvOk set to " + (string)rlvOk);
         }
         else if (code == MENU_SELECTION) {
             string menuChoice = (string)split[0];
@@ -477,7 +477,7 @@ default {
                 //
 
                 if (cdIsDoll(lmID)) {
-                    if (RLVok == FALSE) {
+                    if (rlvOk == FALSE) {
                         helpMenuList += "RLV"; // To be able to enable RLV when checker fails: one-way button
                     }
 
@@ -488,7 +488,7 @@ default {
                         //
                         // Note that Dolly cannot be posed and cannot be collapsed to access these
                         //
-                        if (RLVok) helpMenuList += [ "Reset Body" ];
+                        if (rlvOk) helpMenuList += [ "Reset Body" ];
                         helpMenuList += [ "Reset Key", "Update" ];
                         //if (detachable) menu += [ "Detach" ];
                 }
@@ -515,7 +515,7 @@ default {
 #ifdef EMERGENCY_TP
                 // If is Dolly, whisk Dolly away to Location of Landmark
                 // If is someone else, give Landmark to them
-                if (cdIsDoll(lmID) && RLVok)
+                if (cdIsDoll(lmID) && rlvOk)
                     lmInternalCommand("teleport", LANDMARK_CDHOME, lmID);
                 else
 #endif
@@ -593,7 +593,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 list plusList;
 
                 // The following options require RLV to work
-                if (RLVok == TRUE) {
+                if (rlvOk == TRUE) {
                     msg = "See the help file for explanations of these options. ";
                     lmSendConfig("backMenu",(backMenu = "Options..."));
 
@@ -638,7 +638,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 }
 
                 plusList += cdGetButton("Carryable", lmID, allowCarry, 0);
-                if (RLVok == TRUE) {
+                if (rlvOk == TRUE) {
                     plusList += cdGetButton("Outfitable", lmID, allowDress, 0);
                     plusList += cdGetButton("Types",      lmID, allowTypes, 0);
 #ifdef ADULT_MODE
@@ -664,15 +664,15 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 // Perhaps should be in other menu?
 
 #ifdef HOMING_BEACON
-                if (RLVok)
+                if (rlvOk)
                     plusList += cdGetButton("Homing Beacon", lmID, homingBeacon, 0);
 #endif
 #ifdef OPTIONAL_RLV
-                if (RLVsupport == TRUE) {
+                if (rlvSupport == TRUE) {
 #ifdef ADULT_MODE
                     if (!hardcore)
 #endif
-                        plusList += cdGetButton("RLV", lmID, RLVok, 0);
+                        plusList += cdGetButton("RLV", lmID, rlvOk, 0);
                 }
 #endif
 

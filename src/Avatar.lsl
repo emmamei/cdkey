@@ -362,7 +362,7 @@ default {
         dollName = llGetDisplayName(dollID = llGetOwner());
         keyID = llGetKey();
 
-        RLVok = UNSET;
+        rlvOk = UNSET;
         cdInitializeSeq();
 
         llRequestPermissions(dollID, PERMISSION_MASK);
@@ -375,7 +375,7 @@ default {
     on_rez(integer start) {
         // Set up key when rezzed
 
-        //RLVok = UNSET;
+        //rlvOk = UNSET;
         //llStopMoveToTarget();
         //llTargetRemove(targetHandle);
 
@@ -395,7 +395,7 @@ default {
 
         if (keyDetached(id)) return;
 
-        RLVok = UNSET;
+        rlvOk = UNSET;
 
         debugSay(2,"DEBUG-FOLLOW","dropCarrier(): from attach");
         dropCarrier(carrierID);
@@ -463,7 +463,7 @@ default {
             else if (name == "poseSilence")         poseSilence = (integer)value;
             else if (name == "carryExpire")         carryExpire = (integer)value;
             else if (name == "carrierID")             carrierID = value;
-            else if (name == "RLVok")                     RLVok = (integer)value;
+            else if (name == "rlvOk")                     rlvOk = (integer)value;
             else if (name == "carrierName")         carrierName = value;
 #ifdef ADULT_MODE
             else if (name == "hardcore")               hardcore = (integer)value;
@@ -638,9 +638,9 @@ default {
             }
         }
         else if (code == RLV_RESET) {
-            RLVok = (integer)split[0];
+            rlvOk = (integer)split[0];
 
-            if (RLVok == TRUE) {
+            if (rlvOk == TRUE) {
                 // This should only happen when the RLVcheck is
                 // done during login or attach
                 if (poseAnimation != ANIMATION_NONE) {

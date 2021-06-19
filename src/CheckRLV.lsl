@@ -80,8 +80,8 @@ startRlvCheck() {
 
     // Configure variables
     rlvCheck = MAX_RLVCHECK_TRIES;
-    RLVok = UNSET;
-    RLVsupport = UNSET;
+    rlvOk = UNSET;
+    rlvSupport = UNSET;
     rlvAPIversion = "";
     rlvStarted = FALSE;
 
@@ -97,9 +97,9 @@ startRlvCheck() {
 // to check for RLV
 //
 // We should only be calling checkRLV to begin a test, or in the
-// case that the timer expired. Thus, RLVok should be UNSET.
-// If RLVok was TRUE, then no more check tries are needed.
-// If RLVok is FALSE, then there should be no more tries to make.
+// case that the timer expired. Thus, rlvOk should be UNSET.
+// If rlvOk was TRUE, then no more check tries are needed.
+// If rlvOk is FALSE, then there should be no more tries to make.
 
 rlvCheckTry() {
     // Check RLV: this could be called multiple times (retries)
@@ -127,25 +127,25 @@ rlvCheckTry() {
 }
 
 rlvRestoreRestritions() {
-    if (RLVok != TRUE) return;
+    if (rlvOk != TRUE) return;
 
-    string baseRLV;
+    string rlvBase;
 
     // This adjusts the default "base" RLV based on Dolly's settings...
     //
-    // In this, defaultBaseRLVcmd is much more flexible than the other defaults
+    // In this, rlvDefaultBaseCmd is much more flexible than the other defaults
     //
 #ifdef EMERGENCY_TP
-    if (autoTP)     baseRLV += "accepttp=n,";       else baseRLV += "accepttp=y,";
+    if (autoTP)     rlvBase += "accepttp=n,";       else rlvBase += "accepttp=y,";
 #endif
-    if (!canSelfTP) baseRLV += "tplm=n,tploc=n,";   else baseRLV += "tplm=y,tploc=y,";
-    if (!canFly)    baseRLV += "fly=n,";            else baseRLV += "fly=y,";
+    if (!canSelfTP) rlvBase += "tplm=n,tploc=n,";   else rlvBase += "tplm=y,tploc=y,";
+    if (!canFly)    rlvBase += "fly=n,";            else rlvBase += "fly=y,";
 
-    // baseRLV could theoretically be nil
-    if (baseRLV != "")
-        lmRunRlvAs("Base", baseRLV);
+    // rlvBase could theoretically be nil
+    if (rlvBase != "")
+        lmRunRlvAs("Base", rlvBase);
 
-    lmSendConfig("defaultBaseRLVcmd",(string)baseRLV); // save the defaults
+    lmSendConfig("rlvDefaultBaseCmd",(string)rlvBase); // save the defaults
 
     if (keyLocked) lmRunRlvAs("Base","detach=n");
     else lmRunRlvAs("Base","detach=y");
@@ -189,20 +189,20 @@ rlvActivate() {
 
         llOwnerSay("Enabling RLV mode");
 
-        lmSendConfig("RLVok",(string)RLVok); // is this needed or redundant?
-        lmSendConfig("RLVsupport",(string)RLVsupport);
+        lmSendConfig("rlvOk",(string)rlvOk); // is this needed or redundant?
+        lmSendConfig("rlvSupport",(string)rlvSupport);
 
         lmRlvInternalCmd("clearRLVcmd",""); // Initial clear after RLV activate
 
         // This generates a 350 link message (RLV_RESET)
-        lmRLVreport(RLVok, rlvAPIversion, 0);
+        lmRlvReport(rlvOk, rlvAPIversion, 0);
     }
 
     rlvRestoreRestritions();
     if (collapsed)
         lmInternalCommand("collapse", (string)collapsed, NULL_KEY);
 
-    // If we get here - RLVok is already set
+    // If we get here - rlvOk is already set
     rlvStarted = TRUE;
 }
 
@@ -261,7 +261,7 @@ default {
 
             // FIXME: We could deactivate, but RLV channel may be used for other things
             //cdListenerDeactivate(rlvChannel); // This prevents a secondary response
-            if (RLVok == TRUE) return;
+            if (rlvOk == TRUE) return;
 
             debugSay(2, "DEBUG-CHECKRLV", "RLV Message received: " + listenChoice);
             llOwnerSay("RLV Check completed in " + formatFloat(llGetTime(), 1) + " seconds");
@@ -279,8 +279,8 @@ default {
 #endif
 
             cdHaltTimer(); // we succeeded; no more retries
-            RLVok = TRUE;
-            RLVsupport = TRUE;
+            rlvOk = TRUE;
+            rlvSupport = TRUE;
 
             rlvActivate();
         }
@@ -300,7 +300,7 @@ default {
             string c = llGetSubString(name, 0, 0);
 
                  if (name == "keyLocked")         {    keyLocked = (integer)value; }
-            else if (name == "RLVok")             {        RLVok = (integer)value; }
+            else if (name == "rlvOk")             {        rlvOk = (integer)value; }
 #ifdef ADULT_MODE
             else if (name == "hardcore")          {     hardcore = (integer)value; manageOutfitLock(); }
 #endif
@@ -338,9 +338,9 @@ default {
             }
         }
         else if (code == RLV_RESET) {
-            RLVok = (integer)split[0];
+            rlvOk = (integer)split[0];
 
-            if (RLVok == TRUE) {
+            if (rlvOk == TRUE) {
                 debugSay(4,"DEBUG-CHECKRLV","RLV Reset: Updating exceptions");
                 lmInternalCommand("reloadExceptions", script, NULL_KEY);
 
@@ -379,7 +379,7 @@ default {
                 // A SCRIPT LOOP THAT WILL BE VERY HARD TO ESCAPE.
 
                 // Exempt builtin or user specified controllers from TP restictions
-                if (RLVok == FALSE) return;
+                if (rlvOk == FALSE) return;
 
                 list exceptions = cdList2ListStrided(controllerList, 0, -1, 2);
                 if (exceptions == []) return;
@@ -464,7 +464,7 @@ default {
     // Timer fires for only one reason: RLVcheck timeout
 
     timer() {
-        // RLVok shouldn't be TRUE here: timer would be shut off
+        // rlvOk shouldn't be TRUE here: timer would be shut off
         debugSay(2,"DEBUG-CHECKRLV","RLV check #" + (string)rlvCheck + " failed; retry...");
 
         if (rlvCheck > 0) {
@@ -474,11 +474,11 @@ default {
             llOwnerSay("Did not detect an RLV capable viewer, RLV features disabled.");
             llOwnerSay("RLV Check took " + (string)(llGetTime()) + " seconds");
             cdHaltTimer(); // Failed too many times
-            RLVok = FALSE;
-            RLVsupport = FALSE;
+            rlvOk = FALSE;
+            rlvSupport = FALSE;
 
-            lmRLVreport(RLVok, "", FALSE); // report FALSE
-            lmSendConfig("RLVsupport",(string)RLVsupport);
+            lmRlvReport(rlvOk, "", FALSE); // report FALSE
+            lmSendConfig("rlvSupport",(string)rlvSupport);
         }
     }
 }

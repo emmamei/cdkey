@@ -220,9 +220,9 @@ doCollapse() {
     if (cdCarried())
         lmInternalCommand("stopFollow", (string)carrierID, keyID);
 
-    if (RLVok == TRUE) {
+    if (rlvOk == TRUE) {
         rlvLockKey();
-        lmRunRlv(defaultCollapseRLVcmd);
+        lmRunRlv(rlvDefaultCollapseCmd);
     }
 
     if (!isSitting) {
@@ -265,8 +265,8 @@ unCollapse() {
 
     lmInternalCommand("setHovertext", "", keyID);
 
-    if (RLVok == TRUE) {
-        lmRlvInternalCmd("clearRLVcmd",""); // clear all collapse-related restrictions from defaultCollapseRLVcmd
+    if (rlvOk == TRUE) {
+        lmRlvInternalCmd("clearRLVcmd",""); // clear all collapse-related restrictions from rlvDefaultCollapseCmd
         if (keyLocked == FALSE) rlvUnlockKey();
         else rlvLockKey();
     }
@@ -301,7 +301,7 @@ default {
     // STATE ENTRY
     //----------------------------------------
     state_entry() {
-        RLVok = UNSET;
+        rlvOk = UNSET;
         dollID = llGetOwner();
         keyID = llGetKey();
         dollName = dollyName();
@@ -318,7 +318,7 @@ default {
     // ON REZ
     //----------------------------------------
     on_rez(integer start) {
-        RLVok = UNSET;
+        rlvOk = UNSET;
         timerStarted = TRUE;
         configured = TRUE;
 
@@ -381,7 +381,7 @@ default {
             return;
         }
 
-        if (RLVok == UNSET) {
+        if (rlvOk == UNSET) {
             if (dollID != toucherID) {
                 cdSayTo(dollName + "'s key clanks and clinks.... it doesn't seem to be ready yet.",toucherID);
                 llOwnerSay(toucherName + " is fiddling with your Key but the state of RLV is not yet determined.");
@@ -602,7 +602,7 @@ default {
                             "allowDress",
                             "allowSelfWind",
                             "isAFK",
-                            "RLVok",
+                            "rlvOk",
 #ifdef ADULT_MODE
                             "allowStrip",
                             "hardcore",
@@ -611,7 +611,7 @@ default {
                             "dollDisplayName",
                             "dialogChannel",
                             "dollType",
-                            "defaultCollapseRLVcmd",
+                            "rlvDefaultCollapseCmd",
 #ifdef DEVELOPER_MODE
                             "debugLevel",
 #endif
@@ -647,10 +647,10 @@ default {
             else if (name == "allowDress")                 allowDress = (integer)value;
             else if (name == "allowSelfWind")           allowSelfWind = (integer)value;
             else if (name == "isAFK")                           isAFK = (integer)value;
-            else if (name == "RLVok") {
-                RLVok = (integer)value;
+            else if (name == "rlvOk") {
+                rlvOk = (integer)value;
 
-                if (RLVok) {
+                if (rlvOk) {
                     // When RLV activates for whatever reason, make sure collapse is properly set
                     if (collapsed) doCollapse();
                 }
@@ -670,7 +670,7 @@ default {
             else if (name == "dollDisplayName")             dollDisplayName = value;
             else if (name == "dialogChannel")                 dialogChannel = (integer)value;
             else if (name == "dollType")                           dollType = value;
-            else if (name == "defaultCollapseRLVcmd") defaultCollapseRLVcmd = value;
+            else if (name == "rlvDefaultCollapseCmd") rlvDefaultCollapseCmd = value;
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                   debugLevel = (integer)value;
 #endif
@@ -828,12 +828,12 @@ default {
         //----------------------------------------
         // RLV_RESET
         else if (code == RLV_RESET) {
-            RLVok = (integer)split[0];
+            rlvOk = (integer)split[0];
 
             // refresh collapse state... no escape!
             if (collapsed) doCollapse();
 
-            if (RLVok == TRUE) {
+            if (rlvOk == TRUE) {
                 if (!allowDress) llOwnerSay("The public cannot dress you.");
             }
             else {

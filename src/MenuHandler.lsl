@@ -163,7 +163,7 @@ default {
         myName = llGetScriptName();
 
         cdInitializeSeq();
-        RLVok = UNSET;
+        rlvOk = UNSET;
         chooseDialogChannel();
     }
 
@@ -171,7 +171,7 @@ default {
     // ON REZ
     //----------------------------------------
     on_rez(integer start) {
-        RLVok = UNSET;
+        rlvOk = UNSET;
         cdInitializeSeq();
         chooseDialogChannel();
     }
@@ -181,14 +181,14 @@ default {
     //----------------------------------------
     // During attach we perform:
     //
-    //     * Unset RLVok
+    //     * Unset rlvOk
     //     * Set up DialogChannel
     //
     attach(key id) {
 
         if (!(keyDetached(id))) {
 
-            RLVok = UNSET;
+            rlvOk = UNSET;
             chooseDialogChannel();
         }
     }
@@ -208,7 +208,7 @@ default {
                              "timeLeftOnKey",
                              "windRate",
                              "outfitFolder",
-                             "RLVok",
+                             "rlvOk",
                              "backMenu",
                              "keyLimit",
                              "keyLocked",
@@ -272,7 +272,7 @@ default {
                  if (name == "timeLeftOnKey")             timeLeftOnKey = (integer)value;
             else if (name == "windRate")                       windRate = (float)value;
             else if (name == "outfitFolder")               outfitFolder = value;
-            else if (name == "RLVok")                             RLVok = (integer)value;
+            else if (name == "rlvOk")                             rlvOk = (integer)value;
             else if (name == "backMenu")                       backMenu = value;
             else if (name == "keyLimit")                       keyLimit = (integer)value;
             else if (name == "keyLocked")                     keyLocked = (integer)value;
@@ -407,22 +407,23 @@ default {
 #ifdef ADULT_MODE
                 if (!hardcore) {
 #endif
-                    integer minsLeft = llRound(timeLeftOnKey / (60.0 * windRate));
-
                     // timeLeftOnKey is in seconds, and timeLeftOnKey / 60.0 converts
                     // the number to minutes. The value windRate is a scaling factor:
                     // a key running fast (windRate = 2.0) has fewer minutes left;
                     // timeLeftOnKey is "real" seconds left.
 
-                    timeLeftMsg = "Dolly has " + (string)minsLeft + " minutes remaining. Key is ";
+                    if (windRate > 0.0) {
 
-                    if (windRate > 0) {
+                        timeLeftMsg = "Dolly has " + (string)(llRound(timeLeftOnKey / (60.0 * windRate))) +
+                                      " minutes remaining. Key is ";
 
-                             if (windRate == 1) timeLeftMsg += "winding down at a normal rate. ";
-                        else if (windRate  > 1) timeLeftMsg += "winding down at an accelerated rate. ";
-                        else if (windRate  < 1) timeLeftMsg += "winding down at a slowed rate. ";
+                             if (windRate == 1.0) timeLeftMsg += "winding down at a normal rate. ";
+                        else if (windRate  > 1.0) timeLeftMsg += "winding down at an accelerated rate. ";
+                        else if (windRate  < 1.0) timeLeftMsg += "winding down at a slowed rate. ";
                     }
-                    else timeLeftMsg += "not winding down. ";
+                    else {
+                        timeLeftMsg = "Dolly has no time remaining. ";
+                    }
 #ifdef ADULT_MODE
                 }
 #endif
@@ -542,7 +543,7 @@ default {
                     // Visible & Lock/Unlock Button
                     if (isDoll) {
                         menu += "Visible";
-                        if (RLVok) {
+                        if (rlvOk) {
                             if (keyLocked) {
 #ifdef ADULT_MODE
                                 if (!hardcore)
@@ -565,7 +566,7 @@ default {
 
                     //--------------------
                     // Outfits Button
-                    if (RLVok == TRUE) {
+                    if (rlvOk == TRUE) {
                         // Can the doll be dressed? Add menu button
                         //
                         // Dolly can change her outfits if she is able.
@@ -665,7 +666,7 @@ default {
                     //--------------------
                     // Strip Button
                     // Is doll strippable?
-                    if (RLVok == TRUE) {
+                    if (rlvOk == TRUE) {
                         if (simRating == "MATURE" || simRating == "ADULT") {
 
                             // Only show for Slut Dollies - or hardcore dollies
@@ -710,10 +711,10 @@ default {
                 // END OF BUTTONS
 
 #ifdef DEVELOPER_MODE
-                if (RLVok == UNSET) msg += "Still checking for RLV support some features unavailable. ";
+                if (rlvOk == UNSET) msg += "Still checking for RLV support some features unavailable. ";
                 else
 #endif
-                if (RLVok != TRUE) {
+                if (rlvOk != TRUE) {
                     msg += "No RLV detected; therefore, some features are unavailable. ";
                 }
 
@@ -754,7 +755,7 @@ default {
             }
         }
         else if (code == RLV_RESET) {
-            RLVok = (integer)split[0];
+            rlvOk = (integer)split[0];
         }
         else if (code < 200) {
             if (code == INIT_STAGE2) {
@@ -1027,10 +1028,10 @@ default {
 #endif
 #ifdef OPTIONAL_RLV
                             else if (afterSpace == "RLV") {
-                                // we don't deal with RLVsupport here, as if RLVsupport is FALSE,
+                                // we don't deal with rlvSupport here, as if rlvSupport is FALSE,
                                 // this choice is never made.
-                                lmSendConfig("RLVok", (string)isX);
-                                lmRLVreport(RLVok,"",isX);
+                                lmSendConfig("rlvOk", (string)isX);
+                                lmRlvReport(rlvOk,"",isX);
                             }
 #endif
                             // if is not Doll, they can set and unset these options...

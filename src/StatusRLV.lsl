@@ -139,8 +139,8 @@ default {
             string name = (string)split[0];
             string value = (string)split[1];
 
-                 if (name == "RLVok")              RLVok = (integer)value;
-            else if (name == "RLVsupport")    RLVsupport = (integer)value;
+                 if (name == "rlvOk")              rlvOk = (integer)value;
+            else if (name == "rlvSupport")    rlvSupport = (integer)value;
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")    debugLevel = (integer)value;
 #endif
@@ -167,8 +167,8 @@ default {
 #ifdef DEVELOPER_MODE
             debugSay(4,"DEBUG-STATUSRLV","RLV_CMD script " + rlvScript + ": internalRlvCommand = " + internalRlvCommand + ": rlvCommand = " + rlvCommand);
 
-            if (RLVok != TRUE) {
-                if (RLVok == UNSET) llSay(DEBUG_CHANNEL,"RLV command issued with RLV inactive from " + rlvScript + "! (" + rlvCommand + ")");
+            if (rlvOk != TRUE) {
+                if (rlvOk == UNSET) llSay(DEBUG_CHANNEL,"RLV command issued with RLV inactive from " + rlvScript + "! (" + rlvCommand + ")");
                 return;
             }
 #endif
@@ -179,7 +179,7 @@ default {
                 case "escapeRLVcmd": {
                     // complete cancel of all RLV - such as from SafeWord
                     llOwnerSay("@clear"); // Total RLV zap: such as from SafeWord
-                    RLVok = FALSE;
+                    rlvOk = FALSE;
                     break;
                 }
 #endif
@@ -201,9 +201,9 @@ default {
             }
         }
         else if (code == RLV_RESET) {
-            RLVok = (integer)split[0];
+            rlvOk = (integer)split[0];
 
-            if (RLVok == TRUE)
+            if (rlvOk == TRUE)
                 lmInternalCommand("restoreRestrictions",script,NULL_KEY); // restore RLV restrictions
         }
         else if (code < 200) {

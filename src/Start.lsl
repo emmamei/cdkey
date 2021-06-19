@@ -271,8 +271,8 @@ processConfiguration(string configSettingName, string configSettingValue) {
         else if (configSettingName == "collapse rlv") {
 #ifdef USER_RLV
             // has to be valid rlv
-            defaultCollapseRLVcmd += "," + configSettingValue;
-            lmSendConfig("defaultCollapseRLVcmd", configSettingValue);
+            rlvDefaultCollapseCmd += "," + configSettingValue;
+            lmSendConfig("rlvDefaultCollapseCmd", configSettingValue);
 #else
             ; // Nothing to do
 #endif
@@ -280,8 +280,8 @@ processConfiguration(string configSettingName, string configSettingValue) {
         else if (configSettingName == "pose rlv") {
 #ifdef USER_RLV
             // has to be valid rlv
-            defaultPoseRLVcmd += "," + configSettingValue;
-            lmSendConfig("defaultPoseRLVcmd", configSettingValue);
+            rlvDefaultPoseCmd += "," + configSettingValue;
+            lmSendConfig("rlvDefaultPoseCmd", configSettingValue);
 #else
             ; // Nothing to do
 #endif
@@ -466,7 +466,7 @@ default {
         dollID = llGetOwner();
         dollName = dollyName();
 
-        rlvPreviously = RLVok;
+        rlvPreviously = rlvOk;
         lmInternalCommand("startRlvCheck", "", keyID);
 
         // Reset visibility so we don't forget or get confused
@@ -550,22 +550,22 @@ default {
 
                 //lmSendConfig("poseAnimation", value);
 
-                if ((!collapsed) && (RLVok == TRUE)) {
+                if ((!collapsed) && (rlvOk == TRUE)) {
 
                     // Dolly is operating normally (not collapsed)
                     // and this is a pose, not a collapse
 
                     if (poseAnimation == "" && !collapsed) {
                         // Not collapsed or posed - so clear to base RLV
-                        lmRlvInternalCmd("clearRLVcmd",defaultBaseRLVcmd); // received a null poseAnimation, and not collapsed: reset
+                        lmRlvInternalCmd("clearRLVcmd",rlvDefaultBaseCmd); // received a null poseAnimation, and not collapsed: reset
                     }
                     else {
                         // Posed: activate RLV restrictions
-                        lmRunRlv(defaultPoseRLVcmd);
+                        lmRunRlv(rlvDefaultPoseCmd);
                     }
                 }
             }
-            else if (name == "defaultBaseRLVcmd")    defaultBaseRLVcmd = value;
+            else if (name == "rlvDefaultBaseCmd")    rlvDefaultBaseCmd = value;
         }
 
 #ifdef DEVELOPER_MODE
@@ -694,7 +694,7 @@ default {
                     else {
                         controllerList = tmpList + [ uuid ];
 
-                        if (RLVok) {
+                        if (rlvOk) {
                             // Controllers get added to the exceptions
                             llOwnerSay("@tplure:"    + uuid + "=add," +
                                         "accepttp:"  + uuid + "=add," +
@@ -775,9 +775,9 @@ default {
             }
         }
         else if (code == RLV_RESET) {
-            RLVok = (integer)split[0];
+            rlvOk = (integer)split[0];
 
-            if (RLVok == FALSE) {
+            if (rlvOk == FALSE) {
                 if (rlvPreviously == TRUE) {
                     lmSendToController(dollName + " has logged in without RLV at " + wwGetSLUrl());
                 }
@@ -801,9 +801,9 @@ default {
                 readPreferences();
 
                 // Send out defaults
-                lmSendConfig("defaultCollapseRLVcmd", defaultCollapseRLVcmd);
-                lmSendConfig("defaultPoseRLVcmd", defaultPoseRLVcmd);
-                lmSendConfig("defaultBaseRLVcmd", defaultBaseRLVcmd);
+                lmSendConfig("rlvDefaultCollapseCmd", rlvDefaultCollapseCmd);
+                lmSendConfig("rlvDefaultPoseCmd", rlvDefaultPoseCmd);
+                lmSendConfig("rlvDefaultBaseCmd", rlvDefaultBaseCmd);
 
                 // Check for items necessary for proper operation
                 // and give error messages or warnings

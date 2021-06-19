@@ -40,7 +40,7 @@ integer mySeqNum;
 #define lmRunRlvAs(vmodule,command)                     cdLinkMessage(LINK_THIS,0,315,vmodule+"|runRLVcmd|"+command,keyID)
 
 //#define lmConfirmRLV(forscript,command)                 cdLinkMessage(LINK_THIS,0,320,forscript+"|"+command,keyID)
-#define lmRLVreport(active,apistring,apiversion)        cdLinkMessage(LINK_THIS,0,350,(string)active+"|"+apistring+"|"+(string)apiversion,keyID)
+#define lmRlvReport(active,apistring,apiversion)        cdLinkMessage(LINK_THIS,0,350,(string)active+"|"+apistring+"|"+(string)apiversion,keyID)
 #define lmMenuReply(choice,name,id)                     cdLinkMessage(LINK_THIS,0,500,choice+"|"+name,id)
 #define lmTextboxReply(type,name,choice,id)             cdLinkMessage(LINK_THIS,0,501,(string)type+"|"+name+"|"+choice,id)
 #define lmPoseReply(choice,name,id)                     cdLinkMessage(LINK_THIS,0,502,choice+"|"+name,id)
