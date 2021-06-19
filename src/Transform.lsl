@@ -632,56 +632,67 @@ default {
 
             if (cmd == "optionsMenu") {
                 list optionsMenuButtons;
+                string optionsMenuMessage;
 
                 lmSendConfig("backMenu",(backMenu = MAIN));
                 debugSay(6,"DEBUG-OPTIONS","Building Options menu...");
                 debugSay(6,"DEBUG-OPTIONS","isDoll = " + (string)cdIsDoll(lmID));
                 debugSay(6,"DEBUG-OPTIONS","isCarrier = " + (string)cdIsCarrier(lmID));
 
-                if (cdIsDoll(lmID)) {
-                    msg = "See the help file for information on these options.";
+                if (cdIsExternalController(lmID)) {
+
+                    optionsMenuMessage = "See the help file for more information on these options. Choose what you want to happen.";
+
+                    optionsMenuButtons += (list)"Type...";
+                    if (rlvOk == TRUE) optionsMenuButtons += (list)"Restrictions...";
+                    optionsMenuButtons += (list)"Drop Control";
+
+                }
+                else if (cdIsCarrier(lmID)) {
+                    optionsMenuButtons += (list)"Type...";
+                    if (rlvOk == TRUE) optionsMenuButtons += (list)"Restrictions...";
+                }
+                else if (cdIsDoll(lmID)) {
+                    optionsMenuMessage = "See the help file for information on these options.";
 
                     optionsMenuButtons += [ "Operation...", "Key...", "Access..." ];
 #ifdef ADULT_MODE
                     if (!hardcore)
 #endif
-                        optionsMenuButtons += [ "Public..." ];
+                        optionsMenuButtons += (list)"Public...";
 
                     if (keySpecificMenu != "")
-                        optionsMenuButtons += [ keySpecificMenu ];
+                        optionsMenuButtons += (list)keySpecificMenu;
 
-                    // No supervisors here
+                    // Check if Dolly is carried or Dolly has external controller
+                    //
+                    // That is, check if Dolly is supervised by someone else,
+                    // and make some of their buttons disappear if they are indeed
+                    // supervised.
+                    //
                     if (!cdCarried() && cdControllerCount() == 0) {
 
-                        optionsMenuButtons += [ "Type..." ];
+                        optionsMenuButtons += (list)"Type...";
 
                         if (rlvOk == TRUE)
 #ifdef ADULT_MODE
                             if (!hardcore)
 #endif
-                                optionsMenuButtons += [ "Restrictions..." ];
+                                optionsMenuButtons += (list)"Restrictions...";
                     }
                 }
-                else if (cdIsCarrier(lmID)) {
-                    optionsMenuButtons += [ "Type..." ];
-                    if (rlvOk == TRUE) optionsMenuButtons += [ "Restrictions..." ];
+#ifdef DEVELOPER_MODE
+                else {
+                    // This section should never be triggered: it means that
+                    // someone who shouldn't see the Options menu did.
+                    llOwnerSay(DEBUG_CHANNEL,"Someone saw the options menu who wasn't supposed to.");
+                    return;
                 }
-                else if (cdIsController(lmID)) {
-
-                    msg = "See the help file for more information on these options. Choose what you want to happen.";
-
-                    optionsMenuButtons += [ "Type...", "Access..." ];
-                    if (rlvOk == TRUE) optionsMenuButtons += [ "Restrictions..." ];
-                    optionsMenuButtons += [ "Drop Control" ];
-
-                }
-                // This section should never be triggered: it means that
-                // someone who shouldn't see the Options menu did.
-                else return;
 
                 debugSay(6,"DEBUG-OPTIONS","Options menu built; presenting to " + (string)lmID);
+#endif
                 lmDialogListen();
-                llDialog(lmID, msg, dialogSort(optionsMenuButtons + "Back..."), dialogChannel);
+                llDialog(lmID, optionsMenuMessage, dialogSort(optionsMenuButtons + "Back..."), dialogChannel);
             }
         }
 

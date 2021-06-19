@@ -493,7 +493,7 @@ default {
                     //--------------------
                     // ...public
                     else {
-                        lmInternalCommand("carriedMenu", carrierName, NULL_KEY);
+                        lmInternalCommand("carriedMenu", (string)lmID + "|" + carrierName, NULL_KEY);
                         return;
                     }
                 }
@@ -512,7 +512,7 @@ default {
                 // Options Button
                 if (isDoll) {
 
-                    // Give Dolly only options if not posed
+                    // Give Dolly options only if not posed
                     if (poseAnimation == ANIMATION_NONE) menu += [ "Options..." ];
                 }
 

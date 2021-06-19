@@ -485,6 +485,10 @@ default {
                 else                    { cdSetHovertext("Wind Me!",                   (  DEFAULT_DOLLY_COLOR )); }
             }
             else if (cmd == "carriedMenu") {
+                // This is the menu that activates for a non-carrier when
+                // Dolly is being carried. Thus a carrier should never see
+                // this menu dialog.
+
                 key menuID = (string)split[0];
                 string carrierName = (string)split[1];
                 string menuMessage;
