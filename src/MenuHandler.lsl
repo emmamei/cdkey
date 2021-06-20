@@ -143,9 +143,9 @@ doDialogChannel() {
 //integer listCompare(list a, list b) {
 //    if (a != b) return FALSE;    // Note: This is comparing list lengths only
 //
-//    return !llListFindList(a, b);  
-//    // As both lists are the same length, llListFindList() can only return 0 or -1 
-//    // Which we return as TRUE or FALSE respectively    
+//    return !llListFindList(a, b);
+//    // As both lists are the same length, llListFindList() can only return 0 or -1
+//    // Which we return as TRUE or FALSE respectively
 //}
 
 //========================================
@@ -809,10 +809,13 @@ default {
     //----------------------------------------
     // SENSOR
     //----------------------------------------
-    sensor(integer num) {
-        integer channel;
-        string type;
-        list current;
+    sensor(integer avatarCount) {
+
+        // We found avatars within 20m of us
+
+        integer listChannel;
+        string listType;
+        list listCurrent;
 
         key foundKey;
         string foundName;
@@ -822,40 +825,61 @@ default {
         dialogButtons = [];
 
         if (controlHandle) {
-            channel = controlChannel;
+            listChannel = controlChannel;
+            listCurrent = controllerList;
 #ifdef ADULT_MODE
-            type = "controller list";
+            listType = "controller list";
 #else
-            type = "parent list";
+            listType = "parent list";
 #endif
-            current = controllerList;
         }
         else {
-            channel = blacklistChannel;
-            type = "blacklist";
-            current = blacklistList;
+            listChannel = blacklistChannel;
+            listCurrent = blacklistList;
+            listType = "blacklist";
         }
 
-        i = num;
-        while ((i--) && (llGetListLength(dialogButtons) < 12)) {
-            foundKey = llDetectedKey(i);
-            foundName = llDetectedName(i);
+        // note that avatarCount and llDetected* are 1-indexed
+        integer index = avatarCount;
 
-            if (llListFindList(current, [ (string)foundKey] ) == NOT_FOUND) { // Don't list existing users
+        // The "working backwards" allows us to use the index to count down
+        // while still going through the list forwards: this is done because
+        // the avatars in the list (max 16 entries!) are from nearest to furthest
+        // away.
+        //
+        // This way, the ending dialog lists will all be in nearest-to-furthest
+        // order.
+        //
+        while (index--) {
+            foundKey = llDetectedKey(avatarCount - index);
+
+            if (llListFindList(listCurrent, [ (string)foundKey] ) == NOT_FOUND) { // Don't list existing users
+
+                foundName = llDetectedName(index);
+
                 dialogKeys += foundKey;
                 dialogNames += foundName;
                 dialogButtons += llGetSubString(foundName, 0, 23);
             }
         }
 
+        // Only 11 buttons allowed - leave room for "Back" button
+        dialogButtons = llList2List(dialogButtons, 0, 10);
+          dialogNames = llList2List(dialogNames,   0, 10);
+           dialogKeys = llList2List(dialogKeys,    0, 10);
+
         lmDialogListen();
-        llDialog(dollID, "Select the avatar to be added to the " + type + ".", dialogSort(dialogButtons + "Back..."), channel);
+        llDialog(dollID, "Select the avatar to be added to the " + listType + ".", dialogSort(dialogButtons + "Back..."), listChannel);
     }
 
     //----------------------------------------
     // NO SENSOR
     //----------------------------------------
     no_sensor() {
+        dialogKeys = [];
+        dialogNames = [];
+        dialogButtons = [];
+
         lmDialogListen();
         llDialog(dollID, "No avatars detected within chat range", [ "Back..." ], dialogChannel);
     }
@@ -1167,7 +1191,7 @@ default {
                             if (cdIsDoll(listenID)) msg = "Current " + msg + ":";
                             else msg = "Doll's current " + msg + ":";
 
-                            i = n; 
+                            i = n;
                             string idX;
                             while (i--) {
                                 idX = (string)dialogKeys[n - i - 2];

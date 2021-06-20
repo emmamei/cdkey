@@ -32,6 +32,8 @@
 // FIXME: This should be in a notecard so it can be changed without mangling the scripts.
 string outfitURL = "outfits.htm";
 string outfitMessage;
+list outfitNameList;
+list outfitDialogList;
 
 string prefix;
 
@@ -115,6 +117,8 @@ list outfitPageN(list outfitList) {
     string outfitName;
     list tmpList;
 
+    outfitNameList = [];
+
     // Take a slice related to the current page
     tmpList = (list)outfitList[currentIndex, currentIndex + 8];
 
@@ -135,6 +139,9 @@ list outfitPageN(list outfitList) {
 
         // Prepend a number to the chat entry...
         chat += "\n" + (string)(currentIndex + x + 1) + ". " + outfitName;
+
+        // Add the button name to the full name list
+        outfitNameList += (list)outfitName;
 
         // Cut the button name to the shortest allowable...
         output += (list)llGetSubString(outfitName, 0, 23);
@@ -678,8 +685,10 @@ default {
                 // We only get here if we are wandering about in the same directory...
                 lmDialogListen();
                 outfitHandle = cdListenAll(outfitChannel);
+                outfitDialogList = outfitPageN(outfitList);
+
                 // outfitMessage was built by the initial call to listener2666
-                llDialog(dresserID, outfitMessage, dialogSort(outfitPageN(outfitList) + dialogItems), outfitChannel);
+                llDialog(dresserID, outfitMessage, dialogSort(outfitDialogList + dialogItems), outfitChannel);
                 llSetTimerEvent(60.0);
 
             }
@@ -691,7 +700,9 @@ default {
                 //lmSendConfig("backMenu",(backMenu = MAIN));
             }
             else {
-                if (cdListElementP(outfitList, listenMessage) != NOT_FOUND) {
+                integer index;
+
+                if ((index = cdListElementP(outfitDialogList, listenMessage)) != NOT_FOUND) {
                     // This is the actual processing of an Outfit Menu entry -
                     // either a folder or a single outfit item.
                     //
@@ -699,13 +710,14 @@ default {
                     // No standard user should be entering this way anyway
                     //if (!isDresser(listenID)) return;
 
-                    outfitList = [];
                     string c = cdGetFirstChar(listenMessage);
+
+                    outfitList = [];
 
                     if (isTypeFolder(c) || isParentFolder(c)) {
 
-                        // if a Folder was chosen, we have to descend into it by
-                        // adding the choice to the currently active folder
+                        // listenMessage represents either a Type Folder or a Parent Folder;
+                        // recurse into it and display it.
 
                         if (clothingFolder == "") clothingFolder = listenMessage;
                         else clothingFolder += ("/" + listenMessage);
@@ -717,8 +729,13 @@ default {
                         llSetTimerEvent(60.0);
                     }
                     else {
-                        debugSay(3, "DEBUG-DRESS", "Calling wearOutfit with " + listenMessage + " in the active folder " + activeFolder);
-                        lmInternalCommand("wearOutfit", listenMessage, NULL_KEY);
+
+                        // listenMessage represents an outfit name (possibly an avatar name)
+
+                        string outfitName = (string)outfitNameList[index];
+
+                        debugSay(3, "DEBUG-DRESS", "Calling wearOutfit with " + outfitName + " in the active folder " + activeFolder);
+                        lmInternalCommand("wearOutfit", outfitName, NULL_KEY);
                     }
                 }
 #ifdef DEVELOPER_MODE
@@ -813,10 +830,13 @@ default {
             // Sort: slow bubble sort
             outfitList = llListSort(outfitList, 1, TRUE);
 
+            // Outfits need to be scanned and a menu button list created
+
             // Now create appropriate menu page from full outfits list
             outfitPage = 1;
 
-            list newOutfitList = outfitPageN(outfitList);
+            outfitDialogList = outfitPageN(outfitList);
+            list newOutfitList = outfitDialogList;
 
             if (llGetListLength(outfitList) < 10) newOutfitList += [ "-", "-" ];
             else newOutfitList += [ "Outfits Prev", "Outfits Next" ];
