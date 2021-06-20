@@ -23,6 +23,7 @@
 #define cdListenerDeactivate(a) llListenControl(a, 0)
 #define cdListenerActivate(a) llListenControl(a, 1)
 #define cdResetKey() llResetOtherScript("Start")
+#define cdList2String(a) llDumpList2String(a,"|")
 //#define lmCollapse(a) lmInternalCommand("collapse",(string)(a),NULL_KEY)
 #define keyDetached(id) (id == NULL_KEY)
 
@@ -333,12 +334,12 @@ default {
 
                     if (split == [""]) blacklistList = [];
                     else blacklistList = split;
-                    //lmSendConfig("blacklist",llDumpList2String(blacklistList,"|"));
+                    lmSendConfig("blacklist",cdList2String(blacklistList));
             }
             else if (name == "controllers") {
                     if (split == [""]) controllerList = [];
                     else controllerList = split;
-                    //lmSendConfig("controllers",llDumpList2String(controllerList,"|"));
+                    lmSendConfig("controllers",cdList2String(controllerList));
             }
         }
         else if (code == INTERNAL_CMD) {
@@ -1053,7 +1054,7 @@ default {
 
                     if ((index = llListFindList(controllerList, [ (string)listenID ])) != NOT_FOUND) {
                         controllerList = llDeleteSubList(controllerList, index, index + 1);
-                        lmSendConfig("controllers", llDumpList2String(controllerList, "|"));
+                        lmSendConfig("controllers", cdList2String(controllerList));
 
                         cdSayTo("You are no longer a controller of this Dolly.", listenID);
                         llOwnerSay("Your controller " + name + " has relinquished control.");

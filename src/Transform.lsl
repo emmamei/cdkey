@@ -636,8 +636,12 @@ default {
 
                 lmSendConfig("backMenu",(backMenu = MAIN));
                 debugSay(6,"DEBUG-OPTIONS","Building Options menu...");
+                debugSay(6,"DEBUG-OPTIONS","lmID = " + (string)lmID);
                 debugSay(6,"DEBUG-OPTIONS","isDoll = " + (string)cdIsDoll(lmID));
                 debugSay(6,"DEBUG-OPTIONS","isCarrier = " + (string)cdIsCarrier(lmID));
+                debugSay(6,"DEBUG-OPTIONS","isExternalController = " + (string)cdIsExternalController(lmID));
+                debugSay(6,"DEBUG-OPTIONS","isController = " + (string)cdIsController(lmID));
+                debugSay(6,"DEBUG-OPTIONS","controllerList: " + llDumpList2String(controllerList,","));
 
                 if (cdIsDoll(lmID)) {
                     optionsMenuMessage = "See the help file for information on these options.";
@@ -710,15 +714,11 @@ default {
                         }
                     }
                 }
-                else if (cdIsExternalController(lmID)) {
+                else if (cdIsExternalController(lmID) || cdIsCarrier(lmID)) {
 
-                    optionsMenuButtons += [ "Type...", "Drop Control"];
-                    if (rlvOk) optionsMenuButtons += (list)"Restrictions...";
-
-                }
-                else if (cdIsCarrier(lmID)) {
                     optionsMenuButtons += (list)"Type...";
                     if (rlvOk) optionsMenuButtons += (list)"Restrictions...";
+
                 }
 #ifdef DEVELOPER_MODE
                 else {
