@@ -82,9 +82,7 @@ list dialogKeys;
 list dialogNames;
 list dialogButtons;
 
-#ifdef SINGLE_SELF_WIND
 key lastWinderID = NULL_KEY;
-#endif
 
 //========================================
 // FUNCTIONS
@@ -216,9 +214,7 @@ default {
 #ifdef ADULT_MODE
                              "hardcore",
 #endif
-#ifdef SINGLE_SELF_WIND
                              "lastWinderID",
-#endif
                              "poseAnimation",
 
                              "showPhrases",
@@ -280,9 +276,7 @@ default {
 #ifdef ADULT_MODE
             else if (name == "hardcore")                       hardcore = (integer)value;
 #endif
-#ifdef SINGLE_SELF_WIND
             else if (name == "lastWinderID")               lastWinderID = (key)value;
-#endif
 
             // poseAnimation used to test for being posed
             else if (name == "poseAnimation")             poseAnimation = value;
@@ -374,12 +368,29 @@ default {
                 list menuButtons;
                 string infoPage = "See " + WEB_DOMAIN + "communitydoll.htm for more information. ";
 
+                integer hasControllers;
+                integer hasSupervisor;
+
                 // Cache access test results
-                hasCarrier      = cdCarried();
-                isCarrier       = cdIsCarrier(lmID);
+                hasCarrier = cdCarried();
+                isCarrier  = cdIsCarrier(lmID);
+                isDoll     = cdIsDoll(lmID);
+
+                // These have LSL functions in them; using a variable to
+                // cache results should make testing faster as we do these
+                // functions only once here.
+                //
+                // Note also that Dolly IS a Controller if she has no other
+                // controllers. This means you can test for Controller status
+                // first in cases where Dolly gets a key UNLESS there is
+                // an actual controller. This also means if you only want
+                // external controllers to be able to do something, you
+                // better test for Dolly first.
+                // 
                 isController    = cdIsController(lmID);
-                isDoll          = cdIsDoll(lmID);
                 numControllers  = cdControllerCount();
+                hasControllers  = cdHasControllers();
+                hasSupervisor   = (hasControllers || hasCarrier);
 
                 //----------------------------------------
                 // If other menus are appropriate, bypass the main menu quickly
@@ -474,6 +485,13 @@ default {
                 //
                 //--------------------
                 // Uncarry Button
+                //
+                // SECURITY: The Uncarry button is shown to the carrier, and to
+                // External Controllers. The carrier can drop Dolly normally, and
+                // Controllers can essentially for the carrier to drop Dolly.
+                //
+                // If Doll is getting the menu and has carrier - Dolly never gets here.
+                //
                 if (hasCarrier) {
                     // Doll has carrier - but who clicked her key?
 
@@ -481,7 +499,7 @@ default {
                     // ...Carrier?
                     if (isCarrier) {
                         menuMessage = "Uncarry frees " + dollName + " when you are done with " + pronounHerDoll + ". ";
-                        menuButtons = ["Uncarry"];
+                        menuButtons += (list)"Uncarry";
                         if (collapsed) menuMessage += "(Doll is collapsed.) ";
                     }
 
@@ -489,7 +507,7 @@ default {
                     // ...Controller (NOT Dolly)
                     else if (cdIsController(lmID)) {
                         menuMessage = dollName + " is being carried by " + carrierName + ". ";
-                        menuButtons = ["Uncarry"];
+                        menuButtons += (list)"Uncarry";
                     }
 
                     //--------------------
@@ -512,12 +530,15 @@ default {
 
                 //--------------------
                 // Options Button
+                //
+                // SECURITY: Show this button to Dolly and to External Controllers.
+                // Show to Dolly only if they are not posed.
+                //
                 if (isDoll) {
 
                     // Give Dolly options only if not posed
-                    if (poseAnimation == ANIMATION_NONE) menuButtons += [ "Options..." ];
+                    if (poseAnimation == ANIMATION_NONE) menuButtons += (list)"Options...";
                 }
-
                 else {
                     // Give controllers access to options
                     if (isController) menuButtons += "Options...";
@@ -525,58 +546,59 @@ default {
 
                 //--------------------
                 // Help Button
-                menuButtons += [ "Help..." ];
+                //
+                // SECURITY: None
+                //
+                menuButtons += "Help...";
 
                 // Standard Main Menu
                 //
-                if (!collapsed && (!hasCarrier || isCarrier)) {
-                    // Dolly State (all of the following must be true):
-                    //   1. Dolly is not collapsed
-                    //   2. Either menu recipient is carrier, or Dolly is not carried
-                    //
-                    // Put another way, a carrier gets the same menu Dolly would if she has no carrier.
-                    //
-                    // Menu recipient could be...
-                    //   1. Doll
-                    //   2. Carrier
-                    //   3. Controller
-                    //   4. Someone else
-
-                    // Buttons:
+                // This menu is only shown if the Doll is not collapsed
+                //
+                if (!collapsed) {
 
                     //--------------------
-                    // Visible & Lock/Unlock Button
-                    if (isDoll) {
-                        menuButtons += "Visible";
-                        if (rlvOk) {
-                            if (keyLocked) {
-#ifdef ADULT_MODE
-                                if (!hardcore)
-#endif
-                                    menuButtons += "Unlock";
-                            }
+                    // Visible Button
+                    //
+                    // SECURITY: Only for Doll
+                    //
+                    if (isDoll) menuButtons += "Visible";
+
+                    //====================
+                    // RLV BUTTONS
+
+                    if (rlvOk) {
+
+                        //--------------------
+                        // Lock/Unlock Button
+                        //
+                        // SECURITY: Only show to a Controller (including Dolly if they
+                        // have no others) and make it a one-way option for Dolly if
+                        // Dolly has External Controllers: Dolly can lock but
+                        // not unlock.
+                        //
+                        // Public and Carrier do not see this button.
+                        //
+                        if (isController) {
+                            if (keyLocked) menuButtons += "Unlock";
                             else menuButtons += "Lock";
                         }
-                    }
+                        else {
+                            // Dolly is not a controller here: one-way option
+                            if (isDoll) {
+                                if (!keyLocked) menuButtons += "Lock";
+                            }
+                        }
 
-                    //--------------------
-                    // Unwind Button
-                    if (!isDoll) {
+                        //--------------------
+                        // Outfits Button
 
-                        // Toucher is not Doll.... could be anyone
-                        menuMessage =  dollName + " is a doll and likes to be treated like a doll. So feel free to use these options. ";
-                        menuButtons += "Unwind";
-                    }
-
-                    //--------------------
-                    // Outfits Button
-                    if (rlvOk == TRUE) {
                         // Can the doll be dressed? Add menu button
                         //
-                        // Dolly can change her outfits if she is able.
-                        // Others can if Dolly allows, OR if the toucher is a Controller.
-                        // Note that this means Carriers cannot change Dolly unless
-                        // permitted: this is appropriate.
+                        // SECURITY: Dolly can change her outfits if they are allowed to
+                        // self-dress. The public (or a carrier) can change her outfits if
+                        // public access is allowed. A controller has full control at all
+                        // times.
 
                         if (outfitFolder != "") {
                             if (isDoll) {
@@ -591,18 +613,82 @@ default {
                             llSay(DEBUG_CHANNEL, "Outfits folder is unset!");
                         }
 #endif
+
+#ifdef ADULT_MODE
+                        //--------------------
+                        // Strip Button
+                        //
+                        // SECURITY: THIS FEATURE IS FOR ADULT MODE ONLY.
+                        // The feature is only available in Mature and Adult sims.
+                        // This feature is fully dependent on Dress options:
+                        // if public dressing is not allowed, neither is public
+                        // undressing. (This dependency is best expressed in the setting
+                        // of options).
+                        //
+                        // For Dolly, show this option if Doll Type is Slut or if
+                        // stripping is allowed (but only if Dolly can dress themselves).
+                        //
+                        // For controllers, show this option if Doll Type is Slut
+                        // or if stripping is allowed.
+                        // 
+                        // For all, show this button only if Doll Type is Slut
+                        // (or similar) or stripping is allowed.
+                        //
+                        // By testing for Slut Doll type here, we make the stripping
+                        // option moot.
+                        //
+                        // Also, with hardcore mode, stripping is allowed.
+
+                        if (simRating == "MATURE" || simRating == "ADULT") {
+
+                            if (isController) {
+                                if ((dollType == "Slut") || allowStrip) {
+                                    menuButtons += "Strip";
+                                }
+                            }
+                            else if (isDoll) {
+                                if (canDressSelf && ((dollType == "Slut") || allowStrip)) {
+                                    menuButtons += "Strip";
+                                }
+                            }
+                            else {
+                                if ((dollType == "Slut") || allowStrip) {
+                                    menuButtons += "Strip";
+                                }
+                            }
+                        }
+                    } // END OF RLV BUTTONS
+#endif
+                    //--------------------
+                    // Unwind Button
+                    //
+                    // SECURITY: This feature available to all except Dolly.
+                    // (Letting Dolly unwind themselves makes no sense.)
+                    //
+                    if (!isDoll) {
+
+                        // Toucher is not Doll.... could be anyone
+                        menuMessage =  dollName + " is a doll and likes to be treated like a doll. So feel free to use these options. ";
+                        menuButtons += "Unwind";
                     }
 
                     //--------------------
                     // Types Button
+                    //
+                    // SECURITY: If types are allowed, show them to everyone only IF
+                    // Dolly is not posed. Show this feature to Dolly ONLY if they are
+                    // not locked into a type.
+                    //
                     if (allowTypes) {
+
                         if (poseAnimation == ANIMATION_NONE) {
+
                             // Only present the Types button if Dolly is not posed
 
-                            if (typeLockExpire == 0) {
-                                // No difference?!
-                                menuButtons += "Types...";
+                            if (isDoll) {
+                                if (typeLockExpire == 0) menuButtons += "Types...";
                             }
+                            else menuButtons += "Types...";
                         }
                     }
 
@@ -611,6 +697,26 @@ default {
 
                     //--------------------
                     // Poses and Unpose Buttons
+                    //
+                    // SECURITY: Dont provide these options if Dolly is
+                    // sitting, and don't provide them if no poses are
+                    // available.
+                    //
+                    // If Dolly is posed...
+                    //
+                    // ...then provide Dolly with Pose and Unpose
+                    // buttons only if Dolly is SELF-posed.
+                    //
+                    // ...provide Controllers with Pose and Unpose buttons.
+                    //
+                    // ...provide the public with Unpose button IF they
+                    // are allowed to manipulate poses.
+                    //
+                    // If Dolly is NOT currently posed...
+                    //
+                    // ...provide Poses button to Dolly and to Controllers, but to
+                    // public ONLY if allowed.
+                    //
                     if (isDollySitting == FALSE) { // Agent not sitting
                         // if dolly is sitting, dont allow poses
 
@@ -631,7 +737,7 @@ default {
                                 // Also allow anyone to Unpose Dolly if Dolly self posed.
 
                                 else {
-                                    if (isController || allowPose)
+                                    if (isController)
                                         menuButtons += [ "Poses...", "Unpose" ];
                                     else if (isDollSelfPosed)
                                         menuButtons += [ "Unpose" ];
@@ -646,9 +752,15 @@ default {
 
                     //--------------------
                     // Carry Button
-                    // Fix for issue #157
                     //
-                    // Dolly doesn't carry self...
+                    // SECURITY: Present the Carry button to all *except* Dolly.
+                    //
+                    // Show the button if Dolly does not have a carrier...
+                    //
+                    // ...to Controllers at all times.
+                    //
+                    // ...to Public if allowed to Carry Dolly.
+                    //
                     if (!isDoll) {
 
                         // Dolly has no carrier
@@ -661,50 +773,51 @@ default {
                             }
                         }
                     }
-
-#ifdef ADULT_MODE
-                    //--------------------
-                    // Strip Button
-                    // Is doll strippable?
-                    if (rlvOk == TRUE) {
-                        if (simRating == "MATURE" || simRating == "ADULT") {
-
-                            // Only show for Slut Dollies - or hardcore dollies
-                            if ((dollType == "Slut") || (isDoll && canDressSelf) || (allowDress && allowStrip)) {
-                                menuButtons += "Strip";
-                            }
-
-                            // Otherwise, show if Strip is allowed, and Dress is allowed
-                            else if (allowStrip && allowDress) {
-                                if (isController || isCarrier || isDoll) menuButtons += "Strip";
-                            }
-                        }
-                    }
-#endif
-                }
+                } // END OF UNCOLLAPSED MENU
 
                 // At this point, we have no assumptions about
                 // whether Dolly is collapsed, carried, or whatnot.
 
                 //--------------------
                 // Wind Button
+                //
+                // SECURITY: If winding would be effective (30s or more) then
+                // make the button available to all other than Dolly.
+                //
+                // Only make the button available to Dolly if self-wind is allowed,
+                // and optionally only if Dolly did not wind previously.
+                //
+                // Show the option to a member of the public only if they did not
+                // wind previously (if Repeat Wind is disabled), or any time if Repeat
+                // Wind is enabled.
+                //
+                // This option should result in a button no matter what, but a
+                // WIND button only shows if criteria are met.
+                //
                 if (isDoll) {
 
                     if (allowSelfWind) {
                         if (keyLimit - timeLeftOnKey > 30) {
 #ifdef SINGLE_SELF_WIND
-                            if (lastWinderID != dollID) menuButtons += [ "Wind" ];
-#else
-                            menuButtons += [ "Wind" ];
+                            if (lastWinderID != dollID)
 #endif
+                                menuButtons += [ "Wind" ];
                         }
                         else menuButtons += [ "-" ];
                     }
                 }
                 else {
-                    // Anyone can wind Dolly :)
-                    if (keyLimit - timeLeftOnKey > 30) menuButtons += [ "Wind" ];
-                    else menuButtons += [ "-" ];
+                    if (isController) {
+                        if (keyLimit - timeLeftOnKey > 30) menuButtons += [ "Wind" ];
+                        else menuButtons += [ "-" ];
+                    }
+                    else {
+                        if (allowRepeatWind || (lastWinderID != lmID)) {
+                            if (keyLimit - timeLeftOnKey > 30) menuButtons += [ "Wind" ];
+                            else menuButtons += [ "-" ];
+                        }
+                        else menuButtons += [ "-" ];
+                    }
                 }
 
                 //--------------------

@@ -639,47 +639,86 @@ default {
                 debugSay(6,"DEBUG-OPTIONS","isDoll = " + (string)cdIsDoll(lmID));
                 debugSay(6,"DEBUG-OPTIONS","isCarrier = " + (string)cdIsCarrier(lmID));
 
-                if (cdIsExternalController(lmID)) {
-
-                    optionsMenuMessage = "See the help file for more information on these options. Choose what you want to happen.";
-
-                    optionsMenuButtons += (list)"Type...";
-                    if (rlvOk == TRUE) optionsMenuButtons += (list)"Restrictions...";
-                    optionsMenuButtons += (list)"Drop Control";
-
-                }
-                else if (cdIsCarrier(lmID)) {
-                    optionsMenuButtons += (list)"Type...";
-                    if (rlvOk == TRUE) optionsMenuButtons += (list)"Restrictions...";
-                }
-                else if (cdIsDoll(lmID)) {
+                if (cdIsDoll(lmID)) {
                     optionsMenuMessage = "See the help file for information on these options.";
+                }
+                else if (cdIsExternalController(lmID) || cdIsCarrier(lmID)) {
+                    optionsMenuMessage = "See the help file for more information on these options. Choose what you want to happen.";
+                }
 
-                    optionsMenuButtons += [ "Operation...", "Key...", "Access..." ];
+                // ----------------------------------------
+                // Key... and Access... Buttons
+                //
+                // SECURITY: These buttons are only available to Dolly
+                if (cdIsDoll(lmID)) 
+                    optionsMenuButtons += [ "Key...", "Access..." ];
+
+                // ----------------------------------------
+                // Public... Button
+                //
+                // SECURITY: This button is for Dolly only, unless
+                // there is a Controller. If hardcore mode, then this
+                // button is not available.
+                //
+                // Not sure about Carrier... probably not.
+                if (cdIsController(lmID)) {
+
 #ifdef ADULT_MODE
                     if (!hardcore)
 #endif
                         optionsMenuButtons += (list)"Public...";
+                }
 
+                // ----------------------------------------
+                // Key-specific Menu
+                //
+                // NOTE: There's no telling WHAT this menu will be about, except that
+                // it will be specific to the key hardware that the scripts are in.
+                //
+                // SECURITY: This button is limited solely to Dolly.
+                if (cdIsDoll(lmID)) {
                     if (keySpecificMenu != "")
                         optionsMenuButtons += (list)keySpecificMenu;
+                }
 
-                    // Check if Dolly is carried or Dolly has external controller
-                    //
-                    // That is, check if Dolly is supervised by someone else,
-                    // and make some of their buttons disappear if they are indeed
-                    // supervised.
-                    //
+                // SECURITY: The Drop Control button is for the Controller ONLY.
+                //
+                if (cdIsExternalController(lmID))
+                    optionsMenuButtons += "Drop Control";
+
+                // ----------------------------------------
+                // Type... and Restrictions... Button
+                //
+                // SECURITY: Show Type to Dolly unless Dolly has Controllers or is Carried.
+                // Show to Controllers and Carriers on demand.
+                //
+                // SECURITY: Show Restrictions to Dolly unless Dolly has Controllers,
+                // is Carried, or is in hardcore mode.
+                //
+                // Show Restrictions to Controllers and Carriers on demand.
+                //
+                if (cdIsDoll(lmID)) {
                     if (!cdCarried() && cdControllerCount() == 0) {
 
                         optionsMenuButtons += (list)"Type...";
 
-                        if (rlvOk == TRUE)
+                        if (rlvOk) {
 #ifdef ADULT_MODE
                             if (!hardcore)
 #endif
                                 optionsMenuButtons += (list)"Restrictions...";
+                        }
                     }
+                }
+                else if (cdIsExternalController(lmID)) {
+
+                    optionsMenuButtons += [ "Type...", "Drop Control"];
+                    if (rlvOk) optionsMenuButtons += (list)"Restrictions...";
+
+                }
+                else if (cdIsCarrier(lmID)) {
+                    optionsMenuButtons += (list)"Type...";
+                    if (rlvOk) optionsMenuButtons += (list)"Restrictions...";
                 }
 #ifdef DEVELOPER_MODE
                 else {

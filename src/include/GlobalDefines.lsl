@@ -243,6 +243,7 @@ float GlobalDefines_version=1.0;
 #define JAMMED 2
 
 #define cdControllerCount()      llFloor(llGetListLength(controllerList) / 2)
+#define cdHasControllers()       (llGetListLength(controllerList))
 #define cdAttached()             llGetAttached()
 #define cdDollAway()             ((llGetAgentInfo(dollID) & (AGENT_AWAY | (AGENT_BUSY * busyIsAway))) != 0)
 #define cdCarried()              (carrierID != NULL_KEY)
