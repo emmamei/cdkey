@@ -528,10 +528,13 @@ default {
                 // Standard Main Menu
                 //
                 if (!collapsed && (!hasCarrier || isCarrier)) {
-                    // State: not collapsed; and either: a) toucher is carrier; or b) doll has no carrier...
+                    // Dolly State (all of the following must be true):
+                    //   1. Dolly is not collapsed
+                    //   2. Either menu recipient is carrier, or Dolly is not carried
+                    //
                     // Put another way, a carrier gets the same menu Dolly would if she has no carrier.
                     //
-                    // Toucher could be...
+                    // Menu recipient could be...
                     //   1. Doll
                     //   2. Carrier
                     //   3. Controller
@@ -574,10 +577,7 @@ default {
                         // Note that this means Carriers cannot change Dolly unless
                         // permitted: this is appropriate.
 
-                        if (outfitFolder == "") {
-                            llSay(DEBUG_CHANNEL, "Outfits folder is unset!");
-                        }
-                        else {
+                        if (outfitFolder != "") {
                             if (isDoll) {
                                 if (canDressSelf) menu += "Outfits...";
                             }
@@ -585,6 +585,11 @@ default {
                                 if (allowDress || isController) menu += "Outfits...";
                             }
                         }
+#ifdef DEVELOPER_MODE
+                        else {
+                            llSay(DEBUG_CHANNEL, "Outfits folder is unset!");
+                        }
+#endif
                     }
 
                     //--------------------
@@ -594,12 +599,6 @@ default {
                             // Only present the Types button if Dolly is not posed
 
                             if (typeLockExpire == 0) {
-                                // Members of the public are allowed if allowed
-                                //if (!isDoll && !isController) menu += "Types...";
-
-                                // Dolly or Controllers always can use Types
-                                //else menu += "Types...";
-
                                 // No difference?!
                                 menu += "Types...";
                             }
@@ -743,6 +742,7 @@ default {
 
                 if (llGetListLength(menu) > 12)
                     llSay(DEBUG_CHANNEL,"Menu appears to have overfilled with buttons (" + (string)(llGetListLength(menu)));
+
                 llDialog(lmID, msg, dialogSort(menu), dialogChannel);
                 llSetTimerEvent(MENU_TIMEOUT);
             }
