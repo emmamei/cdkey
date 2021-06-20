@@ -307,11 +307,11 @@ processConfiguration(string configSettingName, string configSettingValue) {
         }
         else if (configSettingName == "blacklist") {
             string blacklistUUID = (string)configSettingValue;
-            lmSetConfig("addBlacklist",blacklistUUID);
+            lmInternalCommand("addBlacklist", blacklistUUID, NULL_KEY);
         }
         else if (configSettingName == "controller") {
             string controllerUUID = (string)configSettingValue;
-            lmSetConfig("addController",controllerUUID);
+            lmInternalCommand("addController", controllerUUID, NULL_KEY);
         }
         else if (configSettingName == "helpless dolly") {
             // Note inverted sense of this value: this is intentional

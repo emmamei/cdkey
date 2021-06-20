@@ -357,6 +357,11 @@ integer commandsDollyOnly(string chatCommand, string param) {
             break;
         }
 
+        case "reset": {
+            cdResetKey();
+            break;
+        }
+
         case "update": {
 
             lmSendConfig("update", "1");

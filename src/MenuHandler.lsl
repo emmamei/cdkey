@@ -370,9 +370,9 @@ default {
                 menuID = NULL_KEY;
             }
             else if (cmd == "mainMenu") {
-                string msg;
-                list menu;
-                string manpage;
+                string menuMessage;
+                list menuButtons;
+                string infoPage = "See " + WEB_DOMAIN + "communitydoll.htm for more information. ";
 
                 // Cache access test results
                 hasCarrier      = cdCarried();
@@ -472,22 +472,24 @@ default {
                 // When the doll is carried the carrier has exclusive control
                 // This section will not be used for Dolly
                 //
+                //--------------------
+                // Uncarry Button
                 if (hasCarrier) {
                     // Doll has carrier - but who clicked her key?
 
                     //--------------------
                     // ...Carrier?
                     if (isCarrier) {
-                        msg = "Uncarry frees " + dollName + " when you are done with " + pronounHerDoll + ". ";
-                        menu = ["Uncarry"];
-                        if (collapsed) msg += "(Doll is collapsed.) ";
+                        menuMessage = "Uncarry frees " + dollName + " when you are done with " + pronounHerDoll + ". ";
+                        menuButtons = ["Uncarry"];
+                        if (collapsed) menuMessage += "(Doll is collapsed.) ";
                     }
 
                     //--------------------
                     // ...Controller (NOT Dolly)
                     else if (cdIsController(lmID)) {
-                        msg = dollName + " is being carried by " + carrierName + ". ";
-                        menu = ["Uncarry"];
+                        menuMessage = dollName + " is being carried by " + carrierName + ". ";
+                        menuButtons = ["Uncarry"];
                     }
 
                     //--------------------
@@ -513,17 +515,17 @@ default {
                 if (isDoll) {
 
                     // Give Dolly options only if not posed
-                    if (poseAnimation == ANIMATION_NONE) menu += [ "Options..." ];
+                    if (poseAnimation == ANIMATION_NONE) menuButtons += [ "Options..." ];
                 }
 
                 else {
                     // Give controllers access to options
-                    if (isController) menu += "Options...";
+                    if (isController) menuButtons += "Options...";
                 }
 
                 //--------------------
                 // Help Button
-                menu += [ "Help..." ];
+                menuButtons += [ "Help..." ];
 
                 // Standard Main Menu
                 //
@@ -545,26 +547,25 @@ default {
                     //--------------------
                     // Visible & Lock/Unlock Button
                     if (isDoll) {
-                        menu += "Visible";
+                        menuButtons += "Visible";
                         if (rlvOk) {
                             if (keyLocked) {
 #ifdef ADULT_MODE
                                 if (!hardcore)
 #endif
-                                    menu += "Unlock";
+                                    menuButtons += "Unlock";
                             }
-                            else menu += "Lock";
+                            else menuButtons += "Lock";
                         }
                     }
 
                     //--------------------
                     // Unwind Button
                     if (!isDoll) {
-                        manpage = "communitydoll.htm";
 
                         // Toucher is not Doll.... could be anyone
-                        msg =  dollName + " is a doll and likes to be treated like a doll. So feel free to use these options. ";
-                        menu += "Unwind";
+                        menuMessage =  dollName + " is a doll and likes to be treated like a doll. So feel free to use these options. ";
+                        menuButtons += "Unwind";
                     }
 
                     //--------------------
@@ -579,10 +580,10 @@ default {
 
                         if (outfitFolder != "") {
                             if (isDoll) {
-                                if (canDressSelf) menu += "Outfits...";
+                                if (canDressSelf) menuButtons += "Outfits...";
                             }
                             else {
-                                if (allowDress || isController) menu += "Outfits...";
+                                if (allowDress || isController) menuButtons += "Outfits...";
                             }
                         }
 #ifdef DEVELOPER_MODE
@@ -600,7 +601,7 @@ default {
 
                             if (typeLockExpire == 0) {
                                 // No difference?!
-                                menu += "Types...";
+                                menuButtons += "Types...";
                             }
                         }
                     }
@@ -615,13 +616,13 @@ default {
 
                         if (arePosesPresent()) {
                             if (poseAnimation != ANIMATION_NONE) {
-                                msg += "Doll is currently posed. ";
+                                menuMessage += "Doll is currently posed. ";
 
                                 // If accessor is Dolly... allow Dolly to pose and unpose,
                                 // but NOT when posed by someone else.
 
                                 if (isDoll) {
-                                    if (isDollSelfPosed) menu += [ "Poses...", "Unpose" ];
+                                    if (isDollSelfPosed) menuButtons += [ "Poses...", "Unpose" ];
                                 }
 
                                 // If accessor is NOT Dolly... allow the public access if
@@ -631,14 +632,14 @@ default {
 
                                 else {
                                     if (isController || allowPose)
-                                        menu += [ "Poses...", "Unpose" ];
+                                        menuButtons += [ "Poses...", "Unpose" ];
                                     else if (isDollSelfPosed)
-                                        menu += [ "Unpose" ];
+                                        menuButtons += [ "Unpose" ];
                                 }
                             }
                             else {
                                 // Notice again: Carrier can only pose Dolly if permitted.
-                                if ((!isDoll && allowPose) || isDoll || isController) menu += "Poses...";
+                                if ((!isDoll && allowPose) || isDoll || isController) menuButtons += "Poses...";
                             }
                         }
                     }
@@ -655,8 +656,8 @@ default {
 
                             // Dolly can be carried if allowed, and Controller can at any time
                             if (allowCarry || isController) {
-                                msg += "Carry option picks up " + dollName + " and temporarily makes the Dolly exclusively yours. ";
-                                menu += "Carry";
+                                menuMessage += "Carry option picks up " + dollName + " and temporarily makes the Dolly exclusively yours. ";
+                                menuButtons += "Carry";
                             }
                         }
                     }
@@ -670,12 +671,12 @@ default {
 
                             // Only show for Slut Dollies - or hardcore dollies
                             if ((dollType == "Slut") || (isDoll && canDressSelf) || (allowDress && allowStrip)) {
-                                menu += "Strip";
+                                menuButtons += "Strip";
                             }
 
                             // Otherwise, show if Strip is allowed, and Dress is allowed
                             else if (allowStrip && allowDress) {
-                                if (isController || isCarrier || isDoll) menu += "Strip";
+                                if (isController || isCarrier || isDoll) menuButtons += "Strip";
                             }
                         }
                     }
@@ -692,32 +693,32 @@ default {
                     if (allowSelfWind) {
                         if (keyLimit - timeLeftOnKey > 30) {
 #ifdef SINGLE_SELF_WIND
-                            if (lastWinderID != dollID) menu += [ "Wind" ];
+                            if (lastWinderID != dollID) menuButtons += [ "Wind" ];
 #else
-                            menu += [ "Wind" ];
+                            menuButtons += [ "Wind" ];
 #endif
                         }
-                        else menu += [ "-" ];
+                        else menuButtons += [ "-" ];
                     }
                 }
                 else {
                     // Anyone can wind Dolly :)
-                    if (keyLimit - timeLeftOnKey > 30) menu += [ "Wind" ];
-                    else menu += [ "-" ];
+                    if (keyLimit - timeLeftOnKey > 30) menuButtons += [ "Wind" ];
+                    else menuButtons += [ "-" ];
                 }
 
                 //--------------------
                 // END OF BUTTONS
 
 #ifdef DEVELOPER_MODE
-                if (rlvOk == UNSET) msg += "Still checking for RLV support some features unavailable. ";
+                if (rlvOk == UNSET) menuMessage += "Still checking for RLV support some features unavailable. ";
                 else
 #endif
                 if (rlvOk != TRUE) {
-                    msg += "No RLV detected; therefore, some features are unavailable. ";
+                    menuMessage += "No RLV detected; therefore, some features are unavailable. ";
                 }
 
-                msg += "See " + WEB_DOMAIN + manpage + " for more information. "
+                menuMessage += infoPage
 #ifdef DEVELOPER_MODE
                 + "(Key is in Developer Mode.) "
                 + "\n\nCurrent region FPS is " + formatFloat(llGetRegionFPS(),1) + " FPS and time dilation is " + formatFloat(llGetRegionTimeDilation(),3) + "."
@@ -725,25 +726,27 @@ default {
                 ;
 
                 if (isDoll) {
-                    msg += "\n\nCurrently listening on channel " + (string)chatChannel + " with prefix " + chatPrefix;
+                    menuMessage += "\n\nCurrently listening on channel " + (string)chatChannel + " with prefix " + chatPrefix;
                 }
 
-                //menu = llListSort(menu, 1, 1);
+                //menuButtons = llListSort(menuButtons, 1, 1);
 
                 // This is needed because we want to sort by name;
                 // this section puts the checkmark marker on both
                 // keys by replacing them within the list - and thus
                 // not disturbing the alphabetic order
 
-                if ((i = llListFindList(menu, ["Visible"])) != NOT_FOUND) menu = llListReplaceList(menu, cdGetButton("Visible", lmID, isVisible, 0), i, i);
+                if ((i = llListFindList(menuButtons, ["Visible"])) != NOT_FOUND) menuButtons = llListReplaceList(menuButtons, cdGetButton("Visible", lmID, isVisible, 0), i, i);
 
-                msg = timeLeftMsg + msg;
+                menuMessage = timeLeftMsg + menuMessage;
                 timeLeftMsg = "";
 
-                if (llGetListLength(menu) > 12)
-                    llSay(DEBUG_CHANNEL,"Menu appears to have overfilled with buttons (" + (string)(llGetListLength(menu)));
+#ifdef DEVELOPER_MODE
+                if (llGetListLength(menuButtons) > 12)
+                    llSay(DEBUG_CHANNEL,"Menu appears to have overfilled with buttons (" + (string)(llGetListLength(menuButtons)));
+#endif
 
-                llDialog(lmID, msg, dialogSort(menu), dialogChannel);
+                llDialog(lmID, menuMessage, dialogSort(menuButtons), dialogChannel);
                 llSetTimerEvent(MENU_TIMEOUT);
             }
         }
