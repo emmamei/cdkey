@@ -1140,7 +1140,7 @@ default {
                                  if (afterSpace == "Self TP")    lmSendConfig("canSelfTP",    (string)(canSelfTP = isX));
                             else if (afterSpace == "Self Dress") lmSendConfig("canDressSelf", (string)(canDressSelf = isX));
                             else if (afterSpace == "Flying")     lmSendConfig("canFly",       (string)isX);
-                            else if (afterSpace == "Force TP")   lmSendConfig("autoTP",       (string)isX);
+                            else if (afterSpace == "Reject TP")  lmSendConfig("canRejectTP",  (string)isX);
                             else isRestriction = 0;
                         }
                         else if (isX && isDoll) {
@@ -1148,7 +1148,7 @@ default {
                                  if (afterSpace == "Self TP")    llOwnerSay("The Self TP option cannot be re-enabled by you.");
                             else if (afterSpace == "Self Dress") llOwnerSay("The Self Dress option cannot be re-enabled by you.");
                             else if (afterSpace == "Flying")     llOwnerSay("The Flying option cannot be re-enabled by you.");
-                            else if (afterSpace == "Force TP")   llOwnerSay("The Force TP option cannot be re-enabled by you.");
+                            else if (afterSpace == "Reject TP")  llOwnerSay("The Reject TP option cannot be re-enabled by you.");
                             else isRestriction = 0;
                         }
 
@@ -1160,7 +1160,6 @@ default {
                             //----------------------------------------
                             // Operations
                                  if (afterSpace == "Type Hovertext")     lmSendConfig("typeHovertext",   (string)isX);
-                            //else if (afterSpace == "Phrases")       lmSendConfig("showPhrases",   (string)(showPhrases = isX));
 #ifdef HOMING_BEACON
                             // Automatic return home after collapse (once time is up)
                             else if (afterSpace == "Homing Beacon") lmSendConfig("homingBeacon",  (string)isX);

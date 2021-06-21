@@ -135,9 +135,9 @@ rlvRestoreRestritions() {
     //
     // In this, rlvDefaultBaseCmd is much more flexible than the other defaults
     //
-    if (autoTP)     rlvBase += "accepttp=n,";       else rlvBase += "accepttp=y,";
-    if (!canSelfTP) rlvBase += "tplm=n,tploc=n,";   else rlvBase += "tplm=y,tploc=y,";
-    if (!canFly)    rlvBase += "fly=n,";            else rlvBase += "fly=y,";
+    if (canRejectTP) rlvBase += "accepttp=y,";       else rlvBase += "accepttp=n,";
+    if (canSelfTP)   rlvBase += "tplm=y,tploc=y,";   else rlvBase += "tplm=n,tploc=n,";
+    if (canFly)      rlvBase += "fly=y,";            else rlvBase += "fly=n,";
 
     // rlvBase could theoretically be nil
     if (rlvBase != "")
@@ -302,16 +302,14 @@ default {
 #ifdef ADULT_MODE
             else if (name == "hardcore")          {     hardcore = (integer)value; manageOutfitLock(); }
 #endif
-#ifdef EMERGENCY_TP
-            else if (name == "autoTP")            {       autoTP = (integer)value; rlvSetIf("accepttp", !autoTP); }
-#endif
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")        {   debugLevel = (integer)value; }
 #endif
             else if (c == "c") {
                      if (name == "canSelfTP")     {    canSelfTP = (integer)value; rlvSetIf("tplm", canSelfTP); rlvSetIf("tploc", canSelfTP); }
-                else if (name == "canDressSelf")  { canDressSelf = (integer)value; manageOutfitLock(); }
+                else if (name == "canRejectTP")   {  canRejectTP = (integer)value; rlvSetIf("accepttp", canRejectTP); }
                 else if (name == "canFly")        {       canFly = (integer)value; rlvSetIf("fly", canFly); }
+                else if (name == "canDressSelf")  { canDressSelf = (integer)value; manageOutfitLock(); }
                 else if (name == "collapsed")     {    collapsed = (integer)value; manageOutfitLock(); }
                 else if (name == "controllers") {
                     if (split == [""]) controllerList = [];

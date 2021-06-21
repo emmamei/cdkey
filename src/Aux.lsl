@@ -128,22 +128,24 @@ default {
                             "mustAgreeToType",
                             "collapseTime",
                             "collapsed",
-                            "autoTP",
                             "showPhrases",
                             "rlvSupport",
                             "rlvOk",
+                            "dollDisplayName",
+                            "poseAnimation",
+                            "poseSilence",
+
                             "allowCarry",
                             "allowDress",
                             "allowTypes",
                             "allowPose",
-                            "canDressSelf",
-                            "canFly",
                             "allowRepeatWind",
                             "allowSelfWind",
-                            "dollDisplayName",
-                            "poseAnimation",
-                            "poseSilence",
+
+                            "canDressSelf",
+                            "canFly",
                             "canSelfTP",
+                            "canRejectTP",
 #ifdef ADULT_MODE
                             "allowStrip",
                             "hardcore",
@@ -180,22 +182,25 @@ default {
             else if (name == "mustAgreeToType")       mustAgreeToType = (integer)value;
             else if (name == "collapseTime")             collapseTime = (integer)value;
             else if (name == "collapsed")                   collapsed = (integer)value;
-            else if (name == "autoTP")                         autoTP = (integer)value;
             else if (name == "showPhrases")               showPhrases = (integer)value;
             else if (name == "rlvSupport")                 rlvSupport = (integer)value;
             else if (name == "rlvOk")                           rlvOk = (integer)value;
+
             else if (name == "allowCarry")                 allowCarry = (integer)value;
             else if (name == "allowDress")                 allowDress = (integer)value;
             else if (name == "allowTypes")                 allowTypes = (integer)value;
             else if (name == "allowPose")                   allowPose = (integer)value;
-            else if (name == "canDressSelf")             canDressSelf = (integer)value;
-            else if (name == "canFly")                         canFly = (integer)value;
             else if (name == "allowRepeatWind")       allowRepeatWind = (integer)value;
             else if (name == "allowSelfWind")           allowSelfWind = (integer)value;
+
+            else if (name == "canSelfTP")                   canSelfTP = (integer)value;
+            else if (name == "canRejectTP")               canRejectTP = (integer)value;
+            else if (name == "canDressSelf")             canDressSelf = (integer)value;
+            else if (name == "canFly")                         canFly = (integer)value;
+
             else if (name == "dollDisplayName")       dollDisplayName = value;
             else if (name == "poseAnimation")           poseAnimation = value;
             else if (name == "poseSilence")               poseSilence = (integer)value;
-            else if (name == "canSelfTP")                   canSelfTP = (integer)value;
 #ifdef ADULT_MODE
             else if (name == "allowStrip")                 allowStrip = (integer)value;
             else if (name == "hardcore")                     hardcore = (integer)value;
@@ -611,10 +616,9 @@ Parent - Take care choosing your parents; they have great control over Dolly and
 #ifdef ADULT_MODE
                     }
 #endif
-
-#ifdef EMERGENCY_TP
-                    plusList += cdGetButton("Force TP", lmID, autoTP, 1);
-#endif
+                    // I could add "Reject TP" to hardcore but with an option that extreme...
+                    // Dolly needs to actively enable it.
+                    plusList += cdGetButton("Reject TP", lmID, canRejectTP, 1);
                     plusList += "Back...";
                 }
                 else {

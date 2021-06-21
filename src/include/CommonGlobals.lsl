@@ -58,12 +58,12 @@ integer allowStrip          = 0;
 integer hardcore;
 #endif
 integer isAFK               = 0; // current AFK state
-integer autoTP;
 integer busyIsAway;
 integer canAFK              = 1;
 integer canDressSelf        = 1;
 integer canFly              = 1;
 integer canSelfTP           = 1;
+integer canRejectTP         = 1;
 integer chatChannel         = 75;
 integer code;
 integer collapsed;

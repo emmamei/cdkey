@@ -109,7 +109,7 @@ doXstats() {
 #endif
     s += "\n";
 
-    cdCapability(autoTP,               "Doll can", "be force teleported");
+    cdCapability(canRejectTP,          "Doll can", "reject incoming teleports");
     cdCapability(canFly,               "Doll can", "fly");
     cdCapability(canSelfTP,            "Doll can", "teleport " + _her_ + " own self");
     cdCapability(allowRepeatWind,      "Doll can", "be multiply wound");
@@ -782,22 +782,23 @@ default {
 #ifdef DEVELOPER_MODE
                              "debugLevel",
 #endif
-#ifdef EMERGENCY_TP
-                             "autoTP",
-#endif
                              "timeLeftOnKey",
                              "rlvOk",
                              "keyLimit",
                              "blacklist",
+                             "collapsed",
+
                              "allowRepeatWind",
                              "allowCarry",
                              "allowDress",
                              "allowTypes",
                              "allowPose",
-                             "collapsed",
+
+                             "canRejectTP",
                              "canDressSelf",
                              "canFly",
                              "canSelfTP",
+
                              "carrierID",
                              "carrierName",
                              "configured",
@@ -844,21 +845,23 @@ default {
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")             debugLevel = integerValue;
 #endif
-#ifdef EMERGENCY_TP
-            else if (name == "autoTP")                     autoTP = integerValue;
-#endif
             else if (name == "rlvOk")                       rlvOk = integerValue;
             else if (name == "keyLimit")                 keyLimit = integerValue;
+
             else if (name == "allowRepeatWind")   allowRepeatWind = integerValue;
             else if (name == "allowCarry")             allowCarry = integerValue;
             else if (name == "allowDress")             allowDress = integerValue;
             else if (name == "allowTypes")             allowTypes = integerValue;
             else if (name == "allowPose")               allowPose = integerValue;
+
             else if (name == "poseSilence")           poseSilence = integerValue;
             else if (name == "collapsed")               collapsed = integerValue;
+
+            else if (name == "canRejectTP")           canRejectTP = integerValue;
             else if (name == "canDressSelf")         canDressSelf = integerValue;
             else if (name == "canFly")                     canFly = integerValue;
             else if (name == "canSelfTP")               canSelfTP = integerValue;
+
             else if (name == "configured")             configured = integerValue;
             else if (name == "collapseTime")         collapseTime = integerValue;
             else if (name == "poseLockExpire")     poseLockExpire = integerValue;

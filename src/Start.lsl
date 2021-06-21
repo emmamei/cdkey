@@ -118,7 +118,11 @@ processBooleanSetting(string settingName, string settingValue) {
             // Special handling for ghost setting: configSettingValue is a boolean,
             // but result is to change the visibility value...
             //
+            // Special handling, too, for auto tp setting: "auto tp" maps onto canRejectTP
+            // but inverted: so we invert the value setting. (The term auto tp is historical.)
+            //
             if (settingName == "ghost") lmSendConfig("visibility",(string)GHOST_VISIBILITY);
+            else if (settingName == "auto tp") lmSendConfig("canRejectTP",(string)FALSE);
             else lmSendConfig(settingName, "1");
             break;
 
@@ -131,7 +135,8 @@ processBooleanSetting(string settingName, string settingValue) {
         case "false":
         case "0": {
 
-            lmSendConfig(settingName, "0");
+            if (settingName == "auto tp") lmSendConfig("canRejectTP",(string)TRUE);
+            else lmSendConfig(settingName, "0");
             break;
 
         }
@@ -185,9 +190,8 @@ processConfiguration(string configSettingName, string configSettingValue) {
                       "strippable",
                       "hardcore",
 #endif
-#ifdef EMERGENCY_TP
                       "auto tp",
-#endif
+                      "can reject tp",
                       "pose silence",
                       "busy is away",
                       "can fly",
@@ -209,7 +213,8 @@ processConfiguration(string configSettingName, string configSettingValue) {
                          "allowStrip",
                          "hardcore",
 #endif
-                         "autoTP",
+                         "canRejectTP",
+                         "canRejectTP",
                          "poseSilence",
                          "busyIsAway",
                          "canFly",
