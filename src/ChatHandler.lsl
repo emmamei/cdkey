@@ -106,9 +106,7 @@ doXstats() {
 #endif
     s += "\n";
 
-#ifdef EMERGENCY_TP
     cdCapability(autoTP,               "Doll can", "be force teleported");
-#endif
     cdCapability(canFly,               "Doll can", "fly");
     cdCapability(canSelfTP,            "Doll can", "teleport " + pronounHerDoll + " own self");
     cdCapability(allowRepeatWind,      "Doll can", "be multiply wound");
@@ -1113,11 +1111,10 @@ default {
             //   * uncarry
             //
             if (!commandsPublic(chatCommand, param)) {
-#ifdef DEVELOPER_MODE
-                llOwnerSay("Command not recognized: \"" + chatCommand + "\"");
-#else
-                ;
-#endif
+                string errorMessage = "Command not recognized: \"" + chatCommand + "\"";
+
+                if (accessorIsDoll) llOwnerSay(errorMessage);
+                else cdSayTo(errorMessage,accessorID);
             }
         }
     }

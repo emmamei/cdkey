@@ -528,6 +528,10 @@ default {
             //string name = (string)split[1];
 
             if (menuChoice == "Outfits..." && !tempDressingLock) {
+
+                if (dresserID == NULL_KEY)
+                    topFolder = outfitFolder; // Reset top level if "new" dresser in progress
+
                 // Check for dresser lockout
                 if (!isDresser(lmID)) {
                     cdSayTo("You go to look in Dolly's closet for clothes, and find that " + llGetDisplayName(dresserID) + " is already there looking", lmID);

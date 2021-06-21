@@ -135,9 +135,7 @@ rlvRestoreRestritions() {
     //
     // In this, rlvDefaultBaseCmd is much more flexible than the other defaults
     //
-#ifdef EMERGENCY_TP
     if (autoTP)     rlvBase += "accepttp=n,";       else rlvBase += "accepttp=y,";
-#endif
     if (!canSelfTP) rlvBase += "tplm=n,tploc=n,";   else rlvBase += "tplm=y,tploc=y,";
     if (!canFly)    rlvBase += "fly=n,";            else rlvBase += "fly=y,";
 

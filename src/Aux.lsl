@@ -128,9 +128,7 @@ default {
                             "mustAgreeToType",
                             "collapseTime",
                             "collapsed",
-#ifdef EMERGENCY_TP
                             "autoTP",
-#endif
                             "showPhrases",
                             "rlvSupport",
                             "rlvOk",
@@ -182,9 +180,7 @@ default {
             else if (name == "mustAgreeToType")       mustAgreeToType = (integer)value;
             else if (name == "collapseTime")             collapseTime = (integer)value;
             else if (name == "collapsed")                   collapsed = (integer)value;
-#ifdef EMERGENCY_TP
             else if (name == "autoTP")                         autoTP = (integer)value;
-#endif
             else if (name == "showPhrases")               showPhrases = (integer)value;
             else if (name == "rlvSupport")                 rlvSupport = (integer)value;
             else if (name == "rlvOk")                           rlvOk = (integer)value;

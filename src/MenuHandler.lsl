@@ -1140,9 +1140,7 @@ default {
                                  if (afterSpace == "Self TP")    lmSendConfig("canSelfTP",    (string)(canSelfTP = isX));
                             else if (afterSpace == "Self Dress") lmSendConfig("canDressSelf", (string)(canDressSelf = isX));
                             else if (afterSpace == "Flying")     lmSendConfig("canFly",       (string)isX);
-#ifdef EMERGENCY_TP
                             else if (afterSpace == "Force TP")   lmSendConfig("autoTP",       (string)isX);
-#endif
                             else isRestriction = 0;
                         }
                         else if (isX && isDoll) {

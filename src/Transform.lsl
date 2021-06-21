@@ -753,18 +753,12 @@ default {
 
                 if (optName == "Verify Type") {
                     lmSendConfig("mustAgreeToType", (string)(mustAgreeToType = (curState == CROSS)));
-                    //if (mustAgreeToType) llOwnerSay("Changes in Doll Types will be verified with you first.");
-                    //else llOwnerSay("Changes in Doll Types will not be verified with you first.");
                 }
                 else if (optName == "Show Phrases") {
                     lmSendConfig("showPhrases", (string)(showPhrases = (curState == CROSS)));
-                    //if (showPhrases) llOwnerSay("Hypnotic phrases will be displayed.");
-                    //else llOwnerSay("No hypnotic phrases will be displayed.");
                 }
                 else if (optName == "Type Hovertext") {
                     lmSendConfig("typeHovertext", (string)(typeHovertext = (curState == CROSS)));
-                    //if (typeHovertext) llOwnerSay("Hypnotic phrases will be displayed.");
-                    //else llOwnerSay("No hypnotic phrases will be displayed.");
                 }
 
                 list choices;

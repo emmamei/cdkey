@@ -209,9 +209,7 @@ processConfiguration(string configSettingName, string configSettingValue) {
                          "allowStrip",
                          "hardcore",
 #endif
-#ifdef EMERGENCY_TP
                          "autoTP",
-#endif
                          "poseSilence",
                          "busyIsAway",
                          "canFly",
