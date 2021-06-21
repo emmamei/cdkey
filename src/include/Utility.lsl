@@ -25,6 +25,16 @@ string wwGetSLUrl() {
 list dialogSort(list srcButtons) {
     list outButtons;
 
+    // This function realigns the buttons so we can
+    // get the proper buttons in the proper places:
+    //
+    // (Placeholders only: in actual lists, strings are
+    // required, not integers.)
+    //
+    // INPUT: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ]
+    //
+    // OUTPUT: [ 10, 11, 12, 7, 8, 9, 4, 5, 6, 1, 2, 3 ]
+
     while (llGetListLength(srcButtons) != 0) {
         outButtons += (list)srcButtons[-3, -1];
         srcButtons = llDeleteSubList(srcButtons, -3, -1);
