@@ -460,7 +460,7 @@ default {
 
                     llSetTimerEvent(timerRate = adjustTimer());
             }
-            else if (name == "poseSilence")         poseSilence = (integer)value;
+            else if (name == "canTalkInPose")     canTalkInPose = (integer)value;
             else if (name == "carryExpire")         carryExpire = (integer)value;
             else if (name == "carrierID")             carrierID = value;
             else if (name == "rlvOk")                     rlvOk = (integer)value;
@@ -572,7 +572,8 @@ default {
 
                 clearPoseAnimation();
 
-                if (poseSilence) lmRunRlv("sendchat=y");
+                // Whether Dolly can or can't talk in pose is irrelevant here
+                lmRunRlv("sendchat=y");
 
                 // if we have carrier, start following them again
                 debugSay(2,"DEBUG-FOLLOW","startFollow(): from Unpose button");
@@ -634,18 +635,18 @@ default {
                 else expire = (string)(llGetUnixTime() + POSE_TIMEOUT);
                 lmSetConfig("poseLockExpire", expire);
 
-                if (poseSilence) lmRunRlv("sendchat=n");
+                if (!canTalkInPose) lmRunRlv("sendchat=n");
             }
         }
         else if (code == RLV_RESET) {
             rlvOk = (integer)split[0];
 
-            if (rlvOk == TRUE) {
+            if (rlvOk) {
                 // This should only happen when the RLVcheck is
                 // done during login or attach
                 if (poseAnimation != ANIMATION_NONE) {
                     setPoseAnimation(poseAnimation); 
-                    if (poseSilence) lmRunRlv("sendchat=n");
+                    if (!canTalkInPose) lmRunRlv("sendchat=n");
                 }
             }
         }

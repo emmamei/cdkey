@@ -55,15 +55,19 @@ integer allowSelfWind       = 1;
 integer allowTypes          = 1;
 #ifdef ADULT_MODE
 integer allowStrip          = 0;
+
 integer hardcore;
 #endif
 integer isAFK               = 0; // current AFK state
 integer busyIsAway;
+
 integer canAFK              = 1;
 integer canDressSelf        = 1;
 integer canFly              = 1;
 integer canSelfTP           = 1;
 integer canRejectTP         = 1;
+integer canTalkInPose       = 1;
+
 integer chatChannel         = 75;
 integer code;
 integer collapsed;
@@ -80,7 +84,6 @@ integer safeMode;
 integer offlineMode         = TRUE;
 integer optHeader;
 integer pleasureDoll;
-integer poseSilence         = 1;
 
 integer remoteSeq;
 integer rlvOk               = -1; // UNSET

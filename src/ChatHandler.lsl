@@ -131,7 +131,7 @@ doXstats() {
     cdCapability(allowDress,           "Doll can", "be dressed by the public");
     cdCapability(allowCarry,           "Doll can", "be carried by the public");
     cdCapability(canDressSelf,         "Doll can", "dress by " + _her_ + " own self");
-    cdCapability(poseSilence,          "Doll is",  "silenced while posing");
+    cdCapability(canTalkInPose,        "Doll is",  "able to talk while posed");
 
     if (windRate > 0) s += "\nCurrent wind rate is " + formatFloat2(windRate) + ".\n";
     else s += "Key is not winding down.\n";
@@ -807,7 +807,7 @@ default {
                              "dollType",
                              "dollGender",
                              "dollDisplayName",
-                             "poseSilence",
+                             "canTalkInPose",
                              "poseAnimation",
                              "poserID",
                              "poserName",
@@ -854,9 +854,9 @@ default {
             else if (name == "allowTypes")             allowTypes = integerValue;
             else if (name == "allowPose")               allowPose = integerValue;
 
-            else if (name == "poseSilence")           poseSilence = integerValue;
             else if (name == "collapsed")               collapsed = integerValue;
 
+            else if (name == "canTalkInPose")       canTalkInPose = integerValue;
             else if (name == "canRejectTP")           canRejectTP = integerValue;
             else if (name == "canDressSelf")         canDressSelf = integerValue;
             else if (name == "canFly")                     canFly = integerValue;

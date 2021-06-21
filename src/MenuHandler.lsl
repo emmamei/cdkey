@@ -249,7 +249,7 @@ default {
                              "debugLevel",
 #endif
                              "poserID",
-                             "poseSilence",
+                             "canTalkInPose",
                              "pronounHerDoll",
                              "pronounSheDoll",
                              "typeHovertext",
@@ -313,7 +313,7 @@ default {
             else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
             else if (name == "poserID")                   poserID = (key)value;
-            else if (name == "poseSilence")           poseSilence = (integer)value;
+            else if (name == "canTalkInPose")       canTalkInPose = (integer)value;
             else if (name == "pronounHerDoll")     pronounHerDoll = value;
             else if (name == "pronounSheDoll")     pronounSheDoll = value;
             else if (name == "typeHovertext")               typeHovertext = (integer)value;
@@ -1122,33 +1122,30 @@ default {
 
                         //----------------------------------------
                         // Abilities
-                        if (afterSpace == "Silent Pose") {
-                            // if X is true - this value can be changed -OR-
-                            // if is NOT Dolly - this value can be changed -OR-
-                            // if is a Controller - this value can be changed
-                            //
-                            // otherwise - if this is a Dolly with Controller - cannot make this setting false.
-                            if (isX || !isDoll || isController) lmSendConfig("poseSilence", (string)isX);
-                            else if (!isX && isDoll) llOwnerSay("The Silent Pose cannot be disabled by you.");
-                        }
-                        else if (!isX || !isDoll || isController) {
+                        if (!isX || !isDoll || isController) {
                             // if X is false - these values can be changed -OR-
                             // if is not Doll - these values can be changed -OR-
                             // if isController - these values can be changed
                             //
                             // However! if X is true and isDoll and is NOT Controller - then skip to next...
-                                 if (afterSpace == "Self TP")    lmSendConfig("canSelfTP",    (string)(canSelfTP = isX));
-                            else if (afterSpace == "Self Dress") lmSendConfig("canDressSelf", (string)(canDressSelf = isX));
-                            else if (afterSpace == "Flying")     lmSendConfig("canFly",       (string)isX);
-                            else if (afterSpace == "Reject TP")  lmSendConfig("canRejectTP",  (string)isX);
+                            //
+                            // Note that with no other controllers, Dolly qualifies as a controller.
+                            // Note, too, that if Dolly HAS a controller, then Dolly will not see
+                            // the restrictions menu in that case anyway.
+                                 if (afterSpace == "Self TP")      lmSendConfig("canSelfTP",     (string)(canSelfTP = isX));
+                            else if (afterSpace == "Self Dress")   lmSendConfig("canDressSelf",  (string)(canDressSelf = isX));
+                            else if (afterSpace == "Talk in Pose") lmSendConfig("canTalkInPose", (string)(canTalkInPose = isX));
+                            else if (afterSpace == "Flying")       lmSendConfig("canFly",        (string)isX);
+                            else if (afterSpace == "Reject TP")    lmSendConfig("canRejectTP",   (string)isX);
                             else isRestriction = 0;
                         }
                         else if (isX && isDoll) {
                             // Dolly (accessor) is trying to enable: reject
-                                 if (afterSpace == "Self TP")    llOwnerSay("The Self TP option cannot be re-enabled by you.");
-                            else if (afterSpace == "Self Dress") llOwnerSay("The Self Dress option cannot be re-enabled by you.");
-                            else if (afterSpace == "Flying")     llOwnerSay("The Flying option cannot be re-enabled by you.");
-                            else if (afterSpace == "Reject TP")  llOwnerSay("The Reject TP option cannot be re-enabled by you.");
+                                 if (afterSpace == "Self TP")      llOwnerSay("The Self TP option cannot be re-enabled by you.");
+                            else if (afterSpace == "Self Dress")   llOwnerSay("The Self Dress option cannot be re-enabled by you.");
+                            else if (afterSpace == "Flying")       llOwnerSay("The Flying option cannot be re-enabled by you.");
+                            else if (afterSpace == "Reject TP")    llOwnerSay("The Reject TP option cannot be re-enabled by you.");
+                            else if (afterSpace == "Talk in Pose") llOwnerSay("The Talk in Pose option cannot be re-enabled by you.");
                             else isRestriction = 0;
                         }
 

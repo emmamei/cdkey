@@ -121,8 +121,11 @@ processBooleanSetting(string settingName, string settingValue) {
             // Special handling, too, for auto tp setting: "auto tp" maps onto canRejectTP
             // but inverted: so we invert the value setting. (The term auto tp is historical.)
             //
+            // Special handling for pose silence setting likewise.
+            //
             if (settingName == "ghost") lmSendConfig("visibility",(string)GHOST_VISIBILITY);
             else if (settingName == "auto tp") lmSendConfig("canRejectTP",(string)FALSE);
+            else if (settingName == "pose silence") lmSendConfig("canTalkInPose",(string)FALSE);
             else lmSendConfig(settingName, "1");
             break;
 
@@ -136,6 +139,7 @@ processBooleanSetting(string settingName, string settingValue) {
         case "0": {
 
             if (settingName == "auto tp") lmSendConfig("canRejectTP",(string)TRUE);
+            else if (settingName == "pose silence") lmSendConfig("canTalkInPose",(string)TRUE);
             else lmSendConfig(settingName, "0");
             break;
 
@@ -193,6 +197,7 @@ processConfiguration(string configSettingName, string configSettingValue) {
                       "auto tp",
                       "can reject tp",
                       "pose silence",
+                      "can talk in pose",
                       "busy is away",
                       "can fly",
                       "poseable",
@@ -215,7 +220,8 @@ processConfiguration(string configSettingName, string configSettingValue) {
 #endif
                          "canRejectTP",
                          "canRejectTP",
-                         "poseSilence",
+                         "canTalkInPose",
+                         "canTalkInPose",
                          "busyIsAway",
                          "canFly",
                          "allowPose",

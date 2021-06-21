@@ -133,7 +133,6 @@ default {
                             "rlvOk",
                             "dollDisplayName",
                             "poseAnimation",
-                            "poseSilence",
 
                             "allowCarry",
                             "allowDress",
@@ -142,6 +141,7 @@ default {
                             "allowRepeatWind",
                             "allowSelfWind",
 
+                            "canTalkInPose",
                             "canDressSelf",
                             "canFly",
                             "canSelfTP",
@@ -200,7 +200,7 @@ default {
 
             else if (name == "dollDisplayName")       dollDisplayName = value;
             else if (name == "poseAnimation")           poseAnimation = value;
-            else if (name == "poseSilence")               poseSilence = (integer)value;
+            else if (name == "canTalkInPose")           canTalkInPose = (integer)value;
 #ifdef ADULT_MODE
             else if (name == "allowStrip")                 allowStrip = (integer)value;
             else if (name == "hardcore")                     hardcore = (integer)value;
@@ -236,15 +236,19 @@ default {
 
                     // This is a hack: this allows us to use the var hardcore to set
                     // these settings appropriately, no matter what hardcore is set to
-                    lmSendConfig("poseSilence",     (string)(    poseSilence =  hardcore));
+
+                    // These are disabled during hardcore mode
+                    lmSendConfig("canTalkInPose",   (string)(  canTalkInPose = !hardcore));
                     lmSendConfig("canDressSelf",    (string)(   canDressSelf = !hardcore));
                     lmSendConfig("canFly",          (string)(         canFly = !hardcore));
                     lmSendConfig("canSelfTP",       (string)(      canSelfTP = !hardcore));
-                    lmSetConfig( "keyLocked",       (string)(      keyLocked =  hardcore));
                     lmSendConfig("mustAgreeToType", (string)(mustAgreeToType = !hardcore));
                     lmSendConfig("allowSelfWind",   (string)(  allowSelfWind = !hardcore));
                     lmSendConfig("allowRepeatWind", (string)(allowRepeatWind = !hardcore));
+
+                    // These are enabled during hardcore mode
                     lmSendConfig("allowStrip",      (string)(     allowStrip =  hardcore));
+                    lmSetConfig( "keyLocked",       (string)(      keyLocked =  hardcore));
 
                     // Rather than locking dolly down, these open her up: thus, the
                     // setting of these is not set then reset; rather after setting,
@@ -273,18 +277,22 @@ default {
                         lmSendConfig("hardcore",        (string)(       hardcore = FALSE));
                         lmSendConfig("allowStrip",      (string)(     allowStrip = FALSE));
 #endif
-                        lmSendConfig("poseSilence",     (string)(    poseSilence = FALSE));
-                        lmSendConfig("canDressSelf",    (string)(   canDressSelf = TRUE));
-                        lmSendConfig("canFly",          (string)(         canFly = TRUE));
-                        lmSendConfig("canSelfTP",       (string)(      canSelfTP = TRUE));
-                        lmSetConfig( "keyLocked",       (string)(      keyLocked = FALSE));
-                        lmSendConfig("mustAgreeToType", (string)(mustAgreeToType = TRUE));
-                        lmSendConfig("allowSelfWind",   (string)(  allowSelfWind = TRUE));
-                        lmSendConfig("allowRepeatWind", (string)(allowRepeatWind = TRUE));
                         lmSendConfig("allowPose",       (string)(      allowPose = FALSE));
                         lmSendConfig("allowCarry",      (string)(     allowCarry = FALSE));
                         lmSendConfig("allowDress",      (string)(     allowDress = FALSE));
                         lmSendConfig("allowTypes",      (string)(     allowTypes = FALSE));
+                        lmSendConfig("allowSelfWind",   (string)(  allowSelfWind = TRUE));
+                        lmSendConfig("allowRepeatWind", (string)(allowRepeatWind = TRUE));
+
+                        lmSetConfig( "keyLocked",       (string)(      keyLocked = FALSE));
+
+                        lmSendConfig("canTalkInPose",   (string)(  canTalkInPose = TRUE));
+                        lmSendConfig("canDressSelf",    (string)(   canDressSelf = TRUE));
+                        lmSendConfig("canFly",          (string)(         canFly = TRUE));
+                        lmSendConfig("canSelfTP",       (string)(      canSelfTP = TRUE));
+
+                        lmSendConfig("mustAgreeToType", (string)(mustAgreeToType = TRUE));
+
                     }
 
                     break;
@@ -608,11 +616,10 @@ Parent - Take care choosing your parents; they have great control over Dolly and
 #ifdef ADULT_MODE
                     if (!hardcore) {
 #endif
-                        plusList += cdGetButton("Silent Pose", lmID, poseSilence, 1);
-                        plusList += cdGetButton("Self Dress", lmID, canDressSelf, 1);
-
-                        plusList += cdGetButton("Flying", lmID, canFly, 1);
-                        plusList += cdGetButton("Self TP", lmID, canSelfTP, 1);
+                        plusList += cdGetButton("Talk In Pose", lmID, canTalkInPose, 1);
+                        plusList += cdGetButton("Self Dress",   lmID, canDressSelf, 1);
+                        plusList += cdGetButton("Flying",       lmID, canFly, 1);
+                        plusList += cdGetButton("Self TP",      lmID, canSelfTP, 1);
 #ifdef ADULT_MODE
                     }
 #endif
