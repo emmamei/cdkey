@@ -459,13 +459,16 @@ default {
 
             if (menuChoice == "Help...") {
                 msg = "Here you can find various options to get help with your key and to connect with the community.";
-                list helpMenuList = [ "Join Group", "Visit Website", "Visit Blog", "Visit Development" ];
+                list helpMenuButtons = [ "Join Group", "Visit Website", "Visit Blog", "Visit Development" ];
 
                 if (isNotecardPresent(NOTECARD_HELP))
-                    helpMenuList += [ "Help Notecard" ];
+                    helpMenuButtons += "Help Notecard";
 
                 if (isLandmarkPresent(LANDMARK_CDHOME))
-                    helpMenuList += [ "Visit Dollhouse" ];
+                    helpMenuButtons += "Visit Dollhouse";
+
+                if (isObjectPresent(OBJECT_KEY))
+                    helpMenuButtons += "Get Key";
 
                 // Note - to do this Key handout properly, we'd need an infinite Key:
                 // a Key which contains a Key which contains a Key which contains a Key...
@@ -473,30 +476,33 @@ default {
                 //
 
                 if (cdIsDoll(lmID)) {
+#ifdef OPTIONAL_RLV
                     if (rlvOk == FALSE) {
-                        helpMenuList += "RLV"; // To be able to enable RLV when checker fails: one-way button
+                        helpMenuButtons += "RLV"; // To be able to enable RLV when checker fails: one-way button
                     }
-
-                    if (!collapsed) if (notPosed())
+#endif
+                    if (!collapsed) if (notPosed()) {
 
                         // This is to totally reset Dolly's worn body,
                         // using the ~normalself, ~normaloutfit,  and ~nude folders
                         //
                         // Note that Dolly cannot be posed and cannot be collapsed to access these
                         //
-                        if (rlvOk) helpMenuList += [ "Reset Body" ];
-                        helpMenuList += [ "Reset Key", "Update" ];
-                        //if (detachable) menu += [ "Detach" ];
+                        if (!cdHasControllers()) {
+                            if (rlvOk) helpMenuButtons += "Reset Body";
+                            helpMenuButtons += [ "Reset Key", "Update" ];
+                        }
+                    }
                 }
                 else {
-                    if (isObjectPresent(OBJECT_KEY))
-                        helpMenuList += [ "Get Key" ];
-
-                    if (cdIsController(lmID)) helpMenuList += "Reset Key";
+                    if (cdIsController(lmID)) {
+                        if (rlvOk) helpMenuButtons += "Reset Body";
+                        helpMenuButtons += "Reset Key";
+                    }
                 }
 
                 lmDialogListen();
-                llDialog(lmID, msg, [ "Back..." ] + dialogSort(helpMenuList), dialogChannel);
+                llDialog(lmID, msg, [ "Back..." ] + dialogSort(helpMenuButtons), dialogChannel);
             }
             else if (menuChoice == "Reset Body") {
                 lmInternalCommand("resetBody","",lmID);

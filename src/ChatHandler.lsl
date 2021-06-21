@@ -85,6 +85,9 @@ doStats() {
     //lmMemReport(1.0,accessorID);
 }
 
+#define _she_ pronounSheDoll
+#define _her_ pronounHerDoll
+
 doXstats() {
     string s = "Extended stats:\n\nDoll is " +
 #ifdef ADULT_MODE
@@ -108,7 +111,7 @@ doXstats() {
 
     cdCapability(autoTP,               "Doll can", "be force teleported");
     cdCapability(canFly,               "Doll can", "fly");
-    cdCapability(canSelfTP,            "Doll can", "teleport " + pronounHerDoll + " own self");
+    cdCapability(canSelfTP,            "Doll can", "teleport " + _her_ + " own self");
     cdCapability(allowRepeatWind,      "Doll can", "be multiply wound");
     cdCapability(allowTypes,           "Doll is", "a transforming doll");
 
@@ -117,7 +120,6 @@ doXstats() {
 
     cdCapability(( poseLockExpire > 0), "Doll pose is",  "currently locked");
     cdCapability(( wearLockExpire > 0), "Doll's clothing is",  "currently locked on");
-    cdCapability((lowScriptExpire > 0), "Doll is",  "currently in powersave mode");
 #ifdef ADULT_MODE
     cdCapability(allowStrip,           "Doll is", "strippable");
     cdCapability(hardcore,             "Doll is", "currently in hardcore mode");
@@ -128,7 +130,7 @@ doXstats() {
     cdCapability(allowPose,            "Doll can", "be posed by the public");
     cdCapability(allowDress,           "Doll can", "be dressed by the public");
     cdCapability(allowCarry,           "Doll can", "be carried by the public");
-    cdCapability(canDressSelf,         "Doll can", "dress by " + pronounHerDoll + " own self");
+    cdCapability(canDressSelf,         "Doll can", "dress by " + _her_ + " own self");
     cdCapability(poseSilence,          "Doll is",  "silenced while posing");
 
     if (windRate > 0) s += "\nCurrent wind rate is " + formatFloat2(windRate) + ".\n";
@@ -681,9 +683,9 @@ integer commandsPublic(string chatCommand, string param) {
                 if (poseDoesNotExpire) break;
 
                 if (poserID != dollID) {
-                    llOwnerSay("Dolly tries to wrest control of " + pronounHerDoll +
-                        " body from the pose but " + pronounSheDoll +
-                        " is no longer in control of " + pronounHerDoll + " form.");
+                    llOwnerSay("Dolly tries to wrest control of " + _her_ +
+                        " body from the pose but " + _she_ +
+                        " is no longer in control of " + _her_ + " form.");
                 }
                 else {
                     cdSayTo("Dolly feels her pose release, and stretches her limbs, so long frozen.",accessorID);
@@ -692,7 +694,7 @@ integer commandsPublic(string chatCommand, string param) {
             }
             else if (accessorIsController || accessorIsCarrier) {
                 if (poserID == dollID) {
-                    llOwnerSay("You release Dolly's body from the pose that " + pronounSheDoll + " activated.");
+                    llOwnerSay("You release Dolly's body from the pose that " + _she_ + " activated.");
                     lmMenuReply("Unpose", accessorName, accessorID);
                 }
                 else if (poserID == accessorID) {
