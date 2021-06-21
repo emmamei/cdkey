@@ -21,7 +21,6 @@
 
 #define nothingWorn(c,d) ((c) != "0") && ((c) != "1") && ((d) != "0") && ((d) != "1")
 #define dressVia(a) listInventoryOn(a)
-#define clearDresser() dresserID = NULL_KEY
 #define rlvLockKey()    lmRunRlv("detach=n")
 #define rlvUnlockKey()  lmRunRlv("detach=y")
 
@@ -87,6 +86,11 @@ integer outfitPage; // zero-indexed
 //========================================
 
 #include "include/Wear.lsl" // Wearing outfits functions
+
+clearDresser() {
+    dresserID = NULL_KEY;
+    topFolder = outfitFolder;
+}
 
 integer uSubStringLastIndex(string hay, string pin) {
 
@@ -528,9 +532,6 @@ default {
             //string name = (string)split[1];
 
             if (menuChoice == "Outfits..." && !tempDressingLock) {
-
-                if (dresserID == NULL_KEY)
-                    topFolder = outfitFolder; // Reset top level if "new" dresser in progress
 
                 // Check for dresser lockout
                 if (!isDresser(lmID)) {
