@@ -97,6 +97,7 @@ integer isVisible           = 1;
 integer wearLockExpire;
 integer typeLockExpire;
 integer poseLockExpire;
+integer outfitAvatar        = FALSE;
 
 // Note that lowScriptExpire *IS NOT A LOCK*
 integer lowScriptExpire;

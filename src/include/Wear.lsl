@@ -13,7 +13,17 @@
 #define cdWear(a) lmRunRlv("attach:"+(a)+"=force") 
 #define cdForceDetach(a) lmRunRlv("detachall:"+(a)+"=force");
 
+//========================================
+// VARIABLES
+//========================================
+
+//========================================
+// FUNCTIONS
+//========================================
+
 wearStandardOutfit(string newOutfitName) {
+    outfitAvatar = FALSE;
+
     // Steps to dressing avi:
     //
     // Overview: Attach everything we need, and lock them afterwards.
@@ -111,6 +121,8 @@ wearStandardOutfit(string newOutfitName) {
 }
 
 wearNewAvi(string newAvatarFolder) {
+    outfitAvatar = TRUE;
+
     // Steps to dressing AS a new Avatar:
     //
     // Load new outfit:
@@ -203,12 +215,13 @@ wearOutfitCore(string newOutfitName) {
     // DRESSING
     //----------------------------------------
 
-    if (isStandAloneFolder(cdGetFirstChar(newOutfitName))) {
+    if (isAvatarFolder(cdGetFirstChar(newOutfitName))) {
         wearNewAvi(newOutfitName);
         llOwnerSay("New avatar chosen: " + cdButFirstChar(newOutfitName));
     }
     else {
-        wearStandardOutfit(newOutfitName);
+        if (outfitAvatar) resetBody(newOutfitName);
+        else wearStandardOutfit(newOutfitName);
         llOwnerSay("New outfit chosen: " + newOutfitName);
     }
 
@@ -222,46 +235,45 @@ wearOutfitCore(string newOutfitName) {
 
 }
 
-resetBodyCore() {
-    if (normaloutfitFolder == "") {
-        llOwnerSay("ERROR: Cannot reset body form without ~normaloutfit present.");
-        return;
-    }
-
-    // Clear old outfit settings
-    oldOutfit = "";
-    newOutfit = "";
-
 #define rlvLockFolderRecursive(a)   ("detachallthis:" + (a) + "=n")
 #define rlvUnlockFolderRecursive(a) ("detachallthis:" + (a) + "=y")
 #define rlvAttachFolderRecursive(a) (    "attachall:" + (a) + "=force")
 #define rlvDetachAllRecursive(a)    (    "detachall:" + (a) + "=force")
 
+resetBodyCore() {
+    if (normaloutfitFolder == "") {
+        llOwnerSay("ERROR: Cannot reset body form without ~normaloutfit present.");
+    }
+    else {
+        resetBody(normaloutfitFolder);
+    }
+}
+
+resetBody(string wearOutfit) {
+
+    // Clear old outfit settings
+    oldOutfit = "";
+    newOutfit = "";
+
     // LOCK the key in place
     rlvLockKey();
 
     // Force attach nude elements
-    if (nudeFolder)         lmRunRlv(rlvUnlockFolderRecursive(nudeFolder)         + "," + rlvAttachFolderRecursive(nudeFolder));
-    if (normalselfFolder)   lmRunRlv(rlvUnlockFolderRecursive(normalselfFolder)   + "," + rlvAttachFolderRecursive(normalselfFolder));
-    if (normaloutfitFolder) lmRunRlv(rlvUnlockFolderRecursive(normaloutfitFolder) + "," + rlvAttachFolderRecursive(normaloutfitFolder));
+    if (nudeFolder)         lmRunRlv(rlvUnlockFolderRecursive(nudeFolder)       + "," + rlvAttachFolderRecursive(nudeFolder));
+    if (normalselfFolder)   lmRunRlv(rlvUnlockFolderRecursive(normalselfFolder) + "," + rlvAttachFolderRecursive(normalselfFolder));
+    if (wearOutfit)         lmRunRlv(rlvUnlockFolderRecursive(wearOutfit)       + "," + rlvAttachFolderRecursive(wearOutfit));
 
     // Lock default body
     if (nudeFolder)         lmRunRlv(rlvLockFolderRecursive(nudeFolder));
-    if (normalselfFolder)   lmRunRlv(rlvLockFolderRecursive(normalselfFolder));
-    if (normaloutfitFolder) lmRunRlv(rlvLockFolderRecursive(normaloutfitFolder));
+    if (wearOutfit)         lmRunRlv(rlvLockFolderRecursive(wearOutfit));
 
     // Remove all else from the top, outfits and all the rest
     lmRunRlv(rlvDetachAllRecursive(outfitFolder));
 
-    // Clear locks and force attach
-    //if (nudeFolder)         lmRunRlv(rlvLockFolderRecursive(nudeFolder) + "attachall:" + nudeFolder         + "=force");
-    //if (normalselfFolder)   lmRunRlv(rlvLockFolderRecursive(nudeFolder) + "attachall:" + normalselfFolder   + "=force");
-    //if (normaloutfitFolder) lmRunRlv(rlvLockFolderRecursive(nudeFolder) + "attachall:" + normaloutfitFolder + "=force");
-
     // Clear locks
     if (nudeFolder)         lmRunRlv(rlvUnlockFolderRecursive(nudeFolder));
     if (normalselfFolder)   lmRunRlv(rlvUnlockFolderRecursive(normalselfFolder));
-    if (normaloutfitFolder) lmRunRlv(rlvUnlockFolderRecursive(normaloutfitFolder));
+    if (wearOutfit)         lmRunRlv(rlvUnlockFolderRecursive(wearOutfit));
 }
 
 #ifdef ADULT_MODE

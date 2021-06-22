@@ -222,7 +222,7 @@ float GlobalDefines_version=1.0;
 #define isGroupFolder(c)        ((c) == "#")
 #define isHiddenFolder(c)       ((c) == "~")
 #define isPlusFolder(c)         ((c) == "+")
-#define isStandAloneFolder(c)   ((c) == "&")
+#define isAvatarFolder(c)       ((c) == "&")
 #define isTypeFolder(c)         ((c) == "*")
 #define isParentFolder(c)       ((c) == ">")
 #define isRated(c)              ((c) == "{")
