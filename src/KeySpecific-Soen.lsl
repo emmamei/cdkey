@@ -139,7 +139,12 @@ default {
                     break;
                 }
 #endif
-
+#ifdef DEVELOPER_MODE
+                case "debugLevel": {
+                    debugLevel = (integer)value;
+                    break;
+                }
+#endif
                 case "collapsed": {
                     debugSay(4,"DEBUG-SOEN","Collapse read at " + value);
                     keyParticlesToggle(value == (string)FALSE);
