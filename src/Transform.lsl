@@ -77,11 +77,17 @@
 string nudeFolder;
 string normalselfFolder;
 string normaloutfitFolder;
+
 integer phraseCount;
 integer changeOutfit;
 string msg;
 integer i;
+
 list typeBufferedList;
+list typeFolderBufferedList;
+integer typeFolderBufferChannel;
+integer typeFolderBufferHandle;
+
 key transformerID;
 integer readLine;
 integer readingNC;
@@ -205,6 +211,13 @@ setDollType(string typeName) {
     debugSay(2,"DEBUG-DOLLTYPE","Changed to type " + dollType);
 }
 
+reloadTypeFolderNames() {
+    if (outfitFolder == "") return;
+
+    typeFolderBufferHandle = llListen(typeFolderBufferChannel, NO_FILTER, dollID, NO_FILTER);
+    lmRunRlv("getinv:" + outfitFolder + "=" + (string)(typeFolderBufferChannel));
+}
+
 reloadTypeNames(key id) {
     string typeName;
 
@@ -302,8 +315,10 @@ default {
     // CHANGED
     //----------------------------------------
     changed(integer change) {
-        if (change & CHANGED_ALLOWED_DROP)
+        if (change & CHANGED_ALLOWED_DROP) {
             reloadTypeNames(NULL_KEY);
+            //reloadTypeFolderNames();
+        }
     }
 
     //----------------------------------------
@@ -597,6 +612,8 @@ default {
                 typeSearchChannel = rlvChannel + 1;
                 outfitSearchChannel = rlvChannel + 2;
                 systemSearchChannel = rlvChannel + 3;
+
+                typeFolderBufferChannel = rlvChannel + 4;
             }
         }
 
@@ -779,14 +796,13 @@ default {
 
             // Choose a Transformation
             else if (choice == "Types...") {
-                string msg3 = " cannot be transformed right now, as ";
-                string msg4 = " recently transformed into a " + dollType + " doll. ";
-
-                integer i;
 
                 // Doll must remain in a type for a period of time
                 if (typeLockExpire) {
                     debugSay(5,"DEBUG-TYPES","Transform is currently locked");
+
+                    string msg3 = " cannot be transformed right now, as ";
+                    string msg4 = " recently transformed into a " + dollType + " doll. ";
 
                     if (cdIsDoll(lmID)) msg = "You " + msg3 + " you were " + msg4;
                     else msg = dollName + msg3 + " Dolly was " + msg4;
@@ -814,12 +830,46 @@ default {
                           "phrases may be used on Dolly if permitted.";
 
                     // We need a new list var to be able to change the display, not the
-                    // available types
+                    // available types. These are the types based on available notecards.
                     list typeMenuChoices = typeBufferedList;
 
                     // Delete the current type: transforming to current type is redundant
                     if ((i = llListFindList(typeMenuChoices, (list)dollType)) != NOT_FOUND) {
                         typeMenuChoices = llDeleteSubList(typeMenuChoices, i, i);
+                    }
+
+                    integer i = llGetListLength(typeMenuChoices);
+                    string indexedType;
+
+                    if (!showPhrases) {
+                        while (i--) {
+                            indexedType = (string)typeMenuChoices[i];
+                            debugSay(5,"DEBUG-TYPES","Type being scanned[" + (string)i + "]: " + indexedType);
+
+                            // If type entry is a SPECIAL_TYPE, then skip to next;
+                            // Special types are kept in the menu choices, no matter what
+                            if (!(~llListFindList(SPECIAL_TYPES, (list)(indexedType)))) {
+
+                                // If type entry is not in the type folder list, then remove from
+                                // menu list: the type will have no phrases, and no outfits - and
+                                // no purpose
+                                if (!(~llListFindList(typeFolderBufferedList, (list)(indexedType)))) {
+
+                                    typeMenuChoices = llDeleteSubList(typeMenuChoices, i, i);
+                                    debugSay(5,"DEBUG-TYPES","Type removed from menu: " + indexedType);
+                                }
+#ifdef DEVELOPER_MODE
+                                else {
+                                    debugSay(5,"DEBUG-TYPES","Directory found: " + indexedType);
+                                }
+#endif
+                            }
+#ifdef DEVELOPER_MODE
+                            else {
+                                debugSay(5,"DEBUG-TYPES","Special type found: " + indexedType);
+                            }
+#endif
+                        }
                     }
 
                     if (cdIsDoll(lmID)) msg += "What type of doll do you want to be?";
@@ -1010,6 +1060,9 @@ default {
             // Type folder is not directly related to outfit folder searching; system folders are
             // completely inseparable
             systemSearch(systemSearchChannel,systemSearchHandle);
+
+            // Specific Type folders can be buffered here
+            reloadTypeFolderNames();
         }
         else if (listenChannel == typeSearchChannel) {
 
@@ -1103,6 +1156,19 @@ default {
             lmSendConfig("nudeFolder",nudeFolder);
             lmSendConfig("normalselfFolder",normalselfFolder);
             lmSendConfig("normaloutfitFolder",normaloutfitFolder);
+
+            // Check for Type Folders and store in buffered list
+            //
+            integer index;
+            index = llGetListLength(folderList);
+            while (index--) {
+                if (cdGetFirstChar((string)folderList[index]) == TYPE_FLAG) {
+                    typeFolderBufferedList += cdButFirstChar((string)folderList[index]);
+                }
+            }
+
+            debugSay(6,"DEBUG-TYPES","Type Folder List = " + llDumpList2String(typeFolderBufferedList,","));
+
             llSleep(1.0);
             lmInitStage(INIT_STAGE4); // Outfits and System folder search succeeded: continue
         }
@@ -1114,6 +1180,19 @@ default {
                 cdSayTo("Dolly's internal mechanisms engage, and a transformation comes over Dolly, making " + pronounHerDoll + " into a " + listenMessage + " Dolly",listenID);
                 lmTypeReply(listenMessage, llGetDisplayName(listenID), listenID);
             }
+        }
+        else if (listenChannel == typeFolderBufferChannel) {
+            llListenRemove(typeFolderBufferHandle);
+            list folderList = llCSV2List(listenMessage);
+            integer i;
+
+            typeFolderBufferedList = [];
+            i = llGetListLength(folderList);
+            while (i--) {
+                if (isTypeFolder((string)folderList[i]))
+                    typeFolderBufferedList += (string)folderList[i];
+            }
+
         }
     }
 

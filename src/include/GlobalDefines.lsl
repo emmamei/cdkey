@@ -74,52 +74,78 @@ float GlobalDefines_version=1.0;
 #define VSTR  + "\nScript Date: " + PACKAGE_VERSION
 #define MAIN "~Main Menu~"
 #define UPMENU "~Up~"
+
+//    - Regular: used for standard Dolls, including non-transformable
+//    - Slut: can be stripped (like Pleasure Dolls)
+//    - Display: poses dont time out
+//    - Domme: messages shift focus slightly
+#define SPECIAL_TYPES [ "Regular", "Slut", "Display", "Domme" ]
+
 // Collapse animation - and documentation
 #define ANIMATION_COLLAPSED "collapse"
+
 // No animation
 #define ANIMATION_NONE ""
+
 // Carry distance for the new carry code
 #define CARRY_RANGE 2.5
+
 // llTakeControls() mask all available controls
 #define CONTROL_ALL 0x5000033f
 // llTakeControls() mask for the basic movement keys (4 arrow keys)
 #define CONTROL_MOVE 0xf
 // llTakeControls() mask for AFK mode slow movement
 #define CONTROL_SLOW 0x3
+
 // Dolls home landmark name
 #define LANDMARK_HOME "Home"
+
 // Name of the Community Dolls Room landmark
 #define LANDMARK_CDHOME "Community Dolls at BDSM Pasha Desires"
+
 // Name of the help notecard
 #define NOTECARD_HELP "Community Dolls Key Help and Manual"
+
 // Name of the key object
 #define OBJECT_KEY "Community Dolls Key"
+
 // Name of the preferences notecard
 #define NOTECARD_PREFERENCES "Preferences"
+
 // Name of the intro text notecard
 //#define NOTECARD_INTRO "IntroText"
+
 // Wind down rate factor in AFK mode
 #define RATE_AFK 0.5
+
 // Wind down rate factor in standard mode
 #define RATE_STANDARD 1.0
+
 // Time dilation at which we go to reduced activity
 #define DILATION_HIGH 0.95
+
 // Time dilation at which we return to normal mode
 #define DILATION_LOW 0.98
+
 // LockMeister/FS AO channel
 #define LOCKMEISTER_CHANNEL -8888
+
 // Seconds per minute
 #define SEC_TO_MIN 60
 #define SECS_PER_MIN 60
+
 // Community Dolls web URLs
 #define WEB_DEV "https://github.com/emmamei/cdkey/tree/Development"
 #define WEB_DOMAIN "http://communitydolls.com/"
 #define WEB_BLOG "http://communitydolls.blogspot.com/"
 #define WEB_GROUP "secondlife:///app/group/0f0c0dd5-a611-2529-d5c7-1284fb719003/about"
+
 // Maximum number of @getinvworn failures while dressing
 #define MAX_DRESS_FAILURES 5
+
 // This defines the config settings that we never expedite HTTP POST for
 #define SKIP_EXPEDITE [ "poseExpire", "timeLeftOnKey", "timeToJamRepair", "wearLockExpire", "winderRechargeTime" ]
+
 // Timeouts
 #define WEAR_LOCK_TIMEOUT 600
 #define TYPE_LOCK_TIME 300

@@ -616,7 +616,7 @@ default {
 
                     string uuid = (string)split[1];
                     string name = (string)split[2];
-                    string nameURI = "secondlife:///app/agent/" + uuid + "/displayname";
+                    string nameURI = "secondlife:///app/agent/" + uuid + "/profile";
 
                     //----------------------------------------
                     // VALIDATION
@@ -664,7 +664,7 @@ default {
                         rejectList = blacklistList;
                     }
                     else {
-                        typeString = "blacklist";
+                        typeString = "blacklisted";
                         tmpList = blacklistList;
                         rejectList = controllerList;
                     }
@@ -717,7 +717,7 @@ default {
                     // Add user name - find it if need be
                     //
                     if (noUserName) {
-                        llSay(DEBUG_CHANNEL,"No name alloted with this user.");
+                        debugSay(5,"DEBUG-ADD","No name found for user; making query: " + nameURI);
 
                         if (queryUUID != "") {
                             llSay(DEBUG_CHANNEL,"Query conflict detected!");
