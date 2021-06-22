@@ -368,6 +368,8 @@ default {
             simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
     }
 
+#define cdFindInList(a,b) (llListFindList(a, (list)(b)) != NOT_FOUND)
+
     //----------------------------------------
     // TOUCH START
     //----------------------------------------
@@ -376,7 +378,7 @@ default {
         string toucherName = llGetDisplayName(toucherID);
 
         // Deny access to the key when the command was recieved from blacklisted avatar
-        if (llListFindList(blacklistList, [ (string)toucherID ]) != NOT_FOUND) {
+        if (cdFindInList(blacklistList, (string)toucherID)) {
             llOwnerSay("SECURITY WARNING! Attempted Key access from blacklisted user " + toucherName);
             return;
         }
