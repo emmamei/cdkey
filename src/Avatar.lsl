@@ -627,11 +627,11 @@ default {
                 setPoseAnimation(poseAnimation); 
 
 #ifdef ADULT_MODE
-#define dollPoseDoesNotExpire (dollType == "Display" || hardcore)
+#define poseDoesNotExpire (dollType == "Display" || hardcore)
 #else
-#define dollPoseDoesNotExpire (dollType == "Display")
+#define poseDoesNotExpire (dollType == "Display")
 #endif
-                if (dollPoseDoesNotExpire) expire = "0";
+                if (poseDoesNotExpire) expire = "0";
                 else expire = (string)(llGetUnixTime() + POSE_TIMEOUT);
                 lmSetConfig("poseLockExpire", expire);
 
