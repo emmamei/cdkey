@@ -105,7 +105,7 @@ integer systemSearchTries;
 
 integer findTypeFolder;
 
-string transform;
+string typeToConfirm;
 
 // These dual variables allow us to separate the actual valid typeFolder
 // from the one being searched for
@@ -947,15 +947,20 @@ default {
             else if (choice == "Transform") {
                 // We get here because dolly had to confirm the change
                 // of type - and chose "Transform" from the menu
-                lmSetConfig("dollType", transform);
+                cdSayTo("Doll has accepted transformation to a " + typeToConfirm + " Doll.",lmID);
+                lmSetConfig("dollType", typeToConfirm);
                 lmSetConfig("typeLockExpire","1");
-                transform = "";
+                typeToConfirm = "";
+            }
+            else if (choice == "Dont Transform") {
+                cdSayTo("Doll has rejected transformation to a " + typeToConfirm + " Doll.",lmID);
+                typeToConfirm = "";
             }
         }
         else if (code == TYPE_SELECTION) {
-            string choice = (string)split[0];
+            string typeName = (string)split[0];
 
-            debugSay(2,"DEBUG-DOLLTYPE","Changing doll type to " + choice);
+            debugSay(2,"DEBUG-DOLLTYPE","Changing doll type to " + typeName);
 
             // A Doll Type was chosen: change to it as is appropriate
 
@@ -966,10 +971,10 @@ default {
             //    * Other when Dolly is hardcore
             //
             if (cdIsDoll(lmID) || cdIsController(lmID) || !mustAgreeToType) {
-                transform = "";
+                typeToConfirm = "";
 
                 // Doll (or a Controller) chose a Type - or no confirmation needed: just do it
-                lmSetConfig("dollType", choice);
+                lmSetConfig("dollType", typeName);
                 lmSetConfig("typeLockExpire","1");
             }
             else {
@@ -978,12 +983,12 @@ default {
                 // A member of the public chose a Type and confirmation is required
                 cdSayTo("Getting confirmation from Doll...",lmID);
 
-                transform = choice; // save transformation Type
-                list choices = ["Transform", "Dont Transform", MAIN ];
-                string msg = "Do you wish to be transformed to a " + choice + " Doll?";
+                typeToConfirm = typeName; // save transformation Type
+                list menuChoices = ["Transform", "Dont Transform", MAIN ];
+                string menuMessage = "Do you wish to be transformed to a " + typeName + " Doll?";
 
                 lmDialogListen();
-                llDialog(dollID, msg, choices, dialogChannel); // this starts a new choice on this channel
+                llDialog(dollID, menuMessage, dialogSort(menuChoices), dialogChannel); // this starts a new choice on this channel
             }
         }
         else if (code < 200) {
@@ -1231,9 +1236,12 @@ default {
             if (listenMessage == "Back...") {
                 lmMenuReply(backMenu = MAIN,llGetDisplayName(listenID),listenID);
             }
+            // FIXME: listenMessage should never equal "OK" - no types - but we check for it anyway
             else if (listenMessage != "OK") {
+                string typeName = listenMessage;
+
                 cdSayTo("Dolly's internal mechanisms engage, and a transformation comes over Dolly, making " + pronounHerDoll + " into a " + listenMessage + " Dolly",listenID);
-                lmTypeReply(listenMessage, llGetDisplayName(listenID), listenID);
+                lmTypeChange(typeName, llGetDisplayName(listenID), listenID); // this performs type switch
             }
         }
         else if (listenChannel == typeFolderBufferChannel) {
