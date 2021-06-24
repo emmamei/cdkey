@@ -859,9 +859,11 @@ default {
                     //
                     string typeTemp;
 
-                    // Now, IF there are no phrases allowed - scan for Directories to match.
+                    // Now, IF there are no phrases allowed...
                     //
-                    // No directory and not special, remove and ignore it.
+                    // Without phrases, then a type with no outfit directory is
+                    // useless. We want to remove these from the types menu, UNLESS
+                    // they are special, in which case we keep the type.
                     //
                     if (!showPhrases) {
 
