@@ -252,18 +252,23 @@ reloadTypeNames(key id) {
             }
         }
 
+#define inTypeBufferedList(a) (llListFindList(typeBufferedList, (list)(a)) != NOT_FOUND)
+
         //We don't need a Notecard to be present for these to be active
         //
         // Note the following rules of the built-in types:
         //   - Display: Notecard is ok but not needed
         //   - Slut: rejects type even if Notecard is present if not ADULT, else Notecard ok but not needed
+        //   - Regular: Notecard is ignored
+        //   - Domme: only activated if Notecard present
         //
-        if (llListFindList(typeBufferedList, (list)"Display") == NOT_FOUND) typeBufferedList += (list)"Display";
-        typeBufferedList += (list)"Regular";
+        if (!inTypeBufferedList("Display")) typeBufferedList += (list)"Display";
+        if (!inTypeBufferedList("Regular")) typeBufferedList += (list)"Regular";
+
 #ifdef ADULT_MODE
         // This makes the process location-dependent...
         if (simRating == "MATURE" || simRating == "ADULT")
-            if (llListFindList(typeBufferedList, (list)"Slut") == NOT_FOUND) typeBufferedList += (list)"Slut";
+            if (!inTypeBufferedList("Slut")) typeBufferedList += (list)"Slut";
 #endif
     }
 }
@@ -832,59 +837,107 @@ default {
                     // We need a new list var to be able to change the display, not the
                     // available types. These are the types based on available notecards.
                     list typeMenuChoices = typeBufferedList;
+                    integer i;
+
+                    debugSay(6,"DEBUG-TYPES","Type Folder List (during menu build) = " + llDumpList2String(typeFolderBufferedList,","));
+                    debugSay(6,"DEBUG-TYPES","Type List (during menu build) = " + llDumpList2String(typeBufferedList,","));
+                    debugSay(6,"DEBUG-TYPES","Type Menu Choices (during menu build) = " + llDumpList2String(typeMenuChoices,","));
+                    debugSay(6,"DEBUG-TYPES","Current doll type = " + dollType);
 
                     // Delete the current type: transforming to current type is redundant
                     if ((i = llListFindList(typeMenuChoices, (list)dollType)) != NOT_FOUND) {
                         typeMenuChoices = llDeleteSubList(typeMenuChoices, i, i);
                     }
 
-                    integer i = llGetListLength(typeMenuChoices);
-                    string indexedType;
+                    debugSay(6,"DEBUG-TYPES","Type menu choices = " + llDumpList2String(typeMenuChoices,","));
 
+#define inList(a,b) (~llListFindList(a, (list)b))
+#define isSpecialType(a) (~llListFindList(SPECIAL_TYPES, (list)a))
+
+                    // We don't need to add special types, as they have been added up front
+                    // when typeBufferedList was created
+                    //
+                    string typeTemp;
+
+                    // Now, IF there are no phrases allowed - scan for Directories to match.
+                    //
+                    // No directory and not special, remove and ignore it.
+                    //
                     if (!showPhrases) {
+
+                        // Check each menu choice and see if it has
+                        // a matching directory...
+                        //
+                        i = llGetListLength(typeMenuChoices);
+
                         while (i--) {
-                            indexedType = (string)typeMenuChoices[i];
-                            debugSay(5,"DEBUG-TYPES","Type being scanned[" + (string)i + "]: " + indexedType);
+                            typeTemp = (string)typeMenuChoices[i];
+                            debugSay(5,"DEBUG-TYPES","Type being scanned[" + (string)i + "]: " + typeTemp);
 
                             // If type entry is a SPECIAL_TYPE, then skip to next;
                             // Special types are kept in the menu choices, no matter what
-                            if (!(~llListFindList(SPECIAL_TYPES, (list)(indexedType)))) {
 
-                                // If type entry is not in the type folder list, then remove from
-                                // menu list: the type will have no phrases, and no outfits - and
-                                // no purpose
-                                if (!(~llListFindList(typeFolderBufferedList, (list)(indexedType)))) {
+                            if (!(isSpecialType(typeTemp))) {
+
+                                // If (non-special) type entry is not in the type folder
+                                // list, then remove from // menu list: the type will have
+                                // no phrases, and no outfits - and no purpose
+                                //
+                                if (!(inList(typeFolderBufferedList,typeTemp))) {
 
                                     typeMenuChoices = llDeleteSubList(typeMenuChoices, i, i);
-                                    debugSay(5,"DEBUG-TYPES","Type removed from menu: " + indexedType);
+                                    debugSay(5,"DEBUG-TYPES","Type removed from menu: " + typeTemp);
                                 }
 #ifdef DEVELOPER_MODE
                                 else {
-                                    debugSay(5,"DEBUG-TYPES","Directory found: " + indexedType);
+                                    debugSay(5,"DEBUG-TYPES","Directory found: " + typeTemp);
                                 }
 #endif
                             }
-#ifdef DEVELOPER_MODE
-                            else {
-                                debugSay(5,"DEBUG-TYPES","Special type found: " + indexedType);
-                            }
-#endif
                         }
                     }
 
-                    if (cdIsDoll(lmID)) msg += "What type of doll do you want to be?";
-                    else {
-                        msg += "What type of doll do you want the Doll to be?";
+                    // Add all directories to list (including those without phrases)
+                    //
+                    // FIXME: Do we want to do this at creation of typeBufferedList?
+                    // FIXME: Do we want this to be permanent with typeBufferedList?
+                    //
+                    i = llGetListLength(typeFolderBufferedList);
 
-#ifdef ADULT_MODE
-                        if (!hardcore)
-#endif
-                            llOwnerSay(cdProfileURL(lmID) + " is looking at your doll types.");
+                    while (i--) {
+                        typeTemp = (string)typeFolderBufferedList[i];
+
+                        if (!(inList(typeMenuChoices,typeTemp))) {
+
+                            typeMenuChoices += typeTemp;
+                            debugSay(5,"DEBUG-TYPES","Type added to menu: " + typeTemp);
+                        }
                     }
 
-                    lmSendConfig("backMenu",(backMenu = MAIN));
-                    lmDialogListen();
-                    llDialog(lmID, msg, dialogSort(llListSort(typeMenuChoices, 1, 1) + "Back..."), typeDialogChannel);
+#ifdef DEVELOPER_MODE
+                    debugSay(6,"DEBUG-TYPES","Type menu choices = " + llDumpList2String(typeMenuChoices,","));
+#endif
+                    // FIXME: This should not happen, but until things are fixed up, leave it in.
+                    if (typeMenuChoices == []) {
+                        lmDialogListen();
+                        llDialog(lmID, "There are no types to choose from.", [], typeDialogChannel);
+                    }
+                    else {
+
+                        if (cdIsDoll(lmID)) msg += "What type of doll do you want to be?";
+                        else {
+                            msg += "What type of doll do you want the Doll to be?";
+
+#ifdef ADULT_MODE
+                            if (!hardcore)
+#endif
+                                llOwnerSay(cdProfileURL(lmID) + " is looking at your doll types.");
+                        }
+
+                        lmSendConfig("backMenu",(backMenu = MAIN));
+                        lmDialogListen();
+                        llDialog(lmID, msg, dialogSort(llListSort(typeMenuChoices, 1, 1) + "Back..."), typeDialogChannel);
+                    }
                 }
             }
 
@@ -1062,7 +1115,7 @@ default {
             systemSearch(systemSearchChannel,systemSearchHandle);
 
             // Specific Type folders can be buffered here
-            reloadTypeFolderNames();
+            //reloadTypeFolderNames();
         }
         else if (listenChannel == typeSearchChannel) {
 
@@ -1176,7 +1229,7 @@ default {
             if (listenMessage == "Back...") {
                 lmMenuReply(backMenu = MAIN,llGetDisplayName(listenID),listenID);
             }
-            else {
+            else if (listenMessage != "OK") {
                 cdSayTo("Dolly's internal mechanisms engage, and a transformation comes over Dolly, making " + pronounHerDoll + " into a " + listenMessage + " Dolly",listenID);
                 lmTypeReply(listenMessage, llGetDisplayName(listenID), listenID);
             }
@@ -1186,13 +1239,16 @@ default {
             list folderList = llCSV2List(listenMessage);
             integer i;
 
+            debugSay(6,"DEBUG-OPTIONS","folderList: " + llDumpList2String(folderList,","));
             typeFolderBufferedList = [];
+
             i = llGetListLength(folderList);
             while (i--) {
                 if (isTypeFolder((string)folderList[i]))
                     typeFolderBufferedList += (string)folderList[i];
             }
 
+            debugSay(6,"DEBUG-OPTIONS","typeFolderBufferedList: " + llDumpList2String(typeFolderBufferedList,","));
         }
     }
 
