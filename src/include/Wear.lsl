@@ -21,7 +21,7 @@
 // FUNCTIONS
 //========================================
 
-wearStandardOutfit(string newOutfitName) {
+wearStandardOutfit(string newOutfit) {
     outfitAvatar = FALSE;
 
     // Steps to dressing avi:
@@ -120,7 +120,7 @@ wearStandardOutfit(string newOutfitName) {
 
 }
 
-wearNewAvi(string newAvatarFolder) {
+wearNewAvi(string newOutfit) {
     outfitAvatar = TRUE;
 
     // Steps to dressing AS a new Avatar:
@@ -216,12 +216,12 @@ wearOutfitCore(string newOutfitName) {
     //----------------------------------------
 
     if (isAvatarFolder(cdGetFirstChar(newOutfitName))) {
-        wearNewAvi(newOutfitName);
+        wearNewAvi(newOutfit);
         llOwnerSay("New avatar chosen: " + cdButFirstChar(newOutfitName));
     }
     else {
-        if (outfitAvatar) resetBody(newOutfitName);
-        else wearStandardOutfit(newOutfitName);
+        if (outfitAvatar) resetBody(newOutfit);
+        else wearStandardOutfit(newOutfit);
         llOwnerSay("New outfit chosen: " + newOutfitName);
     }
 
