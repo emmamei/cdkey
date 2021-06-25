@@ -145,12 +145,7 @@ doWinding(string winderName, key winderID) {
 #define isFlying  (agentInfo & AGENT_FLYING)
 #define isSitting (agentInfo & AGENT_SITTING)
 
-float forceWindRate(float windRate) {
-    lmSendConfig("windRate", (string)windRate);         // current rate
-
-    debugSay(2,"DEBUG-MAIN","windRate changed to " + (string)windRate);
-
-    llTargetOmega(<0.0, 0.0, 1.0>, windRate * TWO_PI / 8.0, 1.0);
+float doSpin(float windRate) {
 
     // llTargetOmega: With a normalized vector (first parameter), the spin rate
     // is in radians per second - 2𝜋 radians equals 1 full rotation.
@@ -162,13 +157,16 @@ float forceWindRate(float windRate) {
     // The windRate variable allows the changing of the key's rotation speed based
     // on external factors.
 
+#define spinStop() llTargetOmega(ZERO_VECTOR, 0.0, 0.0)
+#define spinRate(a) llTargetOmega(<0.0, 0.0, 1.0>, (a) * TWO_PI / 8.0, 1.0)
+
     if (windRate == 0.0) {
         debugSay(4,"DEBUG-MAIN","setting spin to zero...");
-        llTargetOmega(ZERO_VECTOR, 0.0, 0.0);
+        spinStop();
     }
     else {
         debugSay(4,"DEBUG-MAIN","setting spin to " + (string)windRate + "...");
-        llTargetOmega(<0.0, 0.0, 1.0>, windRate * TWO_PI / 8.0, 1.0);
+        spinRate(windRate);
     }
 
     return windRate;
@@ -192,8 +190,13 @@ float setWindRate() {
     else if (isSitting) newWindRate = 0.7;            // 70% speed
     else                newWindRate = 1.0;            // 100% speed
 
-    if (newWindRate != windRate)
-        forceWindRate(windRate);
+    if (newWindRate != windRate) {
+        lmSendConfig("windRate", (string)windRate);         // current rate
+
+        debugSay(2,"DEBUG-MAIN","windRate changed to " + (string)(windRate = newWindRate));
+
+        doSpin(windRate);
+    }
 
     return windRate;
 }
@@ -741,8 +744,8 @@ default {
             if (cmd == "setWindRate") {
                 setWindRate();
             }
-            else if (cmd == "forceWindRate") {
-                forceWindRate(windRate);
+            else if (cmd == "doSpin") {
+                doSpin(windRate);
             }
             else if (cmd == "collapse") {
                 integer collapseState = (integer)split[0];

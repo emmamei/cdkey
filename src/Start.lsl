@@ -522,11 +522,8 @@ default {
             // restore collapse environment
             lmInternalCommand("collapse", (string)collapsed, keyID);
 
-            // forceWindRate forces the current setting to be active
-            lmInternalCommand("forceWindRate","",NULL_KEY);
-
-            // setWindRate depends on accurate AFK and collapse settings...
-            lmInternalCommand("forceWindRate","",NULL_KEY);
+            // doSpin sets the key to spinning - or should
+            lmInternalCommand("doSpin","",NULL_KEY);
         }
     }
 
