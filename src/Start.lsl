@@ -522,8 +522,11 @@ default {
             // restore collapse environment
             lmInternalCommand("collapse", (string)collapsed, keyID);
 
+            // forceWindRate forces the current setting to be active
+            lmInternalCommand("forceWindRate","",NULL_KEY);
+
             // setWindRate depends on accurate AFK and collapse settings...
-            lmInternalCommand("setWindRate","",NULL_KEY);
+            lmInternalCommand("forceWindRate","",NULL_KEY);
         }
     }
 
