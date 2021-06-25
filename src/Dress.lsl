@@ -260,8 +260,7 @@ changeComplete(integer success) {
 
     // And remove the temp locks we used
 
-    // If we used "detach" as the pattern then the Key would be unlocked
-    lmRunRlv("clear=attach,clear=detachall");
+    lmRunRlv("clear=attach,clear=detach");
 
     if (success) {
         if (change) {
@@ -461,9 +460,10 @@ default {
                 wearOutfitCore((string)split[0]);
 
                 debugSay(2,"DEBUG-DRESS","keyLocked = " + (string)keyLocked);
-                if (keyLocked == FALSE) rlvUnlockKey();
+                rlvLockKey();
                 changeComplete(TRUE);
                 clearDresser();
+                if (keyLocked == FALSE) rlvUnlockKey();
             }
             else if (cmd == "resetBody") {
 
