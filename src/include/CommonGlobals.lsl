@@ -109,6 +109,7 @@ integer winderRechargeTime;
 integer windMins            = 30;
 integer windNormal          = 1800;
 integer windEmergency       = 600;
+integer windEmergencyActivated = FALSE;
 
 // List of managed and stored restrictions
 

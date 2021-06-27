@@ -1068,12 +1068,15 @@ default {
 #endif
                     return;
                 }
-#ifdef EMERGENCY_TP
                 else if (listenMessage == "TP Home") {
+
+                    // This menu selection only happens when user selects TP Home button...
+                    //
+                    // Homing beacon bypasses the menu
+
                     lmInternalCommand("teleport", LANDMARK_HOME, listenID);
                     return;
                 }
-#endif
                 else if (listenMessage == "RLV") {
                     lmInternalCommand("startRlvCheck","",listenID);
                     return;

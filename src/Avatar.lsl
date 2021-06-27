@@ -26,6 +26,7 @@
 #define notCurrentAnimation(p) ((p) != poseAnimation)
 #define getAnimationName(n) llGetInventoryName(INVENTORY_ANIMATION, (n));
 #define getAnimationCount() llGetInventoryNumber(INVENTORY_ANIMATION);
+#define isLandmarkPresent(a) (llGetInventoryType(a) == INVENTORY_LANDMARK)
 
 #define MIN_FRAMES 20
 #define ADD_FRAMES 20
@@ -36,9 +37,7 @@
 #define poseChanged (currentAnimation != poseAnimation)
 #define keyDetached(id) (id == NULL_KEY)
 
-#ifdef EMERGENCY_TP
-key rlvTPrequest;
-#endif
+key queryLandmarkData;
 
 // Note that this is not the "speed" nor is it a slowing factor
 // This is a vector of force applied against Dolly: headwind speed
@@ -105,6 +104,57 @@ integer targetHandle;
 //========================================
 // FUNCTIONS
 //========================================
+
+#define getRegionLocation(d) (llGetRegionCorner() + ((vector)d))
+#define locationToString(d) ((string)((integer)d.x) + "/" + (string)((integer)d.y) + "/" + (string)((integer)d.z))
+
+rlvTeleport(string locationData) {
+
+    //debugSay(6,"DEBUG-LANDMARK","queryLandmarkData = " + (string)queryLandmarkData);
+
+    vector globalLocation = getRegionLocation(locationData);
+    string globalPosition = locationToString(globalLocation);
+
+    //debugSay(6,"DEBUG-LANDMARK","Dolly should be teleporting now...");
+    //debugSay(6,"DEBUG-LANDMARK","Position = " + globalPosition);
+    llOwnerSay("Position = " + globalPosition);
+
+    llOwnerSay("Dolly is now teleporting.");
+
+    // Note this will be rejected if @unsit=n or @tploc=n are active
+    //lmRunRlvAs("TP-LANDMARK","unsit=y"); // restore restriction
+    //lmRunRlvAs("TP-LANDMARK","tploc=y"); // restore restriction
+
+    // Perform TP
+    //lmRunRlvAs("TP-LANDMARK","tpto:" + globalPosition + "=force");
+
+    // FIXME: Determine whether this is needed or not
+
+    // Restore restrictions as needed
+    //lmRunRlvAs("TP-LANDMARK","tploc=n"); // restore restriction
+    //lmRunRlvAs("TP-LANDMARK","unsit=n"); // restore restriction
+}
+
+doTeleport(string landmark) {
+/*
+    if (!isLandmarkPresent(landmark)) {
+        debugSay(6,"DEBUG-LANDMARK","No landmark by the name of \"" + landmark + "\" is present in inventory.");
+        return;
+    }
+*/
+    // This should trigger a dataserver event
+    queryLandmarkData = llRequestInventoryData(landmark);
+
+/*
+    if (queryLandmarkData == NULL_KEY) {
+        llSay(DEBUG_CHANNEL,"Landmark <" + landmark + "> does not exist.");
+        return;
+    }
+*/
+    llOwnerSay("queryLandmarkData set to " + (string)queryLandmarkData);
+    //debugSay(6,"DEBUG-LANDMARK","queryLandmarkData set to " + (string)queryLandmarkData);
+    //debugSay(6,"DEBUG-LANDMARK","Teleporting dolly " + dollName + " to  inventory landmark \"" + landmark + "\".");
+}
 
 float adjustTimer() {
 
@@ -367,6 +417,7 @@ default {
 
         llRequestPermissions(dollID, PERMISSION_MASK);
         myName = llGetScriptName();
+        //doTeleport("Home");
     }
 
     //----------------------------------------
@@ -505,20 +556,16 @@ default {
                     break;
                 }
 
-#ifdef EMERGENCY_TP
                 case "teleport": {
-                    string lm = (string)split[0];
+                    // This either runs from Transform (Homing Beacon)
+                    // or from MenuHandler (menu button)
+                    //
+                    string landmark = (string)split[0];
 
-                    llRegionSayTo(lmID, 0, "Teleporting dolly " + dollName + " to  landmark " + lm + ".");
-
-                    lmRunRlv("tploc=y");
-
-                    // This should trigger a dataserver event
-                    rlvTPrequest = llRequestInventoryData(lm);
-                    debugSay(6,"DEBUG-AVATAR","rlvTPrequest = " + (string)rlvTPrequest);
+                    doTeleport(landmark);
                     break;
                 }
-#endif
+
                 case "startFollow": {
                     startFollow(carrierID);
                     break;
@@ -693,32 +740,22 @@ default {
 #endif
     }
 
-#ifdef EMERGENCY_TP
     //----------------------------------------
     // DATASERVER
     //----------------------------------------
     dataserver(key queryID, string queryData) {
 
-#define getRegionLocation(d) (llGetRegionCorner() + ((vector)data))
-#define locationToString(d) ((string)(llFloor(d.x)) + "/" + ((string)(llFloor(d.y))) + "/" + ((string)(llFloor(d.z))))
+        llOwnerSay("Data server fired.");
 
-        debugSay(6,"DEBUG-AVATAR","Data server running!");
-        debugSay(6,"DEBUG-AVATAR","Request = " + (string)queryID);
-        debugSay(6,"DEBUG-AVATAR","rlvTPrequest = " + (string)rlvTPrequest);
-        llOwnerSay("dataserver fired!");
-
-        if (queryID == rlvTPrequest) {
-            vector global = getRegionLocation(queryData);
-
-            debugSay(6,"DEBUG-AVATAR","Dolly should be teleporting now...");
-            llOwnerSay("Dolly is now teleporting.");
-
-            // Note this will be rejected if @unsit=n or @tploc=n are active
-            lmRunRlvAs("TP", "tpto:" + locationToString(global) + "=force");
-            lmRunRlv("tploc=n"); // restore restriction
+        if (queryID == queryLandmarkData) {
+            rlvTeleport(queryData);
         }
-    }
+#ifdef DEVELOPER_MODE
+        else {
+            debugSay(6,"DEBUG-LANDMARK","queryID is not equal to queryLandmarkData - skipping");
+        }
 #endif
+    }
 
     //----------------------------------------
     // RUN TIME PERMISSIONS

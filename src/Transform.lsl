@@ -139,7 +139,7 @@ integer dbConfig;
 integer mustAgreeToType;
 string keySpecificMenu;
 
-key kQuery;
+key typeNotecardQuery;
 
 list currentPhrases;
 
@@ -177,7 +177,7 @@ setDollType(string typeName) {
         if (showPhrases) {
             if (llGetInventoryType(typeNotecard) == INVENTORY_NOTECARD) {
 
-                kQuery = llGetNotecardLine(typeNotecard,readLine++);
+                typeNotecardQuery = llGetNotecardLine(typeNotecard,readLine++);
 
                 debugSay(2,"DEBUG-DOLLTYPE","Found notecard: " + typeNotecard);
             }
@@ -397,8 +397,7 @@ default {
             // is it possible to be collapsed but collapseTime be equal to 0.0?
             if (collapsed) {
                 if ((timerMark - collapseTime) > TIME_BEFORE_TP)
-                    if (llGetInventoryType(LANDMARK_HOME) == INVENTORY_LANDMARK)
-                        lmInternalCommand("teleport", LANDMARK_HOME, dollID); // runs in Avatar
+                    lmInternalCommand("teleport", LANDMARK_HOME, dollID); // runs in Avatar
             }
         }
 #endif
@@ -603,7 +602,7 @@ default {
                 // if showPhrases is turned on, read hypno phrases from notecard
                 if (showPhrases) {
                     if (llGetInventoryType(typeNotecard) == INVENTORY_NOTECARD) {
-                        kQuery = llGetNotecardLine(typeNotecard,readLine);
+                        typeNotecardQuery = llGetNotecardLine(typeNotecard,readLine);
                     }
                 }
             }
@@ -1267,11 +1266,11 @@ default {
     //----------------------------------------
     dataserver(key queryID, string queryData)  {
 
-        if (queryID == kQuery) {
+        if (queryID == typeNotecardQuery) {
             if (queryData == EOF) {
                 phraseCount = llGetListLength(currentPhrases);
                 llOwnerSay("Load of hypnotic device complete: " + (string)phraseCount + " phrases in memory");
-                kQuery = NULL_KEY;
+                typeNotecardQuery = NULL_KEY;
                 readLine = 0;
             }
             else {
@@ -1279,7 +1278,7 @@ default {
                 if (llStringLength(queryData) > 1) currentPhrases += queryData;
 
                 // Read next line
-                kQuery = llGetNotecardLine(typeNotecard,readLine++);
+                typeNotecardQuery = llGetNotecardLine(typeNotecard,readLine++);
             }
         }
     }

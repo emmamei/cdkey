@@ -320,9 +320,7 @@ default {
 #ifdef DEVELOPER_MODE
                     // Status messages for developers
                     msg += "\n\nTime before Emg Wind: " + (string)TIME_BEFORE_EMGWIND + "\nTime elapsed: " + (string)timeCollapsed + "\n";
-#ifdef EMERGENCY_TP
                     msg += "\nTime before TP: " + (string)TIME_BEFORE_TP;
-#endif
 #endif
 
                     // Only present the TP home option for the doll if they have been collapsed
@@ -527,13 +525,11 @@ default {
                 llGiveInventory(lmID,OBJECT_KEY);
             }
             else if (menuChoice == "Visit Dollhouse") {
-#ifdef EMERGENCY_TP
                 // If is Dolly, whisk Dolly away to Location of Landmark
                 // If is someone else, give Landmark to them
                 if (cdIsDoll(lmID) && rlvOk)
                     lmInternalCommand("teleport", LANDMARK_CDHOME, lmID);
                 else
-#endif
                     llGiveInventory(lmID, LANDMARK_CDHOME);
             }
             else if (menuChoice == "Visit Development")

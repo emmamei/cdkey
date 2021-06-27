@@ -97,17 +97,28 @@ doWinding(string winderName, key winderID) {
 
     integer windAmount;
 
-#ifdef SINGLE_SELF_WIND
-    // Test and reject repeat windings from Dolly - no matter who Dolly is or what the settings are
+    //----------------------------------------
+    // STEP 1:
+
     if (allowSelfWind) { // is self-wind allowed?
+
         if (winderID == dollID) { // is winder Dolly?
+
+#ifdef SINGLE_SELF_WIND
+            // Test and reject repeat windings from Dolly - no matter who Dolly is or what the settings are
             if (winderID == lastWinderID) { // is last winder also Dolly?
                 llOwnerSay("You have wound yourself once already; you must be wound by someone else before being able to wind again.");
-                            return;
+                return;
+            }
+#endif
+            // Test if Dolly activated emergency winder
+            if (windEmergencyActivated) {
+                llOwnerSay("You have activated your emergency winder. Someone else needs to wind you before you can wind again.");
+                return;
             }
         }
     }
-#endif
+
     // Test and reject repeat winding as appropriate - Controllers and Carriers are not limited
     // (odd sequence helps with short-circuiting and speed)
     if (!allowRepeatWind) {
@@ -121,6 +132,9 @@ doWinding(string winderName, key winderID) {
         }
     }
 
+    //----------------------------------------
+    // STEP 2:
+
     // Here, dolly may be collapsed or not...
 
     // Rather than clip afterwards, we clip the windAmount beforehand:
@@ -131,13 +145,20 @@ doWinding(string winderName, key winderID) {
     // At this point, the winding amount could be minimal - that is,
     // the Key is already fully wound. However - at this point who really cares?
 
+    //----------------------------------------
+    // STEP 3:
+
     // The "winding" takes place here. Note that while timeLeftOnKey might
     // be set - collapse is set a short time later - thus, timeLeftOnKey is greater
     // than zero, but collapse is still true.
     lmSendConfig("timeLeftOnKey", (string)(timeLeftOnKey += windAmount));
     if (lastWinderID != winderID) lmSendConfig("lastWinderID", (string)(lastWinderID = winderID));
 
+    //----------------------------------------
+    // STEP 4:
+
     lmInternalCommand("windMsg", (string)windAmount + "|" + winderName, winderID);
+    windEmergencyActivated = FALSE;
 
     if (collapsed) unCollapse();
 }
@@ -883,6 +904,7 @@ default {
                     if (collapsed) {
 
                         lmSendToController(dollName + " has activated the emergency winder.");
+                        windEmergencyActivated = TRUE;
 
                         lmSendConfig("winderRechargeTime", (string)(winderRechargeTime = (llGetUnixTime() + EMERGENCY_LIMIT_TIME)));
                         lmSendConfig("lastWinderID", (string)(lastWinderID = dollID));
@@ -905,7 +927,7 @@ default {
 #ifdef ADULT_MODE
                     if (!hardcore) {
 #endif
-                        s += "  There remains ";
+                        s += " There remains ";
 
                         if (rechargeMins < 60) s += (string)rechargeMins + " minutes ";
                         else s += "over " + (string)(rechargeMins / 60) + " hours ";
