@@ -1,5 +1,8 @@
-src/**/readme*
+**/readme*
+**/test*
 src/**/*.txt
 src/**/*.diff
+src/**/*.template
+src/**/*.orig
 [a-z]
 **/nohup.out

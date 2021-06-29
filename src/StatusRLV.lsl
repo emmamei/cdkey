@@ -7,35 +7,13 @@
 // DATE: 24 November 2020
 
 #include "include/GlobalDefines.lsl"
-//
-// As of 23 January 2014 this script is now state tracking only
-// core RLV command generators are now part of the Avatar script
-// thus we keep this script lightweight with plenty of heap room
-// for it's runtime data needs.
-//
-// Why is this so complex? Because......
-//
-// Because if a script sends a restriction, we want to have that
-// restriction remain, even if another script tries to clear it.
-// For each restriction, the scripts that triggered it will be tracked
-// and each reset checked.
-//
-// This is useful for when unknown scripts are setting and clearing
-// restrictions. If we assume that the scripts are known... then
-// things are simpler.
 
 #define CHATMSG_MAXLEN 896
-#define SCRIPT_MAXMEM 65536
-#define COMPLETE_CLEAR 1
+#define TESTING_DATASERVER 1
 
-#ifndef COMPLETE_CLEAR
-// rlvStatus is a list with stride 2:
-//
-//  1: RLV restriction
-//  2: String CSV containing scripts using restriction
-//
-list rlvRestrict;
-#endif
+//========================================
+// VARIABLES
+//========================================
 
 string scriptName;
 integer statusChannel = 55117;
@@ -87,6 +65,7 @@ doRlvCommand(string commandString) {
 
     llOwnerSay("@" + commandString);
 }
+
 //========================================
 // STATES
 //========================================
@@ -96,11 +75,11 @@ default {
     // STATE ENTRY
     //----------------------------------------
     state_entry() {
+        rlvOk = TRUE;
         myName = llGetScriptName();
         keyID = llGetKey();
 
         cdInitializeSeq();
-        //scaleMem();
     }
 
     //----------------------------------------
@@ -108,25 +87,7 @@ default {
     //----------------------------------------
     on_rez(integer start) {
         cdInitializeSeq();
-        //scaleMem();
     }
-
-#ifndef COMPLETE_CLEAR
-    //----------------------------------------
-    // LISTEN
-    //----------------------------------------
-    listen(integer listenChannel, string listenName, key listenID, string listenMessage) {
-
-        if (listenChannel == statusChannel) {
-            if (listenMessage == "") return; // fast exit
-
-            // Note that we are building rlvRestrict here - its value
-            // was cleared elsewhere before we got here the first time
-            debugSay(4,"DEBUG-STATUSRLV","RLV status: " + listenMessage);
-            rlvRestrict = (rlvRestrict=[]) + rlvRestrict + llParseString2List(listenMessage, [ "/" ], []);
-        }
-    }
-#endif
 
     //----------------------------------------
     // LINK MESSAGE
@@ -138,33 +99,46 @@ default {
         if (code == SEND_CONFIG) {
             string name = (string)split[0];
             string value = (string)split[1];
+            integer integerValue = (integer)value;
 
-                 if (name == "rlvOk")              rlvOk = (integer)value;
-            else if (name == "rlvSupport")    rlvSupport = (integer)value;
+            switch (name) {
+
+                case "rlvOk": {
+                    rlvOk = integerValue;
+                    break;
+                }
+
 #ifdef DEVELOPER_MODE
-            else if (name == "debugLevel")    debugLevel = (integer)value;
+                case "debugLevel": {
+                    debugLevel = integerValue;
+                    break;
+                }
 #endif
-            else
+            }
+
             return;
         }
-
         else if (code == INTERNAL_CMD) {
             string cmd = (string)split[0];
-            split = llDeleteSubList(split, 0, 0);
+            //split = llDeleteSubList(split, 0, 0);
 
-            if (cmd == "instantMessage") {
+            switch (cmd) {
+                case "instantMessage": {
 
-                // This is segregated for speed: this script (StatusRLV) doesn't have
-                // an overriding need to not have a 2s delay in it
-                llInstantMessage(lmID,(string)split[0]);
-            }
-        }
+                    // This is segregated for speed: this script (StatusRLV) doesn't have
+                    // an overriding need to not have a 2s delay in it
+                    llInstantMessage(lmID,(string)split[0]);
+                    break;
+                }
+            } // switch
+        } // INTERNAL_CMD
         else if (code == RLV_CMD) {
-            string rlvScript = (string)split[0];
             string internalRlvCommand = (string)split[1];
             string rlvCommand = (string)split[2];
 
 #ifdef DEVELOPER_MODE
+            string rlvScript = (string)split[0];
+
             debugSay(4,"DEBUG-STATUSRLV","RLV_CMD script " + rlvScript + ": internalRlvCommand = " + internalRlvCommand + ": rlvCommand = " + rlvCommand);
 
             if (rlvOk != TRUE) {
@@ -174,15 +148,6 @@ default {
 #endif
 
             switch(internalRlvCommand) {
-
-#ifdef NOT_USED
-                case "rlvEscape": {
-                    // complete cancel of all RLV - such as from SafeWord
-                    llOwnerSay("@clear"); // Total RLV zap: such as from SafeWord
-                    rlvOk = FALSE;
-                    break;
-                }
-#endif
 
                 case "rlvClearCmd": {
                     doRlvClear(rlvCommand);
