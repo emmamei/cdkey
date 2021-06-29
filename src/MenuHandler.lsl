@@ -1068,6 +1068,7 @@ default {
 #endif
                     return;
                 }
+#ifdef TP_HOME
                 else if (listenMessage == "TP Home") {
 
                     // This menu selection only happens when user selects TP Home button...
@@ -1077,6 +1078,7 @@ default {
                     lmInternalCommand("teleport", LANDMARK_HOME, listenID);
                     return;
                 }
+#endif
                 else if (listenMessage == "RLV") {
                     lmInternalCommand("startRlvCheck","",listenID);
                     return;

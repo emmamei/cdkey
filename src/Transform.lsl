@@ -387,6 +387,7 @@ default {
             }
         }
 
+#ifdef TP_HOME
 #ifdef HOMING_BEACON
         //----------------------------------------
         // HOMING BEACON: AUTO-TRANSPORT
@@ -397,9 +398,10 @@ default {
             // is it possible to be collapsed but collapseTime be equal to 0.0?
             if (collapsed) {
                 if ((timerMark - collapseTime) > TIME_BEFORE_TP)
-                    lmInternalCommand("teleport", LANDMARK_HOME, dollID); // runs in Avatar
+                    lmInternalCommand("teleport", LANDMARK_HOME, dollID);
             }
         }
+#endif
 #endif
         //----------------------------------------
         // OUTFIT SEARCH: RLV TIMEOUTS

@@ -329,6 +329,7 @@ default {
 #ifdef ADULT_MODE
                     if (!hardcore) {
 #endif
+#ifdef TP_HOME
                         if (rlvOk) {
                             if (timeCollapsed > TIME_BEFORE_TP) {
 #ifdef HOMING_BEACON
@@ -339,6 +340,7 @@ default {
                                         menu += ["TP Home"];
                             }
                         }
+#endif
 
                         // If the doll is still down after 1800 seconds (30 minutes) and their
                         // emergency winder is recharged; add a button for it
@@ -527,8 +529,13 @@ default {
             else if (menuChoice == "Visit Dollhouse") {
                 // If is Dolly, whisk Dolly away to Location of Landmark
                 // If is someone else, give Landmark to them
-                if (cdIsDoll(lmID) && rlvOk)
+                if (cdIsDoll(lmID) && rlvOk) {
+#ifdef TP_HOME
                     lmInternalCommand("teleport", LANDMARK_CDHOME, lmID);
+#else
+                    ;
+#endif
+                }
                 else
                     llGiveInventory(lmID, LANDMARK_CDHOME);
             }
