@@ -19,10 +19,10 @@ float Config_version=1.0;
 #define OPT_SINGLEWIND []
 #endif
 
-#ifdef PRESERVE_DIRECTORY
-#define OPT_PRESERVE_DIRECTORY ["PreserveDirectory"]
+#ifdef PRESERVE_FOLDER
+#define OPT_PRESERVE_FOLDER ["PreserveFolder"]
 #else
-#define OPT_PRESERVE_DIRECTORY []
+#define OPT_PRESERVE_FOLDER []
 #endif
 
 #ifdef ROLLOVER
@@ -45,7 +45,7 @@ float Config_version=1.0;
 #define OPT_KEY_MODE ["Mode=Normal"]
 #endif
 
-#define BUILD_REPORT (OPT_ADULT + OPT_KEY_MODE + OPT_ROLLOVER + OPT_SINGLEWIND + OPT_HOMING + OPT_PRESERVE_DIRECTORY + OPT_WIND )
+#define BUILD_REPORT (OPT_ADULT + OPT_KEY_MODE + OPT_ROLLOVER + OPT_SINGLEWIND + OPT_HOMING + OPT_PRESERVE_FOLDER + OPT_WIND )
 
 #define lmConfigReport() llMessageLinked(LINK_THIS, 142, myName, NULL_KEY)
 

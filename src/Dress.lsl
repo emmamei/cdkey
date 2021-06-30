@@ -407,7 +407,7 @@ default {
                     dressVia(dressRandomChannel);
                 }
                 else {
-                    llOwnerSay("No type directory found to choose an outfit from.");
+                    llOwnerSay("No type folder found to choose an outfit from.");
                 }
             }
             else if (name == "isVisible") {
@@ -528,8 +528,8 @@ default {
                 if (outfitFolder != "") {
                     debugSay(2, "DEBUG-DRESS", "Outfit menu; outfit Folder is not empty");
 
-#ifndef PRESERVE_DIRECTORY
-                    // This resets the current directory location for the menu
+#ifndef PRESERVE_FOLDER
+                    // This resets the current folder location for the menu
                     //
                     // Note if typeFolder is unset, then clothingFolder will be too
                     clothingFolder = typeFolder;
@@ -657,13 +657,13 @@ default {
                 list dialogItems = [ "Outfits Prev", "Outfits Next", "Back..." ];
 
                 // Setting backMenu in this way is not proper: we don't know if
-                // going back to the Main menu or one directory up is appropriate
+                // going back to the Main menu or one folder up is appropriate
                 //
                 //backMenu = MAIN;
                 //lmSendConfig("backMenu",(backMenu = MAIN));
                 //dialogItems += "Back...";
 
-                // We only get here if we are wandering about in the same directory...
+                // We only get here if we are wandering about in the same folder...
                 lmDialogListen();
                 outfitHandle = cdListenAll(outfitChannel);
                 outfitDialogList = outfitPageN(outfitList);
@@ -748,12 +748,12 @@ default {
 
             if (listenMessage == "") {
 
-                // No outfits available in this directory
+                // No outfits available in this folder
                 lmDialogListen();
                 cdListenAll(outfitChannel);
 
                 backMenu = UPMENU;
-                llDialog(dresserID, "No outfits to wear in this directory.", [ "Back..." ], outfitChannel);
+                llDialog(dresserID, "No outfits to wear in this folder.", [ "Back..." ], outfitChannel);
 
                 llSetTimerEvent(60.0);
                 return;
@@ -799,7 +799,7 @@ default {
                 cdListenAll(outfitChannel);
 
                 backMenu = UPMENU;
-                llDialog(dresserID, "No wearable outfits in this directory.", [ "Back..." ], outfitChannel);
+                llDialog(dresserID, "No wearable outfits in this folder.", [ "Back..." ], outfitChannel);
 
                 llSetTimerEvent(60.0);
                 return;
@@ -849,7 +849,7 @@ default {
         // Channel: dressRandomChannel
         //
         // Choosing a new outfit automatically: select a random outfit from the
-        // type directory.
+        // type folder.
         //
         else if (listenChannel == dressRandomChannel) {
             // Choose an outfit
@@ -865,7 +865,7 @@ default {
 
             if (listenMessage == "") {
 
-                // No outfits available in this directory: give message
+                // No outfits available in this folder: give message
                 llOwnerSay("No outfits available to use for this Doll type.");
 
                 llSetTimerEvent(60.0);
@@ -917,7 +917,7 @@ default {
             if (outfitList == []) {
                 outfitList = []; // free memory
 
-                llOwnerSay("No wearable outfits in Doll type directory.");
+                llOwnerSay("No wearable outfits in Doll type folder.");
 
                 llSetTimerEvent(60.0);
                 return;

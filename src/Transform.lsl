@@ -872,7 +872,7 @@ default {
                                 }
 #ifdef DEVELOPER_MODE
                                 else {
-                                    debugSay(5,"DEBUG-TYPES","Directory found: " + typeTemp);
+                                    debugSay(5,"DEBUG-TYPES","Folder found: " + typeTemp);
                                 }
 #endif
                             }

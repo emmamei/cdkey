@@ -74,9 +74,9 @@ wearStandardOutfit(string newOutfit) {
 
     debugSay(2,"DEBUG-DRESS","oldOutfit == \"" + oldOutfit + "\"");
 
-    // We don't want anything in these directories to be popped off
+    // We don't want anything in these folders to be popped off
 
-    // Step 2: Remove oldOutfit or alternately entire Outfits dir
+    // Step 2: Remove oldOutfit or alternately entire Outfits folder
     if (oldOutfit != "") {
         debugSay(2, "DEBUG-DRESS", "Removing old outfit from " + oldOutfit);
         cdForceDetach(oldOutfit);
