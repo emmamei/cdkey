@@ -463,9 +463,6 @@ default {
 #ifdef ADULT_MODE
             else if (name == "hardcore")               hardcore = (integer)value;
 #endif
-#ifdef DEVELOPER_MODE
-            else if (name == "timeReporting")     timeReporting = (integer)value;
-#endif
             else if (name == "poseAnimation") {
                 // Note that poses are handled as a choice... not here
                 poseAnimation = value;

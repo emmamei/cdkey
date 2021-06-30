@@ -521,7 +521,6 @@ default {
             list cmdList = [
                              "collapsed",
 #ifdef DEVELOPER_MODE
-                             "timeReporting",
                              "debugLevel",
 #endif
                              "simRating",
@@ -559,7 +558,6 @@ default {
 
                  if (name == "collapsed")                   collapsed = (integer)value;
 #ifdef DEVELOPER_MODE
-            else if (name == "timeReporting")           timeReporting = (integer)value;
             else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
             else if (name == "simRating")                   simRating = value;
