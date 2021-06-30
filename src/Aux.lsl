@@ -531,7 +531,7 @@ default {
                 // If is someone else, give Landmark to them
 #ifdef TP_HOME
                 if (cdIsDoll(lmID)) {
-                    if (RLVok) {
+                    if (rlvOk) {
                         lmInternalCommand("teleport", LANDMARK_CDHOME, lmID);
                     }
                     else

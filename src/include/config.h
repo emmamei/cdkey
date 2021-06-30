@@ -46,7 +46,7 @@
 // #define DEBUG_BADRLV 1
 
 /* adds auto TP to Dolly... */
-// #define TP_HOME 1
+#define TP_HOME 1
 
 #ifdef TP_HOME
 /* adds a homing beacon: an automatic TP home for collapsed dollies */
