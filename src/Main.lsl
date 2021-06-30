@@ -442,12 +442,9 @@ default {
 #define bumpExpireTime(a) llGetUnixTime() + (a)
 
 #ifdef DEVELOPER_MODE
-        if (debugLevel > 0) {
-            timeSpan = llGetTime();
-            if (timeSpan) {
-                debugSay(5,"DEBUG-MAIN","Main Timer fired, interval " + formatFloat2(timeSpan) + "s.");
-            }
-        }
+        debugSay(5,"DEBUG-MAIN","Main Timer fired.");
+
+        //timeSpan = llGetTime();
 #endif
 
         //----------------------------------------

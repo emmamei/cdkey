@@ -56,9 +56,6 @@ string myPath;
 
 integer i;
 integer posePage;
-integer timerMark;
-integer lastTimerMark;
-integer timeMark;
 integer reachedTarget = FALSE;
 integer hasCarrier;
 integer nearCarrier;
@@ -665,15 +662,7 @@ default {
         else llSetTimerEvent(0.0);
 
 #ifdef DEVELOPER_MODE
-        if (debugLevel > 0) {
-            timerMark = llGetUnixTime();
-
-            if (lastTimerMark) {
-                debugSay(5,"DEBUG-AVATAR","Avatar Timer fired, interval " + formatFloat(timerMark - lastTimerMark,2) + "s.");
-            }
-
-            lastTimerMark = timerMark;
-        }
+        debugSay(5,"DEBUG-AVATAR","Avatar Timer fired.");
 #endif
     }
 

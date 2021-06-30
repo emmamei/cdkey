@@ -91,7 +91,7 @@ doRlvClear(string commandString) {
     // this is a blanket clear, but it doesn't mean to us what
     // it means normally: we have a base RLV set
 
-    debugSay(2,"DEBUG-STATUSRLV","RLV clear command issued from " + script);
+    //debugSay(2,"DEBUG-STATUSRLV","RLV clear command issued from " + script);
     //llSay(DEBUG_CHANNEL,"rlvClearCmd run from " + script);
 
     llOwnerSay("@clear"); // clear command
@@ -286,10 +286,11 @@ default {
     //----------------------------------------
     dataserver(key queryID, string queryData) {
 
-        debugSay(6,"DEBUG-LANDMARK","queryLandmarkData is equal to " + (string)queryLandmarkData);
-        debugSay(6,"DEBUG-LANDMARK","queryID is equal to " + (string)queryID);
+        //debugSay(6,"DEBUG-LANDMARK","queryLandmarkData is equal to " + (string)queryLandmarkData);
+        //debugSay(6,"DEBUG-LANDMARK","queryID is equal to " + (string)queryID);
 
         if (queryID == queryLandmarkData) {
+
             rlvTeleport(queryData);
             llSetTimerEvent(0.0);
             queryLandmarkData = NULL_KEY;

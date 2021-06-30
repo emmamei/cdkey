@@ -94,10 +94,6 @@ integer readingNC;
 string typeNotecard;
 integer timerMark;
 
-#ifdef DEVELOPER_MODE
-integer lastTimerMark;
-#endif
-
 integer outfitSearching;
 integer outfitSearchTries;
 integer typeSearchTries;
@@ -198,7 +194,7 @@ setDollType(string typeName) {
     //
     if (typeName != "Regular") {
         if (rlvOk == TRUE) {
-            debugSay(4,"DEBUG-DOLLTYPE","Searching for " + typeFolderExpected);
+            debugSay(4,"DEBUG-DOLLTYPE","Searching for type folder: " + typeFolderExpected);
 
             typeSearchHandle = cdListenMine(typeSearchChannel);
 
@@ -364,19 +360,12 @@ default {
         // typeFolderExpected = Computed but untested typeFolder
 
 #ifdef DEVELOPER_MODE
-        if (timeReporting) {
-            string s;
+        string s = "Transform Timer fired";
 
-            if (lastTimerMark > 0) {
-                s = "Transform Timer fired, interval " + formatFloat(timerMark - lastTimerMark,2) + "s";
-                if (lowScriptExpire) s += " (low script mode enabled)";
-                s += ".";
+        if (lowScriptExpire) s += " (low script mode enabled)";
+        s += ".";
 
-                debugSay(5,"DEBUG-TRANSFORM",s);
-            }
-
-            lastTimerMark = timerMark;
-        }
+        debugSay(5,"DEBUG-TRANSFORM",s);
 #endif
         //----------------------------------------
         // TYPE LOCK
@@ -657,12 +646,6 @@ default {
 
                 lmSendConfig("backMenu",(backMenu = MAIN));
                 debugSay(6,"DEBUG-OPTIONS","Building Options menu...");
-                debugSay(6,"DEBUG-OPTIONS","lmID = " + (string)lmID);
-                debugSay(6,"DEBUG-OPTIONS","isDoll = " + (string)cdIsDoll(lmID));
-                debugSay(6,"DEBUG-OPTIONS","isCarrier = " + (string)cdIsCarrier(lmID));
-                debugSay(6,"DEBUG-OPTIONS","isExternalController = " + (string)cdIsExternalController(lmID));
-                debugSay(6,"DEBUG-OPTIONS","isController = " + (string)cdIsController(lmID));
-                debugSay(6,"DEBUG-OPTIONS","controllerList: " + llDumpList2String(controllerList,","));
 
                 if (cdIsDoll(lmID)) {
                     optionsMenuMessage = "See the help file for information on these options.";
@@ -838,10 +821,10 @@ default {
                     list typeMenuChoices = typeBufferedList;
                     integer i;
 
-                    debugSay(6,"DEBUG-TYPES","Type Folder List (during menu build) = " + llDumpList2String(typeFolderBufferedList,","));
-                    debugSay(6,"DEBUG-TYPES","Type List (during menu build) = " + llDumpList2String(typeBufferedList,","));
+                    //debugSay(6,"DEBUG-TYPES","Type Folder List (during menu build) = " + llDumpList2String(typeFolderBufferedList,","));
+                    //debugSay(6,"DEBUG-TYPES","Type List (during menu build) = " + llDumpList2String(typeBufferedList,","));
                     debugSay(6,"DEBUG-TYPES","Type Menu Choices (during menu build) = " + llDumpList2String(typeMenuChoices,","));
-                    debugSay(6,"DEBUG-TYPES","Current doll type = " + dollType);
+                    //debugSay(6,"DEBUG-TYPES","Current doll type = " + dollType);
 
                     // Delete the current type: transforming to current type is redundant
                     if ((i = llListFindList(typeMenuChoices, (list)dollType)) != NOT_FOUND) {
@@ -873,7 +856,7 @@ default {
 
                         while (i--) {
                             typeTemp = (string)typeMenuChoices[i];
-                            debugSay(5,"DEBUG-TYPES","Type being scanned[" + (string)i + "]: " + typeTemp);
+                            //debugSay(5,"DEBUG-TYPES","Type being scanned[" + (string)i + "]: " + typeTemp);
 
                             // If type entry is a SPECIAL_TYPE, then skip to next;
                             // Special types are kept in the menu choices, no matter what
@@ -887,7 +870,7 @@ default {
                                 if (!(inList(typeFolderBufferedList,typeTemp))) {
 
                                     typeMenuChoices = llDeleteSubList(typeMenuChoices, i, i);
-                                    debugSay(5,"DEBUG-TYPES","Type removed from menu: " + typeTemp);
+                                    //debugSay(5,"DEBUG-TYPES","Type removed from menu: " + typeTemp);
                                 }
 #ifdef DEVELOPER_MODE
                                 else {
