@@ -529,15 +529,17 @@ default {
             else if (menuChoice == "Visit Dollhouse") {
                 // If is Dolly, whisk Dolly away to Location of Landmark
                 // If is someone else, give Landmark to them
-                if (cdIsDoll(lmID) && rlvOk) {
 #ifdef TP_HOME
-                    lmInternalCommand("teleport", LANDMARK_CDHOME, lmID);
-#else
-                    ;
-#endif
+                if (cdIsDoll(lmID)) {
+                    if (RLVok) {
+                        lmInternalCommand("teleport", LANDMARK_CDHOME, lmID);
+                    }
+                    else
+                        llGiveInventory(lmID, LANDMARK_CDHOME);
                 }
-                else
-                    llGiveInventory(lmID, LANDMARK_CDHOME);
+#else
+                llGiveInventory(lmID, LANDMARK_CDHOME);
+#endif
             }
             else if (menuChoice == "Visit Development")
                 cdSayTo("Here is your link to the Community Doll Key development: " + WEB_DEV, lmID);

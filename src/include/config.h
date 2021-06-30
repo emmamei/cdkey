@@ -45,8 +45,13 @@
    fails effectively disable the listener for the check reply */
 // #define DEBUG_BADRLV 1
 
+/* adds auto TP to Dolly... */
+// #define TP_HOME 1
+
+#ifdef TP_HOME
 /* adds a homing beacon: an automatic TP home for collapsed dollies */
 // #define HOMING_BEACON 1
+#endif
 
 /* enable optional RLV: dolly can enable and disable it */
 // #define OPTIONAL_RLV

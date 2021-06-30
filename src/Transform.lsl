@@ -387,7 +387,6 @@ default {
             }
         }
 
-#ifdef TP_HOME
 #ifdef HOMING_BEACON
         //----------------------------------------
         // HOMING BEACON: AUTO-TRANSPORT
@@ -401,7 +400,6 @@ default {
                     lmInternalCommand("teleport", LANDMARK_HOME, dollID);
             }
         }
-#endif
 #endif
         //----------------------------------------
         // OUTFIT SEARCH: RLV TIMEOUTS
