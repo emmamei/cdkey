@@ -72,8 +72,11 @@ string normalselfFolder; // This is the ~normalself we are using
 string normaloutfitFolder; // This is the ~normaloutfit we are using
 string nudeFolder; // This is the ~nude we are using
 
-integer menuDressHandle;
-integer menuDressChannel;
+integer dressMenuHandle;
+integer dressMenuChannel;
+
+integer dressRandomHandle;
+integer dressRandomChannel;
 
 integer dressingFailures;
 
@@ -156,50 +159,6 @@ list outfitPageN(list outfitList) {
     return llListSort(output,1,1);
 }
 
-retryDirSearch() {
-
-    // Nowhere to retry to
-    if (clothingFolder == "") return;
-
-    // Retry at Outfits top level
-    // FIXME: what about Type folders?
-    clothingFolder = "";
-    //lmSendConfig("clothingFolder", clothingFolder);
-    dressVia(randomDressChannel); // recursion
-}
-
-#ifdef RLV_BASE_CHANNEL
-// FUNCTION: rlvRequest - used in only one location
-//
-// FIXME: can the rlvRequest function be removed or reworked?
-rlvRequest(string rlv, integer channel) {
-
-    if (channel < 2670) {
-
-        // FIXME: this should not happen
-
-        if (channel == 0) {
-            llSay(DEBUG_CHANNEL,"rlvRequest called with channel zero");
-            return;
-        }
-
-        llSay(DEBUG_CHANNEL,"rlvRequest called with old channel numbers");
-        if (channel == 2666) menuDressHandle = cdListenAll(menuDressChannel);
-
-        lmRunRlv(rlv + (string)(rlvBaseChannel + channel));
-    }
-    else {
-
-        // FIXME: this block should be executed all the time
-
-        if (channel == menuDressChannel) menuDressHandle = cdListenAll(menuDressChannel);
-        lmRunRlv(rlv + (string)channel);
-    }
-
-    llSetTimerEvent(30.0);
-}
-#endif
-
 listInventoryOn(integer channel) {
 
     if (outfitFolder == "") {
@@ -226,9 +185,15 @@ listInventoryOn(integer channel) {
 #endif
     lmSendConfig("activeFolder", activeFolder);
 
-    if (channel == menuDressChannel) {
-        menuDressHandle =  cdListenAll(menuDressChannel);
-        lmRunRlv("getinv:" + activeFolder + "=" + (string)(channel));
+    if (channel == dressMenuChannel) {
+        dressMenuHandle =  cdListenAll(dressMenuChannel);
+        lmRunRlv("getinv:" + activeFolder + "=" + (string)(dressMenuChannel));
+
+        llSetTimerEvent(30.0);
+    }
+    else if (channel == dressRandomChannel) {
+        dressRandomHandle =  cdListenAll(dressRandomChannel);
+        lmRunRlv("getinv:" + activeFolder + "=" + (string)(dressRandomChannel));
 
         llSetTimerEvent(30.0);
     }
@@ -402,7 +367,8 @@ default {
 #ifdef RLV_BASE_CHANNEL
                 rlvBaseChannel = dialogChannel ^ 0x80000000; // Xor with the sign bit forcing the positive channel needed by RLV spec.
 #endif
-                menuDressChannel = (dialogChannel ^ 0x80000000) + 2666; // Xor with the sign bit forcing the positive channel needed by RLV spec.
+                dressMenuChannel = (dialogChannel ^ 0x80000000) + 2666; // Xor with the sign bit forcing the positive channel needed by RLV spec.
+                dressRandomChannel = dressMenuChannel + 1;
                 outfitChannel = dialogChannel + 15; // arbitrary offset
                 debugSay(6, "DEBUG-DRESS", "outfits Channel set to " + (string)outfitChannel);
 
@@ -427,12 +393,22 @@ default {
             else if (name == "outfitFolder") {
                 outfitFolder = value;
 
-                if (typeFolder != "") topFolder = outfitFolder + "/" + typeFolder;
-                else topFolder = outfitFolder;
+                // Even though type folder may be set,
+                // it will be invalidated by this process,
+                // and should be set a long time after this anyway.
+                //
+                topFolder = outfitFolder;
             }
             else if (name == "typeFolder") {
                 typeFolder = value;
-                topFolder = outfitFolder + "/" + typeFolder;
+
+                if (typeFolder != "") {
+                    topFolder = outfitFolder + "/" + typeFolder;
+                    dressVia(dressRandomChannel);
+                }
+                else {
+                    llOwnerSay("No type directory found to choose an outfit from.");
+                }
             }
             else if (name == "isVisible") {
                 isVisible = (integer)value;
@@ -558,7 +534,7 @@ default {
                     // Note if typeFolder is unset, then clothingFolder will be too
                     clothingFolder = typeFolder;
 #endif
-                    dressVia(menuDressChannel);
+                    dressVia(dressMenuChannel);
                 }
                 else {
                     clearDresser();
@@ -596,7 +572,7 @@ default {
                     //lmSendConfig("clothingFolder", clothingFolder);
                 }
 
-                dressVia(menuDressChannel); // recursion: put up a new Primary menu
+                dressVia(dressMenuChannel); // recursion: put up a new Primary menu
                 llSetTimerEvent(60.0);
             }
         }
@@ -729,7 +705,7 @@ default {
 
                         debugSay(6, "DEBUG-DRESS", "Generating new list of outfits...");
                         lmSendConfig("backMenu",(backMenu = UPMENU));
-                        dressVia(menuDressChannel); // recursion: put up a new Primary menu
+                        dressVia(dressMenuChannel); // recursion: put up a new Primary menu
 
                         llSetTimerEvent(60.0);
                     }
@@ -752,19 +728,19 @@ default {
         }
 
         //----------------------------------------
-        // Channel: menuDressChannel
+        // Channel: dressMenuChannel
         //
         // Choosing a new outfit normally and manually: create a paged dialog with an
         // alphabetical list of available outfits, and let the user choose one
         //
-        else if (listenChannel == menuDressChannel) {
+        else if (listenChannel == dressMenuChannel) {
 
             // Choose an outfit
             //
             // This is the first menu presented upon the activation
             // of a new folder to choose outfits from.
 
-            llListenRemove(menuDressHandle);
+            llListenRemove(dressMenuHandle);
 
             // Check for an empty (text) list of outfits
             //
@@ -867,7 +843,97 @@ default {
             llDialog(dresserID, outfitMessage, dialogSort(newOutfitList), outfitChannel);
 
             llSetTimerEvent(60.0);
-            newOutfitList = [];
+        }
+
+        //----------------------------------------
+        // Channel: dressRandomChannel
+        //
+        // Choosing a new outfit automatically: select a random outfit from the
+        // type directory.
+        //
+        else if (listenChannel == dressRandomChannel) {
+            // Choose an outfit
+            //
+            // This is the first menu presented upon the activation
+            // of a new folder to choose outfits from.
+
+            llListenRemove(dressRandomHandle);
+
+            // Check for an empty (text) list of outfits
+            //
+            // This is check #1 of an empty list of outfits
+
+            if (listenMessage == "") {
+
+                // No outfits available in this directory: give message
+                llOwnerSay("No outfits available to use for this Doll type.");
+
+                llSetTimerEvent(60.0);
+                return;
+            }
+
+            outfitList = llParseString2List(listenMessage, [","], []);
+
+            integer n;
+            string itemName;
+            string prefix;
+            list tmpList;
+
+            debugSay(6, "DEBUG-DRESS", "Filtering random outfit data");
+
+            // Filter list of outfits (directories) to choose:
+            // remove all non-outfits... Note some of these
+            // are currently unused by the code: if the macros
+            // are removed, this code will have to be fixed.
+            //
+            n = llGetListLength(outfitList);
+            while (n--) {
+                itemName = (string)outfitList[n];
+                prefix = cdGetFirstChar(itemName);
+
+                if (!
+                   (isGroupFolder(prefix) ||
+                    isGroupFolder(prefix) ||
+                    isHiddenFolder(prefix) ||
+                    isPlusFolder(prefix) ||
+                    isAvatarFolder(prefix) ||
+                    isTypeFolder(prefix) ||
+                    isParentFolder(prefix) ||
+                    isRated(prefix))) {
+
+                    tmpList += itemName;
+                }
+            }
+
+            outfitList = tmpList;
+            tmpList = [];
+
+            debugSay(6, "DEBUG-DRESS", "Filtered random list = " + llDumpList2String(outfitList,","));
+
+            // Check for zero outfits in the list after cleaning it up...
+            //
+            // This is check #2 for an empty list of outfits
+
+            if (outfitList == []) {
+                outfitList = []; // free memory
+
+                llOwnerSay("No wearable outfits in Doll type directory.");
+
+                llSetTimerEvent(60.0);
+                return;
+            }
+
+            // At this point, outfitList is now completely built:
+            // if we wanted a random outfit, this is the place for it.
+            newOutfit = (string)outfitList[ (integer)llFrand(llGetListLength(outfitList)) ];
+            llOwnerSay("Dressing Dolly as " + dollType + " doll with " + newOutfit + " outfit");
+
+            // We can bypass the entire outfit selection process, and call wearOutfit directly,
+            // because we know a lot more about the results.
+            //
+            lmInternalCommand("wearOutfit", newOutfit, NULL_KEY);
+
+            llSetTimerEvent(60.0);
         }
     }
 }

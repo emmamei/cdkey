@@ -203,7 +203,7 @@ wearOutfitCore(string newOutfitName) {
 
     // Build the newOutfit* variables - but do they get used?
 
-    newOutfitFolder = outfitFolder;
+    newOutfitFolder = topFolder;
       newOutfitPath = clothingFolder;
 
     newOutfit = newOutfitFolder + "/";
@@ -231,8 +231,8 @@ wearOutfitCore(string newOutfitName) {
 
     oldOutfit = newOutfit;
 
-    llListenRemove(menuDressHandle);
-
+    llListenRemove(dressMenuHandle);
+    llListenRemove(dressRandomHandle);
 }
 
 #define rlvLockFolderRecursive(a)   ("detachallthis:" + (a) + "=n")
