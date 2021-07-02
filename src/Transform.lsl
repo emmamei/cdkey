@@ -14,6 +14,7 @@
 #define cdProfileURL(i) "secondlife:///app/agent/"+(string)(i)+"/about"
 #define cdStringEndMatch(a,b) llGetSubString(a,-llStringLength(b),STRING_END)==b
 #define cdListenMine(a)   llListen(a, NO_FILTER, dollID, NO_FILTER)
+//#define cdFindInList(a,b) (~llListFindList(a, (list)(b)))
 
 // Channel to use to discard dialog output
 #define DISCARD_CHANNEL 9999
@@ -148,9 +149,31 @@ setDollType(string typeName) {
     //typeName = cdGetFirstChar(llToUpper(typeName)) + cdButFirstChar(llToLower(typeName));
 
     reloadTypeNames(NULL_KEY);
-    if (llListFindList(typeBufferedList, (list)typeName) == NOT_FOUND) {
-      llSay(DEBUG_CHANNEL,"Invalid Doll Type specified!");
-      return;
+
+    //----------------------------------------
+    // VALIDATE TYPE
+    //
+    // Note we test against the buffered list (notecards) but
+    // also test againts the buffered list of folders if it
+    // exists.
+    //
+    if (!cdFindInList(typeBufferedList, typeName)) {
+
+        if (typeFolderBufferedList == []) {
+
+            llSay(DEBUG_CHANNEL,"Invalid Doll Type specified!");
+            return;
+        }
+        else {
+
+            if (!cdFindInList(typeFolderBufferedList, typeName)) {
+
+                // Not in Type List, and not in Type Folder List either...
+                llSay(DEBUG_CHANNEL,"Invalid Doll Type specified!");
+                return;
+
+            }
+        }
     }
 
     if (typeName == "") typeName = "Regular";
@@ -248,7 +271,7 @@ reloadTypeNames(key id) {
             }
         }
 
-#define inTypeBufferedList(a) (llListFindList(typeBufferedList, (list)(a)) != NOT_FOUND)
+#define inTypeBufferedList(a) (~llListFindList(typeBufferedList, (list)(a)))
 
         //We don't need a Notecard to be present for these to be active
         //
@@ -549,7 +572,7 @@ default {
             // Commands need to be in the list cmdList in order to be
             // recognized, before testing down below
             //
-            if (llListFindList(cmdList, (list)name) == NOT_FOUND)
+            if (!cdFindInList(cmdList, name))
                 return;
 
             string value = (string)split[1];
@@ -784,6 +807,8 @@ default {
 
                 // Doll must remain in a type for a period of time
                 if (typeLockExpire) {
+
+                    // Dolly's type cannot be changed now: build dialog and message
                     debugSay(5,"DEBUG-TYPES","Transform is currently locked");
 
                     string msg3 = " cannot be transformed right now, as ";
@@ -806,7 +831,8 @@ default {
                     llDialog(lmID, msg, ["OK"], DISCARD_CHANNEL);
                 }
                 else {
-                    // Transformation lock time has expired: transformations (type changes) now allowed
+
+                    // Dolly can change type: not locked
                     reloadTypeNames(lmID);
                     debugSay(5,"DEBUG-TYPES","Type names reloaded");
 
@@ -831,7 +857,6 @@ default {
 
                     debugSay(6,"DEBUG-TYPES","Type menu choices = " + llDumpList2String(typeMenuChoices,","));
 
-#define inList(a,b) (~llListFindList(a, (list)b))
 #define isSpecialType(a) (~llListFindList(SPECIAL_TYPES, (list)a))
 
                     // We don't need to add special types, as they have been added up front
@@ -865,7 +890,7 @@ default {
                                 // list, then remove from // menu list: the type will have
                                 // no phrases, and no outfits - and no purpose
                                 //
-                                if (!(inList(typeFolderBufferedList,typeTemp))) {
+                                if (!(cdFindInList(typeFolderBufferedList, typeTemp))) {
 
                                     typeMenuChoices = llDeleteSubList(typeMenuChoices, i, i);
                                     //debugSay(5,"DEBUG-TYPES","Type removed from menu: " + typeTemp);
@@ -889,7 +914,7 @@ default {
                     while (i--) {
                         typeTemp = (string)typeFolderBufferedList[i];
 
-                        if (!(inList(typeMenuChoices,typeTemp))) {
+                        if (!(cdFindInList(typeMenuChoices, typeTemp))) {
 
                             typeMenuChoices += typeTemp;
                             debugSay(5,"DEBUG-TYPES","Type added to menu: " + typeTemp);
@@ -1041,7 +1066,7 @@ default {
 
             // Are we searching for something specific? Bypass defaults if so
             if (outfitFolderExpected != "") {
-                if (~llListFindList(folderList, (list)outfitFolderExpected))  outfitFolder = outfitFolderExpected;
+                if (cdFindInList(folderList, outfitFolderExpected)) outfitFolder = outfitFolderExpected;
                 else llSay(DEBUG_CHANNEL,"Outfit folder \"" + outfitFolderExpected + "\" could not be found - searching for defaults");
                 // else outfitFolder is unaffected - and remains unset
             }
@@ -1055,24 +1080,15 @@ default {
                 if (llSubStringIndex(listenMessage,"Outfits") >= 0) {
 
                     // exact match check
-                         if (~llListFindList(folderList, (list)"> Outfits"))  outfitFolder = "> Outfits";
-                    else if (~llListFindList(folderList, (list)"Outfits"))    outfitFolder = "Outfits";
+                         if (cdFindInList(folderList, "> Outfits"))  outfitFolder = "> Outfits";
+                    else if (cdFindInList(folderList, "Outfits"))    outfitFolder = "Outfits";
 
                 }
                 else if (llSubStringIndex(listenMessage,"Dressup") >= 0) {
 
-                         if (~llListFindList(folderList, (list)"> Dressup"))  outfitFolder = "> Dressup";
-                    else if (~llListFindList(folderList, (list)"Dressup"))    outfitFolder = "Dressup";
+                         if (cdFindInList(folderList, "> Dressup"))  outfitFolder = "> Dressup";
+                    else if (cdFindInList(folderList, "Dressup"))    outfitFolder = "Dressup";
                 }
-
-#ifdef PRELIMINARY
-                if (llSubStringIndex(listenMessage,"Avatars") >= 0) {
-                     if (~llListFindList(folderList, (list)"> Avatars"))  avatarFolder = "> Avatars";
-                }
-                else if (llSubStringIndex(listenMessage,"Avis") >= 0) {
-                     if (~llListFindList(folderList, (list)"> Avis"))  avatarFolder = "> Avis";
-                }
-#endif
             }
 
             // At this point, either the outfit folder has been set to a default, to a user-specified folder that
@@ -1099,10 +1115,10 @@ default {
 
             // Type folder is not directly related to outfit folder searching; system folders are
             // completely inseparable
+            //
+            // Both system folders and type folders are loaded with this command
+            //
             systemSearch(systemSearchChannel,systemSearchHandle);
-
-            // Specific Type folders can be buffered here
-            //reloadTypeFolderNames();
         }
         else if (listenChannel == typeSearchChannel) {
 
@@ -1140,7 +1156,7 @@ default {
                 if (llSubStringIndex(listenMessage,typeFolderExpected) >= 0) {
 
                     // This is the exact check:
-                    if (~llListFindList(folderList, (list)typeFolderExpected)) {
+                    if (cdFindInList(folderList, typeFolderExpected)) {
                         typeFolder = typeFolderExpected;
                         typeFolderExpected = "";
                     }
@@ -1177,18 +1193,18 @@ default {
             // It also means that any ~nudeFolder and/or ~normalselfFolder found along side the Outfits folder
             // will override any inside of the same
 
-            if (~llListFindList(folderList, (list)"~nude")) nudeFolder = outfitFolder + "/~nude";
+            if (cdFindInList(folderList, "~nude")) nudeFolder = outfitFolder + "/~nude";
             else {
                 llOwnerSay("WARN: No nude (~nude) folder found in your outfits folder (\"" + outfitFolder + "\")...");
             }
 
-            if (~llListFindList(folderList, (list)"~normalself")) normalselfFolder = outfitFolder + "/~normalself";
+            if (cdFindInList(folderList, "~normalself")) normalselfFolder = outfitFolder + "/~normalself";
             else {
                 llOwnerSay("ERROR: No normal self (~normalself) folder found in your outfits folder (\"" + outfitFolder + "\")... this folder is necessary for proper operation");
                 llSay(DEBUG_CHANNEL,"No ~normalself folder found in \"" + outfitFolder + "\": this folder is required for proper Key operation");
             }
 
-            if (~llListFindList(folderList, (list)"~normaloutfit")) normaloutfitFolder = outfitFolder + "/~normaloutfit";
+            if (cdFindInList(folderList, "~normaloutfit")) normaloutfitFolder = outfitFolder + "/~normaloutfit";
             else {
                 llOwnerSay("WARN: No normaloutfit (~normaloutfit) folder found in your outfits folder (\"" + outfitFolder + "\")...");
             }
