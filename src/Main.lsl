@@ -441,12 +441,20 @@ default {
 
 #ifdef DEVELOPER_MODE
         debugSay(5,"DEBUG-MAIN","Main Timer fired.");
-
-        //timeSpan = llGetTime();
 #endif
 
         //----------------------------------------
         // LOW SCRIPT MODE
+
+        // There's four possibilities:
+        //    1. We're in low script mode:
+        //       a) Sim is lagging still: bump expire time up
+        //       b) Sim is fine - and expire time has expired: exit low script mode
+        //    2. We're not in low script mode:
+        //       a) Sim is lagging: enter low script mode
+        //       b) Sim is fine
+        //
+        // Timer needs to be adjusted in several instances (1b,2a,2b)
 
         if (lowScriptExpire) {
 
@@ -471,7 +479,6 @@ default {
                 // if environment has past test long enough - then go out of powersave mode
                 if (isTimePast(lowScriptExpire)) {
                     debugSay(2,"DEBUG-MAIN", "Low Script Mode active but environment good - disabling");
-                    //llOwnerSay("You hear the key's inner workings gear up to full power.");
 
                     lmSendConfig("lowScriptExpire",(string)(lowScriptExpire = 0));
                     llSetTimerEvent(STD_RATE);
@@ -503,7 +510,7 @@ default {
         // CHECK COLLAPSE STATE
 
         // False collapse? Collapsed = 1 while timeLeftOnKey is positive is an invalid condition
-        if (collapsed) if (timeLeftOnKey > 0) unCollapse();
+        //if (collapsed) if (timeLeftOnKey > 0) unCollapse();
 
         //----------------------------------------
         // POSE TIMED OUT?
