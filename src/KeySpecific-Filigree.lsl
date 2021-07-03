@@ -47,7 +47,7 @@ integer keySpecificChannel = -32111;
 integer keySpecificHandle;
 string keySpecificMenu = "Gem...";
 
-integer isVisible;
+//integer isVisible;
 vector gemColor;
 vector normalGemColor = COLOR_PINK;
 
@@ -358,14 +358,14 @@ default {
         if (listenChannel == keySpecificChannel) {
             integer index;
 
-            if ((index = llListFindList(colorNames, (list)listenMessage)) != NOT_FOUND) {
+            if (~(index = llListFindList(colorNames, (list)listenMessage))) {
                 vector colorValue = (vector)colorValues[ index ];
 
                 setNormalGemColor(colorValue);
                 //lmMenuReply("Options...","",dollID);
                 lmMenuReply("Gem...","",listenID);
             }
-            else if (choice == "Back...") {
+            else if (listenMessage == "Back...") {
                 lmMenuReply(backMenu,"",listenID);
             }
         }
