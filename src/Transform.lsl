@@ -603,7 +603,10 @@ default {
             else if (name == "homingBeacon")             homingBeacon = (integer)value;
 
             // collapseTime only needed for homingBeacon use
-            else if (name == "collapseTime")             collapseTime = (integer)value;
+            else if (name == "collapseTime") {
+                collapseTime = (integer)value;
+                if (homingBeacon) adjustTimer();
+            }
 #endif
             else if (name == "showPhrases") {
                 showPhrases = (integer)value;
@@ -614,6 +617,7 @@ default {
                     if (llGetInventoryType(typeNotecard) == INVENTORY_NOTECARD) {
                         typeNotecardQuery = llGetNotecardLine(typeNotecard,readLine);
                     }
+                    adjustTimer();
                 }
             }
             else if (name == "dialogChannel") {
@@ -646,8 +650,12 @@ default {
                 }
             }
             else if (name == "typeLockExpire") {
-                if (value == "0") typeLockExpire = 0;
-                else typeLockExpire = llGetUnixTime() + TYPE_LOCK_TIME;
+                if (value == "0")
+                    typeLockExpire = 0;
+                else {
+                    typeLockExpire = llGetUnixTime() + TYPE_LOCK_TIME;
+                    adjustTimer();
+                }
                 lmSendConfig("typeLockExpire",(string)(typeLockExpire));
             }
             else if (name == "outfitFolder") {
