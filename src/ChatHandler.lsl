@@ -826,7 +826,7 @@ default {
             // Commands need to be in the list cmdList in order to be
             // recognized, before testing down below
             //
-            if (llListFindList(cmdList, (list)name) == NOT_FOUND)
+            if (!cdFindInList(cmdList, name))
                 return;
 
             string value = (string)split[1];
@@ -986,7 +986,7 @@ default {
             accessorIsController = cdIsController(listenID); // This includes Dolly if there are no Controllers
             accessorIsCarrier = cdIsCarrier(listenID);
 
-#define blacklistedUser(a) (llListFindList(blacklistList, [ (string)(a) ]) != NOT_FOUND)
+#define blacklistedUser(a) (~llListFindList(blacklistList, (list)((string)(a))))
 #define parametersExist (spaceInMsg != NOT_FOUND)
 #define getTrailingString(a,b) llStringTrim(llGetSubString((a), (b) + 1, STRING_END), STRING_TRIM)
 #define getLeadingString(a,b) llStringTrim(llGetSubString((a), 0, (b) - 1), STRING_TRIM)

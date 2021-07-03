@@ -260,7 +260,7 @@ default {
             // Commands need to be in the list cmdList in order to be
             // recognized, before testing down below
             //
-            if (llListFindList(cmdList, (list)name) == NOT_FOUND)
+            if (!cdFindInList(cmdList, name))
                 return;
 
             string value = (string)split[1];
@@ -850,7 +850,8 @@ default {
                 // keys by replacing them within the list - and thus
                 // not disturbing the alphabetic order
 
-                if ((i = llListFindList(menuButtons, ["Visible"])) != NOT_FOUND) menuButtons = llListReplaceList(menuButtons, cdGetButton("Visible", lmID, isVisible, 0), i, i);
+                if (~(i = llListFindList(menuButtons, (list)"Visible")))
+                    menuButtons = llListReplaceList(menuButtons, cdGetButton("Visible", lmID, isVisible, 0), i, i);
 
                 menuMessage = timeLeftMsg + menuMessage;
                 timeLeftMsg = "";
@@ -970,7 +971,7 @@ default {
         while (index--) {
             foundKey = llDetectedKey(avatarCount - index);
 
-            if (llListFindList(listCurrent, [ (string)foundKey] ) == NOT_FOUND) { // Don't list existing users
+            if (!cdFindInList(listCurrent, (string)foundKey)) { // Don't list existing users
 
                 foundName = llDetectedName(index);
 
@@ -1052,7 +1053,7 @@ default {
                 if (listenMessage == "Drop Control") {
                     integer index;
 
-                    if ((index = llListFindList(controllerList, [ (string)listenID ])) != NOT_FOUND) {
+                    if (~(index = llListFindList(controllerList, (list)((string)listenID)))) {
                         controllerList = llDeleteSubList(controllerList, index, index + 1);
                         lmSendConfig("controllers", cdList2String(controllerList));
 
@@ -1063,7 +1064,8 @@ default {
 #ifdef DEVELOPER_MODE
                     else {
                         llSay(DEBUG_CHANNEL,"listenID " + (string)listenID + " not found in Controllers List: " + llDumpList2String(controllerList,",") +
-                            " - index= = " + (string)index + " - search = " + (string)llListFindList(controllerList, [ listenID ]));
+                            " - index= = " + (string)index +
+                            " - search = " + (string)(cdFindInList(controllerList, listenID)));
                     }
 #endif
                     return;
@@ -1341,7 +1343,7 @@ default {
             }
 
             string button = listenMessage;
-            integer i = llListFindList(dialogButtons, [ listenMessage ]);
+            integer i = cdFindInList(dialogButtons, (list)listenMessage);
             string name = (string)dialogNames[i];
             string uuid = (string)dialogKeys[i];
 
@@ -1351,8 +1353,10 @@ default {
                 llListenRemove(blacklistHandle);
                 blacklistHandle = 0;
 
-                if (llListFindList(blacklistList, [uuid,name]) != NOT_FOUND) lmInternalCommand("remBlacklist", (string)uuid + "|" + name, listenID);
-                else                                                     lmInternalCommand("addBlacklist", (string)uuid + "|" + name, listenID);
+                if (~llListFindList(blacklistList,[uuid,name]))
+                    lmInternalCommand("remBlacklist", (string)uuid + "|" + name, listenID);
+                else
+                    lmInternalCommand("addBlacklist", (string)uuid + "|" + name, listenID);
             }
             else {
 
@@ -1360,12 +1364,14 @@ default {
                 llListenRemove(controlHandle);
                 controlHandle = 0;
 
-                if (llListFindList(controllerList, [uuid,name]) == NOT_FOUND) {
+                if (~llListFindList(controllerList,[uuid,name])) {
+                    if (cdIsController(listenID)) lmInternalCommand("remController", (string)uuid + "|" + name, listenID);
+                }
+                else {
                     msg = "Dolly " + dollName + " has presented you with the power to control her Key. With this power comes great responsibility. Do you wish to accept this power?";
                     lmDialogListen();
                     llDialog((key)uuid, msg, [ "Accept", "Decline" ], dialogChannel);
                 }
-                else if (cdIsController(listenID)) lmInternalCommand("remController", (string)uuid + "|" + name, listenID);
             }
         }
     }

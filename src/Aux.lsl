@@ -157,7 +157,7 @@ default {
             // Commands need to be in the list cmdList in order to be
             // recognized, before testing down below
             //
-            if (llListFindList(cmdList, (list)name) == NOT_FOUND)
+            if (!cdFindInList(cmdList, name))
                 return;
 
             string value = (string)split[1];
@@ -918,7 +918,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
             while (i--) {
                 script = llGetInventoryName(INVENTORY_SCRIPT, i);
 
-                if (script != "Aux" && (llListFindList(memList,(list)script) == NOT_FOUND)) {
+                if (script != "Aux" && (!cdFindInList(memList,script))) {
                     if (!llGetScriptState(script))
                         memList += "\n" + script + ":\t" + "---- script not running! ----";
                 }

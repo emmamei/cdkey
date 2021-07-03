@@ -167,7 +167,7 @@ posePageN(string choice, key id) {
 
         // If this was false, it would mean we have a poseAnimation that is
         // not in the Key's inventory...
-        if (~(i = llListFindList(poseBufferedList, [ poseAnimation ]))) {
+        if (~(i = llListFindList(poseBufferedList, (list)poseAnimation))) {
 
             poseDialogButtons = llDeleteSubList(poseBufferedList, i, i);
 

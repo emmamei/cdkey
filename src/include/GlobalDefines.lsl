@@ -208,11 +208,26 @@ float GlobalDefines_version=1.0;
 #define YES 1
 #define NO 0
 
-// List definitions: makes things easier to comprehend
+//========================================
+// LIST MACROS
+//
+// These are designed to make things easier to read, easier to
+// comprehened, and thus easier to maintain and understand
 
-// Note: ....P in names is a LISP convention: acts like a question mark
-#define cdListElementP(a,b) llListFindList(a, [ b ])
-#define cdFindInList(a,b) llListFindList(a, [ b ])
+// From: http://wiki.secondlife.com/wiki/LlListFindList
+#define cdFindInList(a,b) (~llListFindList(a, (list)(b)))
+/*
+
+if(~llListFindList(myList, (list)item))
+{//it exists
+    // This works because ~(-1) produces 0, but ~ of any other value produces non-zero and causes the 'if' to succeed
+    // So any return value (including 0) that corresponds to a found item, will make the condition succeed
+    // It saves bytecode and is faster then doing != -1
+    // This is a bitwise NOT (~) not a negation (-)
+}
+
+*/
+
 #define cdSplitArgs(a) llParseStringKeepNulls((a), [ "|" ], [])
 #define cdSplitString(a) llParseString2List(a, [ "," ], [])
 #define cdList2ListStrided(src,start,end,every) llList2ListStrided((list)src[start, end], 0, -1, every)
@@ -255,7 +270,6 @@ float GlobalDefines_version=1.0;
 #define isRated(c)              ((c) == "{")
 #define isChrootFolder(f)       (llGetSubString(f,0,1) == "!>")
 
-#define CORE_SCRIPTS [ "Aux", "Avatar", "ChatHandler", "Dress", "Main", "MenuHandler", "ServiceRequester", "ServiceReceiver", "Start", "StatusRLV", "Transform" ]
 // #define COLOR_NAMES [ "Purple", "Pink", "Red", "Green", "Blue", "Cyan", "Yellow", "Orange", "White", "Black", "CUSTOM" ]
 // #define COLOR_VALUE [ <0.3, 0.1, 0.6>, <0.9, 0.1, 0.8>, <0.8, 0.1, 0.1>, <0.1, 0.8, 0.1>, <0.1, 0.1, 0.8>, <0.1, 0.8, 0.8>, <0.8, 0.8, 0.1>, <0.8, 0.4, 0.1>, <0.9, 0.9, 0.9>, <0.1, 0.1, 0.1>, <0,0,0> ]
 #define COLOR_NAMES [ "Purple", "Pink", "Red", "Green", "Blue", "Cyan", "Yellow", "Orange", "White", "CUSTOM" ]
@@ -317,7 +331,7 @@ float GlobalDefines_version=1.0;
 #define cdIsCarrier(id)                 (id == carrierID)
 
 // Here's the test: if we want Dolly included or not
-#define cdIsExternalController(id)      (llListFindList(controllerList, [ (string)id ]) != -1)
+#define cdIsExternalController(id)      (~llListFindList(controllerList, (list)((string)id)))
 #define cdIsController(id)              cdGetControllerStatus(id)
 
 #include "KeySharedFuncs.lsl"
@@ -335,7 +349,7 @@ integer cdGetControllerStatus(key id) {
     if (cdIsDoll(id))
         return (controllerList == []);
     else {
-        return (llListFindList(controllerList, [ (string)id ]) != -1);
+        return (cdFindInList(controllerList,((string)id)));
     }
 }
 

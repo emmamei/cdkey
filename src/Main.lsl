@@ -398,8 +398,6 @@ default {
             simRatingQuery = llRequestSimulatorData(llGetRegionName(), DATA_SIM_RATING);
     }
 
-#define cdFindInList(a,b) (llListFindList(a, (list)(b)) != NOT_FOUND)
-
     //----------------------------------------
     // TOUCH START
     //----------------------------------------
@@ -655,7 +653,7 @@ default {
             // Commands need to be in the list cmdList in order to be
             // recognized, before testing down below
             //
-            if (llListFindList(cmdList, (list)name) == NOT_FOUND)
+            if (!cdFindInList(cmdList, name))
                 return;
 
             string value = (string)split[1];

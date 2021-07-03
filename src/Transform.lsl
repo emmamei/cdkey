@@ -851,7 +851,7 @@ default {
                     //debugSay(6,"DEBUG-TYPES","Current doll type = " + dollType);
 
                     // Delete the current type: transforming to current type is redundant
-                    if ((i = llListFindList(typeMenuChoices, (list)dollType)) != NOT_FOUND) {
+                    if (~(i = llListFindList(typeMenuChoices, (list)dollType))) {
                         typeMenuChoices = llDeleteSubList(typeMenuChoices, i, i);
                     }
 

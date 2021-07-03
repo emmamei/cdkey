@@ -17,7 +17,7 @@
 
 #define NO_FILTER ""
 #define cdListenMine(a) llListen(a, NO_FILTER, dollID, NO_FILTER)
-#define isKnownTypeFolder(a) (llListFindList(typeFolders, [ a ]) != NOT_FOUND)
+#define isKnownTypeFolder(a) (~llListFindList(typeFolders, (list)a))
 
 #define nothingWorn(c,d) ((c) != "0") && ((c) != "1") && ((d) != "0") && ((d) != "1")
 #define dressVia(a) listInventoryOn(a)
@@ -357,7 +357,7 @@ default {
             // Commands need to be in the list cmdList in order to be
             // recognized, before testing down below
             //
-            if (llListFindList(cmdList, (list)name) == NOT_FOUND)
+            if (!cdFindInList(cmdList,name))
                 return;
 
             string value = (string)split[1];
@@ -683,7 +683,8 @@ default {
             else {
                 integer index;
 
-                if ((index = cdListElementP(outfitDialogList, listenMessage)) != NOT_FOUND) {
+                if (~(index = llListFindList(outfitDialogList, (list)listenMessage))) {
+
                     // This is the actual processing of an Outfit Menu entry -
                     // either a folder or a single outfit item.
                     //

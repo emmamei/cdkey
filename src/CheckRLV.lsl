@@ -384,12 +384,12 @@ default {
 
                 // Add carrier to list of exceptions
                 if (cdCarried()) {
-                    if (llListFindList(exceptions, (list)carrierID) != NOT_FOUND) exceptions += carrierID;
+                    if (cdFindInList(exceptions,carrierID)) exceptions += carrierID;
                 }
 
                 // Dolly not allowed to be one of the exceptions
                 //
-                if ((i = llListFindList(exceptions, (list)dollID)) != NOT_FOUND)
+                if (~(i = llListFindList(exceptions, (list)dollID)))
                     llDeleteSubList(exceptions, i, i);
 
                 rlvExceptions = exceptions; // save current exceptions

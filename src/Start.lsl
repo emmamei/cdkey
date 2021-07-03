@@ -84,7 +84,7 @@ list remList(list workingList, string uuid, key id) {
     string s;
     integer i;
 
-    if ((i = llListFindList(workingList, [ uuid ])) != NOT_FOUND) {
+    if (~(i = llListFindList(workingList, (list)uuid))) {
 
         s = "Removing user " + nameURI + " from the list";
         cdSayToAgentPlusDoll(s, id);
@@ -241,12 +241,12 @@ processConfiguration(string configSettingName, string configSettingValue) {
     // processing done a single time during the read of the nc belong elsewhere
 
     // Check for settings - boolean true or false
-    if ((i = cdListElementP(settings,configSettingName)) != NOT_FOUND) {
+    if (~(i = llListFindList(settings,(list)configSettingName))) {
         processBooleanSetting(configSettingName,configSettingValue);
     }
 
     // Check for non-boolean settings
-    else if ((i = cdListElementP(configs,configSettingName)) != NOT_FOUND) {
+    else if (~(i = llListFindList(configs,(list)configSettingName))) {
         if (configSettingName == "outfits path") {
             // Defer actual setting of outfitsFolder until later
             //
@@ -364,7 +364,7 @@ processConfiguration(string configSettingName, string configSettingValue) {
             lmSetConfig("dollGender", dollGender);
         }
     }
-    else if ((i = cdListElementP(keySpecificConfigs,configSettingName)) != NOT_FOUND) {
+    else if (~(i = llListFindList(keySpecificConfigs, (list)configSettingName))) {
         // Let the Key-Specific file validate the value
         lmSendConfig(configSettingName,configSettingValue);
     }
@@ -645,8 +645,8 @@ default {
                     string typeString; // used to construct messages
                     list tmpList; // used as working area for whatever list
 
-#define inRejectList(a) (llListFindList(rejectList, [ a ]) != NOT_FOUND)
-#define inWorkingList(a) (llListFindList(tmpList, [ a ]) != NOT_FOUND)
+#define inRejectList(a) (~llListFindList(rejectList, (list)a))
+#define inWorkingList(a) (~llListFindList(tmpList, (list)a))
 #define noUserName (name == "")
 #define queryMarker "++"
 
@@ -973,7 +973,7 @@ default {
             }
 
 #define userName queryData
-#define isUserUUIDInList(a) llListFindList(a, [ queryMarker + (string)queryUUID ])
+#define isUserUUIDInList(a) llListFindList(a, (list)(queryMarker + (string)queryUUID))
 
             case blacklistQueryID: {
 
