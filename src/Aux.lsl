@@ -22,6 +22,7 @@
 
 #define GEM_COLOR_TEXTBOX 1
 #define DOLL_NAME_TEXTBOX 2
+#define TEXTBOX_CHANNEL_OFFSET 1111
 
 #define HIPPO_UPDATE -2948813
 
@@ -211,7 +212,7 @@ default {
             }
             else if (name == "dialogChannel") {
                 dialogChannel = (integer)value;
-                textboxChannel = dialogChannel - 1111;
+                textboxChannel = dialogChannel - TEXTBOX_CHANNEL_OFFSET;
             }
         }
         else if (code == SET_CONFIG) {

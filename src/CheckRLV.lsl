@@ -259,6 +259,9 @@ default {
 
             // FIXME: We could deactivate, but RLV channel may be used for other things
             //cdListenerDeactivate(rlvChannel); // This prevents a secondary response
+
+            // This is a shortcut: if rlvOk is true, then we don't need to check for
+            // validation... right? Isn't this almost the same as above?
             if (rlvOk == TRUE) return;
 
             debugSay(2, "DEBUG-CHECKRLV", "RLV Message received: " + listenMessage);

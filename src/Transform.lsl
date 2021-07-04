@@ -122,7 +122,7 @@ string avatarFolder;
 //string dollType;
 string dollTypeExpected;
 
-integer rlvChannel;
+//integer rlvChannel;
 integer typeSearchHandle;
 integer typeSearchChannel;
 integer outfitSearchHandle;
@@ -623,15 +623,14 @@ default {
             else if (name == "dialogChannel") {
                 dialogChannel = (integer)value;
 
-                rlvChannel = ~dialogChannel + 1;
                 typeDialogChannel = dialogChannel - TYPE_CHANNEL_OFFSET;
                 llListen(typeDialogChannel, NO_FILTER, dollID, NO_FILTER);
 
-                typeSearchChannel = rlvChannel + 1;
-                outfitSearchChannel = rlvChannel + 2;
-                systemSearchChannel = rlvChannel + 3;
-
-                typeFolderBufferChannel = rlvChannel + 4;
+//                           rlvChannel = ~dialogChannel + 1;
+                      typeSearchChannel = ~dialogChannel + 2;
+                    outfitSearchChannel = ~dialogChannel + 3;
+                    systemSearchChannel = ~dialogChannel + 4;
+                typeFolderBufferChannel = ~dialogChannel + 5;
             }
         }
 

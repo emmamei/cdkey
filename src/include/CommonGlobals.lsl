@@ -68,7 +68,6 @@ integer canSelfTP           = 1;
 integer canRejectTP         = 1;
 integer canTalkInPose       = 1;
 
-integer chatChannel         = 75;
 integer code;
 integer collapsed;
 integer posed;
@@ -132,6 +131,7 @@ integer rlvTplure;
 integer debugLevel = 8;
 #endif
 
+integer chatChannel         = 75;
 integer dialogChannel;
 integer dialogHandle;
 
