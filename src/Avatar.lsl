@@ -9,6 +9,8 @@
 #include "include/GlobalDefines.lsl"
 // #include "include/Json.lsl"
 
+#include "include/Listeners.lsl"
+
 //#define DEBUG_BADRLV
 #define NOT_IN_REGION ZERO_VECTOR
 #define cdLockMeisterCmd(a) llWhisper(LOCKMEISTER_CHANNEL,(string)dollID+a)
@@ -64,8 +66,6 @@ integer nearCarrier;
 // current poses in inventory
 list poseBufferedList;
 integer poseCount;
-
-integer poseChannel;
 
 key grantorID;
 integer permMask;
@@ -252,6 +252,7 @@ posePageN(string choice, key id) {
     msg = "Select the pose to put dolly into";
     if (poseAnimation) msg += " (current pose is " + poseAnimation + ")";
 
+    debugSay(5,"DEBUG-AVATAR","Pose channel is " + (string)poseChannel);
     llDialog(id, msg, dialogSort(poseDialogButtons), poseChannel);
 }
 
@@ -376,6 +377,9 @@ default {
 
         //debugSay(5,"DEBUG-AVATAR","ifPermissions (on_rez)");
         //llRequestPermissions(dollID, PERMISSION_MASK);
+
+        poseChannel = listenerGetChannel();
+        lmSendConfig("poseChannel", (string)poseChannel);
     }
 
     //----------------------------------------
@@ -479,10 +483,6 @@ default {
             }
             else if (name == "pronounHerDoll")       pronounHerDoll = value;
             else if (name == "pronounSheDoll")       pronounSheDoll = value;
-            else if (name == "dialogChannel") {
-                dialogChannel = (integer)value;
-                poseChannel = dialogChannel - POSE_CHANNEL_OFFSET;
-            }
         }
         else if (code == INTERNAL_CMD) {
             string cmd = (string)split[0];
@@ -566,7 +566,10 @@ default {
                         llOwnerSay(cdUserProfile(lmID) + " is looking at your poses menu.");
 
                 posePage = 1;
-                lmDialogListen();
+
+                poseChannel = listenerGetChannel();
+                lmSendConfig("poseChannel", (string)poseChannel);
+
                 lmInternalCommand("posePageN",choice, lmID);
             }
         }

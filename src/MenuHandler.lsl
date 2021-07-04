@@ -27,13 +27,8 @@
 // Wait for the user for 5 minutes - but for a program, only
 // wait 60s. The request for a dialog menu should happen before then -
 // and change the timeout to wait for a user.
-#define MENU_TIMEOUT 600.0
+#define MENU_TIMEOUT 60.0
 #define SYS_MENU_TIMEOUT 60.0
-
-#define BLACKLIST_CHANNEL_OFFSET 666
-#define CONTROL_CHANNEL_OFFSET 888
-#define POSE_CHANNEL_OFFSET 777
-#define TYPE_CHANNEL_OFFSET 778
 
 #define UNSET -1
 
@@ -61,16 +56,6 @@ integer isController;
 integer isDoll;
 integer numControllers;
 integer keyLocked = FALSE;
-
-integer blacklistChannel;
-integer blacklistHandle;
-integer controllerChannel;
-integer controllerHandle;
-integer poseChannel;
-integer poseHandle;
-
-//integer typeDialogChannel;
-integer typeHandle;
 
 string isDollName;
 
@@ -112,7 +97,6 @@ default {
 
         cdInitializeSeq();
         rlvOk = UNSET;
-        //chooseDialogChannel();
         listenerGetAllChannels();
     }
 
@@ -122,7 +106,6 @@ default {
     on_rez(integer start) {
         rlvOk = UNSET;
         cdInitializeSeq();
-        //chooseDialogChannel();
         listenerGetAllChannels();
     }
 
@@ -139,7 +122,6 @@ default {
         if (!(keyDetached(id))) {
 
             rlvOk = UNSET;
-            //chooseDialogChannel();
             listenerGetAllChannels();
         }
     }
@@ -193,6 +175,7 @@ default {
                              "chatPrefix",
 
                              "dialogChannel",
+                             "poseChannel",
 #ifdef ADULT_MODE
                              // if not Adult Mode we don't need this...
                              "dollType",
@@ -257,6 +240,11 @@ default {
             else if (name == "chatPrefix")                 chatPrefix = value;
 
             else if (name == "dialogChannel")           dialogChannel = (integer)value;
+            else if (name == "poseChannel") {
+                poseChannel = (integer)value;
+
+                poseHandle = listenerOpenChannel(poseChannel, poseHandle);
+            }
 #ifdef ADULT_MODE
             // if not Adult Mode we don't need this...
             else if (name == "dollType")                     dollType = value;
@@ -264,11 +252,11 @@ default {
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                 debugLevel = (integer)value;
 #endif
-            else if (name == "poserID")                   poserID = (key)value;
-            else if (name == "canTalkInPose")       canTalkInPose = (integer)value;
-            else if (name == "pronounHerDoll")     pronounHerDoll = value;
-            else if (name == "pronounSheDoll")     pronounSheDoll = value;
-            else if (name == "typeHovertext")               typeHovertext = (integer)value;
+            else if (name == "poserID")                       poserID = (key)value;
+            else if (name == "canTalkInPose")           canTalkInPose = (integer)value;
+            else if (name == "pronounHerDoll")         pronounHerDoll = value;
+            else if (name == "pronounSheDoll")         pronounSheDoll = value;
+            else if (name == "typeHovertext")           typeHovertext = (integer)value;
             else if (name == "visibility")                 visibility = (float)value;
             else if (name == "isVisible") {
                 isVisible = (integer)value;
@@ -300,10 +288,17 @@ default {
 
             if (cmd == "dialogListen") {
 
-                //doDialogChannel();
-                dialogChannel = listenerActivateDialogChannel();
+                debugSay(4,"DEBUG-MENU","dialogListen Internal Command called");
+                //dialogChannel = listenerActivateDialogChannel();
+                listenerOpenAllChannels();
                 llSetTimerEvent(MENU_TIMEOUT); // generic (listener) timeout requested by other script
             }
+//          else if (cmd == "poseListen") {
+//
+//              listenerGetAllChannels();
+//              dialogChannel = listenerActivateDialogChannel();
+//              llSetTimerEvent(MENU_TIMEOUT); // generic (listener) timeout requested by other script
+//          }
             else if (cmd == "mainMenu") {
                 string menuMessage;
                 list menuButtons;
@@ -852,11 +847,13 @@ default {
     //   * blacklistHandle
     //   * controllerHandle
     //   * poseHandle
-    //   * typeHandle
     //   * dialogHandle
     //
+    // This will never fire - UNLESS the dialog times out
+    // due to inactivity or Ignore
+    //
     timer() {
-        debugSay(4,"DEBUG-MENU","Menu Timer fired.");
+        debugSay(4,"DEBUG-MENU","MenuHandler Timer fired.");
         llSetTimerEvent(0.0);
 
         // Note that if ANY of these are set, when timer trips, ALL are cleared...
@@ -867,7 +864,6 @@ default {
         if (controllerHandle) { llListenRemove(controllerHandle); controllerHandle = 0; debugSay(4,"DEBUG-MENU","Timer expired: controllerHandle removed");   }
 
         if   (poseHandle)    { cdListenerDeactivate(  poseHandle);  debugSay(4,"DEBUG-MENU","Timer expired: poseHandle deactivated");   }
-        if   (typeHandle)    { cdListenerDeactivate(  typeHandle);  debugSay(4,"DEBUG-MENU","Timer expired: typeHandle deactivated");   }
         if (dialogHandle)    { cdListenerDeactivate(dialogHandle);  debugSay(4,"DEBUG-MENU","Timer expired: dialogHandle deactivated"); }
 
         dialogKeys = [];
@@ -990,7 +986,7 @@ default {
         //    * blacklistChannel
         //    * controllerChannel
         //    * poseChannel
-        //    * typeDialogChannel
+
         if (listenChannel == dialogChannel) {
             // This is what starts the Menu process: a reply sent out
             // via Link Message to be responded to by the appropriate script

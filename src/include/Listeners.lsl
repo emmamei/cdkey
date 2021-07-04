@@ -23,6 +23,9 @@
 //   * control dialogChannel: set, activate, stop
 //   * control other channels: set (via offset), activate, stop
 //
+// We should be able to hide all deactivate vs close options in
+// these functions
+//
 // CheckRLV at one point uses this command:
 //
 //     rlvChannel = MAX_INT - (integer)llFrand(5000);
@@ -82,12 +85,21 @@
 #define cdListenMine(a)   llListen(a, NO_FILTER,    dollID, NO_FILTER)
 #define cdListenerDeactivate(a) llListenControl(a, 0)
 #define cdListenerActivate(a) llListenControl(a, 1)
+#define cdPositive(a) ((a) ^ 0x80000000)
 
 //========================================
 // VARIABLES
 //========================================
 
 integer baseChannel;
+
+// Only for MenuHandler:
+integer blacklistChannel;
+integer blacklistHandle;
+integer controllerChannel;
+integer controllerHandle;
+integer poseChannel;
+integer poseHandle;
 
 // Have to remove these from CommonGlobals.lsl first,
 // modify scripts, then invoke them here...
@@ -121,11 +133,10 @@ integer listenerGetChannel() {
 //----------------------------------------
 // ACTIVATE CHANNELS
 //
-integer listenerSetChannel(integer listenerChannel, integer listenerHandle){
+integer listenerOpenChannel(integer listenerChannel, integer listenerHandle){
 
     // Remove any set channel
-    if (listenerHandle)
-        llListenRemove(listenerHandle);
+    if (listenerHandle) llListenRemove(listenerHandle);
 
     // Set channel and return handle
     //
@@ -179,31 +190,9 @@ listenerDeactivateChannel(integer listenerHandle) {
 }
 
 //----------------------------------------
-// ORIGINAL FUNCTIONS
+// REPLACEMENT FUNCTIONS
 //
 // As used in MenuHandler.lsl
-
-// The doDialogChannel actually opens the dialog channel
-
-doDialogChannel() {
-    listenerActivateDialogChannel();
-}
-
-// The chooseDialogChannel only sets the values for all of the
-// channels used in MenuHandler
-
-chooseDialogChannel() {
-    debugSay(4,"DEBUG-MENU","chooseDialogChannel() called");
-
-    dialogChannel = listenerGetDialogChannel();
-
-    poseChannel = listenerGetChannel();
-    //typeDialogChannel = listenerGetChannel();
-
-    // NOTE: blacklistChannel and controllerChannel are not opened here
-    blacklistChannel = listenerGetChannel();
-      controllerChannel = listenerGetChannel();
-}
 
 // This is a chooseDialogChannel replacement: its purpose is to
 // set all channel values
@@ -216,13 +205,22 @@ chooseDialogChannel() {
 
 listenerGetAllChannels() {
 
-    dialogChannel = listenerGetDialogChannel();
+    // We want this to be able to be called repeatedly...
+    if (!dialogChannel) dialogChannel = listenerGetDialogChannel();
+    lmSendConfig("dialogChannel", (string)(dialogChannel));
 
-    poseChannel = listenerGetChannel();
-    //typeDialogChannel = listenerGetChannel();
+    if (!blacklistChannel)   blacklistChannel = listenerGetChannel();
+    if (!controllerChannel) controllerChannel = listenerGetChannel();
+}
 
-    // NOTE: blacklistChannel and controllerChannel are not opened here
-    blacklistChannel = listenerGetChannel();
-      controllerChannel = listenerGetChannel();
+listenerOpenAllChannels() {
+
+        dialogHandle = listenerOpenChannel(    dialogChannel,     dialogHandle);
+//        poseHandle = listenerOpenChannel(      poseChannel,       poseHandle);
+//  typeDialogHandle = listenerOpenChannel(typeDialogChannel, typeDialogHandle);
+//   blacklistHandle = listenerOpenChannel( blacklistChannel,  blacklistHandle);
+//  controllerHandle = listenerOpenChannel(controllerChannel, controllerHandle);
+
+    lmSendConfig("dialogChannel", (string)(dialogChannel));
 }
 
