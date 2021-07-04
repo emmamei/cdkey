@@ -8,6 +8,8 @@
 
 #include "include/GlobalDefines.lsl"
 
+#include "include/Listeners.lsl"
+
 // code to clean up name and key list
 //#define KEY2NAME 1
 //
@@ -17,11 +19,6 @@
 #define LISTENER_ACTIVE 1
 #define LISTENER_INACTIVE 0
 #define NO_FILTER ""
-#define cdListenAll(a)    llListen(a, NO_FILTER, NO_FILTER, NO_FILTER)
-#define cdListenUser(a,b) llListen(a, NO_FILTER,         b, NO_FILTER)
-#define cdListenMine(a)   llListen(a, NO_FILTER,    dollID, NO_FILTER)
-#define cdListenerDeactivate(a) llListenControl(a, 0)
-#define cdListenerActivate(a) llListenControl(a, 1)
 #define cdResetKey() llResetOtherScript("Start")
 #define cdList2String(a) llDumpList2String(a,"|")
 //#define lmCollapse(a) lmInternalCommand("collapse",(string)(a),NULL_KEY)
@@ -67,12 +64,14 @@ integer keyLocked = FALSE;
 
 integer blacklistChannel;
 integer blacklistHandle;
-integer controlChannel;
-integer controlHandle;
+integer controllerChannel;
+integer controllerHandle;
 integer poseChannel;
 integer poseHandle;
+
 //integer typeDialogChannel;
 integer typeHandle;
+
 string isDollName;
 
 string mistressName;
@@ -88,56 +87,6 @@ key lastWinderID = NULL_KEY;
 //========================================
 // FUNCTIONS
 //========================================
-
-chooseDialogChannel() {
-    debugSay(4,"DEBUG-MENU","chooseDialogChannel() called");
-
-    if (dialogHandle) {
-
-        llListenRemove(dialogHandle);
-        llListenRemove(poseHandle);
-        llListenRemove(typeHandle);
-
-        dialogHandle = 0;
-          poseHandle = 0;
-          typeHandle = 0;
-    }
-
-    dialogChannel = 0x80000000 | (integer)("0x" + llGetSubString((string)llGenerateKey(), -7, -1));
-    poseChannel = dialogChannel - POSE_CHANNEL_OFFSET;
-    //typeDialogChannel = dialogChannel - TYPE_CHANNEL_OFFSET;
-
-    // NOTE: blacklistChannel and controlChannel are not opened here
-    blacklistChannel = dialogChannel - BLACKLIST_CHANNEL_OFFSET;
-      controlChannel = dialogChannel - CONTROL_CHANNEL_OFFSET;
-
-    //lmSendConfig("dialogChannel", (string)(dialogChannel));
-    doDialogChannel();
-}
-
-// This function ONLY activates the dialogChannel - no
-// reset is done unless necessary
-
-doDialogChannel() {
-    debugSay(4,"DEBUG-MENU","doDialogChannel() called");
-    debugSay(4,"DEBUG-MENU","dialogChannel = " + (string)dialogChannel);
-
-    // Open dialogChannel and typeDialogChannel, poseChannel, with it
-    if (dialogHandle) {
-
-        // Uses llListenControl(a, 1)
-        cdListenerActivate(dialogHandle);
-        cdListenerActivate(poseHandle);
-        cdListenerActivate(typeHandle);
-    }
-    else {
-        // Uses llListen(a, NO_FILTER, NO_FILTER, NO_FILTER)
-        dialogHandle = cdListenAll(dialogChannel);
-          poseHandle = cdListenAll(poseChannel);
-          //typeHandle = cdListenAll(typeDialogChannel);
-    }
-    lmSendConfig("dialogChannel", (string)(dialogChannel));
-}
 
 //integer listCompare(list a, list b) {
 //    if (a != b) return FALSE;    // Note: This is comparing list lengths only
@@ -163,7 +112,8 @@ default {
 
         cdInitializeSeq();
         rlvOk = UNSET;
-        chooseDialogChannel();
+        //chooseDialogChannel();
+        listenerGetAllChannels();
     }
 
     //----------------------------------------
@@ -172,7 +122,8 @@ default {
     on_rez(integer start) {
         rlvOk = UNSET;
         cdInitializeSeq();
-        chooseDialogChannel();
+        //chooseDialogChannel();
+        listenerGetAllChannels();
     }
 
     //----------------------------------------
@@ -188,7 +139,8 @@ default {
         if (!(keyDetached(id))) {
 
             rlvOk = UNSET;
-            chooseDialogChannel();
+            //chooseDialogChannel();
+            listenerGetAllChannels();
         }
     }
 
@@ -348,21 +300,9 @@ default {
 
             if (cmd == "dialogListen") {
 
-                doDialogChannel();
-                //cdListenerActivate(dialogHandle);
-                llSetTimerEvent(MENU_TIMEOUT);
-            }
-            else if (cmd == "dialogClose") {
-                cdListenerDeactivate(dialogHandle);
-                cdListenerDeactivate(poseHandle);
-                cdListenerDeactivate(typeHandle);
-
-                llSetTimerEvent(0.0);
-
-                dialogKeys = []; dialogButtons = []; dialogNames = [];
-
-                menuName = "";
-                menuID = NULL_KEY;
+                //doDialogChannel();
+                dialogChannel = listenerActivateDialogChannel();
+                llSetTimerEvent(MENU_TIMEOUT); // generic (listener) timeout requested by other script
             }
             else if (cmd == "mainMenu") {
                 string menuMessage;
@@ -862,7 +802,7 @@ default {
 #endif
 
                 llDialog(lmID, menuMessage, dialogSort(menuButtons), dialogChannel);
-                llSetTimerEvent(MENU_TIMEOUT);
+                llSetTimerEvent(MENU_TIMEOUT); // set (listener) timeout for main menu
             }
         }
         else if (code == MENU_SELECTION) {
@@ -879,7 +819,8 @@ default {
             if (code == INIT_STAGE2) {
                 if (lmData == "Start") configured = 1;
 
-                doDialogChannel();
+                //doDialogChannel();
+                //dialogChannel = listenerActivateDialogChannel();
                 //scaleMem();
             }
             else if (code == INIT_STAGE5) {
@@ -906,14 +847,27 @@ default {
     //----------------------------------------
     // TIMER
     //----------------------------------------
+
+    // Timer is solely for listener timeouts:
+    //   * blacklistHandle
+    //   * controllerHandle
+    //   * poseHandle
+    //   * typeHandle
+    //   * dialogHandle
+    //
     timer() {
+        debugSay(4,"DEBUG-MENU","Menu Timer fired.");
         llSetTimerEvent(0.0);
 
-        if (blacklistHandle) { llListenRemove(blacklistHandle); blacklistHandle = 0; debugSay(4,"DEBUG-MENU","Timer expired: blacklistHandle removed"); }
-        if (controlHandle)   { llListenRemove(controlHandle);     controlHandle = 0; debugSay(4,"DEBUG-MENU","Timer expired: controlHandle removed");   }
+        // Note that if ANY of these are set, when timer trips, ALL are cleared...
+        // This is very probably NOT what we want, though it probably does not
+        // present problems in practice... PROBABLY.
+        //
+        if  (blacklistHandle) { llListenRemove( blacklistHandle);  blacklistHandle = 0; debugSay(4,"DEBUG-MENU","Timer expired: blacklistHandle removed"); }
+        if (controllerHandle) { llListenRemove(controllerHandle); controllerHandle = 0; debugSay(4,"DEBUG-MENU","Timer expired: controllerHandle removed");   }
 
-        if (poseHandle)      { cdListenerDeactivate(poseHandle);    debugSay(4,"DEBUG-MENU","Timer expired: poseHandle deactivated");   }
-        if (typeHandle)      { cdListenerDeactivate(typeHandle);    debugSay(4,"DEBUG-MENU","Timer expired: typeHandle deactivated");   }
+        if   (poseHandle)    { cdListenerDeactivate(  poseHandle);  debugSay(4,"DEBUG-MENU","Timer expired: poseHandle deactivated");   }
+        if   (typeHandle)    { cdListenerDeactivate(  typeHandle);  debugSay(4,"DEBUG-MENU","Timer expired: typeHandle deactivated");   }
         if (dialogHandle)    { cdListenerDeactivate(dialogHandle);  debugSay(4,"DEBUG-MENU","Timer expired: dialogHandle deactivated"); }
 
         dialogKeys = [];
@@ -942,8 +896,8 @@ default {
         dialogNames = [];
         dialogButtons = [];
 
-        if (controlHandle) {
-            listChannel = controlChannel;
+        if (controllerHandle) {
+            listChannel = controllerChannel;
             listCurrent = controllerList;
 #ifdef ADULT_MODE
             listType = "controller list";
@@ -1034,7 +988,7 @@ default {
         // Answer to one of these channels:
         //    * dialogChannel
         //    * blacklistChannel
-        //    * controlChannel
+        //    * controllerChannel
         //    * poseChannel
         //    * typeDialogChannel
         if (listenChannel == dialogChannel) {
@@ -1220,9 +1174,9 @@ default {
                     lmSendConfig("backMenu",(backMenu = "Access..."));
 
                     if (afterSpace == "Blacklist") {
-                        if (controlHandle) {
-                            llListenRemove(controlHandle);
-                            controlHandle = 0;
+                        if (controllerHandle) {
+                            llListenRemove(controllerHandle);
+                            controllerHandle = 0;
                         }
 
                         activeChannel = blacklistChannel;
@@ -1244,7 +1198,7 @@ default {
                             blacklistHandle = 0;
                         }
 
-                        activeChannel = controlChannel;
+                        activeChannel = controllerChannel;
 #ifdef ADULT_MODE
                         msg = "controller list";
 #else
@@ -1259,7 +1213,7 @@ default {
                             dialogNames = [];
                             controllerList = []; // an attempt to free memory
                         }
-                        controlHandle = cdListenUser(controlChannel, listenID);
+                        controllerHandle = cdListenUser(controllerChannel, listenID);
                     }
 
                     // Only need this once now, make dialogButtons = numbered list of names truncated to 24 char limit
@@ -1294,7 +1248,7 @@ default {
 
                         lmDialogListen();
                         llDialog(listenID, msg, dialogSort(llListSort(dialogButtons, 1, 1) + MAIN), activeChannel);
-                        llSetTimerEvent(MENU_TIMEOUT);
+                        llSetTimerEvent(MENU_TIMEOUT); // set (listener) timeout for blacklist/controller menu
                     }
                     else if (beforeSpace == "List") {
                         if (dialogNames == []) {
@@ -1331,13 +1285,13 @@ default {
                 lmPoseReply(listenMessage, name, listenID);
             }
         }
-        else if ((listenChannel == blacklistChannel) || (listenChannel == controlChannel)) {
+        else if ((listenChannel == blacklistChannel) || (listenChannel == controllerChannel)) {
             // This is what starts the Menu process: a reply sent out
             // via Link Message to be responded to by the appropriate script
             //lmMenuReply(listenMessage, name, listenID);
 
             if (listenMessage == MAIN) {
-                llSetTimerEvent(MENU_TIMEOUT);
+                llSetTimerEvent(MENU_TIMEOUT); // set (listener) timer for main menu from blacklist/controller menu
                 lmMenuReply(MAIN, name, listenID);
                 return;
             }
@@ -1361,8 +1315,8 @@ default {
             else {
 
                 // shutdown the listener
-                llListenRemove(controlHandle);
-                controlHandle = 0;
+                llListenRemove(controllerHandle);
+                controllerHandle = 0;
 
                 if (~llListFindList(controllerList,[uuid,name])) {
                     if (cdIsController(listenID)) lmInternalCommand("remController", (string)uuid + "|" + name, listenID);
