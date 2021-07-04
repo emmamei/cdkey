@@ -367,9 +367,10 @@ default {
 #ifdef RLV_BASE_CHANNEL
                 rlvBaseChannel = dialogChannel ^ 0x80000000; // Xor with the sign bit forcing the positive channel needed by RLV spec.
 #endif
-                dressMenuChannel = (dialogChannel ^ 0x80000000) + 2666; // Xor with the sign bit forcing the positive channel needed by RLV spec.
-                dressRandomChannel = dressMenuChannel + 1;
-                outfitChannel = dialogChannel + 15; // arbitrary offset
+                  dressMenuChannel = (dialogChannel ^ 0x80000000) + 2666; // Xor with the sign bit forcing the positive channel needed by RLV spec.
+                dressRandomChannel = (dialogChannel ^ 0x80000000) + 2665; // Xor with the sign bit forcing the positive channel needed by RLV spec.
+                     outfitChannel =  dialogChannel + 15; // arbitrary offset
+
                 debugSay(6, "DEBUG-DRESS", "outfits Channel set to " + (string)outfitChannel);
 
             }

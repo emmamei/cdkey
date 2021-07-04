@@ -13,8 +13,8 @@
 
 #define cdProfileURL(i) "secondlife:///app/agent/"+(string)(i)+"/about"
 #define cdStringEndMatch(a,b) llGetSubString(a,-llStringLength(b),STRING_END)==b
+
 #define cdListenMine(a)   llListen(a, NO_FILTER, dollID, NO_FILTER)
-//#define cdFindInList(a,b) (~llListFindList(a, (list)(b)))
 
 // Channel to use to discard dialog output
 #define DISCARD_CHANNEL 9999
