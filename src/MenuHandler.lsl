@@ -175,7 +175,6 @@ default {
                              "chatPrefix",
 
                              "dialogChannel",
-                             "poseChannel",
 #ifdef ADULT_MODE
                              // if not Adult Mode we don't need this...
                              "dollType",
@@ -240,11 +239,6 @@ default {
             else if (name == "chatPrefix")                 chatPrefix = value;
 
             else if (name == "dialogChannel")           dialogChannel = (integer)value;
-            else if (name == "poseChannel") {
-                poseChannel = (integer)value;
-
-                poseHandle = listenerOpenChannel(poseChannel, poseHandle);
-            }
 #ifdef ADULT_MODE
             // if not Adult Mode we don't need this...
             else if (name == "dollType")                     dollType = value;
@@ -846,7 +840,6 @@ default {
     // Timer is solely for listener timeouts:
     //   * blacklistHandle
     //   * controllerHandle
-    //   * poseHandle
     //   * dialogHandle
     //
     // This will never fire - UNLESS the dialog times out
@@ -863,7 +856,7 @@ default {
         if  (blacklistHandle) { llListenRemove( blacklistHandle);  blacklistHandle = 0; debugSay(4,"DEBUG-MENU","Timer expired: blacklistHandle removed"); }
         if (controllerHandle) { llListenRemove(controllerHandle); controllerHandle = 0; debugSay(4,"DEBUG-MENU","Timer expired: controllerHandle removed");   }
 
-        if   (poseHandle)    { cdListenerDeactivate(  poseHandle);  debugSay(4,"DEBUG-MENU","Timer expired: poseHandle deactivated");   }
+        //if   (poseHandle)    { cdListenerDeactivate(  poseHandle);  debugSay(4,"DEBUG-MENU","Timer expired: poseHandle deactivated");   }
         if (dialogHandle)    { cdListenerDeactivate(dialogHandle);  debugSay(4,"DEBUG-MENU","Timer expired: dialogHandle deactivated"); }
 
         dialogKeys = [];
@@ -985,7 +978,6 @@ default {
         //    * dialogChannel
         //    * blacklistChannel
         //    * controllerChannel
-        //    * poseChannel
 
         if (listenChannel == dialogChannel) {
             // This is what starts the Menu process: a reply sent out
@@ -1271,14 +1263,6 @@ default {
                         lmMenuReply("Access...",llGetDisplayName(listenID),listenID);
                     }
                 }
-            }
-        }
-        else if (listenChannel == poseChannel) {
-            if (listenMessage == "Back...") {
-                lmMenuReply(backMenu,llGetDisplayName(listenID),listenID);
-            }
-            else {
-                lmPoseReply(listenMessage, name, listenID);
             }
         }
         else if ((listenChannel == blacklistChannel) || (listenChannel == controllerChannel)) {

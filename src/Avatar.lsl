@@ -25,6 +25,7 @@
 #define cdListenerDeactivate(a) llListenControl(a, 0)
 #define cdListenerActivate(a) llListenControl(a, 1)
 #define cdResetKey() llResetOtherScript("Start")
+#define cdAnimationExists(a) (llGetInventoryType(a) == INVENTORY_ANIMATION)
 #define notCurrentAnimation(p) ((p) != poseAnimation)
 #define getAnimationName(n) llGetInventoryName(INVENTORY_ANIMATION, (n));
 #define getAnimationCount() llGetInventoryNumber(INVENTORY_ANIMATION);
@@ -100,6 +101,43 @@ integer targetHandle;
 // FUNCTIONS
 //========================================
 
+poseSelected(string poseChoice, key id) {
+    string expire;
+
+    if (!(isAnimationPresent(poseChoice))) {
+        cdSayTo("No such pose! (\"" + poseChoice + "\")",id);
+        return;
+    }
+
+    llSay(PUBLIC_CHANNEL,"Pose " + poseChoice + " selected for Dolly.");
+
+    if (poseAnimationID != NULL_KEY) {
+        llStopAnimation(poseAnimationID);
+        debugSay(4,"DEBUG-AVATAR","Stopping old animation " + poseAnimation + " (" + (string)poseAnimationID + ")");
+    }
+
+    // The Real Meat: We have an animation (pose) name
+    lmSendConfig("poseAnimation", (string)(poseAnimation = poseChoice));
+    lmSendConfig("poserID", (string)(poserID = id));
+    llRequestPermissions(dollID, PERMISSION_MASK);
+    cdAOoff();
+
+    //debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 300/poseAnimation)");
+    poseSet(poseAnimation); 
+
+#ifdef ADULT_MODE
+#define poseDoesNotExpire (dollType == "Display" || hardcore)
+#else
+#define poseDoesNotExpire (dollType == "Display")
+#endif
+
+    if (poseDoesNotExpire) expire = "0";
+    else expire = (string)(llGetUnixTime() + POSE_TIMEOUT);
+    lmSetConfig("poseLockExpire", expire);
+
+    if (!canTalkInPose) lmRunRlv("sendchat=n");
+}
+
 float adjustTimer() {
 
 #define LOW_SPEED_CARRY_RATE 15.0
@@ -145,7 +183,7 @@ bufferPoses() {
     poseBufferedList = llListSort(poseBufferedList,1,1);
 }
 
-posePageN(string choice, key id) {
+poseMenu(string menuChoice, key menuID) {
     // posePage is the number of the page of poses;
     // poseIndex is a direct index into the list of
     // poses
@@ -153,8 +191,8 @@ posePageN(string choice, key id) {
     integer poseIndex;
 
     list poseDialogButtons;
-    integer isDoll = cdIsDoll(id);
-    integer isController = cdIsController(id);
+    integer isDoll = cdIsDoll(menuID);
+    integer isController = cdIsController(menuID);
 
     debugSay(4,"DEBUG-AVATAR","poseBufferedList = " + llDumpList2String(poseBufferedList,","));
     debugSay(4,"DEBUG-AVATAR","poseCount = " + (string)poseCount);
@@ -190,7 +228,7 @@ posePageN(string choice, key id) {
     // Now select the appropriate slice of the total list, showing nine buttons
     // at a time
     //
-    if (choice == "Poses Next") {
+    if (menuChoice == "Poses Next") {
         posePage++;
         poseIndex = indexOfPage(posePage);
 
@@ -207,7 +245,7 @@ posePageN(string choice, key id) {
 #endif
         }
     }
-    else if (choice == "Poses Prev") {
+    else if (menuChoice == "Poses Prev") {
         posePage--;
 
         if (posePage == 0) {
@@ -252,14 +290,14 @@ posePageN(string choice, key id) {
     msg = "Select the pose to put dolly into";
     if (poseAnimation) msg += " (current pose is " + poseAnimation + ")";
 
-    debugSay(5,"DEBUG-AVATAR","Pose channel is " + (string)poseChannel);
-    llDialog(id, msg, dialogSort(poseDialogButtons), poseChannel);
+    debugSay(5,"DEBUG-AVATAR","Pose channel is " + (string)poseMenuChannel);
+    llDialog(menuID, msg, dialogSort(poseDialogButtons), poseMenuChannel);
 }
 
 #define isFlying  (agentInfo & AGENT_FLYING)
 #define isSitting (agentInfo & AGENT_SITTING)
 
-clearPoseAnimation() {
+poseClear() {
     list animList;
     key animKey;
     integer agentInfo;
@@ -300,7 +338,7 @@ clearPoseAnimation() {
     cdAOon();
 }
 
-setPoseAnimation(string anim) {
+poseSet(string anim) {
     key animKey;
 
     //integer upRefresh;
@@ -378,8 +416,9 @@ default {
         //debugSay(5,"DEBUG-AVATAR","ifPermissions (on_rez)");
         //llRequestPermissions(dollID, PERMISSION_MASK);
 
-        poseChannel = listenerGetChannel();
-        lmSendConfig("poseChannel", (string)poseChannel);
+        poseMenuChannel = listenerGetChannel();
+        poseMenuHandle = listenerOpenChannel(poseMenuChannel, poseMenuHandle);
+        //lmSendConfig("poseMenuChannel", (string)poseMenuChannel);
     }
 
     //----------------------------------------
@@ -489,13 +528,14 @@ default {
             split = llDeleteSubList(split, 0, 0);
 
             switch (cmd) {
-
-                case "posePageN": {
+#ifdef NOT_USED
+                case "poseMenu": {
 
                     string choice = (string)split[0];
-                    posePageN(choice,lmID);
+                    poseMenu(choice,lmID);
                     break;
                 }
+#endif
 
                 case "startFollow": {
                     startFollow(carrierID);
@@ -544,11 +584,12 @@ default {
             else if (choice == "Unpose") {
                 lmSendConfig("poseAnimation", (string)(poseAnimation = ANIMATION_NONE));
                 lmSendConfig("poserID", (string)(poserID = NULL_KEY));
+                llRequestPermissions(dollID, PERMISSION_MASK);
 
                 // poseLockExpire is being set elsewhere
                 lmSetConfig("poseLockExpire", "0");
 
-                clearPoseAnimation();
+                poseClear();
 
                 // Whether Dolly can or can't talk in pose is irrelevant here
                 lmRunRlv("sendchat=y");
@@ -567,57 +608,19 @@ default {
 
                 posePage = 1;
 
-                poseChannel = listenerGetChannel();
-                lmSendConfig("poseChannel", (string)poseChannel);
+                // Open poses menu channel
+                poseMenuChannel = listenerGetChannel();
+                poseMenuHandle = listenerOpenChannel(poseMenuChannel, poseMenuHandle);
+                //lmSendConfig("poseMenuChannel", (string)poseMenuChannel);
 
-                lmInternalCommand("posePageN",choice, lmID);
+                //lmInternalCommand("poseMenu",choice, lmID);
+                poseMenu(choice,lmID);
             }
         }
         else if (code == POSE_SELECTION) {
-            string choice = (string)split[0];
+            string poseChoice = (string)split[0];
 
-            // it could be Poses Next or Poses Prev instead of an Anim
-            if (choice == "Poses Next" || choice == "Poses Prev") {
-                lmDialogListen();
-                llSleep(0.5);
-                lmInternalCommand("posePageN",choice, lmID);
-            }
-
-            // could have been "Back..."
-            else if (choice == "Back...") {
-                lmMenuReply(backMenu, llGetDisplayName(lmID), lmID);
-                lmSendConfig("backMenu",(backMenu = MAIN));
-            }
-
-            else {
-                // None of the other choices are valid: it's a pose
-                string expire;
-
-                llSay(PUBLIC_CHANNEL,"Pose " + choice + " selected.");
-
-                if (poseAnimationID != NULL_KEY) {
-                    llStopAnimation(poseAnimationID);
-                    debugSay(4,"DEBUG-AVATAR","Stopping old animation " + poseAnimation + " (" + (string)poseAnimationID + ")");
-                }
-
-                // The Real Meat: We have an animation (pose) name
-                lmSendConfig("poseAnimation", (string)(poseAnimation = choice));
-                lmSendConfig("poserID", (string)(poserID = lmID));
-
-                //debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 300/poseAnimation)");
-                setPoseAnimation(poseAnimation); 
-
-#ifdef ADULT_MODE
-#define poseDoesNotExpire (dollType == "Display" || hardcore)
-#else
-#define poseDoesNotExpire (dollType == "Display")
-#endif
-                if (poseDoesNotExpire) expire = "0";
-                else expire = (string)(llGetUnixTime() + POSE_TIMEOUT);
-                lmSetConfig("poseLockExpire", expire);
-
-                if (!canTalkInPose) lmRunRlv("sendchat=n");
-            }
+            poseSelected(poseChoice,lmID);
         }
         else if (code == RLV_RESET) {
             rlvOk = (integer)split[0];
@@ -626,7 +629,7 @@ default {
                 // This should only happen when the RLVcheck is
                 // done during login or attach
                 if (poseAnimation != ANIMATION_NONE) {
-                    setPoseAnimation(poseAnimation); 
+                    poseSet(poseAnimation); 
                     if (!canTalkInPose) lmRunRlv("sendchat=n");
                 }
             }
@@ -637,7 +640,7 @@ default {
 
                 poseAnimation = ANIMATION_NONE;
                 poseAnimationID = NULL_KEY;
-                clearPoseAnimation();
+                poseClear();
             }
 #ifdef DEVELOPER_MODE
             else if (code == MEM_REPORT) {
@@ -646,6 +649,37 @@ default {
 #endif
             else if (code == CONFIG_REPORT) {
                 cdConfigureReport();
+            }
+        }
+    }
+
+    //----------------------------------------
+    // LISTEN
+    //----------------------------------------
+    listen(integer listenChannel, string listenName, key listenID, string listenMessage) {
+
+        list split = llParseStringKeepNulls(listenMessage, [ " " ], []);
+
+        string name = llGetDisplayName(listenID); // "listenID" can be assumed present due to them using the menu dialogs...
+        string menuChoice = listenMessage;
+
+        if (listenChannel == poseMenuChannel) {
+
+            // it could be Poses Next or Poses Prev instead of an Anim
+            if (menuChoice == "Poses Next" || menuChoice == "Poses Prev") {
+                poseMenu(menuChoice,listenID);
+            }
+
+            // could have been "Back..."
+            else if (menuChoice == "Back...") {
+                lmMenuReply(backMenu, name, listenID);
+                //lmSendConfig("backMenu",(backMenu = MAIN));
+            }
+
+            else {
+                // By doing this, we allow other scripts the ability to select poses
+                //lmPoseSelected(listenMessage, name, listenID);
+                poseSelected(menuChoice,listenID);
             }
         }
     }
@@ -679,11 +713,11 @@ default {
 
         if (permMask & PERMISSION_TRIGGER_ANIMATION) {
 
-            // The big work is done in clearPoseAnimation() and setPoseAnimation()
+            // The big work is done in poseClear() and poseSet()
 
             if (poseChanged) {
-                if (notCurrentlyPosed(poseAnimation)) clearPoseAnimation();
-                else setPoseAnimation(poseAnimation); 
+                if (notCurrentlyPosed(poseAnimation)) poseClear();
+                else poseSet(poseAnimation); 
                 currentAnimation = poseAnimation;
             }
 

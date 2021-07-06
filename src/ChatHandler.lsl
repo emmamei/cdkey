@@ -722,11 +722,10 @@ integer commandsPublic(string chatCommand, string param) {
             if (requestedAnimation != ANIMATION_COLLAPSED) {
                 if (!(llGetAgentInfo(llGetOwner()) & AGENT_SITTING)) { // Agent not sitting
                     if (llGetInventoryType(requestedAnimation) == INVENTORY_ANIMATION) {
-                        // We don't have to do any testing for poses here: if the specified pose exists, we use it
-                        lmPoseReply(requestedAnimation, accessorName, accessorID);
+                        lmPoseSelected(requestedAnimation, accessorName, accessorID);
                     }
                     else {
-                        llSay(DEBUG_CHANNEL,"No pose by that name: " + requestedAnimation);
+                        llOwnerSay("No pose by that name: " + requestedAnimation);
                     }
                 }
             }

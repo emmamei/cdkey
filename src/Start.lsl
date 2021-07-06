@@ -19,8 +19,6 @@
 #define cdRunScript(a) llSetScriptState(a, RUNNING)
 #define cdStopScript(a) llSetScriptState(a, NOT_RUNNING)
 #define cdIsScriptRunning(a) llGetScriptState(a)
-#define cdNotecardNotExist(a) (llGetInventoryType(a) != INVENTORY_NONE)
-#define cdNotecardExists(a) (llGetInventoryType(a) == INVENTORY_NOTECARD)
 #define cdList2String(a) llDumpList2String(a,"|")
 
 // This action is different in different scripts;
@@ -381,7 +379,7 @@ processConfiguration(string configSettingName, string configSettingValue) {
 readPreferences() {
 
     // Check to see if the file exists and is a notecard
-    if (cdNotecardExists(NOTECARD_PREFERENCES)) {
+    if (isNotecardPresent(NOTECARD_PREFERENCES)) {
         llOwnerSay("Loading Key Preferences Notecard");
 
         // Start reading from first line (which is 0)

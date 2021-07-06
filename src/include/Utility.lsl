@@ -45,6 +45,7 @@ list dialogSort(list srcButtons) {
 
 #define isCollapseAnimationPresent() (llGetInventoryType(ANIMATION_COLLAPSED) == INVENTORY_ANIMATION)
 #define isPreferencesNotecardPresent() (llGetInventoryType(NOTECARD_PREFERENCES) == INVENTORY_NOTECARD)
+#define isAnimationPresent(a) (llGetInventoryType(a) == INVENTORY_ANIMATION)
 #define isNotecardPresent(a) (llGetInventoryType(a) == INVENTORY_NOTECARD)
 #define isLandmarkPresent(a) (llGetInventoryType(a) == INVENTORY_LANDMARK)
 

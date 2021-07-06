@@ -98,8 +98,8 @@ integer blacklistChannel;
 integer blacklistHandle;
 integer controllerChannel;
 integer controllerHandle;
-integer poseChannel;
-integer poseHandle;
+integer poseMenuChannel;
+integer poseMenuHandle;
 
 // Have to remove these from CommonGlobals.lsl first,
 // modify scripts, then invoke them here...
@@ -199,7 +199,7 @@ listenerDeactivateChannel(integer listenerHandle) {
 //
 // Here, it sets values for:
 //   * dialogChannel
-//   * poseChannel
+//   * poseMenuChannel
 //   * blacklistChannel
 //   * controllerChannel
 
@@ -216,7 +216,7 @@ listenerGetAllChannels() {
 listenerOpenAllChannels() {
 
         dialogHandle = listenerOpenChannel(    dialogChannel,     dialogHandle);
-//        poseHandle = listenerOpenChannel(      poseChannel,       poseHandle);
+//    poseMenuHandle = listenerOpenChannel(  poseMenuChannel,   poseMenuHandle);
 //  typeDialogHandle = listenerOpenChannel(typeDialogChannel, typeDialogHandle);
 //   blacklistHandle = listenerOpenChannel( blacklistChannel,  blacklistHandle);
 //  controllerHandle = listenerOpenChannel(controllerChannel, controllerHandle);
