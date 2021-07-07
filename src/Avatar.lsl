@@ -22,8 +22,6 @@
 #define UNSET -1
 #define ALL_CONTROLS (CONTROL_FWD|CONTROL_BACK|CONTROL_LEFT|CONTROL_RIGHT|CONTROL_ROT_LEFT|CONTROL_ROT_RIGHT|CONTROL_UP|CONTROL_DOWN|CONTROL_LBUTTON|CONTROL_ML_LBUTTON)
 
-#define cdListenerDeactivate(a) llListenControl(a, 0)
-#define cdListenerActivate(a) llListenControl(a, 1)
 #define cdResetKey() llResetOtherScript("Start")
 #define cdAnimationExists(a) (llGetInventoryType(a) == INVENTORY_ANIMATION)
 #define notCurrentAnimation(p) ((p) != poseAnimation)
@@ -692,12 +690,13 @@ default {
 
     timer() {
 
-        if (hasCarrier) keepFollow(carrierID);
-        else llSetTimerEvent(0.0);
-
 #ifdef DEVELOPER_MODE
         debugSay(5,"DEBUG-AVATAR","Avatar Timer fired.");
 #endif
+        poseMenuHandle = listenerTimeout(poseMenuHandle);
+
+        if (hasCarrier) keepFollow(carrierID);
+        else llSetTimerEvent(0.0);
     }
 
     //----------------------------------------

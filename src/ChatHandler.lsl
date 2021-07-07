@@ -17,8 +17,6 @@
 #define cdResetKey() llResetOtherScript("Start")
 
 #define cdCapability(c,p,u) { s += p; if (!(c)) { s += " not"; }; s += " " + u + ".\n"; }
-#define cdListenerActivate(a) llListenControl(a, 1)
-#define cdListenerDeactivate(a) llListenControl(a, 0)
 #define cdProfileURL(i) "secondlife:///app/agent/"+(string)(i)+"/about"
 #define cdList2String(a) llDumpList2String(a,"|")
 

@@ -19,10 +19,15 @@
 #define LISTENER_ACTIVE 1
 #define LISTENER_INACTIVE 0
 #define NO_FILTER ""
+#define NO_HANDLE 0
+
 #define cdResetKey() llResetOtherScript("Start")
 #define cdList2String(a) llDumpList2String(a,"|")
 //#define lmCollapse(a) lmInternalCommand("collapse",(string)(a),NULL_KEY)
 #define keyDetached(id) (id == NULL_KEY)
+
+#define cdListenerActivate(a) llListenControl(a, 1)
+#define cdListenerDeactivate(a) llListenControl(a, 0)
 
 // Wait for the user for 5 minutes - but for a program, only
 // wait 60s. The request for a dialog menu should happen before then -
@@ -283,16 +288,8 @@ default {
             if (cmd == "dialogListen") {
 
                 debugSay(4,"DEBUG-MENU","dialogListen Internal Command called");
-                //dialogChannel = listenerActivateDialogChannel();
-                listenerOpenAllChannels();
-                llSetTimerEvent(MENU_TIMEOUT); // generic (listener) timeout requested by other script
+                dialogHandle = listenerOpenChannel(dialogChannel,dialogHandle);
             }
-//          else if (cmd == "poseListen") {
-//
-//              listenerGetAllChannels();
-//              dialogChannel = listenerActivateDialogChannel();
-//              llSetTimerEvent(MENU_TIMEOUT); // generic (listener) timeout requested by other script
-//          }
             else if (cmd == "mainMenu") {
                 string menuMessage;
                 list menuButtons;
@@ -372,7 +369,7 @@ default {
                 //----------------------------------------
                 // Prepare listeners: this allows for lag time by doing this up front
 
-                cdListenerActivate(dialogHandle);
+                //cdListenerActivate(dialogHandle);
                 lmDialogListen();
                 llSleep(0.5); // Let messages settle in to update menu...
 
@@ -807,10 +804,6 @@ default {
         else if (code < 200) {
             if (code == INIT_STAGE2) {
                 if (lmData == "Start") configured = 1;
-
-                //doDialogChannel();
-                //dialogChannel = listenerActivateDialogChannel();
-                //scaleMem();
             }
             else if (code == INIT_STAGE5) {
                 //startup = 0;
@@ -849,15 +842,13 @@ default {
         debugSay(4,"DEBUG-MENU","MenuHandler Timer fired.");
         llSetTimerEvent(0.0);
 
-        // Note that if ANY of these are set, when timer trips, ALL are cleared...
+        // FIXME: Note that if ANY of these are set, when timer trips, ALL are cleared...
         // This is very probably NOT what we want, though it probably does not
         // present problems in practice... PROBABLY.
         //
-        if  (blacklistHandle) { llListenRemove( blacklistHandle);  blacklistHandle = 0; debugSay(4,"DEBUG-MENU","Timer expired: blacklistHandle removed"); }
-        if (controllerHandle) { llListenRemove(controllerHandle); controllerHandle = 0; debugSay(4,"DEBUG-MENU","Timer expired: controllerHandle removed");   }
-
-        //if   (poseHandle)    { cdListenerDeactivate(  poseHandle);  debugSay(4,"DEBUG-MENU","Timer expired: poseHandle deactivated");   }
-        if (dialogHandle)    { cdListenerDeactivate(dialogHandle);  debugSay(4,"DEBUG-MENU","Timer expired: dialogHandle deactivated"); }
+         blacklistHandle = listenerTimeout( blacklistHandle);
+        controllerHandle = listenerTimeout(controllerHandle);
+            dialogHandle = listenerTimeout(    dialogHandle);
 
         dialogKeys = [];
         dialogButtons = [];
@@ -1163,8 +1154,8 @@ default {
 
                     if (afterSpace == "Blacklist") {
                         if (controllerHandle) {
-                            llListenRemove(controllerHandle);
-                            controllerHandle = 0;
+                            listenerStopChannel(controllerHandle);
+                            controllerHandle = NO_HANDLE;
                         }
 
                         activeChannel = blacklistChannel;
@@ -1182,8 +1173,8 @@ default {
                     }
                     else {
                         if (blacklistHandle) {
-                            llListenRemove(blacklistHandle);
-                            blacklistHandle = 0;
+                            listenerStopChannel(blacklistHandle);
+                            blacklistHandle = NO_HANDLE;
                         }
 
                         activeChannel = controllerChannel;
@@ -1284,8 +1275,8 @@ default {
             if (listenChannel == blacklistChannel) {
 
                 // shutdown the listener
-                llListenRemove(blacklistHandle);
-                blacklistHandle = 0;
+                listenerStopChannel(blacklistHandle);
+                blacklistHandle = NO_HANDLE;
 
                 if (~llListFindList(blacklistList,[uuid,name]))
                     lmInternalCommand("remBlacklist", (string)uuid + "|" + name, listenID);
@@ -1295,8 +1286,8 @@ default {
             else {
 
                 // shutdown the listener
-                llListenRemove(controllerHandle);
-                controllerHandle = 0;
+                listenerStopChannel(controllerHandle);
+                controllerHandle = NO_HANDLE;
 
                 if (~llListFindList(controllerList,[uuid,name])) {
                     if (cdIsController(listenID)) lmInternalCommand("remController", (string)uuid + "|" + name, listenID);

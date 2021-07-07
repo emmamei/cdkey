@@ -40,15 +40,9 @@ integer tempDressingLock = FALSE;  // allow only one dressing going on at a time
 
 string newOutfitName;
 
-// New simple listener setup we only
-// listen to rlvChannel directly the
-// other we use MenuHandlers link 500's
-#define RLV_BASE_CHANNEL 1
-#ifdef RLV_BASE_CHANNEL
-integer rlvBaseChannel;
-#endif
 integer outfitChannel;
 integer outfitHandle;
+
 integer change;
 integer pushRandom;
 integer keyLocked = FALSE;
@@ -364,9 +358,6 @@ default {
 
             if (name == "dialogChannel") {
                 dialogChannel = (integer)value;
-#ifdef RLV_BASE_CHANNEL
-                rlvBaseChannel = dialogChannel ^ 0x80000000; // Xor with the sign bit forcing the positive channel needed by RLV spec.
-#endif
                   dressMenuChannel = (dialogChannel ^ 0x80000000) + 2666; // Xor with the sign bit forcing the positive channel needed by RLV spec.
                 dressRandomChannel = (dialogChannel ^ 0x80000000) + 2665; // Xor with the sign bit forcing the positive channel needed by RLV spec.
                      outfitChannel =  dialogChannel + 15; // arbitrary offset

@@ -13,8 +13,6 @@
 #define RLV_TIMEOUT 10.0
 #define UNSET -1
 
-#define cdListenerDeactivate(a) llListenControl(a, 0)
-#define cdListenerActivate(a) llListenControl(a, 1)
 #define cdResetKey() llResetOtherScript("Start")
 #define cdHaltTimer() llSetTimerEvent(0.0);
 #define rlvSetIf(a,b) if ((b) == 1) { lmRunRlv((a)+"=y"); } else { lmRunRlv((a)+"=n"); }
@@ -71,11 +69,10 @@ startRlvCheck() {
 
     // Set up listener to receive RLV command output
     if (rlvChannel == NO_CHANNEL) {
+
         // Calculate positive (RLV compatible) rlvChannel
         rlvChannel = MAX_INT - (integer)llFrand(5000);
         rlvHandle = cdListenMine(rlvChannel);
-
-        cdListenerActivate(rlvHandle);
     }
 
     // Configure variables
@@ -233,7 +230,8 @@ default {
 
         // remove rlvHandle in order to set new one later
         llListenRemove(rlvHandle);
-        rlvChannel == 0;
+        rlvHandle = 0;
+        rlvChannel = NO_CHANNEL;
     }
 
     //----------------------------------------
@@ -256,9 +254,6 @@ default {
         // Initial RLV Check results are being processed here
         //
         if (listenChannel == rlvChannel) {
-
-            // FIXME: We could deactivate, but RLV channel may be used for other things
-            //cdListenerDeactivate(rlvChannel); // This prevents a secondary response
 
             // This is a shortcut: if rlvOk is true, then we don't need to check for
             // validation... right? Isn't this almost the same as above?
@@ -321,16 +316,6 @@ default {
                 else if (name == "chatChannel") { chatChannel = (integer)value; }
             }
 
-            else if (name == "dialogChannel") {
-                dialogChannel = (integer)value;
-
-                llListenRemove(rlvHandle);
-
-                // Calculate positive (RLV compatible) rlvChannel
-                rlvChannel = ~dialogChannel + 1;
-                rlvHandle = cdListenMine(rlvChannel);
-                cdListenerActivate(rlvHandle);
-            }
             else if (name == "wearLockExpire") {
                 wearLockExpire = (integer)value;
                 manageOutfitLock();

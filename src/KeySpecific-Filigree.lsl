@@ -33,8 +33,6 @@
 #define cdListenAll(a)    llListen(a, NO_FILTER, NO_FILTER, NO_FILTER)
 #define cdListenUser(a,b) llListen(a, NO_FILTER,         b, NO_FILTER)
 #define cdListenMine(a)   llListen(a, NO_FILTER,    dollID, NO_FILTER)
-#define cdListenerDeactivate(a) llListenControl(a, 0)
-#define cdListenerActivate(a) llListenControl(a, 1)
 
 //=======================================
 // VARIABLES

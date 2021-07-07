@@ -27,8 +27,6 @@ integer rlvCmdIssued;
 key queryLandmarkData = NULL_KEY;
 key tpLandmarkQueryID = NULL_KEY;
 string tpLandmark;
-integer tpChannel;
-integer tpHandle;
 
 integer i;
 

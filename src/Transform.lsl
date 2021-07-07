@@ -131,6 +131,7 @@ integer systemSearchHandle;
 integer systemSearchChannel;
 
 integer typeDialogChannel;
+integer typeDialogHandle;
 
 integer dbConfig;
 integer mustAgreeToType;
@@ -624,7 +625,6 @@ default {
                 dialogChannel = (integer)value;
 
                 typeDialogChannel = dialogChannel - TYPE_CHANNEL_OFFSET;
-                llListen(typeDialogChannel, NO_FILTER, dollID, NO_FILTER);
 
 //                           rlvChannel = ~dialogChannel + 1;
                       typeSearchChannel = ~dialogChannel + 2;
@@ -838,6 +838,7 @@ default {
                     llDialog(lmID, msg, ["OK"], DISCARD_CHANNEL);
                 }
                 else {
+                    typeDialogHandle = llListen(typeDialogChannel, NO_FILTER, dollID, NO_FILTER);
 
                     // Dolly can change type: not locked
                     reloadTypeNames(lmID);
@@ -1236,6 +1237,9 @@ default {
             lmInitStage(INIT_STAGE4); // Outfits and System folder search succeeded: continue
         }
         else if (listenChannel == typeDialogChannel) {
+
+            llListenRemove(typeDialogHandle);
+
             if (listenMessage == "Back...") {
                 lmMenuReply(backMenu = MAIN,llGetDisplayName(listenID),listenID);
             }

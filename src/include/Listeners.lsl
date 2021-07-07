@@ -26,43 +26,6 @@
 // We should be able to hide all deactivate vs close options in
 // these functions
 //
-// CheckRLV at one point uses this command:
-//
-//     rlvChannel = MAX_INT - (integer)llFrand(5000);
-//
-// Transform.lsl:
-//              rlvChannel = ~dialogChannel + 1;
-//
-//              typeDialogChannel = dialogChannel - TYPE_CHANNEL_OFFSET;
-//              llListen(typeDialogChannel, NO_FILTER, dollID, NO_FILTER);
-//
-//              typeSearchChannel = rlvChannel + 1;
-//              outfitSearchChannel = rlvChannel + 2;
-//              systemSearchChannel = rlvChannel + 3;
-//
-//              typeFolderBufferChannel = rlvChannel + 4;
-// Aux.lsl:
-//              textboxChannel = dialogChannel - TEXTBOX_CHANNEL_OFFSET;
-// Avatar.lsl
-//              poseChannel = dialogChannel - POSE_CHANNEL_OFFSET;
-// CheckRLV.lsl
-//              llListenRemove(rlvHandle);
-//
-//              // Calculate positive (RLV compatible) rlvChannel
-//              rlvChannel = ~dialogChannel + 1;
-//              rlvHandle = cdListenMine(rlvChannel);
-//              cdListenerActivate(rlvHandle);
-// Dress.lsl
-// #ifdef RLV_BASE_CHANNEL
-//              rlvBaseChannel = dialogChannel ^ 0x80000000; // Xor with the sign bit forcing the positive channel needed by RLV spec.
-// #endif
-//              dressMenuChannel = (dialogChannel ^ 0x80000000) + 2666; // Xor with the sign bit forcing the positive channel needed by RLV spec.
-//              dressRandomChannel = dressMenuChannel + 1;
-//              outfitChannel = dialogChannel + 15; // arbitrary offset
-//              debugSay(6, "DEBUG-DRESS", "outfits Channel set to " + (string)outfitChannel);
-// Main.lsl:
-//              (none)
-//
 // SUMMARY:
 //   * Transform: sets a bunch of search channels, and opens type Dialog Channel
 //   * Aux: sets textbox channel
@@ -71,13 +34,14 @@
 //   * Dress: sets rlvBaseChannel, dress Menu Channels, outfit Channel...
 //   * Main: nothing - only sets dialog channel
 
-// These offsets will be very soon obsolete
+// These offsets may very well be very soon obsolete
 #define BLACKLIST_CHANNEL_OFFSET 666
 #define CONTROL_CHANNEL_OFFSET 888
 #define POSE_CHANNEL_OFFSET 777
 #define TYPE_CHANNEL_OFFSET 778
 #define TEXTBOX_CHANNEL_OFFSET 1111
 
+#define MENU_TIMEOUT 60.0
 #define MAX_INT DEBUG_CHANNEL
 
 #define cdListenAll(a)    llListen(a, NO_FILTER, NO_FILTER, NO_FILTER)
@@ -98,6 +62,8 @@ integer blacklistChannel;
 integer blacklistHandle;
 integer controllerChannel;
 integer controllerHandle;
+
+// Only for Avatar:
 integer poseMenuChannel;
 integer poseMenuHandle;
 
@@ -107,6 +73,83 @@ integer poseMenuHandle;
 //integer chatChannel         = 75;
 //integer dialogChannel;
 //integer dialogHandle;
+
+// THIS IS RAW DATA!!
+//
+// Many of these would not be part of any processing here,
+// but others would be. This is a programmatically generated
+// list of all (possible) channels in code.
+//
+// Eventually, they should all be defined here. Some of them are
+// already. Note that unused variables are removed by the Firestorm
+// optimizer, so we don't have to worry about that.
+//
+//      2 activeChannel
+//      4 blacklistChannel
+//     19 chatChannel
+//      6 comChannel
+//      4 controllerChannel
+//     44 dialogChannel
+//      8 dressMenuChannel
+//      6 dressRandomChannel
+//      4 keySpecificChannel
+//      2 listChannel
+//     11 outfitChannel
+//      4 outfitSearchChannel
+//      5 poseMenuChannel
+//      8 rlvChannel
+//      1 statusChannel
+//      4 systemSearchChannel
+//      4 textboxChannel
+//      5 typeDialogChannel
+//      4 typeFolderBufferChannel
+//      5 typeSearchChannel
+//
+// Channels (presumably) by file - again this was originally
+// programmatically generated:
+//
+// Aux.lsl: dialogChannel
+// Aux.lsl: textboxChannel
+//
+// Avatar.lsl: poseMenuChannel
+//
+// ChatHandler.lsl: chatChannel
+//
+// CheckRLV.lsl: chatChannel
+// CheckRLV.lsl: rlvChannel
+//
+// Dress.lsl: dialogChannel
+// Dress.lsl: dressMenuChannel
+// Dress.lsl: dressRandomChannel
+// Dress.lsl: outfitChannel
+//
+// KeySpecific-Filigree.lsl: keySpecificChannel
+//
+// KeySpecific-Soen.lsl: chatChannel
+//
+// Main.lsl: dialogChannel
+//
+// MenuHandler.lsl: activeChannel
+// MenuHandler.lsl: blacklistChannel
+// MenuHandler.lsl: chatChannel
+// MenuHandler.lsl: controllerChannel
+// MenuHandler.lsl: dialogChannel
+// MenuHandler.lsl: listChannel
+//
+// Start.lsl: chatChannel
+//
+// StatusRLV.lsl: statusChannel
+//
+// Transform.lsl: dialogChannel
+// Transform.lsl: outfitSearchChannel
+// Transform.lsl: systemSearchChannel
+// Transform.lsl: typeDialogChannel
+// Transform.lsl: typeFolderBufferChannel
+// Transform.lsl: typeSearchChannel
+//
+// UpdaterClient.lsl: comChannel
+//
+// UpdaterServer.lsl: comChannel
 
 //========================================
 // FUNCTIONS
@@ -119,19 +162,25 @@ integer listenerGetDialogChannel() {
 
     dialogChannel = (0x80000000 | (integer)("0x" + llGetSubString((string)llGenerateKey(), -7, -1)));
     lmSendConfig("dialogChannel", (string)(dialogChannel));
-
     return dialogChannel;
 }
 
 integer listenerGetChannel() {
+    integer returnChannel;
+
     if (baseChannel == 0)
         baseChannel = MAX_INT - (integer)llFrand(5000);
 
-    return baseChannel++;
+    returnChannel = baseChannel;
+
+    // When we assign a new channel number - let everyone else know we've done it
+    lmSendConfig("baseChannel", (string)(++baseChannel));
+
+    return returnChannel;
 }
 
 //----------------------------------------
-// ACTIVATE CHANNELS
+// OPEN CHANNELS
 //
 integer listenerOpenChannel(integer listenerChannel, integer listenerHandle){
 
@@ -143,9 +192,34 @@ integer listenerOpenChannel(integer listenerChannel, integer listenerHandle){
     // Uses llListen(a, NO_FILTER, NO_FILTER, NO_FILTER)
     listenerHandle = cdListenAll(listenerChannel);
 
+    llSetTimerEvent(MENU_TIMEOUT);
+
     return listenerHandle;
 }
 
+//----------------------------------------
+// STOP CHANNELS
+//
+listenerStopChannel(integer listenerHandle) {
+    llListenRemove(listenerHandle);
+}
+
+//----------------------------------------
+// CHANNEL TIMEOUTS
+//
+integer listenerTimeout(integer listenerHandle) {
+    if (listenerHandle) {
+        llListenRemove(listenerHandle);
+        debugSay(4,"DEBUG-LISTENERS","Timer expired: listener removed");
+        listenerHandle = 0;
+    }
+
+    return listenerHandle;
+}
+
+//----------------------------------------
+// ACTIVATE CHANNELS
+//
 integer listenerActivateChannel(integer listenerChannel, integer listenerHandle){
 
     if (listenerHandle) {
@@ -166,19 +240,10 @@ integer listenerActivateChannel(integer listenerChannel, integer listenerHandle)
 // reset is done unless necessary
 
 integer listenerActivateDialogChannel() {
-    //debugSay(4,"DEBUG-MENU","doDialogChannel() called");
-    //debugSay(4,"DEBUG-MENU","dialogChannel = " + (string)dialogChannel);
 
     dialogHandle = listenerActivateChannel(dialogChannel,dialogHandle);
 
     return dialogChannel;
-}
-
-//----------------------------------------
-// STOP CHANNELS
-//
-listenerStopChannel(integer listenerHandle) {
-    llListenRemove(listenerHandle);
 }
 
 //----------------------------------------
