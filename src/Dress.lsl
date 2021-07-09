@@ -16,7 +16,6 @@
 #include "include/GlobalDefines.lsl"
 
 #define NO_FILTER ""
-#define cdListenMine(a) llListen(a, NO_FILTER, dollID, NO_FILTER)
 #define isKnownTypeFolder(a) (~llListFindList(typeFolders, (list)a))
 
 #define nothingWorn(c,d) ((c) != "0") && ((c) != "1") && ((d) != "0") && ((d) != "1")
@@ -43,12 +42,9 @@ string newOutfitName;
 integer outfitChannel;
 integer outfitHandle;
 
-integer change;
-integer pushRandom;
 integer keyLocked = FALSE;
 
 // These are the paths of the outfits relative to #RLV
-//string lastFolder;
 string newOutfit;
 string oldOutfit;
 string wearFolder;
@@ -56,23 +52,25 @@ string unwearFolder;
 
 list outfitList;
 
-string clothingFolder; // This contains clothing to be worn
-string outfitFolder;  // This contains folders of clothing to be worn
-string activeFolder; // This is the lookup folder to search
-string typeFolder; // This is the folder we want for our doll type
-string topFolder; // This is the top folder, usually same as outfitFolder
-
+// Relative to #RLV
+string outfitMasterFolder;  // This contains folders of clothing to be worn
 string normalselfFolder; // This is the ~normalself we are using
 string normaloutfitFolder; // This is the ~normaloutfit we are using
 string nudeFolder; // This is the ~nude we are using
+string topFolder; // This is the top folder, usually same as outfitMasterFolder
+
+// Relative to outfitMasterFolder
+string typeFolder; // This is the folder for the current type, if any
+
+// FIXME: clothingFolder and activeFolder are confusing, and could be conflated
+string clothingFolder; // This is the currently displayed folder
+string activeFolder; // This is the lookup folder to search
 
 integer dressMenuHandle;
 integer dressMenuChannel;
 
 integer dressRandomHandle;
 integer dressRandomChannel;
-
-integer dressingFailures;
 
 integer outfitPage; // zero-indexed
 
@@ -83,10 +81,15 @@ integer outfitPage; // zero-indexed
 //========================================
 
 #include "include/Wear.lsl" // Wearing outfits functions
+#include "include/Listeners.lsl" // Listener functions
 
 clearDresser() {
     dresserID = NULL_KEY;
-    topFolder = outfitFolder;
+
+    if (typeFolder != "")
+        topFolder = outfitMasterFolder + "/" + typeFolder;
+    else
+        topFolder = outfitMasterFolder;
 }
 
 integer uSubStringLastIndex(string hay, string pin) {
@@ -155,16 +158,16 @@ list outfitPageN(list outfitList) {
 
 listInventoryOn(integer channel) {
 
-    if (outfitFolder == "") {
+    if (outfitMasterFolder == "") {
         llOwnerSay("No suitable outfits folder found, so unfortunately you will not be able to be dressed");
         return;
     }
 
     // activeFolder is the folder (full path) we are looking at with our Menu
-    // outfitFolder is where all outfits are stored, including
+    // outfitMasterFolder is where all outfits are stored, including
     //     ~normalself, ~normaloutfit, ~nude, and all the type folders
     // clothingFolder is the current folder for clothing, relative
-    //     to the outfitFolder
+    //     to the outfitMasterFolder
     // topFolder is the current top level for all outfits, not including system
     //     folders: it incorporates the type folder
 
@@ -216,17 +219,14 @@ integer isDresser(key id) {
 
 changeComplete(integer success) {
     integer wearLock;
+    string msg;
 
     // And remove the temp locks we used
 
     lmRunRlv("clear=attach,clear=detach");
 
     if (success) {
-        if (change) {
-            string s = "Change to new outfit " + newOutfitName + " complete.";
-
-            cdSayToAgentPlusDoll(s,dresserID);
-        }
+        cdSayToAgentPlusDoll("Change to new outfit " + newOutfitName + " complete.",dresserID);
 
         // Note: if wearLock is already set, it STAYS set with this setting
         //
@@ -237,20 +237,14 @@ changeComplete(integer success) {
         wearLock = ((wearLockExpire > 0) || ((dresserID != NULL_KEY) && (dresserID != dollID)));
     }
     else {
-        if (dressingFailures > MAX_DRESS_FAILURES)
-            llOwnerSay("Too many dressing failures.");
 
-        string s = "Change to new outfit " + newOutfitName + " unsuccessful.";
-
-        cdSayToAgentPlusDoll(s,dresserID);
+        cdSayToAgentPlusDoll("Change to new outfit " + newOutfitName + " unsuccessful.",dresserID);
 
         wearLock = 0;
     }
 
     // Note that if wearLock is already in place, this will bump the time up
     lmInternalCommand("wearLock", (string)wearLock, dollID);
-
-    change = 0;
 
     tempDressingLock = FALSE;
     llSetTimerEvent(0.0);
@@ -259,7 +253,7 @@ changeComplete(integer success) {
 #ifdef DEVELOPER_MODE
 string folderStatus() {
 
-    return "Outfits Folder: " + outfitFolder +
+    return "Outfits Folder: " + outfitMasterFolder +
            "\nCurrent Folder: " + activeFolder +
            "\nType Folder: " + typeFolder +
            "\nUse ~normalself: " + normalselfFolder +
@@ -272,7 +266,7 @@ string folderStatus() {
 
     if (typeFolder == "") typeFolderExists = "n/a";
 
-    return "Outfits Folder: " + outfitFolder +
+    return "Outfits Folder: " + outfitMasterFolder +
            "\nType Folder: " + typeFolderExists;
 }
 #endif
@@ -339,7 +333,7 @@ default {
                             "normaloutfitFolder",
                             "nudeFolder",
 
-                            "outfitFolder",
+                            "outfitMasterFolder",
                             "typeFolder",
 #ifdef ADULT_MODE
                             "hardcore",
@@ -382,20 +376,20 @@ default {
             else if (name == "normaloutfitFolder")    normaloutfitFolder = value;
             else if (name == "nudeFolder")                    nudeFolder = value;
 
-            else if (name == "outfitFolder") {
-                outfitFolder = value;
+            else if (name == "outfitMasterFolder") {
+                outfitMasterFolder = value;
 
                 // Even though type folder may be set,
                 // it will be invalidated by this process,
                 // and should be set a long time after this anyway.
                 //
-                topFolder = outfitFolder;
+                topFolder = outfitMasterFolder;
             }
             else if (name == "typeFolder") {
                 typeFolder = value;
 
                 if (typeFolder != "") {
-                    topFolder = outfitFolder + "/" + typeFolder;
+                    topFolder = outfitMasterFolder + "/" + typeFolder;
                     dressVia(dressRandomChannel);
                 }
                 else {
@@ -507,33 +501,27 @@ default {
                     return;
                 }
 
-                debugSay(2, "DEBUG-DRESS", "Outfit menu; outfit Folder = " + outfitFolder);
+                debugSay(2, "DEBUG-DRESS", "Outfit menu; outfit Folder = " + outfitMasterFolder);
 
                 // Check to see if clothing has been worn long enough before changing (wearLock)
                 if (wearLockExpire > 0) {
                     clearDresser();
+
                     lmDialogListen();
                     llDialog(dresserID, "Clothing was just changed; cannot change right now.", ["OK"], dialogChannel);
+
                     return;
                 }
 
-                if (outfitFolder != "") {
-                    debugSay(2, "DEBUG-DRESS", "Outfit menu; outfit Folder is not empty");
+                // If outfitMasterFolder is blank, we SHOULD NOT be here...
 
 #ifndef PRESERVE_FOLDER
-                    // This resets the current folder location for the menu
-                    //
-                    // Note if typeFolder is unset, then clothingFolder will be too
-                    clothingFolder = typeFolder;
+                // This resets the current folder location for the menu
+                //
+                // Note if typeFolder is unset, then clothingFolder will be too
+                clothingFolder = typeFolder;
 #endif
-                    dressVia(dressMenuChannel);
-                }
-                else {
-                    clearDresser();
-                    if (rlvOk == TRUE) llSay(DEBUG_CHANNEL,"outfitFolder is unset.");
-                    else llSay(DEBUG_CHANNEL,"You cannot be dressed without RLV active.");
-                    return;
-                }
+                dressVia(dressMenuChannel);
             }
             else if (menuChoice == UPMENU) {
                 // When we get here, using the Menu Reply to MAIN
@@ -613,6 +601,7 @@ default {
 
             debugSay(6, "DEBUG-DRESS", "Secondary outfits menu: listenMessage = " + listenMessage + "; select = " + (string)select);
 
+            // FIXME: This assumes no one will have a directory like "Outfits Big" or "Back..."
             if (llGetSubString(listenMessage, 0, 6) == "Outfits") {
 
                 // Choice was one of:
@@ -656,8 +645,10 @@ default {
                 //dialogItems += "Back...";
 
                 // We only get here if we are wandering about in the same folder...
+                // FIXME: This is a brute force listener open
                 lmDialogListen();
                 outfitHandle = cdListenAll(outfitChannel);
+
                 outfitDialogList = outfitPageN(outfitList);
 
                 // outfitMessage was built by the initial call to listener2666
@@ -742,9 +733,11 @@ default {
             if (listenMessage == "") {
 
                 // No outfits available in this folder
+                // FIXME: This is a brute force listener open
                 lmDialogListen();
                 cdListenAll(outfitChannel);
 
+                // FIXME: What if dolly CANT go "back" up...?
                 backMenu = UPMENU;
                 llDialog(dresserID, "No outfits to wear in this folder.", [ "Back..." ], outfitChannel);
 
@@ -788,9 +781,11 @@ default {
             if (outfitList == []) {
                 outfitList = []; // free memory
 
+                // FIXME: This is a brute force listener open
                 lmDialogListen();
                 cdListenAll(outfitChannel);
 
+                // FIXME: What if dolly CANT go "back" up...?
                 backMenu = UPMENU;
                 llDialog(dresserID, "No wearable outfits in this folder.", [ "Back..." ], outfitChannel);
 
@@ -822,6 +817,7 @@ default {
             outfitMessage += "\n\n" + folderStatus();
 
             // Provide a dialog to user to choose new outfit
+            // FIXME: This is a brute force listener open
             lmDialogListen();
             cdListenAll(outfitChannel);
 

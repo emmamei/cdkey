@@ -22,12 +22,14 @@
 //========================================
 
 wearStandardOutfit(string newOutfit) {
+    // newOutfit uses full path relative to #RLV
+
     outfitAvatar = FALSE;
 
     // Steps to dressing avi:
     //
     // Overview: Attach everything we need, and lock them afterwards.
-    // Next, detach the old outfit - then detach the entire outfitFolder
+    // Next, detach the old outfit - then detach the entire outfitMasterFolder
     // just in case (everything we want should be locked on).
     //
     // Attach and Lock (New Outfit):
@@ -37,7 +39,7 @@ wearStandardOutfit(string newOutfit) {
     //
     // Force Detach:
     //
-    // 2) Detach oldOutfitFolder, or entire outfitFolder
+    // 2) Detach oldOutfitFolder, or entire outfitMasterFolder
     //       (using @detachall:=force )
     //
     // Attach outfit again:
@@ -84,8 +86,8 @@ wearStandardOutfit(string newOutfit) {
     else {
         // If no oldOutfitFolder, then just detach everything
         // outside of the newFolder and ~normalself and ~nude
-        debugSay(2, "DEBUG-DRESS", "Removing all other outfits from " + outfitFolder);
-        cdForceDetach(outfitFolder);
+        debugSay(2, "DEBUG-DRESS", "Removing all other outfits from " + outfitMasterFolder);
+        cdForceDetach(outfitMasterFolder);
     }
 
     //----------------------------------------
@@ -121,6 +123,8 @@ wearStandardOutfit(string newOutfit) {
 }
 
 wearNewAvi(string newOutfit) {
+    // newOutfit uses full path relative to #RLV
+
     outfitAvatar = TRUE;
 
     // Steps to dressing AS a new Avatar:
@@ -159,8 +163,8 @@ wearNewAvi(string newOutfit) {
 
     debugSay(2,"DEBUG-DRESS","*** STEP 2 ***");
     // Detach everything other than the locked newOutfit
-    debugSay(2, "DEBUG-DRESS", "Removing all other clothing worn from " + outfitFolder);
-    cdForceDetach(outfitFolder);
+    debugSay(2, "DEBUG-DRESS", "Removing all other clothing worn from " + outfitMasterFolder);
+    cdForceDetach(outfitMasterFolder);
 
     cdUnlock(newOutfit);
 
@@ -170,8 +174,7 @@ wearNewAvi(string newOutfit) {
 
 wearOutfitCore(string newOutfitName) {
 
-    string newOutfitFolder;
-    string newOutfitPath;
+    // newOutfitName is the folder name alone
 
     // Overriting a script global here... not kosher, but works.
     // Note that the value may or may NOT come from this script:
@@ -189,26 +192,9 @@ wearOutfitCore(string newOutfitName) {
     rlvLockKey();
     tempDressingLock = TRUE;
 
-    dressingFailures = 0;
-    change = 1;
-
-    // Send a message to ourself, generate an event, and save the
-    // previous values of newOutfit* into oldOutfit* - can we do
-    // this without using a link message?
-    //
-    // *OutfitName       newOutfitName    - name of outfit
-    // *OutfitFolder     outfitFolder    - name of main outfits folder
-    // *OutfitPath       clothingFolder   - name of folder with outfit, relative to outfitFolder
-    // *Outfit           -new-            - full path of outfit (outfitFolder + "/" + clothingFolder + "/" + newOutfitName)
-
-    // Build the newOutfit* variables - but do they get used?
-
-    newOutfitFolder = topFolder;
-      newOutfitPath = clothingFolder;
-
-    newOutfit = newOutfitFolder + "/";
-    if (clothingFolder != "")
-        newOutfit += clothingFolder + "/";
+    // newOutfit is relative to #RLV
+    newOutfit = topFolder + "/";
+    if (clothingFolder != "") newOutfit += clothingFolder + "/";
     newOutfit += newOutfitName;
 
     //----------------------------------------
@@ -250,6 +236,7 @@ resetBodyCore() {
 }
 
 resetBody(string wearOutfit) {
+    // wearOutfit is full path relative to #RLV
 
     // Clear old outfit settings
     oldOutfit = "";
@@ -268,7 +255,7 @@ resetBody(string wearOutfit) {
     if (wearOutfit)         lmRunRlv(rlvLockFolderRecursive(wearOutfit));
 
     // Remove all else from the top, outfits and all the rest
-    lmRunRlv(rlvDetachAllRecursive(outfitFolder));
+    lmRunRlv(rlvDetachAllRecursive(outfitMasterFolder));
 
     // Clear locks
     if (nudeFolder)         lmRunRlv(rlvUnlockFolderRecursive(nudeFolder));
@@ -283,7 +270,7 @@ stripCore() {
     if (nudeFolder)       lmRunRlv("detachthis:" + nudeFolder       + "=n");
     if (normalselfFolder) lmRunRlv("detachthis:" + normalselfFolder + "=n");
 
-    lmRunRlv("detachall:" + outfitFolder + "=force");
+    lmRunRlv("detachall:" + outfitMasterFolder + "=force");
 
     if (nudeFolder)       lmRunRlv("detachthis:" + nudeFolder       + "=y,attachall:" + nudeFolder       + "=force");
     if (normalselfFolder) lmRunRlv("detachthis:" + normalselfFolder + "=y,attachall:" + normalselfFolder + "=force");
