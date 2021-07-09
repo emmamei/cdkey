@@ -44,9 +44,6 @@
 #define MENU_TIMEOUT 60.0
 #define MAX_INT DEBUG_CHANNEL
 
-#define cdListenAll(a)    llListen(a, NO_FILTER, NO_FILTER, NO_FILTER)
-#define cdListenUser(a,b) llListen(a, NO_FILTER,         b, NO_FILTER)
-#define cdListenMine(a)   llListen(a, NO_FILTER,    dollID, NO_FILTER)
 #define cdListenerDeactivate(a) llListenControl(a, 0)
 #define cdListenerActivate(a) llListenControl(a, 1)
 #define cdPositive(a) ((a) ^ 0x80000000)
@@ -182,15 +179,26 @@ integer listenerGetChannel() {
 //----------------------------------------
 // OPEN CHANNELS
 //
-integer listenerOpenChannel(integer listenerChannel, integer listenerHandle){
+#define ALL_USERS ""
+#define DOLL_ONLY dollID
+#define MINE_ONLY dollID
+
+#define NO_HANDLE 0
+
+#define cdListenAll(a)    listenerOpenChannel(a,NO_HANDLE,ALL_USERS)
+#define cdListenUser(a,b) listenerOpenChannel(a,NO_HANDLE,b)
+#define cdListenMine(a)   listenerOpenChannel(a,NO_HANDLE,dollID)
+
+#define listenerOpen(a,b) listenerOpenChannel(a,b,ALL_USERS)
+
+integer listenerOpenChannel(integer listenerChannel, integer listenerHandle, string listenerFilter){
 
     // Remove any set channel
     if (listenerHandle) llListenRemove(listenerHandle);
 
     // Set channel and return handle
     //
-    // Uses llListen(a, NO_FILTER, NO_FILTER, NO_FILTER)
-    listenerHandle = cdListenAll(listenerChannel);
+    listenerHandle = llListen(listenerChannel, NO_FILTER, listenerFilter, NO_FILTER);
 
     llSetTimerEvent(MENU_TIMEOUT);
 
@@ -201,6 +209,10 @@ integer listenerOpenChannel(integer listenerChannel, integer listenerHandle){
 // STOP CHANNELS
 //
 listenerStopChannel(integer listenerHandle) {
+    llListenRemove(listenerHandle);
+}
+
+listenerClose(integer listenerHandle) {
     llListenRemove(listenerHandle);
 }
 

@@ -407,16 +407,8 @@ default {
     on_rez(integer start) {
         // Set up key when rezzed
 
-        //rlvOk = UNSET;
-        //llStopMoveToTarget();
-        //llTargetRemove(targetHandle);
-
-        //debugSay(5,"DEBUG-AVATAR","ifPermissions (on_rez)");
-        //llRequestPermissions(dollID, PERMISSION_MASK);
-
         poseMenuChannel = listenerGetChannel();
-        poseMenuHandle = listenerOpenChannel(poseMenuChannel, poseMenuHandle);
-        //lmSendConfig("poseMenuChannel", (string)poseMenuChannel);
+        poseMenuHandle = listenerOpen(poseMenuChannel, poseMenuHandle);
     }
 
     //----------------------------------------
@@ -608,10 +600,8 @@ default {
 
                 // Open poses menu channel
                 poseMenuChannel = listenerGetChannel();
-                poseMenuHandle = listenerOpenChannel(poseMenuChannel, poseMenuHandle);
-                //lmSendConfig("poseMenuChannel", (string)poseMenuChannel);
+                poseMenuHandle = listenerOpen(poseMenuChannel, poseMenuHandle);
 
-                //lmInternalCommand("poseMenu",choice, lmID);
                 poseMenu(choice,lmID);
             }
         }
@@ -634,7 +624,6 @@ default {
         }
         else if (code < 200) {
             if (code == INIT_STAGE5) {
-                //debugSay(5,"DEBUG-AVATAR","ifPermissions (link_message 110)");
 
                 poseAnimation = ANIMATION_NONE;
                 poseAnimationID = NULL_KEY;
@@ -671,12 +660,10 @@ default {
             // could have been "Back..."
             else if (menuChoice == "Back...") {
                 lmMenuReply(backMenu, name, listenID);
-                //lmSendConfig("backMenu",(backMenu = MAIN));
             }
 
             else {
                 // By doing this, we allow other scripts the ability to select poses
-                //lmPoseSelected(listenMessage, name, listenID);
                 poseSelected(menuChoice,listenID);
             }
         }

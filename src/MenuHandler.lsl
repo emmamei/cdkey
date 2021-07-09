@@ -26,9 +26,6 @@
 //#define lmCollapse(a) lmInternalCommand("collapse",(string)(a),NULL_KEY)
 #define keyDetached(id) (id == NULL_KEY)
 
-#define cdListenerActivate(a) llListenControl(a, 1)
-#define cdListenerDeactivate(a) llListenControl(a, 0)
-
 // Wait for the user for 5 minutes - but for a program, only
 // wait 60s. The request for a dialog menu should happen before then -
 // and change the timeout to wait for a user.
@@ -66,7 +63,7 @@ string isDollName;
 
 string mistressName;
 string menuName;
-string outfitFolder;
+string outfitMasterFolder;
 
 list dialogKeys;
 list dialogNames;
@@ -145,7 +142,7 @@ default {
 
                              "timeLeftOnKey",
                              "windRate",
-                             "outfitFolder",
+                             "outfitMasterFolder",
                              "rlvOk",
                              "backMenu",
                              "keyLimit",
@@ -207,7 +204,7 @@ default {
 
                  if (name == "timeLeftOnKey")             timeLeftOnKey = (integer)value;
             else if (name == "windRate")                       windRate = (float)value;
-            else if (name == "outfitFolder")               outfitFolder = value;
+            else if (name == "outfitMasterFolder")               outfitMasterFolder = value;
             else if (name == "rlvOk")                             rlvOk = (integer)value;
             else if (name == "backMenu")                       backMenu = value;
             else if (name == "keyLimit")                       keyLimit = (integer)value;
@@ -288,7 +285,7 @@ default {
             if (cmd == "dialogListen") {
 
                 debugSay(4,"DEBUG-MENU","dialogListen Internal Command called");
-                dialogHandle = listenerOpenChannel(dialogChannel,dialogHandle);
+                dialogHandle = listenerOpen(dialogChannel,dialogHandle);
             }
             else if (cmd == "mainMenu") {
                 string menuMessage;
@@ -369,7 +366,6 @@ default {
                 //----------------------------------------
                 // Prepare listeners: this allows for lag time by doing this up front
 
-                //cdListenerActivate(dialogHandle);
                 lmDialogListen();
                 llSleep(0.5); // Let messages settle in to update menu...
 
@@ -527,7 +523,7 @@ default {
                         // public access is allowed. A controller has full control at all
                         // times.
 
-                        if (outfitFolder != "") {
+                        if (outfitMasterFolder != "") {
                             if (isDoll) {
                                 if (canDressSelf) menuButtons += "Outfits...";
                             }
@@ -1154,7 +1150,7 @@ default {
 
                     if (afterSpace == "Blacklist") {
                         if (controllerHandle) {
-                            listenerStopChannel(controllerHandle);
+                            listenerClose(controllerHandle);
                             controllerHandle = NO_HANDLE;
                         }
 
@@ -1173,7 +1169,7 @@ default {
                     }
                     else {
                         if (blacklistHandle) {
-                            listenerStopChannel(blacklistHandle);
+                            listenerClose(blacklistHandle);
                             blacklistHandle = NO_HANDLE;
                         }
 
@@ -1275,7 +1271,7 @@ default {
             if (listenChannel == blacklistChannel) {
 
                 // shutdown the listener
-                listenerStopChannel(blacklistHandle);
+                listenerClose(blacklistHandle);
                 blacklistHandle = NO_HANDLE;
 
                 if (~llListFindList(blacklistList,[uuid,name]))
@@ -1286,7 +1282,7 @@ default {
             else {
 
                 // shutdown the listener
-                listenerStopChannel(controllerHandle);
+                listenerClose(controllerHandle);
                 controllerHandle = NO_HANDLE;
 
                 if (~llListFindList(controllerList,[uuid,name])) {
