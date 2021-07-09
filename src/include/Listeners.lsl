@@ -157,7 +157,9 @@ integer poseMenuHandle;
 //
 integer listenerGetDialogChannel() {
 
-    dialogChannel = (0x80000000 | (integer)("0x" + llGetSubString((string)llGenerateKey(), -7, -1)));
+    if (!dialogChannel)
+        dialogChannel = (0x80000000 | (integer)("0x" + llGetSubString((string)llGenerateKey(), -7, -1)));
+
     lmSendConfig("dialogChannel", (string)(dialogChannel));
     return dialogChannel;
 }

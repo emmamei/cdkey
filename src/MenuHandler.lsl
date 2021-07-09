@@ -99,7 +99,7 @@ default {
 
         cdInitializeSeq();
         rlvOk = UNSET;
-        listenerGetAllChannels();
+        dialogChannel = listenerGetDialogChannel();
     }
 
     //----------------------------------------
@@ -108,7 +108,7 @@ default {
     on_rez(integer start) {
         rlvOk = UNSET;
         cdInitializeSeq();
-        listenerGetAllChannels();
+        dialogChannel = listenerGetDialogChannel();
     }
 
     //----------------------------------------
@@ -124,7 +124,7 @@ default {
         if (!(keyDetached(id))) {
 
             rlvOk = UNSET;
-            listenerGetAllChannels();
+            dialogChannel = listenerGetDialogChannel();
         }
     }
 

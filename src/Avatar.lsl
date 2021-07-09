@@ -407,8 +407,8 @@ default {
     on_rez(integer start) {
         // Set up key when rezzed
 
-        poseMenuChannel = listenerGetChannel();
-        poseMenuHandle = listenerOpen(poseMenuChannel, poseMenuHandle);
+        //poseMenuChannel = listenerGetChannel();
+        //poseMenuHandle = listenerOpen(poseMenuChannel, poseMenuHandle);
     }
 
     //----------------------------------------
@@ -599,7 +599,6 @@ default {
                 posePage = 1;
 
                 // Open poses menu channel
-                poseMenuChannel = listenerGetChannel();
                 poseMenuHandle = listenerOpen(poseMenuChannel, poseMenuHandle);
 
                 poseMenu(choice,lmID);
@@ -627,6 +626,7 @@ default {
 
                 poseAnimation = ANIMATION_NONE;
                 poseAnimationID = NULL_KEY;
+                poseMenuChannel = listenerGetChannel();
                 poseClear();
             }
 #ifdef DEVELOPER_MODE

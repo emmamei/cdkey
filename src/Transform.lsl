@@ -216,7 +216,12 @@ setDollType(string typeName) {
     // Only search for a type folder - outfit folder - if RLV is active and Doll is
     // not a Regular Doll
     //
-    if (typeName != "Regular") {
+    if (typeName == "Regular") {
+
+        // If type is Regular, then there is NO type folder...
+        lmSendConfig("typeFolder", "");
+    }
+    else {
         if (rlvOk == TRUE) {
             debugSay(4,"DEBUG-DOLLTYPE","Searching for type folder: " + typeFolderExpected);
 
@@ -858,11 +863,6 @@ default {
                     debugSay(6,"DEBUG-TYPES","Type Menu Choices (during menu build) = " + llDumpList2String(typeMenuChoices,","));
                     //debugSay(6,"DEBUG-TYPES","Current doll type = " + dollType);
 
-                    // Delete the current type: transforming to current type is redundant
-                    if (~(i = llListFindList(typeMenuChoices, (list)dollType))) {
-                        typeMenuChoices = llDeleteSubList(typeMenuChoices, i, i);
-                    }
-
                     debugSay(6,"DEBUG-TYPES","Type menu choices = " + llDumpList2String(typeMenuChoices,","));
 
 #define isSpecialType(a) (~llListFindList(SPECIAL_TYPES, (list)a))
@@ -927,6 +927,11 @@ default {
                             typeMenuChoices += typeTemp;
                             debugSay(5,"DEBUG-TYPES","Type added to menu: " + typeTemp);
                         }
+                    }
+
+                    // Delete the current type: transforming to current type is redundant
+                    if (~(i = llListFindList(typeMenuChoices, (list)dollType))) {
+                        typeMenuChoices = llDeleteSubList(typeMenuChoices, i, i);
                     }
 
 #ifdef DEVELOPER_MODE

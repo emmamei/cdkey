@@ -19,7 +19,6 @@
 #define isKnownTypeFolder(a) (~llListFindList(typeFolders, (list)a))
 
 #define nothingWorn(c,d) ((c) != "0") && ((c) != "1") && ((d) != "0") && ((d) != "1")
-#define dressVia(a) listInventoryOn(a)
 #define rlvLockKey()    lmRunRlv("detach=n")
 #define rlvUnlockKey()  lmRunRlv("detach=y")
 
@@ -156,12 +155,15 @@ list outfitPageN(list outfitList) {
     return llListSort(output,1,1);
 }
 
-listInventoryOn(integer channel) {
+integer dressVia(integer channel) {
 
-    if (outfitMasterFolder == "") {
-        llOwnerSay("No suitable outfits folder found, so unfortunately you will not be able to be dressed");
-        return;
+    integer dressHandle;
+
+#ifdef DEVELOPER_MODE
+    if (channel == 0) {
+        llSay(DEBUG_CHANNEL,"Dressing channel not set!");
     }
+#endif
 
     // activeFolder is the folder (full path) we are looking at with our Menu
     // outfitMasterFolder is where all outfits are stored, including
@@ -178,25 +180,16 @@ listInventoryOn(integer channel) {
     //llSay(DEBUG_CHANNEL,"listing inventory on " + (string)channel + " with active folder " + activeFolder);
     debugSay(4, "DEBUG-DRESS", "clothingFolder is " + clothingFolder);
     debugSay(4, "DEBUG-DRESS", "typeFolder is " + typeFolder);
-    debugSay(4, "DEBUG-DRESS", "Setting activeFolder (in listInventory) to " + activeFolder);
+    debugSay(4, "DEBUG-DRESS", "Setting activeFolder (in dressVia) to " + activeFolder);
 #endif
     lmSendConfig("activeFolder", activeFolder);
 
-    if (channel == dressMenuChannel) {
-        dressMenuHandle =  cdListenAll(dressMenuChannel);
-        lmRunRlv("getinv:" + activeFolder + "=" + (string)(dressMenuChannel));
+    dressHandle =  cdListenAll(channel);
+    lmRunRlv("getinv:" + activeFolder + "=" + (string)(channel));
 
-        llSetTimerEvent(30.0);
-    }
-    else if (channel == dressRandomChannel) {
-        dressRandomHandle =  cdListenAll(dressRandomChannel);
-        lmRunRlv("getinv:" + activeFolder + "=" + (string)(dressRandomChannel));
+    llSetTimerEvent(30.0);
 
-        llSetTimerEvent(30.0);
-    }
-    else {
-        llSay(DEBUG_CHANNEL,"Erroneous inventory channel requested! (" + (string)(channel) + ")");
-    }
+    return dressHandle;
 }
 
 // This function serves as a lock of sorts
@@ -352,9 +345,6 @@ default {
 
             if (name == "dialogChannel") {
                 dialogChannel = (integer)value;
-                  dressMenuChannel = (dialogChannel ^ 0x80000000) + 2666; // Xor with the sign bit forcing the positive channel needed by RLV spec.
-                dressRandomChannel = (dialogChannel ^ 0x80000000) + 2665; // Xor with the sign bit forcing the positive channel needed by RLV spec.
-                     outfitChannel =  dialogChannel + 15; // arbitrary offset
 
                 debugSay(6, "DEBUG-DRESS", "outfits Channel set to " + (string)outfitChannel);
 
@@ -387,10 +377,13 @@ default {
             }
             else if (name == "typeFolder") {
                 typeFolder = value;
+                clothingFolder = "";
+                activeFolder = "";
+                topFolder = outfitMasterFolder;
 
                 if (typeFolder != "") {
-                    topFolder = outfitMasterFolder + "/" + typeFolder;
-                    dressVia(dressRandomChannel);
+                    topFolder += "/" + typeFolder;
+                    dressRandomHandle = dressVia(dressRandomChannel);
                 }
                 else {
                     llOwnerSay("No type folder found to choose an outfit from.");
@@ -521,7 +514,7 @@ default {
                 // Note if typeFolder is unset, then clothingFolder will be too
                 clothingFolder = typeFolder;
 #endif
-                dressVia(dressMenuChannel);
+                dressMenuHandle = dressVia(dressMenuChannel);
             }
             else if (menuChoice == UPMENU) {
                 // When we get here, using the Menu Reply to MAIN
@@ -552,12 +545,17 @@ default {
                     //lmSendConfig("clothingFolder", clothingFolder);
                 }
 
-                dressVia(dressMenuChannel); // recursion: put up a new Primary menu
-                llSetTimerEvent(60.0);
+                dressMenuHandle = dressVia(dressMenuChannel); // recursion: put up a new Primary menu
+                //llSetTimerEvent(60.0);
             }
         }
         else if (code < 200) {
-            if (code == SIM_RATING_CHG) {
+            if (code == INIT_STAGE1) {
+                  dressMenuChannel = listenerGetChannel();
+                dressRandomChannel = listenerGetChannel();
+                     outfitChannel = listenerGetChannel();
+            }
+            else if (code == SIM_RATING_CHG) {
                 simRating = (string)split[0];
                 integer regionRating = cdRating2Integer(simRating);
             }
@@ -689,9 +687,9 @@ default {
 
                         debugSay(6, "DEBUG-DRESS", "Generating new list of outfits...");
                         lmSendConfig("backMenu",(backMenu = UPMENU));
-                        dressVia(dressMenuChannel); // recursion: put up a new Primary menu
+                        dressMenuHandle = dressVia(dressMenuChannel); // recursion: put up a new Primary menu
 
-                        llSetTimerEvent(60.0);
+                        //llSetTimerEvent(60.0);
                     }
                     else {
 
