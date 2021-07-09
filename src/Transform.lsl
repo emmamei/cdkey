@@ -654,12 +654,16 @@ default {
                 }
             }
             else if (name == "typeLockExpire") {
+#ifdef DEVELOPER_MODE
+                typeLockExpire = 0;
+#else
                 if (value == "0")
                     typeLockExpire = 0;
                 else {
                     typeLockExpire = llGetUnixTime() + TYPE_LOCK_TIME;
                     adjustTimer();
                 }
+#endif
                 lmSendConfig("typeLockExpire",(string)(typeLockExpire));
             }
             else if (name == "outfitMasterFolder") {
