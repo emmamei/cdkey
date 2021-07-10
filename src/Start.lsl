@@ -51,7 +51,7 @@ integer rlvPreviously;
 integer dbConfigCount;
 integer i;
 
-string outfitMasterFolderExpected;
+string outfitMasterPathExpected;
 string dollTypeExpected;
 
 integer startParameter;
@@ -248,8 +248,8 @@ processConfiguration(string configSettingName, string configSettingValue) {
         if (configSettingName == "outfits path") {
             // Defer actual setting of outfitsFolder until later
             //
-            //lmSetConfig("outfitMasterFolder", configSettingValue);
-            outfitMasterFolderExpected = configSettingValue;
+            //lmSetConfig("outfitMasterPath", configSettingValue);
+            outfitMasterPathExpected = configSettingValue;
         }
         else if (configSettingName == "doll type") {
 
@@ -856,13 +856,13 @@ default {
 
                 // Put out settings that we may or may not have read in the preferences file,
                 // with their appropriate defaults as necessary
-                lmSetConfig("outfitMasterFolder", outfitMasterFolderExpected);
+                lmSetConfig("outfitMasterPath", outfitMasterPathExpected);
                 lmSetConfig("dollType", dollTypeExpected);
             }
             else if (code == INIT_STAGE4) {
                 // Stage 4 is triggered by Transform completing its search for an outfit folder...
                 //
-                // At this point, outfitMasterFolder has been set one way or the other
+                // At this point, outfitMasterPath has been set one way or the other
                 debugSay(3,"DEBUG-START","Stage 4 begun.");
                 string name = dollName;
 

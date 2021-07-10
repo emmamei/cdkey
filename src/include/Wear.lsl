@@ -33,7 +33,7 @@ wearStandardOutfit(string newOutfit) {
     // Steps to dressing avi:
     //
     // Overview: Attach everything we need, and lock them afterwards.
-    // Next, detach the old outfit - then detach the entire outfitMasterFolder
+    // Next, detach the old outfit - then detach the entire outfitMasterPath
     // just in case (everything we want should be locked on).
     //
     // Attach and Lock (New Outfit):
@@ -43,7 +43,7 @@ wearStandardOutfit(string newOutfit) {
     //
     // Force Detach:
     //
-    // 2) Detach oldOutfitFolder, or entire outfitMasterFolder
+    // 2) Detach oldOutfitFolder, or entire outfitMasterPath
     //       (using @detachall:=force )
     //
     // Attach outfit again:
@@ -73,8 +73,8 @@ wearStandardOutfit(string newOutfit) {
     debugSay(2,"DEBUG-DRESS","*** STEP 2 ***");
 
     // Lock items so they don't get thrown off
-    if (normalselfFolder != "") { cdLock(normalselfFolder); }
-    if (      nudeFolder != "") { cdLock(      nudeFolder); }
+    if (normalselfPath != "") { cdLock(normalselfPath); }
+    if (      nudePath != "") { cdLock(      nudePath); }
 
     cdLock(newOutfit);
 
@@ -90,8 +90,8 @@ wearStandardOutfit(string newOutfit) {
     else {
         // If no oldOutfitFolder, then just detach everything
         // outside of the newFolder and ~normalself and ~nude
-        debugSay(2, "DEBUG-DRESS", "Removing all other outfits from " + outfitMasterFolder);
-        cdForceDetach(outfitMasterFolder);
+        debugSay(2, "DEBUG-DRESS", "Removing all other outfits from " + outfitMasterPath);
+        cdForceDetach(outfitMasterPath);
     }
 
     //----------------------------------------
@@ -119,8 +119,8 @@ wearStandardOutfit(string newOutfit) {
 
     debugSay(2, "DEBUG-DRESS", "Unlocking three folders of new outfit...");
 
-    if (normalselfFolder != "") { cdUnlock(normalselfFolder); }
-    if (      nudeFolder != "") { cdUnlock(      nudeFolder); }
+    if (normalselfPath != "") { cdUnlock(normalselfPath); }
+    if (      nudePath != "") { cdUnlock(      nudePath); }
 
     cdUnlock(newOutfit);
 
@@ -167,8 +167,8 @@ wearNewAvi(string newOutfit) {
 
     debugSay(2,"DEBUG-DRESS","*** STEP 2 ***");
     // Detach everything other than the locked newOutfit
-    debugSay(2, "DEBUG-DRESS", "Removing all other clothing worn from " + outfitMasterFolder);
-    cdForceDetach(outfitMasterFolder);
+    debugSay(2, "DEBUG-DRESS", "Removing all other clothing worn from " + outfitMasterPath);
+    cdForceDetach(outfitMasterPath);
 
     cdUnlock(newOutfit);
 
@@ -197,8 +197,8 @@ wearOutfitCore(string newOutfitName) {
     tempDressingLock = TRUE;
 
     // newOutfit is relative to #RLV
-    newOutfit = topFolder + "/";
-    if (clothingFolder != "") newOutfit += clothingFolder + "/";
+    newOutfit = topPath + "/";
+    if (currentOutfitFolder != "") newOutfit += currentOutfitFolder + "/";
     newOutfit += newOutfitName;
 
     //----------------------------------------
@@ -231,11 +231,11 @@ wearOutfitCore(string newOutfitName) {
 #define rlvDetachAllRecursive(a)    (    "detachall:" + (a) + "=force")
 
 resetBodyCore() {
-    if (normaloutfitFolder == "") {
+    if (normaloutfitPath == "") {
         llOwnerSay("ERROR: Cannot reset body form without ~normaloutfit present.");
     }
     else {
-        resetBody(normaloutfitFolder);
+        resetBody(normaloutfitPath);
     }
 }
 
@@ -250,20 +250,20 @@ resetBody(string wearOutfit) {
     rlvLockKey();
 
     // Force attach nude elements
-    if (nudeFolder)         lmRunRlv(rlvUnlockFolderRecursive(nudeFolder)       + "," + rlvAttachFolderRecursive(nudeFolder));
-    if (normalselfFolder)   lmRunRlv(rlvUnlockFolderRecursive(normalselfFolder) + "," + rlvAttachFolderRecursive(normalselfFolder));
+    if (nudePath)         lmRunRlv(rlvUnlockFolderRecursive(nudePath)       + "," + rlvAttachFolderRecursive(nudePath));
+    if (normalselfPath)   lmRunRlv(rlvUnlockFolderRecursive(normalselfPath) + "," + rlvAttachFolderRecursive(normalselfPath));
     if (wearOutfit)         lmRunRlv(rlvUnlockFolderRecursive(wearOutfit)       + "," + rlvAttachFolderRecursive(wearOutfit));
 
     // Lock default body
-    if (nudeFolder)         lmRunRlv(rlvLockFolderRecursive(nudeFolder));
+    if (nudePath)         lmRunRlv(rlvLockFolderRecursive(nudePath));
     if (wearOutfit)         lmRunRlv(rlvLockFolderRecursive(wearOutfit));
 
     // Remove all else from the top, outfits and all the rest
-    lmRunRlv(rlvDetachAllRecursive(outfitMasterFolder));
+    lmRunRlv(rlvDetachAllRecursive(outfitMasterPath));
 
     // Clear locks
-    if (nudeFolder)         lmRunRlv(rlvUnlockFolderRecursive(nudeFolder));
-    if (normalselfFolder)   lmRunRlv(rlvUnlockFolderRecursive(normalselfFolder));
+    if (nudePath)         lmRunRlv(rlvUnlockFolderRecursive(nudePath));
+    if (normalselfPath)   lmRunRlv(rlvUnlockFolderRecursive(normalselfPath));
     if (wearOutfit)         lmRunRlv(rlvUnlockFolderRecursive(wearOutfit));
 }
 
@@ -271,13 +271,13 @@ resetBody(string wearOutfit) {
 stripCore() {
     if (!keyLocked) rlvLockKey(); // Lock key if not already locked
 
-    if (nudeFolder)       lmRunRlv("detachthis:" + nudeFolder       + "=n");
-    if (normalselfFolder) lmRunRlv("detachthis:" + normalselfFolder + "=n");
+    if (nudePath)       lmRunRlv("detachthis:" + nudePath       + "=n");
+    if (normalselfPath) lmRunRlv("detachthis:" + normalselfPath + "=n");
 
-    lmRunRlv("detachall:" + outfitMasterFolder + "=force");
+    lmRunRlv("detachall:" + outfitMasterPath + "=force");
 
-    if (nudeFolder)       lmRunRlv("detachthis:" + nudeFolder       + "=y,attachall:" + nudeFolder       + "=force");
-    if (normalselfFolder) lmRunRlv("detachthis:" + normalselfFolder + "=y,attachall:" + normalselfFolder + "=force");
+    if (nudePath)       lmRunRlv("detachthis:" + nudePath       + "=y,attachall:" + nudePath       + "=force");
+    if (normalselfPath) lmRunRlv("detachthis:" + normalselfPath + "=y,attachall:" + normalselfPath + "=force");
 
     if (!keyLocked) rlvUnlockKey(); // Unlock key if it's not supposed to be locked
 }

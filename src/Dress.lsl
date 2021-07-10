@@ -48,18 +48,18 @@ string unwearFolder;
 list outfitList;
 
 // Relative to #RLV
-string outfitMasterFolder;  // This contains folders of clothing to be worn
-string normalselfFolder; // This is the ~normalself we are using
-string normaloutfitFolder; // This is the ~normaloutfit we are using
-string nudeFolder; // This is the ~nude we are using
-string topFolder; // This is the top folder, usually same as outfitMasterFolder
-string activeFolder; // This is the current folder displayed in menu: topFolder + "/" + clothingFolder
+string outfitMasterPath;  // This contains folders of clothing to be worn
+string normalselfPath; // This is the ~normalself we are using
+string normaloutfitPath; // This is the ~normaloutfit we are using
+string nudePath; // This is the ~nude we are using
+string topPath; // This is the top folder, usually same as outfitMasterPath
+string currentOutfitPath; // This is the current folder displayed in menu: topPath + "/" + currentOutfitFolder
 
-// Relative to outfitMasterFolder
-string typeFolder; // This is the folder for the current type, if any: MUST be in outfitMasterFolder
+// Relative to outfitMasterPath
+string typeFolder; // This is the folder for the current type, if any: MUST be in outfitMasterPath
 
-// Relative to topFolder
-string clothingFolder; // This is the current folder displayed in menu (relative to topFolder)
+// Relative to topPath
+string currentOutfitFolder; // This is the current folder displayed in menu (relative to topPath)
 
 integer dressMenuHandle;
 integer dressMenuChannel;
@@ -82,9 +82,9 @@ clearDresser() {
     dresserID = NULL_KEY;
 
     if (typeFolder != "")
-        topFolder = outfitMasterFolder + "/" + typeFolder;
+        topPath = outfitMasterPath + "/" + typeFolder;
     else
-        topFolder = outfitMasterFolder;
+        topPath = outfitMasterPath;
 }
 
 integer uSubStringLastIndex(string hay, string pin) {
@@ -161,27 +161,27 @@ integer dressVia(integer channel) {
     }
 #endif
 
-    // activeFolder is the folder (full path) we are looking at with our Menu
-    // outfitMasterFolder is where all outfits are stored, including
+    // currentOutfitPath is the folder (full path) we are looking at with our Menu
+    // outfitMasterPath is where all outfits are stored, including
     //     ~normalself, ~normaloutfit, ~nude, and all the type folders
-    // clothingFolder is the current folder for clothing, relative
-    //     to the outfitMasterFolder
-    // topFolder is the current top level for all outfits, not including system
+    // currentOutfitFolder is the current folder for clothing, relative
+    //     to the outfitMasterPath
+    // topPath is the current top level for all outfits, not including system
     //     folders: it incorporates the type folder
 
-    activeFolder = topFolder;
-    if (clothingFolder != "") activeFolder += "/" + clothingFolder;
+    currentOutfitPath = topPath;
+    if (currentOutfitFolder != "") currentOutfitPath += "/" + currentOutfitFolder;
 
 #ifdef DEVELOPER_MODE
-    //llSay(DEBUG_CHANNEL,"listing inventory on " + (string)channel + " with active folder " + activeFolder);
-    debugSay(4, "DEBUG-DRESS", "clothingFolder is " + clothingFolder);
+    //llSay(DEBUG_CHANNEL,"listing inventory on " + (string)channel + " with active folder " + currentOutfitPath);
+    debugSay(4, "DEBUG-DRESS", "currentOutfitFolder is " + currentOutfitFolder);
     debugSay(4, "DEBUG-DRESS", "typeFolder is " + typeFolder);
-    debugSay(4, "DEBUG-DRESS", "Setting activeFolder (in dressVia) to " + activeFolder);
+    debugSay(4, "DEBUG-DRESS", "Setting currentOutfitPath (in dressVia) to " + currentOutfitPath);
 #endif
-    //lmSendConfig("activeFolder", activeFolder);
+    //lmSendConfig("currentOutfitPath", currentOutfitPath);
 
     dressHandle =  cdListenAll(channel);
-    lmRunRlv("getinv:" + activeFolder + "=" + (string)(channel));
+    lmRunRlv("getinv:" + currentOutfitPath + "=" + (string)(channel));
 
     llSetTimerEvent(30.0);
 
@@ -242,12 +242,12 @@ changeComplete(string newOutfitName, integer success) {
 #ifdef DEVELOPER_MODE
 string folderStatus() {
 
-    return "Outfits Folder: " + outfitMasterFolder +
-           "\nCurrent Folder: " + activeFolder +
+    return "Outfits Folder: " + outfitMasterPath +
+           "\nCurrent Folder: " + currentOutfitPath +
            "\nType Folder: " + typeFolder +
-           "\nUse ~normalself: " + normalselfFolder +
-           "\nUse ~normaloutfit: " + normaloutfitFolder +
-           "\nUse ~nude: " + nudeFolder;
+           "\nUse ~normalself: " + normalselfPath +
+           "\nUse ~normaloutfit: " + normaloutfitPath +
+           "\nUse ~nude: " + nudePath;
 }
 #else
 string folderStatus() {
@@ -255,7 +255,7 @@ string folderStatus() {
 
     if (typeFolder == "") typeFolderExists = "n/a";
 
-    return "Outfits Folder: " + outfitMasterFolder +
+    return "Outfits Folder: " + outfitMasterPath +
            "\nType Folder: " + typeFolderExists;
 }
 #endif
@@ -318,11 +318,11 @@ default {
 #ifdef DEVELOPER_MODE
                             "debugLevel",
 #endif
-                            "normalselfFolder",
-                            "normaloutfitFolder",
-                            "nudeFolder",
+                            "normalselfPath",
+                            "normaloutfitPath",
+                            "nudePath",
 
-                            "outfitMasterFolder",
+                            "outfitMasterPath",
                             "typeFolder",
 #ifdef ADULT_MODE
                             "hardcore",
@@ -358,27 +358,27 @@ default {
 #ifdef DEVELOPER_MODE
             else if (name == "debugLevel")                        debugLevel = (integer)value;
 #endif
-            else if (name == "normalselfFolder")        normalselfFolder = value;
-            else if (name == "normaloutfitFolder")    normaloutfitFolder = value;
-            else if (name == "nudeFolder")                    nudeFolder = value;
+            else if (name == "normalselfPath")        normalselfPath = value;
+            else if (name == "normaloutfitPath")    normaloutfitPath = value;
+            else if (name == "nudePath")                    nudePath = value;
 
-            else if (name == "outfitMasterFolder") {
-                outfitMasterFolder = value;
+            else if (name == "outfitMasterPath") {
+                outfitMasterPath = value;
 
                 // Even though type folder may be set,
                 // it will be invalidated by this process,
                 // and should be set a long time after this anyway.
                 //
-                topFolder = outfitMasterFolder;
+                topPath = outfitMasterPath;
             }
             else if (name == "typeFolder") {
                 typeFolder = value;
-                clothingFolder = "";
-                activeFolder = "";
-                topFolder = outfitMasterFolder;
+                currentOutfitFolder = "";
+                currentOutfitPath = "";
+                topPath = outfitMasterPath;
 
                 if (typeFolder != "") {
-                    topFolder += "/" + typeFolder;
+                    topPath += "/" + typeFolder;
                     dressRandomHandle = dressVia(dressRandomChannel);
                 }
                 // if typeFolder is blank, that doesn't tell us WHY: could be no type folder
@@ -490,7 +490,7 @@ default {
                     return;
                 }
 
-                debugSay(2, "DEBUG-DRESS", "Outfit menu; outfit Folder = " + outfitMasterFolder);
+                debugSay(2, "DEBUG-DRESS", "Outfit menu; outfit Folder = " + outfitMasterPath);
 
                 // Check to see if clothing has been worn long enough before changing (wearLock)
                 if (wearLockExpire > 0) {
@@ -502,13 +502,13 @@ default {
                     return;
                 }
 
-                // If outfitMasterFolder is blank, we SHOULD NOT be here...
+                // If outfitMasterPath is blank, we SHOULD NOT be here...
 
 #ifndef PRESERVE_FOLDER
                 // This resets the current folder location for the menu
                 //
-                // Note if typeFolder is unset, then clothingFolder will be too
-                clothingFolder = typeFolder;
+                // Note if typeFolder is unset, then currentOutfitFolder will be too
+                currentOutfitFolder = typeFolder;
 #endif
                 dressMenuHandle = dressVia(dressMenuChannel);
             }
@@ -520,25 +520,25 @@ default {
                 integer lastElement;
 
                 outfitList = [];
-                debugSay(6, "DEBUG-DRESS", "Up Menu: clothingFolder = \"" + clothingFolder + "\"");
+                debugSay(6, "DEBUG-DRESS", "Up Menu: currentOutfitFolder = \"" + currentOutfitFolder + "\"");
 
-                lastElement = uSubStringLastIndex(clothingFolder,"/");
+                lastElement = uSubStringLastIndex(currentOutfitFolder,"/");
 
                 if (lastElement != -1) {
                     debugSay(6, "DEBUG-DRESS", "Up Menu: found separator");
-                    clothingFolder = llGetSubString(clothingFolder,0,lastElement - 1);
-                    //lmSendConfig("clothingFolder", clothingFolder);
+                    currentOutfitFolder = llGetSubString(currentOutfitFolder,0,lastElement - 1);
+                    //lmSendConfig("currentOutfitFolder", currentOutfitFolder);
                 }
                 else {
-                    // At this point, either clothingFolder has ONE item in it, or it is null.
+                    // At this point, either currentOutfitFolder has ONE item in it, or it is null.
                     // It should not be null - because that needs to go up to MAIN menu, not UPMENU.
-                    // (Same thing for when clothingFolder equals an in-use typeFolder.)
+                    // (Same thing for when currentOutfitFolder equals an in-use typeFolder.)
                     //
-                    // Since having one single item means no "/" we need to adjust clothingFolder manually
+                    // Since having one single item means no "/" we need to adjust currentOutfitFolder manually
                     //
                     debugSay(6, "DEBUG-DRESS", "Up Menu: found no separator");
-                    clothingFolder = "";
-                    //lmSendConfig("clothingFolder", clothingFolder);
+                    currentOutfitFolder = "";
+                    //lmSendConfig("currentOutfitFolder", currentOutfitFolder);
                 }
 
                 dressMenuHandle = dressVia(dressMenuChannel); // recursion: put up a new Primary menu
@@ -678,8 +678,8 @@ default {
                         // listenMessage represents either a Type Folder or a Parent Folder;
                         // recurse into it and display it.
 
-                        if (clothingFolder == "") clothingFolder = listenMessage;
-                        else clothingFolder += ("/" + listenMessage);
+                        if (currentOutfitFolder == "") currentOutfitFolder = listenMessage;
+                        else currentOutfitFolder += ("/" + listenMessage);
 
                         debugSay(6, "DEBUG-DRESS", "Generating new list of outfits...");
                         lmSendConfig("backMenu",(backMenu = UPMENU));
@@ -693,7 +693,7 @@ default {
 
                         string outfitName = (string)outfitNameList[index];
 
-                        debugSay(3, "DEBUG-DRESS", "Calling wearOutfit with " + outfitName + " in the active folder " + activeFolder);
+                        debugSay(3, "DEBUG-DRESS", "Calling wearOutfit with " + outfitName + " in the active folder " + currentOutfitPath);
                         lmInternalCommand("wearOutfit", outfitName, NULL_KEY);
                     }
                 }
@@ -815,9 +815,9 @@ default {
             lmDialogListen();
             cdListenAll(outfitChannel);
 
-            // if clothingFolder is at the top, then go to MAIN... but typeFolder
+            // if currentOutfitFolder is at the top, then go to MAIN... but typeFolder
             // might be active...
-            if (clothingFolder == typeFolder)
+            if (currentOutfitFolder == typeFolder)
                 backMenu = MAIN;
             else
                 backMenu = UPMENU;

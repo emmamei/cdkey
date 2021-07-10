@@ -63,7 +63,7 @@ string isDollName;
 
 string mistressName;
 string menuName;
-string outfitMasterFolder;
+string outfitMasterPath;
 
 list dialogKeys;
 list dialogNames;
@@ -142,7 +142,7 @@ default {
 
                              "timeLeftOnKey",
                              "windRate",
-                             "outfitMasterFolder",
+                             "outfitMasterPath",
                              "rlvOk",
                              "backMenu",
                              "keyLimit",
@@ -204,7 +204,7 @@ default {
 
                  if (name == "timeLeftOnKey")             timeLeftOnKey = (integer)value;
             else if (name == "windRate")                       windRate = (float)value;
-            else if (name == "outfitMasterFolder")               outfitMasterFolder = value;
+            else if (name == "outfitMasterPath")               outfitMasterPath = value;
             else if (name == "rlvOk")                             rlvOk = (integer)value;
             else if (name == "backMenu")                       backMenu = value;
             else if (name == "keyLimit")                       keyLimit = (integer)value;
@@ -523,7 +523,7 @@ default {
                         // public access is allowed. A controller has full control at all
                         // times.
 
-                        if (outfitMasterFolder != "") {
+                        if (outfitMasterPath != "") {
                             if (isDoll) {
                                 if (canDressSelf) menuButtons += "Outfits...";
                             }
