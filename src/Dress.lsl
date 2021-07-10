@@ -36,16 +36,12 @@ string prefix;
 
 integer tempDressingLock = FALSE;  // allow only one dressing going on at a time
 
-string newOutfitName;
-
 integer outfitChannel;
 integer outfitHandle;
 
 integer keyLocked = FALSE;
 
 // These are the paths of the outfits relative to #RLV
-string newOutfit;
-string oldOutfit;
 string wearFolder;
 string unwearFolder;
 
@@ -57,13 +53,13 @@ string normalselfFolder; // This is the ~normalself we are using
 string normaloutfitFolder; // This is the ~normaloutfit we are using
 string nudeFolder; // This is the ~nude we are using
 string topFolder; // This is the top folder, usually same as outfitMasterFolder
+string activeFolder; // This is the current folder displayed in menu: topFolder + "/" + clothingFolder
 
 // Relative to outfitMasterFolder
-string typeFolder; // This is the folder for the current type, if any
+string typeFolder; // This is the folder for the current type, if any: MUST be in outfitMasterFolder
 
-// FIXME: clothingFolder and activeFolder are confusing, and could be conflated
-string clothingFolder; // This is the currently displayed folder
-string activeFolder; // This is the lookup folder to search
+// Relative to topFolder
+string clothingFolder; // This is the current folder displayed in menu (relative to topFolder)
 
 integer dressMenuHandle;
 integer dressMenuChannel;
@@ -182,7 +178,7 @@ integer dressVia(integer channel) {
     debugSay(4, "DEBUG-DRESS", "typeFolder is " + typeFolder);
     debugSay(4, "DEBUG-DRESS", "Setting activeFolder (in dressVia) to " + activeFolder);
 #endif
-    lmSendConfig("activeFolder", activeFolder);
+    //lmSendConfig("activeFolder", activeFolder);
 
     dressHandle =  cdListenAll(channel);
     lmRunRlv("getinv:" + activeFolder + "=" + (string)(channel));
@@ -210,7 +206,7 @@ integer isDresser(key id) {
     else return (dresserID == id);
 }
 
-changeComplete(integer success) {
+changeComplete(string newOutfitName, integer success) {
     integer wearLock;
     string msg;
 
@@ -410,12 +406,13 @@ default {
             split = llDeleteSubList(split, 0, 0);
 
             if (cmd == "wearOutfit") {
+                string newOutfitName = (string)split[0];
 
-                wearOutfitCore((string)split[0]);
+                wearOutfitCore(newOutfitName);
 
                 debugSay(2,"DEBUG-DRESS","keyLocked = " + (string)keyLocked);
                 rlvLockKey();
-                changeComplete(TRUE);
+                changeComplete(newOutfitName,TRUE);
                 clearDresser();
                 if (keyLocked == FALSE) rlvUnlockKey();
             }
@@ -909,15 +906,17 @@ default {
                 return;
             }
 
+            string randomOutfit;
+
             // At this point, outfitList is now completely built:
             // if we wanted a random outfit, this is the place for it.
-            newOutfit = (string)outfitList[ (integer)llFrand(llGetListLength(outfitList)) ];
-            llOwnerSay("Dressing Dolly as " + dollType + " doll with " + newOutfit + " outfit");
+            randomOutfit = (string)outfitList[ (integer)llFrand(llGetListLength(outfitList)) ];
+            llOwnerSay("Dressing Dolly as " + dollType + " doll with " + randomOutfit + " outfit");
 
             // We can bypass the entire outfit selection process, and call wearOutfit directly,
             // because we know a lot more about the results.
             //
-            lmInternalCommand("wearOutfit", newOutfit, NULL_KEY);
+            lmInternalCommand("wearOutfit", randomOutfit, NULL_KEY);
 
             llSetTimerEvent(60.0);
         }

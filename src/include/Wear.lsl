@@ -17,6 +17,10 @@
 // VARIABLES
 //========================================
 
+string newOutfitName;
+string newOutfit;
+string oldOutfit;
+
 //========================================
 // FUNCTIONS
 //========================================
