@@ -211,6 +211,10 @@ float setWindRate() {
     else if (isSitting) newWindRate = 0.7;            // 70% speed
     else                newWindRate = 1.0;            // 100% speed
 
+#ifdef DEVELOPER_MODE
+    if (dollType == "Builder") newWindRate *= 0.5; // 50% of usual rate... Doubles time
+#endif
+
     if (newWindRate != windRate) {
         lmSendConfig("windRate", (string)windRate);         // current rate
 

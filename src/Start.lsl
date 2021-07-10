@@ -252,10 +252,20 @@ processConfiguration(string configSettingName, string configSettingValue) {
             outfitMasterFolderExpected = configSettingValue;
         }
         else if (configSettingName == "doll type") {
-            // Defer actual setting of dollType until later
-            //
-            //lmSetConfig("dollType", configSettingValue);
+
+#ifdef DEVELOPER_MODE
+            // This rejects a Builder type on startup: MUST set
+            // Builder type by menu or chat command...
+            if (llToLower(configSettingValue) != "builder") {
+                dollTypeExpected = configSettingValue;
+            }
+            else {
+                llOwnerSay("Cannot set Builder type on startup.");
+            }
+#else
+            // Builder type is just another type
             dollTypeExpected = configSettingValue;
+#endif
         }
         else if (configSettingName == "chat channel") {
             // cant be 0 or MAXINT (DEBUG_CHANNEL)

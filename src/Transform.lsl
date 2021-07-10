@@ -216,7 +216,11 @@ setDollType(string typeName) {
     // Only search for a type folder - outfit folder - if RLV is active and Doll is
     // not a Regular Doll
     //
-    if (typeName == "Regular") {
+    if (typeName == "Regular"
+#ifdef DEVELOPER_MODE
+        || typeName == "Builder"
+#endif
+        ) {
 
         // If type is Regular, then there is NO type folder...
         lmSendConfig("typeFolder", "");
@@ -657,7 +661,7 @@ default {
 #ifdef DEVELOPER_MODE
                 typeLockExpire = 0;
 #else
-                if (value == "0")
+                if (value == "0" || dollType == "Regular") {
                     typeLockExpire = 0;
                 else {
                     typeLockExpire = llGetUnixTime() + TYPE_LOCK_TIME;
