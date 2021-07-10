@@ -174,6 +174,7 @@ default {
                              "collapsed",
                              "configured",
                              "chatChannel",
+                             "baseChannel",
                              "chatPrefix",
 
                              "dialogChannel",
@@ -238,6 +239,7 @@ default {
             else if (name == "collapsed")                   collapsed = (integer)value;
             else if (name == "configured")                 configured = (integer)value;
             else if (name == "chatChannel")               chatChannel = (integer)value;
+            else if (name == "baseChannel")               baseChannel = (integer)value;
             else if (name == "chatPrefix")                 chatPrefix = value;
 
             else if (name == "dialogChannel")           dialogChannel = (integer)value;

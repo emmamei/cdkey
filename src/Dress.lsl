@@ -318,6 +318,7 @@ default {
                             "pronounHerDoll",
                             "pronounSheDoll",
                             "canDressSelf",
+                            "baseChannel",
                             "collapsed",
 #ifdef DEVELOPER_MODE
                             "debugLevel",
@@ -353,6 +354,7 @@ default {
             else if (name == "rlvOk")                              rlvOk = (integer)value;
             else if (name == "keyLocked")                      keyLocked = (integer)value;
             else if (name == "typeHovertext")              typeHovertext = (integer)value;
+            else if (name == "baseChannel")                  baseChannel = (integer)value;
             else if (name == "dollType")                        dollType = value;
             else if (name == "pronounHerDoll")            pronounHerDoll = value;
             else if (name == "pronounSheDoll")            pronounSheDoll = value;

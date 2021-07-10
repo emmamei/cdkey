@@ -5,6 +5,7 @@
 // vim:sw=4 et nowrap filetype=lsl
 
 #include "include/GlobalDefines.lsl"
+#include "include/Listeners.lsl"
 
 #define TYPE_CHANNEL_OFFSET 778
 #define TYPE_FLAG "*"
@@ -13,8 +14,6 @@
 
 #define cdProfileURL(i) "secondlife:///app/agent/"+(string)(i)+"/about"
 #define cdStringEndMatch(a,b) llGetSubString(a,-llStringLength(b),STRING_END)==b
-
-#define cdListenMine(a)   llListen(a, NO_FILTER, dollID, NO_FILTER)
 
 // Channel to use to discard dialog output
 #define DISCARD_CHANNEL 9999
@@ -343,6 +342,15 @@ default {
 
         cdInitializeSeq();
         rlvOk = UNSET;
+
+        // NOTE: This doesnt turn the listeners on, it just
+        // sets what their channel number is.
+
+              typeDialogChannel = listenerGetChannel();
+              typeSearchChannel = listenerGetChannel();
+            outfitSearchChannel = listenerGetChannel();
+            systemSearchChannel = listenerGetChannel();
+        typeFolderBufferChannel = listenerGetChannel();
     }
 
     //----------------------------------------
@@ -576,6 +584,7 @@ default {
                              "collapseTime",
 #endif
                              "showPhrases",
+                             "baseChannel",
                              "dialogChannel"
             ];
 
@@ -597,6 +606,7 @@ default {
 #ifdef ADULT_MODE
             else if (name == "hardcore")                     hardcore = (integer)value;
 #endif
+            else if (name == "baseChannel")               baseChannel = (integer)value;
             else if (name == "backMenu")                     backMenu = value;
             else if (name == "typeHovertext")           typeHovertext = (integer)value;
             else if (name == "collapsed")                   collapsed = (integer)value;
@@ -632,14 +642,6 @@ default {
             }
             else if (name == "dialogChannel") {
                 dialogChannel = (integer)value;
-
-                typeDialogChannel = dialogChannel - TYPE_CHANNEL_OFFSET;
-
-//                           rlvChannel = ~dialogChannel + 1;
-                      typeSearchChannel = ~dialogChannel + 2;
-                    outfitSearchChannel = ~dialogChannel + 3;
-                    systemSearchChannel = ~dialogChannel + 4;
-                typeFolderBufferChannel = ~dialogChannel + 5;
             }
         }
 

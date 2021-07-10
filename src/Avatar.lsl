@@ -497,6 +497,7 @@ default {
             }
             else if (name == "canTalkInPose")     canTalkInPose = (integer)value;
             else if (name == "carryExpire")         carryExpire = (integer)value;
+            else if (name == "baseChannel")         baseChannel = (integer)value;
             else if (name == "carrierID")             carrierID = value;
             else if (name == "rlvOk")                     rlvOk = (integer)value;
             else if (name == "carrierName")         carrierName = value;
