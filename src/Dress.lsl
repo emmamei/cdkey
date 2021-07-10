@@ -53,13 +53,17 @@ string normalselfPath; // This is the ~normalself we are using
 string normaloutfitPath; // This is the ~normaloutfit we are using
 string nudePath; // This is the ~nude we are using
 string topPath; // This is the top folder, usually same as outfitMasterPath
-string currentOutfitPath; // This is the current folder displayed in menu: topPath + "/" + currentOutfitFolder
 
-// Relative to outfitMasterPath
-string typeFolder; // This is the folder for the current type, if any: MUST be in outfitMasterPath
+// currentOutfitPath and currentOutfitFolder are the same thing: but one has
+// a full path relative to #RLV and the other is relative to topFolder
+//
+string currentOutfitPath; // This is the current folder displayed in menu: topPath + "/" + currentOutfitFolder
 
 // Relative to topPath
 string currentOutfitFolder; // This is the current folder displayed in menu (relative to topPath)
+
+// Relative to outfitMasterPath
+string typeFolder; // This is the folder for the current type, if any: MUST be in outfitMasterPath
 
 integer dressMenuHandle;
 integer dressMenuChannel;
