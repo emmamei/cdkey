@@ -456,6 +456,13 @@ default {
             //llStopMoveToTarget();
             //llTargetRemove(targetHandle);
 
+            // Don't let a Builder wander... A person could reactivate Builder type
+            // if really needed, but otherwise Dolly drops out and becomes a Regular Doll
+            if (dollType == "Builder") {
+                llOwnerSay("Activating Regular Doll Type: Builder Dolls not allowed to wander.");
+                lmSetConfig("dollType", "Regular");
+            }
+
             msg = "Region ";
             if (llGetParcelFlags(llGetPos()) & PARCEL_FLAG_ALLOW_SCRIPTS) msg += "allows scripts";
             else msg += "does not allow scripts";
