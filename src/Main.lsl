@@ -216,9 +216,9 @@ float setWindRate() {
 #endif
 
     if (newWindRate != windRate) {
-        lmSendConfig("windRate", (string)windRate);         // current rate
+        lmSendConfig("windRate", (string)(windRate = newWindRate));         // change current rate
 
-        debugSay(2,"DEBUG-MAIN","windRate changed to " + (string)(windRate = newWindRate));
+        //debugSay(2,"DEBUG-MAIN","windRate changed to " + (string)(windRate));
 
         doSpin(windRate);
     }
