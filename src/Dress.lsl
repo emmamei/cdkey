@@ -385,9 +385,8 @@ default {
                     topFolder += "/" + typeFolder;
                     dressRandomHandle = dressVia(dressRandomChannel);
                 }
-                else {
-                    llOwnerSay("No type folder found to choose an outfit from.");
-                }
+                // if typeFolder is blank, that doesn't tell us WHY: could be no type folder
+                // was found, or could be that Type ignores type folders (Regular and Builder)
             }
             else if (name == "isVisible") {
                 isVisible = (integer)value;

@@ -464,8 +464,8 @@ default {
                     typeFolder = "";
                     typeFolderExpected = "";
 
-                    // This is not a functional error, though it detracts functionality.
-                    llOwnerSay("No type folder was found for " + dollType + " Dolls.");
+                    // This is not (quite) a functional error: no directory data returned
+                    llSay(DEBUG_CHANNEL,"Type folder search FAILED. No type folder is available.");
                     adjustTimer();
                 }
             }
@@ -1172,6 +1172,7 @@ default {
                 list folderList = llCSV2List(listenMessage);
 
                 debugSay(6,"DEBUG-SEARCHING","looking for typeFolder(Expected) = " + typeFolderExpected);
+
                 // This comparison is inexact - but a quick check to see
                 // if the typeFolderExpected is contained in the string
                 if (llSubStringIndex(listenMessage,typeFolderExpected) >= 0) {
@@ -1179,19 +1180,22 @@ default {
                     // This is the exact check:
                     if (cdFindInList(folderList, typeFolderExpected)) {
                         typeFolder = typeFolderExpected;
-                        typeFolderExpected = "";
                     }
                     else {
+                        // Exact typeFolder test fails, although general test succeeded
+                        llOwnerSay("No type folder was found for " + dollType + " Dolls.");
                         typeFolder = "";
-                        typeFolderExpected = "";
                     }
 
                 }
-                // typeFolderExpected not found at all
                 else {
+                    // typeFolderExpected not found at all
                     typeFolder = "";
-                    typeFolderExpected = "";
                 }
+
+                typeFolderExpected = "";
+                if (typeFolder == "")
+                    llOwnerSay("No type folder was found for " + dollType + " Dolls.");
 
                 lmSendConfig("typeFolder", typeFolder);
             }
