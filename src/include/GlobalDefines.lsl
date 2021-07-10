@@ -75,11 +75,36 @@ float GlobalDefines_version=1.0;
 #define MAIN "~Main Menu~"
 #define UPMENU "~Up~"
 
+// Special types are types that are present in the Dolly, no
+// matter if there are any notecards OR directories present.
+// A special type is permanently present.
+//
 //    - Regular: used for standard Dolls, including non-transformable
 //    - Slut: can be stripped (like Pleasure Dolls)
 //    - Display: poses dont time out
-//    - Domme: messages shift focus slightly
-#define SPECIAL_TYPES [ "Regular", "Slut", "Display", "Domme" ]
+//    - Domme: messages shift focus slightly (treat like normal type)
+//    - Builder: key slows drastically, etc: only for Developers
+//
+// Note that the Slut Doll type is only present for Adult Keys, and the
+// Builder Doll type is only present for Developer Keys.
+//
+#ifdef ADULT_MODE
+
+#ifdef DEVELOPER_MODE
+#define SPECIAL_TYPES [ "Regular", "Slut", "Display", "Builder" ]
+#else
+#define SPECIAL_TYPES [ "Regular", "Slut", "Display" ]
+#endif
+
+#else
+
+#ifdef DEVELOPER_MODE
+#define SPECIAL_TYPES [ "Regular", "Display", "Builder" ]
+#else
+#define SPECIAL_TYPES [ "Regular", "Display" ]
+#endif
+
+#endif
 
 // Collapse animation - and documentation
 #define ANIMATION_COLLAPSED "collapse"
