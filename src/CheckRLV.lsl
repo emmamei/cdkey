@@ -7,6 +7,7 @@
 // DATE: 24 November 2020
 
 #include "include/GlobalDefines.lsl"
+#include "include/Listeners.lsl"
 
 #define NOT_IN_REGION ZERO_VECTOR
 #define MAX_RLVCHECK_TRIES 5
@@ -68,12 +69,8 @@ startRlvCheck() {
     llResetTime();
 
     // Set up listener to receive RLV command output
-    if (rlvChannel == NO_CHANNEL) {
-
-        // Calculate positive (RLV compatible) rlvChannel
-        rlvChannel = MAX_INT - (integer)llFrand(5000);
-        rlvHandle = cdListenMine(rlvChannel);
-    }
+    if (!rlvChannel) rlvChannel = listenerGetChannel();
+    rlvHandle = cdListenMine(rlvChannel);
 
     // Configure variables
     rlvCheck = MAX_RLVCHECK_TRIES;
@@ -123,7 +120,7 @@ rlvCheckTry() {
     else              llOwnerSay("@version="    + (string)rlvChannel);
 }
 
-rlvRestoreRestritions() {
+rlvRestoreRestrictions() {
     if (rlvOk != TRUE) return;
 
     string rlvBase;
@@ -193,7 +190,7 @@ rlvActivate() {
         lmRlvReport(rlvOk, rlvAPIversion, 0);
     }
 
-    rlvRestoreRestritions();
+    rlvRestoreRestrictions();
     if (collapsed)
         lmInternalCommand("collapse", (string)collapsed, NULL_KEY);
 
@@ -219,6 +216,7 @@ default {
         myPath = "";
 #endif
         cdInitializeSeq();
+
         //startRlvCheck();
     }
 
@@ -227,11 +225,6 @@ default {
     //----------------------------------------
     on_rez(integer start) {
         keyInit = FALSE; // we're not activating the full Init Stage sequence here
-
-        // remove rlvHandle in order to set new one later
-        llListenRemove(rlvHandle);
-        rlvHandle = 0;
-        rlvChannel = NO_CHANNEL;
     }
 
     //----------------------------------------
@@ -346,7 +339,7 @@ default {
                 startRlvCheck();
             }
             else if (cmd == "restoreRestrictions") {
-                rlvRestoreRestritions();
+                rlvRestoreRestrictions();
             }
             else if (cmd == "addExceptions") {
                 string exceptionKey = (string)split[0];

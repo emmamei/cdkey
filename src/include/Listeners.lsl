@@ -210,12 +210,11 @@ integer listenerOpenChannel(integer listenerChannel, integer listenerHandle, str
 //----------------------------------------
 // STOP CHANNELS
 //
-listenerStopChannel(integer listenerHandle) {
-    llListenRemove(listenerHandle);
-}
+#define listenerStopChannel(a) listenerClose(a)
 
-listenerClose(integer listenerHandle) {
+integer listenerClose(integer listenerHandle) {
     llListenRemove(listenerHandle);
+    return 0;
 }
 
 //----------------------------------------

@@ -242,7 +242,7 @@ setDollType(string typeName) {
 reloadTypeFolderNames() {
     if (outfitMasterPath == "") return;
 
-    typeFolderBufferHandle = llListen(typeFolderBufferChannel, NO_FILTER, dollID, NO_FILTER);
+    typeFolderBufferHandle = cdListenMine(typeFolderBufferChannel);
     lmRunRlv("getinv:" + outfitMasterPath + "=" + (string)(typeFolderBufferChannel));
 }
 
@@ -443,8 +443,7 @@ default {
                     outfitSearch(outfitSearchChannel,outfitSearchHandle);
 
                 else {
-                    llListenRemove(outfitSearchHandle);
-                    outfitSearchHandle = 0;
+                    outfitSearchHandle = listenerClose(outfitSearchHandle);
                     outfitSearching = FALSE;
 
                     outfitMasterPath = "";
@@ -466,8 +465,7 @@ default {
 
                 }
                 else {
-                    llListenRemove(typeSearchHandle);
-                    typeSearchHandle = 0;
+                    typeSearchHandle = listenerClose(typeSearchHandle);
 
                     typeFolder = "";
                     typeFolderExpected = "";
@@ -485,8 +483,7 @@ default {
 
                 }
                 else {
-                    llListenRemove(systemSearchHandle);
-                    systemSearchHandle = 0;
+                    systemSearchHandle = listenerClose(systemSearchHandle);
 
                     nudePath = "";
                     normalselfPath = "";
@@ -665,6 +662,7 @@ default {
 #else
                 if (value == "0" || dollType == "Regular") {
                     typeLockExpire = 0;
+                }
                 else {
                     typeLockExpire = llGetUnixTime() + TYPE_LOCK_TIME;
                     adjustTimer();
@@ -853,7 +851,7 @@ default {
                     llDialog(lmID, msg, ["OK"], DISCARD_CHANNEL);
                 }
                 else {
-                    typeDialogHandle = llListen(typeDialogChannel, NO_FILTER, dollID, NO_FILTER);
+                    typeDialogHandle = cdListenMine(typeDialogChannel);
 
                     // Dolly can change type: not locked
                     reloadTypeNames(lmID);
@@ -1058,8 +1056,7 @@ default {
         // folders we want...
         //
         if (listenChannel == outfitSearchChannel) {
-            llListenRemove(outfitSearchHandle);
-            outfitSearchHandle = 0;
+            outfitSearchHandle = listenerClose(outfitSearchHandle);
             adjustTimer();
 
             debugSay(6,"DEBUG-SEARCHING","Search channel received: " + listenMessage);
@@ -1152,8 +1149,7 @@ default {
 
             // Note that, unlike the dialog channel, the type search channel is
             // removed and recreated... maybe it should not be
-            llListenRemove(typeSearchHandle);
-            typeSearchHandle = 0;
+            typeSearchHandle = listenerClose(typeSearchHandle);
             adjustTimer();
 
             // if there is no outfits folder we mark the type folder search
@@ -1203,8 +1199,7 @@ default {
             }
         }
         else if (listenChannel == systemSearchChannel) {
-            llListenRemove(systemSearchHandle);
-            systemSearchHandle = 0;
+            systemSearchHandle = listenerClose(systemSearchHandle);
             adjustTimer();
 
             list folderList = llCSV2List(listenMessage);
@@ -1257,7 +1252,7 @@ default {
         }
         else if (listenChannel == typeDialogChannel) {
 
-            llListenRemove(typeDialogHandle);
+            typeDialogHandle = listenerClose(typeDialogHandle);
 
             if (listenMessage == "Back...") {
                 lmMenuReply(backMenu = MAIN,llGetDisplayName(listenID),listenID);
@@ -1271,7 +1266,8 @@ default {
             }
         }
         else if (listenChannel == typeFolderBufferChannel) {
-            llListenRemove(typeFolderBufferHandle);
+            typeFolderBufferHandle = listenerClose(typeFolderBufferHandle);
+
             list folderList = llCSV2List(listenMessage);
             integer i;
 
