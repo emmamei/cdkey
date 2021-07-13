@@ -503,6 +503,7 @@ default {
                     clearDresser();
 
                     lmDialogListen();
+                    llSleep(0.5);
                     llDialog(dresserID, "Clothing was just changed; cannot change right now.", ["OK"], dialogChannel);
 
                     return;
@@ -646,7 +647,7 @@ default {
 
                 // We only get here if we are wandering about in the same folder...
                 // FIXME: This is a brute force listener open
-                lmDialogListen();
+                //lmDialogListen();
                 outfitHandle = cdListenAll(outfitChannel);
 
                 outfitDialogList = outfitPageN(outfitList);
@@ -724,7 +725,7 @@ default {
             // This is the first menu presented upon the activation
             // of a new folder to choose outfits from.
 
-            llListenRemove(dressMenuHandle);
+            dressMenuHandle = listenerClose(dressMenuHandle);
 
             // Check for an empty (text) list of outfits
             //
@@ -734,8 +735,8 @@ default {
 
                 // No outfits available in this folder
                 // FIXME: This is a brute force listener open
-                lmDialogListen();
-                cdListenAll(outfitChannel);
+                //lmDialogListen();
+                outfitHandle = cdListenAll(outfitChannel);
 
                 // FIXME: What if dolly CANT go "back" up...?
                 backMenu = UPMENU;
@@ -782,8 +783,8 @@ default {
                 outfitList = []; // free memory
 
                 // FIXME: This is a brute force listener open
-                lmDialogListen();
-                cdListenAll(outfitChannel);
+                //lmDialogListen();
+                outfitHandle = cdListenAll(outfitChannel);
 
                 // FIXME: What if dolly CANT go "back" up...?
                 backMenu = UPMENU;
@@ -818,8 +819,8 @@ default {
 
             // Provide a dialog to user to choose new outfit
             // FIXME: This is a brute force listener open
-            lmDialogListen();
-            cdListenAll(outfitChannel);
+            //lmDialogListen();
+            outfitHandle = cdListenAll(outfitChannel);
 
             // if currentOutfitFolder is at the top, then go to MAIN... but typeFolder
             // might be active...
@@ -846,7 +847,7 @@ default {
             // This is the first menu presented upon the activation
             // of a new folder to choose outfits from.
 
-            llListenRemove(dressRandomHandle);
+            dressRandomHandle = listenerClose(dressRandomHandle);
 
             // Check for an empty (text) list of outfits
             //
