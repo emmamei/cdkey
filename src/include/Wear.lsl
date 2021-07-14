@@ -7,10 +7,10 @@
 #define rlvLockKey()    lmRunRlv("detach=n")
 #define rlvUnlockKey()  lmRunRlv("detach=y")
 
-#define cdLock(a)   lmRunRlv("detachallthis:"+(a)+"=n")
-#define cdUnlock(a) lmRunRlv("detachallthis:"+(a)+"=y")
-#define cdAttach(a) lmRunRlv("attachallover:"+(a)+"=force") 
-#define cdWear(a) lmRunRlv("attach:"+(a)+"=force") 
+#define cdLock(a)        lmRunRlv("detachallthis:"+(a)+"=n")
+#define cdUnlock(a)      lmRunRlv("detachallthis:"+(a)+"=y")
+#define cdAttach(a)      lmRunRlv("attachallover:"+(a)+"=force") 
+#define cdWear(a)        lmRunRlv("attach:"+(a)+"=force") 
 #define cdForceDetach(a) lmRunRlv("detachall:"+(a)+"=force");
 
 //========================================
@@ -25,10 +25,59 @@ string oldOutfit;
 // FUNCTIONS
 //========================================
 
+wearCompleteAvatar(string newAvatar) {
+    // newOutfit uses full path relative to #RLV
+
+    rlvLockKey();
+
+    // Steps to dressing AS a new Avatar:
+    //
+    // Load new outfit:
+    //
+    // 1) Attach and lock everything in the newOutfitFolder
+    //       (using @attach)
+    //
+    // Strip all previous items except the key:
+    //
+    // 2) Remove everything from >Outfits
+    //       (using @detachall:=force)
+    // 3) Unlock all
+    //
+    // Hide key, since random avi might not be suitable for key:
+    //
+    // 4) Hide key: using internal commands
+
+    //----------------------------------------
+    // STEP #1
+
+    // Attach the new folder
+
+    debugSay(2,"DEBUG-DRESS","*** STEP 1 ***");
+
+    cdWear(newAvatar);
+    cdAttach(newAvatar);
+
+    // All of the new outfit should be attached - and having replaced
+    // anything that was in the way. Nothing is locked.
+
+    //----------------------------------------
+    // STEP #2
+
+    cdLock(newAvatar);
+
+    debugSay(2,"DEBUG-DRESS","*** STEP 2 ***");
+    // Detach everything other than the locked newOutfit
+    debugSay(2, "DEBUG-DRESS", "Removing all other clothing worn from " + outfitMasterPath);
+
+    cdForceDetach(outfitMasterPath);
+    cdUnlock(newAvatar);
+    if (!keyLocked) rlvUnlockKey();
+}
+
 wearStandardOutfit(string newOutfit) {
     // newOutfit uses full path relative to #RLV
 
-    outfitAvatar = FALSE;
+    rlvLockKey();
 
     // Steps to dressing avi:
     //
@@ -58,8 +107,8 @@ wearStandardOutfit(string newOutfit) {
 
     // Attach the new folder
 
-    debugSay(2,"DEBUG-DRESS","*** STEP 1 ***");
     debugSay(2, "DEBUG-DRESS", "Attaching outfit from " + newOutfit);
+
     cdAttach(newOutfit);
 
     // At this point, all standard equipment should be attached,
@@ -70,15 +119,12 @@ wearStandardOutfit(string newOutfit) {
 
     // Remove rest of old outfit (using saved folder)
 
-    debugSay(2,"DEBUG-DRESS","*** STEP 2 ***");
-
-    // Lock items so they don't get thrown off
+    // Lock standard items so they don't get thrown off
     if (normalselfPath != "") { cdLock(normalselfPath); }
     if (      nudePath != "") { cdLock(      nudePath); }
 
+    // Lock new outfit
     cdLock(newOutfit);
-
-    debugSay(2,"DEBUG-DRESS","oldOutfit == \"" + oldOutfit + "\"");
 
     // We don't want anything in these folders to be popped off
 
@@ -104,7 +150,8 @@ wearStandardOutfit(string newOutfit) {
     // and it may also be that if we lock something elsewhere, we don't have to
     // worry about this...
     //
-    debugSay(2,"DEBUG-DRESS","*** STEP 3 ***");
+
+    // FIXME: It is strongly possible that this step literally removes all and reattaches all
 
     // Attach new outfit again
     debugSay(2, "DEBUG-DRESS", "Attaching outfit again from " + newOutfit);
@@ -113,67 +160,18 @@ wearStandardOutfit(string newOutfit) {
     //----------------------------------------
     // STEP #4
 
-    debugSay(2,"DEBUG-DRESS","*** STEP 4 ***");
-
     // Unlock folders previously locked
-
-    debugSay(2, "DEBUG-DRESS", "Unlocking three folders of new outfit...");
 
     if (normalselfPath != "") { cdUnlock(normalselfPath); }
     if (      nudePath != "") { cdUnlock(      nudePath); }
 
     cdUnlock(newOutfit);
-
+    if (!keyLocked) rlvUnlockKey();
 }
 
 wearNewAvi(string newOutfit) {
-    // newOutfit uses full path relative to #RLV
-
-    outfitAvatar = TRUE;
-
-    // Steps to dressing AS a new Avatar:
-    //
-    // Load new outfit:
-    //
-    // 1) Attach and lock everything in the newOutfitFolder
-    //       (using @attach)
-    //
-    // Strip all previous items except the key:
-    //
-    // 2) Remove everything from >Outfits
-    //       (using @detachall:=force)
-    // 3) Unlock all
-    //
-    // Hide key, since random avi might not be suitable for key:
-    //
-    // 4) Hide key: using internal commands
-
-    //----------------------------------------
-    // STEP #1
-
-    // Attach the new folder
-
-    debugSay(2,"DEBUG-DRESS","*** STEP 1 ***");
-    debugSay(2, "DEBUG-DRESS", "Attaching outfit from " + newOutfit);
-    cdWear(newOutfit);
-
-    // All of the new outfit should be attached - and having replaced
-    // anything that was in the way. Nothing is locked.
-
-    //----------------------------------------
-    // STEP #2
-
-    cdLock(newOutfit);
-
-    debugSay(2,"DEBUG-DRESS","*** STEP 2 ***");
-    // Detach everything other than the locked newOutfit
-    debugSay(2, "DEBUG-DRESS", "Removing all other clothing worn from " + outfitMasterPath);
-    cdForceDetach(outfitMasterPath);
-
-    cdUnlock(newOutfit);
-
-    //llOwnerSay("Your key fades from view as your new avatar persona takes shape...");
-    //lmSendConfig("isVisible", (string)isVisible);
+    // This puts on a new avatar, contained fully in one directory
+    wearCompleteAvatar(newOutfit);
 }
 
 wearOutfitCore(string newOutfitName) {
@@ -206,13 +204,25 @@ wearOutfitCore(string newOutfitName) {
     //----------------------------------------
 
     if (isAvatarFolder(cdGetFirstChar(newOutfitName))) {
+
+        // if the new outfit is an avatar, do what needs doing...
         wearNewAvi(newOutfit);
+
         llOwnerSay("New avatar chosen: " + cdButFirstChar(newOutfitName));
+
+        outfitAvatar = TRUE; // New outfit is an avatar; mark it
     }
     else {
-        if (outfitAvatar) resetBody(newOutfit);
+
+        // This new outfit is NOT an avatar...
+
+        // if the new outfit is replacing an avatar, then adjust for that
+        if (outfitAvatar) resetBodyWithOutfit(newOutfit);
         else wearStandardOutfit(newOutfit);
+
         llOwnerSay("New outfit chosen: " + newOutfitName);
+
+        outfitAvatar = FALSE; // New outfit is NOT an avatar: mark it
     }
 
     llSleep(1.0);
@@ -225,46 +235,32 @@ wearOutfitCore(string newOutfitName) {
     llListenRemove(dressRandomHandle);
 }
 
-#define rlvLockFolderRecursive(a)   ("detachallthis:" + (a) + "=n")
-#define rlvUnlockFolderRecursive(a) ("detachallthis:" + (a) + "=y")
-#define rlvAttachFolderRecursive(a) (    "attachall:" + (a) + "=force")
-#define rlvDetachAllRecursive(a)    (    "detachall:" + (a) + "=force")
+#define resetBodyCore() resetBody()
 
-resetBodyCore() {
+resetBody() {
     if (normaloutfitPath == "") {
-        llOwnerSay("ERROR: Cannot reset body form without ~normaloutfit present.");
+        llSay(DEBUG_CHANNEL,"ERROR: Cannot reset body form without ~normaloutfit present.");
     }
     else {
-        resetBody(normaloutfitPath);
+        resetBodyWithOutfit(normaloutfitPath);
     }
 }
 
-resetBody(string wearOutfit) {
+resetBodyWithOutfit(string wearOutfitPath) {
     // wearOutfit is full path relative to #RLV
+    if (wearOutfitPath == "") {
+        llSay(DEBUG_CHANNEL,"ERROR: Cannot reset body form without outfit path.");
+        return;
+    }
 
-    // Clear old outfit settings
-    oldOutfit = "";
+    wearCompleteAvatar(normalselfPath);
+
+    if (nudePath) cdAttach(nudePath);
+                  cdAttach(wearOutfitPath);
+
+    // Set outfit settings
     newOutfit = "";
-
-    // LOCK the key in place
-    rlvLockKey();
-
-    // Force attach nude elements
-    if (nudePath)         lmRunRlv(rlvUnlockFolderRecursive(nudePath)       + "," + rlvAttachFolderRecursive(nudePath));
-    if (normalselfPath)   lmRunRlv(rlvUnlockFolderRecursive(normalselfPath) + "," + rlvAttachFolderRecursive(normalselfPath));
-    if (wearOutfit)         lmRunRlv(rlvUnlockFolderRecursive(wearOutfit)       + "," + rlvAttachFolderRecursive(wearOutfit));
-
-    // Lock default body
-    if (nudePath)         lmRunRlv(rlvLockFolderRecursive(nudePath));
-    if (wearOutfit)         lmRunRlv(rlvLockFolderRecursive(wearOutfit));
-
-    // Remove all else from the top, outfits and all the rest
-    lmRunRlv(rlvDetachAllRecursive(outfitMasterPath));
-
-    // Clear locks
-    if (nudePath)         lmRunRlv(rlvUnlockFolderRecursive(nudePath));
-    if (normalselfPath)   lmRunRlv(rlvUnlockFolderRecursive(normalselfPath));
-    if (wearOutfit)         lmRunRlv(rlvUnlockFolderRecursive(wearOutfit));
+    oldOutfit = wearOutfitPath;
 }
 
 #ifdef ADULT_MODE
