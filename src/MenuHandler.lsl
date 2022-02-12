@@ -121,10 +121,11 @@ default {
     //
     attach(key id) {
 
+        dialogChannel = listenerGetDialogChannel();
+
         if (!(keyDetached(id))) {
 
             rlvOk = UNSET;
-            dialogChannel = listenerGetDialogChannel();
         }
     }
 
@@ -177,7 +178,7 @@ default {
                              "baseChannel",
                              "chatPrefix",
 
-                             "dialogChannel",
+                             //"dialogChannel",
 #ifdef ADULT_MODE
                              // if not Adult Mode we don't need this...
                              "dollType",
@@ -242,7 +243,7 @@ default {
             else if (name == "baseChannel")               baseChannel = (integer)value;
             else if (name == "chatPrefix")                 chatPrefix = value;
 
-            else if (name == "dialogChannel")           dialogChannel = (integer)value;
+            //else if (name == "dialogChannel")           dialogChannel = (integer)value;
 #ifdef ADULT_MODE
             // if not Adult Mode we don't need this...
             else if (name == "dollType")                     dollType = value;
@@ -287,6 +288,9 @@ default {
             if (cmd == "dialogListen") {
 
                 debugSay(4,"DEBUG-MENU","dialogListen Internal Command called");
+                debugSay(4,"DEBUG-MENU","dialogChannel is set to " + (string)dialogChannel);
+
+                lmSendConfig("dialogChannel", (string)(dialogChannel));
                 dialogHandle = listenerOpen(dialogChannel,dialogHandle);
             }
             else if (cmd == "mainMenu") {

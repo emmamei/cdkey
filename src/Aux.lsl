@@ -147,12 +147,12 @@ default {
                             "canFly",
                             "canSelfTP",
                             "canRejectTP",
+                            "dialogChannel",
 #ifdef ADULT_MODE
                             "allowStrip",
                             "hardcore",
 #endif
-                            "blacklist",
-                            "dialogChannel"
+                            "blacklist"
             ];
 
             // Commands need to be in the list cmdList in order to be
@@ -308,6 +308,8 @@ default {
                 // this is only called for Dolly - so...
                 list menu = [ "Ok" ];
 
+                lmDialogListen();
+
                 // is it possible to be collapsed but collapseTime be equal to 0.0?
                 if (collapsed) {
                     msg = "You need winding. You have been collapsed for ";
@@ -353,8 +355,7 @@ default {
 #ifdef ADULT_MODE
                     }
 #endif
-
-                    lmDialogListen();
+                    debugSay(8,"DEBUG-AUX","dialogChannel = " + (string)dialogChannel);
                     llDialog(dollID, msg, menu, dialogChannel);
                 }
             }
@@ -516,6 +517,7 @@ default {
                 }
 
                 lmDialogListen();
+                llSleep(0.5);
                 llDialog(lmID, msg, [ "Back..." ] + dialogSort(helpMenuButtons), dialogChannel);
             }
             else if (menuChoice == "Reset Body") {
@@ -607,6 +609,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
 
                 lmSendConfig("backMenu",(backMenu = "Options..."));
                 lmDialogListen();
+                llSleep(0.5);
                 llDialog(lmID, msg, dialogSort(plusList + "Back..."), dialogChannel);
             }
             else if (menuChoice == "Restrictions...") {
@@ -645,6 +648,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 }
 
                 lmDialogListen();
+                llSleep(0.5);
                 llDialog(lmID, msg, dialogSort(plusList), dialogChannel);
             }
             else if (menuChoice == "Public...") {
@@ -668,6 +672,7 @@ Parent - Take care choosing your parents; they have great control over Dolly and
                 }
                 lmSendConfig("backMenu",(backMenu = "Options..."));
                 lmDialogListen();
+                llSleep(0.5);
                 llDialog(lmID, msg, dialogSort(plusList + "Back..."), dialogChannel);
             }
             else if (menuChoice == "Operation...") {
